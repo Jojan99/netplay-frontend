@@ -1,0 +1,74 @@
+:host {
+  height: 100%;
+}
+
+@media (max-width: 768px) {
+  :host {
+    position: fixed;
+    inset: 0;
+    background: white;
+  }
+}
+.wa-audio-preview {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: #f0f2f5;
+  padding: 10px 14px;
+  border-radius: 999px;
+  width: fit-content;
+  max-width: 100%;
+}
+
+.dark .wa-audio-preview {
+  background: #2a2f32;
+}
+
+.wa-audio-trash {
+  color: #8696a0;
+  font-size: 16px;
+}
+
+.wa-audio-play {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: #25d366;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.wa-waveform {
+  display: flex;
+  gap: 2px;
+  height: 24px;
+  align-items: center;
+}
+
+.wa-waveform span {
+  width: 3px;
+  height: 100%;
+  background: #8696a0;
+  border-radius: 2px;
+  opacity: 0.6;
+}
+
+.wa-duration {
+  font-size: 12px;
+  color: #667781;
+  min-width: 32px;
+  text-align: right;
+}
+
+.wa-audio-send {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: #25d366;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}

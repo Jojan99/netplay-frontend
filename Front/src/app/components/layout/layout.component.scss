@@ -1,0 +1,36 @@
+:host {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+}
+
+.flex-grow {
+    flex-grow: 1;
+    display: flex;
+}
+
+main {
+    overflow-y: auto;
+    overflow-x: hidden;
+    /* Mobile: always full width since sidebar is a fixed overlay */
+    width: 100%;
+}
+
+.sidebar-content {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.3s ease-in-out;
+}
+
+.sidebar-content.expanded {
+    max-height: 500px;
+}
+
+@media (max-width: 767px) {
+    main {
+        justify-content: initial;
+        align-items: initial;
+        display: block;
+    }
+}
+

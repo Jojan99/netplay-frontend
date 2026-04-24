@@ -1,0 +1,336 @@
+<div class="flex h-full min-h-0" style="font-family: 'Inter', sans-serif;">
+
+  <!-- ════════════════════════════════ CHAT MAIN ════════════════════════════ -->
+  <div class="flex flex-col flex-1 min-h-0 min-w-0">
+
+    <!-- HEADER -->
+    <div class="shrink-0 border-b" style="background: #1e293b; border-color: #334155;">
+      <app-chat-header
+        *ngIf="headerData"
+        [data]="headerData"
+        (openTransfer)="openTransfer.emit()"
+        (back)="back.emit()"
+        (finish)="finishConversation()"
+        (toggleInfo)="toggleInfoPanel()"
+      ></app-chat-header>
+    </div>
+
+    <!-- MENSAJES -->
+    <div class="flex-1 min-h-0 overflow-y-auto px-4 py-5 flex flex-col gap-1 transition-opacity duration-300"
+         #messagesContainer
+         (dragover)="onDragOver($event)"
+         (dragleave)="onDragLeave($event)"
+         (drop)="onDrop($event)"
+         [class.ring-2]="dragging"
+         [class.ring-emerald-500]="dragging"
+         style="background: #0f172a;
+                background-image: radial-gradient(circle at 1px 1px, #1e293b 1px, transparent 0);
+                background-size: 28px 28px;">
+
+      <div *ngIf="loading" class="flex items-center justify-center gap-2 py-8 text-sm" style="color: #64748b;">
+        <div class="w-4 h-4 border-2 rounded-full animate-spin" style="border-color:#334155; border-top-color:#10b981;"></div>
+        Cargando mensajes…
+      </div>
+
+      <app-message-bubble
+        *ngFor="let msg of messages; trackBy: trackByMessage"
+        [message]="msg"
+        (openPreview)="openPreview($event)"
+        (forwardMsg)="onForwardMessage($event)"
+        (saveSticker)="saveStickerFromMessage($event)">
+      </app-message-bubble>
+
+    </div>
+
+    <!-- PREVIEW ARCHIVO SALIENTE -->
+    <div *ngIf="filePreview" class="px-4 py-3 border-t shrink-0"
+         style="background: #1e293b; border-color: #334155;">
+      <div class="rounded-2xl p-3 flex gap-3 items-center"
+           style="background: #0f172a; border: 1px solid #334155;">
+
+        <img *ngIf="previewType === 'image'" [src]="previewUrl"
+             class="w-24 h-24 object-cover rounded-xl flex-shrink-0" />
+
+        <video *ngIf="previewType === 'video'" [src]="previewUrl"
+               controls class="w-48 rounded-xl flex-shrink-0"></video>
+
+        <audio *ngIf="previewType === 'audio'" [src]="previewUrl"
+               controls class="flex-1"></audio>
+
+        <div *ngIf="previewType === 'document'" class="flex items-center gap-3 flex-shrink-0">
+          <div class="w-10 h-10 rounded-xl flex items-center justify-center" style="background: #1e3a5f;">
+            <i class="fa-solid fa-file text-blue-400"></i>
+          </div>
+          <div>
+            <div class="text-sm font-medium" style="color: #e2e8f0;">{{ filePreview.name }}</div>
+            <div class="text-xs" style="color: #64748b;">Documento</div>
+          </div>
+        </div>
+
+        <div class="ml-auto flex gap-2 flex-shrink-0">
+          <button class="px-4 py-2 rounded-xl text-sm font-medium transition"
+                  style="background: #334155; color: #94a3b8;"
+                  (click)="clearFile()">Cancelar</button>
+          <button class="px-4 py-2 rounded-xl text-sm font-semibold transition flex items-center gap-2"
+                  style="background: #10b981; color: #fff;"
+                  (click)="sendMedia()">
+            <i class="fa-solid fa-paper-plane text-xs"></i> Enviar
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- BARRA DE INPUT -->
+    <div class="shrink-0 border-t" style="background: #1e293b; border-color: #334155;"
+         *ngIf="conversationId">
+
+      <div class="flex items-end gap-2 px-4 py-3 relative" (click)="closeAttachMenu()">
+
+        <!-- + MENU ADJUNTOS -->
+        <div class="relative flex-shrink-0">
+          <button type="button"
+                  (click)="toggleAttachMenu(); $event.stopPropagation()"
+                  class="w-9 h-9 flex items-center justify-center rounded-full transition"
+                  style="background: #334155; color: #94a3b8;"
+                  [disabled]="sending">
+            <i class="fa-solid fa-plus text-sm"></i>
+          </button>
+
+          <!-- DROPDOWN -->
+          <div *ngIf="showAttachMenu"
+               class="absolute bottom-12 left-0 rounded-2xl shadow-2xl p-2 w-56 z-[9999]"
+               style="background: #1e293b; border: 1px solid #334155;"
+               (click)="$event.stopPropagation()">
+
+            <button class="flex items-center gap-3 p-3 w-full rounded-xl transition text-left"
+                    style="color: #e2e8f0;"
+                    onmouseenter="this.style.background='#334155'"
+                    onmouseleave="this.style.background='transparent'"
+                    (click)="openPicker('document')">
+              <div class="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0" style="background: #1e3a5f;">
+                <i class="fa-solid fa-file-lines text-blue-400 text-sm"></i>
+              </div>
+              <div>
+                <div class="text-sm font-semibold">Documento</div>
+                <div class="text-xs" style="color: #64748b;">PDF, Word, Excel…</div>
+              </div>
+            </button>
+
+            <button class="flex items-center gap-3 p-3 w-full rounded-xl transition text-left"
+                    style="color: #e2e8f0;"
+                    onmouseenter="this.style.background='#334155'"
+                    onmouseleave="this.style.background='transparent'"
+                    (click)="openPicker('media')">
+              <div class="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0" style="background: #0f2f1f;">
+                <i class="fa-solid fa-image text-emerald-400 text-sm"></i>
+              </div>
+              <div>
+                <div class="text-sm font-semibold">Foto o video</div>
+                <div class="text-xs" style="color: #64748b;">JPG, PNG, MP4…</div>
+              </div>
+            </button>
+
+            <button class="flex items-center gap-3 p-3 w-full rounded-xl transition text-left"
+                    style="color: #e2e8f0;"
+                    onmouseenter="this.style.background='#334155'"
+                    onmouseleave="this.style.background='transparent'"
+                    (click)="toggleStickerPicker(); $event.stopPropagation()">
+              <div class="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0" style="background: #2d1b4e;">
+                <span class="text-lg">😊</span>
+              </div>
+              <div>
+                <div class="text-sm font-semibold">Sticker</div>
+                <div class="text-xs" style="color: #64748b;">Enviar sticker guardado</div>
+              </div>
+            </button>
+
+          </div>
+        </div>
+
+        <!-- STICKER PICKER -->
+        <div *ngIf="showStickerPicker"
+             class="absolute bottom-16 left-12 rounded-2xl shadow-2xl p-3 z-[9999]"
+             style="background: #1e293b; border: 1px solid #334155; width: 260px;"
+             (click)="$event.stopPropagation()">
+          <div class="text-xs font-semibold mb-2" style="color: #64748b;">Mis Stickers</div>
+          <div *ngIf="stickers.length === 0" class="text-xs text-center py-4" style="color: #475569;">
+            Sin stickers guardados. Haz clic derecho en un sticker recibido para guardarlo.
+          </div>
+          <div class="grid grid-cols-4 gap-2">
+            <button *ngFor="let s of stickers"
+                    class="rounded-xl overflow-hidden transition hover:scale-110"
+                    style="background: #0f172a;"
+                    (click)="sendSticker(s)">
+              <img [src]="s.media_url" alt="sticker"
+                   style="width: 56px; height: 56px; object-fit: contain;" />
+            </button>
+          </div>
+        </div>
+
+        <!-- TEXTAREA -->
+        <div class="flex-1 rounded-2xl px-4 py-2 flex items-end gap-2"
+             style="background: #0f172a; border: 1px solid #334155; min-height: 44px;">
+          <textarea #messageTextarea
+                    [(ngModel)]="draftMessage"
+                    placeholder="Escribe un mensaje…"
+                    class="flex-1 bg-transparent outline-none text-sm resize-none overflow-hidden"
+                    style="min-height: 24px; max-height: 120px; color: #e2e8f0; line-height: 1.5;"
+                    [disabled]="sending || isRecording || !!audioPreviewUrl || !!filePreview"
+                    (input)="autoResize(messageTextarea)"
+                    (keydown)="handleKeydown($event)">
+          </textarea>
+        </div>
+
+        <!-- MIC -->
+        <button *ngIf="!audioPreviewUrl"
+                class="w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0 transition"
+                [style.background]="isRecording ? '#fef2f2' : '#334155'"
+                [style.color]="isRecording ? '#ef4444' : '#94a3b8'"
+                (click)="isRecording ? stopRecording() : startRecording()">
+          <i class="fa-solid text-sm" [ngClass]="isRecording ? 'fa-stop' : 'fa-microphone'"></i>
+        </button>
+
+        <!-- SEND -->
+        <button *ngIf="!audioPreviewUrl"
+                (click)="sendMessage(draftMessage)"
+                class="w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0 transition"
+                style="background: #10b981; color: #fff;"
+                [disabled]="sending || isRecording || !!filePreview">
+          <i class="fa-solid fa-paper-plane text-sm" style="transform: translateX(1px)"></i>
+        </button>
+
+      </div>
+
+      <!-- PROCESANDO AUDIO -->
+      <div *ngIf="isProcessingAudio" class="px-4 pb-3 flex items-center gap-2 text-xs" style="color: #64748b;">
+        <div class="w-3 h-3 border-2 rounded-full animate-spin" style="border-color: #334155; border-top-color: #10b981;"></div>
+        Procesando audio…
+      </div>
+
+      <!-- AUDIO PREVIEW -->
+      <div *ngIf="audioPreviewUrl && !isRecording && !isProcessingAudio" class="px-4 pb-3">
+        <div class="flex items-center gap-3 p-3 rounded-2xl"
+             style="background: #0f172a; border: 1px solid #334155;">
+          <audio [src]="audioPreviewUrl" controls class="flex-1 h-8"
+                 style="filter: invert(0.8) sepia(0.3) hue-rotate(100deg);"></audio>
+          <button class="w-8 h-8 rounded-full flex items-center justify-center transition flex-shrink-0"
+                  style="background: #2f0f0f; color: #ef4444;" (click)="cancelAudio()">
+            <i class="fa-solid fa-trash text-xs"></i>
+          </button>
+          <button class="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 transition"
+                  style="background: #10b981; color: #fff;"
+                  (click)="sendRecordedAudio()"
+                  [disabled]="sending || isRecording || isProcessingAudio || !recordedAudioFile">
+            <i class="fa-solid fa-paper-plane text-xs"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- GRABANDO -->
+      <div *ngIf="isRecording" class="px-4 pb-3 flex items-center gap-2 text-xs font-medium" style="color: #ef4444;">
+        <div class="w-2 h-2 rounded-full animate-pulse" style="background: #ef4444;"></div>
+        Grabando… {{ recordSeconds }}s
+        <div class="ml-auto flex gap-1">
+          <div class="w-1 h-3 rounded-full animate-bounce" style="background: #ef4444; animation-delay: 0ms;"></div>
+          <div class="w-1 h-4 rounded-full animate-bounce" style="background: #ef4444; animation-delay: 100ms;"></div>
+          <div class="w-1 h-2 rounded-full animate-bounce" style="background: #ef4444; animation-delay: 200ms;"></div>
+          <div class="w-1 h-5 rounded-full animate-bounce" style="background: #ef4444; animation-delay: 150ms;"></div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Inputs ocultos -->
+    <input #docInput type="file" class="hidden"
+           accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.zip,.rar,.txt"
+           (change)="onFileSelected($event)" />
+    <input #mediaInput type="file" class="hidden"
+           accept="image/*,video/*"
+           (change)="onFileSelected($event)" />
+
+  </div>
+
+  <!-- ════════════════════════════════ INFO PANEL ═══════════════════════════ -->
+  <app-crm-info-panel
+    *ngIf="showInfoPanel && conversationId && headerData"
+    [conversationId]="conversationId!"
+    [customerPhone]="headerData!.customerPhone"
+    [customerName]="headerData!.customerName"
+    [currentPriority]="headerData!.priority || 'normal'"
+    [status]="headerData!.status"
+    (priorityChanged)="onPriorityChanged($event)"
+    (customerNameChanged)="headerData!.customerName = $event"
+    (closePanel)="showInfoPanel = false">
+  </app-crm-info-panel>
+
+  <!-- ════════════════════════════════ MODAL PREVIEW ═══════════════════════ -->
+  <app-preview-modal
+    *ngIf="previewOpen"
+    [url]="previewUrl!"
+    [type]="previewType!"
+    (close)="closePreview()">
+  </app-preview-modal>
+
+  <!-- ════════════════════════════════ MODAL REENVIAR ══════════════════════ -->
+  <div *ngIf="forwardingMessage"
+       class="fixed inset-0 z-[9999] flex items-center justify-center"
+       style="background: rgba(0,0,0,0.7); backdrop-filter: blur(4px);">
+    <div class="rounded-2xl shadow-2xl flex flex-col" style="background: #1e293b; border: 1px solid #334155; width: 380px; max-height: 80vh;">
+
+      <div class="flex items-center justify-between px-5 py-4 border-b" style="border-color: #334155;">
+        <h3 class="font-bold text-sm" style="color: #e2e8f0;">
+          <i class="fa-solid fa-share mr-2" style="color: #10b981;"></i> Reenviar mensaje
+        </h3>
+        <button class="w-7 h-7 rounded-full flex items-center justify-center" style="background: #334155; color: #94a3b8;"
+                (click)="forwardingMessage = null">
+          <i class="fa-solid fa-xmark text-xs"></i>
+        </button>
+      </div>
+
+      <!-- Mensaje origen -->
+      <div class="px-5 py-3 border-b" style="border-color: #334155;">
+        <div class="text-xs" style="color: #64748b;">Mensaje a reenviar:</div>
+        <div class="mt-1 text-sm px-3 py-2 rounded-xl" style="background: #0f172a; color: #e2e8f0; border: 1px solid #334155;">
+          {{ forwardingMessage.content || '[Archivo]' }}
+        </div>
+      </div>
+
+      <!-- Lista de conversaciones destino -->
+      <div class="flex-1 overflow-y-auto px-4 py-3">
+        <div class="text-xs font-semibold mb-2" style="color: #64748b;">Selecciona destinos:</div>
+        <div *ngIf="allConversations.length === 0" class="text-xs text-center py-6" style="color: #475569;">
+          Sin conversaciones activas
+        </div>
+        <button *ngFor="let c of allConversations"
+                class="flex items-center gap-3 w-full px-3 py-2.5 rounded-xl mb-1 transition text-left"
+                [style.background]="forwardTargets.includes(c.id) ? '#10b98115' : '#0f172a'"
+                [style.border]="'1px solid ' + (forwardTargets.includes(c.id) ? '#10b98140' : '#334155')"
+                (click)="toggleForwardTarget(c.id)">
+          <div class="w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs flex-shrink-0"
+               style="background: #1e3a5f; color: #10b981;">
+            {{ c.customer?.name?.charAt(0)?.toUpperCase() || '?' }}
+          </div>
+          <div class="flex-1 min-w-0">
+            <div class="text-sm font-medium truncate" style="color: #e2e8f0;">{{ c.customer?.name || 'Cliente' }}</div>
+            <div class="text-xs" style="color: #64748b;">{{ c.customer?.phone }}</div>
+          </div>
+          <i *ngIf="forwardTargets.includes(c.id)" class="fa-solid fa-check text-xs" style="color: #10b981;"></i>
+        </button>
+      </div>
+
+      <div class="px-5 py-4 border-t flex gap-3" style="border-color: #334155;">
+        <button class="flex-1 py-2 rounded-xl text-sm font-medium transition"
+                style="background: #334155; color: #94a3b8;"
+                (click)="forwardingMessage = null">Cancelar</button>
+        <button class="flex-1 py-2 rounded-xl text-sm font-semibold transition"
+                style="background: #10b981; color: #000;"
+                [disabled]="!forwardTargets.length"
+                (click)="submitForward()">
+          Reenviar ({{ forwardTargets.length }})
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+</div>

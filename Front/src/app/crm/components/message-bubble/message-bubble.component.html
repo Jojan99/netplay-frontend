@@ -1,0 +1,310 @@
+<!-- WRAPPER -->
+<div class="flex mb-1 group relative"
+     [class.justify-end]="message.from === 'agent'"
+     [class.justify-start]="message.from !== 'agent'"
+     (contextmenu)="onRightClick($event)">
+
+  <!-- ── NOTA INTERNA ──────────────────────────────────────────── -->
+  <div *ngIf="isNote"
+       class="max-w-[78%] rounded-2xl px-4 py-3 text-sm"
+       style="background: #2d2600; border: 1px dashed #f59e0b40; color: #fbbf24;">
+    <div class="flex items-center gap-1.5 mb-1 text-xs font-semibold opacity-70">
+      <i class="fa-solid fa-note-sticky text-yellow-400"></i> Nota interna
+    </div>
+    <div style="white-space: pre-wrap; word-break: break-word;">{{ message.content }}</div>
+    <div class="text-right mt-1 text-xs opacity-50">{{ message.at | date:'HH:mm' }}</div>
+  </div>
+
+  <!-- ── BURBUJA NORMAL ────────────────────────────────────────── -->
+  <div *ngIf="!isNote"
+       class="relative max-w-[78%] min-w-[80px] rounded-2xl overflow-visible"
+       [style.background]="message.from === 'agent' ? '#10b981' : '#1e293b'"
+       [style.borderRadius]="message.from === 'agent' ? '18px 4px 18px 18px' : '4px 18px 18px 18px'"
+       [style.border]="message.from !== 'agent' ? '1px solid #334155' : 'none'"
+       style="box-shadow: 0 1px 4px rgba(0,0,0,0.3);">
+
+    <!-- STICKER – sin fondo de burbuja -->
+    <ng-container *ngIf="isSticker">
+      <div class="relative overflow-visible group/sticker"
+           style="background: transparent; border: none; box-shadow: none;">
+        <img [src]="message.media_url"
+             alt="sticker"
+             class="block"
+             style="width: 140px; height: 140px; object-fit: contain; border-radius: 12px;"
+             (error)="onImageError($event)" />
+        <!-- Botón guardar sticker (solo mensajes del cliente) -->
+        <button *ngIf="message.from === 'customer' && message.media_url"
+                class="absolute bottom-1 right-1 w-7 h-7 rounded-full flex items-center justify-center
+                       opacity-0 group-hover/sticker:opacity-100 transition-opacity"
+                style="background: #1e293bcc; color: #10b981; border: 1px solid #334155;"
+                title="Guardar sticker"
+                (click)="saveSticker.emit(message.media_url!)">
+          <i class="fa-solid fa-bookmark text-xs"></i>
+        </button>
+      </div>
+    </ng-container>
+
+    <ng-container *ngIf="!isSticker">
+
+      <!-- INDICADOR DE REENVÍO -->
+      <div *ngIf="message.is_forwarded"
+           class="flex items-center gap-1 px-3.5 pt-2 text-xs opacity-60"
+           [style.color]="message.from === 'agent' ? '#000' : '#94a3b8'">
+        <i class="fa-solid fa-share"></i> Reenviado
+      </div>
+
+      <ng-container [ngSwitch]="message.message_type">
+
+        <!-- ── TEXTO ────────────────────────────────── -->
+        <ng-container *ngSwitchCase="'text'">
+          <div class="px-3.5 pt-2.5 pb-6 text-sm leading-relaxed"
+               style="white-space: pre-wrap; word-break: break-word;"
+               [style.color]="message.from === 'agent' ? '#000' : '#e2e8f0'">
+            {{ message.content }}
+          </div>
+        </ng-container>
+
+        <!-- ── IMAGEN ───────────────────────────────── -->
+        <ng-container *ngSwitchCase="'image'">
+          <div class="relative">
+            <img [src]="message.media_url"
+                 class="block w-full max-w-[280px] cursor-zoom-in"
+                 style="border-radius: 0;"
+                 (click)="openImage()"
+                 (error)="onImageError($event)" />
+            <div class="absolute inset-0 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity cursor-zoom-in"
+                 style="background: rgba(0,0,0,0.35);"
+                 (click)="openImage()">
+              <div class="w-10 h-10 rounded-full flex items-center justify-center"
+                   style="background: rgba(255,255,255,0.2); backdrop-filter: blur(4px);">
+                <i class="fa-solid fa-magnifying-glass-plus text-white text-sm"></i>
+              </div>
+            </div>
+          </div>
+          <div *ngIf="message.content"
+               class="px-3.5 pt-2 pb-6 text-sm leading-relaxed"
+               [style.color]="message.from === 'agent' ? '#000' : '#e2e8f0'">
+            {{ message.content }}
+          </div>
+          <div *ngIf="!message.content" class="pb-4"></div>
+        </ng-container>
+
+        <!-- ── DOCUMENTO ─────────────────────────────── -->
+        <ng-container *ngSwitchCase="'document'">
+
+          <!-- PDF -->
+          <ng-container *ngIf="isPdf">
+            <div class="relative w-64 cursor-pointer group" (click)="openPdf()">
+              <div class="w-full h-52 overflow-hidden" style="background: #0f172a;">
+                <iframe [src]="safePdfUrl" class="w-full h-full pointer-events-none scale-75 origin-top-left"
+                        style="width: 133%; height: 133%;"></iframe>
+              </div>
+              <div class="absolute inset-0 flex items-end justify-center pb-3 opacity-0 group-hover:opacity-100 transition"
+                   style="background: linear-gradient(to bottom, transparent 40%, rgba(0,0,0,0.6));">
+                <span class="text-xs font-semibold text-white px-3 py-1 rounded-full"
+                      style="background: rgba(255,255,255,0.15); backdrop-filter: blur(4px);">Ver PDF</span>
+              </div>
+            </div>
+            <div class="flex items-center gap-2.5 px-3.5 pt-2 pb-6">
+              <div class="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
+                   style="background: rgba(0,0,0,0.2);">
+                <i class="fa-solid fa-file-pdf text-sm"
+                   [style.color]="message.from === 'agent' ? '#000' : '#f87171'"></i>
+              </div>
+              <div class="text-xs font-semibold" [style.color]="message.from === 'agent' ? '#000' : '#e2e8f0'">
+                Documento PDF
+              </div>
+            </div>
+          </ng-container>
+
+          <!-- OFFICE -->
+          <ng-container *ngIf="isOffice">
+            <div class="w-64 h-52 overflow-hidden cursor-pointer" (click)="openOffice()">
+              <iframe [src]="safeOfficeUrl" class="w-full h-full pointer-events-none"></iframe>
+            </div>
+            <div class="flex items-center gap-2.5 px-3.5 pt-2 pb-6">
+              <div class="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
+                   style="background: rgba(0,0,0,0.2);">
+                <i class="fa-solid fa-file-word text-sm text-blue-400"></i>
+              </div>
+              <div class="text-xs font-semibold truncate"
+                   [style.color]="message.from === 'agent' ? '#000' : '#e2e8f0'">Documento Office</div>
+            </div>
+          </ng-container>
+
+          <!-- ARCHIVO GENÉRICO -->
+          <ng-container *ngIf="!isPdf && !isOffice">
+            <a [href]="message.media_url" target="_blank" rel="noopener noreferrer"
+               class="flex items-center gap-3 px-3.5 py-3 pb-6 no-underline">
+              <div class="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
+                   style="background: rgba(0,0,0,0.2);">
+                <i class="fa-solid fa-file-zipper text-sm"
+                   [style.color]="message.from === 'agent' ? '#000' : '#a78bfa'"></i>
+              </div>
+              <div class="min-w-0">
+                <div class="text-xs font-semibold truncate"
+                     [style.color]="message.from === 'agent' ? '#000' : '#e2e8f0'">
+                  {{ message.content || 'Archivo' }}
+                </div>
+                <div class="text-xs opacity-60"
+                     [style.color]="message.from === 'agent' ? '#000' : '#94a3b8'">Toca para descargar</div>
+              </div>
+              <i class="fa-solid fa-arrow-down-to-line ml-auto text-xs opacity-50"
+                 [style.color]="message.from === 'agent' ? '#000' : '#e2e8f0'"></i>
+            </a>
+          </ng-container>
+        </ng-container>
+
+        <!-- ── VIDEO ─────────────────────────────────── -->
+        <ng-container *ngSwitchCase="'video'">
+          <div class="relative w-full max-w-[280px] group" style="background:#000; border-radius:0;">
+            <video #videoEl [src]="message.media_url" muted preload="metadata"
+                   class="block w-full" style="max-height:200px; object-fit:cover;"
+                   (dblclick)="openFullscreen(videoEl)" (ended)="onVideoEnded(videoEl)"></video>
+            <div class="absolute inset-0 flex items-center justify-center"
+                 style="background: rgba(0,0,0,0.2);" (click)="toggleVideo(videoEl)">
+              <div class="w-12 h-12 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform"
+                   style="background: rgba(255,255,255,0.15); backdrop-filter: blur(4px); border: 1.5px solid rgba(255,255,255,0.3);">
+                <span class="text-white text-lg" style="transform: translateX(2px)">▶</span>
+              </div>
+            </div>
+          </div>
+          <div *ngIf="message.content" class="px-3.5 pt-2 pb-6 text-sm leading-relaxed"
+               [style.color]="message.from === 'agent' ? '#000' : '#e2e8f0'">{{ message.content }}</div>
+          <div *ngIf="!message.content" class="pb-4"></div>
+        </ng-container>
+
+        <!-- ── AUDIO ─────────────────────────────────── -->
+        <ng-container *ngSwitchCase="'audio'">
+          <div class="flex items-center gap-2.5 px-3 py-2.5 pb-6">
+            <div class="w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0"
+                 style="background: rgba(0,0,0,0.2);">
+              <i class="fa-solid fa-microphone text-sm"
+                 [style.color]="message.from === 'agent' ? '#000' : '#10b981'"></i>
+            </div>
+            <audio [src]="message.media_url" controls class="flex-1"
+                   style="height:32px; min-width:160px; filter: invert(0.8) sepia(0.2) hue-rotate(100deg);">
+            </audio>
+          </div>
+        </ng-container>
+
+        <!-- ── UBICACIÓN ──────────────────────────────── -->
+        <ng-container *ngSwitchCase="'location'">
+          <a [href]="mapsUrl" target="_blank" rel="noopener noreferrer"
+             class="flex flex-col no-underline overflow-hidden" style="border-radius: 0; width: 240px;">
+            <!-- Mapa estático -->
+            <div class="relative w-full" style="height: 120px; background: #1e293b;">
+              <img *ngIf="locationCoords"
+                   [src]="'https://maps.googleapis.com/maps/api/staticmap?center=' + locationCoords!.lat + ',' + locationCoords!.lng + '&zoom=15&size=240x120&markers=' + locationCoords!.lat + ',' + locationCoords!.lng"
+                   class="w-full h-full object-cover" alt="mapa"
+                   style="opacity: 0.7;"
+                   (error)="onImageError($event)" />
+              <div class="absolute inset-0 flex items-center justify-center">
+                <i class="fa-solid fa-location-dot text-3xl" style="color: #ef4444; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5));"></i>
+              </div>
+            </div>
+            <div class="px-3.5 py-2.5 pb-6 flex items-center gap-2">
+              <i class="fa-solid fa-map-pin flex-shrink-0"
+                 [style.color]="message.from === 'agent' ? '#000' : '#10b981'"></i>
+              <div>
+                <div class="text-xs font-semibold" [style.color]="message.from === 'agent' ? '#000' : '#e2e8f0'">
+                  Ubicación
+                </div>
+                <div class="text-xs opacity-60" [style.color]="message.from === 'agent' ? '#000' : '#94a3b8'">
+                  Ver en Google Maps
+                </div>
+              </div>
+            </div>
+          </a>
+        </ng-container>
+
+        <!-- ── CONTACTO ───────────────────────────────── -->
+        <ng-container *ngSwitchCase="'contact'">
+          <div class="flex items-center gap-3 px-3.5 py-3 pb-6">
+            <div class="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 font-bold text-sm"
+                 style="background: #334155; color: #e2e8f0;">
+              <i class="fa-solid fa-user"></i>
+            </div>
+            <div>
+              <div class="text-sm font-semibold" [style.color]="message.from === 'agent' ? '#000' : '#e2e8f0'">
+                {{ message.content?.replace('👤 Contacto: ', '') || 'Contacto' }}
+              </div>
+              <div class="text-xs opacity-60" [style.color]="message.from === 'agent' ? '#000' : '#94a3b8'">
+                Tarjeta de contacto
+              </div>
+            </div>
+          </div>
+        </ng-container>
+
+        <!-- ── REACCIÓN ───────────────────────────────── -->
+        <ng-container *ngSwitchCase="'reaction'">
+          <div class="px-4 py-3 pb-6 text-2xl">
+            {{ message.content?.replace('👍 Reacción: ', '') }}
+          </div>
+        </ng-container>
+
+        <!-- ── DEFAULT ────────────────────────────────── -->
+        <ng-container *ngSwitchDefault>
+          <div class="px-3.5 pt-2.5 pb-6 text-sm leading-relaxed"
+               [style.color]="message.from === 'agent' ? '#000' : '#e2e8f0'">
+            {{ message.content || '[Mensaje no soportado]' }}
+          </div>
+        </ng-container>
+
+      </ng-container>
+
+      <!-- FIRMA DE AGENTE -->
+      <div *ngIf="message.from === 'agent' && message.agent_signature"
+           class="px-3.5 pb-5 text-xs italic opacity-50" style="color: #000; margin-top: -4px;">
+        — {{ message.agent_signature }}
+      </div>
+
+      <!-- META (hora + check) -->
+      <div class="absolute bottom-1.5 right-3 flex items-center gap-1 pointer-events-none"
+           style="font-size: 10px; opacity: 0.65;"
+           [style.color]="message.from === 'agent' ? '#000' : '#94a3b8'">
+        {{ message.at | date:'HH:mm' }}
+        <span *ngIf="message.from === 'agent'" class="text-xs">
+          {{ message.pending ? '✓' : '✓✓' }}
+        </span>
+      </div>
+
+    </ng-container>
+  </div>
+
+  <!-- BOTÓN REENVIAR (hover) -->
+  <button *ngIf="!isNote"
+          class="self-center opacity-0 group-hover:opacity-100 transition-opacity mx-1 flex-shrink-0
+                 w-7 h-7 rounded-full flex items-center justify-center"
+          style="background: #334155; color: #94a3b8;"
+          [class.order-first]="message.from === 'agent'"
+          title="Reenviar"
+          (click)="forward()">
+    <i class="fa-solid fa-share text-xs"></i>
+  </button>
+
+</div>
+
+<!-- MENÚ CONTEXTUAL -->
+<div *ngIf="showContextMenu"
+     class="fixed z-[9999] rounded-xl shadow-2xl overflow-hidden"
+     [style.left.px]="contextX"
+     [style.top.px]="contextY"
+     style="background: #1e293b; border: 1px solid #334155; min-width: 160px;"
+     (click)="$event.stopPropagation()">
+  <button class="flex items-center gap-3 px-4 py-2.5 w-full text-sm text-left transition"
+          style="color: #e2e8f0;"
+          onmouseenter="this.style.background='#334155'"
+          onmouseleave="this.style.background='transparent'"
+          (click)="forward()">
+    <i class="fa-solid fa-share w-4" style="color: #10b981;"></i> Reenviar
+  </button>
+  <button *ngIf="message.message_type === 'text'"
+          class="flex items-center gap-3 px-4 py-2.5 w-full text-sm text-left transition"
+          style="color: #e2e8f0;"
+          onmouseenter="this.style.background='#334155'"
+          onmouseleave="this.style.background='transparent'"
+          (click)="copyText()">
+    <i class="fa-solid fa-copy w-4" style="color: #60a5fa;"></i> Copiar texto
+  </button>
+</div>

@@ -1,0 +1,319 @@
+<div class="min-h-screen p-6 space-y-6 bg-gray-50 dark:bg-gray-950 transition-colors">
+
+  <!-- Header -->
+  <div>
+    <h1 class="text-2xl font-bold text-gray-900 dark:text-white tracking-tight">Webhooks</h1>
+    <p class="text-gray-500 dark:text-gray-400 text-sm mt-0.5">Configura notificaciones y rate limit por instancia</p>
+  </div>
+
+  <!-- Selector instancia -->
+  <div>
+    <label class="block text-xs font-semibold text-gray-600 dark:text-gray-400 mb-1.5 uppercase tracking-wider">
+      Instancia
+    </label>
+    <select [(ngModel)]="selectedInstance" (change)="onInstanceChange()"
+      class="rounded-xl px-4 py-2.5 text-sm border outline-none transition-all min-w-64
+             bg-white dark:bg-gray-900
+             border-gray-200 dark:border-gray-700
+             text-gray-900 dark:text-white
+             focus:border-green-500 focus:ring-2 focus:ring-green-500/20">
+      <option value="">Selecciona una instancia...</option>
+      <option *ngFor="let inst of instances" [value]="inst.instanceId">
+        {{ inst.name }}
+      </option>
+    </select>
+  </div>
+
+  <!-- Placeholder sin instancia -->
+  <div *ngIf="!selectedInstance"
+    class="rounded-2xl border p-14 text-center
+           bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm
+           border-gray-200 dark:border-gray-800">
+    <div class="w-14 h-14 rounded-2xl bg-gray-100 dark:bg-gray-800 flex items-center justify-center mx-auto mb-4">
+      <svg class="w-7 h-7 text-gray-400 dark:text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/>
+      </svg>
+    </div>
+    <p class="text-gray-900 dark:text-white font-semibold mb-1">Selecciona una instancia</p>
+    <p class="text-gray-500 dark:text-gray-400 text-sm">Elige una instancia para configurar su webhook</p>
+  </div>
+
+  <ng-container *ngIf="selectedInstance">
+
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+
+      <!-- ── Config Webhook ───────────────────────────────────── -->
+      <div class="rounded-2xl border p-5 space-y-4
+                  bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm
+                  border-gray-200 dark:border-gray-800">
+
+        <div class="flex items-center gap-2 mb-1">
+          <div class="w-8 h-8 bg-green-100 dark:bg-green-500/10 rounded-lg flex items-center justify-center">
+            <svg class="w-4 h-4 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/>
+            </svg>
+          </div>
+          <h2 class="text-gray-900 dark:text-white font-semibold">Configuración del Webhook</h2>
+        </div>
+
+        <!-- URL activa -->
+        <div *ngIf="currentWebhook.url"
+          class="flex items-start gap-2.5 bg-green-50 dark:bg-green-500/10 border border-green-200 dark:border-green-500/20 rounded-xl p-3">
+          <svg class="w-4 h-4 text-green-600 dark:text-green-400 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+          </svg>
+          <div class="min-w-0">
+            <p class="text-green-700 dark:text-green-400 text-xs font-semibold">Webhook activo</p>
+            <p class="text-green-600 dark:text-green-300/60 text-xs font-mono truncate mt-0.5">
+              {{ currentWebhook.url }}
+            </p>
+          </div>
+        </div>
+
+        <!-- URL input -->
+        <div>
+          <label class="block text-xs font-semibold text-gray-600 dark:text-gray-400 mb-1.5 uppercase tracking-wider">
+            URL del Webhook
+          </label>
+          <input [(ngModel)]="webhookUrl" type="url" placeholder="https://tuservidor.com/webhook"
+            class="w-full rounded-xl px-4 py-3 text-sm border outline-none transition-all font-mono
+                   bg-gray-50 dark:bg-gray-800
+                   border-gray-200 dark:border-gray-700
+                   text-gray-900 dark:text-white
+                   placeholder-gray-400 dark:placeholder-gray-500
+                   focus:border-green-500 focus:ring-2 focus:ring-green-500/20"/>
+          <p class="text-gray-400 dark:text-gray-500 text-xs mt-1">
+            Se enviará un POST cuando lleguen mensajes nuevos
+          </p>
+        </div>
+
+        <!-- Secret -->
+        <div>
+          <label class="block text-xs font-semibold text-gray-600 dark:text-gray-400 mb-1.5 uppercase tracking-wider">
+            Secret HMAC (opcional)
+          </label>
+          <input [(ngModel)]="webhookSecret" type="password" placeholder="Clave para verificar firma"
+            class="w-full rounded-xl px-4 py-3 text-sm border outline-none transition-all font-mono
+                   bg-gray-50 dark:bg-gray-800
+                   border-gray-200 dark:border-gray-700
+                   text-gray-900 dark:text-white
+                   placeholder-gray-400 dark:placeholder-gray-500
+                   focus:border-green-500 focus:ring-2 focus:ring-green-500/20"/>
+        </div>
+
+        <!-- Mensaje resultado -->
+        <div *ngIf="saveMsg"
+          [ngClass]="saveOk
+            ? 'bg-green-50 dark:bg-green-500/10 border-green-200 dark:border-green-500/20 text-green-700 dark:text-green-400'
+            : 'bg-red-50 dark:bg-red-500/10 border-red-200 dark:border-red-500/20 text-red-600 dark:text-red-400'"
+          class="rounded-xl px-3 py-2.5 text-sm border font-medium">
+          {{ saveMsg }}
+        </div>
+
+        <!-- Botones -->
+        <div class="flex gap-3">
+          <button (click)="save()" [disabled]="saving || !webhookUrl.trim()"
+            class="flex-1 py-2.5 rounded-xl text-sm font-bold transition-all
+                   bg-green-500 hover:bg-green-400 text-white
+                   shadow-lg shadow-green-500/25
+                   disabled:opacity-40 disabled:cursor-not-allowed
+                   flex items-center justify-center gap-2">
+            <svg *ngIf="saving" class="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
+              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
+            </svg>
+            {{ saving ? 'Guardando...' : 'Guardar webhook' }}
+          </button>
+          <button *ngIf="currentWebhook.url" (click)="remove()"
+            class="px-4 py-2.5 rounded-xl text-sm font-semibold border transition-all
+                   bg-red-50 dark:bg-red-500/10 hover:bg-red-100 dark:hover:bg-red-500/20
+                   border-red-200 dark:border-red-500/20
+                   text-red-600 dark:text-red-400">
+            Eliminar
+          </button>
+        </div>
+      </div>
+
+      <!-- ── Rate Limit ────────────────────────────────────────── -->
+      <div class="rounded-2xl border p-5 space-y-4
+                  bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm
+                  border-gray-200 dark:border-gray-800">
+
+        <div class="flex items-center gap-2 mb-1">
+          <div class="w-8 h-8 bg-yellow-100 dark:bg-yellow-500/10 rounded-lg flex items-center justify-center">
+            <svg class="w-4 h-4 text-yellow-600 dark:text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            </svg>
+          </div>
+          <h2 class="text-gray-900 dark:text-white font-semibold">Rate Limit</h2>
+        </div>
+
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label class="block text-xs font-semibold text-gray-600 dark:text-gray-400 mb-1.5 uppercase tracking-wider">
+              Mensajes / minuto
+            </label>
+            <input [(ngModel)]="rateLimitPerMin" type="number" min="1" max="100"
+              class="w-full rounded-xl px-3 py-2.5 text-sm border outline-none transition-all
+                     bg-gray-50 dark:bg-gray-800
+                     border-gray-200 dark:border-gray-700
+                     text-gray-900 dark:text-white
+                     focus:border-green-500 focus:ring-2 focus:ring-green-500/20"/>
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-gray-600 dark:text-gray-400 mb-1.5 uppercase tracking-wider">
+              Delay (ms)
+            </label>
+            <input [(ngModel)]="rateLimitDelay" type="number" min="100" step="100"
+              class="w-full rounded-xl px-3 py-2.5 text-sm border outline-none transition-all
+                     bg-gray-50 dark:bg-gray-800
+                     border-gray-200 dark:border-gray-700
+                     text-gray-900 dark:text-white
+                     focus:border-green-500 focus:ring-2 focus:ring-green-500/20"/>
+          </div>
+        </div>
+
+        <!-- Stats actuales -->
+        <div *ngIf="rateLimitStats"
+          class="grid grid-cols-2 gap-3 bg-gray-50 dark:bg-gray-800/60 border border-gray-200 dark:border-gray-700 rounded-xl p-3">
+          <div class="text-center">
+            <p class="text-2xl font-bold text-gray-900 dark:text-white">{{ rateLimitStats.count }}</p>
+            <p class="text-gray-400 dark:text-gray-500 text-xs mt-0.5">Usados este minuto</p>
+          </div>
+          <div class="text-center border-l border-gray-200 dark:border-gray-700">
+            <p class="text-2xl font-bold text-gray-900 dark:text-white">{{ rateLimitStats.secondsLeft }}s</p>
+            <p class="text-gray-400 dark:text-gray-500 text-xs mt-0.5">Resetea en</p>
+          </div>
+        </div>
+
+        <!-- Mensaje RL -->
+        <div *ngIf="saveMsgRL"
+          class="bg-green-50 dark:bg-green-500/10 border border-green-200 dark:border-green-500/20 rounded-xl px-3 py-2.5 text-green-700 dark:text-green-400 text-sm font-medium">
+          {{ saveMsgRL }}
+        </div>
+
+        <button (click)="saveRateLimit()" [disabled]="savingRL"
+          class="w-full py-2.5 rounded-xl text-sm font-bold border transition-all
+                 bg-yellow-50 dark:bg-yellow-500/10 hover:bg-yellow-100 dark:hover:bg-yellow-500/20
+                 border-yellow-200 dark:border-yellow-500/20
+                 text-yellow-700 dark:text-yellow-400
+                 disabled:opacity-40 disabled:cursor-not-allowed
+                 flex items-center justify-center gap-2">
+          <svg *ngIf="savingRL" class="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
+          </svg>
+          {{ savingRL ? 'Guardando...' : 'Guardar Rate Limit' }}
+        </button>
+      </div>
+
+    </div>
+
+    <!-- ── Webhook Logs ────────────────────────────────────────── -->
+    <div class="rounded-2xl border overflow-hidden
+                bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm
+                border-gray-200 dark:border-gray-800">
+
+      <!-- Header logs -->
+      <div class="px-5 py-4 border-b border-gray-100 dark:border-gray-800 flex items-center justify-between">
+        <div class="flex items-center gap-2">
+          <div class="w-8 h-8 bg-gray-100 dark:bg-gray-800 rounded-lg flex items-center justify-center">
+            <svg class="w-4 h-4 text-gray-500 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+            </svg>
+          </div>
+          <h2 class="text-gray-900 dark:text-white font-semibold">Logs del Webhook</h2>
+        </div>
+        <button (click)="loadWebhookLogs()"
+          class="p-2 rounded-xl border transition-all
+                 bg-gray-50 dark:bg-gray-800
+                 border-gray-200 dark:border-gray-700
+                 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200
+                 hover:bg-gray-100 dark:hover:bg-gray-700">
+          <svg class="w-4 h-4" [class.animate-spin]="loadingLogs" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+          </svg>
+        </button>
+      </div>
+
+      <!-- Loading -->
+      <div *ngIf="loadingLogs" class="flex items-center justify-center py-12">
+        <div class="flex items-center gap-3">
+          <svg class="animate-spin w-5 h-5 text-green-500" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
+          </svg>
+          <p class="text-gray-400 dark:text-gray-500 text-sm">Cargando logs...</p>
+        </div>
+      </div>
+
+      <!-- Tabla -->
+      <div *ngIf="!loadingLogs" class="overflow-x-auto">
+        <table class="w-full text-sm">
+          <thead>
+            <tr class="border-b border-gray-100 dark:border-gray-800 bg-gray-50/50 dark:bg-gray-800/30">
+              <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Evento</th>
+              <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Estado</th>
+              <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider hidden md:table-cell">Intentos</th>
+              <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider hidden sm:table-cell">Último intento</th>
+              <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Acción</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-gray-100 dark:divide-gray-800">
+            <tr *ngFor="let log of webhookLogs"
+              class="hover:bg-gray-50 dark:hover:bg-gray-800/40 transition-colors">
+              <td class="px-4 py-3">
+                <p class="text-gray-800 dark:text-gray-200 text-xs font-mono">{{ log.event }}</p>
+                <p *ngIf="log.last_error"
+                  class="text-red-400 text-xs mt-0.5 max-w-xs truncate opacity-70">
+                  {{ log.last_error }}
+                </p>
+              </td>
+              <td class="px-4 py-3">
+                <span [ngClass]="{
+                  'bg-green-100 dark:bg-green-500/10 text-green-700 dark:text-green-400':   log.status === 'success',
+                  'bg-yellow-100 dark:bg-yellow-500/10 text-yellow-700 dark:text-yellow-400': log.status === 'pending',
+                  'bg-red-100 dark:bg-red-500/10 text-red-600 dark:text-red-400':            log.status === 'failed'
+                }" class="text-xs font-semibold px-2.5 py-1 rounded-full">
+                  {{ log.status }}
+                </span>
+              </td>
+              <td class="px-4 py-3 hidden md:table-cell">
+                <p class="text-gray-400 dark:text-gray-500 text-xs">{{ log.attempts }}</p>
+              </td>
+              <td class="px-4 py-3 hidden sm:table-cell">
+                <p class="text-gray-400 dark:text-gray-500 text-xs">{{ log.last_attempt | date:'dd/MM HH:mm' }}</p>
+              </td>
+              <td class="px-4 py-3">
+                <button *ngIf="log.status === 'failed'" (click)="retry(log.id)"
+                  class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all
+                         bg-gray-50 dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700
+                         border-gray-200 dark:border-gray-700
+                         text-gray-600 dark:text-gray-400">
+                  <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                  </svg>
+                  Reintentar
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+
+        <!-- Empty -->
+        <div *ngIf="!webhookLogs.length"
+          class="flex flex-col items-center justify-center py-12 gap-3">
+          <div class="w-12 h-12 rounded-2xl bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
+            <svg class="w-6 h-6 text-gray-400 dark:text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+            </svg>
+          </div>
+          <p class="text-gray-500 dark:text-gray-400 text-sm font-medium">Sin logs de webhook aún</p>
+        </div>
+      </div>
+
+    </div>
+
+  </ng-container>
+
+</div>

@@ -1,0 +1,298 @@
+<div class="flex flex-col h-full min-h-0" style="background: #1e293b; border-left: 1px solid #334155; width: 300px; font-family: 'Inter', sans-serif;">
+
+  <!-- HEADER -->
+  <div class="flex items-center justify-between px-4 py-3 border-b shrink-0"
+       style="border-color: #334155;">
+    <h3 class="text-sm font-bold" style="color: #e2e8f0;">Información</h3>
+    <button class="w-7 h-7 rounded-full flex items-center justify-center transition"
+            style="background: #334155; color: #94a3b8;"
+            onmouseenter="this.style.background='#475569'"
+            onmouseleave="this.style.background='#334155'"
+            (click)="closePanel.emit()">
+      <i class="fa-solid fa-xmark text-xs"></i>
+    </button>
+  </div>
+
+  <!-- CLIENTE INFO -->
+  <div class="px-4 py-3 border-b shrink-0" style="border-color: #334155;">
+    <div class="flex items-center gap-3">
+      <div class="w-11 h-11 rounded-full flex items-center justify-center font-bold text-base flex-shrink-0"
+           style="background: linear-gradient(135deg,#1e3a5f,#0f2f1f); color: #10b981; border: 1.5px solid #334155;">
+        {{ (editingName ? editNameValue : customerName).charAt(0).toUpperCase() || '?' }}
+      </div>
+      <div class="flex-1 min-w-0">
+        <!-- Nombre editable -->
+        <div *ngIf="!editingName" class="flex items-center gap-1.5">
+          <div class="font-semibold text-sm truncate" style="color: #e2e8f0;">{{ customerName || 'Cliente' }}</div>
+          <button class="opacity-50 hover:opacity-100 transition flex-shrink-0"
+                  style="color: #94a3b8;"
+                  title="Editar nombre"
+                  (click)="startEditName()">
+            <i class="fa-solid fa-pen text-xs"></i>
+          </button>
+        </div>
+        <div *ngIf="editingName" class="flex items-center gap-1">
+          <input type="text"
+                 [(ngModel)]="editNameValue"
+                 (keydown.enter)="saveName()"
+                 (keydown.escape)="cancelEditName()"
+                 class="flex-1 min-w-0 px-2 py-1 rounded-lg text-xs outline-none"
+                 style="background: #0f172a; border: 1px solid #10b981; color: #e2e8f0;" />
+          <button class="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0"
+                  style="background: #10b981; color: #000;"
+                  [disabled]="savingName"
+                  (click)="saveName()">
+            <i class="fa-solid fa-check text-xs"></i>
+          </button>
+          <button class="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0"
+                  style="background: #334155; color: #94a3b8;"
+                  (click)="cancelEditName()">
+            <i class="fa-solid fa-xmark text-xs"></i>
+          </button>
+        </div>
+        <div class="text-xs mt-0.5" style="color: #64748b;">{{ customerPhone }}</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TABS -->
+  <div class="flex border-b shrink-0" style="border-color: #334155;">
+    <button *ngFor="let tab of [
+      {id:'info', icon:'fa-circle-info', label:'Info'},
+      {id:'notes', icon:'fa-note-sticky', label:'Notas'},
+      {id:'labels', icon:'fa-tags', label:'Etiquetas'}
+    ]"
+      class="flex-1 flex flex-col items-center py-2 text-xs font-medium gap-1 transition"
+      [style.color]="activeTab === tab.id ? '#10b981' : '#64748b'"
+      [style.borderBottom]="activeTab === tab.id ? '2px solid #10b981' : '2px solid transparent'"
+      (click)="activeTab = $any(tab.id); tab.id === 'info' && loadServiceStatus()">
+      <i class="fa-solid text-sm" [class]="tab.icon"></i>
+      {{ tab.label }}
+    </button>
+  </div>
+
+  <!-- SCROLL AREA -->
+  <div class="flex-1 min-h-0 overflow-y-auto">
+
+    <!-- ── TAB INFO ──────────────────────────────────────────────── -->
+    <div *ngIf="activeTab === 'info'" class="px-4 py-3 flex flex-col gap-4">
+
+      <!-- PRIORIDAD -->
+      <div>
+        <div class="text-xs font-semibold mb-2 uppercase tracking-wide" style="color: #64748b;">Prioridad</div>
+        <div class="flex gap-2">
+          <button *ngFor="let p of ['low','normal','high']"
+                  class="flex-1 py-1.5 rounded-xl text-xs font-semibold transition"
+                  [style.background]="currentPriority === p ? priorityColor(p) + '25' : '#0f172a'"
+                  [style.color]="currentPriority === p ? priorityColor(p) : '#64748b'"
+                  [style.border]="'1px solid ' + (currentPriority === p ? priorityColor(p) + '60' : '#334155')"
+                  (click)="setPriority($any(p))">
+            {{ priorityLabel(p) }}
+          </button>
+        </div>
+      </div>
+
+      <!-- ESTADO DE SERVICIO -->
+      <div>
+        <div class="text-xs font-semibold mb-2 uppercase tracking-wide" style="color: #64748b;">Estado del Servicio</div>
+        <div *ngIf="loadingService" class="flex items-center gap-2 text-xs" style="color: #64748b;">
+          <div class="w-3 h-3 border-2 rounded-full animate-spin" style="border-color: #334155; border-top-color: #10b981;"></div>
+          Cargando…
+        </div>
+        <div *ngIf="!loadingService && !serviceStatus && serviceLoaded"
+             class="text-xs" style="color: #64748b;">Sin datos de servicio.</div>
+        <div *ngIf="serviceStatus" class="rounded-xl p-3" style="background: #0f172a; border: 1px solid #334155;">
+          <div class="flex items-center gap-2 mb-2">
+            <span class="w-2 h-2 rounded-full"
+                  [style.background]="serviceStatus.service_status === 'Activo' ? '#10b981' : '#ef4444'"></span>
+            <span class="text-xs font-semibold"
+                  [style.color]="serviceStatus.service_status === 'Activo' ? '#10b981' : '#ef4444'">
+              {{ serviceStatus.service_status }}
+            </span>
+          </div>
+          <div class="grid grid-cols-2 gap-1">
+            <div *ngIf="serviceStatus.plan" class="text-xs">
+              <span style="color: #64748b;">Plan:</span>
+              <span class="ml-1 font-medium" style="color: #e2e8f0;">{{ serviceStatus.plan }}</span>
+            </div>
+            <div *ngIf="serviceStatus.ip" class="text-xs">
+              <span style="color: #64748b;">IP:</span>
+              <span class="ml-1 font-medium" style="color: #e2e8f0;">{{ serviceStatus.ip }}</span>
+            </div>
+            <div *ngIf="serviceStatus.address" class="text-xs col-span-2">
+              <span style="color: #64748b;">Dirección:</span>
+              <span class="ml-1 font-medium" style="color: #e2e8f0;">{{ serviceStatus.address }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- CREAR TICKET -->
+      <div>
+        <div class="text-xs font-semibold mb-2 uppercase tracking-wide" style="color: #64748b;">Soporte</div>
+        <button *ngIf="!showTicketForm"
+                class="w-full py-2 rounded-xl text-xs font-semibold transition flex items-center justify-center gap-2"
+                style="background: #1e3a5f; color: #60a5fa; border: 1px solid #1e3a5f;"
+                onmouseenter="this.style.background='#1d4ed820'"
+                onmouseleave="this.style.background='#1e3a5f'"
+                (click)="openTicketForm()">
+          <i class="fa-solid fa-ticket"></i> Crear Ticket
+        </button>
+
+        <div *ngIf="showTicketForm" class="flex flex-col gap-2">
+          <!-- Tipo de servicio -->
+          <div>
+            <label class="text-xs mb-1 block" style="color: #64748b;">Tipo de servicio *</label>
+            <select [(ngModel)]="ticketServiceId"
+                    class="w-full px-3 py-2 rounded-xl text-xs outline-none"
+                    style="background: #0f172a; border: 1px solid #334155; color: #e2e8f0;">
+              <option [value]="0" disabled>Seleccionar…</option>
+              <option *ngFor="let s of ticketServices" [value]="s.id">{{ s.name }}</option>
+            </select>
+          </div>
+
+          <!-- Prioridad -->
+          <div>
+            <label class="text-xs mb-1 block" style="color: #64748b;">Prioridad *</label>
+            <select [(ngModel)]="ticketPriorityId"
+                    class="w-full px-3 py-2 rounded-xl text-xs outline-none"
+                    style="background: #0f172a; border: 1px solid #334155; color: #e2e8f0;">
+              <option [value]="0" disabled>Seleccionar…</option>
+              <option *ngFor="let p of ticketPriorities" [value]="p.id">{{ p.name }}</option>
+            </select>
+          </div>
+
+          <!-- Técnico -->
+          <div>
+            <label class="text-xs mb-1 block" style="color: #64748b;">Técnico *</label>
+            <select [(ngModel)]="ticketTechId"
+                    class="w-full px-3 py-2 rounded-xl text-xs outline-none"
+                    style="background: #0f172a; border: 1px solid #334155; color: #e2e8f0;">
+              <option [value]="0" disabled>Seleccionar…</option>
+              <option *ngFor="let t of ticketTechs" [value]="t.id">{{ t.names }} {{ t.lastname }}</option>
+            </select>
+          </div>
+
+          <!-- Observación -->
+          <div>
+            <label class="text-xs mb-1 block" style="color: #64748b;">Observación *</label>
+            <textarea placeholder="Describe el problema…"
+                      [(ngModel)]="ticketObs"
+                      rows="3"
+                      class="w-full px-3 py-2 rounded-xl text-xs outline-none resize-none"
+                      style="background: #0f172a; border: 1px solid #334155; color: #e2e8f0;"></textarea>
+          </div>
+
+          <!-- Dirección (opcional) -->
+          <input type="text" placeholder="Dirección (opcional)"
+                 [(ngModel)]="ticketAddress"
+                 class="w-full px-3 py-2 rounded-xl text-xs outline-none"
+                 style="background: #0f172a; border: 1px solid #334155; color: #e2e8f0;" />
+
+          <!-- Cédula (opcional) -->
+          <input type="text" placeholder="Cédula (opcional)"
+                 [(ngModel)]="ticketCedula"
+                 class="w-full px-3 py-2 rounded-xl text-xs outline-none"
+                 style="background: #0f172a; border: 1px solid #334155; color: #e2e8f0;" />
+
+          <div class="flex gap-2">
+            <button class="flex-1 py-1.5 rounded-xl text-xs font-medium transition"
+                    style="background: #334155; color: #94a3b8;"
+                    (click)="showTicketForm = false">Cancelar</button>
+            <button class="flex-1 py-1.5 rounded-xl text-xs font-semibold transition"
+                    style="background: #10b981; color: #000;"
+                    [disabled]="savingTicket || !ticketFormValid"
+                    (click)="submitTicket()">
+              {{ savingTicket ? '…' : 'Crear' }}
+            </button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ── TAB NOTAS ──────────────────────────────────────────────── -->
+    <div *ngIf="activeTab === 'notes'" class="flex flex-col h-full">
+
+      <!-- Input nueva nota -->
+      <div class="px-4 py-3 border-b" style="border-color: #334155;">
+        <textarea [(ngModel)]="newNoteText"
+                  placeholder="Escribe una nota interna…"
+                  rows="3"
+                  class="w-full px-3 py-2 rounded-xl text-xs outline-none resize-none"
+                  style="background: #0f172a; border: 1px solid #334155; color: #e2e8f0;"></textarea>
+        <button class="mt-2 w-full py-2 rounded-xl text-xs font-semibold transition"
+                style="background: #10b981; color: #000;"
+                [disabled]="savingNote || !newNoteText.trim()"
+                (click)="addNote()">
+          {{ savingNote ? 'Guardando…' : '+ Agregar nota' }}
+        </button>
+      </div>
+
+      <!-- Lista de notas -->
+      <div class="flex-1 overflow-y-auto px-4 py-3 flex flex-col gap-3">
+        <div *ngIf="notes.length === 0" class="text-xs text-center py-8" style="color: #475569;">
+          Sin notas aún
+        </div>
+
+        <div *ngFor="let note of notes"
+             class="rounded-xl p-3 relative group"
+             style="background: #2d2600; border: 1px solid #f59e0b20;">
+          <div class="text-xs font-semibold mb-1" style="color: #fbbf24;">
+            {{ note.agent_name }}
+            <span class="font-normal ml-1 opacity-60">{{ note.created_at | date:'dd/MM HH:mm' }}</span>
+          </div>
+          <div class="text-xs leading-relaxed" style="color: #e2e8f0; white-space: pre-wrap;">{{ note.content }}</div>
+          <button class="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition
+                         w-6 h-6 rounded-full flex items-center justify-center"
+                  style="background: #2f0f0f; color: #ef4444;"
+                  (click)="deleteNote(note.id)">
+            <i class="fa-solid fa-trash text-xs"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── TAB ETIQUETAS ──────────────────────────────────────────── -->
+    <div *ngIf="activeTab === 'labels'" class="px-4 py-3">
+
+      <!-- Etiquetas de la conversación -->
+      <div class="mb-4">
+        <div class="text-xs font-semibold mb-2 uppercase tracking-wide" style="color: #64748b;">Etiquetas activas</div>
+        <div *ngIf="conversationLabels.length === 0" class="text-xs" style="color: #475569;">Sin etiquetas</div>
+        <div class="flex flex-wrap gap-1.5">
+          <span *ngFor="let label of conversationLabels"
+                class="flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium cursor-pointer"
+                [style.background]="label.color + '20'"
+                [style.color]="label.color"
+                [style.border]="'1px solid ' + label.color + '40'"
+                (click)="toggleLabel(label.id)">
+            {{ label.name }}
+            <i class="fa-solid fa-xmark text-xs opacity-60"></i>
+          </span>
+        </div>
+      </div>
+
+      <!-- Todas las etiquetas -->
+      <div>
+        <div class="text-xs font-semibold mb-2 uppercase tracking-wide" style="color: #64748b;">Agregar etiqueta</div>
+        <div class="flex flex-col gap-1.5">
+          <button *ngFor="let label of allLabels"
+                  class="flex items-center gap-2 px-3 py-2 rounded-xl text-xs transition text-left"
+                  [style.background]="hasLabel(label.id) ? label.color + '15' : '#0f172a'"
+                  [style.border]="'1px solid ' + (hasLabel(label.id) ? label.color + '40' : '#334155')"
+                  (click)="toggleLabel(label.id)">
+            <span class="w-3 h-3 rounded-full flex-shrink-0" [style.background]="label.color"></span>
+            <span [style.color]="hasLabel(label.id) ? label.color : '#e2e8f0'">{{ label.name }}</span>
+            <i *ngIf="hasLabel(label.id)" class="fa-solid fa-check ml-auto text-xs" [style.color]="label.color"></i>
+          </button>
+          <div *ngIf="allLabels.length === 0" class="text-xs" style="color: #475569;">
+            No hay etiquetas creadas. Créalas desde el panel de admin.
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+</div>

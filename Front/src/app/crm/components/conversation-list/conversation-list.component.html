@@ -1,0 +1,138 @@
+<div class="h-full flex flex-col min-h-0 border-r"
+     style="background: #1e293b; border-color: #334155;">
+
+  <!-- HEADER -->
+  <div class="px-4 pt-4 pb-3 border-b shrink-0" style="border-color: #334155;">
+
+    <!-- TITLE ROW -->
+    <div class="flex items-center justify-between mb-3">
+      <span class="text-sm font-bold" style="color: #e2e8f0;">Conversaciones</span>
+      <span class="text-xs px-2.5 py-1 rounded-full font-bold"
+            style="background: #10b98120; color: #10b981; border: 1px solid #10b98130;">
+        {{ filtered.length }}
+      </span>
+    </div>
+
+    <!-- SEARCH -->
+    <div class="relative mb-3">
+      <input type="search"
+             [(ngModel)]="searchQuery"
+             (ngModelChange)="applySearch()"
+             placeholder="Buscar por nombre o teléfono…"
+             class="w-full pl-9 pr-3 py-2 rounded-xl text-sm outline-none transition"
+             style="background: #0f172a; border: 1px solid #334155; color: #e2e8f0;"
+             onfocus="this.style.borderColor='#10b981'"
+             onblur="this.style.borderColor='#334155'" />
+      <i class="fa-solid fa-magnifying-glass absolute left-3 top-2.5 text-xs" style="color: #64748b;"></i>
+    </div>
+
+    <!-- FILTERS -->
+    <div class="flex gap-1.5 flex-wrap">
+      <button *ngFor="let tab of [
+        {id:'new',         label:'Nuevo',      color:'#10b981', bg:'#10b98120', border:'#10b98140'},
+        {id:'in_progress', label:'En curso',   color:'#60a5fa', bg:'#3b82f620', border:'#3b82f640'},
+        {id:'closed',      label:'Cerrado',    color:'#f87171', bg:'#ef444420', border:'#ef444430'},
+        {id:'all',         label:'Todos',      color:'#a78bfa', bg:'#8b5cf620', border:'#8b5cf640'}
+      ]"
+        class="px-3 py-1 rounded-xl text-xs font-semibold transition-all duration-200"
+        [style.background]="activeStatus === tab.id ? tab.bg : '#0f172a'"
+        [style.color]="activeStatus === tab.id ? tab.color : '#64748b'"
+        [style.border]="'1px solid ' + (activeStatus === tab.id ? tab.border : '#334155')"
+        (click)="changeStatus($any(tab.id))">
+        {{ tab.label }}
+      </button>
+    </div>
+
+  </div>
+
+  <!-- LIST -->
+  <div class="flex-1 min-h-0 overflow-y-auto">
+
+    <button *ngFor="let c of filtered; trackBy: trackByConversationId"
+            class="w-full text-left px-4 py-3 transition-all duration-150 border-b relative"
+            [style.borderColor]="'#1e293b'"
+            [style.background]="activeConversationId === c.id ? '#0f172a' : 'transparent'"
+            [style.borderLeft]="activeConversationId === c.id ? '3px solid #10b981' : '3px solid transparent'"
+            onmouseenter="if(this.style.borderLeft === '3px solid transparent') this.style.background='#0f172a22'"
+            onmouseleave="if(this.style.borderLeft === '3px solid transparent') this.style.background='transparent'"
+            (click)="selectConversation(c)">
+
+      <div class="flex gap-3 items-start">
+
+        <!-- AVATAR -->
+        <div class="relative flex-shrink-0">
+          <div class="h-10 w-10 rounded-full flex items-center justify-center font-bold text-sm"
+               style="background: linear-gradient(135deg, #1e3a5f 0%, #0f2f1f 100%);
+                      color: #10b981; border: 1.5px solid #334155;">
+            {{ getInitials(c.customer?.name || '') }}
+          </div>
+          <!-- Prioridad dot -->
+          <span *ngIf="c.priority && c.priority !== 'normal'"
+                class="absolute -top-0.5 -right-0.5 text-xs leading-none"
+                [title]="c.priority">
+            {{ priorityDot(c.priority) }}
+          </span>
+        </div>
+
+        <!-- INFO -->
+        <div class="flex-1 min-w-0">
+
+          <!-- NAME + META -->
+          <div class="flex justify-between items-center gap-2">
+            <span class="font-semibold text-sm truncate"
+                  [style.color]="activeConversationId === c.id ? '#f1f5f9' : '#cbd5e1'">
+              {{ c.customer?.name || 'Cliente' }}
+            </span>
+
+            <div class="flex items-center gap-1.5 flex-shrink-0">
+              <!-- UNREAD BADGE -->
+              <span *ngIf="c.unread_count && activeConversationId !== c.id"
+                    class="text-xs font-bold rounded-full min-w-[18px] h-[18px] px-1 flex items-center justify-center"
+                    style="background: #10b981; color: #000;">
+                {{ c.unread_count }}
+              </span>
+              <!-- HORA -->
+              <span *ngIf="c.last_message?.at" class="text-xs flex-shrink-0" style="color: #475569;">
+                {{ c.last_message.at | date:'HH:mm' }}
+              </span>
+            </div>
+          </div>
+
+          <!-- LAST MESSAGE -->
+          <div class="flex items-center gap-1.5 text-xs truncate mt-0.5" style="color: #64748b;">
+            <span class="truncate">{{ lastMessagePreview(c.last_message) }}</span>
+          </div>
+
+          <!-- FOOTER: status + agente -->
+          <div class="flex items-center gap-2 mt-1 flex-wrap">
+            <span class="text-xs font-medium px-1.5 py-0.5 rounded-md"
+                  [style.background]="c.status === 'new' ? '#10b98115' : c.status === 'in_progress' ? '#3b82f615' : '#64748b15'"
+                  [style.color]="c.status === 'new' ? '#10b981' : c.status === 'in_progress' ? '#60a5fa' : '#94a3b8'">
+              {{ getStatusLabel(c.status) }}
+            </span>
+
+            <span *ngIf="c.assigned_user"
+                  class="text-xs truncate max-w-[80px]"
+                  style="color: #64748b;">
+              <i class="fa-solid fa-user text-xs mr-0.5"></i>
+              {{ c.assigned_user.names }}
+            </span>
+          </div>
+
+        </div>
+      </div>
+    </button>
+
+    <!-- EMPTY STATE -->
+    <div *ngIf="!filtered || filtered.length === 0"
+         class="flex flex-col items-center justify-center py-16 gap-3">
+      <div class="text-4xl opacity-20">💬</div>
+      <div class="text-sm font-medium" style="color: #475569;">Sin conversaciones</div>
+      <div class="text-xs" style="color: #334155;">
+        {{ searchQuery ? 'Sin resultados para "' + searchQuery + '"' : 'Intenta cambiar el filtro' }}
+      </div>
+    </div>
+
+  </div>
+
+</div>

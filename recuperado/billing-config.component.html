@@ -1,0 +1,531 @@
+<div class="p-6 max-w-4xl mx-auto">
+
+  <!-- Tabs -->
+  <div class="flex gap-1 mb-6 border-b border-gray-200 dark:border-gray-700">
+    <button (click)="invoiceTab = false"
+            [class]="!invoiceTab ? 'px-4 py-2 text-sm font-medium text-blue-600 border-b-2 border-blue-600' : 'px-4 py-2 text-sm font-medium text-gray-500 hover:text-gray-700'">
+      Grupos de facturación
+    </button>
+    <button (click)="invoiceTab = true"
+            [class]="invoiceTab ? 'px-4 py-2 text-sm font-medium text-blue-600 border-b-2 border-blue-600' : 'px-4 py-2 text-sm font-medium text-gray-500 hover:text-gray-700'">
+      Plantilla de factura
+    </button>
+  </div>
+
+  <!-- ═══════════════ INVOICE CONFIG TAB ═══════════════ -->
+  <ng-container *ngIf="invoiceTab">
+    <div class="mb-6">
+      <h1 class="text-2xl font-bold text-gray-800 dark:text-white">Plantilla de factura</h1>
+      <p class="text-sm text-gray-500 dark:text-gray-400">
+        Personaliza los datos de tu empresa que aparecen en cada factura generada.
+      </p>
+    </div>
+
+    <div *ngIf="invoiceSuccess" class="flex items-center gap-2 p-4 mb-5 text-sm text-green-700 bg-green-50 rounded-lg dark:bg-green-900/20 dark:text-green-400">
+      {{ invoiceSuccess }}
+    </div>
+    <div *ngIf="invoiceError" class="flex items-center gap-2 p-4 mb-5 text-sm text-red-700 bg-red-50 rounded-lg dark:bg-red-900/20 dark:text-red-400">
+      {{ invoiceError }}
+    </div>
+
+    <div *ngIf="invoiceLoading" class="text-center py-10 text-gray-400">Cargando...</div>
+
+    <form *ngIf="!invoiceLoading" (ngSubmit)="saveInvoiceConfig()" class="space-y-5">
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+        <!-- Razon Social -->
+        <div>
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Razón Social</label>
+          <input type="text" [(ngModel)]="invoiceForm.invoice_business_name" name="invoice_business_name"
+                 class="w-full text-sm rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-800 dark:text-white px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+        </div>
+
+        <!-- NIT -->
+        <div>
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">NIT / Identificación</label>
+          <input type="text" [(ngModel)]="invoiceForm.invoice_nit" name="invoice_nit"
+                 class="w-full text-sm rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-800 dark:text-white px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+        </div>
+
+        <!-- Teléfono -->
+        <div>
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Teléfono</label>
+          <input type="text" [(ngModel)]="invoiceForm.invoice_phone" name="invoice_phone"
+                 class="w-full text-sm rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-800 dark:text-white px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+        </div>
+
+        <!-- Ciudad -->
+        <div>
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Ciudad / Municipio</label>
+          <input type="text" [(ngModel)]="invoiceForm.invoice_city" name="invoice_city"
+                 class="w-full text-sm rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-800 dark:text-white px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+        </div>
+
+        <!-- País -->
+        <div>
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">País</label>
+          <input type="text" [(ngModel)]="invoiceForm.invoice_country" name="invoice_country"
+                 class="w-full text-sm rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-800 dark:text-white px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+        </div>
+
+        <!-- Condición IVA -->
+        <div>
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Condición IVA</label>
+          <select [(ngModel)]="invoiceForm.invoice_iva_condition" name="invoice_iva_condition"
+                  class="w-full text-sm rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-800 dark:text-white px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+            <option value="No Aplica">No Aplica</option>
+            <option value="Responsable de IVA">Responsable de IVA</option>
+            <option value="No responsable de IVA">No responsable de IVA</option>
+            <option value="Gran Contribuyente">Gran Contribuyente</option>
+          </select>
+        </div>
+
+        <!-- Actividad Económica -->
+        <div class="md:col-span-2">
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Actividad Económica</label>
+          <input type="text" [(ngModel)]="invoiceForm.invoice_economic_activity" name="invoice_economic_activity"
+                 placeholder="Ej: 6110 - Actividades de telecomunicaciones alámbricas"
+                 class="w-full text-sm rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-800 dark:text-white px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+        </div>
+
+        <!-- Dirección -->
+        <div class="md:col-span-2">
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Dirección</label>
+          <input type="text" [(ngModel)]="invoiceForm.invoice_address" name="invoice_address"
+                 class="w-full text-sm rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-800 dark:text-white px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+        </div>
+
+        <!-- Logo upload -->
+        <div class="md:col-span-2">
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Logo de la empresa</label>
+
+          <!-- Preview -->
+          <div class="flex items-center gap-4 mb-3">
+            <div class="w-24 h-16 rounded-lg border border-gray-200 dark:border-gray-600 bg-white flex items-center justify-center overflow-hidden p-1">
+              <img *ngIf="invoiceForm.invoice_logo_url; else noLogo" [src]="invoiceForm.invoice_logo_url"
+                   class="h-full w-full object-contain" alt="Logo">
+              <ng-template #noLogo>
+                <svg class="w-8 h-8 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                </svg>
+              </ng-template>
+            </div>
+            <div>
+              <label class="cursor-pointer inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-blue-600 border border-blue-300 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-900/20 transition">
+                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/>
+                </svg>
+                <span>{{ logoUploading ? 'Subiendo...' : 'Subir logo' }}</span>
+                <input type="file" accept="image/png,image/jpeg,image/jpg" class="hidden" [disabled]="logoUploading"
+                       (change)="onLogoFileChange($event)">
+              </label>
+              <p class="text-xs text-gray-400 mt-1">JPG o PNG, máx. 2 MB.</p>
+              <p *ngIf="logoUploadError" class="text-xs text-red-500 mt-1">{{ logoUploadError }}</p>
+            </div>
+          </div>
+
+          <!-- URL manual como fallback -->
+          <input type="url" [(ngModel)]="invoiceForm.invoice_logo_url" name="invoice_logo_url"
+                 placeholder="O pega la URL del logo aquí"
+                 class="w-full text-sm rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-800 dark:text-white px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+        </div>
+
+        <!-- Métodos de pago -->
+        <div class="md:col-span-2">
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Información de pago</label>
+          <textarea [(ngModel)]="invoiceForm.invoice_payment_info" name="invoice_payment_info" rows="4"
+                    placeholder="- BANCOLOMBIA CTA AHO 47800013328&#10;- NEQUI 3022042294"
+                    class="w-full text-sm rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-800 dark:text-white px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-y"></textarea>
+          <p class="text-xs text-gray-400 mt-1">Aparece al pie de la factura. Usa saltos de línea para listar los medios de pago.</p>
+        </div>
+
+        <!-- Pie de página -->
+        <div class="md:col-span-2">
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Pie de página / Mensaje final</label>
+          <input type="text" [(ngModel)]="invoiceForm.invoice_footer" name="invoice_footer"
+                 placeholder="¡Gracias por preferirnos!"
+                 class="w-full text-sm rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-800 dark:text-white px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+        </div>
+
+      </div>
+
+      <div class="flex justify-end pt-2">
+        <button type="submit" [disabled]="invoiceSaving"
+                class="px-6 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-50 rounded-lg transition">
+          {{ invoiceSaving ? 'Guardando...' : 'Guardar plantilla' }}
+        </button>
+      </div>
+
+    </form>
+  </ng-container>
+
+  <!-- ═══════════════ BILLING GROUPS TAB ═══════════════ -->
+  <ng-container *ngIf="!invoiceTab">
+
+  <!-- Header -->
+  <div class="mb-6">
+    <h1 class="text-2xl font-bold text-gray-800 dark:text-white">Configuración de facturación</h1>
+    <p class="text-sm text-gray-500 dark:text-gray-400">
+      Define hasta 4 grupos de corte con su día, hora y si se ejecutan automáticamente.
+    </p>
+  </div>
+
+  <!-- Mensajes -->
+  <div *ngIf="successMsg"
+       class="flex items-center gap-2 p-4 mb-5 text-sm text-green-700 bg-green-50 rounded-lg dark:bg-green-900/20 dark:text-green-400">
+    <svg class="w-4 h-4 shrink-0" fill="currentColor" viewBox="0 0 20 20">
+      <path d="M10 .5a9.5 9.5 0 1 0 9.5 9.5A9.51 9.51 0 0 0 10 .5Zm3.707 8.207-4 4a1 1 0 0 1-1.414 0l-2-2a1 1 0 0 1 1.414-1.414L9 10.586l3.293-3.293a1 1 0 0 1 1.414 1.414Z"/>
+    </svg>
+    {{ successMsg }}
+  </div>
+  <div *ngIf="errorMsg"
+       class="flex items-center gap-2 p-4 mb-5 text-sm text-red-700 bg-red-50 rounded-lg dark:bg-red-900/20 dark:text-red-400">
+    {{ errorMsg }}
+  </div>
+
+  <!-- Loading -->
+  <div *ngIf="isLoading" class="flex justify-center py-16">
+    <svg class="w-8 h-8 animate-spin text-blue-600" fill="none" viewBox="0 0 24 24">
+      <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
+      <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"/>
+    </svg>
+  </div>
+
+  <!-- Grupos -->
+  <div *ngIf="!isLoading" class="space-y-4 mb-6">
+
+    <div *ngFor="let s of schedules; let i = index"
+         class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-6">
+
+      <div class="flex items-center justify-between mb-5">
+        <div class="flex items-center gap-3">
+          <div class="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center text-white font-bold text-sm">
+            {{ s.grupo }}
+          </div>
+          <div>
+            <span class="font-semibold text-gray-700 dark:text-gray-200">Grupo {{ s.grupo }}</span>
+            <span class="ml-2 text-xs px-2 py-0.5 rounded-full"
+                  [ngClass]="(groupUserCounts[s.grupo] ?? 0) > 0
+                    ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300'
+                    : 'bg-gray-100 text-gray-500 dark:bg-gray-700 dark:text-gray-400'">
+              {{ groupUserCounts[s.grupo] ?? 0 }} usuarios
+            </span>
+          </div>
+        </div>
+
+        <div class="flex items-center gap-4">
+          <!-- Toggle activo -->
+          <label class="flex items-center gap-2 cursor-pointer select-none">
+            <div class="relative">
+              <input type="checkbox" [(ngModel)]="s.active" class="sr-only">
+              <div [class]="s.active ? 'bg-blue-600' : 'bg-gray-300 dark:bg-gray-600'"
+                   class="block w-10 h-6 rounded-full transition-colors duration-200"
+                   (click)="s.active = !s.active">
+              </div>
+              <div [class]="s.active ? 'translate-x-4' : 'translate-x-0'"
+                   class="absolute left-1 top-1 w-4 h-4 rounded-full bg-white shadow transition-transform duration-200">
+              </div>
+            </div>
+            <span class="text-sm text-gray-600 dark:text-gray-300">{{ s.active ? 'Activo' : 'Inactivo' }}</span>
+          </label>
+
+          <button (click)="removeGroup(i)"
+                  [title]="(groupUserCounts[s.grupo] ?? 0) > 0 ? 'Trasladar usuarios y eliminar' : 'Eliminar grupo'"
+                  class="transition"
+                  [ngClass]="(groupUserCounts[s.grupo] ?? 0) > 0
+                    ? 'text-yellow-500 hover:text-yellow-700'
+                    : 'text-gray-400 hover:text-red-500'">
+            <svg *ngIf="(groupUserCounts[s.grupo] ?? 0) === 0" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+            </svg>
+            <!-- Ícono traslado cuando tiene usuarios -->
+            <svg *ngIf="(groupUserCounts[s.grupo] ?? 0) > 0" class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div>
+          <label class="block mb-1.5 text-sm font-medium text-gray-700 dark:text-gray-300">
+            Día del mes (1–28)
+          </label>
+          <select [(ngModel)]="s.billing_day"
+                  class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg bg-gray-50 dark:bg-gray-700 dark:border-gray-600 dark:text-white focus:ring-2 focus:ring-blue-500">
+            <option *ngFor="let d of days" [ngValue]="d">Día {{ d }}</option>
+          </select>
+        </div>
+
+        <div>
+          <label class="block mb-1.5 text-sm font-medium text-gray-700 dark:text-gray-300">
+            Hora de ejecución automática
+          </label>
+          <select [(ngModel)]="s.billing_hour"
+                  class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg bg-gray-50 dark:bg-gray-700 dark:border-gray-600 dark:text-white focus:ring-2 focus:ring-blue-500">
+            <option *ngFor="let h of hours" [ngValue]="h">{{ hourLabel(h) }}</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Trigger manual -->
+      <div class="mt-5 pt-4 border-t border-gray-100 dark:border-gray-700 flex items-center justify-between">
+        <p class="text-xs text-gray-400 dark:text-gray-500">
+          Ejecutar proceso de facturación manualmente — día <strong>{{ s.billing_day }}</strong> del mes que selecciones
+        </p>
+        <button (click)="openTrigger(s)"
+                class="flex items-center gap-2 px-4 py-2 text-xs font-medium text-white bg-green-600 rounded-lg hover:bg-green-700 transition">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/>
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+          </svg>
+          Ejecutar ahora
+        </button>
+      </div>
+    </div>
+
+    <!-- Vacío -->
+    <div *ngIf="schedules.length === 0"
+         class="text-center py-12 text-gray-400 dark:text-gray-500 bg-white dark:bg-gray-800 rounded-xl border border-dashed border-gray-200 dark:border-gray-700">
+      No hay grupos configurados. Agrega uno para comenzar.
+    </div>
+  </div>
+
+  <!-- Botones footer -->
+  <div *ngIf="!isLoading" class="flex items-center gap-4">
+    <button (click)="addGroup()" [disabled]="schedules.length >= maxGroups"
+            class="flex items-center gap-2 px-4 py-2.5 text-sm font-medium text-blue-600 bg-blue-50 rounded-lg hover:bg-blue-100 dark:bg-blue-900/20 dark:text-blue-400 dark:hover:bg-blue-900/40 disabled:opacity-40 disabled:cursor-not-allowed transition">
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+      </svg>
+      Agregar grupo
+    </button>
+
+    <button (click)="save()" [disabled]="isSaving"
+            class="flex items-center gap-2 px-5 py-2.5 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition ml-auto">
+      <svg *ngIf="!isSaving" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+      </svg>
+      <svg *ngIf="isSaving" class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
+        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"/>
+      </svg>
+      {{ isSaving ? 'Guardando...' : 'Guardar configuración' }}
+    </button>
+  </div>
+
+  </ng-container><!-- end billing groups tab -->
+</div>
+
+<!-- ═══ SECCIÓN: Cortes automáticos por mora ════════════════════════════════ -->
+<div class="mt-6 bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm p-6">
+
+  <div class="flex items-start justify-between mb-5">
+    <div>
+      <h2 class="text-base font-semibold text-gray-800 dark:text-white">Cortes automáticos por mora</h2>
+      <p class="text-sm text-gray-500 dark:text-gray-400 mt-0.5">
+        Suspende clientes con facturas vencidas más de N días. Se reactivan automáticamente al pagar.
+      </p>
+    </div>
+    <!-- Toggle -->
+    <button (click)="autoSuspendEnabled = !autoSuspendEnabled" type="button"
+            class="relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 focus:outline-none"
+            [ngClass]="autoSuspendEnabled ? 'bg-blue-600' : 'bg-gray-200 dark:bg-gray-600'">
+      <span class="pointer-events-none inline-block h-5 w-5 rounded-full bg-white shadow transform transition duration-200"
+            [ngClass]="autoSuspendEnabled ? 'translate-x-5' : 'translate-x-0'">
+      </span>
+    </button>
+  </div>
+
+  <!-- Stats cards -->
+  <div class="grid grid-cols-3 gap-3 mb-5">
+    <div class="bg-rose-50 dark:bg-rose-900/20 rounded-xl p-3 text-center border border-rose-100 dark:border-rose-800">
+      <p class="text-2xl font-bold text-rose-600 dark:text-rose-400">{{ autoSuspendStats.currently_suspended }}</p>
+      <p class="text-xs text-rose-500 dark:text-rose-400 mt-0.5">Suspendidos actualmente</p>
+    </div>
+    <div class="bg-amber-50 dark:bg-amber-900/20 rounded-xl p-3 text-center border border-amber-100 dark:border-amber-800">
+      <p class="text-2xl font-bold text-amber-600 dark:text-amber-400">{{ autoSuspendStats.suspended_today }}</p>
+      <p class="text-xs text-amber-500 dark:text-amber-400 mt-0.5">Suspendidos hoy</p>
+    </div>
+    <div class="bg-emerald-50 dark:bg-emerald-900/20 rounded-xl p-3 text-center border border-emerald-100 dark:border-emerald-800">
+      <p class="text-2xl font-bold text-emerald-600 dark:text-emerald-400">{{ autoSuspendStats.reactivated_today }}</p>
+      <p class="text-xs text-emerald-500 dark:text-emerald-400 mt-0.5">Reactivados hoy</p>
+    </div>
+  </div>
+
+  <!-- Config row -->
+  <div class="flex flex-col sm:flex-row sm:items-end gap-4">
+    <div class="flex-1 grid grid-cols-1 sm:grid-cols-2 gap-4">
+
+      <!-- Mínimo de facturas vencidas -->
+      <div>
+        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+          Facturas pendientes para suspender
+        </label>
+        <div class="flex items-center gap-2">
+          <input type="number" [(ngModel)]="autoSuspendDays" min="1" max="12"
+                 class="w-24 px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-blue-500">
+          <span class="text-sm text-gray-500 dark:text-gray-400">
+            factura(s) sin pagar
+          </span>
+        </div>
+      </div>
+
+      <!-- Día del mes para ejecutar -->
+      <div>
+        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+          Día del mes para ejecutar cortes
+        </label>
+        <div class="flex items-center gap-2">
+          <select [(ngModel)]="autoSuspendDay"
+                  class="w-28 px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-blue-500">
+            <option *ngFor="let d of days" [value]="d">Día {{ d }}</option>
+          </select>
+          <span class="text-sm text-gray-500 dark:text-gray-400">del mes</span>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="flex items-center gap-3">
+      <!-- Mensaje de éxito -->
+      <span *ngIf="autoSuspendMsg" class="text-sm font-medium text-emerald-600 dark:text-emerald-400">
+        {{ autoSuspendMsg }}
+      </span>
+
+      <!-- Ejecutar ahora -->
+      <button (click)="runAutoSuspendNow()" [disabled]="autoSuspendRunning"
+              class="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 disabled:opacity-50 transition">
+        <svg *ngIf="autoSuspendRunning" class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
+          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"/>
+        </svg>
+        <svg *ngIf="!autoSuspendRunning" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M5.25 5.653c0-.856.917-1.398 1.667-.986l11.54 6.347a1.125 1.125 0 0 1 0 1.972l-11.54 6.347a1.125 1.125 0 0 1-1.667-.986V5.653Z"/>
+        </svg>
+        {{ autoSuspendRunning ? 'Ejecutando...' : 'Ejecutar ahora' }}
+      </button>
+
+      <!-- Guardar -->
+      <button (click)="saveAutoSuspend()" [disabled]="autoSuspendSaving"
+              class="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 disabled:opacity-50 transition">
+        <svg *ngIf="autoSuspendSaving" class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
+          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"/>
+        </svg>
+        {{ autoSuspendSaving ? 'Guardando...' : 'Guardar' }}
+      </button>
+    </div>
+  </div>
+
+  <!-- Info box -->
+  <div class="mt-4 flex items-start gap-2 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-xl border border-blue-100 dark:border-blue-800">
+    <svg class="w-4 h-4 text-blue-500 shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+      <path stroke-linecap="round" stroke-linejoin="round" d="m11.25 11.25.041-.02a.75.75 0 0 1 1.063.852l-.708 2.836a.75.75 0 0 0 1.063.853l.041-.021M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9-3.75h.008v.008H12V8.25Z"/>
+    </svg>
+    <p class="text-xs text-blue-700 dark:text-blue-300">
+      El proceso corre el día del mes configurado a las 7:00 AM. Se suspende todo cliente con N o más facturas mensuales sin pagar,
+      y en el mismo proceso se reactivan los que ya saldaron su deuda. Cada 4 minutos también se revisa si algún cliente suspendido ya pagó y se reactiva de inmediato.
+    </p>
+  </div>
+
+</div>
+
+<!-- ═══ MODAL: Ejecutar proceso ════════════════════════════════════════════ -->
+<div *ngIf="triggerModal"
+     class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4"
+     (click)="triggerModal = false">
+  <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-xl w-full max-w-sm p-6" (click)="$event.stopPropagation()">
+
+    <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-1">
+      Ejecutar proceso — Grupo {{ triggerGrupo }}
+    </h3>
+    <p class="text-xs text-gray-400 mb-5">
+      El día de corte configurado es <strong>{{ triggerDay }}</strong>. Selecciona el mes y año de la factura.
+    </p>
+
+    <div class="grid grid-cols-2 gap-3 mb-5">
+      <div>
+        <label class="block text-xs font-medium text-gray-500 mb-1">Mes</label>
+        <select [(ngModel)]="triggerMonth"
+                class="w-full px-3 py-2 text-sm border border-gray-200 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-blue-500">
+          <option *ngFor="let m of months" [ngValue]="m.v">{{ m.l }}</option>
+        </select>
+      </div>
+      <div>
+        <label class="block text-xs font-medium text-gray-500 mb-1">Año</label>
+        <select [(ngModel)]="triggerYear"
+                class="w-full px-3 py-2 text-sm border border-gray-200 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-blue-500">
+          <option *ngFor="let y of years" [ngValue]="y">{{ y }}</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 text-xs rounded-lg px-3 py-2 mb-5">
+      Se generarán facturas con fecha <strong>{{ triggerDay }}/{{ triggerMonth }}/{{ triggerYear }}</strong>
+    </div>
+
+    <div class="flex gap-3 justify-end">
+      <button (click)="triggerModal = false"
+              class="px-4 py-2 text-sm text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition">
+        Cancelar
+      </button>
+      <button (click)="confirmTrigger()" [disabled]="isTriggerBusy"
+              class="px-4 py-2 text-sm font-medium text-white bg-green-600 hover:bg-green-700 disabled:opacity-50 rounded-lg flex items-center gap-2 transition">
+        <svg *ngIf="isTriggerBusy" class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
+          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"/>
+        </svg>
+        {{ isTriggerBusy ? 'Ejecutando...' : 'Confirmar' }}
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ MODAL: Trasladar usuarios ══════════════════════════════════════════ -->
+<div *ngIf="transferModal"
+     class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4"
+     (click)="transferModal = false">
+  <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-xl w-full max-w-sm p-6" (click)="$event.stopPropagation()">
+
+    <div class="flex items-center gap-3 mb-4">
+      <div class="w-10 h-10 rounded-full bg-yellow-100 flex items-center justify-center shrink-0">
+        <svg class="w-5 h-5 text-yellow-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
+        </svg>
+      </div>
+      <div>
+        <h3 class="text-base font-semibold text-gray-900 dark:text-white">Grupo con usuarios</h3>
+        <p class="text-xs text-gray-500">El grupo {{ transferFrom }} tiene {{ groupUserCounts[transferFrom] ?? 0 }} usuario(s). Traslada antes de eliminar.</p>
+      </div>
+    </div>
+
+    <div class="mb-5">
+      <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Trasladar al grupo</label>
+      <select [(ngModel)]="transferTo"
+              class="w-full px-3 py-2 text-sm border border-gray-200 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-blue-500">
+        <option [ngValue]="null" disabled>Seleccionar grupo destino</option>
+        <option *ngFor="let s of otherGroups(transferFrom)" [ngValue]="s.grupo">
+          Grupo {{ s.grupo }} ({{ groupUserCounts[s.grupo] ?? 0 }} usuarios)
+        </option>
+      </select>
+    </div>
+
+    <div class="flex gap-3 justify-end">
+      <button (click)="transferModal = false; pendingRemoveIndex = -1"
+              class="px-4 py-2 text-sm text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition">
+        Cancelar
+      </button>
+      <button (click)="confirmTransfer()" [disabled]="!transferTo || isTransferBusy"
+              class="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-50 rounded-lg flex items-center gap-2 transition">
+        <svg *ngIf="isTransferBusy" class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
+          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"/>
+        </svg>
+        {{ isTransferBusy ? 'Trasladando...' : 'Trasladar y eliminar' }}
+      </button>
+    </div>
+  </div>
+</div>

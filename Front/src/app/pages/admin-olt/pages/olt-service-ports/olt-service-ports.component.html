@@ -1,0 +1,131 @@
+<div class="p-6 max-w-5xl mx-auto space-y-6">
+
+  <!-- Header -->
+  <div>
+    <h1 class="text-xl font-bold text-gray-800 dark:text-white">Service Ports</h1>
+    <p class="text-sm text-gray-500 dark:text-gray-400 mt-0.5">Consulta los service-ports asignados a una ONT específica.</p>
+  </div>
+
+  <!-- Selectors row -->
+  <div class="flex flex-col sm:flex-row gap-3">
+
+    <!-- OLT selector -->
+    <div class="flex-1">
+      <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1 uppercase tracking-wide">OLT</label>
+      <select [(ngModel)]="selectedOltId" (ngModelChange)="onOltChange()"
+              [disabled]="loadingOlts"
+              class="w-full text-sm px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500">
+        <option [ngValue]="null">{{ loadingOlts ? 'Cargando...' : 'Seleccionar OLT' }}</option>
+        <option *ngFor="let olt of olts" [ngValue]="olt.id">{{ olt.name }}</option>
+      </select>
+    </div>
+
+    <!-- ONT selector -->
+    <div class="flex-1">
+      <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1 uppercase tracking-wide">ONT</label>
+      <select [(ngModel)]="selectedOnt" (ngModelChange)="onOntChange()"
+              [disabled]="!selectedOltId || loadingOnts || onts.length === 0"
+              class="w-full text-sm px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500">
+        <option [ngValue]="null">
+          {{ !selectedOltId ? 'Selecciona una OLT primero' : loadingOnts ? 'Cargando ONTs...' : 'Seleccionar ONT' }}
+        </option>
+        <option *ngFor="let o of onts" [ngValue]="o">
+          {{ o.fsp }} · {{ o.description || o.serial || 'ONT ' + o.ont_id }}
+        </option>
+      </select>
+    </div>
+
+    <!-- Refresh -->
+    <div class="flex items-end">
+      <button (click)="loadPorts()" [disabled]="!selectedOnt || loadingPorts"
+              class="flex items-center gap-1.5 px-3 py-2 text-sm bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white rounded-lg transition-colors h-[38px]">
+        <svg *ngIf="!loadingPorts" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182m0-4.991v4.99"/>
+        </svg>
+        <svg *ngIf="loadingPorts" class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
+          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/>
+        </svg>
+        Consultar
+      </button>
+    </div>
+  </div>
+
+  <!-- Placeholder -->
+  <div *ngIf="!selectedOnt"
+       class="flex flex-col items-center justify-center py-20 text-gray-400">
+    <svg class="w-14 h-14 mb-3 opacity-40" fill="none" viewBox="0 0 24 24" stroke-width="1" stroke="currentColor">
+      <path stroke-linecap="round" stroke-linejoin="round" d="M7.5 21 3 16.5m0 0L7.5 12M3 16.5h13.5m0-13.5L21 7.5m0 0L16.5 12M21 7.5H7.5"/>
+    </svg>
+    <p class="text-sm">Selecciona una OLT y una ONT para ver sus service-ports.</p>
+  </div>
+
+  <!-- Loading ports -->
+  <div *ngIf="loadingPorts" class="space-y-3 animate-pulse">
+    <div *ngFor="let i of [1,2,3]" class="h-14 bg-gray-200 dark:bg-gray-700 rounded-xl"></div>
+  </div>
+
+  <!-- Results -->
+  <ng-container *ngIf="!loadingPorts && selectedOnt && ports !== null">
+
+    <!-- ONT banner -->
+    <div class="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-xl px-5 py-3 flex items-center gap-3">
+      <svg class="w-5 h-5 text-blue-600 dark:text-blue-400 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M8.288 15.038a5.25 5.25 0 0 1 7.424 0M5.106 11.856c3.807-3.808 9.98-3.808 13.788 0M1.924 8.674c5.565-5.565 14.587-5.565 20.152 0M12.53 18.22l-.53.53-.53-.53a.75.75 0 0 1 1.06 0Z"/>
+      </svg>
+      <div class="text-sm">
+        <span class="font-semibold text-blue-700 dark:text-blue-300">{{ ontLabel }}</span>
+        <span class="text-blue-500 dark:text-blue-400 ml-2">{{ ports.length }} service-port(s)</span>
+      </div>
+    </div>
+
+    <!-- Empty -->
+    <div *ngIf="ports.length === 0"
+         class="flex flex-col items-center justify-center py-12 text-gray-400">
+      <svg class="w-10 h-10 mb-2 opacity-40" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/>
+      </svg>
+      <p class="text-sm">Esta ONT no tiene service-ports asignados.</p>
+    </div>
+
+    <!-- Table -->
+    <div *ngIf="ports.length > 0" class="overflow-x-auto rounded-xl border border-gray-200 dark:border-gray-700">
+      <table class="w-full text-sm">
+        <thead class="bg-gray-50 dark:bg-gray-800 text-xs uppercase text-gray-500 dark:text-gray-400">
+          <tr>
+            <th class="px-4 py-3 text-left">Índice SP</th>
+            <th class="px-4 py-3 text-left">VLAN</th>
+            <th class="px-4 py-3 text-left">FSP</th>
+            <th class="px-4 py-3 text-left">ONT ID</th>
+            <th class="px-4 py-3 text-left">Descripción</th>
+            <th class="px-4 py-3 text-left">Estado</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-gray-100 dark:divide-gray-700 bg-white dark:bg-gray-900">
+          <tr *ngFor="let sp of ports" class="hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
+            <td class="px-4 py-3">
+              <span class="font-mono text-xs font-semibold bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 px-2 py-1 rounded">
+                {{ sp.index ?? sp.sp_index ?? '—' }}
+              </span>
+            </td>
+            <td class="px-4 py-3 text-xs font-mono text-gray-700 dark:text-gray-300">{{ sp.vlan ?? '—' }}</td>
+            <td class="px-4 py-3">
+              <span class="font-mono text-xs bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 px-2 py-1 rounded">
+                {{ sp.fsp ?? selectedOnt?.fsp ?? '—' }}
+              </span>
+            </td>
+            <td class="px-4 py-3 text-xs text-gray-500 dark:text-gray-400">{{ sp.ont_id ?? selectedOnt?.ont_id }}</td>
+            <td class="px-4 py-3 text-xs text-gray-600 dark:text-gray-300">{{ sp.description ?? sp.desc ?? '—' }}</td>
+            <td class="px-4 py-3">
+              <span class="px-2 py-0.5 text-xs rounded-full font-medium"
+                    [ngClass]="(sp.status === 'online' || sp.admin_state === 'up') ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' : 'bg-gray-100 text-gray-500 dark:bg-gray-700 dark:text-gray-400'">
+                {{ sp.status ?? sp.admin_state ?? 'activo' }}
+              </span>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </ng-container>
+
+</div>

@@ -1,0 +1,161 @@
+<!-- ROOT -->
+<div class="crm-mobile-root h-screen flex flex-col" style="font-family:'Inter',sans-serif;">
+
+  <!-- ══════════════════════ TOP NAV BAR ══════════════════════ -->
+  <div class="shrink-0 flex items-center gap-3 px-4 py-2.5 border-b"
+       style="background: #1e293b; border-color: #334155;">
+
+    <!-- LOGO / TÍTULO -->
+    <div class="flex items-center gap-2 mr-2">
+      <div class="w-7 h-7 rounded-lg flex items-center justify-center"
+           style="background: linear-gradient(135deg, #10b981, #059669);">
+        <i class="fa-brands fa-whatsapp text-white text-sm"></i>
+      </div>
+      <span class="text-sm font-bold" style="color: #e2e8f0;">Bandeja CRM</span>
+    </div>
+
+    <!-- TABS: INBOX / DASHBOARD -->
+    <div class="flex gap-1">
+      <button class="px-3 py-1.5 rounded-xl text-xs font-semibold transition flex items-center gap-1.5"
+              [style.background]="mainView === 'inbox' ? '#10b98120' : 'transparent'"
+              [style.color]="mainView === 'inbox' ? '#10b981' : '#64748b'"
+              [style.border]="mainView === 'inbox' ? '1px solid #10b98140' : '1px solid transparent'"
+              (click)="setView('inbox')">
+        <i class="fa-solid fa-inbox text-xs"></i> Inbox
+      </button>
+
+      <button class="px-3 py-1.5 rounded-xl text-xs font-semibold transition flex items-center gap-1.5"
+              [style.background]="mainView === 'dashboard' ? '#3b82f620' : 'transparent'"
+              [style.color]="mainView === 'dashboard' ? '#60a5fa' : '#64748b'"
+              [style.border]="mainView === 'dashboard' ? '1px solid #3b82f640' : '1px solid transparent'"
+              (click)="setView('dashboard')">
+        <i class="fa-solid fa-chart-line text-xs"></i> Dashboard
+      </button>
+    </div>
+
+    <!-- SPACER -->
+    <div class="flex-1"></div>
+
+    <!-- ACCIONES -->
+    <div class="flex items-center gap-2">
+
+      <!-- RECARGAR -->
+      <button class="w-8 h-8 flex items-center justify-center rounded-full transition"
+              style="background: #334155; color: #94a3b8;"
+              title="Recargar inbox"
+              (click)="loadInbox()">
+        <i class="fa-solid fa-rotate-right text-sm"></i>
+      </button>
+
+      <!-- NUEVA CONVERSACIÓN -->
+      <button class="w-8 h-8 flex items-center justify-center rounded-full transition"
+              style="background: #10b981; color: #fff;"
+              title="Nueva conversación"
+              (click)="showNewConversationModal = true">
+        <i class="fa-solid fa-plus text-sm"></i>
+      </button>
+
+      <!-- BROADCAST -->
+      <button class="px-3 py-1.5 rounded-xl text-xs font-semibold transition flex items-center gap-1.5"
+              style="background: #334155; color: #94a3b8; border: 1px solid #475569;"
+              onmouseenter="this.style.background='#475569'; this.style.color='#e2e8f0'"
+              onmouseleave="this.style.background='#334155'; this.style.color='#94a3b8'"
+              title="Mensaje masivo"
+              (click)="showBroadcastModal = true">
+        <i class="fa-solid fa-bullhorn text-xs"></i>
+        <span class="hidden sm:inline">Broadcast</span>
+      </button>
+
+      <!-- DARK/LIGHT -->
+      <button class="w-8 h-8 flex items-center justify-center rounded-full transition"
+              style="background: #334155; color: #94a3b8;"
+              title="Cambiar tema"
+              (click)="themeService.toggle()">
+        <i class="fa-solid text-sm"
+           [ngClass]="themeService.isDark() ? 'fa-sun' : 'fa-moon'"></i>
+      </button>
+
+    </div>
+  </div>
+
+  <!-- ══════════════════════ MAIN CONTENT ══════════════════════ -->
+  <div class="flex-1 min-h-0 overflow-hidden">
+
+    <!-- DASHBOARD VIEW -->
+    <ng-container *ngIf="mainView === 'dashboard'">
+      <app-crm-dashboard class="block h-full"></app-crm-dashboard>
+    </ng-container>
+
+    <!-- INBOX VIEW -->
+    <ng-container *ngIf="mainView === 'inbox'">
+      <div class="h-full flex overflow-hidden min-h-0 relative">
+
+        <!-- 📋 LISTA DE CONVERSACIONES -->
+        <div class="absolute md:relative inset-0 md:inset-auto
+                    w-full md:w-96
+                    h-full min-h-0
+                    transition-all duration-400 ease-in-out
+                    will-change-transform will-change-opacity"
+             [class.translate-x-0]="mobileView === 'list' || !isMobile"
+             [class.-translate-x-full]="mobileView === 'chat' && isMobile"
+             [class.opacity-100]="mobileView === 'list' || !isMobile"
+             [class.opacity-0]="mobileView === 'chat' && isMobile"
+             [class.pointer-events-none]="mobileView === 'chat' && isMobile">
+          <app-conversation-list
+            [conversations]="inbox"
+            [activeConversationId]="activeConversationId"
+            [activeStatus]="inboxStatus"
+            (openChat)="openChat($event)"
+            (statusChange)="setStatus($event)">
+          </app-conversation-list>
+        </div>
+
+        <!-- 💬 CHAT -->
+        <div class="absolute md:relative inset-0 md:inset-auto
+                    w-full flex-1
+                    h-full min-h-0
+                    transition-all duration-400 ease-in-out
+                    will-change-transform will-change-opacity"
+             [class.translate-x-full]="mobileView === 'list' && isMobile"
+             [class.translate-x-0]="mobileView === 'chat' || !isMobile"
+             [class.opacity-0]="mobileView === 'list' && isMobile"
+             [class.opacity-100]="mobileView === 'chat' || !isMobile"
+             [class.pointer-events-none]="mobileView === 'list' && isMobile"
+             style="background: #0f172a;">
+          <app-chat-window
+            class="h-full block"
+            [conversationId]="activeConversationId"
+            (conversationClosed)="onConversationClosed()"
+            (openTransfer)="openTransfer()"
+            (back)="backToList()">
+          </app-chat-window>
+        </div>
+
+        <!-- 🔁 MODAL TRANSFERIR -->
+        <app-transfer-conversation-modal
+          *ngIf="showTransferModal"
+          [conversationId]="activeConversationId!"
+          (closed)="onTransferClosed($event)">
+        </app-transfer-conversation-modal>
+
+      </div>
+    </ng-container>
+
+  </div>
+
+</div>
+
+<!-- ══════════════════════ MODALES GLOBALES ══════════════════════ -->
+
+<!-- BROADCAST -->
+<app-crm-broadcast-modal
+  *ngIf="showBroadcastModal"
+  (closed)="showBroadcastModal = false">
+</app-crm-broadcast-modal>
+
+<!-- NUEVA CONVERSACIÓN -->
+<app-crm-new-conversation-modal
+  *ngIf="showNewConversationModal"
+  (closed)="showNewConversationModal = false"
+  (created)="onConversationCreated($event); showNewConversationModal = false">
+</app-crm-new-conversation-modal>

@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>⚙️ Parametrización</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+
+<body class="bg-gray-200 min-h-screen flex items-center justify-center p-4">
+
+  <!-- Contenedor: ocupa todo el ancho en móvil, limitado en desktop -->
+  <div class="bg-white rounded-xl shadow-xl w-full max-w-full sm:max-w-3xl p-6 sm:p-10">
+
+    <!-- Tabs -->
+    <div class="flex border-b mb-6 gap-4 overflow-x-auto text-base font-semibold">
+      <button class="tab-btn px-3 py-2 border-b-2 border-blue-600 text-blue-600" data-tab="marcas">Marcas</button>
+      <button class="tab-btn px-3 py-2 text-gray-500 hover:text-blue-600" data-tab="categorias">Categorías</button>
+      <button class="tab-btn px-3 py-2 text-gray-500 hover:text-blue-600" data-tab="tallas">Tallas</button>
+      <button class="tab-btn px-3 py-2 text-gray-500 hover:text-blue-600" data-tab="colores">Colores</button>
+    </div>
+
+    <!-- Controles -->
+    <div class="flex flex-col gap-4 mb-6">
+      
+      <!-- Select + Icono -->
+      <div class="flex items-center gap-3">
+        <select class="w-28 border rounded px-3 py-2 text-lg">
+          <option>15</option>
+          <option>30</option>
+          <option>50</option>
+        </select>
+        <button class="p-3 border rounded hover:bg-gray-100">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16m-7 6h7"/>
+          </svg>
+        </button>
+      </div>
+
+      <!-- Botón Nuevo -->
+      <button class="w-full px-4 py-4 bg-blue-600 text-white text-lg rounded-lg hover:bg-blue-700">
+        + Nuevo
+      </button>
+
+      <!-- Input Buscar -->
+      <input type="text" placeholder="Buscar marcas..." 
+             class="w-full border rounded px-4 py-3 text-lg focus:ring focus:ring-blue-300">
+
+    </div>
+
+    <!-- Tabla -->
+    <div class="overflow-x-auto">
+      <table class="w-full text-lg text-left border rounded-lg">
+        <thead class="bg-gray-100 text-gray-600">
+          <tr>
+            <th class="px-4 py-3">ID</th>
+            <th class="px-4 py-3">Nombre</th>
+            <th class="px-4 py-3">Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td colspan="3" class="px-4 py-6 text-center text-gray-500">
+              Ningún registro disponible
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Paginador -->
+    <div class="flex flex-col items-center justify-center mt-6 text-lg text-gray-600 gap-3">
+      <span>Mostrando 0 registros</span>
+      <div class="flex space-x-3">
+        <button class="px-3 py-2 border rounded-lg hover:bg-gray-100">&larr;</button>
+        <button class="px-3 py-2 border rounded-lg hover:bg-gray-100">&rarr;</button>
+      </div>
+    </div>
+
+  </div>
+
+</body>
+</html>

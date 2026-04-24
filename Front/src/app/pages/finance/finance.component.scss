@@ -1,0 +1,57 @@
+.modal-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+  }
+
+  .hidden {
+    display: none;
+  }
+  
+  .border-b {
+    border-bottom-width: 0;
+}
+
+.table-container {
+  width: 100%;
+}
+
+@media (min-width: 640px) {
+  .table-container {
+      width: 640px; /* Ancho mínimo para pantallas más grandes */
+  }
+}
+
+.table {
+  width: 100%;
+}
+
+/* Estilo personalizado para el tooltip */
+/* Estilo base para el tooltip */
+.tooltip {
+  position: absolute;
+  z-index: 10;
+  background-color: #333;
+  color: #fff;
+  padding: 5px 10px;
+  border-radius: 5px;
+  top: -30px;
+  left: calc(100% + 10px);
+  overflow: hidden;
+  transition: width 0.3s ease;
+}
+
+/* Estilo para el tooltip cuando está oculto */
+.tooltip[style='0px'] {
+  width: 0;
+  padding: 0;
+}
+
+
+

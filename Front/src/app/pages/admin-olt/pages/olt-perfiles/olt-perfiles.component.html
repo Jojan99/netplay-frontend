@@ -1,0 +1,119 @@
+<div class="p-6 max-w-5xl mx-auto space-y-6">
+
+  <!-- Header -->
+  <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+    <div>
+      <h1 class="text-xl font-bold text-gray-800 dark:text-white">Perfiles ONT</h1>
+      <p class="text-sm text-gray-500 dark:text-gray-400 mt-0.5">Line profiles y service profiles configurados en la OLT.</p>
+    </div>
+    <div class="flex items-center gap-2 flex-wrap">
+      <select [(ngModel)]="selectedOltId" (ngModelChange)="onOltChange()"
+              [disabled]="loadingOlts"
+              class="text-sm px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500">
+        <option [ngValue]="null">{{ loadingOlts ? 'Cargando...' : 'Seleccionar OLT' }}</option>
+        <option *ngFor="let olt of olts" [ngValue]="olt.id">{{ olt.name }}</option>
+      </select>
+      <button (click)="syncProfiles()" [disabled]="!selectedOltId || syncing"
+              class="flex items-center gap-1.5 px-3 py-2 text-sm bg-purple-600 hover:bg-purple-700 disabled:opacity-50 text-white rounded-lg transition-colors">
+        <svg *ngIf="!syncing" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182m0-4.991v4.99"/>
+        </svg>
+        <svg *ngIf="syncing" class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
+          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/>
+        </svg>
+        {{ syncing ? 'Sincronizando...' : 'Sincronizar desde OLT' }}
+      </button>
+    </div>
+  </div>
+
+  <!-- No OLT -->
+  <div *ngIf="!selectedOltId && !loadingOlts"
+       class="flex flex-col items-center justify-center py-20 text-gray-400">
+    <svg class="w-14 h-14 mb-3 opacity-40" fill="none" viewBox="0 0 24 24" stroke-width="1" stroke="currentColor">
+      <path stroke-linecap="round" stroke-linejoin="round" d="M9 4.5v15m6-15v15m-10.875 0h15.75c.621 0 1.125-.504 1.125-1.125V5.625c0-.621-.504-1.125-1.125-1.125H4.125C3.504 4.5 3 5.004 3 5.625v12.75c0 .621.504 1.125 1.125 1.125Z"/>
+    </svg>
+    <p class="text-sm">Selecciona una OLT para ver sus perfiles.</p>
+  </div>
+
+  <!-- Loading -->
+  <div *ngIf="loadingProfiles" class="space-y-3 animate-pulse">
+    <div *ngFor="let i of [1,2,3]" class="h-16 bg-gray-200 dark:bg-gray-700 rounded-xl"></div>
+  </div>
+
+  <!-- Content -->
+  <ng-container *ngIf="!loadingProfiles && selectedOltId">
+
+    <div *ngIf="lastSynced" class="text-xs text-gray-400">
+      Última sincronización: {{ lastSynced | date:'dd/MM/yyyy HH:mm' }}
+    </div>
+
+    <div *ngIf="lineProfiles.length === 0 && srvProfiles.length === 0"
+         class="flex flex-col items-center justify-center py-16 text-gray-400">
+      <svg class="w-10 h-10 mb-2 opacity-40" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 3.75h.008v.008H12v-.008Z"/>
+      </svg>
+      <p class="text-sm font-medium">No hay perfiles sincronizados</p>
+      <p class="text-xs mt-1">Haz clic en "Sincronizar desde OLT" para obtenerlos.</p>
+    </div>
+
+    <div class="grid sm:grid-cols-2 gap-6">
+
+      <!-- Line Profiles -->
+      <div *ngIf="lineProfiles.length > 0">
+        <div class="flex items-center gap-2 mb-3">
+          <span class="w-2.5 h-2.5 rounded-full bg-blue-500"></span>
+          <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300">Line Profiles</h3>
+          <span class="text-xs text-gray-400">({{ lineProfiles.length }})</span>
+        </div>
+        <div class="overflow-x-auto rounded-xl border border-gray-200 dark:border-gray-700">
+          <table class="w-full text-sm">
+            <thead class="bg-gray-50 dark:bg-gray-800 text-xs uppercase text-gray-500 dark:text-gray-400">
+              <tr>
+                <th class="px-4 py-3 text-left">ID</th>
+                <th class="px-4 py-3 text-left">Nombre</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-100 dark:divide-gray-700 bg-white dark:bg-gray-900">
+              <tr *ngFor="let p of lineProfiles" class="hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
+                <td class="px-4 py-3">
+                  <span class="font-mono text-xs bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 px-2 py-1 rounded">{{ p.profile_id }}</span>
+                </td>
+                <td class="px-4 py-3 text-gray-700 dark:text-gray-300">{{ p.profile_name }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Srv Profiles -->
+      <div *ngIf="srvProfiles.length > 0">
+        <div class="flex items-center gap-2 mb-3">
+          <span class="w-2.5 h-2.5 rounded-full bg-purple-500"></span>
+          <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300">Service Profiles</h3>
+          <span class="text-xs text-gray-400">({{ srvProfiles.length }})</span>
+        </div>
+        <div class="overflow-x-auto rounded-xl border border-gray-200 dark:border-gray-700">
+          <table class="w-full text-sm">
+            <thead class="bg-gray-50 dark:bg-gray-800 text-xs uppercase text-gray-500 dark:text-gray-400">
+              <tr>
+                <th class="px-4 py-3 text-left">ID</th>
+                <th class="px-4 py-3 text-left">Nombre</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-100 dark:divide-gray-700 bg-white dark:bg-gray-900">
+              <tr *ngFor="let p of srvProfiles" class="hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
+                <td class="px-4 py-3">
+                  <span class="font-mono text-xs bg-purple-50 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 px-2 py-1 rounded">{{ p.profile_id }}</span>
+                </td>
+                <td class="px-4 py-3 text-gray-700 dark:text-gray-300">{{ p.profile_name }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
+  </ng-container>
+
+</div>

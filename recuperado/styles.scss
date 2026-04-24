@@ -1,0 +1,182 @@
+@use '@angular/material' as mat;
+// Plus imports for other components in your app.
+
+// Include the common styles for Angular Material. We include this here so that you only
+// have to load a single css file for Angular Material in your app.
+// Be sure that you only ever include this mixin once!
+@include mat.core();
+
+.message-row {
+  display: flex;
+  margin: 4px 0;
+}
+
+.message-row.me {
+  justify-content: flex-end;
+}
+
+/* BURBUJA */
+.bubble {
+  background: #ffffff;
+  border-radius: 7.5px;
+  padding: 6px 7px 6px 9px;
+  max-width: 65%;
+  display: inline-flex;
+  align-items: flex-end;
+  gap: 6px;
+  font-size: 14px;
+  line-height: 1.34;
+  box-shadow: 0 1px 0.5px rgba(0,0,0,.13);
+}
+
+/* AGENTE (verde WhatsApp REAL) */
+.message-row.me .bubble {
+  background: #dcf8c6;
+}
+
+/* TEXTO */
+.bubble-text {
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+/* META */
+.bubble-meta {
+  font-size: 11px;
+  color: #667781;
+  white-space: nowrap;
+}
+
+/* CHECK AZUL */
+.message-row.me .bubble-meta span:last-child {
+  color: #53bdeb;
+}
+
+/* MEDIA */
+.bubble-media {
+  max-width: 240px;
+  max-height: 240px;
+  border-radius: 8px;
+}
+
+.bubble-video-wrapper {
+  position: relative;
+  width: 240px;
+  height: 240px;
+  border-radius: 8px;
+  overflow: hidden;
+  background: #000;
+}
+
+.bubble-video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* Overlay play */
+.video-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  background: rgba(0,0,0,.25);
+}
+
+.video-icon {
+  font-size: 42px;
+  color: #fff;
+}
+
+/* Botón fullscreen */
+.video-fullscreen {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  background: rgba(0,0,0,.6);
+  color: #fff;
+  font-size: 14px;
+  padding: 4px 6px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+/* Hora */
+.video-duration {
+  position: absolute;
+  bottom: 6px;
+  right: 6px;
+  background: rgba(0,0,0,.6);
+  color: #fff;
+  font-size: 11px;
+  padding: 2px 6px;
+  border-radius: 10px;
+}
+
+
+/* AUDIO */
+.bubble-audio {
+  width: 240px;
+}
+
+
+/* Estilos generales */
+::-webkit-scrollbar {
+    width: 6px; /* Ancho de la barra de desplazamiento */
+    height: 8px; /* Para barras horizontales */
+  }
+  
+  /* Fondo de la barra */
+  ::-webkit-scrollbar-track {
+    background: #f0f0f0; /* Color de fondo */
+    border-radius: 15px;
+  }
+  
+  /* Barra de desplazamiento */
+  ::-webkit-scrollbar-thumb {
+    background: #888; /* Color del scroll */
+    border-radius: 15px;
+    transition: background 0.3s ease;
+  }
+  
+  /* Hover en la barra */
+  ::-webkit-scrollbar-thumb:hover {
+    background: #555; /* Cambio de color al pasar el mouse */
+  }
+
+  .message-row {
+  display: flex;
+  margin: 4px 0;
+}
+
+.message-row.me {
+  justify-content: flex-end;
+}
+
+.bubble {
+  background: #ffffff;
+  border-radius: 7.5px;
+  padding: 6px 7px 6px 9px;
+  max-width: 65%;
+  display: inline-flex;
+  align-items: flex-end;
+  gap: 6px;
+  font-size: 14px;
+  line-height: 1.34;
+  box-shadow: 0 1px 0.5px rgba(0,0,0,.13);
+}
+
+.message-row.me .bubble {
+  background: #dcf8c6;
+}
+
+/* etc… */
+
+  
+
+/* You can add global styles to this file, and also import other style files */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;

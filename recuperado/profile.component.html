@@ -1,0 +1,162 @@
+<div class="max-w-2xl mx-auto py-8 px-4">
+
+  <!-- Header card -->
+  <div class="bg-white dark:bg-gray-800 rounded-2xl shadow p-6 mb-6 flex items-center gap-5">
+    <div class="w-16 h-16 rounded-full bg-blue-600 flex items-center justify-center text-white text-2xl font-bold shrink-0">
+      {{ (profile?.username || 'U').charAt(0).toUpperCase() }}
+    </div>
+    <div class="flex-1 min-w-0">
+      <p class="text-xl font-semibold text-gray-900 dark:text-white truncate">
+        {{ profile?.names }} {{ profile?.lastname }}
+      </p>
+      <p class="text-sm text-gray-500 dark:text-gray-400">{{ '@' + profile?.username }}</p>
+      <div class="mt-1 flex flex-wrap gap-2">
+        <span class="text-xs font-medium px-2 py-0.5 rounded-full" [ngClass]="roleClass">
+          {{ profile?.profile_name }}
+        </span>
+        <span class="text-xs font-medium px-2 py-0.5 rounded-full bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300">
+          {{ profile?.company_name }}
+        </span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tabs -->
+  <div class="bg-white dark:bg-gray-800 rounded-2xl shadow overflow-hidden">
+
+    <div class="flex border-b border-gray-200 dark:border-gray-700">
+      <button (click)="tab='info'"
+              class="flex-1 py-3 text-sm font-medium transition-colors"
+              [ngClass]="tab === 'info'
+                ? 'text-blue-600 border-b-2 border-blue-600'
+                : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200'">
+        Información personal
+      </button>
+      <button (click)="tab='password'; pwError=''"
+              class="flex-1 py-3 text-sm font-medium transition-colors"
+              [ngClass]="tab === 'password'
+                ? 'text-blue-600 border-b-2 border-blue-600'
+                : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200'">
+        Cambiar contraseña
+      </button>
+    </div>
+
+    <!-- Loading -->
+    <div *ngIf="loading" class="flex justify-center py-12">
+      <div class="w-6 h-6 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+    </div>
+
+    <!-- Tab: Info -->
+    <div *ngIf="!loading && tab === 'info'" class="p-6 space-y-4">
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div>
+          <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Nombres</label>
+          <input [(ngModel)]="infoForm.names" type="text"
+                 class="w-full rounded-lg border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 px-3 py-2 text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
+        </div>
+        <div>
+          <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Apellidos</label>
+          <input [(ngModel)]="infoForm.lastname" type="text"
+                 class="w-full rounded-lg border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 px-3 py-2 text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
+        </div>
+        <div>
+          <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Correo electrónico</label>
+          <input [(ngModel)]="infoForm.email" type="email"
+                 class="w-full rounded-lg border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 px-3 py-2 text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
+        </div>
+        <div>
+          <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Teléfono</label>
+          <input [(ngModel)]="infoForm.phone" type="text"
+                 class="w-full rounded-lg border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 px-3 py-2 text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
+        </div>
+      </div>
+
+      <!-- Read-only fields -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
+        <div>
+          <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Usuario</label>
+          <div class="w-full rounded-lg border border-gray-100 dark:border-gray-600 bg-gray-100 dark:bg-gray-700/50 px-3 py-2 text-sm text-gray-500 dark:text-gray-400 select-none">
+            {{ profile?.username }}
+          </div>
+        </div>
+        <div>
+          <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Empresa</label>
+          <div class="w-full rounded-lg border border-gray-100 dark:border-gray-600 bg-gray-100 dark:bg-gray-700/50 px-3 py-2 text-sm text-gray-500 dark:text-gray-400 select-none">
+            {{ profile?.company_name }}
+          </div>
+        </div>
+      </div>
+
+      <div class="flex justify-end pt-2">
+        <button (click)="saveInfo()" [disabled]="saving"
+                class="px-5 py-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white text-sm font-medium rounded-lg flex items-center gap-2 transition-colors">
+          <span *ngIf="saving" class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
+          Guardar cambios
+        </button>
+      </div>
+    </div>
+
+    <!-- Tab: Password -->
+    <div *ngIf="!loading && tab === 'password'" class="p-6 space-y-4">
+
+      <div *ngIf="pwError" class="bg-red-50 border border-red-200 text-red-700 text-sm rounded-lg px-4 py-3">
+        {{ pwError }}
+      </div>
+
+      <div>
+        <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Contraseña actual</label>
+        <div class="relative">
+          <input [(ngModel)]="pwForm.current_password" [type]="showCurrent ? 'text' : 'password'"
+                 class="w-full rounded-lg border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 px-3 py-2 pr-10 text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
+          <button type="button" (click)="showCurrent = !showCurrent"
+                  class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path *ngIf="!showCurrent" stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+              <path *ngIf="showCurrent" stroke-linecap="round" stroke-linejoin="round" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <div>
+        <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Nueva contraseña</label>
+        <div class="relative">
+          <input [(ngModel)]="pwForm.new_password" [type]="showNew ? 'text' : 'password'"
+                 class="w-full rounded-lg border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 px-3 py-2 pr-10 text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
+          <button type="button" (click)="showNew = !showNew"
+                  class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path *ngIf="!showNew" stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+              <path *ngIf="showNew" stroke-linecap="round" stroke-linejoin="round" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <div>
+        <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Confirmar nueva contraseña</label>
+        <div class="relative">
+          <input [(ngModel)]="pwForm.new_password_confirmation" [type]="showConfirm ? 'text' : 'password'"
+                 class="w-full rounded-lg border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 px-3 py-2 pr-10 text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
+          <button type="button" (click)="showConfirm = !showConfirm"
+                  class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path *ngIf="!showConfirm" stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+              <path *ngIf="showConfirm" stroke-linecap="round" stroke-linejoin="round" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <div class="flex justify-end pt-2">
+        <button (click)="savePassword()" [disabled]="saving"
+                class="px-5 py-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white text-sm font-medium rounded-lg flex items-center gap-2 transition-colors">
+          <span *ngIf="saving" class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
+          Cambiar contraseña
+        </button>
+      </div>
+    </div>
+
+  </div>
+</div>

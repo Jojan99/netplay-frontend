@@ -1,0 +1,499 @@
+<div class="p-3 sm:p-4 space-y-4">
+
+  <!-- Header -->
+  <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+    <h1 class="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white">Gestión Mikrotik</h1>
+    <button *ngIf="activeTab !== 'config'" (click)="refresh()"
+            class="inline-flex items-center gap-2 px-3 py-2 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 self-start sm:self-auto">
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+      </svg>
+      Actualizar
+    </button>
+  </div>
+
+  <!-- Tabs — scroll horizontal en móvil -->
+  <div class="border-b border-gray-200 dark:border-gray-700 overflow-x-auto">
+    <ul class="flex min-w-max -mb-px text-sm font-medium">
+      <li>
+        <button (click)="setTab('info')"
+                [class.border-blue-600]="activeTab==='info'" [class.text-blue-600]="activeTab==='info'"
+                [class.border-transparent]="activeTab!=='info'" [class.text-gray-500]="activeTab!=='info'"
+                class="inline-block px-4 py-3 border-b-2 whitespace-nowrap transition-colors hover:text-blue-600 hover:border-blue-600 dark:hover:text-blue-500">
+          Info Router
+        </button>
+      </li>
+      <li>
+        <button (click)="setTab('clients')"
+                [class.border-blue-600]="activeTab==='clients'" [class.text-blue-600]="activeTab==='clients'"
+                [class.border-transparent]="activeTab!=='clients'" [class.text-gray-500]="activeTab!=='clients'"
+                class="inline-block px-4 py-3 border-b-2 whitespace-nowrap transition-colors hover:text-blue-600 hover:border-blue-600 dark:hover:text-blue-500">
+          Clientes ARP
+        </button>
+      </li>
+      <li>
+        <button (click)="setTab('queues')"
+                [class.border-blue-600]="activeTab==='queues'" [class.text-blue-600]="activeTab==='queues'"
+                [class.border-transparent]="activeTab!=='queues'" [class.text-gray-500]="activeTab!=='queues'"
+                class="inline-block px-4 py-3 border-b-2 whitespace-nowrap transition-colors hover:text-blue-600 hover:border-blue-600 dark:hover:text-blue-500">
+          Ancho de Banda
+        </button>
+      </li>
+      <li>
+        <button (click)="setTab('config')"
+                [class.border-blue-600]="activeTab==='config'" [class.text-blue-600]="activeTab==='config'"
+                [class.border-transparent]="activeTab!=='config'" [class.text-gray-500]="activeTab!=='config'"
+                class="inline-block px-4 py-3 border-b-2 whitespace-nowrap transition-colors hover:text-blue-600 hover:border-blue-600 dark:hover:text-blue-500">
+          Configuración
+        </button>
+      </li>
+    </ul>
+  </div>
+
+  <!-- ═══ TAB: INFO ═══ -->
+  <div *ngIf="activeTab==='info'">
+    <div *ngIf="loadingInfo" class="flex justify-center py-16">
+      <div class="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-600"></div>
+    </div>
+    <div *ngIf="!loadingInfo && !routerInfo"
+         class="text-center py-16 text-gray-500 dark:text-gray-400">
+      <svg class="w-12 h-12 mx-auto mb-3 opacity-40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 9v3.75m9-.75a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 3.75h.008v.008H12v-.008Z"/>
+      </svg>
+      No se pudo cargar. Verifique la configuración del router.
+      <br><button (click)="setTab('config')" class="mt-3 text-blue-600 underline text-sm">Ir a Configuración</button>
+    </div>
+
+    <div *ngIf="routerInfo" class="space-y-4">
+      <!-- Cards resumen -->
+      <div class="grid grid-cols-2 lg:grid-cols-4 gap-3">
+        <div class="bg-white dark:bg-gray-800 rounded-xl p-3 sm:p-4 shadow border border-gray-100 dark:border-gray-700">
+          <p class="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wider">Identidad</p>
+          <p class="text-base sm:text-lg font-bold text-gray-900 dark:text-white mt-1 truncate">{{ routerInfo.identity }}</p>
+          <p class="text-xs text-gray-400 mt-0.5 truncate">{{ routerInfo.resource?.board_name }}</p>
+        </div>
+        <div class="bg-white dark:bg-gray-800 rounded-xl p-3 sm:p-4 shadow border border-gray-100 dark:border-gray-700">
+          <p class="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wider">RouterOS</p>
+          <p class="text-base sm:text-lg font-bold text-gray-900 dark:text-white mt-1">{{ routerInfo.resource?.version }}</p>
+          <p class="text-xs text-gray-400 mt-0.5">{{ routerInfo.resource?.architecture }}</p>
+        </div>
+        <div class="bg-white dark:bg-gray-800 rounded-xl p-3 sm:p-4 shadow border border-gray-100 dark:border-gray-700">
+          <p class="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wider">Uptime</p>
+          <p class="text-base sm:text-lg font-bold text-gray-900 dark:text-white mt-1">{{ routerInfo.resource?.uptime }}</p>
+          <p class="text-xs text-gray-400 mt-0.5">{{ routerInfo.resource?.cpu_count }} CPU(s)</p>
+        </div>
+        <div class="bg-white dark:bg-gray-800 rounded-xl p-3 sm:p-4 shadow border border-gray-100 dark:border-gray-700">
+          <p class="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wider">Clientes ARP</p>
+          <p class="text-base sm:text-lg font-bold text-gray-900 dark:text-white mt-1">{{ routerInfo.active_clients }}</p>
+          <p class="text-xs text-gray-400 mt-0.5">de {{ routerInfo.arp_count }} totales</p>
+        </div>
+      </div>
+
+      <!-- CPU & Memoria -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <div class="bg-white dark:bg-gray-800 rounded-xl p-4 shadow border border-gray-100 dark:border-gray-700">
+          <div class="flex justify-between items-center mb-2">
+            <span class="text-sm font-medium text-gray-700 dark:text-gray-300">CPU</span>
+            <span class="text-sm font-bold" [class.text-green-600]="cpuPercent()<70" [class.text-yellow-500]="cpuPercent()>=70&&cpuPercent()<90" [class.text-red-600]="cpuPercent()>=90">{{ cpuPercent() }}%</span>
+          </div>
+          <div class="w-full bg-gray-200 rounded-full h-2.5 dark:bg-gray-700">
+            <div class="h-2.5 rounded-full transition-all"
+                 [class.bg-green-500]="cpuPercent()<70"
+                 [class.bg-yellow-500]="cpuPercent()>=70&&cpuPercent()<90"
+                 [class.bg-red-500]="cpuPercent()>=90"
+                 [style.width.%]="cpuPercent()"></div>
+          </div>
+        </div>
+        <div class="bg-white dark:bg-gray-800 rounded-xl p-4 shadow border border-gray-100 dark:border-gray-700">
+          <div class="flex justify-between items-center mb-2">
+            <span class="text-sm font-medium text-gray-700 dark:text-gray-300">Memoria RAM</span>
+            <span class="text-sm font-bold text-blue-600">{{ memPercent() }}%</span>
+          </div>
+          <div class="w-full bg-gray-200 rounded-full h-2.5 dark:bg-gray-700">
+            <div class="h-2.5 rounded-full bg-blue-500 transition-all" [style.width.%]="memPercent()"></div>
+          </div>
+          <p class="text-xs text-gray-400 mt-1.5">
+            {{ formatBytes(routerInfo.resource?.total_memory - routerInfo.resource?.free_memory) }} / {{ formatBytes(routerInfo.resource?.total_memory) }}
+          </p>
+        </div>
+      </div>
+
+      <!-- Interfaces -->
+      <div class="bg-white dark:bg-gray-800 rounded-xl shadow border border-gray-100 dark:border-gray-700">
+        <div class="p-4 border-b dark:border-gray-700">
+          <h3 class="font-semibold text-gray-900 dark:text-white">Interfaces ({{ routerInfo.interfaces?.length }})</h3>
+        </div>
+        <div class="overflow-x-auto">
+          <table class="w-full text-sm text-left text-gray-500 dark:text-gray-400">
+            <thead class="text-xs uppercase bg-gray-50 dark:bg-gray-700 text-gray-700 dark:text-gray-400">
+              <tr>
+                <th class="px-4 py-3">Nombre</th>
+                <th class="px-4 py-3">Tipo</th>
+                <th class="px-4 py-3">Estado</th>
+                <th class="px-4 py-3 hidden md:table-cell">MAC</th>
+                <th class="px-4 py-3 hidden sm:table-cell">TX</th>
+                <th class="px-4 py-3 hidden sm:table-cell">RX</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let iface of routerInfo.interfaces"
+                  class="border-b dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600">
+                <td class="px-4 py-3 font-medium text-gray-900 dark:text-white">{{ iface.name }}</td>
+                <td class="px-4 py-3 text-xs">{{ iface.type }}</td>
+                <td class="px-4 py-3">
+                  <span class="px-2 py-0.5 rounded-full text-xs font-medium"
+                        [class.bg-green-100]="iface.running==='true'" [class.text-green-800]="iface.running==='true'"
+                        [class.bg-red-100]="iface.running!=='true'" [class.text-red-800]="iface.running!=='true'">
+                    {{ iface.running === 'true' ? 'Activo' : 'Inactivo' }}
+                  </span>
+                </td>
+                <td class="px-4 py-3 font-mono text-xs hidden md:table-cell">{{ iface['mac-address'] ?? '—' }}</td>
+                <td class="px-4 py-3 hidden sm:table-cell">{{ formatBytes(+iface['tx-byte']) }}</td>
+                <td class="px-4 py-3 hidden sm:table-cell">{{ formatBytes(+iface['rx-byte']) }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Direcciones IP -->
+      <div class="bg-white dark:bg-gray-800 rounded-xl shadow border border-gray-100 dark:border-gray-700">
+        <div class="p-4 border-b dark:border-gray-700">
+          <h3 class="font-semibold text-gray-900 dark:text-white">Direcciones IP ({{ routerInfo.addresses?.length }})</h3>
+        </div>
+        <div class="overflow-x-auto">
+          <table class="w-full text-sm text-left text-gray-500 dark:text-gray-400">
+            <thead class="text-xs uppercase bg-gray-50 dark:bg-gray-700 text-gray-700 dark:text-gray-400">
+              <tr>
+                <th class="px-4 py-3">Dirección</th>
+                <th class="px-4 py-3">Interfaz</th>
+                <th class="px-4 py-3">Estado</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let addr of routerInfo.addresses"
+                  class="border-b dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600">
+                <td class="px-4 py-3 font-mono font-medium text-gray-900 dark:text-white">{{ addr.address }}</td>
+                <td class="px-4 py-3">{{ addr.interface }}</td>
+                <td class="px-4 py-3">
+                  <span class="px-2 py-0.5 rounded-full text-xs font-medium"
+                        [class.bg-green-100]="addr.disabled!=='true'" [class.text-green-800]="addr.disabled!=='true'"
+                        [class.bg-gray-100]="addr.disabled==='true'" [class.text-gray-800]="addr.disabled==='true'">
+                    {{ addr.disabled === 'true' ? 'Deshabilitada' : 'Activa' }}
+                  </span>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ TAB: CLIENTS ═══ -->
+  <div *ngIf="activeTab==='clients'">
+    <!-- Actions bar -->
+    <div class="flex flex-col sm:flex-row gap-3 mb-4">
+      <input type="text" [(ngModel)]="clientSearch" (input)="filterClients()"
+             placeholder="Buscar por IP, MAC, DNI o nombre..."
+             class="flex-1 px-4 py-2.5 border border-gray-300 rounded-lg text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
+      <button [disabled]="!selectedIds.size || suspending"
+              (click)="suspendSelected()"
+              class="inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-red-600 text-white text-sm rounded-lg hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"/>
+        </svg>
+        <span *ngIf="!suspending">Suspender ({{ selectedIds.size }})</span>
+        <span *ngIf="suspending">Suspendiendo...</span>
+      </button>
+    </div>
+
+    <div *ngIf="suspendResult" class="mb-4 p-3 rounded-lg text-sm flex items-center gap-2"
+         [class.bg-green-50]="!suspendError" [class.text-green-800]="!suspendError"
+         [class.bg-red-50]="suspendError" [class.text-red-800]="suspendError">
+      {{ suspendResult }}
+    </div>
+
+    <div *ngIf="loadingClients" class="flex justify-center py-16">
+      <div class="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-600"></div>
+    </div>
+
+    <p *ngIf="!loadingClients" class="text-xs text-gray-500 dark:text-gray-400 mb-2">
+      {{ filteredClients.length }} de {{ clients.length }} clientes · {{ selectedIds.size }} seleccionado(s)
+    </p>
+
+    <!-- Tabla con scroll horizontal en móvil -->
+    <div *ngIf="!loadingClients" class="bg-white dark:bg-gray-800 rounded-xl shadow border border-gray-100 dark:border-gray-700 overflow-x-auto">
+      <table class="w-full text-sm text-left text-gray-500 dark:text-gray-400">
+        <thead class="text-xs uppercase bg-gray-50 dark:bg-gray-700 text-gray-700 dark:text-gray-400">
+          <tr>
+            <th class="px-3 py-3">
+              <input type="checkbox" [checked]="allSelected()" (change)="toggleSelectAll()" class="rounded cursor-pointer">
+            </th>
+            <th class="px-4 py-3">IP</th>
+            <th class="px-4 py-3 hidden md:table-cell">MAC</th>
+            <th class="px-4 py-3 hidden sm:table-cell">Interfaz</th>
+            <th class="px-4 py-3">DNI</th>
+            <th class="px-4 py-3">Cliente</th>
+            <th class="px-4 py-3">Estado</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let c of filteredClients"
+              class="border-b dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600"
+              [class.bg-red-50]="c.disabled">
+            <td class="px-3 py-3">
+              <input *ngIf="c.user_id" type="checkbox" [checked]="selectedIds.has(c.user_id)"
+                     (change)="toggleSelect(c)" class="rounded cursor-pointer">
+            </td>
+            <td class="px-4 py-3 font-mono font-medium text-gray-900 dark:text-white text-xs sm:text-sm">{{ c.ip }}</td>
+            <td class="px-4 py-3 font-mono text-xs hidden md:table-cell">{{ c.mac || '—' }}</td>
+            <td class="px-4 py-3 text-xs hidden sm:table-cell">{{ c.interface }}</td>
+            <td class="px-4 py-3 text-xs">{{ c.comment || '—' }}</td>
+            <td class="px-4 py-3">{{ c.user_name || c.username || '—' }}</td>
+            <td class="px-4 py-3">
+              <span class="px-2 py-0.5 rounded-full text-xs font-medium whitespace-nowrap"
+                    [class.bg-green-100]="!c.disabled" [class.text-green-800]="!c.disabled"
+                    [class.bg-red-100]="c.disabled" [class.text-red-800]="c.disabled">
+                {{ c.disabled ? 'Suspendido' : 'Activo' }}
+              </span>
+            </td>
+          </tr>
+          <tr *ngIf="!filteredClients.length">
+            <td colspan="7" class="text-center py-10 text-gray-400">Sin resultados</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ═══ TAB: QUEUES ═══ -->
+  <div *ngIf="activeTab==='queues'">
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
+      <p class="text-sm text-gray-500 dark:text-gray-400">{{ queues.length }} cola(s) de ancho de banda</p>
+      <button (click)="openCreateQueue()"
+              class="inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 self-start sm:self-auto">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+        </svg>
+        Nueva Cola
+      </button>
+    </div>
+
+    <div *ngIf="loadingQueues" class="flex justify-center py-16">
+      <div class="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-600"></div>
+    </div>
+
+    <!-- Modal Cola -->
+    <div *ngIf="showQueueForm" class="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/50 p-4">
+      <div class="bg-white dark:bg-gray-800 rounded-xl shadow-xl w-full max-w-lg max-h-[90vh] overflow-y-auto p-5 sm:p-6 space-y-4">
+        <div class="flex items-center justify-between">
+          <h3 class="text-base sm:text-lg font-bold text-gray-900 dark:text-white">
+            {{ editingQueue ? 'Editar Cola' : 'Nueva Cola de Ancho de Banda' }}
+          </h3>
+          <button (click)="showQueueForm=false" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+            </svg>
+          </button>
+        </div>
+
+        <div *ngIf="queueMsg" class="p-3 rounded-lg text-sm"
+             [class.bg-red-50]="queueError" [class.text-red-800]="queueError"
+             [class.bg-green-50]="!queueError" [class.text-green-800]="!queueError">
+          {{ queueMsg }}
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Nombre *</label>
+            <input type="text" [(ngModel)]="queueForm.name" placeholder="ej: cliente-001"
+                   class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Target (IP/Subred) *</label>
+            <input type="text" [(ngModel)]="queueForm.target" placeholder="ej: 192.168.1.10/32"
+                   class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Límite Máx. (↑/↓) *</label>
+            <input type="text" [(ngModel)]="queueForm.max_limit" placeholder="ej: 5M/2M"
+                   class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Comentario</label>
+            <input type="text" [(ngModel)]="queueForm.comment" placeholder="ej: nombre cliente"
+                   class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Burst Limit (↑/↓)</label>
+            <input type="text" [(ngModel)]="queueForm.burst_limit" placeholder="ej: 10M/4M"
+                   class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Burst Threshold</label>
+            <input type="text" [(ngModel)]="queueForm.burst_threshold" placeholder="ej: 3M/1M"
+                   class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
+          </div>
+          <div class="sm:col-span-2">
+            <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Burst Time (seg ↑/↓)</label>
+            <input type="text" [(ngModel)]="queueForm.burst_time" placeholder="ej: 8/8"
+                   class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
+          </div>
+        </div>
+
+        <div class="flex justify-end gap-3 pt-1">
+          <button (click)="showQueueForm=false"
+                  class="px-4 py-2 text-sm text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 dark:text-gray-300 dark:bg-gray-700">
+            Cancelar
+          </button>
+          <button (click)="saveQueue()" [disabled]="savingQueue || !queueForm.name || !queueForm.target || !queueForm.max_limit"
+                  class="px-4 py-2 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50">
+            {{ savingQueue ? 'Guardando...' : 'Guardar' }}
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div *ngIf="!loadingQueues" class="bg-white dark:bg-gray-800 rounded-xl shadow border border-gray-100 dark:border-gray-700 overflow-x-auto">
+      <table class="w-full text-sm text-left text-gray-500 dark:text-gray-400">
+        <thead class="text-xs uppercase bg-gray-50 dark:bg-gray-700 text-gray-700 dark:text-gray-400">
+          <tr>
+            <th class="px-4 py-3">Nombre</th>
+            <th class="px-4 py-3">Target</th>
+            <th class="px-4 py-3">Límite</th>
+            <th class="px-4 py-3 hidden sm:table-cell">Burst</th>
+            <th class="px-4 py-3 hidden md:table-cell">Comentario</th>
+            <th class="px-4 py-3">Estado</th>
+            <th class="px-4 py-3">Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let q of queues" class="border-b dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600">
+            <td class="px-4 py-3 font-medium text-gray-900 dark:text-white">{{ q.name }}</td>
+            <td class="px-4 py-3 font-mono text-xs">{{ q.target }}</td>
+            <td class="px-4 py-3 font-mono text-xs font-semibold">{{ q['max-limit'] }}</td>
+            <td class="px-4 py-3 font-mono text-xs hidden sm:table-cell">{{ q['burst-limit'] || '—' }}</td>
+            <td class="px-4 py-3 hidden md:table-cell">{{ q.comment || '—' }}</td>
+            <td class="px-4 py-3">
+              <span class="px-2 py-0.5 rounded-full text-xs font-medium"
+                    [class.bg-green-100]="q.disabled!=='true'" [class.text-green-800]="q.disabled!=='true'"
+                    [class.bg-gray-100]="q.disabled==='true'" [class.text-gray-800]="q.disabled==='true'">
+                {{ q.disabled === 'true' ? 'Inactiva' : 'Activa' }}
+              </span>
+            </td>
+            <td class="px-4 py-3">
+              <div class="flex items-center gap-3">
+                <button (click)="openEditQueue(q)" class="text-blue-600 hover:text-blue-800 dark:text-blue-400 text-xs font-medium">Editar</button>
+                <button (click)="deleteQueue(q['.id'])" class="text-red-600 hover:text-red-800 dark:text-red-400 text-xs font-medium">Eliminar</button>
+              </div>
+            </td>
+          </tr>
+          <tr *ngIf="!queues.length">
+            <td colspan="7" class="text-center py-10 text-gray-400">No hay colas configuradas</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ═══ TAB: CONFIG ═══ -->
+  <div *ngIf="activeTab==='config'">
+    <div class="max-w-lg mx-auto">
+      <div class="bg-white dark:bg-gray-800 rounded-xl shadow border border-gray-100 dark:border-gray-700 p-5 sm:p-6">
+        <div class="flex items-center gap-3 mb-6">
+          <div class="p-2 bg-blue-100 dark:bg-blue-900/30 rounded-lg">
+            <svg class="w-5 h-5 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.25 14.25h13.5m-13.5 0a3 3 0 0 1-3-3m3 3a3 3 0 1 0 6 0m-6 0h6m6.75 0a3 3 0 0 1-3-3m3 3a3 3 0 1 0-6 0m6 0h.008v.008H18.75V14.25Zm-12-7.5h13.5m-13.5 0a3 3 0 0 0-3 3m3-3a3 3 0 1 1 6 0m-6 0h6m6.75 0a3 3 0 0 0-3 3m3-3a3 3 0 1 1-6 0m6 0h.008v.008H18.75V6.75Z"/>
+            </svg>
+          </div>
+          <div>
+            <h3 class="font-semibold text-gray-900 dark:text-white">Conexión Mikrotik</h3>
+            <p class="text-xs text-gray-500 dark:text-gray-400">API Winbox — puerto por defecto 8728</p>
+          </div>
+        </div>
+
+        <div *ngIf="loadingConfig" class="flex justify-center py-8">
+          <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+        </div>
+
+        <div *ngIf="configMsg" class="mb-4 p-3 rounded-lg text-sm"
+             [class.bg-green-50]="!configError" [class.text-green-800]="!configError"
+             [class.bg-red-50]="configError" [class.text-red-800]="configError">
+          {{ configMsg }}
+        </div>
+
+        <form *ngIf="!loadingConfig" (ngSubmit)="saveConfig()" class="space-y-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+              Dirección IP del Router *
+            </label>
+            <input type="text" [(ngModel)]="configForm.host" name="host" required
+                   placeholder="ej: 192.168.1.1"
+                   class="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
+          </div>
+
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+                Puerto API *
+              </label>
+              <input type="number" [(ngModel)]="configForm.port" name="port" required
+                     placeholder="8728"
+                     class="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+                Usuario *
+              </label>
+              <input type="text" [(ngModel)]="configForm.user" name="user" required
+                     placeholder="admin"
+                     class="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+              Contraseña *
+            </label>
+            <div class="relative">
+              <input [type]="showPass ? 'text' : 'password'"
+                     [(ngModel)]="configForm.pass" name="pass" required
+                     placeholder="Contraseña del usuario API"
+                     class="w-full px-3 py-2.5 pr-10 border border-gray-300 rounded-lg text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
+              <button type="button" (click)="showPass=!showPass"
+                      class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
+                <svg *ngIf="!showPass" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"/>
+                </svg>
+                <svg *ngIf="showPass" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3.98 8.223A10.477 10.477 0 0 0 1.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.451 10.451 0 0 1 12 4.5c4.756 0 8.773 3.162 10.065 7.498a10.522 10.522 0 0 1-4.293 5.774M6.228 6.228 3 3m3.228 3.228 3.65 3.65m7.894 7.894L21 21m-3.228-3.228-3.65-3.65m0 0a3 3 0 1 0-4.243-4.243m4.242 4.242L9.88 9.88"/>
+                </svg>
+              </button>
+            </div>
+            <p class="text-xs text-gray-400 mt-1">La contraseña se guarda cifrada y nunca se muestra.</p>
+          </div>
+
+          <div class="pt-2">
+            <button type="submit"
+                    [disabled]="savingConfig || !configForm.host || !configForm.user || !configForm.pass"
+                    class="w-full sm:w-auto px-6 py-2.5 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
+              {{ savingConfig ? 'Guardando...' : 'Guardar Configuración' }}
+            </button>
+          </div>
+        </form>
+
+        <!-- Info box -->
+        <div class="mt-6 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+          <p class="text-xs font-medium text-blue-800 dark:text-blue-300 mb-1">Requisitos en el Mikrotik:</p>
+          <ul class="text-xs text-blue-700 dark:text-blue-400 space-y-1 list-disc list-inside">
+            <li>Habilitar API: <code class="bg-blue-100 dark:bg-blue-800 px-1 rounded">IP → Services → api (8728)</code></li>
+            <li>El usuario debe tener permiso de <strong>read</strong> y <strong>write</strong></li>
+            <li>Asegúrese que el servidor puede alcanzar la IP del router</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>

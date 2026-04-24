@@ -1,0 +1,342 @@
+<div class="p-4 max-w-6xl mx-auto space-y-6">
+
+  <!-- Header -->
+  <div>
+    <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Reporte de Pagos</h1>
+    <p class="text-sm text-gray-500 dark:text-gray-400">Trazabilidad completa del historial de facturación por cliente</p>
+  </div>
+
+  <!-- Smart Search -->
+  <div class="relative" (click)="$event.stopPropagation()">
+    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Buscar cliente</label>
+
+    <!-- Status filter -->
+    <div class="flex gap-2 mb-2">
+      <button *ngFor="let opt of [{k:'active',l:'Activos'},{k:'inactive',l:'Inactivos'},{k:'all',l:'Todos'}]"
+        (click)="setStatusFilter(opt.k)"
+        [class]="'px-3 py-1 text-xs font-medium rounded-full border transition-colors ' +
+          (statusFilter === opt.k
+            ? (opt.k==='active' ? 'bg-green-600 text-white border-green-600' : opt.k==='inactive' ? 'bg-red-500 text-white border-red-500' : 'bg-blue-600 text-white border-blue-600')
+            : 'bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300 border-gray-300 dark:border-gray-600 hover:border-blue-400')">
+        {{ opt.l }}
+      </button>
+    </div>
+
+    <div class="relative">
+      <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0"/>
+      </svg>
+      <input type="text" [(ngModel)]="searchText" (input)="onSearchInput($event)" (focus)="showDropdown = true"
+        placeholder="Nombre, DNI o teléfono..."
+        class="w-full sm:w-96 pl-9 pr-10 py-2.5 border border-gray-300 dark:border-gray-600 rounded-xl text-sm bg-white dark:bg-gray-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-sm" />
+      <button *ngIf="selectedUser" (click)="clearSelection()"
+        class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+        </svg>
+      </button>
+    </div>
+
+    <!-- Dropdown -->
+    <div *ngIf="showDropdown && filteredUsers.length > 0"
+      class="absolute z-30 mt-1 w-full sm:w-96 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-xl max-h-60 overflow-y-auto">
+      <ul class="py-1">
+        <li *ngFor="let u of filteredUsers | slice:0:20"
+          (click)="selectUser(u, $event)"
+          class="flex items-center justify-between px-4 py-2.5 cursor-pointer hover:bg-blue-50 dark:hover:bg-blue-900/30 transition-colors">
+          <div>
+            <div class="text-sm font-medium text-gray-800 dark:text-white">{{ u.names }} {{ u.lastname }}</div>
+            <div class="text-xs text-gray-400">{{ u.dni }} · {{ u.phone }}</div>
+          </div>
+          <span *ngIf="u.internet_status"
+            [class]="'text-xs px-2 py-0.5 rounded-full ' + (u.internet_status === 'ACTIVE' || u.internet_status === 1 ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700')">
+            {{ u.internet_status === 'ACTIVE' || u.internet_status === 1 ? 'Activo' : 'Inactivo' }}
+          </span>
+        </li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- Empty state -->
+  <div *ngIf="!selectedUser && !isLoadingInvoices"
+    class="flex flex-col items-center justify-center py-16 text-center text-gray-400 dark:text-gray-500">
+    <svg class="w-16 h-16 mb-4 opacity-30" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+        d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+    </svg>
+    <p class="font-medium">Selecciona un cliente para ver su reporte completo</p>
+    <p class="text-sm mt-1">Historial de facturas, abonos y hábito de pago</p>
+  </div>
+
+  <!-- Loading -->
+  <div *ngIf="isLoadingInvoices" class="space-y-3 animate-pulse">
+    <div class="h-28 bg-gray-200 dark:bg-gray-700 rounded-xl"></div>
+    <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+      <div *ngFor="let i of [1,2,3,4]" class="h-20 bg-gray-200 dark:bg-gray-700 rounded-xl"></div>
+    </div>
+    <div class="h-48 bg-gray-200 dark:bg-gray-700 rounded-xl"></div>
+  </div>
+
+  <!-- Client content -->
+  <ng-container *ngIf="selectedUser && !isLoadingInvoices">
+
+    <!-- Client card -->
+    <div class="bg-white dark:bg-gray-800 rounded-xl shadow border border-gray-100 dark:border-gray-700 p-5">
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div class="flex items-center gap-4">
+          <div class="w-12 h-12 rounded-full bg-blue-600 flex items-center justify-center text-white font-bold text-xl shrink-0">
+            {{ selectedUser.names?.charAt(0)?.toUpperCase() }}
+          </div>
+          <div>
+            <h2 class="text-lg font-bold text-gray-900 dark:text-white">{{ selectedUser.names }} {{ selectedUser.lastname }}</h2>
+            <div class="flex flex-wrap gap-3 mt-1 text-sm text-gray-500 dark:text-gray-400">
+              <span>DNI: {{ selectedUser.dni }}</span>
+              <span>&middot;</span>
+              <span>Tel: {{ selectedUser.phone }}</span>
+              <span *ngIf="selectedUser.email">&middot; {{ selectedUser.email }}</span>
+            </div>
+            <div *ngIf="selectedUser.address" class="text-xs text-gray-400 mt-0.5">{{ selectedUser.address }}</div>
+          </div>
+        </div>
+
+        <!-- Habit badge -->
+        <div class="flex flex-col items-end gap-2">
+          <span [class]="'inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-semibold ' + habitColor">
+            <span class="text-base">{{ habitIcon }}</span>
+            {{ habitLabel }}
+          </span>
+          <span [class]="'text-xs font-medium ' + puntualColor">
+            {{ puntualLabel }}
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Metrics row -->
+    <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+      <div class="bg-white dark:bg-gray-800 rounded-xl shadow border border-gray-100 dark:border-gray-700 p-4">
+        <div class="text-xs text-gray-400 uppercase tracking-wide mb-1">Total facturado</div>
+        <div class="text-xl font-bold text-gray-800 dark:text-white">{{ formatCurrency(totalFacturado) }}</div>
+        <div class="text-xs text-gray-400 mt-1">{{ allInvoices.length }} facturas</div>
+      </div>
+      <div class="bg-white dark:bg-gray-800 rounded-xl shadow border border-gray-100 dark:border-gray-700 p-4">
+        <div class="text-xs text-gray-400 uppercase tracking-wide mb-1">Total pagado</div>
+        <div class="text-xl font-bold text-green-600">{{ formatCurrency(totalPagado) }}</div>
+        <div class="text-xs text-gray-400 mt-1">{{ filterCounts['paid'] }} facturas pagadas</div>
+      </div>
+      <div class="bg-white dark:bg-gray-800 rounded-xl shadow border border-gray-100 dark:border-gray-700 p-4">
+        <div class="text-xs text-gray-400 uppercase tracking-wide mb-1">Saldo pendiente</div>
+        <div class="text-xl font-bold text-red-600">{{ formatCurrency(totalPendiente) }}</div>
+        <div class="text-xs text-gray-400 mt-1">{{ filterCounts['pending'] + filterCounts['abone'] }} sin cancelar</div>
+      </div>
+      <div class="bg-white dark:bg-gray-800 rounded-xl shadow border border-gray-100 dark:border-gray-700 p-4">
+        <div class="text-xs text-gray-400 uppercase tracking-wide mb-1">Tasa de pago</div>
+        <div class="text-xl font-bold text-blue-600">{{ tasaPago }}%</div>
+        <!-- Progress bar -->
+        <div class="mt-2 h-1.5 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+          <div class="h-full rounded-full transition-all duration-500"
+            [style.width.%]="tasaPago"
+            [class]="tasaPago >= 80 ? 'bg-green-500' : tasaPago >= 50 ? 'bg-yellow-500' : 'bg-red-500'">
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Filter tabs -->
+    <div class="flex gap-2 flex-wrap">
+      <button *ngFor="let tab of [
+        {key:'all',     label:'Todas'},
+        {key:'paid',    label:'Pagadas'},
+        {key:'pending', label:'Pendientes'},
+        {key:'abone',   label:'Con abono'}
+      ]"
+        (click)="setFilter(tab.key)"
+        [class]="activeFilter === tab.key
+          ? 'px-4 py-1.5 rounded-full text-sm font-semibold bg-blue-600 text-white shadow'
+          : 'px-4 py-1.5 rounded-full text-sm font-medium bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-300 hover:border-blue-400 transition-colors'">
+        {{ tab.label }}
+        <span class="ml-1.5 text-xs opacity-75">({{ filterCounts[tab.key] }})</span>
+      </button>
+    </div>
+
+    <!-- Invoices list -->
+    <div *ngIf="filtered.length === 0" class="text-center py-10 text-gray-400 dark:text-gray-500">
+      No hay facturas en esta categoría
+    </div>
+
+    <div class="space-y-3">
+      <div *ngFor="let inv of filtered"
+        class="bg-white dark:bg-gray-800 rounded-xl shadow border border-gray-100 dark:border-gray-700 overflow-hidden">
+
+        <!-- Invoice header row -->
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 cursor-pointer"
+          (click)="toggleExpand(inv.id)">
+
+          <div class="flex items-center gap-4">
+            <!-- Status dot -->
+            <div [class]="'w-2.5 h-2.5 rounded-full shrink-0 ' +
+              (inv.paid === 1 ? 'bg-green-500' : inv.abone === 1 ? 'bg-blue-500' : 'bg-red-400')">
+            </div>
+            <div>
+              <div class="flex items-center gap-2 flex-wrap">
+                <span class="font-mono font-semibold text-sm text-gray-700 dark:text-gray-300">{{ inv.number_facture }}</span>
+                <span [class]="'px-2 py-0.5 text-xs rounded-full font-medium ' + statusClass(inv)">
+                  {{ statusLabel(inv) }}
+                </span>
+                <span *ngIf="logsForInvoice(inv).length > 0"
+                  class="px-2 py-0.5 text-xs rounded-full bg-gray-100 dark:bg-gray-700 text-gray-500">
+                  {{ logsForInvoice(inv).length }} mov.
+                </span>
+              </div>
+              <div class="text-xs text-gray-400 mt-0.5">
+                Período: {{ inv.date_facturation | date:'MMMM yyyy' }}
+              </div>
+            </div>
+          </div>
+
+          <!-- Numbers summary -->
+          <div class="flex items-center gap-6 text-right">
+            <div class="text-xs">
+              <div class="text-gray-400">Total</div>
+              <div class="font-semibold text-gray-700 dark:text-gray-300">{{ formatCurrency(inv.price_total) }}</div>
+            </div>
+            <div class="text-xs" *ngIf="inv.price_discount > 0">
+              <div class="text-gray-400">Dcto.</div>
+              <div class="font-medium text-purple-600">-{{ formatCurrency(inv.price_discount) }}</div>
+            </div>
+            <div class="text-xs" *ngIf="inv.price_abone > 0">
+              <div class="text-gray-400">Abonado</div>
+              <div class="font-medium text-blue-600">{{ formatCurrency(inv.price_abone) }}</div>
+            </div>
+            <div class="text-xs">
+              <div class="text-gray-400">Balance</div>
+              <div [class]="'font-bold text-sm ' + (invoiceBalance(inv) > 0 ? 'text-red-600' : 'text-green-600')">
+                {{ formatCurrency(invoiceBalance(inv)) }}
+              </div>
+            </div>
+            <!-- Expand arrow -->
+            <svg class="w-4 h-4 text-gray-400 shrink-0 transition-transform duration-200"
+              [class.rotate-180]="expandedInvoiceId === inv.id"
+              fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+            </svg>
+          </div>
+        </div>
+
+        <!-- Expanded detail -->
+        <div *ngIf="expandedInvoiceId === inv.id"
+          class="border-t border-gray-100 dark:border-gray-700 bg-gray-50 dark:bg-gray-850">
+
+          <!-- Traceability data -->
+          <div class="px-4 py-3 grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs border-b border-gray-100 dark:border-gray-700">
+            <div>
+              <div class="text-gray-400 mb-0.5">Generada</div>
+              <div class="font-medium text-gray-700 dark:text-gray-300">{{ inv.created_at | date:'dd/MM/yyyy' }}</div>
+            </div>
+            <div>
+              <div class="text-gray-400 mb-0.5">Días facturados</div>
+              <div class="font-medium text-gray-700 dark:text-gray-300">{{ inv.days_facture || '—' }}</div>
+            </div>
+            <div *ngIf="inv.paid === 1">
+              <div class="text-gray-400 mb-0.5">Pagada el</div>
+              <div class="font-medium text-green-600">{{ inv.paid_at | date:'dd/MM/yyyy HH:mm' }}</div>
+            </div>
+            <div *ngIf="inv.paid === 1">
+              <div class="text-gray-400 mb-0.5">Registrado por</div>
+              <div class="font-medium text-gray-700 dark:text-gray-300">{{ inv.paid_by_name }}</div>
+            </div>
+            <div *ngIf="inv.porcentage_discount > 0">
+              <div class="text-gray-400 mb-0.5">% Descuento</div>
+              <div class="font-medium text-purple-600">{{ inv.porcentage_discount }}%</div>
+            </div>
+          </div>
+
+          <!-- Payment logs timeline -->
+          <div class="px-4 py-4">
+            <div class="flex items-center justify-between mb-3">
+              <h4 class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">
+                Movimientos de pago ({{ logsForInvoice(inv).length }})
+              </h4>
+              <button *ngIf="inv.paid === 1" (click)="downloadComprobante(inv); $event.stopPropagation()"
+                class="flex items-center gap-1.5 px-3 py-1.5 text-xs bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+                </svg>
+                Comprobante
+              </button>
+            </div>
+
+            <!-- No logs yet -->
+            <div *ngIf="logsForInvoice(inv).length === 0"
+              class="text-xs text-gray-400 dark:text-gray-500 italic py-2">
+              Sin movimientos registrados aún
+            </div>
+
+            <!-- Timeline -->
+            <div *ngIf="logsForInvoice(inv).length > 0"
+              class="relative pl-5 border-l-2 border-gray-200 dark:border-gray-700 space-y-3">
+              <div *ngFor="let log of logsForInvoice(inv)" class="relative">
+                <div [class]="'absolute -left-[1.35rem] w-2.5 h-2.5 rounded-full ring-2 ring-white dark:ring-gray-850 ' + logTypeColor(log.type)"></div>
+                <div class="bg-white dark:bg-gray-800 rounded-lg p-3 border border-gray-200 dark:border-gray-700 shadow-sm">
+                  <div class="flex items-center justify-between gap-2 flex-wrap">
+                    <div class="flex items-center gap-2">
+                      <span [class]="'px-2 py-0.5 text-xs rounded-full font-medium ' +
+                        (log.type === 'pago_completo' ? 'bg-green-100 text-green-800' :
+                         log.type === 'abono' ? 'bg-blue-100 text-blue-800' :
+                         log.type === 'descuento' ? 'bg-purple-100 text-purple-800' : 'bg-gray-100 text-gray-700')">
+                        {{ logTypeLabel(log.type) }}
+                      </span>
+                      <span class="text-xs font-bold text-gray-800 dark:text-gray-200">{{ formatCurrency(log.amount) }}</span>
+                    </div>
+                    <span class="text-xs text-gray-400">{{ log.created_at | date:'dd/MM/yyyy HH:mm' }}</span>
+                  </div>
+                  <div class="mt-1.5 text-xs text-gray-500 dark:text-gray-400">
+                    Registrado por <span class="font-medium text-gray-700 dark:text-gray-300">{{ log.recorded_by_name }}</span>
+                  </div>
+                  <div *ngIf="log.notes" class="mt-1 text-xs text-gray-400 italic">{{ log.notes }}</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Summary footer -->
+    <div *ngIf="allInvoices.length > 0"
+      class="bg-gray-50 dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4">
+      <h3 class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">Análisis del hábito de pago</h3>
+      <div class="grid grid-cols-2 sm:grid-cols-3 gap-4 text-sm">
+        <div>
+          <span class="text-gray-400">Facturas totales:</span>
+          <span class="ml-2 font-semibold text-gray-800 dark:text-white">{{ allInvoices.length }}</span>
+        </div>
+        <div>
+          <span class="text-gray-400">Pagadas:</span>
+          <span class="ml-2 font-semibold text-green-600">{{ filterCounts['paid'] }}</span>
+        </div>
+        <div>
+          <span class="text-gray-400">Pendientes:</span>
+          <span class="ml-2 font-semibold text-red-600">{{ filterCounts['pending'] }}</span>
+        </div>
+        <div>
+          <span class="text-gray-400">Con abono parcial:</span>
+          <span class="ml-2 font-semibold text-blue-600">{{ filterCounts['abone'] }}</span>
+        </div>
+        <div>
+          <span class="text-gray-400">Total abonado:</span>
+          <span class="ml-2 font-semibold text-blue-600">{{ formatCurrency(totalAbonado) }}</span>
+        </div>
+        <div>
+          <span class="text-gray-400">Días prom. para pagar:</span>
+          <span [class]="'ml-2 font-semibold ' + puntualColor">
+            {{ avgDaysToPay > 0 ? avgDaysToPay + ' días' : '—' }}
+          </span>
+        </div>
+      </div>
+    </div>
+
+  </ng-container>
+</div>

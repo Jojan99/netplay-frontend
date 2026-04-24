@@ -1,0 +1,60 @@
+.bubble {
+  max-width: 420px;
+  padding: 6px 8px;
+  border-radius: 8px;
+  display: inline-flex;
+  align-items: flex-end;
+  gap: 6px;
+  font-size: 14px;
+  line-height: 1.35;
+  word-break: break-word;
+  box-shadow: 0 1px 0.5px rgba(0,0,0,.13);
+}
+
+.bubble-agent {
+  background: #dcf8c6;   /* WhatsApp green */
+  color: #111;
+}
+
+.bubble-customer {
+  background: #ffffff;
+  color: #111;
+}
+
+.bubble-text {
+  white-space: pre-wrap;
+}
+
+.bubble-meta {
+  font-size: 11px;
+  color: #667781;
+  white-space: nowrap;
+  margin-left: 6px;
+}
+
+.bubble-media {
+  max-width: 220px;
+  max-height: 220px;
+  border-radius: 6px;
+}
+
+.bubble-audio {
+  width: 220px;
+}
+
+.bubble-doc {
+  font-size: 13px;
+  color: #027eb5;
+  text-decoration: underline;
+}
+
+.bubble-media {
+  max-width: 260px;
+  max-height: 260px;
+  width: auto;
+  height: auto;
+  border-radius: 12px;
+  object-fit: cover;
+  display: block;
+}
+

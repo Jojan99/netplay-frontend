@@ -1,0 +1,1032 @@
+<!-- ── Toast notifications ─────────────────────────────────────────────── -->
+<div class="fixed top-4 right-4 z-[9999] flex flex-col gap-2 max-w-xs w-full pointer-events-none">
+  <div *ngFor="let t of toasts"
+       class="flex items-start gap-3 px-4 py-3 rounded-lg shadow-lg text-sm font-medium text-white pointer-events-auto transition-all"
+       [ngClass]="{'bg-green-600': t.type==='success', 'bg-red-600': t.type==='error', 'bg-blue-600': t.type==='info'}">
+    <span class="flex-1">{{ t.msg }}</span>
+  </div>
+</div>
+
+<!-- ── User table card ──────────────────────────────────────────────────── -->
+<div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border dark:border-gray-700">
+
+  <!-- Header -->
+  <div class="border-b p-4 dark:border-gray-700 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
+    <div>
+      <h2 class="text-xl font-semibold text-gray-900 dark:text-white">Clientes</h2>
+      <p class="text-sm text-gray-500 dark:text-gray-400">{{ totalEntries }} registros</p>
+    </div>
+    <div class="flex flex-wrap gap-2">
+      <button (click)="openCreateUserModal()"
+        class="px-4 py-2 text-sm font-medium rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition">
+        + Nuevo cliente
+      </button>
+      <button (click)="downloadCsvAll()" [disabled]="exportingCsv"
+        class="px-4 py-2 text-sm font-medium rounded-lg bg-green-600 text-white hover:bg-green-700 disabled:opacity-50 transition">
+        {{ exportingCsv ? 'Exportando...' : '⬇ CSV Todos' }}
+      </button>
+    </div>
+  </div>
+
+  <!-- Controls -->
+  <div class="p-4 flex flex-col sm:flex-row flex-wrap gap-3 items-center border-b dark:border-gray-700">
+    <div class="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
+      <span>Vista</span>
+      <select class="border rounded px-2 py-1 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+              [value]="entriesPerPage" (change)="onEntriesPerPageChange($event)">
+        <option value="12">12</option>
+        <option value="25">25</option>
+        <option value="50">50</option>
+      </select>
+      <span>por página</span>
+    </div>
+
+    <div class="flex items-center gap-2 w-full sm:w-auto">
+      <input type="search" placeholder="Buscar cliente..." (input)="getSearchUser()" [(ngModel)]="search"
+        class="border rounded-lg px-3 py-2 w-full sm:w-64 text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400" />
+    </div>
+  </div>
+
+  <!-- Table -->
+  <div class="overflow-x-auto">
+    <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+      <thead class="bg-gray-50 dark:bg-gray-700">
+        <tr>
+          <th class="w-8 p-3"></th>
+          <th class="p-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Cliente</th>
+          <th class="p-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase hidden md:table-cell">Documento</th>
+          <th class="p-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase hidden lg:table-cell">Teléfono</th>
+          <th class="p-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Estado</th>
+          <th class="p-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase hidden xl:table-cell">Dirección</th>
+          <th class="p-3 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Acciones</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-gray-200 dark:divide-gray-700 dark:bg-gray-800">
+
+        <!-- Skeleton -->
+        <ng-container *ngIf="skeletor">
+          <tr *ngFor="let _ of [1,2,3,4,5,6]">
+            <td colspan="7" class="p-3">
+              <div class="h-3 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
+            </td>
+          </tr>
+        </ng-container>
+
+        <!-- Data rows -->
+        <ng-container *ngIf="!skeletor">
+          <ng-container *ngFor="let user of UserInterfaces.slice(startIndex, endIndex)">
+            <tr class="hover:bg-gray-50 dark:hover:bg-gray-700 transition">
+              <!-- Expand -->
+              <td class="p-2 text-center">
+                <button (click)="toggleDetails(user)" class="text-gray-400 hover:text-gray-600 dark:hover:text-white">
+                  <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                    <path *ngIf="!user.expanded" fill-rule="evenodd" d="M2 12C2 6.477 6.477 2 12 2s10 4.477 10 10-4.477 10-10 10S2 17.523 2 12Zm11-4.243a1 1 0 1 0-2 0V11H7.757a1 1 0 1 0 0 2H11v3.243a1 1 0 1 0 2 0V13h3.243a1 1 0 1 0 0-2H13V7.757Z" clip-rule="evenodd"/>
+                    <path *ngIf="user.expanded" fill-rule="evenodd" d="M2 12C2 6.477 6.477 2 12 2s10 4.477 10 10-4.477 10-10 10S2 17.523 2 12Zm6-1a1 1 0 0 1 1-1h6a1 1 0 1 1 0 2H9a1 1 0 0 1-1-1Z" clip-rule="evenodd"/>
+                  </svg>
+                </button>
+              </td>
+              <!-- Name -->
+              <td class="p-3">
+                <div class="font-medium text-gray-900 dark:text-white text-sm">{{ user.names }} {{ user.lastname }}</div>
+                <div class="text-xs text-gray-500 dark:text-gray-400">{{ user.plan_name }}</div>
+              </td>
+              <td class="p-3 text-sm text-gray-700 dark:text-gray-300 hidden md:table-cell">{{ user.dni }}</td>
+              <td class="p-3 text-sm text-gray-700 dark:text-gray-300 hidden lg:table-cell">{{ user.phone }}</td>
+              <!-- Status -->
+              <td class="p-3">
+                <span class="px-2 py-0.5 rounded-full text-xs font-semibold text-white"
+                      [ngClass]="user.internet_status === 'ACTIVE' ? 'bg-green-500' : 'bg-red-500'">
+                  {{ user.internet_status }}
+                </span>
+              </td>
+              <td class="p-3 text-sm text-gray-700 dark:text-gray-300 hidden xl:table-cell truncate max-w-xs">{{ user.address }}</td>
+              <!-- Actions -->
+              <td class="p-2 sm:p-3">
+                <div class="flex items-center justify-center gap-1 sm:gap-2">
+                  <!-- Suspend -->
+                  <button (click)="openSuspendModal(user.dni, user.id_user, user.internet_status)"
+                    title="Suspender/Activar"
+                    class="rounded-full p-1 hover:bg-gray-100 dark:hover:bg-gray-700 transition">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"
+                         class="w-5 h-5" [ngClass]="user.internet_status === 'ACTIVE' ? 'text-green-500' : 'text-red-500'">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M5.636 5.636a9 9 0 1 0 12.728 0M12 3v9"/>
+                    </svg>
+                  </button>
+                  <!-- Soporte -->
+                  <button (click)="openClienteModal(user.alias, user.id_user, user.id_cab)"
+                    title="Soporte"
+                    class="rounded-full p-1 hover:bg-gray-100 dark:hover:bg-gray-700 text-blue-600 hover:text-blue-800 transition">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z"/>
+                    </svg>
+                  </button>
+                  <!-- Delete -->
+                  <button (click)="openDeleteModal(user.id_user, user.dni)"
+                    title="Eliminar"
+                    class="rounded-full p-1 hover:bg-gray-100 dark:hover:bg-gray-700 text-red-500 hover:text-red-700 transition">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0"/>
+                    </svg>
+                  </button>
+                  <!-- WhatsApp toggle: solo si empresa tiene WA activo -->
+                  <ng-container *ngIf="companyHasWA; else waDisabledTip">
+                    <label class="relative inline-flex items-center gap-1.5 cursor-pointer" title="Notificaciones WhatsApp">
+                      <input type="checkbox" class="sr-only peer" [checked]="user.whatsapp_enabled" (change)="toggleWhatsapp(user)"/>
+                      <div class="w-8 h-4 bg-gray-200 rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[1px] after:bg-white after:rounded-full after:h-3 after:w-3 after:transition-all peer-checked:bg-green-500 shrink-0"></div>
+                      <svg class="w-4 h-4 shrink-0" [class.text-green-500]="user.whatsapp_enabled" [class.text-gray-400]="!user.whatsapp_enabled" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/>
+                        <path d="M12 0C5.373 0 0 5.373 0 12c0 2.089.534 4.049 1.475 5.762L0 24l6.435-1.44A11.945 11.945 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.818a9.818 9.818 0 01-5.007-1.373l-.36-.214-3.724.834.849-3.629-.236-.373A9.818 9.818 0 1112 21.818z"/>
+                      </svg>
+                    </label>
+                  </ng-container>
+                  <ng-template #waDisabledTip>
+                    <span class="relative inline-flex items-center gap-1 opacity-40 cursor-not-allowed"
+                          title="Activa WhatsApp en Configuración > WhatsApp para habilitar esta opción">
+                      <svg class="w-4 h-4 text-gray-400" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/>
+                        <path d="M12 0C5.373 0 0 5.373 0 12c0 2.089.534 4.049 1.475 5.762L0 24l6.435-1.44A11.945 11.945 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.818a9.818 9.818 0 01-5.007-1.373l-.36-.214-3.724.834.849-3.629-.236-.373A9.818 9.818 0 1112 21.818z"/>
+                      </svg>
+                    </span>
+                  </ng-template>
+                </div>
+              </td>
+            </tr>
+
+            <!-- Expanded row -->
+            <tr *ngIf="user.expanded">
+              <td colspan="7" class="bg-gray-50 dark:bg-gray-900 px-4 py-3">
+                <div class="flex flex-wrap gap-3 items-center text-sm text-gray-600 dark:text-gray-400">
+                  <span class="text-xs sm:text-sm">📅 <strong class="text-gray-800 dark:text-white">{{ user.date_create | date:'dd/MM/yyyy' }}</strong></span>
+                  <span class="text-xs sm:text-sm">📡 <strong class="text-gray-800 dark:text-white">{{ user.ip || 'Sin IP' }}</strong></span>
+                  <span class="text-xs sm:text-sm">📦 <strong class="text-gray-800 dark:text-white">{{ user.plan_name }}</strong></span>
+                  <div class="flex gap-2 ml-auto flex-shrink-0">
+                    <button (click)="openPingModal(user.ip, user.names!, user.lastname!, user.dni, user.id_user)"
+                      class="flex items-center gap-1 px-3 py-1.5 text-xs rounded-lg bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-700 dark:text-white transition">
+                      <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5"/></svg>
+                      Ping
+                    </button>
+                  </div>
+                </div>
+              </td>
+            </tr>
+          </ng-container>
+
+          <!-- Empty state -->
+          <tr *ngIf="UserInterfaces.length === 0">
+            <td colspan="7" class="p-8 text-center text-gray-400 dark:text-gray-500">
+              No se encontraron clientes
+            </td>
+          </tr>
+        </ng-container>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Pagination -->
+  <div class="p-4 flex flex-col sm:flex-row justify-between items-center gap-3 text-sm border-t dark:border-gray-700">
+    <span class="text-gray-500 dark:text-gray-400">
+      Mostrando {{ startIndex + 1 }} – {{ endIndex }} de {{ totalEntries }}
+    </span>
+    <div class="flex items-center gap-1 overflow-x-auto max-w-full pb-0.5">
+      <button (click)="prevPage()" [disabled]="currentPage === 1"
+        class="px-2 sm:px-3 py-1.5 rounded border text-gray-600 dark:text-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 disabled:opacity-40 transition whitespace-nowrap flex-shrink-0">
+        ‹
+      </button>
+      <button *ngFor="let p of pageNumbers" (click)="goToPage(p)"
+        class="px-2.5 sm:px-3 py-1.5 rounded border transition flex-shrink-0"
+        [ngClass]="p === currentPage ? 'bg-blue-600 text-white border-blue-600' : 'text-gray-600 dark:text-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700'">
+        {{ p }}
+      </button>
+      <button (click)="nextPage()" [disabled]="isLastPage"
+        class="px-2 sm:px-3 py-1.5 rounded border text-gray-600 dark:text-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 disabled:opacity-40 transition whitespace-nowrap flex-shrink-0">
+        ›
+      </button>
+    </div>
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════════════════════════════════════════
+     CLIENTE MODAL (Soporte)
+══════════════════════════════════════════════════════════════════════════ -->
+<div *ngIf="showClienteModal"
+     class="fixed inset-0 z-50 flex items-start justify-center bg-black/60 sm:p-4 overflow-y-auto">
+  <div class="relative w-full sm:max-w-6xl sm:my-4 min-h-full sm:min-h-0">
+    <div class="bg-white dark:bg-gray-800 sm:rounded-xl shadow-2xl overflow-hidden min-h-screen sm:min-h-0">
+
+      <!-- Modal header -->
+      <div class="flex flex-wrap items-center justify-between gap-2 px-4 sm:px-6 py-3 sm:py-4 border-b dark:border-gray-700 bg-gray-50 dark:bg-gray-900">
+        <div class="flex items-center gap-3 min-w-0 flex-1">
+          <div class="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-blue-600 flex-shrink-0 flex items-center justify-center text-white font-bold text-sm">
+            {{ (selectedUserData?.names ?? 'C').charAt(0).toUpperCase() }}
+          </div>
+          <div class="min-w-0">
+            <h3 class="text-base sm:text-lg font-semibold text-gray-900 dark:text-white truncate">
+              {{ selectedUserData?.names }} {{ selectedUserData?.lastname }}
+            </h3>
+            <p class="text-xs text-gray-500 dark:text-gray-400 truncate">
+              {{ selectedUserData?.dni }} · IP: {{ selectedUserData?.ip || 'Sin IP' }}
+            </p>
+          </div>
+        </div>
+        <div class="flex items-center gap-2 flex-shrink-0">
+          <!-- Internet toggle -->
+          <button (click)="toggleInternetStatus()" [disabled]="togglingStatus"
+            class="px-2 sm:px-3 py-1 text-xs rounded-full font-semibold text-white transition disabled:opacity-60 whitespace-nowrap"
+            [ngClass]="selectedUserData?.status_internet === 'ACTIVE' ? 'bg-green-500 hover:bg-green-600' : 'bg-red-500 hover:bg-red-600'">
+            <span *ngIf="!togglingStatus">{{ selectedUserData?.status_internet === 'ACTIVE' ? '✅ Activo' : '🔴 Inactivo' }}</span>
+            <span *ngIf="togglingStatus">⏳ ...</span>
+          </button>
+          <button (click)="closeClienteModal()"
+            class="w-8 h-8 flex items-center justify-center rounded-lg text-gray-400 hover:text-red-500 hover:bg-gray-100 dark:hover:bg-gray-700 transition">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- Tabs -->
+      <div class="flex border-b dark:border-gray-700 overflow-x-auto">
+        <button (click)="modalTab='resumen'"
+          class="px-5 py-3 text-sm font-medium whitespace-nowrap border-b-2 transition"
+          [ngClass]="modalTab==='resumen' ? 'border-blue-600 text-blue-600 dark:text-blue-400 dark:border-blue-400' : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'">
+          👤 Resumen
+        </button>
+        <button (click)="openServiciosTab()"
+          class="px-5 py-3 text-sm font-medium whitespace-nowrap border-b-2 transition"
+          [ngClass]="modalTab==='servicios' ? 'border-blue-600 text-blue-600 dark:text-blue-400 dark:border-blue-400' : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'">
+          🔧 Servicios
+        </button>
+        <button (click)="modalTab='facturacion'"
+          class="px-5 py-3 text-sm font-medium whitespace-nowrap border-b-2 transition"
+          [ngClass]="modalTab==='facturacion' ? 'border-blue-600 text-blue-600 dark:text-blue-400 dark:border-blue-400' : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'">
+          💰 Facturación
+        </button>
+        <button (click)="modalTab='tickets'"
+          class="px-5 py-3 text-sm font-medium whitespace-nowrap border-b-2 transition"
+          [ngClass]="modalTab==='tickets' ? 'border-blue-600 text-blue-600 dark:text-blue-400 dark:border-blue-400' : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'">
+          🎫 Tickets
+        </button>
+        <button (click)="modalTab='historial'"
+          class="px-5 py-3 text-sm font-medium whitespace-nowrap border-b-2 transition"
+          [ngClass]="modalTab==='historial' ? 'border-blue-600 text-blue-600 dark:text-blue-400 dark:border-blue-400' : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'">
+          📋 Historial
+        </button>
+      </div>
+
+      <!-- Loading overlay -->
+      <div *ngIf="loadingModal" class="p-12 flex justify-center">
+        <div class="w-10 h-10 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+      </div>
+
+      <!-- Tab content -->
+      <div *ngIf="!loadingModal" class="p-3 sm:p-6">
+
+        <!-- ── Resumen ──────────────────────────────────────────────────── -->
+        <div *ngIf="modalTab === 'resumen'">
+          <div class="grid grid-cols-1 xl:grid-cols-3 gap-4 sm:gap-6">
+
+            <!-- Left: Client data -->
+            <div class="xl:col-span-2 bg-white dark:bg-gray-900 rounded-xl border dark:border-gray-700 p-4 sm:p-6">
+              <div class="flex items-center justify-between mb-5">
+                <h4 class="font-semibold text-gray-800 dark:text-white">Datos del cliente</h4>
+                <div class="flex gap-2" *ngIf="!isEditing">
+                  <button (click)="enableEdit()"
+                    class="px-3 py-1.5 text-xs rounded-lg bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300 hover:bg-blue-200 transition">
+                    ✏️ Editar
+                  </button>
+                </div>
+                <div class="flex gap-2" *ngIf="isEditing">
+                  <button (click)="saveUser()"
+                    class="px-3 py-1.5 text-xs rounded-lg bg-green-600 text-white hover:bg-green-700 transition">💾 Guardar</button>
+                  <button (click)="cancelEdit()"
+                    class="px-3 py-1.5 text-xs rounded-lg bg-gray-200 text-gray-700 hover:bg-gray-300 transition">✖ Cancelar</button>
+                </div>
+              </div>
+
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-4 text-sm">
+                <div *ngFor="let field of [
+                    {label:'Nombres', key:'names', readonly: false},
+                    {label:'Apellidos', key:'lastname', readonly: false},
+                    {label:'Documento', key:'dni', readonly: true},
+                    {label:'Teléfono', key:'phone', readonly: false},
+                    {label:'Correo', key:'email', readonly: false},
+                    {label:'Dirección', key:'address', readonly: false},
+                    {label:'IP Asignada', key:'ip', readonly: true},
+                    {label:'Precio mensual', key:'monthly_price', readonly: true},
+                    {label:'Fecha registro', key:'date_create', readonly: true}
+                  ]">
+                  <div>
+                    <span class="text-gray-500 dark:text-gray-400 text-xs uppercase tracking-wide">{{ field.label }}</span>
+                    <p *ngIf="!isEditing" class="mt-0.5 font-medium text-gray-800 dark:text-white">
+                      {{ selectedUserData?.[field.key] || '—' }}
+                    </p>
+                    <input *ngIf="isEditing && !field.readonly"
+                      [(ngModel)]="selectedUserData[field.key]"
+                      class="mt-0.5 w-full border-b border-gray-300 dark:border-gray-600 bg-transparent focus:outline-none focus:border-blue-500 text-gray-800 dark:text-white py-1"/>
+                    <p *ngIf="isEditing && field.readonly" class="mt-0.5 font-medium text-gray-400">
+                      {{ selectedUserData?.[field.key] || '—' }}
+                    </p>
+                  </div>
+                </div>
+
+                <!-- Plan (select when editing) -->
+                <div>
+                  <span class="text-gray-500 dark:text-gray-400 text-xs uppercase tracking-wide">Plan</span>
+                  <p *ngIf="!isEditing" class="mt-0.5 font-medium text-gray-800 dark:text-white">
+                    {{ selectedUserData?.plan_name || '—' }}
+                  </p>
+                  <select *ngIf="isEditing" [(ngModel)]="internet_plan"
+                    class="mt-0.5 w-full border-b border-gray-300 dark:border-gray-600 bg-transparent focus:outline-none focus:border-blue-500 dark:text-white py-1">
+                    <option *ngFor="let p of PlanInternet" [value]="p.id">{{ p.names }}</option>
+                  </select>
+                </div>
+                <div>
+                  <span class="text-gray-500 dark:text-gray-400 text-xs uppercase tracking-wide">Grupo facturación</span>
+                  <p *ngIf="!isEditing" class="mt-0.5 font-medium text-gray-800 dark:text-white">
+                    {{ dataCorteLabel }}
+                  </p>
+                  <select *ngIf="isEditing" [(ngModel)]="data_cortes"
+                    class="mt-0.5 w-full border-b border-gray-300 dark:border-gray-600 bg-transparent focus:outline-none focus:border-blue-500 dark:text-white py-1">
+                    <option *ngFor="let d of DataCortes" [value]="d.id">{{ d.names }}</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            <!-- Right: Summary cards -->
+            <div class="space-y-4">
+              <div class="bg-white dark:bg-gray-900 rounded-xl border dark:border-gray-700 p-5">
+                <h4 class="font-semibold text-gray-800 dark:text-white mb-4 text-sm">Resumen financiero</h4>
+                <div class="space-y-3 text-sm">
+                  <div class="flex justify-between items-center">
+                    <span class="text-gray-500 dark:text-gray-400">Facturas pendientes</span>
+                    <span class="font-bold text-red-500">{{ pendingFacturesCount }}</span>
+                  </div>
+                  <div class="flex justify-between items-center">
+                    <span class="text-gray-500 dark:text-gray-400">Total adeudado</span>
+                    <span class="font-bold text-red-500">$ {{ pendingFacturesTotal | number:'1.2-2' }}</span>
+                  </div>
+                  <div class="flex justify-between items-center">
+                    <span class="text-gray-500 dark:text-gray-400">Tickets abiertos</span>
+                    <span class="font-bold text-orange-500">{{ userTickets.length }}</span>
+                  </div>
+                </div>
+              </div>
+              <div class="bg-white dark:bg-gray-900 rounded-xl border dark:border-gray-700 p-5">
+                <h4 class="font-semibold text-gray-800 dark:text-white mb-3 text-sm">Acciones rápidas</h4>
+                <div class="flex flex-col gap-2">
+                  <button (click)="modalTab='facturacion'"
+                    class="w-full px-3 py-2 text-xs rounded-lg bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 hover:bg-blue-100 transition text-left">
+                    💰 Ver facturación
+                  </button>
+                  <button (click)="modalTab='tickets'"
+                    class="w-full px-3 py-2 text-xs rounded-lg bg-orange-50 dark:bg-orange-900/20 text-orange-700 dark:text-orange-300 hover:bg-orange-100 transition text-left">
+                    🎫 Ver tickets
+                  </button>
+                  <button (click)="downloadCsvUser()"
+                    class="w-full px-3 py-2 text-xs rounded-lg bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-300 hover:bg-green-100 transition text-left">
+                    ⬇ Exportar CSV cliente
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ── Servicios ───────────────────────────────────────────────── -->
+        <div *ngIf="modalTab === 'servicios'">
+          <div class="max-w-lg space-y-6">
+
+            <!-- Autorizar servicio -->
+            <div>
+              <h4 class="font-semibold text-gray-800 dark:text-white mb-4">Autorizar servicio</h4>
+              <div class="bg-gray-50 dark:bg-gray-900 rounded-xl border dark:border-gray-700 p-5">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
+                  <div>
+                    <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">MAC Address</label>
+                    <input type="text" [(ngModel)]="mac" placeholder="AA:BB:CC:DD:EE:FF"
+                      class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white text-sm focus:ring-blue-500 focus:border-blue-500"/>
+                  </div>
+                  <div>
+                    <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Serial</label>
+                    <input type="text" [(ngModel)]="serial" placeholder="Serial del equipo"
+                      class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white text-sm focus:ring-blue-500 focus:border-blue-500"/>
+                  </div>
+                </div>
+                <button (click)="autorizarServicio()" [disabled]="submittingService || !mac"
+                  class="w-full px-4 py-2 rounded-lg bg-green-600 text-white text-sm font-medium hover:bg-green-700 disabled:opacity-50 transition">
+                  {{ submittingService ? 'Autorizando...' : '✅ Autorizar Servicio' }}
+                </button>
+              </div>
+            </div>
+
+            <!-- Migración de IP -->
+            <div>
+              <h4 class="font-semibold text-gray-800 dark:text-white mb-4">Migración de IP</h4>
+              <div class="bg-gray-50 dark:bg-gray-900 rounded-xl border dark:border-gray-700 p-5">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
+                  <div>
+                    <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">VLAN</label>
+                    <select [(ngModel)]="migrVlan" (ngModelChange)="onMigrVlanChange($event)"
+                      class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white text-sm">
+                      <option [ngValue]="null" disabled>Seleccione VLAN...</option>
+                      <option *ngFor="let iface of interfaces" [ngValue]="iface">{{ iface.names }}</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Segmento</label>
+                    <select [(ngModel)]="migrSeg" (ngModelChange)="onMigrSegChange($event)" [disabled]="!migrSegments.length"
+                      class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white text-sm disabled:opacity-50">
+                      <option [ngValue]="null" disabled>Seleccione segmento...</option>
+                      <option *ngFor="let s of migrSegments" [ngValue]="s">{{ s.network }}</option>
+                    </select>
+                  </div>
+                  <div class="sm:col-span-2">
+                    <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">IP ({{ migrIpzone.length }} disponibles)</label>
+                    <select [(ngModel)]="migrIp" [disabled]="!migrIpzone.length"
+                      class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white text-sm disabled:opacity-50">
+                      <option value="" disabled>Seleccione IP...</option>
+                      <option *ngFor="let ip of migrIpzone" [value]="ip.id">{{ ip.names }}</option>
+                    </select>
+                  </div>
+                </div>
+                <button (click)="migrarIp()" [disabled]="submittingMigr || !migrIp || !migrVlan"
+                  class="w-full px-4 py-2 rounded-lg bg-orange-600 text-white text-sm font-medium hover:bg-orange-700 disabled:opacity-50 transition">
+                  {{ submittingMigr ? 'Migrando...' : 'Migrar IP' }}
+                </button>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- ── Facturación ─────────────────────────────────────────────── -->
+        <div *ngIf="modalTab === 'facturacion'">
+          <!-- Toolbar -->
+          <div class="flex flex-wrap items-center gap-2 sm:gap-3 mb-4">
+            <button (click)="showCreateFactureForm = !showCreateFactureForm"
+              class="px-4 py-2 text-sm rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition">
+              + Nueva factura
+            </button>
+            <div class="flex rounded-lg overflow-hidden border dark:border-gray-600 text-xs">
+              <button (click)="factureFilter='all'"
+                class="px-3 py-1.5 transition"
+                [ngClass]="factureFilter==='all' ? 'bg-blue-600 text-white' : 'bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:bg-gray-100'">
+                Todas
+              </button>
+              <button (click)="factureFilter='pending'"
+                class="px-3 py-1.5 transition"
+                [ngClass]="factureFilter==='pending' ? 'bg-yellow-500 text-white' : 'bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:bg-gray-100'">
+                Pendientes
+              </button>
+              <button (click)="factureFilter='paid'"
+                class="px-3 py-1.5 transition"
+                [ngClass]="factureFilter==='paid' ? 'bg-green-600 text-white' : 'bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:bg-gray-100'">
+                Pagadas
+              </button>
+            </div>
+            <input type="search" [(ngModel)]="factureSearch" placeholder="Buscar N° factura..."
+              class="w-full sm:w-auto border rounded-lg px-3 py-1.5 text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white"/>
+          </div>
+
+          <!-- Create facture form -->
+          <div *ngIf="showCreateFactureForm"
+               class="mb-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-xl p-4">
+            <h5 class="font-medium text-blue-800 dark:text-blue-200 mb-3 text-sm">Nueva factura</h5>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Valor total</label>
+                <input type="number" [(ngModel)]="newFacture.price_total"
+                  class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white text-sm"/>
+              </div>
+              <div>
+                <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Fecha</label>
+                <input type="datetime-local" [(ngModel)]="newFacture.date_facturation"
+                  class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white text-sm"/>
+              </div>
+            </div>
+            <div class="flex gap-2 mt-3">
+              <button (click)="createFacture()" [disabled]="submittingFacture"
+                class="px-4 py-2 text-sm rounded-lg bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50 transition">
+                {{ submittingFacture ? 'Creando...' : 'Crear factura' }}
+              </button>
+              <button (click)="showCreateFactureForm = false"
+                class="px-4 py-2 text-sm rounded-lg bg-gray-200 text-gray-700 hover:bg-gray-300 transition">
+                Cancelar
+              </button>
+            </div>
+          </div>
+
+          <!-- Loading -->
+          <div *ngIf="loadingFacture" class="flex justify-center py-8">
+            <div class="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+          </div>
+
+          <!-- Table -->
+          <div *ngIf="!loadingFacture" class="overflow-x-auto rounded-xl border dark:border-gray-700">
+            <table class="min-w-[750px] w-full text-sm divide-y divide-gray-200 dark:divide-gray-700">
+              <thead class="bg-gray-50 dark:bg-gray-700 text-xs uppercase text-gray-500 dark:text-gray-400">
+                <tr>
+                  <th class="px-4 py-3">N° Factura</th>
+                  <th class="px-4 py-3">Emitido</th>
+                  <th class="px-4 py-3">Estado</th>
+                  <th class="px-4 py-3 text-right">Total</th>
+                  <th class="px-4 py-3 text-right">Restante</th>
+                  <th class="px-4 py-3">Fecha pago</th>
+                  <th class="px-4 py-3 text-center">Acciones</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-gray-200 dark:divide-gray-700 dark:bg-gray-800">
+                <tr *ngFor="let item of filteredFactures"
+                    class="hover:bg-gray-50 dark:hover:bg-gray-700 transition">
+                  <td class="px-4 py-2.5 font-medium text-blue-600 dark:text-blue-400">{{ item.number_facture }}</td>
+                  <td class="px-4 py-2.5 text-gray-600 dark:text-gray-300">{{ item.date_facturation | date:'dd/MM/yyyy' }}</td>
+                  <td class="px-4 py-2.5">
+                    <span class="px-2 py-0.5 rounded-full text-xs font-semibold text-white"
+                          [ngClass]="item.paid === 1 ? 'bg-teal-500' : 'bg-yellow-500'">
+                      {{ item.paid === 1 ? 'PAGADO' : 'PENDIENTE' }}
+                    </span>
+                  </td>
+                  <td class="px-4 py-2.5 text-right font-medium">$ {{ item.price_total | number:'1.2-2' }}</td>
+                  <td class="px-4 py-2.5 text-right" [ngClass]="(item.restante ?? 0) > 0 ? 'text-red-500 font-semibold' : 'text-gray-500'">
+                    $ {{ item.restante | number:'1.2-2' }}
+                  </td>
+                  <td class="px-4 py-2.5 text-gray-500 dark:text-gray-400">{{ item.updated_at | date:'dd/MM/yyyy' }}</td>
+                  <td class="px-4 py-2.5">
+                    <div class="flex items-center justify-center gap-1">
+                      <!-- Pay -->
+                      <button *ngIf="item.paid !== 1"
+                        (click)="payFacture(item)"
+                        [disabled]="payingFactureId === item.id"
+                        title="Registrar pago"
+                        class="p-1.5 rounded-lg bg-teal-100 text-teal-700 hover:bg-teal-200 dark:bg-teal-900/30 dark:text-teal-300 disabled:opacity-40 transition">
+                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0z"/></svg>
+                      </button>
+                      <!-- PDF Invoice -->
+                      <button (click)="downloadPdf(item.number_facture)" title="Descargar factura PDF"
+                        class="p-1.5 rounded-lg bg-blue-100 text-blue-700 hover:bg-blue-200 dark:bg-blue-900/30 dark:text-blue-300 transition">
+                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0-3-3m3 3 3-3m2 8H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5.586a1 1 0 0 1 .707.293l5.414 5.414a1 1 0 0 1 .293.707V19a2 2 0 0 1-2 2z"/></svg>
+                      </button>
+                      <!-- WhatsApp: send invoice -->
+                      <button (click)="sendInvoiceWA(item.number_facture!, item)"
+                        [disabled]="item._waSending"
+                        title="Enviar factura por WhatsApp"
+                        class="p-1.5 rounded-lg bg-emerald-100 text-emerald-700 hover:bg-emerald-200 dark:bg-emerald-900/30 dark:text-emerald-300 disabled:opacity-40 transition">
+                        <svg *ngIf="!item._waSending" class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
+                          <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.890-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413Z"/>
+                        </svg>
+                        <svg *ngIf="item._waSending" class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
+                          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"/>
+                        </svg>
+                      </button>
+                      <!-- PDF Comprobante -->
+                      <button *ngIf="item.paid === 1"
+                        (click)="downloadPayPdf(item.id, item.prueba)" title="Descargar comprobante"
+                        class="p-1.5 rounded-lg bg-green-100 text-green-700 hover:bg-green-200 dark:bg-green-900/30 dark:text-green-300 transition">
+                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 0 0 1.946-.806 3.42 3.42 0 0 1 4.438 0 3.42 3.42 0 0 0 1.946.806 3.42 3.42 0 0 1 3.138 3.138 3.42 3.42 0 0 0 .806 1.946 3.42 3.42 0 0 1 0 4.438 3.42 3.42 0 0 0-.806 1.946 3.42 3.42 0 0 1-3.138 3.138 3.42 3.42 0 0 0-1.946.806 3.42 3.42 0 0 1-4.438 0 3.42 3.42 0 0 0-1.946-.806 3.42 3.42 0 0 1-3.138-3.138 3.42 3.42 0 0 0-.806-1.946 3.42 3.42 0 0 1 0-4.438 3.42 3.42 0 0 0 .806-1.946 3.42 3.42 0 0 1 3.138-3.138z"/></svg>
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+                <tr *ngIf="filteredFactures.length === 0">
+                  <td colspan="7" class="px-4 py-8 text-center text-gray-400 dark:text-gray-500">
+                    No hay facturas {{ factureFilter !== 'all' ? 'en este estado' : '' }}
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- ── Tickets ──────────────────────────────────────────────────── -->
+        <div *ngIf="modalTab === 'tickets'">
+          <div class="flex flex-wrap items-center justify-between gap-2 mb-4">
+            <h4 class="font-semibold text-gray-800 dark:text-white">Historial de Tickets</h4>
+            <button (click)="showNewTicketForm = !showNewTicketForm"
+              class="px-4 py-2 text-sm rounded-lg bg-orange-500 text-white hover:bg-orange-600 transition whitespace-nowrap">
+              + Nuevo ticket
+            </button>
+          </div>
+
+          <!-- New ticket form -->
+          <div *ngIf="showNewTicketForm"
+               class="mb-4 bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800 rounded-xl p-5">
+            <h5 class="font-medium text-orange-800 dark:text-orange-200 mb-4 text-sm">Crear nuevo ticket</h5>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
+              <div>
+                <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Tipo de servicio *</label>
+                <select [(ngModel)]="ticketForm.type_service"
+                  class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white text-sm">
+                  <option [value]="0" disabled>Seleccione...</option>
+                  <option *ngFor="let s of serviceTypes" [value]="s.id">{{ s.name }}</option>
+                </select>
+              </div>
+              <div>
+                <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Prioridad *</label>
+                <select [(ngModel)]="ticketForm.priority"
+                  class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white text-sm">
+                  <option [value]="0" disabled>Seleccione...</option>
+                  <option *ngFor="let p of priorities" [value]="p.id">{{ p.name }}</option>
+                </select>
+              </div>
+              <div>
+                <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Técnico *</label>
+                <select [(ngModel)]="ticketForm.tecnichal"
+                  class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white text-sm">
+                  <option [value]="0" disabled>Seleccione...</option>
+                  <option *ngFor="let t of technicians" [value]="t.user_id">{{ t.names }} {{ t.lastname }}</option>
+                </select>
+              </div>
+              <div>
+                <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Fecha</label>
+                <input type="datetime-local" [(ngModel)]="ticketForm.date"
+                  class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white text-sm"/>
+              </div>
+              <div>
+                <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Dirección</label>
+                <input type="text" [(ngModel)]="ticketForm.address" [placeholder]="selectedUserData?.address || ''"
+                  class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white text-sm"/>
+              </div>
+              <div class="sm:col-span-2">
+                <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Observación</label>
+                <input type="text" [(ngModel)]="ticketForm.observation" placeholder="Descripción del problema"
+                  class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white text-sm"/>
+              </div>
+            </div>
+            <div class="flex gap-2">
+              <button (click)="createTicket()" [disabled]="submittingTicket"
+                class="px-4 py-2 text-sm rounded-lg bg-orange-500 text-white hover:bg-orange-600 disabled:opacity-50 transition">
+                {{ submittingTicket ? 'Creando...' : 'Crear ticket' }}
+              </button>
+              <button (click)="showNewTicketForm = false"
+                class="px-4 py-2 text-sm rounded-lg bg-gray-200 text-gray-700 hover:bg-gray-300 transition">
+                Cancelar
+              </button>
+            </div>
+          </div>
+
+          <!-- Loading -->
+          <div *ngIf="loadingTickets" class="flex justify-center py-8">
+            <div class="w-8 h-8 border-4 border-orange-500 border-t-transparent rounded-full animate-spin"></div>
+          </div>
+
+          <!-- Table -->
+          <div *ngIf="!loadingTickets" class="overflow-x-auto rounded-xl border dark:border-gray-700">
+            <table class="min-w-[700px] w-full text-sm divide-y divide-gray-200 dark:divide-gray-700">
+              <thead class="bg-gray-50 dark:bg-gray-700 text-xs uppercase text-gray-500 dark:text-gray-400">
+                <tr>
+                  <th class="px-4 py-3">N°</th>
+                  <th class="px-4 py-3">Servicio</th>
+                  <th class="px-4 py-3">Prioridad</th>
+                  <th class="px-4 py-3">Técnico</th>
+                  <th class="px-4 py-3">Fecha</th>
+                  <th class="px-4 py-3">Estado</th>
+                  <th class="px-4 py-3">Observación</th>
+                  <th class="px-4 py-3 text-center">PDF</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-gray-200 dark:divide-gray-700 dark:bg-gray-800">
+                <tr *ngFor="let t of pagedTickets" class="hover:bg-gray-50 dark:hover:bg-gray-700 transition">
+                  <td class="px-4 py-2.5 font-medium text-gray-700 dark:text-white">{{ t.id }}</td>
+                  <td class="px-4 py-2.5">
+                    <span class="px-2 py-0.5 rounded bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300 text-xs">
+                      {{ t.service }}
+                    </span>
+                  </td>
+                  <td class="px-4 py-2.5">
+                    <span class="px-2 py-0.5 rounded text-xs font-semibold"
+                          [ngClass]="{
+                            'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300': t.prioritys === 'ALTA',
+                            'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-300': t.prioritys === 'MEDIA',
+                            'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300': t.prioritys !== 'ALTA' && t.prioritys !== 'MEDIA'
+                          }">
+                      {{ t.prioritys }}
+                    </span>
+                  </td>
+                  <td class="px-4 py-2.5 text-gray-600 dark:text-gray-300">{{ t.tech_names }} {{ t.tech_lastname }}</td>
+                  <td class="px-4 py-2.5 text-gray-500 dark:text-gray-400">{{ t.date | date:'dd/MM/yyyy' }}</td>
+                  <td class="px-4 py-2.5">
+                    <span class="px-2 py-0.5 rounded-full text-xs font-semibold text-white"
+                          [ngClass]="{
+                            'bg-green-500': t.status === 'CERRADO',
+                            'bg-blue-500': t.status === 'EN PROCESO',
+                            'bg-yellow-500': t.status !== 'CERRADO' && t.status !== 'EN PROCESO'
+                          }">
+                      {{ t.status }}
+                    </span>
+                  </td>
+                  <td class="px-4 py-2.5 text-gray-500 dark:text-gray-400 truncate max-w-[160px]">{{ t.observation }}</td>
+                  <td class="px-4 py-2.5 text-center">
+                    <button (click)="downloadTicketPdf(t.id)" title="PDF Ticket"
+                      class="p-1.5 rounded-lg bg-blue-100 text-blue-700 hover:bg-blue-200 dark:bg-blue-900/30 dark:text-blue-300 transition">
+                      <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0-3-3m3 3 3-3m2 8H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5.586a1 1 0 0 1 .707.293l5.414 5.414a1 1 0 0 1 .293.707V19a2 2 0 0 1-2 2z"/></svg>
+                    </button>
+                  </td>
+                </tr>
+                <tr *ngIf="userTickets.length === 0">
+                  <td colspan="8" class="px-4 py-8 text-center text-gray-400 dark:text-gray-500">
+                    No hay tickets registrados para este cliente
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Ticket pagination -->
+          <div *ngIf="ticketPageCount > 1" class="flex items-center justify-between mt-3 px-1">
+            <span class="text-xs text-gray-400 dark:text-gray-500">
+              {{ (ticketPage-1)*ticketPerPage+1 }}–{{ ticketPage*ticketPerPage > userTickets.length ? userTickets.length : ticketPage*ticketPerPage }} de {{ userTickets.length }}
+            </span>
+            <div class="flex gap-1">
+              <button (click)="ticketPage = ticketPage - 1" [disabled]="ticketPage === 1"
+                class="px-2 py-1 text-xs rounded border border-gray-300 dark:border-gray-600 disabled:opacity-40 hover:bg-gray-50 dark:hover:bg-gray-700">
+                ←
+              </button>
+              <button *ngFor="let p of ticketPageNumbers" (click)="ticketPage = p"
+                [class]="'px-2 py-1 text-xs rounded ' + (p === ticketPage ? 'bg-blue-600 text-white' : 'border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700')">
+                {{ p }}
+              </button>
+              <button (click)="ticketPage = ticketPage + 1" [disabled]="ticketPage === ticketPageCount"
+                class="px-2 py-1 text-xs rounded border border-gray-300 dark:border-gray-600 disabled:opacity-40 hover:bg-gray-50 dark:hover:bg-gray-700">
+                →
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- ── Historial de cambios ───────────────────────────────────── -->
+        <div *ngIf="modalTab === 'historial'">
+          <h4 class="font-semibold text-gray-800 dark:text-white mb-4">Historial de cambios</h4>
+
+          <div *ngIf="loadingAudit" class="flex justify-center py-8">
+            <div class="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+          </div>
+
+          <div *ngIf="!loadingAudit" class="overflow-x-auto rounded-xl border dark:border-gray-700">
+            <table class="min-w-[600px] w-full text-sm divide-y divide-gray-200 dark:divide-gray-700">
+              <thead class="bg-gray-50 dark:bg-gray-700 text-xs uppercase text-gray-500 dark:text-gray-400">
+                <tr>
+                  <th class="px-4 py-3">Fecha</th>
+                  <th class="px-4 py-3">Campo</th>
+                  <th class="px-4 py-3">Valor anterior</th>
+                  <th class="px-4 py-3">Nuevo valor</th>
+                  <th class="px-4 py-3">Descripción</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-gray-200 dark:divide-gray-700 dark:bg-gray-800">
+                <tr *ngFor="let log of auditLogs" class="hover:bg-gray-50 dark:hover:bg-gray-700 transition">
+                  <td class="px-4 py-2.5 text-gray-500 dark:text-gray-400 whitespace-nowrap">
+                    {{ log.created_at | date:'dd/MM/yyyy HH:mm' }}
+                  </td>
+                  <td class="px-4 py-2.5">
+                    <span class="px-2 py-0.5 rounded bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300 text-xs font-medium">
+                      {{ auditFieldLabel(log.field_changed) }}
+                    </span>
+                  </td>
+                  <td class="px-4 py-2.5 text-red-500 dark:text-red-400 text-xs">
+                    {{ log.old_value || '—' }}
+                  </td>
+                  <td class="px-4 py-2.5 text-green-600 dark:text-green-400 text-xs font-medium">
+                    {{ log.new_value || '—' }}
+                  </td>
+                  <td class="px-4 py-2.5 text-gray-500 dark:text-gray-400 text-xs">
+                    {{ log.description }}
+                  </td>
+                </tr>
+                <tr *ngIf="auditLogs.length === 0">
+                  <td colspan="5" class="px-4 py-8 text-center text-gray-400 dark:text-gray-500">
+                    No hay registros de cambios para este cliente
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════════════════════════════════════════
+     PING MODAL
+══════════════════════════════════════════════════════════════════════════ -->
+<div *ngIf="showPingModal"
+     class="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/60 sm:p-4">
+  <div class="bg-white dark:bg-gray-800 rounded-t-2xl sm:rounded-xl shadow-2xl w-full sm:max-w-lg">
+    <div class="flex items-center justify-between px-5 py-4 border-b dark:border-gray-700">
+      <div>
+        <h3 class="font-semibold text-gray-900 dark:text-white">Diagnóstico Ping</h3>
+        <p class="text-sm text-gray-500 dark:text-gray-400">{{ pingName }}</p>
+      </div>
+      <button (click)="closePingModal()" class="text-gray-400 hover:text-red-500 transition">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+        </svg>
+      </button>
+    </div>
+    <div class="p-5 space-y-4">
+      <div class="flex items-center gap-3">
+        <div class="flex-1">
+          <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Cantidad de pings</label>
+          <input type="number" [(ngModel)]="pingCount" min="1" max="20"
+            class="w-full px-3 py-2 rounded-lg border dark:bg-gray-700 dark:border-gray-600 dark:text-white text-sm"/>
+        </div>
+        <button (click)="startPing()" [disabled]="isPinging"
+          class="mt-5 px-4 py-2 rounded-lg bg-blue-600 text-white text-sm hover:bg-blue-700 disabled:opacity-50 transition">
+          {{ isPinging ? 'Pinging...' : 'Enviar' }}
+        </button>
+      </div>
+
+      <div *ngIf="pingResults.length > 0"
+           class="rounded-lg border dark:border-gray-700 overflow-hidden max-h-64 overflow-y-auto">
+        <table class="w-full text-xs">
+          <thead class="bg-gray-50 dark:bg-gray-700">
+            <tr>
+              <th class="px-3 py-2 text-left">#</th>
+              <th class="px-3 py-2 text-left">Host</th>
+              <th class="px-3 py-2 text-left">Tiempo</th>
+              <th class="px-3 py-2 text-left">Estado</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-gray-200 dark:divide-gray-700 dark:bg-gray-800">
+            <tr *ngFor="let r of pingResults; let i = index" class="hover:bg-gray-50 dark:hover:bg-gray-700">
+              <td class="px-3 py-2 text-gray-500">{{ i + 1 }}</td>
+              <td class="px-3 py-2">{{ r.host }}</td>
+              <td class="px-3 py-2">{{ convertToSeconds(r.time) }}</td>
+              <td class="px-3 py-2">{{ r.status }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════════════════════════════════════════
+     CONFIRM SUSPEND MODAL
+══════════════════════════════════════════════════════════════════════════ -->
+<div *ngIf="showSuspendModal"
+     class="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/60 p-4">
+  <div class="bg-white dark:bg-gray-800 rounded-2xl sm:rounded-xl shadow-2xl w-full max-w-sm p-6 text-center mb-0 sm:mb-0">
+    <div class="w-14 h-14 mx-auto mb-4 rounded-full bg-yellow-100 dark:bg-yellow-900/30 flex items-center justify-center">
+      <svg class="w-7 h-7 text-yellow-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+      </svg>
+    </div>
+    <h3 class="text-lg font-semibold text-gray-800 dark:text-white mb-2">
+      {{ pendingSuspendStatus === 'ACTIVE' ? '¿Suspender cliente?' : '¿Activar cliente?' }}
+    </h3>
+    <p class="text-sm text-gray-500 dark:text-gray-400 mb-6">Esta acción cambiará el estado del servicio de internet.</p>
+    <div class="flex gap-3 justify-center">
+      <button (click)="confirmSuspend()"
+        class="px-5 py-2 rounded-lg text-sm font-medium text-white transition"
+        [ngClass]="pendingSuspendStatus === 'ACTIVE' ? 'bg-red-500 hover:bg-red-600' : 'bg-green-500 hover:bg-green-600'">
+        Confirmar
+      </button>
+      <button (click)="showSuspendModal = false"
+        class="px-5 py-2 rounded-lg bg-gray-200 text-gray-700 text-sm hover:bg-gray-300 transition">
+        Cancelar
+      </button>
+    </div>
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════════════════════════════════════════
+     CONFIRM DELETE MODAL
+══════════════════════════════════════════════════════════════════════════ -->
+<div *ngIf="showDeleteModal"
+     class="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/60 p-4">
+  <div class="bg-white dark:bg-gray-800 rounded-2xl sm:rounded-xl shadow-2xl w-full max-w-sm p-6 text-center">
+    <div class="w-14 h-14 mx-auto mb-4 rounded-full bg-red-100 dark:bg-red-900/30 flex items-center justify-center">
+      <svg class="w-7 h-7 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+      </svg>
+    </div>
+    <h3 class="text-lg font-semibold text-gray-800 dark:text-white mb-2">¿Eliminar cliente?</h3>
+    <p class="text-sm text-gray-500 dark:text-gray-400 mb-6">Esta acción no se puede deshacer.</p>
+    <div class="flex gap-3 justify-center">
+      <button (click)="confirmDelete()"
+        class="px-5 py-2 rounded-lg bg-red-500 text-white text-sm hover:bg-red-600 transition">
+        Eliminar
+      </button>
+      <button (click)="showDeleteModal = false"
+        class="px-5 py-2 rounded-lg bg-gray-200 text-gray-700 text-sm hover:bg-gray-300 transition">
+        Cancelar
+      </button>
+    </div>
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════════════════════════════════════════
+     CREATE USER MODAL
+══════════════════════════════════════════════════════════════════════════ -->
+<div *ngIf="showCreateUser"
+     class="fixed inset-0 z-50 flex items-start sm:items-center justify-center bg-black/60 sm:p-4 overflow-y-auto">
+  <div class="bg-white dark:bg-gray-800 sm:rounded-xl shadow-2xl w-full sm:max-w-2xl sm:my-4 min-h-screen sm:min-h-0">
+    <div class="flex items-center justify-between px-6 py-4 border-b dark:border-gray-700">
+      <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Registrar nuevo cliente</h3>
+      <button (click)="showCreateUser = false" class="text-gray-400 hover:text-red-500 transition">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+        </svg>
+      </button>
+    </div>
+
+    <!-- Sub-tabs -->
+    <div class="flex border-b dark:border-gray-700">
+      <button (click)="showUserFormProfile = true"
+        class="px-5 py-3 text-sm font-medium border-b-2 transition"
+        [ngClass]="showUserFormProfile ? 'border-blue-600 text-blue-600' : 'border-transparent text-gray-500'">
+        Datos personales
+      </button>
+      <button (click)="showUserFormProfile = false"
+        class="px-5 py-3 text-sm font-medium border-b-2 transition"
+        [ngClass]="!showUserFormProfile ? 'border-blue-600 text-blue-600' : 'border-transparent text-gray-500'">
+        Conexión
+      </button>
+    </div>
+
+    <div class="p-6">
+      <!-- Personal data -->
+      <div *ngIf="showUserFormProfile" class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div *ngFor="let f of [
+            {label:'Nombres', key:'names', type:'text', ph:'Ingrese nombres'},
+            {label:'Apellidos', key:'lastname', type:'text', ph:'Ingrese apellidos'},
+            {label:'Documento', key:'dni', type:'text', ph:'Ingrese DNI/CC'},
+            {label:'Teléfono', key:'phone', type:'tel', ph:'Ingrese teléfono'},
+            {label:'Correo', key:'email', type:'email', ph:'Ingrese correo'},
+            {label:'Dirección', key:'address', type:'text', ph:'Ingrese dirección'}
+          ]">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{{ f.label }}</label>
+            <input [type]="f.type" [(ngModel)]="newUser[f.key]" [placeholder]="f.ph"
+              class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white text-sm focus:ring-blue-500 focus:border-blue-500"/>
+          </div>
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Periodo facturación</label>
+          <select [(ngModel)]="newUser.periode_facturation"
+            class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white text-sm">
+            <option [value]="0" disabled>Seleccione...</option>
+            <option *ngFor="let d of DataCortes" [value]="d.id">{{ d.names }}</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Connection data -->
+      <div *ngIf="!showUserFormProfile" class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div>
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">VLAN</label>
+          <select [(ngModel)]="selectedVlan" (ngModelChange)="onInterfaceChange($event)"
+            class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white text-sm">
+            <option [ngValue]="null" disabled>Seleccione VLAN...</option>
+            <option *ngFor="let iface of interfaces" [ngValue]="iface">{{ iface.names }}</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Segmento</label>
+          <select [(ngModel)]="selectedSeg" (ngModelChange)="onSegmentChange($event)" [disabled]="!segments.length"
+            class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white text-sm disabled:opacity-50">
+            <option [ngValue]="null" disabled>Seleccione segmento...</option>
+            <option *ngFor="let s of segments" [ngValue]="s">{{ s.network }}</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">IP ({{ Ipzone.length }} disponibles)</label>
+          <select [(ngModel)]="newUser.ip" [disabled]="!Ipzone.length"
+            class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white text-sm disabled:opacity-50">
+            <option [value]="0" disabled>Seleccione IP...</option>
+            <option *ngFor="let ip of Ipzone" [value]="ip.id">{{ ip.names }}</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Plan de Internet</label>
+          <select [(ngModel)]="newUser.plan_id"
+            class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white text-sm">
+            <option [value]="0" disabled>Seleccione plan...</option>
+            <option *ngFor="let p of PlanInternet" [value]="p.id">{{ p.names }}</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="flex gap-3 mt-6">
+        <button (click)="createUser()" [disabled]="submittingNewUser"
+          class="px-6 py-2.5 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700 disabled:opacity-50 transition">
+          {{ submittingNewUser ? 'Registrando...' : 'Registrar cliente' }}
+        </button>
+        <button (click)="showCreateUser = false"
+          class="px-6 py-2.5 rounded-lg bg-gray-200 text-gray-700 text-sm hover:bg-gray-300 transition">
+          Cancelar
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
