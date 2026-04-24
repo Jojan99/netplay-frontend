@@ -1,0 +1,7 @@
+{
+  "name": "Netplay-Front",
+  "integrations": {
+    "capacitor": {}
+  },
+  "type": "angular"
+}

@@ -1,0 +1,270 @@
+<div class="p-6 max-w-5xl mx-auto space-y-6">
+
+  <!-- Header -->
+  <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+    <div>
+      <h1 class="text-xl font-bold text-gray-800 dark:text-white">ONTs sin autorizar</h1>
+      <p class="text-sm text-gray-500 dark:text-gray-400 mt-0.5">
+        Dispositivos conectados a la OLT pendientes de registro.
+      </p>
+    </div>
+
+    <div class="flex items-center gap-2 flex-wrap">
+      <select [(ngModel)]="selectedOltId" (ngModelChange)="onOltChange()"
+              [disabled]="loadingOlts"
+              class="text-sm px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500">
+        <option [ngValue]="null">{{ loadingOlts ? 'Cargando...' : 'Seleccionar OLT' }}</option>
+        <option *ngFor="let olt of olts" [ngValue]="olt.id">{{ olt.name }}</option>
+      </select>
+
+      <button (click)="loadUnauth()" [disabled]="!selectedOltId || loadingOnts"
+              class="flex items-center gap-1.5 px-3 py-2 text-sm bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white rounded-lg transition-colors">
+        <svg *ngIf="!loadingOnts" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182m0-4.991v4.99"/>
+        </svg>
+        <svg *ngIf="loadingOnts" class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
+          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/>
+        </svg>
+        Actualizar
+      </button>
+    </div>
+  </div>
+
+  <!-- Sin OLT -->
+  <div *ngIf="!selectedOltId && !loadingOlts"
+       class="flex flex-col items-center justify-center py-20 text-gray-400 dark:text-gray-500">
+    <svg class="w-14 h-14 mb-3 opacity-40" fill="none" viewBox="0 0 24 24" stroke-width="1" stroke="currentColor">
+      <path stroke-linecap="round" stroke-linejoin="round" d="M8.288 15.038a5.25 5.25 0 0 1 7.424 0M5.106 11.856c3.807-3.808 9.98-3.808 13.788 0M1.924 8.674c5.565-5.565 14.587-5.565 20.152 0M12.53 18.22l-.53.53-.53-.53a.75.75 0 0 1 1.06 0Z"/>
+    </svg>
+    <p class="text-sm">Selecciona una OLT para ver las ONTs pendientes.</p>
+  </div>
+
+  <!-- Loading -->
+  <div *ngIf="loadingOnts" class="space-y-3 animate-pulse">
+    <div *ngFor="let i of [1,2,3,4,5]" class="h-16 bg-gray-200 dark:bg-gray-700 rounded-xl"></div>
+  </div>
+
+  <!-- Sin resultados -->
+  <div *ngIf="!loadingOnts && selectedOltId && onts.length === 0 && lastFetched"
+       class="flex flex-col items-center justify-center py-16 text-gray-400">
+    <svg class="w-12 h-12 mb-3 opacity-40" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+      <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/>
+    </svg>
+    <p class="text-sm font-medium">No hay ONTs sin autorizar</p>
+    <p class="text-xs mt-1">Todos los dispositivos conectados ya están registrados.</p>
+  </div>
+
+  <!-- Lista -->
+  <div *ngIf="!loadingOnts && onts.length > 0">
+    <div class="flex items-center justify-between mb-3 flex-wrap gap-2">
+      <span class="text-sm text-gray-500 dark:text-gray-400">
+        <span class="font-semibold text-gray-800 dark:text-white">{{ onts.length }}</span> ONT(s) pendiente(s)
+        <ng-container *ngIf="lastFetched"> · {{ lastFetched | date:'HH:mm:ss' }}</ng-container>
+      </span>
+      <select [(ngModel)]="perPage" (ngModelChange)="changePerPage()"
+              class="text-sm px-3 py-1.5 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500">
+        <option *ngFor="let n of perPageOptions" [ngValue]="n">{{ n }} / pág</option>
+      </select>
+    </div>
+
+    <div class="overflow-x-auto rounded-xl border border-gray-200 dark:border-gray-700">
+      <table class="w-full text-sm">
+        <thead class="bg-gray-50 dark:bg-gray-800 text-xs uppercase text-gray-500 dark:text-gray-400">
+          <tr>
+            <th class="px-4 py-3 text-left">FSP (Puerto)</th>
+            <th class="px-4 py-3 text-left">Serial</th>
+            <th class="px-4 py-3 text-left">Estado</th>
+            <th class="px-4 py-3 text-left">Señal Rx</th>
+            <th class="px-4 py-3 text-right">Acción</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-gray-100 dark:divide-gray-700 bg-white dark:bg-gray-900">
+          <tr *ngFor="let ont of pagedOnts" class="hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
+            <td class="px-4 py-3">
+              <span class="font-mono text-xs bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 px-2 py-1 rounded">{{ ont.fsp }}</span>
+            </td>
+            <td class="px-4 py-3 font-mono text-xs text-gray-600 dark:text-gray-300">{{ ont.serial || '—' }}</td>
+            <td class="px-4 py-3">
+              <span class="px-2 py-0.5 text-xs rounded-full font-medium"
+                    [ngClass]="(ont.run_state === 'online' || ont.status === 'online')
+                      ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300'
+                      : 'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-300'">
+                {{ ont.run_state || ont.status || 'pendiente' }}
+              </span>
+            </td>
+            <td class="px-4 py-3 text-xs text-gray-500 dark:text-gray-400">{{ ont.rx_power ?? ont.rx ?? '—' }}</td>
+            <td class="px-4 py-3 text-right">
+              <button (click)="openRegister(ont)"
+                      class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-white bg-green-600 hover:bg-green-700 rounded-lg transition-colors">
+                <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/>
+                </svg>
+                Autorizar
+              </button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Paginador -->
+    <div *ngIf="onts.length > perPage"
+         class="flex flex-col sm:flex-row items-center justify-between gap-3 mt-4 text-sm text-gray-500 dark:text-gray-400">
+      <span>
+        Mostrando {{ (page - 1) * perPage + 1 }}–{{ minVal(page * perPage, onts.length) }} de
+        <strong class="text-gray-700 dark:text-gray-200">{{ onts.length }}</strong>
+      </span>
+      <div class="flex items-center gap-1">
+        <button (click)="prevPage()" [disabled]="page === 1"
+                class="px-2.5 py-1.5 rounded-lg border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-40 transition-colors">
+          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5 8.25 12l7.5-7.5"/>
+          </svg>
+        </button>
+        <button *ngIf="pageNumbers[0] > 1" (click)="goPage(1)"
+                class="px-3 py-1.5 rounded-lg border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">1</button>
+        <span *ngIf="pageNumbers[0] > 2" class="px-1">…</span>
+        <button *ngFor="let p of pageNumbers" (click)="goPage(p)"
+                class="px-3 py-1.5 rounded-lg border transition-colors"
+                [ngClass]="p === page
+                  ? 'bg-green-600 text-white border-green-600'
+                  : 'border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700'">
+          {{ p }}
+        </button>
+        <span *ngIf="pageNumbers[pageNumbers.length-1] < totalPages - 1" class="px-1">…</span>
+        <button *ngIf="pageNumbers[pageNumbers.length-1] < totalPages" (click)="goPage(totalPages)"
+                class="px-3 py-1.5 rounded-lg border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">{{ totalPages }}</button>
+        <button (click)="nextPage()" [disabled]="page === totalPages"
+                class="px-2.5 py-1.5 rounded-lg border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-40 transition-colors">
+          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+
+  </div>
+
+</div>
+
+<!-- ═══════════════════ MODAL: AUTORIZAR ONT ═══════════════════ -->
+<div *ngIf="modal" class="fixed inset-0 z-50 flex items-center justify-center p-4">
+  <div class="absolute inset-0 bg-black/50" (click)="modal = false"></div>
+  <div class="relative bg-white dark:bg-gray-800 rounded-xl shadow-2xl w-full max-w-lg p-6">
+
+    <!-- Título -->
+    <div class="flex items-center gap-3 mb-6">
+      <div class="w-10 h-10 rounded-xl bg-green-50 dark:bg-green-900/30 flex items-center justify-center">
+        <svg class="w-5 h-5 text-green-600 dark:text-green-400" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/>
+        </svg>
+      </div>
+      <div>
+        <h3 class="text-base font-bold text-gray-900 dark:text-white">Autorizar ONT</h3>
+        <p class="text-xs text-gray-400">OLT: {{ selectedOltName() }}</p>
+      </div>
+    </div>
+
+    <div class="space-y-4">
+
+      <!-- FSP -->
+      <div>
+        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+          Puerto FSP <span class="text-red-500">*</span>
+        </label>
+        <input type="text" [(ngModel)]="form.fsp" placeholder="0/0/3"
+               class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-green-500 font-mono">
+      </div>
+
+      <!-- Serial -->
+      <div>
+        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Serial</label>
+        <input type="text" [(ngModel)]="form.serial" placeholder="HWTC12345678"
+               class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-green-500 font-mono">
+        <p class="text-xs text-gray-400 mt-1">Pre-cargado desde la OLT. Editar solo si es incorrecto.</p>
+      </div>
+
+      <!-- Descripción -->
+      <div>
+        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Descripción / Cliente</label>
+        <input type="text" [(ngModel)]="form.description" placeholder="Nombre del cliente o referencia"
+               class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-green-500">
+      </div>
+
+      <!-- Divider -->
+      <div class="border-t border-gray-200 dark:border-gray-700 pt-4">
+        <p class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-3">Perfiles y service-port</p>
+      </div>
+
+      <!-- Line Profile + Srv Profile (dos columnas) -->
+      <div class="grid grid-cols-2 gap-3">
+
+        <div>
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Line Profile</label>
+          <select [(ngModel)]="form.line_profile_id"
+                  [disabled]="loadingProfiles"
+                  class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-green-500 disabled:opacity-60">
+            <option [ngValue]="null">{{ loadingProfiles ? 'Cargando...' : '— Sin perfil —' }}</option>
+            <option *ngFor="let p of lineProfiles" [ngValue]="p.profile_id">
+              {{ p.profile_id }} — {{ p.profile_name }}
+            </option>
+          </select>
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Service Profile</label>
+          <select [(ngModel)]="form.srv_profile_id"
+                  [disabled]="loadingProfiles"
+                  class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-green-500 disabled:opacity-60">
+            <option [ngValue]="null">{{ loadingProfiles ? 'Cargando...' : '— Sin perfil —' }}</option>
+            <option *ngFor="let p of srvProfiles" [ngValue]="p.profile_id">
+              {{ p.profile_id }} — {{ p.profile_name }}
+            </option>
+          </select>
+        </div>
+      </div>
+
+      <!-- VLAN desde MikroTik -->
+      <div>
+        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+          VLAN / Segmento de red
+          <span class="text-gray-400 font-normal ml-1">(se crea el service-port automáticamente)</span>
+        </label>
+        <select [(ngModel)]="selectedSegment" (ngModelChange)="onSegmentChange()"
+                [disabled]="loadingSegments"
+                class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-green-500 disabled:opacity-60">
+          <option [ngValue]="null">{{ loadingSegments ? 'Cargando VLANs...' : '— Sin VLAN / seleccionar —' }}</option>
+          <option *ngFor="let seg of lanSegments" [ngValue]="seg">{{ segmentLabel(seg) }}</option>
+        </select>
+        <p *ngIf="form.vlan" class="text-xs text-green-600 dark:text-green-400 mt-1">VLAN {{ form.vlan }} seleccionada.</p>
+        <p *ngIf="!form.vlan && !loadingSegments" class="text-xs text-yellow-600 dark:text-yellow-400 mt-1">
+          Sin VLAN: la ONT se registrará sin service-port. Podrás asignarlo después.
+        </p>
+      </div>
+
+      <!-- Sin perfiles: aviso para sincronizar -->
+      <div *ngIf="!loadingProfiles && lineProfiles.length === 0 && srvProfiles.length === 0"
+           class="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg px-4 py-3 text-sm text-yellow-700 dark:text-yellow-300">
+        No hay perfiles sincronizados. Ve a la sección <strong>Perfiles</strong> y haz clic en "Sincronizar desde OLT" para cargarlos.
+      </div>
+
+    </div>
+
+    <div class="flex gap-3 mt-6">
+      <button (click)="modal = false"
+              class="flex-1 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+        Cancelar
+      </button>
+      <button (click)="confirmRegister()" [disabled]="registering || !form.fsp"
+              class="flex-1 py-2 text-sm font-semibold text-white bg-green-600 hover:bg-green-700 disabled:opacity-50 rounded-lg transition-colors flex items-center justify-center gap-2">
+        <svg *ngIf="registering" class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
+          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/>
+        </svg>
+        {{ registering ? 'Autorizando...' : 'Confirmar autorización' }}
+      </button>
+    </div>
+
+  </div>
+</div>

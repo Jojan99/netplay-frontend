@@ -1,0 +1,41 @@
+/* ── SIDEBAR RESPONSIVE ──────────────────────────────────────────────────── */
+
+/* Mobile-first: sidebar is a fixed overlay (no ocupa espacio en el flex) */
+.sidebar-aside {
+  position: fixed;
+  top: 56px;          /* height of the navbar */
+  left: 0;
+  bottom: 0;
+  width: 256px;
+  height: auto;
+
+  &.sidebar-collapsed {
+    transform: translateX(-100%);
+  }
+
+  &.sidebar-expanded {
+    transform: translateX(0);
+    box-shadow: 4px 0 20px rgba(0, 0, 0, 0.18);
+  }
+}
+
+/* Desktop md+: sidebar vuelve al flujo normal del flex */
+@media (min-width: 768px) {
+  .sidebar-aside {
+    position: relative;
+    top: auto;
+    left: auto;
+    bottom: auto;
+    height: 100%;
+    box-shadow: none !important;
+    transform: translateX(0) !important;
+
+    &.sidebar-collapsed {
+      width: 64px;
+    }
+
+    &.sidebar-expanded {
+      width: 256px;
+    }
+  }
+}

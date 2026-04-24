@@ -1,0 +1,14 @@
+.crm-mobile-root {
+  height: 100%;
+}
+
+/* 🔥 MOBILE FIX DEFINITIVO */
+@media (max-width: 768px) {
+  .crm-mobile-root {
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    background: white;
+    overflow: hidden;
+  }
+}

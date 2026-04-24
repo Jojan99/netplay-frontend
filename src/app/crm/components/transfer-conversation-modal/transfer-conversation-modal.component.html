@@ -1,0 +1,174 @@
+<div class="fixed inset-0 z-50 flex items-center justify-center">
+
+  <!-- BACKDROP -->
+  <div
+    class="absolute inset-0 bg-black/40 backdrop-blur-sm"
+    (click)="cancel()"
+  ></div>
+
+  <!-- MODAL -->
+  <div
+    class="relative w-full max-w-lg mx-4
+           bg-white dark:bg-gray-800
+           rounded-2xl shadow-2xl
+           p-6 animate-fadeIn"
+  >
+
+    <!-- HEADER -->
+    <div class="flex items-center justify-between mb-4">
+      <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
+        Transferir conversación
+      </h3>
+
+      <button
+        class="text-gray-400 hover:text-gray-600 text-xl"
+        (click)="cancel()"
+      >
+        ✕
+      </button>
+    </div>
+
+    <!-- AGENTS LIST -->
+    <div class="max-h-64 overflow-y-auto space-y-2 mb-4">
+
+    <div
+  *ngFor="let a of agents"
+  class="rounded-xl border transition-all
+         dark:border-gray-700"
+  [ngClass]="[
+    a.user_id === selectedAgent?.user_id
+      ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
+      : 'border-gray-200',
+    a.status === 'saturado' ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'
+  ]"
+  (click)="a.status !== 'saturado' && select(a)"
+>
+
+  <!-- HEADER -->
+  <div class="p-3 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-xl">
+
+    <div class="flex items-center justify-between">
+
+      <div class="flex-1">
+
+        <!-- NAME -->
+        <div class="font-medium text-gray-900 dark:text-white">
+          {{ a.name }}
+        </div>
+
+        <!-- LOAD -->
+        <div
+          class="text-xs text-gray-500 flex items-center gap-2 cursor-pointer"
+          (click)="toggleExpand(a, $event)"
+        >
+          {{ a.active_chats }}/{{ a.max_chats }} chats activos
+          <span class="text-blue-500">
+            {{ expandedAgentId === a.user_id ? '▲' : '▼' }}
+          </span>
+        </div>
+
+        <!-- PROGRESS BAR -->
+        <div class="w-full h-1 bg-gray-200 rounded-full mt-1">
+          <div
+            class="h-1 rounded-full"
+            [ngClass]="
+              a.status === 'saturado'
+                ? 'bg-red-500'
+                : a.status === 'ocupado'
+                ? 'bg-yellow-500'
+                : 'bg-green-500'
+            "
+            [style.width.%]="(a.active_chats / a.max_chats) * 100">
+          </div>
+        </div>
+
+      </div>
+
+      <!-- STATUS DOT -->
+      <span
+        class="h-3 w-3 rounded-full ml-3"
+        [ngClass]="
+          a.status === 'libre'
+            ? 'bg-green-500'
+            : a.status === 'ocupado'
+            ? 'bg-yellow-500'
+            : 'bg-red-500'
+        "
+      ></span>
+
+    </div>
+
+  </div>
+
+  <!-- 🔥 CONVERSACIONES DESPLEGABLES -->
+  <div
+    *ngIf="expandedAgentId === a.user_id && a.conversations?.length"
+    class="px-4 pb-3 space-y-1 text-xs text-gray-600 dark:text-gray-300"
+  >
+    <div
+      *ngFor="let c of a.conversations"
+      class="px-2 py-1 rounded-md bg-gray-100 dark:bg-gray-700 truncate"
+    >
+      #{{ c.conversation_id }} – {{ c.customer_name }}
+    </div>
+  </div>
+
+  <!-- SI NO TIENE CHATS -->
+  <div
+    *ngIf="expandedAgentId === a.user_id && !a.conversations?.length"
+    class="px-4 pb-3 text-xs text-gray-400 italic"
+  >
+    Sin conversaciones activas
+  </div>
+
+</div>
+
+    </div>
+
+    <!-- REASON -->
+    <div class="mb-4">
+      <label class="block text-xs font-medium text-gray-500 mb-1">
+        Motivo (opcional)
+      </label>
+
+      <textarea
+        [(ngModel)]="reason"
+        rows="3"
+        class="w-full px-3 py-2 rounded-xl
+               border border-gray-300 dark:border-gray-600
+               bg-gray-50 dark:bg-gray-700
+               text-sm text-gray-900 dark:text-white
+               focus:outline-none focus:ring-2 focus:ring-blue-500/30"
+        placeholder="Escribe un motivo si deseas..."
+      ></textarea>
+    </div>
+
+    <!-- ACTIONS -->
+    <div class="flex justify-end gap-2">
+
+      <button
+        class="px-4 py-2 text-sm rounded-full
+               border border-gray-300 dark:border-gray-600
+               hover:bg-gray-100 dark:hover:bg-gray-700
+               transition"
+        (click)="cancel()"
+      >
+        Cancelar
+      </button>
+
+      <button
+        class="px-4 py-2 text-sm rounded-full
+               bg-blue-600 text-white
+               hover:bg-blue-700
+               disabled:opacity-50 disabled:cursor-not-allowed
+               transition"
+        [disabled]="!selectedAgent || loading"
+        (click)="confirm()"
+      >
+        {{ loading ? 'Transfiriendo...' : 'Transferir' }}
+      </button>
+
+    </div>
+
+  </div>
+</div>

@@ -1,0 +1,308 @@
+<div class="max-w-8xl mx-auto mt-4 sm:mt-8 rounded-lg shadow p-3 sm:p-6">
+  <div class="w-full mb-1">
+
+    <!-- Breadcrumb -->
+    <div class="mb-4">
+      <nav class="flex mb-5" aria-label="Breadcrumb">
+        <ol class="inline-flex items-center space-x-1 text-sm font-medium md:space-x-2">
+          <li class="inline-flex items-center">
+            <a class="inline-flex items-center text-gray-700 hover:text-primary-600 dark:text-gray-300 dark:hover:text-white">
+              <svg class="w-5 h-5 mr-2.5" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                <path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z"></path>
+              </svg>
+              Home
+            </a>
+          </li>
+          <li>
+            <div class="flex items-center">
+              <svg class="w-6 h-6 text-gray-400" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"></path></svg>
+              <span class="ml-1 text-gray-400 md:ml-2 dark:text-gray-500" aria-current="page">Resumen Financiero</span>
+            </div>
+          </li>
+        </ol>
+      </nav>
+      <h1 class="text-xl font-semibold text-gray-900 sm:text-2xl dark:text-white">RESUMEN FINANCIERO</h1>
+    </div>
+
+    <!-- Date range selector -->
+    <div class="flex flex-wrap items-end gap-3 mb-6 p-3 sm:p-4 bg-white border border-gray-200 rounded-lg dark:bg-gray-800 dark:border-gray-700">
+      <div class="flex-1 min-w-[140px]">
+        <label class="block mb-1 text-sm font-medium text-gray-700 dark:text-gray-300">Desde</label>
+        <input type="date" [(ngModel)]="from"
+          class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white" />
+      </div>
+      <div class="flex-1 min-w-[140px]">
+        <label class="block mb-1 text-sm font-medium text-gray-700 dark:text-gray-300">Hasta</label>
+        <input type="date" [(ngModel)]="to"
+          class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white" />
+      </div>
+      <button (click)="consultar()"
+        class="flex items-center px-5 py-2.5 text-sm font-medium text-white bg-blue-700 rounded-lg hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 dark:bg-blue-600 dark:hover:bg-blue-700">
+        <svg class="w-4 h-4 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
+        </svg>
+        Consultar
+      </button>
+    </div>
+
+    <!-- Summary cards -->
+    <div class="grid grid-cols-2 gap-3 mb-6 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-7">
+
+      <div *ngIf="!skeletorResumen; else skeletonCard" class="p-4 bg-white border border-gray-200 rounded-lg shadow dark:bg-gray-800 dark:border-gray-700">
+        <p class="text-xs text-gray-500 dark:text-gray-400 mb-1">Ingresos</p>
+        <p class="text-lg font-bold text-green-600 dark:text-green-400">${{ (resumen.valor_ingreso || 0) | number:'1.0-0' }}</p>
+      </div>
+      <ng-template #skeletonCard>
+        <div class="p-4 bg-white border border-gray-200 rounded-lg shadow dark:bg-gray-800 dark:border-gray-700 animate-pulse">
+          <div class="h-3 bg-gray-200 rounded dark:bg-gray-700 w-16 mb-2"></div>
+          <div class="h-5 bg-gray-200 rounded dark:bg-gray-700 w-24"></div>
+        </div>
+      </ng-template>
+
+      <div class="p-4 bg-white border border-gray-200 rounded-lg shadow dark:bg-gray-800 dark:border-gray-700" [class.animate-pulse]="skeletorResumen">
+        <p class="text-xs text-gray-500 dark:text-gray-400 mb-1">Abonos</p>
+        <p *ngIf="!skeletorResumen" class="text-lg font-bold text-blue-600 dark:text-blue-400">${{ (resumen.valor_abone || 0) | number:'1.0-0' }}</p>
+        <div *ngIf="skeletorResumen" class="h-5 bg-gray-200 rounded dark:bg-gray-700 w-24"></div>
+      </div>
+
+      <div class="p-4 bg-white border border-gray-200 rounded-lg shadow dark:bg-gray-800 dark:border-gray-700" [class.animate-pulse]="skeletorResumen">
+        <p class="text-xs text-gray-500 dark:text-gray-400 mb-1">Total ingresos</p>
+        <p *ngIf="!skeletorResumen" class="text-lg font-bold text-emerald-600 dark:text-emerald-400">${{ (resumen.total_sum || 0) | number:'1.0-0' }}</p>
+        <div *ngIf="skeletorResumen" class="h-5 bg-gray-200 rounded dark:bg-gray-700 w-24"></div>
+      </div>
+
+      <div class="p-4 bg-white border border-gray-200 rounded-lg shadow dark:bg-gray-800 dark:border-gray-700" [class.animate-pulse]="skeletorResumen">
+        <p class="text-xs text-gray-500 dark:text-gray-400 mb-1">Egresos</p>
+        <p *ngIf="!skeletorResumen" class="text-lg font-bold text-red-600 dark:text-red-400">${{ (resumen.total_egresses || 0) | number:'1.0-0' }}</p>
+        <div *ngIf="skeletorResumen" class="h-5 bg-gray-200 rounded dark:bg-gray-700 w-24"></div>
+      </div>
+
+      <div class="p-4 bg-white border border-gray-200 rounded-lg shadow dark:bg-gray-800 dark:border-gray-700" [class.animate-pulse]="skeletorResumen">
+        <p class="text-xs text-gray-500 dark:text-gray-400 mb-1">Compras inv.</p>
+        <p *ngIf="!skeletorResumen" class="text-lg font-bold text-orange-500 dark:text-orange-400">${{ (resumen.total_inventory_egresses || 0) | number:'1.0-0' }}</p>
+        <div *ngIf="skeletorResumen" class="h-5 bg-gray-200 rounded dark:bg-gray-700 w-24"></div>
+      </div>
+
+      <div class="p-4 bg-white border border-gray-200 rounded-lg shadow dark:bg-gray-800 dark:border-gray-700" [class.animate-pulse]="skeletorResumen">
+        <p class="text-xs text-gray-500 dark:text-gray-400 mb-1">Total gastos</p>
+        <p *ngIf="!skeletorResumen" class="text-lg font-bold text-red-700 dark:text-red-500">${{ (resumen.total_gastos || 0) | number:'1.0-0' }}</p>
+        <div *ngIf="skeletorResumen" class="h-5 bg-gray-200 rounded dark:bg-gray-700 w-24"></div>
+      </div>
+
+      <div class="p-4 border-2 rounded-lg shadow"
+        [ngClass]="(resumen.net_value || 0) >= 0
+          ? 'bg-indigo-50 border-indigo-300 dark:bg-indigo-900 dark:border-indigo-700'
+          : 'bg-red-50 border-red-300 dark:bg-red-900 dark:border-red-700'"
+        [class.animate-pulse]="skeletorResumen">
+        <p class="text-xs text-gray-500 dark:text-gray-400 mb-1">Neto</p>
+        <p *ngIf="!skeletorResumen" class="text-lg font-bold"
+          [ngClass]="(resumen.net_value || 0) >= 0 ? 'text-indigo-700 dark:text-indigo-300' : 'text-red-700 dark:text-red-300'">
+          ${{ (resumen.net_value || 0) | number:'1.0-0' }}
+        </p>
+        <div *ngIf="skeletorResumen" class="h-5 bg-gray-200 rounded dark:bg-gray-700 w-24"></div>
+      </div>
+    </div>
+
+    <!-- Chart -->
+    <div class="p-4 mb-6 bg-white border border-gray-200 rounded-lg shadow dark:bg-gray-800 dark:border-gray-700">
+      <h2 class="text-base font-semibold text-gray-900 dark:text-white mb-4">Distribución financiera</h2>
+      <canvas id="resumenChart" class="max-h-64"></canvas>
+    </div>
+
+    <!-- Tabs -->
+    <div class="mb-4 border-b border-gray-200 dark:border-gray-700">
+      <ul class="flex flex-wrap -mb-px text-sm font-medium text-center">
+        <li class="mr-2">
+          <button (click)="activeTab = 'ingresos'"
+            class="inline-block p-4 border-b-2 rounded-t-lg"
+            [ngClass]="activeTab === 'ingresos'
+              ? 'border-blue-600 text-blue-600 dark:border-blue-500 dark:text-blue-500'
+              : 'border-transparent text-gray-500 hover:text-gray-600 dark:text-gray-400 dark:hover:text-gray-300'">
+            Ingresos detallados
+          </button>
+        </li>
+        <li>
+          <button (click)="activeTab = 'egresos'"
+            class="inline-block p-4 border-b-2 rounded-t-lg"
+            [ngClass]="activeTab === 'egresos'
+              ? 'border-blue-600 text-blue-600 dark:border-blue-500 dark:text-blue-500'
+              : 'border-transparent text-gray-500 hover:text-gray-600 dark:text-gray-400 dark:hover:text-gray-300'">
+            Egresos
+          </button>
+        </li>
+      </ul>
+    </div>
+
+    <!-- ── Tab: Ingresos ──────────────────────────────────────────────────────── -->
+    <div *ngIf="activeTab === 'ingresos'">
+      <div class="overflow-x-auto rounded-lg">
+        <div class="inline-block min-w-full align-middle">
+          <div class="overflow-hidden shadow sm:rounded-lg">
+
+            <table *ngIf="!skeletorIngresos; else skeletonIngresos" class="min-w-[520px] w-full divide-y divide-gray-200 dark:divide-gray-600">
+              <thead class="bg-gray-50 dark:bg-gray-700">
+                <tr>
+                  <th class="p-3 text-xs font-medium text-left text-gray-500 uppercase dark:text-gray-400">N° Fact.</th>
+                  <th class="p-3 text-xs font-medium text-left text-gray-500 uppercase dark:text-gray-400">Fecha</th>
+                  <th class="p-3 text-xs font-medium text-left text-gray-500 uppercase dark:text-gray-400">Cliente</th>
+                  <th class="p-3 text-xs font-medium text-left text-gray-500 uppercase dark:text-gray-400">Total</th>
+                  <th class="p-3 text-xs font-medium text-left text-gray-500 uppercase dark:text-gray-400 hidden sm:table-cell">Descuento</th>
+                  <th class="p-3 text-xs font-medium text-left text-gray-500 uppercase dark:text-gray-400 hidden sm:table-cell">Abono</th>
+                  <th class="p-3 text-xs font-medium text-left text-gray-500 uppercase dark:text-gray-400 hidden md:table-cell">Tipo</th>
+                  <th class="p-3 text-xs font-medium text-left text-gray-500 uppercase dark:text-gray-400">Estado</th>
+                </tr>
+              </thead>
+              <tbody class="bg-white divide-y divide-gray-200 dark:bg-gray-800 dark:divide-gray-700">
+                <tr *ngFor="let ing of ingresos" class="hover:bg-gray-100 dark:hover:bg-gray-700">
+                  <td class="p-3 text-sm font-medium text-gray-900 whitespace-nowrap dark:text-white">{{ ing.number_facture }}</td>
+                  <td class="p-3 text-sm text-gray-500 whitespace-nowrap dark:text-gray-400">
+                    {{ ing.date_facturation | date:'dd/MM/yy' }}
+                  </td>
+                  <td class="p-3 text-sm text-gray-500 whitespace-nowrap dark:text-gray-400 max-w-[120px] truncate">{{ ing.cliente || '-' }}</td>
+                  <td class="p-3 text-sm font-semibold text-gray-900 whitespace-nowrap dark:text-white">
+                    ${{ (ing.price_total || 0) | number:'1.0-0' }}
+                  </td>
+                  <td class="p-3 text-sm text-gray-500 whitespace-nowrap dark:text-gray-400 hidden sm:table-cell">
+                    ${{ (ing.price_discount || 0) | number:'1.0-0' }}
+                  </td>
+                  <td class="p-3 text-sm text-gray-500 whitespace-nowrap dark:text-gray-400 hidden sm:table-cell">
+                    ${{ (ing.price_abone || 0) | number:'1.0-0' }}
+                  </td>
+                  <td class="p-3 text-sm text-gray-500 whitespace-nowrap dark:text-gray-400 hidden md:table-cell">{{ getTypeLabel(ing) }}</td>
+                  <td class="p-3 whitespace-nowrap">
+                    <span class="px-2 py-0.5 text-xs font-medium rounded-full" [ngClass]="getStatusClass(ing)">
+                      {{ getStatusLabel(ing) }}
+                    </span>
+                  </td>
+                </tr>
+                <tr *ngIf="ingresos.length === 0">
+                  <td colspan="8" class="p-6 text-sm text-center text-gray-500 dark:text-gray-400">
+                    No hay ingresos para el período seleccionado.
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+
+            <ng-template #skeletonIngresos>
+              <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-600">
+                <thead class="bg-gray-50 dark:bg-gray-700">
+                  <tr>
+                    <th class="p-4 text-xs font-medium text-left text-gray-500 uppercase dark:text-gray-400" *ngFor="let h of ['N° Factura','Fecha','Cliente','Total','Descuento','Abono','Tipo','Estado']">{{ h }}</th>
+                  </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200 dark:bg-gray-800 dark:divide-gray-700">
+                  <tr *ngFor="let i of [1,2,3,4,5]" class="animate-pulse">
+                    <td class="p-4" *ngFor="let j of [1,2,3,4,5,6,7,8]"><div class="h-4 bg-gray-200 rounded dark:bg-gray-700 w-20"></div></td>
+                  </tr>
+                </tbody>
+              </table>
+            </ng-template>
+
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Tab: Egresos ───────────────────────────────────────────────────────── -->
+    <div *ngIf="activeTab === 'egresos'">
+      <div class="flex justify-end mb-3">
+        <button (click)="openEgresoModal()"
+          class="flex items-center px-4 py-2 text-sm font-medium text-white bg-blue-700 rounded-lg hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 dark:bg-blue-600 dark:hover:bg-blue-700">
+          <svg class="w-4 h-4 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+          </svg>
+          Agregar Egreso
+        </button>
+      </div>
+      <div class="overflow-x-auto rounded-lg">
+        <div class="inline-block min-w-full align-middle">
+          <div class="overflow-hidden shadow sm:rounded-lg">
+
+            <table *ngIf="!skeletorEgresos; else skeletonEgresos" class="min-w-full divide-y divide-gray-200 dark:divide-gray-600">
+              <thead class="bg-gray-50 dark:bg-gray-700">
+                <tr>
+                  <th class="p-4 text-xs font-medium text-left text-gray-500 uppercase dark:text-gray-400">Concepto</th>
+                  <th class="p-4 text-xs font-medium text-left text-gray-500 uppercase dark:text-gray-400">Valor</th>
+                  <th class="p-4 text-xs font-medium text-left text-gray-500 uppercase dark:text-gray-400">Fecha</th>
+                </tr>
+              </thead>
+              <tbody class="bg-white divide-y divide-gray-200 dark:bg-gray-800 dark:divide-gray-700">
+                <tr *ngFor="let egr of egresos" class="hover:bg-gray-100 dark:hover:bg-gray-700">
+                  <td class="p-4 text-sm font-medium text-gray-900 dark:text-white">{{ egr.concept }}</td>
+                  <td class="p-4 text-sm font-semibold text-red-600 dark:text-red-400 whitespace-nowrap">
+                    ${{ (egr.value || 0) | number:'1.0-0' }}
+                  </td>
+                  <td class="p-4 text-sm text-gray-500 whitespace-nowrap dark:text-gray-400">
+                    {{ egr.created_at | date:'dd/MM/yyyy' }}
+                  </td>
+                </tr>
+                <tr *ngIf="egresos.length === 0">
+                  <td colspan="3" class="p-6 text-sm text-center text-gray-500 dark:text-gray-400">
+                    No hay egresos registrados.
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+
+            <ng-template #skeletonEgresos>
+              <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-600">
+                <thead class="bg-gray-50 dark:bg-gray-700">
+                  <tr>
+                    <th class="p-4 text-xs font-medium text-left text-gray-500 uppercase dark:text-gray-400" *ngFor="let h of ['Concepto','Valor','Fecha']">{{ h }}</th>
+                  </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200 dark:bg-gray-800 dark:divide-gray-700">
+                  <tr *ngFor="let i of [1,2,3,4]" class="animate-pulse">
+                    <td class="p-4"><div class="h-4 bg-gray-200 rounded dark:bg-gray-700 w-48"></div></td>
+                    <td class="p-4"><div class="h-4 bg-gray-200 rounded dark:bg-gray-700 w-24"></div></td>
+                    <td class="p-4"><div class="h-4 bg-gray-200 rounded dark:bg-gray-700 w-24"></div></td>
+                  </tr>
+                </tbody>
+              </table>
+            </ng-template>
+
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ── Modal: Agregar Egreso ──────────────────────────────────────────────── -->
+<div id="egreso-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+  <div class="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-md mx-4">
+    <div class="flex items-center justify-between p-4 border-b dark:border-gray-700">
+      <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Registrar Egreso</h3>
+      <button (click)="closeEgresoModal()" class="text-gray-400 hover:text-gray-900 dark:hover:text-white">
+        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+          <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"></path>
+        </svg>
+      </button>
+    </div>
+    <div class="p-6 space-y-4">
+      <div>
+        <label class="block mb-1 text-sm font-medium text-gray-700 dark:text-gray-300">Concepto *</label>
+        <input type="text" [(ngModel)]="nuevoEgreso.concept"
+          class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+          placeholder="Concepto del egreso" />
+      </div>
+      <div>
+        <label class="block mb-1 text-sm font-medium text-gray-700 dark:text-gray-300">Valor *</label>
+        <input type="number" [(ngModel)]="nuevoEgreso.value" min="1"
+          class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+          placeholder="0" />
+      </div>
+    </div>
+    <div class="flex justify-end p-4 space-x-3 border-t dark:border-gray-700">
+      <button (click)="closeEgresoModal()"
+        class="px-4 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-lg hover:bg-gray-100 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600 dark:hover:bg-gray-700">
+        Cancelar
+      </button>
+      <button (click)="saveEgreso()"
+        class="px-4 py-2 text-sm font-medium text-white bg-blue-700 rounded-lg hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 dark:bg-blue-600 dark:hover:bg-blue-700">
+        Guardar
+      </button>
+    </div>
+  </div>
+</div>

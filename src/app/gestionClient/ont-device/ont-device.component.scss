@@ -1,0 +1,31 @@
+.card{
+@apply rounded-2xl border border-slate-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-5 shadow-sm;
+}
+
+.box{
+@apply rounded-3xl border border-slate-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-6 shadow-sm;
+}
+
+.title{
+@apply text-lg font-bold text-slate-800 dark:text-white mb-4;
+}
+
+.label{
+@apply text-xs uppercase text-slate-400;
+}
+
+.value{
+@apply text-xl font-bold text-slate-800 dark:text-white;
+}
+
+.info{
+@apply bg-slate-50 dark:bg-gray-700 p-3 rounded-xl;
+}
+
+.btn{
+@apply border px-3 py-2 rounded-xl;
+}
+
+.btn-blue{
+@apply bg-blue-600 text-white px-3 py-2 rounded-xl;
+}

@@ -1,0 +1,7 @@
+{
+  "/api": {
+    "target": "https://netplay.com.co",
+    "secure": true,
+    "changeOrigin": true
+  }
+}

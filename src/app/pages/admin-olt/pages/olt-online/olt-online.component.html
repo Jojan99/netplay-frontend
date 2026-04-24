@@ -1,0 +1,280 @@
+<div class="p-6 max-w-7xl mx-auto space-y-6">
+
+  <!-- Header -->
+  <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+    <div>
+      <h1 class="text-xl font-bold text-gray-800 dark:text-white">ONTs en Línea</h1>
+      <p class="text-sm text-gray-500 dark:text-gray-400 mt-0.5">ONTs actualmente online. Haz clic en el ícono de detalle para ver señal y service-ports.</p>
+    </div>
+    <div class="flex items-center gap-2 flex-wrap">
+      <select [(ngModel)]="selectedOltId" (ngModelChange)="onOltChange()"
+              [disabled]="loadingOlts"
+              class="text-sm px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500">
+        <option [ngValue]="null">{{ loadingOlts ? 'Cargando...' : 'Seleccionar OLT' }}</option>
+        <option *ngFor="let olt of olts" [ngValue]="olt.id">{{ olt.name }}</option>
+      </select>
+      <button (click)="loadOnts()" [disabled]="!selectedOltId || loadingOnts"
+              class="flex items-center gap-1.5 px-3 py-2 text-sm bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white rounded-lg transition-colors">
+        <svg *ngIf="!loadingOnts" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182m0-4.991v4.99"/>
+        </svg>
+        <svg *ngIf="loadingOnts" class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
+          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/>
+        </svg>
+        Actualizar
+      </button>
+    </div>
+  </div>
+
+  <!-- No OLT -->
+  <div *ngIf="!selectedOltId && !loadingOlts"
+       class="flex flex-col items-center justify-center py-20 text-gray-400">
+    <svg class="w-14 h-14 mb-3 opacity-40" fill="none" viewBox="0 0 24 24" stroke-width="1" stroke="currentColor">
+      <path stroke-linecap="round" stroke-linejoin="round" d="M8.288 15.038a5.25 5.25 0 0 1 7.424 0M5.106 11.856c3.807-3.808 9.98-3.808 13.788 0M1.924 8.674c5.565-5.565 14.587-5.565 20.152 0M12.53 18.22l-.53.53-.53-.53a.75.75 0 0 1 1.06 0Z"/>
+    </svg>
+    <p class="text-sm">Selecciona una OLT para ver las ONTs online.</p>
+  </div>
+
+  <!-- Loading skeleton -->
+  <div *ngIf="loadingOnts" class="space-y-3 animate-pulse">
+    <div *ngFor="let i of [1,2,3,4,5]" class="h-16 bg-gray-200 dark:bg-gray-700 rounded-xl"></div>
+  </div>
+
+  <!-- Content -->
+  <ng-container *ngIf="!loadingOnts && selectedOltId">
+
+    <!-- Stats + Filtros -->
+    <div class="flex flex-col sm:flex-row gap-3 sm:items-center">
+      <div class="flex gap-2 flex-wrap items-center">
+        <span class="px-3 py-1.5 text-xs font-medium bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 rounded-full">
+          Online: <strong>{{ onts.length }}</strong>
+        </span>
+        <span *ngIf="lastFetched" class="text-xs text-gray-400">· {{ lastFetched | date:'HH:mm:ss' }}</span>
+      </div>
+      <div class="flex gap-2 sm:ml-auto flex-wrap">
+        <select [(ngModel)]="filterPort" (ngModelChange)="resetPage()"
+                class="text-sm px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500">
+          <option value="">Todos los puertos</option>
+          <option *ngFor="let p of uniquePorts" [value]="p">{{ p }}</option>
+        </select>
+        <input type="text" [(ngModel)]="searchTerm" (ngModelChange)="resetPage()" placeholder="Buscar..."
+               class="text-sm px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 w-44">
+        <select [(ngModel)]="perPage" (ngModelChange)="changePerPage()"
+                class="text-sm px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500">
+          <option *ngFor="let n of perPageOptions" [ngValue]="n">{{ n }} / pág</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Empty -->
+    <div *ngIf="filteredOnts.length === 0 && lastFetched"
+         class="flex flex-col items-center justify-center py-16 text-gray-400">
+      <svg class="w-12 h-12 mb-3 opacity-40" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 3.75h.008v.008H12v-.008Z"/>
+      </svg>
+      <p class="text-sm font-medium">No hay ONTs online en este momento</p>
+    </div>
+
+    <!-- Table -->
+    <div *ngIf="filteredOnts.length > 0" class="overflow-x-auto rounded-xl border border-gray-200 dark:border-gray-700">
+      <table class="w-full text-sm">
+        <thead class="bg-gray-50 dark:bg-gray-800 text-xs uppercase text-gray-500 dark:text-gray-400">
+          <tr>
+            <th class="px-4 py-3 text-left">Puerto (FSP)</th>
+            <th class="px-4 py-3 text-left">ID</th>
+            <th class="px-4 py-3 text-left">Descripción / Serial</th>
+            <th class="px-4 py-3 text-left">Service Ports</th>
+            <th class="px-4 py-3 text-right">Detalle</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-gray-100 dark:divide-gray-700 bg-white dark:bg-gray-900">
+          <tr *ngFor="let ont of pagedOnts"
+              class="hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
+
+            <!-- FSP -->
+            <td class="px-4 py-3">
+              <span class="font-mono text-xs bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 px-2 py-1 rounded">
+                {{ ont.fsp }}
+              </span>
+            </td>
+
+            <!-- ID -->
+            <td class="px-4 py-3 text-xs font-mono text-gray-500 dark:text-gray-400">{{ ont.ont_id }}</td>
+
+            <!-- Desc -->
+            <td class="px-4 py-3">
+              <p class="text-sm text-gray-800 dark:text-gray-100 font-medium">{{ ont.description || '—' }}</p>
+              <p *ngIf="ont.serial" class="text-xs font-mono text-gray-400 mt-0.5">{{ ont.serial }}</p>
+            </td>
+
+            <!-- Service Ports -->
+            <td class="px-4 py-3">
+              <div *ngIf="ont.service_ports?.length; else noSp" class="flex flex-wrap gap-1">
+                <span *ngFor="let sp of ont.service_ports"
+                      class="inline-flex items-center gap-1 font-mono text-xs bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 px-2 py-0.5 rounded-full border border-blue-200 dark:border-blue-700">
+                  <span class="font-semibold">SP{{ sp.index }}</span>
+                  <span class="text-blue-400">/</span>
+                  <span>V{{ sp.vlan }}</span>
+                </span>
+              </div>
+              <ng-template #noSp>
+                <span class="text-xs text-gray-400">Sin SP</span>
+              </ng-template>
+            </td>
+
+            <!-- Detalle button -->
+            <td class="px-4 py-3 text-right">
+              <button (click)="openDetail(ont)"
+                      title="Ver señal y service-ports en tiempo real"
+                      class="p-1.5 rounded-lg text-purple-400 hover:text-purple-600 hover:bg-purple-50 dark:hover:text-purple-300 dark:hover:bg-purple-900/20 transition-colors">
+                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z"/>
+                </svg>
+              </button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Paginador -->
+    <div *ngIf="filteredOnts.length > 0"
+         class="flex flex-col sm:flex-row items-center justify-between gap-3 text-sm text-gray-500 dark:text-gray-400">
+      <span>
+        Mostrando {{ (page - 1) * perPage + 1 }}–{{ minVal(page * perPage, filteredOnts.length) }} de
+        <strong class="text-gray-700 dark:text-gray-200">{{ filteredOnts.length }}</strong>
+      </span>
+      <div class="flex items-center gap-1">
+        <button (click)="prevPage()" [disabled]="page === 1"
+                class="px-2.5 py-1.5 rounded-lg border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-40 transition-colors">
+          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5 8.25 12l7.5-7.5"/>
+          </svg>
+        </button>
+        <button *ngIf="pageNumbers[0] > 1" (click)="goPage(1)"
+                class="px-3 py-1.5 rounded-lg border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">1</button>
+        <span *ngIf="pageNumbers[0] > 2" class="px-1">…</span>
+        <button *ngFor="let p of pageNumbers" (click)="goPage(p)"
+                class="px-3 py-1.5 rounded-lg border transition-colors"
+                [ngClass]="p === page
+                  ? 'bg-blue-600 text-white border-blue-600'
+                  : 'border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700'">
+          {{ p }}
+        </button>
+        <span *ngIf="pageNumbers[pageNumbers.length-1] < totalPages - 1" class="px-1">…</span>
+        <button *ngIf="pageNumbers[pageNumbers.length-1] < totalPages" (click)="goPage(totalPages)"
+                class="px-3 py-1.5 rounded-lg border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">{{ totalPages }}</button>
+        <button (click)="nextPage()" [disabled]="page === totalPages"
+                class="px-2.5 py-1.5 rounded-lg border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-40 transition-colors">
+          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+
+  </ng-container>
+
+</div>
+
+<!-- ═══════════════════ MODAL: DETALLE (SP + Señal) ═══════════════════ -->
+<div *ngIf="detailModal" class="fixed inset-0 z-50 flex items-center justify-center p-4">
+  <div class="absolute inset-0 bg-black/50" (click)="detailModal = false"></div>
+  <div class="relative bg-white dark:bg-gray-800 rounded-xl shadow-2xl w-full max-w-lg p-6">
+
+    <!-- Título -->
+    <div class="flex items-center justify-between mb-5">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl bg-purple-50 dark:bg-purple-900/30 flex items-center justify-center">
+          <svg class="w-5 h-5 text-purple-600 dark:text-purple-400" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z"/>
+          </svg>
+        </div>
+        <div>
+          <h3 class="text-base font-bold text-gray-900 dark:text-white">
+            {{ detailOnt?.description || detailOnt?.serial || 'ONT ' + detailOnt?.ont_id }}
+          </h3>
+          <p class="text-xs text-gray-400">{{ detailOnt?.fsp }} · ID {{ detailOnt?.ont_id }}</p>
+        </div>
+      </div>
+      <button (click)="detailModal = false" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200">
+        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12"/>
+        </svg>
+      </button>
+    </div>
+
+    <!-- Loading -->
+    <div *ngIf="loadingDetail" class="flex items-center justify-center py-10 text-gray-400">
+      <svg class="w-6 h-6 animate-spin mr-2" fill="none" viewBox="0 0 24 24">
+        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
+        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/>
+      </svg>
+      Consultando OLT en tiempo real...
+    </div>
+
+    <div *ngIf="!loadingDetail" class="space-y-4">
+
+      <!-- Señal óptica -->
+      <div>
+        <p class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-2">Señal óptica</p>
+        <div *ngIf="detailInfo; else noInfo" class="grid grid-cols-3 gap-3">
+          <div class="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-3 text-center">
+            <p class="text-xs text-gray-500 dark:text-gray-400 mb-1">Rx ONT</p>
+            <p class="text-sm font-semibold" [ngClass]="rxClass(detailInfo?.rx_optical_power_dbm ?? detailInfo?.rx_power)">
+              {{ (detailInfo?.rx_optical_power_dbm ?? detailInfo?.rx_power) != null
+                  ? ((detailInfo?.rx_optical_power_dbm ?? detailInfo?.rx_power) + ' dBm') : '—' }}
+            </p>
+          </div>
+          <div class="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-3 text-center">
+            <p class="text-xs text-gray-500 dark:text-gray-400 mb-1">Tx ONT</p>
+            <p class="text-sm font-semibold text-gray-700 dark:text-gray-200">
+              {{ (detailInfo?.tx_optical_power_dbm ?? detailInfo?.tx_power) != null
+                  ? ((detailInfo?.tx_optical_power_dbm ?? detailInfo?.tx_power) + ' dBm') : '—' }}
+            </p>
+          </div>
+          <div class="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-3 text-center">
+            <p class="text-xs text-gray-500 dark:text-gray-400 mb-1">Rx OLT</p>
+            <p class="text-sm font-semibold" [ngClass]="rxClass(detailInfo?.olt_rx_power_dbm ?? detailInfo?.olt_rx_power)">
+              {{ (detailInfo?.olt_rx_power_dbm ?? detailInfo?.olt_rx_power) != null
+                  ? ((detailInfo?.olt_rx_power_dbm ?? detailInfo?.olt_rx_power) + ' dBm') : '—' }}
+            </p>
+          </div>
+        </div>
+        <ng-template #noInfo>
+          <p class="text-xs text-gray-400 italic">No se pudo obtener la señal óptica.</p>
+        </ng-template>
+      </div>
+
+      <!-- Service Ports -->
+      <div>
+        <p class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-2">Service Ports (en tiempo real)</p>
+        <div *ngIf="detailPorts.length > 0; else noPorts" class="space-y-2">
+          <div *ngFor="let sp of detailPorts"
+               class="flex items-center justify-between bg-gray-50 dark:bg-gray-700/50 rounded-lg px-4 py-2.5">
+            <div class="flex items-center gap-3">
+              <span class="font-mono text-xs font-bold text-blue-600 dark:text-blue-400">SP{{ sp.index ?? sp.sp_id ?? '—' }}</span>
+              <span class="text-xs text-gray-500 dark:text-gray-400">VLAN <strong class="text-gray-700 dark:text-gray-200">{{ sp.vlan ?? '—' }}</strong></span>
+            </div>
+            <span *ngIf="sp.state" class="text-xs px-2 py-0.5 rounded-full"
+                  [ngClass]="sp.state === 'up' ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' : 'bg-gray-100 text-gray-500 dark:bg-gray-600 dark:text-gray-300'">
+              {{ sp.state }}
+            </span>
+          </div>
+        </div>
+        <ng-template #noPorts>
+          <p class="text-xs text-gray-400 italic">Sin service-ports encontrados.</p>
+        </ng-template>
+      </div>
+
+    </div>
+
+    <div class="mt-5">
+      <button (click)="detailModal = false"
+              class="w-full py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+        Cerrar
+      </button>
+    </div>
+  </div>
+</div>

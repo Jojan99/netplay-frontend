@@ -1,0 +1,119 @@
+<div class="min-h-screen flex flex-col items-center justify-center px-4 py-10 bg-gray-50 dark:bg-gray-900">
+
+  <!-- Logo / marca -->
+  <div class="mb-6 text-center">
+    <span class="text-3xl font-bold text-blue-600 dark:text-blue-400">WispSmart</span>
+    <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Registro de empresa</p>
+  </div>
+
+  <div class="w-full max-w-2xl bg-white rounded-2xl shadow-md p-8 dark:bg-gray-800">
+
+    <!-- Error -->
+    <div *ngIf="errorMsg"
+         class="flex items-center gap-2 p-4 mb-6 text-sm text-red-700 bg-red-50 rounded-lg dark:bg-red-900/20 dark:text-red-400">
+      <svg class="w-4 h-4 shrink-0" fill="currentColor" viewBox="0 0 20 20">
+        <path d="M10 .5a9.5 9.5 0 1 0 9.5 9.5A9.51 9.51 0 0 0 10 .5ZM9.5 4a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3ZM12 15H8a1 1 0 0 1 0-2h1v-3H8a1 1 0 0 1 0-2h2a1 1 0 0 1 1 1v4h1a1 1 0 0 1 0 2Z"/>
+      </svg>
+      {{ errorMsg }}
+    </div>
+
+    <form (ngSubmit)="register()" #f="ngForm" novalidate>
+
+      <!-- ── Datos de empresa ── -->
+      <h3 class="text-base font-semibold text-gray-700 dark:text-gray-200 mb-4">Datos de la empresa</h3>
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
+
+        <div>
+          <label class="block mb-1.5 text-sm font-medium text-gray-700 dark:text-gray-300">Nombre de la empresa</label>
+          <input type="text" [(ngModel)]="form.name" name="name" required
+                 placeholder="Netplay S.A.S"
+                 class="input-field">
+        </div>
+
+        <div>
+          <label class="block mb-1.5 text-sm font-medium text-gray-700 dark:text-gray-300">NIT</label>
+          <input type="text" [(ngModel)]="form.nit" name="nit" required
+                 placeholder="900123456-1"
+                 class="input-field">
+        </div>
+
+        <div>
+          <label class="block mb-1.5 text-sm font-medium text-gray-700 dark:text-gray-300">Correo corporativo</label>
+          <input type="email" [(ngModel)]="form.email" name="email" required
+                 placeholder="empresa@correo.com"
+                 class="input-field">
+        </div>
+
+        <div>
+          <label class="block mb-1.5 text-sm font-medium text-gray-700 dark:text-gray-300">Teléfono</label>
+          <input type="text" [(ngModel)]="form.phone" name="phone" required
+                 placeholder="+57 300 000 0000"
+                 class="input-field">
+        </div>
+
+        <div class="sm:col-span-2">
+          <label class="block mb-1.5 text-sm font-medium text-gray-700 dark:text-gray-300">Dirección</label>
+          <input type="text" [(ngModel)]="form.address" name="address" required
+                 placeholder="Calle 10 # 5-30, Ciudad"
+                 class="input-field">
+        </div>
+      </div>
+
+      <!-- ── Cuenta del administrador ── -->
+      <h3 class="text-base font-semibold text-gray-700 dark:text-gray-200 mb-4">Cuenta del administrador</h3>
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
+
+        <div>
+          <label class="block mb-1.5 text-sm font-medium text-gray-700 dark:text-gray-300">Nombre</label>
+          <input type="text" [(ngModel)]="form.admin_name" name="admin_name" required
+                 placeholder="Juan"
+                 class="input-field">
+        </div>
+
+        <div>
+          <label class="block mb-1.5 text-sm font-medium text-gray-700 dark:text-gray-300">Apellido</label>
+          <input type="text" [(ngModel)]="form.admin_lastname" name="admin_lastname" required
+                 placeholder="Pérez"
+                 class="input-field">
+        </div>
+
+        <div class="sm:col-span-2">
+          <label class="block mb-1.5 text-sm font-medium text-gray-700 dark:text-gray-300">Contraseña</label>
+          <input type="password" [(ngModel)]="form.admin_password" name="admin_password" required
+                 placeholder="Mínimo 6 caracteres"
+                 class="input-field">
+        </div>
+      </div>
+
+      <!-- Botones -->
+      <div class="flex flex-col sm:flex-row items-center justify-between gap-4">
+        <a routerLink="/login"
+           class="text-sm text-blue-600 hover:underline dark:text-blue-400">
+          ¿Ya tienes cuenta? Inicia sesión
+        </a>
+        <button type="submit" [disabled]="isLoading || f.invalid"
+                class="px-6 py-2.5 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition">
+          <span *ngIf="!isLoading">Registrar empresa</span>
+          <span *ngIf="isLoading" class="flex items-center gap-2">
+            <svg class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
+              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"/>
+            </svg>
+            Procesando...
+          </span>
+        </button>
+      </div>
+
+    </form>
+  </div>
+</div>
+
+<!-- Estilos inline para input-field (tailwind no soporta @apply en templates, se hace inline) -->
+<style>
+  .input-field {
+    @apply w-full px-3 py-2.5 text-sm text-gray-900 bg-gray-50 border border-gray-300 rounded-lg
+           focus:ring-2 focus:ring-blue-500 focus:border-blue-500
+           dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400
+           dark:focus:ring-blue-500 dark:focus:border-blue-500;
+  }
+</style>
