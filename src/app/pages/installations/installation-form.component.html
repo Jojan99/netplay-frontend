@@ -1,0 +1,197 @@
+<div class="p-4 max-w-5xl mx-auto">
+  <div class="flex items-center gap-4 mb-6">
+    <a routerLink="/dashboard/installations" class="text-2xl text-gray-600 dark:text-gray-300 hover:text-blue-600 transition-colors">&larr;</a>
+    <h1 class="text-2xl font-bold dark:text-white">Nueva Instalación</h1>
+  </div>
+
+  @if (successMsg) {
+    <div class="bg-green-100 dark:bg-green-900/30 border border-green-400 text-green-700 dark:text-green-300 px-4 py-3 rounded-lg mb-4">
+      {{ successMsg }}
+    </div>
+  }
+
+  @if (errorMsg) {
+    <div class="bg-red-100 dark:bg-red-900/30 border border-red-400 text-red-700 dark:text-red-300 px-4 py-3 rounded-lg mb-4">
+      {{ errorMsg }}
+    </div>
+  }
+
+  <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-6">
+    <h2 class="text-lg font-semibold mb-4 dark:text-white border-b border-gray-200 dark:border-gray-700 pb-2 flex items-center gap-2">
+      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
+      Datos del Cliente
+    </h2>
+    
+    <div class="space-y-4">
+      <div>
+        <label class="block text-sm font-medium mb-1 dark:text-gray-300">Buscar Cliente existente</label>
+        <div class="relative">
+          <input type="text" [(ngModel)]="clientSearchQuery" (input)="searchClients()" (focus)="searchClients()"
+                 placeholder="Buscar por nombre, documento o dirección..."
+                 class="w-full px-4 py-2.5 bg-gray-50 dark:bg-gray-700/50 border border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:text-white">
+          @if (showClientSearch && clientSearchQuery) {
+            <div class="absolute z-10 w-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg mt-1 max-h-60 overflow-y-auto shadow-lg">
+              @for (c of clients; track c.id) {
+                <div (click)="selectClient(c)" class="px-4 py-3 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer border-b border-gray-100 dark:border-gray-700 last:border-b-0">
+                  <div class="font-medium dark:text-white">{{ c.names }} {{ c.lastname }}</div>
+                  <div class="text-sm text-gray-500 dark:text-gray-400">CC: {{ c.dni }} - {{ c.address }}</div>
+                </div>
+              } @empty {
+                <div class="px-4 py-3 text-gray-500 dark:text-gray-400">Sin resultados</div>
+              }
+            </div>
+          }
+        </div>
+      </div>
+
+      @if (selectedClient) {
+        <div class="flex items-center gap-3 px-4 py-3 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-800">
+          <svg class="w-5 h-5 text-green-600" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path></svg>
+          <span class="text-green-600 dark:text-green-400 font-medium">Cliente seleccionado: {{ selectedClient.names }} {{ selectedClient.lastname }}</span>
+          <button (click)="clearClient()" class="text-red-500 hover:text-red-700 dark:hover:text-red-400 text-sm font-medium ml-auto">Cambiar</button>
+        </div>
+      }
+
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div>
+          <label class="block text-sm font-medium mb-1 dark:text-gray-300">Nombre del Cliente *</label>
+          <input type="text" [(ngModel)]="form.client_name" class="w-full px-4 py-2.5 bg-gray-50 dark:bg-gray-700/50 border border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:text-white">
+        </div>
+        <div>
+          <label class="block text-sm font-medium mb-1 dark:text-gray-300">Documento *</label>
+          <input type="text" [(ngModel)]="form.client_dni" class="w-full px-4 py-2.5 bg-gray-50 dark:bg-gray-700/50 border border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:text-white">
+        </div>
+        <div>
+          <label class="block text-sm font-medium mb-1 dark:text-gray-300">Teléfono *</label>
+          <input type="text" [(ngModel)]="form.client_phone" class="w-full px-4 py-2.5 bg-gray-50 dark:bg-gray-700/50 border border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:text-white">
+        </div>
+        <div>
+          <label class="block text-sm font-medium mb-1 dark:text-gray-300">Email</label>
+          <input type="email" [(ngModel)]="form.client_email" class="w-full px-4 py-2.5 bg-gray-50 dark:bg-gray-700/50 border border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:text-white">
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+          <label class="block text-sm font-medium mb-1 dark:text-gray-300">Dirección *</label>
+          <input type="text" [(ngModel)]="form.address" class="w-full px-4 py-2.5 bg-gray-50 dark:bg-gray-700/50 border border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:text-white">
+        </div>
+        <div>
+          <label class="block text-sm font-medium mb-1 dark:text-gray-300">Barrio</label>
+          <input type="text" [(ngModel)]="form.neighborhood" class="w-full px-4 py-2.5 bg-gray-50 dark:bg-gray-700/50 border border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:text-white">
+        </div>
+      </div>
+    </div>
+
+    <h2 class="text-lg font-semibold mt-8 mb-4 dark:text-white border-b border-gray-200 dark:border-gray-700 pb-2 flex items-center gap-2">
+      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+      Programación
+    </h2>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div>
+        <label class="block text-sm font-medium mb-1 dark:text-gray-300">Fecha Programada *</label>
+        <input type="date" [(ngModel)]="form.scheduled_date" class="w-full px-4 py-2.5 bg-gray-50 dark:bg-gray-700/50 border border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:text-white">
+      </div>
+      <div>
+        <label class="block text-sm font-medium mb-1 dark:text-gray-300">Hora Programada *</label>
+        <input type="time" [(ngModel)]="form.scheduled_time" class="w-full px-4 py-2.5 bg-gray-50 dark:bg-gray-700/50 border border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:text-white">
+      </div>
+    </div>
+
+    <h2 class="text-lg font-semibold mt-8 mb-4 dark:text-white border-b border-gray-200 dark:border-gray-700 pb-2 flex items-center gap-2">
+      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+      Asignación
+    </h2>
+
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div class="bg-gray-50 dark:bg-gray-700/30 rounded-lg p-4">
+        <div class="flex items-center justify-between mb-3">
+          <label class="text-sm font-semibold dark:text-gray-300 flex items-center gap-2">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H8m12 0a3 3 0 012.828 0l2.829-2.829a3 3 0 110 4.243m-9-2.243a3 3 0 014.243 0M9 14l-3 3m0 0l3 3m-3-3h12"></path></svg>
+            Técnicos Asignados
+          </label>
+          <span class="text-xs text-gray-500 dark:text-gray-400">Selecciona uno o más</span>
+        </div>
+        
+        <div class="space-y-2">
+          @for (t of technicians; track t.id) {
+            <div class="flex items-center gap-3 p-2 rounded-lg border transition-all" 
+                 [class.bg-blue-50]="form.technician_ids?.includes(t.id)"
+                 [class.border-blue-300]="form.technician_ids?.includes(t.id)"
+                 [class.bg-white]="!form.technician_ids?.includes(t.id)"
+                 [class.border-gray-200]="!form.technician_ids?.includes(t.id)"
+                 [class.dark:bg-gray-700]="!form.technician_ids?.includes(t.id)"
+                 [class.dark:border-gray-600]="!form.technician_ids?.includes(t.id)">
+              <input type="checkbox" [checked]="form.technician_ids?.includes(t.id)" 
+                     (change)="toggleTechnician(t.id)"
+                     class="w-4 h-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500">
+              <div class="flex-1 min-w-0">
+                <div class="font-medium dark:text-white text-sm">{{ t.first_name }} {{ t.last_name }}</div>
+                <div class="text-xs text-gray-500 dark:text-gray-400">{{ t.job_title }}</div>
+              </div>
+            </div>
+          } @empty {
+            <div class="text-center py-4 text-gray-500 dark:text-gray-400">
+              No hay técnicos disponibles
+            </div>
+          }
+        </div>
+      </div>
+
+      <div class="space-y-4">
+        <div class="bg-gray-50 dark:bg-gray-700/30 rounded-lg p-4">
+          <label class="block text-sm font-semibold mb-3 dark:text-gray-300 flex items-center gap-2">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"></path></svg>
+            Costos
+          </label>
+          
+          <div class="grid grid-cols-1 gap-3">
+            <div>
+              <label class="block text-xs text-gray-500 dark:text-gray-400 mb-1">Costo de Instalación</label>
+              <div class="relative">
+                <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">$</span>
+                <input type="number" [(ngModel)]="form.installation_cost" 
+                       class="w-full pl-7 pr-3 py-2 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg dark:text-white text-sm">
+              </div>
+            </div>
+            <div>
+              <label class="block text-xs text-gray-500 dark:text-gray-400 mb-1">Comisión Total (se divide automáticamente)</label>
+              <div class="relative">
+                <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">$</span>
+                <input type="number" [value]="totalCommission" 
+                       (input)="onCommissionChange($event)"
+                       class="w-full pl-7 pr-3 py-2 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg dark:text-white text-sm">
+              </div>
+              @if (form.technician_ids?.length) {
+                <div class="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                  {{ form.technician_ids.length }} técnico(s): {{ totalCommission / (form.technician_ids?.length || 1) | number:'1.0-0' }} c/u
+                </div>
+              }
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium mb-1 dark:text-gray-300">Observaciones</label>
+          <textarea [(ngModel)]="form.observations" rows="3" 
+                  class="w-full px-4 py-2.5 bg-gray-50 dark:bg-gray-700/50 border border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:text-white"
+                  placeholder="Notas adicionales..."></textarea>
+        </div>
+      </div>
+    </div>
+
+    <div class="flex justify-end gap-3 mt-8 pt-4 border-t border-gray-200 dark:border-gray-700">
+      <a routerLink="/dashboard/installations" class="px-5 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">Cancelar</a>
+      <button (click)="save()" [disabled]="!isValid || isSaving" 
+              class="px-5 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-2">
+        @if (isSaving) {
+          <svg class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg>
+        } @else {
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+        }
+        {{ isSaving ? 'Guardando...' : 'Crear Instalación' }}
+      </button>
+    </div>
+  </div>
+</div>
