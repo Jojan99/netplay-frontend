@@ -1,0 +1,136 @@
+<div class="p-4 max-w-4xl mx-auto">
+  <div class="flex items-center gap-4 mb-6">
+    <a routerLink="/transfers" class="text-2xl">&larr;</a>
+    <h1 class="text-2xl font-bold">Nuevo Traslado</h1>
+  </div>
+
+  @if (successMsg) {
+    <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-4">
+      {{ successMsg }}
+    </div>
+  }
+
+  @if (errorMsg) {
+    <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+      {{ errorMsg }}
+    </div>
+  }
+
+  <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+    <h2 class="text-lg font-semibold mb-4">Cliente</h2>
+    
+    <div class="space-y-4">
+      <div>
+        <label class="block text-sm font-medium mb-1">Seleccionar Cliente *</label>
+        <select (change)="onClientChange($event)" class="w-full p-2 border rounded dark:bg-gray-700 dark:border-gray-600">
+          <option value="">Seleccionar...</option>
+          @for (c of clients; track c.id) {
+            <option [value]="c.id">{{ c.names }} {{ c.lastname }} - CC: {{ c.dni }}</option>
+          }
+        </select>
+      </div>
+
+      @if (selectedClient) {
+        <div class="flex items-center gap-2 p-2 bg-green-50 dark:bg-green-900/20 rounded">
+          <span class="text-green-600">Cliente seleccionado: {{ selectedClient.names }} {{ selectedClient.lastname }}</span>
+          <button (click)="clearClient()" class="text-red-500 hover:underline text-sm">Cambiar</button>
+        </div>
+
+        <div class="grid grid-cols-2 gap-4 p-4 bg-gray-50 dark:bg-gray-700/50 rounded">
+          <div>
+            <label class="text-sm text-gray-500">Dirección actual</label>
+            <div class="font-medium">{{ selectedClient.address }}</div>
+          </div>
+          <div>
+            <label class="text-sm text-gray-500">IP actual</label>
+            <div class="font-medium">{{ selectedClient.ip_assignment_id || '-' }}</div>
+          </div>
+        </div>
+      }
+
+      <div>
+        <label class="block text-sm font-medium mb-1">Nueva Dirección *</label>
+        <input type="text" [(ngModel)]="form.new_address" class="w-full p-2 border rounded dark:bg-gray-700 dark:border-gray-600">
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+          <label class="block text-sm font-medium mb-1">Nuevo Barrio</label>
+          <input type="text" [(ngModel)]="form.new_neighborhood" class="w-full p-2 border rounded dark:bg-gray-700 dark:border-gray-600">
+        </div>
+        <div>
+          <label class="block text-sm font-medium mb-1">Nuevo Router</label>
+          <select [(ngModel)]="form.new_router_id" class="w-full p-2 border rounded dark:bg-gray-700 dark:border-gray-600">
+            <option value="">Seleccionar...</option>
+            @for (r of routers; track r.id) {
+              <option [value]="r.id">{{ r.name }} - {{ r.ip_address }}</option>
+            }
+          </select>
+        </div>
+      </div>
+
+      <div>
+        <label class="block text-sm font-medium mb-1">Nueva IP</label>
+        <input type="text" [(ngModel)]="form.new_ip" placeholder="IP asignada" class="w-full p-2 border rounded dark:bg-gray-700 dark:border-gray-600">
+      </div>
+    </div>
+
+    <h2 class="text-lg font-semibold mt-6 mb-4">Programación</h2>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div>
+        <label class="block text-sm font-medium mb-1">Fecha Programada *</label>
+        <input type="date" [(ngModel)]="form.scheduled_date" class="w-full p-2 border rounded dark:bg-gray-700 dark:border-gray-600">
+      </div>
+      <div>
+        <label class="block text-sm font-medium mb-1">Hora Programada *</label>
+        <input type="time" [(ngModel)]="form.scheduled_time" class="w-full p-2 border rounded dark:bg-gray-700 dark:border-gray-600">
+      </div>
+    </div>
+
+    <h2 class="text-lg font-semibold mt-6 mb-4">Costo y Comissão</h2>
+
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div>
+        <label class="block text-sm font-medium mb-1">Costo del Traslado</label>
+        <input type="number" [(ngModel)]="form.transfer_cost" class="w-full p-2 border rounded dark:bg-gray-700 dark:border-gray-600">
+      </div>
+      <div>
+        <label class="block text-sm font-medium mb-1">Técnico 1</label>
+        <select [(ngModel)]="form.technician_1_id" class="w-full p-2 border rounded dark:bg-gray-700 dark:border-gray-600">
+          <option value="">Seleccionar...</option>
+          @for (t of technicians; track t.id) {
+            <option [value]="t.id">{{ t.first_name }} {{ t.last_name }}</option>
+          }
+        </select>
+      </div>
+      <div>
+        <label class="block text-sm font-medium mb-1">Técnico 2</label>
+        <select [(ngModel)]="form.technician_2_id" class="w-full p-2 border rounded dark:bg-gray-700 dark:border-gray-600">
+          <option value="">Seleccionar...</option>
+          @for (t of technicians; track t.id) {
+            <option [value]="t.id">{{ t.first_name }} {{ t.last_name }}</option>
+          }
+        </select>
+      </div>
+    </div>
+
+    <div>
+      <label class="block text-sm font-medium mb-1">Comisión Total</label>
+      <input type="number" [(ngModel)]="form.commission_amount" class="w-full p-2 border rounded dark:bg-gray-700 dark:border-gray-600">
+    </div>
+
+    <div class="mt-4">
+      <label class="block text-sm font-medium mb-1">Observaciones</label>
+      <textarea [(ngModel)]="form.observations" rows="3" class="w-full p-2 border rounded dark:bg-gray-700 dark:border-gray-600"></textarea>
+    </div>
+
+    <div class="flex justify-end gap-2 mt-6">
+      <a routerLink="/transfers" class="px-4 py-2 border rounded">Cancelar</a>
+      <button (click)="save()" [disabled]="!isValid || isSaving" 
+              class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50">
+        {{ isSaving ? 'Guardando...' : 'Crear Traslado' }}
+      </button>
+    </div>
+  </div>
+</div>

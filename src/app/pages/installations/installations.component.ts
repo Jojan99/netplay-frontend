@@ -32,7 +32,7 @@ export class InstallationsComponent implements OnInit {
   paymentForm = { payment_status: 'pending', payment_amount: '', payment_reference: '', payment_method_id: '' };
 
   showAssignModal = false;
-  assignForm = { technician_1_id: '', technician_2_id: '', commission_amount: '' };
+  assignForm: any = { technician_ids: [] as number[], commission_amount: '' };
 
   showCompleteModal = false;
   completeNotes = '';
@@ -57,11 +57,12 @@ export class InstallationsComponent implements OnInit {
     const all = this.allInstallations.length > 0 ? this.allInstallations : this.installations;
     this.techInstallations = all.filter(i => {
       const isCompleted = i.status === 'completed' || i.payment_status === 'verified';
-      const hasTech = [i.technician1, i.technician2].some(t => t?.id === parseInt(tech.id) || t?.id === tech.id);
+      const techIds: number[] = i.technician_ids || [];
+      const hasTech = techIds.some((id: number) => id === parseInt(tech.id) || id === tech.id);
       return isCompleted && hasTech;
     }).map(i => ({
       ...i,
-      techCommission: this.getNumValue(i.commission_amount) / ([i.technician1?.id, i.technician2?.id].filter(Boolean).length || 1)
+      techCommission: this.getNumValue(i.commission_amount) / (i.technician_ids?.length || 1)
     }));
     this.showTechModal = true;
   }
@@ -108,6 +109,18 @@ export class InstallationsComponent implements OnInit {
   loadOptions(): void {
     this.svc.getTechnicians().subscribe(r => this.technicians = r?.data || r || []);
     this.svc.getPaymentMethods().subscribe(r => this.paymentMethods = r?.data || r || []);
+  }
+
+  toggleAssignTechnician(id: number): void {
+    if (!this.assignForm.technician_ids) {
+      this.assignForm.technician_ids = [];
+    }
+    const idx = this.assignForm.technician_ids.indexOf(id);
+    if (idx > -1) {
+      this.assignForm.technician_ids.splice(idx, 1);
+    } else {
+      this.assignForm.technician_ids.push(id);
+    }
   }
 
   load(): void {
@@ -318,8 +331,7 @@ export class InstallationsComponent implements OnInit {
     if (!inst) return;
     this.selected = inst;
     this.assignForm = {
-      technician_1_id: inst.technician_1_id?.toString() || '',
-      technician_2_id: inst.technician_2_id?.toString() || '',
+      technician_ids: inst.technician_ids || [],
       commission_amount: inst.commission_amount?.toString() || inst.installation_cost?.toString() || '',
     };
     this.showAssignModal = true;
@@ -331,8 +343,7 @@ export class InstallationsComponent implements OnInit {
     const instId = this.selected.id;
     const assignData = this.assignForm;
     this.svc.assignTechnicians(this.selected.id, {
-      technician_1_id: this.assignForm.technician_1_id ? parseInt(this.assignForm.technician_1_id) : undefined,
-      technician_2_id: this.assignForm.technician_2_id ? parseInt(this.assignForm.technician_2_id) : undefined,
+      technician_ids: this.assignForm.technician_ids.length ? this.assignForm.technician_ids : undefined,
       commission_amount: this.assignForm.commission_amount ? parseFloat(this.assignForm.commission_amount) : undefined,
     }).subscribe({
       next: r => {

@@ -161,15 +161,20 @@
     </div>
 
     <!-- ── Payment method summary ────────────────────────────────────── -->
-    <ng-container *ngIf="(isAdmin || isContador) && pmSummary.length > 0">
+    <ng-container *ngIf="isAdmin || isContador">
   <div class="bg-white dark:bg-gray-800 rounded-2xl p-5 border border-gray-100 dark:border-gray-700 shadow-sm">
     <div class="flex items-center justify-between mb-4 flex-wrap gap-2">
       <h2 class="text-sm font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wide">
         Recaudo por método de pago
       </h2>
+      <input type="month" [(ngModel)]="pmPeriod" (ngModelChange)="onPmPeriodChange()"
+             class="px-3 py-1.5 text-sm bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-300 focus:ring-2 focus:ring-blue-500">
     </div>
 
-    <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+    <div *ngIf="pmSummary.length === 0" class="text-sm text-gray-400 dark:text-gray-500 text-center py-8">
+      No hay pagos registrados en este período.
+    </div>
+    <div *ngIf="pmSummary.length > 0" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
       <div *ngFor="let pm of pmSummary" class="bg-gray-50 dark:bg-gray-700 rounded-xl p-4 text-center">
         <p class="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">{{ pm.name }}</p>
         <p class="text-lg font-bold text-gray-900 dark:text-white">$ {{ pm.total | number:'1.0-0' }}</p>

@@ -77,6 +77,19 @@ export const components: RouteProps[] = [
           images: { light: 'alerts-light.svg', dark: 'alerts-dark.svg' },
         },
       },
+      {
+        title: 'Instalaciones',
+        icon: `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
+  <path stroke-linecap="round" stroke-linejoin="round" d="M11.42 15.17 17.25 21A2.652 2.652 0 0 0 21 17.25l-5.877-5.877M11.42 15.17l2.496-3.03c.317-.384.74-.626 1.208-.766M11.42 15.17l-4.655 5.653a2.548 2.548 0 1 1-3.593-3.643 6.22 6.22 0 0 0 1.083-2.95c0-1.65-1.335-2.985-2.985-2.985m0 .342 2.834-2.835a2.25 2.25 0 0 1 3.176-3.264 5.25 5.25 0 0 0-5.536 1.336M8.25 10.875a1.125 1.125 0 1 0 2.25 0 1.125 1.125 0 0 0-2.25 0Z"/>
+</svg>`,
+        href: 'installations',
+        group: false,
+        roles: [2, 3],
+        card: {
+          className: 'w-56',
+          images: { light: 'alerts-light.svg', dark: 'alerts-dark.svg' },
+        },
+      },
     ],
 
     card: {
@@ -104,6 +117,17 @@ export const components: RouteProps[] = [
         title: 'Gestionar Egresos',
         icon: '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6"> <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 6 9 12.75l4.286-4.286a11.948 11.948 0 0 1 4.306 6.43l.776 2.898m0 0 3.182-5.511m-3.182 5.51-5.511-3.181" /> </svg>',
         href: 'egresos',
+        group: false,
+        roles: [2, 4],
+        card: {
+          className: 'w-56',
+          images: { light: 'alerts-light.svg', dark: 'alerts-dark.svg' },
+        },
+      },
+      {
+        title: 'Métodos de Pago',
+        icon: '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6"> <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 8.25h19.5M2.25 9h19.5m-16.5 5.25h6m-6 2.25h3m-3.75 3h15a2.25 2.25 0 0 0 2.25-2.25V6.75A2.25 2.25 0 0 0 19.5 4.5h-15a2.25 2.25 0 0 0-2.25 2.25v10.5A2.25 2.25 0 0 0 4.5 19.5Z" /></svg>',
+        href: 'finanzas/metodos-pago',
         group: false,
         roles: [2, 4],
         card: {

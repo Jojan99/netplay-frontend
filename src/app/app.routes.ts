@@ -23,6 +23,11 @@ import { ProfileComponent }          from './pages/profile/profile.component';
 import { ContractsComponent }        from './pages/contracts/contracts.component';
 import { EmployeesComponent }        from './pages/employees/employees.component';
 import { InternetPlansComponent }    from './pages/internet-plans/internet-plans.component';
+import { PaymentMethodsComponent } from './pages/payment-methods/payment-methods.component';
+import { InstallationsComponent } from './pages/installations/installations.component';
+import { InstallationFormComponent } from './pages/installations/installation-form.component';
+import { TransfersComponent } from './pages/transfers/transfers.component';
+import { TransferFormComponent } from './pages/transfers/transfer-form.component';
 
 export const routes: Routes = [
   {
@@ -33,6 +38,7 @@ export const routes: Routes = [
       { path: 'home', component: DashboardComponent },
       { path: 'usuario',        component: UserComponent,              canActivate: [roleGuard], data: { module: 'usuario' } },
       { path: 'finanzas',       component: FinanceComponent,           canActivate: [roleGuard], data: { module: 'finanzas' } },
+      { path: 'finanzas/metodos-pago', component: PaymentMethodsComponent, canActivate: [roleGuard], data: { module: 'finanzas' } },
       { path: 'egresos',        component: EgresosComponent,           canActivate: [roleGuard], data: { module: 'egresos' } },
       { path: 'report-paid',    component: ReportPaidComponent,        canActivate: [roleGuard], data: { module: 'report-paid' } },
       { path: 'history-Facture',component: HistoryFactureComponent,    canActivate: [roleGuard], data: { module: 'history-facture' } },
@@ -71,6 +77,10 @@ export const routes: Routes = [
       { path: 'contratos', component: ContractsComponent },
       { path: 'empleados', component: EmployeesComponent },
       { path: 'planes-internet', component: InternetPlansComponent },
+      { path: 'installations', component: InstallationsComponent },
+      { path: 'installations/new', component: InstallationFormComponent },
+      { path: 'transfers', component: TransfersComponent },
+      { path: 'transfers/new', component: TransferFormComponent },
       { path: '', redirectTo: 'home', pathMatch: 'full' },
       { path: '**', component: DashboardComponent },
     ],

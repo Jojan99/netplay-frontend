@@ -258,6 +258,16 @@ export class FinanceService {
     return this.http.get<any>(`${this.env.rootUrl}api/payment-methods/summary`, { headers: this.getHeaders(), params });
   }
 
+  getPaymentsByMethod(methodName: string, period: string, page = 1, perPage = 15, search = ''): Observable<any> {
+    let params = new HttpParams()
+      .set('method_name', methodName)
+      .set('period', period)
+      .set('page', page)
+      .set('per_page', perPage);
+    if (search) params = params.set('search', search);
+    return this.http.get<any>(`${this.env.rootUrl}api/payment-methods/payments`, { headers: this.getHeaders(), params });
+  }
+
   createPaymentMethod(name: string): Observable<any> {
     return this.http.post<any>(`${this.env.rootUrl}api/payment-methods`,
       JSON.stringify({ name }), { headers: this.getHeaders() });

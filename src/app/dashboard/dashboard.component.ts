@@ -111,7 +111,13 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
   loadPmSummary(): void {
     this.financeService.getPaymentMethodSummary(this.pmPeriod).subscribe({
-      next: (res) => { this.pmSummary = res.data ?? []; },
+      next: (res) => {
+        this.pmSummary = (res.data ?? []).map((item: any) => ({
+          name: item.method_name,
+          total: parseFloat(item.total_amount) || 0,
+          count: parseInt(item.total_payments) || 0,
+        }));
+      },
     });
   }
 
