@@ -461,15 +461,21 @@ get totalCompleted(): number {
     const all = this.allInstallations.length > 0 ? this.allInstallations : this.installations;
     const summary: { [id: number]: { id: string; name: string; count: number; commission: number } } = {};
     all.filter(i => this.isCompletedStatus(i)).forEach(i => {
-      const techs: any[] = i.technician_ids || [];
-      if (techs.length > 0) {
-        const commissionPerTech = this.getNumValue(i.commission_amount) / techs.length;
-        techs.forEach((t: any) => {
-          if (!summary[t.id]) {
-            summary[t.id] = { id: t.id.toString(), name: `${t.first_name} ${t.last_name}`, count: 0, commission: 0 };
+      const techIds: number[] = i.technician_ids || [];
+      if (techIds.length > 0) {
+        const commissionPerTech = this.getNumValue(i.commission_amount) / techIds.length;
+        techIds.forEach((techId: number) => {
+          const tech = this.technicians.find(t => t.id === techId);
+          if (!summary[techId]) {
+            summary[techId] = { 
+              id: techId.toString(), 
+              name: tech ? `${tech.first_name} ${tech.last_name}` : `Técnico ${techId}`, 
+              count: 0, 
+              commission: 0 
+            };
           }
-          summary[t.id].count++;
-          summary[t.id].commission += commissionPerTech;
+          summary[techId].count++;
+          summary[techId].commission += commissionPerTech;
         });
       }
     });
