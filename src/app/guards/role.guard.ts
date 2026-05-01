@@ -7,7 +7,10 @@ export const roleGuard: CanActivateFn = (route) => {
   if (!required) return true;
 
   const allowed = inject(AuthService).getAllowedModules();
-  if (allowed.includes(required)) return true;
+  const hasAccess = allowed.some(
+    m => required === m || required.toLowerCase().startsWith(m.toLowerCase() + '/')
+  );
+  if (hasAccess) return true;
 
   return inject(Router).createUrlTree(['/dashboard/home']);
 };

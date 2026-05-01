@@ -18,6 +18,13 @@ export class AuthService {
   private readonly MODULES_KEY = 'allowed_modules';
 
   login(data: any): void {
+    // Limpiar todo antes de guardar para evitar mezcla entre sesiones
+    localStorage.removeItem(this.TOKEN_KEY);
+    localStorage.removeItem(this.USER_KEY);
+    localStorage.removeItem(this.MODULES_KEY);
+    localStorage.removeItem('employee_id');
+    localStorage.removeItem('user_role');
+
     localStorage.setItem(this.TOKEN_KEY, data.access_token);
     const user: AuthUser = {
       userId:       data.userId       ?? 0,
@@ -30,6 +37,8 @@ export class AuthService {
       company_logo: data.company_logo ?? '',
     };
     localStorage.setItem(this.USER_KEY, JSON.stringify(user));
+    localStorage.setItem('employee_id', (data.employee_id ?? '').toString());
+    localStorage.setItem('user_role', (data.profile_name ?? '').toUpperCase());
   }
 
   setModules(modules: string[]): void {
@@ -45,6 +54,8 @@ export class AuthService {
     localStorage.removeItem(this.TOKEN_KEY);
     localStorage.removeItem(this.USER_KEY);
     localStorage.removeItem(this.MODULES_KEY);
+    localStorage.removeItem('employee_id');
+    localStorage.removeItem('user_role');
   }
 
   getToken(): string | null {

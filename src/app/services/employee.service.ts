@@ -81,6 +81,15 @@ export class EmployeeService {
     return this.http.delete(`${this.base}/${id}/disciplinary/${recId}`, { headers: this.getHeaders() });
   }
 
+  // ── Ubicación (técnicos) ──────────────────────────────────────────────────
+  updateMyLocation(latitude: number, longitude: number): Observable<any> {
+    return this.http.put(`${this.base}/my-location`, { latitude, longitude }, { headers: this.getHeaders() });
+  }
+
+  getTechnicianLocations(): Observable<any> {
+    return this.http.get(`${this.base}/locations`, { headers: this.getHeaders() });
+  }
+
   // ── Nómina ────────────────────────────────────────────────────────────────
   getPayrolls(id: number): Observable<any> {
     return this.http.get(`${this.base}/${id}/payroll`, { headers: this.getHeaders() });

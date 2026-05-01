@@ -20,6 +20,7 @@ import { NavbarComponent }           from '../../common/navbar.component';
 import { SidebarService }            from '../../common/services/sidebar';
 import { components, RouteProps }    from '../../common/components';
 import { AuthService }               from '../../services/auth.service';
+import { CompanyService }            from '../../services/company.service';
 import { ToastService }             from '../../services/toast.service';
 
 @Component({
@@ -43,8 +44,8 @@ export class LayoutComponent implements OnInit {
   selectedItem: any;
   isDropdownVisible = false;
   dropdownPosition  = { top: 0, left: 0 };
+  isLoadingModules  = true;
 
-  // ✅ variables seguras (NO getters)
   companyName = '';
   companyLogo = '';
   username    = '';
@@ -56,43 +57,77 @@ export class LayoutComponent implements OnInit {
     private cdr:             ChangeDetectorRef,
     private router:          Router,
     private authService:     AuthService,
+    private companyService:  CompanyService,
     readonly toastService:   ToastService,
   ) {}
 
   ngOnInit(): void {
-    // ✅ evitar SSR
     if (!isPlatformBrowser(this.platformId)) return;
 
-    // Collapse sidebar by default on mobile
     if (window.innerWidth < 768) {
       this.sidebarService.setCollapsed(true);
     }
 
     const user = this.authService.getUser();
-
-    if (user) {
-      this.companyName = user.company_name || '';
-      this.companyLogo = user.company_logo || '';
-      this.username    = user.username || '';
-      this.roleName    = this.authService.getRoleName();
-
-      this.buildMenu(this.authService.getAllowedModules());
+    if (!user) {
+      this.router.navigate(['/login']);
+      return;
     }
+
+    this.companyName = user.company_name || '';
+    this.companyLogo = user.company_logo || '';
+    this.username    = user.username || '';
+    this.roleName    = this.authService.getRoleName();
+
+    // Siempre cargar módulos desde el backend (no confiar en cache entre sesiones)
+    this.companyService.getMyModules().subscribe({
+      next: (res) => {
+        const modules: string[] = res.data ?? [];
+        this.authService.setModules(modules);
+        this.buildMenu(modules);
+        this.isLoadingModules = false;
+        this.cdr.detectChanges();
+      },
+      error: () => {
+        // Fallback al cache local si el API falla
+        this.buildMenu(this.authService.getAllowedModules());
+        this.isLoadingModules = false;
+      }
+    });
   }
 
-  private buildMenu(allowedModules: string[]) {
-    this.filteredComponents = components
-      .map(item => ({
-        ...item,
-        children: item.children?.filter(
-          child => !child.module || allowedModules.includes(child.module)
-        ),
-      }))
-      .filter(item =>
-        item.children !== undefined
-          ? item.children.length > 0
-          : (!item.module || allowedModules.includes(item.module))
-      );
+  private buildMenu(allowedModules: string[]): void {
+    if (!allowedModules || allowedModules.length === 0) {
+      this.filteredComponents = [];
+      return;
+    }
+
+    const isAllowed = (key: string) =>
+      allowedModules.some(m => key === m || key.toLowerCase().startsWith(m.toLowerCase() + '/'));
+
+    const filtered = components
+      .map(item => {
+        if (item.group && item.children) {
+          const filteredChildren = item.children.filter(child => {
+            const key = child.module || '';
+            return key && isAllowed(key);
+          });
+          if (filteredChildren.length === 0) return null;
+          return { ...item, children: filteredChildren };
+        }
+        const key = item.module || item.href || '';
+        if (!key || !isAllowed(key)) return null;
+        return item;
+      })
+      .filter((item): item is RouteProps => item !== null);
+
+    this.filteredComponents = filtered;
+
+    // Auto-expandir el grupo de la ruta activa
+    const currentUrl = this.router.url;
+    this.selectedItem = filtered.find(item =>
+      item.group && item.children?.some(c => currentUrl.includes(c.href ?? ''))
+    ) ?? null;
   }
 
   selectItem(item: any): void {

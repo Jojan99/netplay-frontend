@@ -492,4 +492,10 @@ get totalCompleted(): number {
     });
     return Object.values(summary).sort((a, b) => b.commission - a.commission);
   }
+
+  getTechnicianName(techId: number): string {
+    const tech = this.technicians.find(t => t.id === techId);
+    if (!tech) return 'Técnico ' + techId;
+    return ((tech.first_name || '') + ' ' + (tech.last_name || '')).trim();
+  }
 }

@@ -6,6 +6,7 @@ import { Router, RouterModule } from '@angular/router';
 import { OauthService } from '../../../services/oauth.service';
 import { AuthService } from '../../../services/auth.service';
 import { CompanyService } from '../../../services/company.service';
+import { LocationTrackerService } from '../../../services/location-tracker.service';
 import { SignInInterface } from '../../../models/sign-in-interfaces';
 
 @Component({
@@ -22,10 +23,11 @@ export class SignInComponent {
   public SignInInterfaces: SignInInterface = { user: '', password: '' };
 
   constructor(
-    private OauthService:   OauthService,
-    private authService:    AuthService,
-    private companyService: CompanyService,
-    private router:         Router,
+    private OauthService:       OauthService,
+    private authService:        AuthService,
+    private companyService:     CompanyService,
+    private locationTracker:    LocationTrackerService,
+    private router:             Router,
   ) {}
 
   signin(): void {
@@ -37,6 +39,7 @@ export class SignInComponent {
         this.isLoading = false;
         if (!res.error && res.data?.access_token) {
           this.authService.login(res.data);
+          this.locationTracker.startTrackingIfTechnician();
           this.companyService.getMyModules().subscribe({
             next: (mod) => {
               this.authService.setModules(mod.data ?? []);
