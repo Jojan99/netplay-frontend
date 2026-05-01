@@ -1,0 +1,55 @@
+<div class="flex items-center justify-between mb-6">
+  <div>
+    <h2 class="text-2xl font-bold text-gray-900 dark:text-white">Mis Reportes</h2>
+    <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Historial de reportes de falla</p>
+  </div>
+  <a routerLink="/portal/reportes/nuevo"
+     class="flex items-center gap-2 px-4 py-2.5 text-sm font-semibold text-white bg-blue-600 rounded-lg
+            hover:bg-blue-700 transition-colors">
+    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+    </svg>
+    Nuevo reporte
+  </a>
+</div>
+
+<!-- Skeleton -->
+<div *ngIf="loading()" class="space-y-3">
+  <div *ngFor="let i of [1,2,3]" class="h-24 bg-gray-200 dark:bg-gray-700 rounded-xl animate-pulse"></div>
+</div>
+
+<!-- Sin reportes -->
+<div *ngIf="!loading() && tickets().length === 0"
+     class="text-center py-20 text-gray-400 dark:text-gray-500">
+  <svg class="w-16 h-16 mx-auto mb-4 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+          d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+  </svg>
+  <p class="font-medium">No tienes reportes registrados</p>
+  <a routerLink="/portal/reportes/nuevo"
+     class="mt-4 inline-block text-sm text-blue-600 dark:text-blue-400 hover:underline">
+    Crear primer reporte →
+  </a>
+</div>
+
+<!-- Lista de tickets -->
+<div *ngIf="!loading() && tickets().length > 0" class="space-y-3">
+  <div *ngFor="let ticket of tickets()"
+       class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 p-5">
+    <div class="flex items-start justify-between gap-3">
+      <div class="flex-1 min-w-0">
+        <div class="flex items-center gap-2 mb-1 flex-wrap">
+          <span class="text-xs font-mono text-gray-400 dark:text-gray-500">#{{ ticket.id }}</span>
+          <span class="text-sm font-semibold text-gray-900 dark:text-white">
+            {{ categoryLabel(ticket.category) }}
+          </span>
+        </div>
+        <p class="text-sm text-gray-600 dark:text-gray-400 line-clamp-2">{{ ticket.observation }}</p>
+        <p class="text-xs text-gray-400 dark:text-gray-500 mt-2">{{ timeAgo(ticket.created_at) }}</p>
+      </div>
+      <span [class]="'flex-shrink-0 text-xs font-medium px-2.5 py-1 rounded-full ' + statusClass(ticket.status)">
+        {{ ticket.status }}
+      </span>
+    </div>
+  </div>
+</div>

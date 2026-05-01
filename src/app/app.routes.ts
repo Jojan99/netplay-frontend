@@ -87,6 +87,10 @@ export const routes: Routes = [
       { path: '**', component: DashboardComponent },
     ],
   },
+  {
+    path: 'portal',
+    loadChildren: () => import('./portal/portal.routes').then(m => m.PORTAL_ROUTES),
+  },
   { path: 'login',         component: SignInComponent },
   { path: 'inicio',        component: SignInComponent },
   { path: 'register',      component: RegisterCompanyComponent },
