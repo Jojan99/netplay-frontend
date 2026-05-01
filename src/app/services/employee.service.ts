@@ -87,7 +87,7 @@ export class EmployeeService {
   }
 
   getTechnicianLocations(): Observable<any> {
-    return this.http.get(`${this.base}/locations`, { headers: this.getHeaders() });
+    return this.http.get(`${this.base}/technician-locations`, { headers: this.getHeaders() });
   }
 
   // ── Nómina ────────────────────────────────────────────────────────────────

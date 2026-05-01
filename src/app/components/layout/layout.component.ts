@@ -109,10 +109,14 @@ export class LayoutComponent implements OnInit {
       .map(item => {
         if (item.group && item.children) {
           const filteredChildren = item.children.filter(child => {
-            const key = child.module || '';
-            return key && isAllowed(key);
+            // Usar module si existe, si no usar href como clave de módulo
+            const key = child.module || child.href || '';
+            return !key || isAllowed(key);
           });
           if (filteredChildren.length === 0) return null;
+          // Si el grupo tiene módulo propio, verificar que esté permitido
+          const groupKey = item.module || '';
+          if (groupKey && !isAllowed(groupKey)) return null;
           return { ...item, children: filteredChildren };
         }
         const key = item.module || item.href || '';

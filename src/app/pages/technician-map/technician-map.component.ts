@@ -4,6 +4,7 @@ import {
 } from '@angular/core';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { EmployeeService } from '../../services/employee.service';
+import { EchoService } from '../../services/echo.service';
 
 @Component({
   selector: 'app-technician-map',
@@ -26,6 +27,7 @@ export class TechnicianMapComponent implements OnInit, AfterViewInit, OnDestroy 
 
   constructor(
     private employeeService: EmployeeService,
+    private echoService:     EchoService,
     private zone: NgZone,
     @Inject(PLATFORM_ID) private platformId: Object,
   ) {}
@@ -41,13 +43,15 @@ export class TechnicianMapComponent implements OnInit, AfterViewInit, OnDestroy 
     this.fixLeafletIcons();
     this.initMap();
     this.loadLocations();
-    // Actualizar cada 30 segundos
+    this.subscribeToRealtime();
+    // Fallback polling cada 30s por si Pusher falla
     this.intervalId = setInterval(() => this.loadLocations(), 30000);
   }
 
   ngOnDestroy(): void {
     if (this.intervalId) clearInterval(this.intervalId);
     if (this.map) this.map.remove();
+    this.echoService.leave('technician-tracking');
   }
 
   private fixLeafletIcons(): void {
@@ -140,6 +144,68 @@ export class TechnicianMapComponent implements OnInit, AfterViewInit, OnDestroy 
         this.markers.delete(id);
       }
     });
+  }
+
+  private subscribeToRealtime(): void {
+    const echo = this.echoService.instance;
+    if (!echo) return;
+
+    echo.channel('technician-tracking')
+      .listen('.technician.location.updated', (data: any) => {
+        this.zone.run(() => {
+          this.lastUpdate = new Date();
+          this.updateSingleTechnician(data);
+        });
+      });
+  }
+
+  private updateSingleTechnician(data: any): void {
+    const lat = parseFloat(data.latitude);
+    const lng = parseFloat(data.longitude);
+    const id  = data.employee_id;
+
+    // Actualizar en la lista lateral
+    const existing = this.technicians.find(t => t.id === id);
+    if (existing) {
+      existing.latitude             = data.latitude;
+      existing.longitude            = data.longitude;
+      existing.last_location_update = data.updated_at;
+    } else {
+      this.technicians = [...this.technicians, {
+        id,
+        first_name:           data.first_name,
+        last_name:            data.last_name,
+        job_title:            data.job_title,
+        latitude:             data.latitude,
+        longitude:            data.longitude,
+        last_location_update: data.updated_at,
+      }];
+    }
+
+    // Mover o crear marcador
+    const updated   = new Date(data.updated_at).toLocaleTimeString();
+    const label     = `${data.first_name} ${data.last_name}`;
+    const popupHtml = `
+      <div class="text-sm">
+        <p class="font-semibold text-gray-800">📍 ${label}</p>
+        <p class="text-gray-500 text-xs">${data.job_title || 'Técnico'}</p>
+        <p class="text-gray-400 text-xs mt-1">Última actualización: ${updated}</p>
+      </div>`;
+
+    if (this.markers.has(id)) {
+      this.markers.get(id).setLatLng([lat, lng]).setPopupContent(popupHtml);
+    } else {
+      const icon = this.L.divIcon({
+        className: '',
+        html: `<div class="tech-marker"><span>${(data.first_name || 'T')[0].toUpperCase()}</span></div>`,
+        iconSize: [36, 36],
+        iconAnchor: [18, 18],
+      });
+      const marker = this.L.marker([lat, lng], { icon })
+        .bindPopup(popupHtml)
+        .addTo(this.map);
+      this.markers.set(id, marker);
+    }
   }
 
   private fitBounds(): void {

@@ -18,7 +18,7 @@ export class LocationTrackerService implements OnDestroy {
 
     this.isTracking = true;
     this.sendLocation();
-    this.intervalId = setInterval(() => this.sendLocation(), 30000);
+    this.intervalId = setInterval(() => this.sendLocation(), 15000);
   }
 
   stopTracking(): void {
