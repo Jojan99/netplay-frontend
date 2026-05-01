@@ -1,0 +1,30 @@
+:host {
+  display: block;
+  height: 100%;
+}
+
+#technician-map {
+  min-height: 400px;
+}
+
+/* Marcador personalizado para cada técnico */
+::ng-deep .tech-marker {
+  width: 36px;
+  height: 36px;
+  border-radius: 50% 50% 50% 0;
+  background: #2563eb;
+  transform: rotate(-45deg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 8px rgba(37, 99, 235, 0.5);
+  border: 2px solid white;
+
+  span {
+    transform: rotate(45deg);
+    color: white;
+    font-weight: 700;
+    font-size: 14px;
+    font-family: sans-serif;
+  }
+}

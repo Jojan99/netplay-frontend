@@ -28,6 +28,7 @@ import { InstallationsComponent } from './pages/installations/installations.comp
 import { InstallationFormComponent } from './pages/installations/installation-form.component';
 import { TransfersComponent } from './pages/transfers/transfers.component';
 import { TransferFormComponent } from './pages/transfers/transfer-form.component';
+import { TechnicianMapComponent } from './pages/technician-map/technician-map.component';
 
 export const routes: Routes = [
   {
@@ -81,6 +82,7 @@ export const routes: Routes = [
       { path: 'installations/new', component: InstallationFormComponent },
       { path: 'transfers', component: TransfersComponent },
       { path: 'transfers/new', component: TransferFormComponent },
+      { path: 'technician-map', component: TechnicianMapComponent, canActivate: [roleGuard], data: { module: 'technician-map' } },
       { path: '', redirectTo: 'home', pathMatch: 'full' },
       { path: '**', component: DashboardComponent },
     ],
