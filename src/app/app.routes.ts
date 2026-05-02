@@ -83,6 +83,10 @@ export const routes: Routes = [
       { path: 'transfers', component: TransfersComponent },
       { path: 'transfers/new', component: TransferFormComponent },
       { path: 'technician-map', component: TechnicianMapComponent, canActivate: [roleGuard], data: { module: 'technician-map' } },
+      {
+        path: 'landing',
+        loadComponent: () => import('./pages/landing-editor/landing-editor.component').then(m => m.LandingEditorComponent),
+      },
       { path: '', redirectTo: 'home', pathMatch: 'full' },
       { path: '**', component: DashboardComponent },
     ],
@@ -90,6 +94,10 @@ export const routes: Routes = [
   {
     path: 'portal',
     loadChildren: () => import('./portal/portal.routes').then(m => m.PORTAL_ROUTES),
+  },
+  {
+    path: 'p',
+    loadChildren: () => import('./landing/landing.routes').then(m => m.LANDING_ROUTES),
   },
   { path: 'login',         component: SignInComponent },
   { path: 'inicio',        component: SignInComponent },

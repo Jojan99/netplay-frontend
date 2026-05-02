@@ -23,7 +23,7 @@ export interface UserInterface {
     expanded?: boolean
     whatsapp_enabled?: boolean
     vlan?: number
-    
+    router_id?: number | null
 
 
 

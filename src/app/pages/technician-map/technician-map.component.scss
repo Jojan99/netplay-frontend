@@ -4,7 +4,14 @@
 }
 
 #technician-map {
-  min-height: 400px;
+  min-height: 350px;
+  height: 100%;
+}
+
+@media (min-width: 1024px) {
+  #technician-map {
+    min-height: 400px;
+  }
 }
 
 /* Marcador personalizado para cada técnico */
