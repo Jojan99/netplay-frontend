@@ -44,6 +44,7 @@ const MODULE_LABELS: Record<string, { label: string; group: string }> = {
   'technician-map':   { label: 'Mapa de Técnicos',       group: 'Red' },
   'staff':            { label: 'Equipo de trabajo',      group: 'Configuración' },
   'billing-config':   { label: 'Config. Facturación',   group: 'Configuración' },
+  'payment-gateway':  { label: 'Pasarela de Pago',       group: 'Configuración' },
   'contratos':        { label: 'Contratos',              group: 'Configuración' },
   'empleados':        { label: 'Empleados',              group: 'Configuración' },
   'planes-internet':  { label: 'Planes de Internet',     group: 'Configuración' },

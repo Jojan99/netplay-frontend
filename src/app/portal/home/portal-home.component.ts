@@ -1,6 +1,6 @@
-import { Component, inject, OnInit, signal } from '@angular/core';
+import { Component, inject, OnInit, computed, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterModule } from '@angular/router';
+import { Router, RouterModule } from '@angular/router';
 import { ClientApiService }  from '../services/client-api.service';
 import { ClientAuthService } from '../services/client-auth.service';
 
@@ -11,16 +11,22 @@ import { ClientAuthService } from '../services/client-auth.service';
   templateUrl: './portal-home.component.html',
 })
 export class PortalHomeComponent implements OnInit {
-  private api  = inject(ClientApiService);
-  private auth = inject(ClientAuthService);
+  private api    = inject(ClientApiService);
+  private auth   = inject(ClientAuthService);
+  private router = inject(Router);
 
   fullName    = signal('');
   loading     = signal(true);
 
-  invoiceSummary = signal<{ total: number; paid: number; pending: number; overdue: number } | null>(null);
-  nextInvoice    = signal<any>(null);
-  openTickets    = signal(0);
-  profile        = signal<any>(null);
+  invoiceSummary   = signal<{ total: number; paid: number; pending: number; overdue: number } | null>(null);
+  unpaidInvoices   = signal<any[]>([]);
+  paymentAvailable = signal(false);
+  openTickets      = signal(0);
+  profile          = signal<any>(null);
+
+  totalDue = computed(() =>
+    this.unpaidInvoices().reduce((sum, inv) => sum + (inv.price_total - (inv.abone ?? 0)), 0)
+  );
 
   ngOnInit(): void {
     this.fullName.set(this.auth.getFullName());
@@ -30,24 +36,20 @@ export class PortalHomeComponent implements OnInit {
   loadData(): void {
     this.loading.set(true);
 
-    // Facturas
     this.api.getInvoices().subscribe({
       next: (res) => {
         if (res.data) {
           this.invoiceSummary.set(res.data.summary);
-          // Próxima factura pendiente/vencida
-          const unpaid = (res.data.invoices as any[]).filter(
-            (inv: any) => inv.invoice_status !== 'paid'
-          );
-          if (unpaid.length > 0) {
-            this.nextInvoice.set(unpaid[0]);
-          }
+          this.paymentAvailable.set(!!res.data.payment_available);
+          const unpaid = (res.data.invoices as any[])
+            .filter((inv: any) => inv.invoice_status !== 'paid')
+            .sort((a: any, b: any) => a.date_facturation.localeCompare(b.date_facturation));
+          this.unpaidInvoices.set(unpaid);
         }
       },
       error: () => {},
     });
 
-    // Tickets abiertos
     this.api.getTickets().subscribe({
       next: (res) => {
         const open = (res.data as any[])?.filter(
@@ -59,18 +61,18 @@ export class PortalHomeComponent implements OnInit {
       error: () => { this.loading.set(false); },
     });
 
-    // Perfil (plan de internet)
     this.api.getProfile().subscribe({
       next: (res) => { this.profile.set(res.data); },
       error: () => {},
     });
   }
 
+  goToPay(): void {
+    this.router.navigate(['/portal/facturas'], { queryParams: { pay: '1' } });
+  }
+
   getStatusLabel(status: string): string {
-    const map: Record<string, string> = {
-      paid: 'Pagada', pending: 'Pendiente', overdue: 'Vencida',
-    };
-    return map[status] ?? status;
+    return ({ paid: 'Pagada', pending: 'Pendiente', overdue: 'Vencida' } as Record<string,string>)[status] ?? status;
   }
 
   getStatusClasses(status: string): string {

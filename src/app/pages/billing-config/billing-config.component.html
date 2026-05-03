@@ -14,6 +14,10 @@
             [class]="activeTab === 'payment-methods' ? 'px-4 py-2 text-sm font-medium text-blue-600 border-b-2 border-blue-600' : 'px-4 py-2 text-sm font-medium text-gray-500 hover:text-gray-700'">
       Métodos de pago
     </button>
+    <button (click)="activeTab = 'gateway'; loadGatewayConfig()"
+            [class]="activeTab === 'gateway' ? 'px-4 py-2 text-sm font-medium text-blue-600 border-b-2 border-blue-600' : 'px-4 py-2 text-sm font-medium text-gray-500 hover:text-gray-700'">
+      Pasarela online
+    </button>
   </div>
 
   <!-- ═══════════════ INVOICE CONFIG TAB ═══════════════ -->
@@ -384,6 +388,559 @@
   </div>
 
   </ng-container><!-- end billing groups tab -->
+
+  <!-- ═══════════════ PASARELA DE PAGO ONLINE ═══════════════ -->
+  <ng-container *ngIf="activeTab === 'gateway'">
+    <div class="mb-6">
+      <h1 class="text-2xl font-bold text-gray-800 dark:text-white">Pasarela de pago online</h1>
+      <p class="text-sm text-gray-500 dark:text-gray-400">
+        Permite que tus clientes paguen sus facturas en línea desde el portal.
+      </p>
+    </div>
+
+    <div *ngIf="gwMsg" class="flex items-center gap-2 p-4 mb-4 text-sm text-green-700 bg-green-50 rounded-lg dark:bg-green-900/20 dark:text-green-400">{{ gwMsg }}</div>
+    <div *ngIf="gwError" class="flex items-center gap-2 p-4 mb-4 text-sm text-red-700 bg-red-50 rounded-lg dark:bg-red-900/20 dark:text-red-400">{{ gwError }}</div>
+    <div *ngIf="gwLoading" class="text-center py-10 text-gray-400">Cargando...</div>
+
+    <div *ngIf="!gwLoading" class="space-y-6">
+
+      <!-- Selector de pasarela -->
+      <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-5 space-y-4">
+        <h3 class="font-semibold text-gray-800 dark:text-white">Pasarela activa</h3>
+
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div *ngFor="let gw of gwAvailable"
+               (click)="gwForm.gateway = gw.id"
+               [class]="gwForm.gateway === gw.id
+                 ? 'border-2 border-blue-500 bg-blue-50 dark:bg-blue-900/20'
+                 : 'border-2 border-gray-200 dark:border-gray-700 hover:border-gray-300 cursor-pointer'"
+               class="rounded-xl p-4 transition-all cursor-pointer">
+            <div class="font-semibold text-sm text-gray-800 dark:text-white">{{ gw.name }}</div>
+            <div *ngIf="gw.id === 'zonapago'" class="text-xs text-amber-600 dark:text-amber-400 mt-1">Requiere contacto previo</div>
+          </div>
+        </div>
+
+        <!-- Modo sandbox / producción -->
+        <div class="flex items-center justify-between pt-2 border-t border-gray-100 dark:border-gray-700">
+          <div>
+            <p class="text-sm font-medium text-gray-700 dark:text-gray-300">Modo de operación</p>
+            <p class="text-xs text-gray-500 dark:text-gray-400">En modo prueba los pagos NO son reales</p>
+          </div>
+          <div class="flex gap-2">
+            <button (click)="gwForm.sandbox = true"
+                    [class]="gwForm.sandbox ? 'bg-amber-500 text-white' : 'bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-300'"
+                    class="px-4 py-1.5 rounded-lg text-sm font-medium transition-colors">
+              Prueba
+            </button>
+            <button (click)="gwForm.sandbox = false"
+                    [class]="!gwForm.sandbox ? 'bg-green-600 text-white' : 'bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-300'"
+                    class="px-4 py-1.5 rounded-lg text-sm font-medium transition-colors">
+              Producción
+            </button>
+          </div>
+        </div>
+
+        <!-- Activar / desactivar -->
+        <div class="flex items-center justify-between">
+          <div>
+            <p class="text-sm font-medium text-gray-700 dark:text-gray-300">Pago online activo</p>
+            <p class="text-xs text-gray-500 dark:text-gray-400">Los clientes verán el botón de pago en el portal</p>
+          </div>
+          <button (click)="gwForm.active = !gwForm.active"
+                  [class]="gwForm.active ? 'bg-blue-600' : 'bg-gray-300 dark:bg-gray-600'"
+                  class="relative w-12 h-6 rounded-full transition-colors focus:outline-none">
+            <span [class]="gwForm.active ? 'translate-x-6' : 'translate-x-1'"
+                  class="absolute top-1 w-4 h-4 bg-white rounded-full shadow transition-transform block"></span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Credenciales -->
+      <!-- autocomplete="off" + name ficticios evitan que el navegador rellene con contraseñas guardadas -->
+      <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-5 space-y-4">
+        <h3 class="font-semibold text-gray-800 dark:text-white">Credenciales</h3>
+        <p class="text-xs text-gray-500 dark:text-gray-400">
+          Deja el campo en blanco para conservar el valor guardado. Solo se actualizan los campos que completes.
+        </p>
+        <!-- Campo trampa invisible: engaña al autocompletado del navegador -->
+        <input type="text"   style="display:none" aria-hidden="true" tabindex="-1" name="username_fake">
+        <input type="password" style="display:none" aria-hidden="true" tabindex="-1" name="password_fake" autocomplete="new-password">
+
+        <!-- Wompi -->
+        <ng-container *ngIf="gwForm.gateway === 'wompi'">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+            <!-- Llave Pública -->
+            <div>
+              <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">
+                Llave Pública <span class="text-gray-400">(pub_test_... / pub_prod_...)</span>
+              </label>
+              <div *ngIf="gwConfig.public_key" class="flex items-center gap-1 mb-1 bg-gray-50 dark:bg-gray-700/50 border border-gray-200 dark:border-gray-600 rounded-lg px-3 py-1.5">
+                <span class="font-mono text-xs text-gray-700 dark:text-gray-300 flex-1 truncate">
+                  {{ gwShowKeys['public_key'] ? gwConfig.public_key : maskKey(gwConfig.public_key) }}
+                </span>
+                <button (click)="toggleKey('public_key')" title="{{ gwShowKeys['public_key'] ? 'Ocultar' : 'Ver' }}"
+                        class="p-1 rounded text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-colors flex-shrink-0">
+                  <svg *ngIf="!gwShowKeys['public_key']" class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                  </svg>
+                  <svg *ngIf="gwShowKeys['public_key']" class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"/>
+                  </svg>
+                </button>
+                <button (click)="copyText(gwConfig.public_key)" title="Copiar"
+                        class="p-1 rounded text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-colors flex-shrink-0">
+                  <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                  </svg>
+                </button>
+              </div>
+              <input type="text" [(ngModel)]="gwForm.public_key"
+                     autocomplete="off"
+                     placeholder="{{ gwConfig.has_public_key ? 'Nueva llave (dejar vacío para conservar)' : 'pub_test_...' }}"
+                     class="w-full text-sm rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-800 dark:text-white px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+            </div>
+
+            <!-- Llave Privada -->
+            <div>
+              <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">
+                Llave Privada <span class="text-gray-400">(prv_test_... / prv_prod_...)</span>
+              </label>
+              <div *ngIf="gwConfig.private_key" class="flex items-center gap-1 mb-1 bg-gray-50 dark:bg-gray-700/50 border border-gray-200 dark:border-gray-600 rounded-lg px-3 py-1.5">
+                <span class="font-mono text-xs text-gray-700 dark:text-gray-300 flex-1 truncate">
+                  {{ gwShowKeys['private_key'] ? gwConfig.private_key : maskKey(gwConfig.private_key) }}
+                </span>
+                <button (click)="toggleKey('private_key')" title="{{ gwShowKeys['private_key'] ? 'Ocultar' : 'Ver' }}"
+                        class="p-1 rounded text-gray-400 hover:text-gray-600 transition-colors flex-shrink-0">
+                  <svg *ngIf="!gwShowKeys['private_key']" class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                  </svg>
+                  <svg *ngIf="gwShowKeys['private_key']" class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"/>
+                  </svg>
+                </button>
+                <button (click)="copyText(gwConfig.private_key)" title="Copiar"
+                        class="p-1 rounded text-gray-400 hover:text-gray-600 transition-colors flex-shrink-0">
+                  <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                  </svg>
+                </button>
+              </div>
+              <input type="password" [(ngModel)]="gwForm.private_key"
+                     autocomplete="new-password"
+                     placeholder="{{ gwConfig.has_private_key ? 'Nueva llave (dejar vacío para conservar)' : 'prv_test_...' }}"
+                     class="w-full text-sm rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-800 dark:text-white px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+            </div>
+
+            <!-- Events Secret -->
+            <div>
+              <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">
+                Events Secret <span class="text-gray-400">(test_events_... / prod_events_...)</span>
+              </label>
+              <div *ngIf="gwConfig.events_secret" class="flex items-center gap-1 mb-1 bg-gray-50 dark:bg-gray-700/50 border border-gray-200 dark:border-gray-600 rounded-lg px-3 py-1.5">
+                <span class="font-mono text-xs text-gray-700 dark:text-gray-300 flex-1 truncate">
+                  {{ gwShowKeys['events_secret'] ? gwConfig.events_secret : maskKey(gwConfig.events_secret) }}
+                </span>
+                <button (click)="toggleKey('events_secret')"
+                        class="p-1 rounded text-gray-400 hover:text-gray-600 transition-colors flex-shrink-0">
+                  <svg *ngIf="!gwShowKeys['events_secret']" class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                  </svg>
+                  <svg *ngIf="gwShowKeys['events_secret']" class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"/>
+                  </svg>
+                </button>
+              </div>
+              <input type="password" [(ngModel)]="gwForm.events_secret"
+                     autocomplete="new-password"
+                     placeholder="{{ gwConfig.has_events_secret ? 'Nuevo valor (dejar vacío para conservar)' : 'test_events_...' }}"
+                     class="w-full text-sm rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-800 dark:text-white px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+            </div>
+
+            <!-- Integrity Secret -->
+            <div>
+              <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">
+                Integrity Secret <span class="text-gray-400">(test_integrity_... / prod_integrity_...)</span>
+              </label>
+              <div *ngIf="gwConfig.integrity_secret" class="flex items-center gap-1 mb-1 bg-gray-50 dark:bg-gray-700/50 border border-gray-200 dark:border-gray-600 rounded-lg px-3 py-1.5">
+                <span class="font-mono text-xs text-gray-700 dark:text-gray-300 flex-1 truncate">
+                  {{ gwShowKeys['integrity_secret'] ? gwConfig.integrity_secret : maskKey(gwConfig.integrity_secret) }}
+                </span>
+                <button (click)="toggleKey('integrity_secret')"
+                        class="p-1 rounded text-gray-400 hover:text-gray-600 transition-colors flex-shrink-0">
+                  <svg *ngIf="!gwShowKeys['integrity_secret']" class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                  </svg>
+                  <svg *ngIf="gwShowKeys['integrity_secret']" class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"/>
+                  </svg>
+                </button>
+              </div>
+              <input type="password" [(ngModel)]="gwForm.integrity_secret"
+                     autocomplete="new-password"
+                     placeholder="{{ gwConfig.has_integrity_secret ? 'Nuevo valor (dejar vacío para conservar)' : 'test_integrity_...' }}"
+                     class="w-full text-sm rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-800 dark:text-white px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+            </div>
+
+          </div>
+
+          <!-- URL webhook por empresa -->
+          <div *ngIf="gwConfig.webhook_url" class="flex items-center gap-2 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700 rounded-lg p-3">
+            <div class="flex-1">
+              <p class="text-xs font-semibold text-blue-700 dark:text-blue-300 mb-0.5">URL del Webhook Wompi</p>
+              <p class="text-xs text-blue-600 dark:text-blue-400">Configura esta URL en tu dashboard de Wompi → Configuración → Webhooks</p>
+              <span class="font-mono text-xs font-semibold text-blue-800 dark:text-blue-200 break-all">{{ gwConfig.webhook_url }}</span>
+            </div>
+            <button (click)="copyText(gwConfig.webhook_url)" title="Copiar URL"
+                    class="flex-shrink-0 p-2 rounded-lg bg-blue-100 dark:bg-blue-800/40 text-blue-700 dark:text-blue-300 hover:bg-blue-200 transition-colors">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+              </svg>
+            </button>
+          </div>
+        </ng-container>
+
+        <!-- ePayco -->
+        <ng-container *ngIf="gwForm.gateway === 'epayco'">
+          <div class="text-xs bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700 rounded-lg p-3 text-blue-700 dark:text-blue-300">
+            Encuentra estas claves en tu <strong>dashboard ePayco → Configuración → Llaves API</strong>
+          </div>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+            <!-- P_CUST_ID_CLIENTE -->
+            <div>
+              <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">
+                P_CUST_ID_CLIENTE <span class="text-gray-400 font-normal">(ID de cliente — número)</span>
+              </label>
+              <div *ngIf="gwConfig.client_id" class="flex items-center gap-1 mb-1 bg-gray-50 dark:bg-gray-700/50 border border-gray-200 dark:border-gray-600 rounded-lg px-3 py-1.5">
+                <span class="font-mono text-xs text-gray-700 dark:text-gray-300 flex-1">
+                  {{ gwShowKeys['client_id'] ? gwConfig.client_id : maskKey(gwConfig.client_id) }}
+                </span>
+                <button (click)="toggleKey('client_id')"
+                        class="p-1 rounded text-gray-400 hover:text-gray-600 transition-colors flex-shrink-0">
+                  <svg *ngIf="!gwShowKeys['client_id']" class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                  </svg>
+                  <svg *ngIf="gwShowKeys['client_id']" class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"/>
+                  </svg>
+                </button>
+              </div>
+              <input type="text" [(ngModel)]="gwForm.client_id"
+                     autocomplete="off"
+                     placeholder="{{ gwConfig.has_client_id ? 'Nuevo valor (dejar vacío para conservar)' : 'Ej: 12345' }}"
+                     class="w-full text-sm rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-800 dark:text-white px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+            </div>
+
+            <!-- P_KEY -->
+            <div>
+              <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">
+                P_KEY <span class="text-gray-400 font-normal">(Llave secreta — usada en firma y webhooks)</span>
+              </label>
+              <div *ngIf="gwConfig.private_key" class="flex items-center gap-1 mb-1 bg-gray-50 dark:bg-gray-700/50 border border-gray-200 dark:border-gray-600 rounded-lg px-3 py-1.5">
+                <span class="font-mono text-xs text-gray-700 dark:text-gray-300 flex-1 truncate">
+                  {{ gwShowKeys['epayco_private_key'] ? gwConfig.private_key : maskKey(gwConfig.private_key) }}
+                </span>
+                <button (click)="toggleKey('epayco_private_key')"
+                        class="p-1 rounded text-gray-400 hover:text-gray-600 transition-colors flex-shrink-0">
+                  <svg *ngIf="!gwShowKeys['epayco_private_key']" class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                  </svg>
+                  <svg *ngIf="gwShowKeys['epayco_private_key']" class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"/>
+                  </svg>
+                </button>
+              </div>
+              <input type="password" [(ngModel)]="gwForm.private_key"
+                     autocomplete="new-password"
+                     placeholder="{{ gwConfig.has_private_key ? 'Nueva llave (dejar vacío para conservar)' : 'p_key_xxxxxxxxxxxxxxxx' }}"
+                     class="w-full text-sm rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-800 dark:text-white px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+            </div>
+          </div>
+
+          <!-- URL confirmación por empresa -->
+          <div *ngIf="gwConfig.webhook_url" class="flex items-center gap-2 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700 rounded-lg p-3">
+            <div class="flex-1">
+              <p class="text-xs font-semibold text-blue-700 dark:text-blue-300 mb-0.5">URL de Confirmación ePayco</p>
+              <p class="text-xs text-blue-600 dark:text-blue-400">Pega esta URL en tu dashboard ePayco → Mi cuenta → Opciones → URL confirmación</p>
+              <span class="font-mono text-xs font-semibold text-blue-800 dark:text-blue-200 break-all">{{ gwConfig.webhook_url }}</span>
+            </div>
+            <button (click)="copyText(gwConfig.webhook_url)" title="Copiar URL"
+                    class="flex-shrink-0 p-2 rounded-lg bg-blue-100 dark:bg-blue-800/40 text-blue-700 dark:text-blue-300 hover:bg-blue-200 transition-colors">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+              </svg>
+            </button>
+          </div>
+        </ng-container>
+
+        <!-- ZonaPago -->
+        <ng-container *ngIf="gwForm.gateway === 'zonapago'">
+          <div class="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700 rounded-xl p-4 text-sm text-amber-800 dark:text-amber-300">
+            <p class="font-semibold mb-1">ZonaPago requiere registro comercial previo</p>
+            <p>Contacta a Zona Virtual para obtener las credenciales de integración:</p>
+            <p class="font-mono mt-1">infozonapagos&#64;zonavirtual.com.co</p>
+          </div>
+        </ng-container>
+      </div>
+
+      <!-- Botón guardar -->
+      <div class="flex justify-end">
+        <button (click)="saveGatewayConfig()" [disabled]="gwSaving"
+                class="px-6 py-2.5 bg-blue-600 hover:bg-blue-700 disabled:opacity-60 text-white text-sm font-semibold rounded-xl transition-colors">
+          {{ gwSaving ? 'Guardando...' : 'Guardar configuración' }}
+        </button>
+      </div>
+
+      <!-- Factura de prueba -->
+      <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
+        <div class="flex items-center justify-between px-5 py-4 border-b border-gray-100 dark:border-gray-700">
+          <div>
+            <h3 class="font-semibold text-gray-800 dark:text-white">Probar flujo de pago</h3>
+            <p class="text-xs text-gray-400 mt-0.5">Crea una factura temporal para un cliente y obtén su link de pago sandbox.</p>
+          </div>
+          <button (click)="loadTestUsers()" [disabled]="testUsersLoading"
+                  class="text-xs px-3 py-1.5 rounded-lg bg-indigo-50 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-300 hover:bg-indigo-100 disabled:opacity-50">
+            {{ testUsersLoading ? 'Cargando...' : (testUsers.length ? 'Recargar clientes' : 'Cargar clientes') }}
+          </button>
+        </div>
+
+        <div *ngIf="testUsers.length > 0" class="p-5 space-y-4">
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div>
+              <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Cliente</label>
+              <select [(ngModel)]="testForm.user_id" class="w-full text-sm rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200 px-3 py-2 focus:ring-2 focus:ring-indigo-400 outline-none">
+                <option [value]="0" disabled>Seleccionar...</option>
+                <option *ngFor="let u of testUsers" [value]="u.id">{{ u.names }} {{ u.lastname }} — {{ u.email }}</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Monto (COP)</label>
+              <input type="number" [(ngModel)]="testForm.amount" min="100" class="w-full text-sm rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200 px-3 py-2 focus:ring-2 focus:ring-indigo-400 outline-none">
+            </div>
+            <div>
+              <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Descripción (opcional)</label>
+              <input type="text" [(ngModel)]="testForm.description" placeholder="Factura de prueba" class="w-full text-sm rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200 px-3 py-2 focus:ring-2 focus:ring-indigo-400 outline-none">
+            </div>
+          </div>
+
+          <div *ngIf="testError" class="text-sm text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/20 rounded-lg px-4 py-2">{{ testError }}</div>
+
+          <button (click)="createTestInvoice()" [disabled]="testSaving || !testForm.user_id"
+                  class="px-4 py-2 rounded-lg bg-indigo-600 text-white text-sm font-medium hover:bg-indigo-700 disabled:opacity-50">
+            {{ testSaving ? 'Generando...' : 'Crear factura y obtener link de pago' }}
+          </button>
+
+          <!-- Resultado -->
+          <div *ngIf="testResult" class="bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-200 dark:border-indigo-700 rounded-xl p-4 space-y-3">
+            <div class="flex items-center gap-2">
+              <span class="text-xs font-semibold text-indigo-700 dark:text-indigo-300 uppercase tracking-wide">Factura creada</span>
+              <span *ngIf="testResult.sandbox" class="px-2 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300">Sandbox</span>
+              <span [class]="gatewayBadgeClass(testResult.gateway)" class="px-2 py-0.5 rounded-full text-xs font-medium">{{ gatewayLabel(testResult.gateway) }}</span>
+            </div>
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm">
+              <div>
+                <div class="text-xs text-gray-500 dark:text-gray-400">Número</div>
+                <div class="font-mono font-medium text-gray-800 dark:text-gray-200">{{ testResult.number_facture }}</div>
+              </div>
+              <div>
+                <div class="text-xs text-gray-500 dark:text-gray-400">Monto</div>
+                <div class="font-semibold text-gray-800 dark:text-gray-200">{{ formatCurrency(testResult.amount) }}</div>
+              </div>
+              <div>
+                <div class="text-xs text-gray-500 dark:text-gray-400">Cliente</div>
+                <div class="text-gray-800 dark:text-gray-200">{{ testResult.customer_name }}</div>
+              </div>
+              <div>
+                <div class="text-xs text-gray-500 dark:text-gray-400">ID Factura</div>
+                <div class="font-mono text-gray-800 dark:text-gray-200">#{{ testResult.invoice_id }}</div>
+              </div>
+            </div>
+            <div class="flex items-center gap-2">
+              <span class="text-xs text-gray-500 dark:text-gray-400 font-mono truncate flex-1">{{ testResult.reference }}</span>
+              <button (click)="copyText(testResult.reference)" title="Copiar referencia"
+                      class="text-xs px-2 py-1 rounded bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-300 hover:bg-gray-50">
+                Copiar ref
+              </button>
+            </div>
+            <button (click)="openTestPayUrl()"
+                    class="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg bg-indigo-600 text-white text-sm font-medium hover:bg-indigo-700">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
+              </svg>
+              Abrir link de pago en nueva pestaña
+            </button>
+          </div>
+        </div>
+
+        <div *ngIf="testUsers.length === 0 && !testUsersLoading" class="px-5 py-8 text-center text-gray-400 text-sm">
+          Haz clic en "Cargar clientes" para listar los clientes disponibles.
+        </div>
+      </div>
+
+      <!-- Historial de transacciones online -->
+      <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
+        <div class="flex items-center justify-between px-5 py-4 border-b border-gray-100 dark:border-gray-700">
+          <h3 class="font-semibold text-gray-800 dark:text-white">Transacciones online
+            <span class="ml-2 text-xs font-normal text-gray-400">— clic en una fila para ver detalle</span>
+          </h3>
+          <button (click)="loadGatewayTransactions()" class="text-xs text-blue-600 dark:text-blue-400 hover:underline">Actualizar</button>
+        </div>
+
+        <div *ngIf="gwTxLoading" class="py-8 text-center text-gray-400 text-sm">Cargando...</div>
+
+        <div *ngIf="!gwTxLoading && gwTransactions.length === 0" class="py-8 text-center text-gray-400 text-sm">
+          Sin transacciones registradas aún.
+        </div>
+
+        <div *ngIf="!gwTxLoading && gwTransactions.length > 0" class="overflow-x-auto">
+          <table class="w-full text-xs">
+            <thead>
+              <tr class="bg-gray-50 dark:bg-gray-700/50 border-b border-gray-100 dark:border-gray-700">
+                <th class="text-left px-4 py-3 font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">Referencia</th>
+                <th class="text-left px-4 py-3 font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">Cliente</th>
+                <th class="text-right px-4 py-3 font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">Monto</th>
+                <th class="text-center px-4 py-3 font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">Estado</th>
+                <th class="text-center px-4 py-3 font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">Pasarela</th>
+                <th class="text-left px-4 py-3 font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">Fecha</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-100 dark:divide-gray-700">
+              <tr *ngFor="let tx of gwTransactions"
+                  (click)="openTxDetail(tx)"
+                  class="hover:bg-blue-50 dark:hover:bg-blue-900/10 cursor-pointer transition-colors">
+                <td class="px-4 py-3">
+                  <span class="font-mono text-gray-700 dark:text-gray-300">{{ tx.reference }}</span>
+                  <span *ngIf="tx.sandbox" class="ml-1.5 px-1.5 py-0.5 rounded text-amber-700 bg-amber-100 dark:bg-amber-900/30 dark:text-amber-300 text-[10px] font-medium">prueba</span>
+                </td>
+                <td class="px-4 py-3">
+                  <div class="text-gray-800 dark:text-gray-200 font-medium">{{ tx.customer_name || '—' }}</div>
+                  <div class="text-gray-400">{{ tx.customer_email || '' }}</div>
+                </td>
+                <td class="px-4 py-3 text-right font-semibold text-gray-900 dark:text-white">
+                  {{ formatCurrency(tx.amount) }}
+                </td>
+                <td class="px-4 py-3 text-center">
+                  <span [class]="'px-2 py-0.5 rounded-full text-xs font-medium ' + txStatusClass(tx.status)">
+                    {{ txStatusLabel(tx.status) }}
+                  </span>
+                </td>
+                <td class="px-4 py-3 text-center">
+                  <span [class]="'px-2 py-0.5 rounded-full text-xs font-medium ' + gatewayBadgeClass(tx.gateway)">
+                    {{ gatewayLabel(tx.gateway) }}
+                  </span>
+                </td>
+                <td class="px-4 py-3 text-gray-500 dark:text-gray-400">{{ tx.initiated_at }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
+  </ng-container><!-- end gateway tab -->
+
+  <!-- ── Modal detalle de transacción ───────────────────────────────────── -->
+  <div *ngIf="gwDetailTx"
+       class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm"
+       (click)="closeTxDetail()">
+    <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-xl max-h-[90vh] overflow-y-auto"
+         (click)="$event.stopPropagation()">
+
+      <!-- Header -->
+      <div class="flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+        <div class="flex items-center gap-3">
+          <h3 class="text-lg font-bold text-gray-900 dark:text-white">Detalle de transacción</h3>
+          <span *ngIf="gwDetailTx.sandbox" class="px-2 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300">Sandbox</span>
+          <span [class]="'px-2 py-0.5 rounded-full text-xs font-medium ' + gatewayBadgeClass(gwDetailTx.gateway)">{{ gatewayLabel(gwDetailTx.gateway) }}</span>
+        </div>
+        <button (click)="closeTxDetail()" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+          </svg>
+        </button>
+      </div>
+
+      <div *ngIf="gwDetailLoading" class="py-12 text-center text-gray-400">Cargando...</div>
+
+      <div *ngIf="!gwDetailLoading" class="p-6 space-y-5">
+
+        <!-- Estado + monto -->
+        <div class="flex items-center justify-between">
+          <span [class]="'px-3 py-1 rounded-full text-sm font-semibold ' + txStatusClass(gwDetailTx.status)">
+            {{ txStatusLabel(gwDetailTx.status) }}
+          </span>
+          <span class="text-2xl font-bold text-gray-900 dark:text-white">{{ formatCurrency(gwDetailTx.amount) }}</span>
+        </div>
+
+        <!-- Referencia -->
+        <div class="bg-gray-50 dark:bg-gray-700/50 rounded-xl p-4">
+          <div class="text-xs text-gray-500 dark:text-gray-400 mb-1">Referencia</div>
+          <div class="flex items-center gap-2">
+            <span class="font-mono text-sm font-medium text-gray-800 dark:text-gray-200 break-all">{{ gwDetailTx.reference }}</span>
+            <button (click)="copyText(gwDetailTx.reference)" class="shrink-0 text-xs px-2 py-1 rounded bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-300 hover:bg-gray-100">
+              Copiar
+            </button>
+          </div>
+        </div>
+
+        <!-- Cliente -->
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <div class="text-xs text-gray-500 dark:text-gray-400 mb-1">Cliente</div>
+            <div class="text-sm font-medium text-gray-800 dark:text-gray-200">{{ gwDetailTx.customer_name || '—' }}</div>
+          </div>
+          <div>
+            <div class="text-xs text-gray-500 dark:text-gray-400 mb-1">Email</div>
+            <div class="text-sm text-gray-800 dark:text-gray-200">{{ gwDetailTx.customer_email || '—' }}</div>
+          </div>
+        </div>
+
+        <!-- Fechas -->
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <div class="text-xs text-gray-500 dark:text-gray-400 mb-1">Iniciado</div>
+            <div class="text-sm text-gray-800 dark:text-gray-200">{{ gwDetailTx.initiated_at || '—' }}</div>
+          </div>
+          <div>
+            <div class="text-xs text-gray-500 dark:text-gray-400 mb-1">Pagado</div>
+            <div class="text-sm text-gray-800 dark:text-gray-200">{{ gwDetailTx.paid_at || '—' }}</div>
+          </div>
+        </div>
+
+        <!-- ID de pasarela -->
+        <div *ngIf="gwDetailTx.gateway_transaction_id">
+          <div class="text-xs text-gray-500 dark:text-gray-400 mb-1">ID en {{ gatewayLabel(gwDetailTx.gateway) }}</div>
+          <div class="flex items-center gap-2">
+            <span class="font-mono text-xs text-gray-700 dark:text-gray-300 break-all">{{ gwDetailTx.gateway_transaction_id }}</span>
+            <button (click)="copyText(gwDetailTx.gateway_transaction_id)" class="shrink-0 text-xs px-2 py-1 rounded bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-300 hover:bg-gray-100">
+              Copiar
+            </button>
+          </div>
+        </div>
+
+        <!-- Factura relacionada -->
+        <div *ngIf="gwDetailTx.invoice" class="bg-gray-50 dark:bg-gray-700/50 rounded-xl p-4">
+          <div class="text-xs text-gray-500 dark:text-gray-400 mb-2">Factura</div>
+          <div class="flex items-center justify-between">
+            <div>
+              <span class="font-mono font-semibold text-gray-800 dark:text-gray-200">{{ gwDetailTx.invoice.number_facture }}</span>
+              <span class="ml-2 text-sm text-gray-500 dark:text-gray-400">— {{ formatCurrency(gwDetailTx.invoice.price_total) }}</span>
+            </div>
+            <span *ngIf="gwDetailTx.invoice.paid"
+                  class="px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300">
+              Pagada
+            </span>
+            <span *ngIf="!gwDetailTx.invoice.paid"
+                  class="px-2 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-300">
+              Pendiente
+            </span>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
 </div>
 
 <!-- ═══ SECCIÓN: Cortes automáticos por mora ════════════════════════════════ -->

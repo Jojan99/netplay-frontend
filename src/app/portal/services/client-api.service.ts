@@ -49,6 +49,18 @@ export class ClientApiService {
     return this.http.post(`${this.baseUrl}/invoices/${id}/send-whatsapp`, {}, this.headers());
   }
 
+  generatePaymentLink(id: number): Observable<any> {
+    return this.http.post(`${this.baseUrl}/invoices/${id}/pay-link`, {}, this.headers());
+  }
+
+  initiatePayment(amount: number, invoiceIds: number[]): Observable<any> {
+    return this.http.post(`${this.baseUrl}/payment/initiate`, { amount, invoice_ids: invoiceIds }, this.headers());
+  }
+
+  getPaymentResult(ref: string): Observable<any> {
+    return this.http.get(`${this.baseUrl}/payment/result/${encodeURIComponent(ref)}`, this.headers());
+  }
+
   // ── Tickets / Reportes ───────────────────────────────────────────────────
   getTickets(): Observable<any> {
     return this.http.get(`${this.baseUrl}/tickets`, this.headers());

@@ -53,7 +53,8 @@ export const routes: Routes = [
         data: { module: 'olt-admin' },
       },
       { path: 'staff',          component: StaffComponent,             canActivate: [roleGuard], data: { module: 'staff' } },
-      { path: 'billing-config', component: BillingConfigComponent,     canActivate: [roleGuard], data: { module: 'billing-config' } },
+      { path: 'billing-config',  component: BillingConfigComponent, canActivate: [roleGuard], data: { module: 'billing-config' } },
+      { path: 'payment-gateway', component: BillingConfigComponent, canActivate: [roleGuard], data: { module: 'payment-gateway' } },
       { path: 'mikrotik',       component: MikrotikComponent,          canActivate: [roleGuard], data: { module: 'mikrotik' } },
       { path: 'resumen',        component: ResumenComponent,           canActivate: [roleGuard], data: { module: 'resumen' } },
       {

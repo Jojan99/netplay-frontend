@@ -2,11 +2,14 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { ActivatedRoute } from '@angular/router';
 import { CompanyService } from '../../services/company.service';
 import { AuthService } from '../../services/auth.service';
 import { UserService } from '../../services/user.service';
 import { FinanceService } from '../../services/finance.service';
 import { environment } from '../../../environments/environment';
+
+const GW_API = environment.rootUrl + 'api/payment-gateway/';
 
 interface Schedule {
   grupo:        number;
@@ -51,7 +54,35 @@ export class BillingConfigComponent implements OnInit {
   readonly years = Array.from({ length: 5 }, (_, i) => new Date().getFullYear() - 2 + i);
 
   // ── Tabs ──────────────────────────────────────────────────
-  activeTab: 'billing' | 'invoice' | 'payment-methods' = 'billing';
+  activeTab: 'billing' | 'invoice' | 'payment-methods' | 'gateway' = 'billing';
+
+  // ── Pasarela de pago online ────────────────────────────────
+  readonly baseUrl = environment.rootUrl;
+  gwLoading    = false;
+  gwSaving     = false;
+  gwMsg        = '';
+  gwError      = '';
+  gwConfig: any = {};
+  gwAvailable: any[] = [];
+  gwForm: any = { gateway: 'wompi', sandbox: true, active: false,
+                  public_key: '', private_key: '', events_secret: '',
+                  integrity_secret: '', client_id: '' };
+  gwShowKeys: Record<string, boolean> = {};
+  gwTxLoading   = false;
+  gwTransactions: any[] = [];
+
+  // ── Detalle de transacción ─────────────────────────────────
+  gwDetailTx: any = null;
+  gwDetailLoading = false;
+
+  // ── Factura de prueba ──────────────────────────────────────
+  testUsers:   any[] = [];
+  testUsersLoading = false;
+  testForm     = { user_id: 0, amount: 1000, description: '' };
+  testResult:  any = null;
+  testSaving   = false;
+  testMsg      = '';
+  testError    = '';
 
   // ── Invoice config ────────────────────────────────────────
   invoiceTab = false;
@@ -108,6 +139,7 @@ export class BillingConfigComponent implements OnInit {
     private authService: AuthService,
     private userService: UserService,
     private financeService: FinanceService,
+    private route: ActivatedRoute,
   ) {}
 
   private getHeaders(): HttpHeaders {
@@ -118,6 +150,13 @@ export class BillingConfigComponent implements OnInit {
   }
 
   ngOnInit(): void {
+    // Si se entra desde la ruta /payment-gateway, abrir directamente el tab de pasarela
+    const module = this.route.snapshot.data?.['module'];
+    if (module === 'payment-gateway') {
+      this.activeTab = 'gateway';
+      this.loadGatewayConfig();
+    }
+
     this.loadConfig();
     this.loadGroupInfo();
     this.loadInvoiceConfig();
@@ -411,5 +450,160 @@ export class BillingConfigComponent implements OnInit {
 
   otherGroups(excludeGrupo: number): Schedule[] {
     return this.schedules.filter(s => s.grupo !== excludeGrupo);
+  }
+
+  // ── Pasarela online ────────────────────────────────────────
+
+  loadGatewayConfig(): void {
+    this.gwLoading = true;
+    this.gwShowKeys = {};
+    this.http.get<any>(GW_API + 'config', { headers: this.getHeaders() }).subscribe({
+      next: (res) => {
+        this.gwLoading   = false;
+        this.gwConfig    = res.data ?? {};
+        this.gwAvailable = res.data?.available ?? [];
+        this.gwForm.gateway  = res.data?.gateway ?? 'wompi';
+        this.gwForm.sandbox  = res.data?.sandbox ?? true;
+        this.gwForm.active   = res.data?.active  ?? false;
+        this.loadGatewayTransactions();
+      },
+      error: () => { this.gwLoading = false; },
+    });
+  }
+
+  toggleKey(field: string): void {
+    this.gwShowKeys[field] = !this.gwShowKeys[field];
+  }
+
+  maskKey(value: string | null | undefined): string {
+    if (!value) return '';
+    if (value.length <= 8) return '•'.repeat(value.length);
+    return value.slice(0, 6) + '••••••••' + value.slice(-4);
+  }
+
+  saveGatewayConfig(): void {
+    this.gwSaving = true;
+    this.gwMsg    = '';
+    this.gwError  = '';
+    const body: any = {
+      gateway: this.gwForm.gateway,
+      sandbox: this.gwForm.sandbox,
+      active:  this.gwForm.active,
+    };
+    // Solo enviar claves que el usuario completó
+    for (const f of ['public_key', 'private_key', 'events_secret', 'integrity_secret', 'client_id']) {
+      if (this.gwForm[f]?.trim()) body[f] = this.gwForm[f].trim();
+    }
+    this.http.put<any>(GW_API + 'config', JSON.stringify(body), { headers: this.getHeaders() }).subscribe({
+      next: (res) => {
+        this.gwSaving = false;
+        this.gwMsg    = res.message ?? 'Configuración guardada.';
+        // Limpiar campos de contraseña
+        for (const f of ['public_key', 'private_key', 'events_secret', 'integrity_secret', 'client_id']) {
+          this.gwForm[f] = '';
+        }
+        this.loadGatewayConfig();
+        setTimeout(() => { this.gwMsg = ''; }, 4000);
+      },
+      error: (err) => {
+        this.gwSaving = false;
+        this.gwError  = err?.error?.message ?? 'Error al guardar.';
+      },
+    });
+  }
+
+  loadGatewayTransactions(): void {
+    this.gwTxLoading = true;
+    this.http.get<any>(GW_API + 'transactions', { headers: this.getHeaders() }).subscribe({
+      next: (res) => { this.gwTxLoading = false; this.gwTransactions = res.data ?? []; },
+      error: () => { this.gwTxLoading = false; },
+    });
+  }
+
+  txStatusLabel(s: string): string {
+    const m: Record<string, string> = {
+      pending:   'Pendiente',
+      approved:  'Aprobado',
+      declined:  'Rechazado',
+      cancelled: 'Cancelado',
+      failed:    'Fallido',
+    };
+    return m[s] ?? s;
+  }
+
+  txStatusClass(s: string): string {
+    const map: Record<string, string> = {
+      pending:   'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300',
+      approved:  'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300',
+      declined:  'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300',
+      cancelled: 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-300',
+      failed:    'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-400',
+    };
+    return map[s] ?? 'bg-gray-100 text-gray-600';
+  }
+
+  gatewayBadgeClass(g: string): string {
+    return { wompi: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300',
+             epayco: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300',
+             zonapago: 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300',
+           }[g] ?? 'bg-gray-100 text-gray-700';
+  }
+
+  gatewayLabel(g: string): string {
+    return { wompi: 'Wompi', epayco: 'ePayco', zonapago: 'ZonaPago' }[g] ?? g;
+  }
+
+  formatCurrency(v: number): string {
+    return new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 }).format(v);
+  }
+
+  // ── Detalle de transacción ─────────────────────────────────
+
+  openTxDetail(tx: any): void {
+    this.gwDetailTx      = tx;
+    this.gwDetailLoading = true;
+    this.http.get<any>(GW_API + 'transactions/' + tx.id, { headers: this.getHeaders() }).subscribe({
+      next:  (res) => { this.gwDetailLoading = false; this.gwDetailTx = res.data; },
+      error: ()    => { this.gwDetailLoading = false; },
+    });
+  }
+
+  closeTxDetail(): void { this.gwDetailTx = null; }
+
+  copyText(text: string): void {
+    navigator.clipboard?.writeText(text ?? '').catch(() => {});
+  }
+
+  // ── Factura de prueba ──────────────────────────────────────
+
+  loadTestUsers(): void {
+    this.testUsersLoading = true;
+    this.http.get<any>(GW_API + 'test-users', { headers: this.getHeaders() }).subscribe({
+      next:  (res) => { this.testUsersLoading = false; this.testUsers = res.data ?? []; },
+      error: ()    => { this.testUsersLoading = false; },
+    });
+  }
+
+  createTestInvoice(): void {
+    if (!this.testForm.user_id || !this.testForm.amount) return;
+    this.testSaving = true;
+    this.testMsg    = '';
+    this.testError  = '';
+    this.testResult = null;
+
+    this.http.post<any>(GW_API + 'test-invoice', JSON.stringify(this.testForm), { headers: this.getHeaders() }).subscribe({
+      next: (res) => {
+        this.testSaving = false;
+        this.testResult = res.data;
+      },
+      error: (err) => {
+        this.testSaving = false;
+        this.testError  = err?.error?.message ?? 'Error al crear factura de prueba.';
+      },
+    });
+  }
+
+  openTestPayUrl(): void {
+    if (this.testResult?.payment_url) window.open(this.testResult.payment_url, '_blank');
   }
 }
