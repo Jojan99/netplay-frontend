@@ -1,0 +1,94 @@
+<div class="min-h-screen bg-gray-50 dark:bg-gray-900 flex flex-col items-center justify-center px-4">
+
+  <div class="w-full max-w-md">
+
+    <!-- Logo / Título -->
+    <div class="text-center mb-8">
+      <h1 class="text-3xl font-bold text-gray-900 dark:text-white">Portal Cliente</h1>
+      <p class="mt-2 text-sm text-gray-500 dark:text-gray-400">
+        Gestiona tu servicio, facturas y reportes
+      </p>
+    </div>
+
+    <!-- Card -->
+    <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-8">
+
+      <!-- Error -->
+      <div *ngIf="errorMsg()"
+           class="flex items-center gap-2 p-4 mb-6 text-sm text-red-800 bg-red-50 dark:bg-red-900/20 dark:text-red-400 rounded-lg">
+        <svg class="w-4 h-4 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+          <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
+        </svg>
+        {{ errorMsg() }}
+      </div>
+
+      <form (ngSubmit)="login()" class="space-y-5">
+
+        <!-- Usuario -->
+        <div>
+          <label class="block mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">
+            Usuario / Documento
+          </label>
+          <input type="text" [(ngModel)]="username" name="username"
+                 placeholder="Ej: 123456789"
+                 class="w-full px-4 py-3 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600
+                        text-gray-900 dark:text-white rounded-lg text-sm
+                        focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent
+                        placeholder-gray-400 dark:placeholder-gray-500">
+        </div>
+
+        <!-- Contraseña -->
+        <div>
+          <label class="block mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">
+            Contraseña
+          </label>
+          <input type="password" [(ngModel)]="password" name="password"
+                 placeholder="••••••••"
+                 class="w-full px-4 py-3 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600
+                        text-gray-900 dark:text-white rounded-lg text-sm
+                        focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent
+                        placeholder-gray-400 dark:placeholder-gray-500">
+        </div>
+
+        <!-- Botón -->
+        <button type="submit" [disabled]="loading()"
+                class="w-full py-3 px-4 text-sm font-semibold text-white bg-blue-600 rounded-lg
+                       hover:bg-blue-700 focus:outline-none focus:ring-4 focus:ring-blue-300
+                       dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800
+                       disabled:opacity-60 disabled:cursor-not-allowed transition-colors">
+          <span *ngIf="!loading()">Ingresar al Portal</span>
+          <span *ngIf="loading()" class="flex items-center justify-center gap-2">
+            <svg class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
+              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
+            </svg>
+            Verificando...
+          </span>
+        </button>
+
+      </form>
+
+    </div>
+
+    <!-- Link al admin -->
+    <p class="mt-6 text-center text-sm text-gray-500 dark:text-gray-400">
+      ¿Eres administrador?
+      <a routerLink="/login" class="font-medium text-blue-600 hover:underline dark:text-blue-400 ml-1">
+        Panel de administración
+      </a>
+    </p>
+
+  </div>
+
+  <!-- Spinner overlay -->
+  <div *ngIf="loading()" class="fixed inset-0 bg-black/20 dark:bg-black/40 z-50 flex items-center justify-center">
+    <div class="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-xl flex items-center gap-3">
+      <svg class="w-6 h-6 animate-spin text-blue-600" fill="none" viewBox="0 0 24 24">
+        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
+        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
+      </svg>
+      <span class="text-sm font-medium text-gray-700 dark:text-gray-300">Iniciando sesión...</span>
+    </div>
+  </div>
+
+</div>

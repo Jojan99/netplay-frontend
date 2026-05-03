@@ -3,48 +3,33 @@
   <!-- Header -->
   <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
     <h1 class="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white">Gestión Mikrotik</h1>
-    <button *ngIf="activeTab !== 'config'" (click)="refresh()"
-            class="inline-flex items-center gap-2 px-3 py-2 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 self-start sm:self-auto">
-      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
-      </svg>
-      Actualizar
-    </button>
+    <div class="flex items-center gap-2 flex-wrap">
+      <!-- Selector de router (visible cuando hay más de uno y no es config) -->
+      <ng-container *ngIf="routers.length > 1 && activeTab !== 'config'">
+        <select [(ngModel)]="selectedRouterId" (ngModelChange)="onRouterChange()"
+                class="px-3 py-2 text-sm border border-gray-300 rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white focus:ring-2 focus:ring-blue-500">
+          <option *ngFor="let r of routers" [value]="r.id">{{ r.name || r.host }}</option>
+        </select>
+      </ng-container>
+      <button *ngIf="activeTab !== 'config'" (click)="refresh()"
+              class="inline-flex items-center gap-2 px-3 py-2 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+        </svg>
+        Actualizar
+      </button>
+    </div>
   </div>
 
-  <!-- Tabs — scroll horizontal en móvil -->
+  <!-- Tabs -->
   <div class="border-b border-gray-200 dark:border-gray-700 overflow-x-auto">
     <ul class="flex min-w-max -mb-px text-sm font-medium">
-      <li>
-        <button (click)="setTab('info')"
-                [class.border-blue-600]="activeTab==='info'" [class.text-blue-600]="activeTab==='info'"
-                [class.border-transparent]="activeTab!=='info'" [class.text-gray-500]="activeTab!=='info'"
+      <li *ngFor="let t of tabs">
+        <button (click)="setTab(t.key)"
+                [class.border-blue-600]="activeTab===t.key" [class.text-blue-600]="activeTab===t.key"
+                [class.border-transparent]="activeTab!==t.key" [class.text-gray-500]="activeTab!==t.key"
                 class="inline-block px-4 py-3 border-b-2 whitespace-nowrap transition-colors hover:text-blue-600 hover:border-blue-600 dark:hover:text-blue-500">
-          Info Router
-        </button>
-      </li>
-      <li>
-        <button (click)="setTab('clients')"
-                [class.border-blue-600]="activeTab==='clients'" [class.text-blue-600]="activeTab==='clients'"
-                [class.border-transparent]="activeTab!=='clients'" [class.text-gray-500]="activeTab!=='clients'"
-                class="inline-block px-4 py-3 border-b-2 whitespace-nowrap transition-colors hover:text-blue-600 hover:border-blue-600 dark:hover:text-blue-500">
-          Clientes ARP
-        </button>
-      </li>
-      <li>
-        <button (click)="setTab('queues')"
-                [class.border-blue-600]="activeTab==='queues'" [class.text-blue-600]="activeTab==='queues'"
-                [class.border-transparent]="activeTab!=='queues'" [class.text-gray-500]="activeTab!=='queues'"
-                class="inline-block px-4 py-3 border-b-2 whitespace-nowrap transition-colors hover:text-blue-600 hover:border-blue-600 dark:hover:text-blue-500">
-          Ancho de Banda
-        </button>
-      </li>
-      <li>
-        <button (click)="setTab('config')"
-                [class.border-blue-600]="activeTab==='config'" [class.text-blue-600]="activeTab==='config'"
-                [class.border-transparent]="activeTab!=='config'" [class.text-gray-500]="activeTab!=='config'"
-                class="inline-block px-4 py-3 border-b-2 whitespace-nowrap transition-colors hover:text-blue-600 hover:border-blue-600 dark:hover:text-blue-500">
-          Configuración
+          {{ t.label }}
         </button>
       </li>
     </ul>
@@ -192,7 +177,6 @@
 
   <!-- ═══ TAB: CLIENTS ═══ -->
   <div *ngIf="activeTab==='clients'">
-    <!-- Actions bar -->
     <div class="flex flex-col sm:flex-row gap-3 mb-4">
       <input type="text" [(ngModel)]="clientSearch" (input)="filterClients()"
              placeholder="Buscar por IP, MAC, DNI o nombre..."
@@ -222,14 +206,11 @@
       {{ filteredClients.length }} de {{ clients.length }} clientes · {{ selectedIds.size }} seleccionado(s)
     </p>
 
-    <!-- Tabla con scroll horizontal en móvil -->
     <div *ngIf="!loadingClients" class="bg-white dark:bg-gray-800 rounded-xl shadow border border-gray-100 dark:border-gray-700 overflow-x-auto">
       <table class="w-full text-sm text-left text-gray-500 dark:text-gray-400">
         <thead class="text-xs uppercase bg-gray-50 dark:bg-gray-700 text-gray-700 dark:text-gray-400">
           <tr>
-            <th class="px-3 py-3">
-              <input type="checkbox" [checked]="allSelected()" (change)="toggleSelectAll()" class="rounded cursor-pointer">
-            </th>
+            <th class="px-3 py-3"><input type="checkbox" [checked]="allSelected()" (change)="toggleSelectAll()" class="rounded cursor-pointer"></th>
             <th class="px-4 py-3">IP</th>
             <th class="px-4 py-3 hidden md:table-cell">MAC</th>
             <th class="px-4 py-3 hidden sm:table-cell">Interfaz</th>
@@ -297,59 +278,59 @@
             </svg>
           </button>
         </div>
-
+        <div class="space-y-3">
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Nombre *</label>
+              <input type="text" [(ngModel)]="queueForm.name" placeholder="ej: Cliente-001"
+                     class="w-full px-3 py-2 border rounded-lg text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+            </div>
+            <div>
+              <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Target * <span class="text-gray-400">(IP/32)</span></label>
+              <input type="text" [(ngModel)]="queueForm.target" placeholder="192.168.1.10/32"
+                     class="w-full px-3 py-2 border rounded-lg text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+            </div>
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Límite máximo * <span class="text-gray-400">(upload/download)</span></label>
+            <input type="text" [(ngModel)]="queueForm.max_limit" placeholder="2M/10M"
+                   class="w-full px-3 py-2 border rounded-lg text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+          </div>
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <div>
+              <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Burst Limit</label>
+              <input type="text" [(ngModel)]="queueForm.burst_limit" placeholder="4M/20M"
+                     class="w-full px-3 py-2 border rounded-lg text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+            </div>
+            <div>
+              <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Burst Threshold</label>
+              <input type="text" [(ngModel)]="queueForm.burst_threshold" placeholder="1M/5M"
+                     class="w-full px-3 py-2 border rounded-lg text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+            </div>
+            <div>
+              <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Burst Time (s)</label>
+              <input type="text" [(ngModel)]="queueForm.burst_time" placeholder="8/8"
+                     class="w-full px-3 py-2 border rounded-lg text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+            </div>
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Comentario</label>
+            <input type="text" [(ngModel)]="queueForm.comment" placeholder="Nombre del cliente..."
+                   class="w-full px-3 py-2 border rounded-lg text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+          </div>
+        </div>
         <div *ngIf="queueMsg" class="p-3 rounded-lg text-sm"
              [class.bg-red-50]="queueError" [class.text-red-800]="queueError"
              [class.bg-green-50]="!queueError" [class.text-green-800]="!queueError">
           {{ queueMsg }}
         </div>
-
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <div>
-            <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Nombre *</label>
-            <input type="text" [(ngModel)]="queueForm.name" placeholder="ej: cliente-001"
-                   class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
-          </div>
-          <div>
-            <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Target (IP/Subred) *</label>
-            <input type="text" [(ngModel)]="queueForm.target" placeholder="ej: 192.168.1.10/32"
-                   class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
-          </div>
-          <div>
-            <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Límite Máx. (↑/↓) *</label>
-            <input type="text" [(ngModel)]="queueForm.max_limit" placeholder="ej: 5M/2M"
-                   class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
-          </div>
-          <div>
-            <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Comentario</label>
-            <input type="text" [(ngModel)]="queueForm.comment" placeholder="ej: nombre cliente"
-                   class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
-          </div>
-          <div>
-            <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Burst Limit (↑/↓)</label>
-            <input type="text" [(ngModel)]="queueForm.burst_limit" placeholder="ej: 10M/4M"
-                   class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
-          </div>
-          <div>
-            <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Burst Threshold</label>
-            <input type="text" [(ngModel)]="queueForm.burst_threshold" placeholder="ej: 3M/1M"
-                   class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
-          </div>
-          <div class="sm:col-span-2">
-            <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Burst Time (seg ↑/↓)</label>
-            <input type="text" [(ngModel)]="queueForm.burst_time" placeholder="ej: 8/8"
-                   class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
-          </div>
-        </div>
-
-        <div class="flex justify-end gap-3 pt-1">
-          <button (click)="showQueueForm=false"
-                  class="px-4 py-2 text-sm text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 dark:text-gray-300 dark:bg-gray-700">
-            Cancelar
-          </button>
+        <div class="flex gap-3">
           <button (click)="saveQueue()" [disabled]="savingQueue || !queueForm.name || !queueForm.target || !queueForm.max_limit"
                   class="px-4 py-2 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50">
             {{ savingQueue ? 'Guardando...' : 'Guardar' }}
+          </button>
+          <button (click)="showQueueForm=false" class="px-4 py-2 text-sm bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300">
+            Cancelar
           </button>
         </div>
       </div>
@@ -398,102 +379,148 @@
   </div>
 
   <!-- ═══ TAB: CONFIG ═══ -->
-  <div *ngIf="activeTab==='config'">
-    <div class="max-w-lg mx-auto">
-      <div class="bg-white dark:bg-gray-800 rounded-xl shadow border border-gray-100 dark:border-gray-700 p-5 sm:p-6">
-        <div class="flex items-center gap-3 mb-6">
-          <div class="p-2 bg-blue-100 dark:bg-blue-900/30 rounded-lg">
+  <div *ngIf="activeTab==='config'" class="space-y-4">
+
+    <!-- Lista de Mikrotiks configurados -->
+    <div class="bg-white dark:bg-gray-800 rounded-xl shadow border border-gray-100 dark:border-gray-700 p-5 sm:p-6">
+      <div class="flex items-center justify-between mb-4">
+        <div>
+          <h3 class="font-semibold text-gray-900 dark:text-white">Mikrotiks configurados</h3>
+          <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Agrega todos los routers de tu red</p>
+        </div>
+        <button (click)="openAddRouter()"
+                class="inline-flex items-center gap-2 px-4 py-2 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+          </svg>
+          Agregar Mikrotik
+        </button>
+      </div>
+
+      <div *ngIf="loadingRouters" class="flex justify-center py-8">
+        <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+      </div>
+
+      <div *ngIf="!loadingRouters && !routers.length"
+           class="text-center py-10 text-gray-400">
+        <svg class="w-12 h-12 mx-auto mb-3 opacity-40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M5.25 14.25h13.5m-13.5 0a3 3 0 0 1-3-3m3 3a3 3 0 1 0 6 0m-6 0h6m6.75 0a3 3 0 0 1-3-3m3 3a3 3 0 1 0-6 0m6 0h.008v.008H18.75V14.25Zm-12-7.5h13.5m-13.5 0a3 3 0 0 0-3 3m3-3a3 3 0 1 1 6 0m-6 0h6m6.75 0a3 3 0 0 0-3 3m3-3a3 3 0 1 1-6 0m6 0h.008v.008H18.75V6.75Z"/>
+        </svg>
+        No hay Mikrotiks configurados. Haz clic en "Agregar Mikrotik".
+      </div>
+
+      <div *ngIf="!loadingRouters && routers.length" class="space-y-3">
+        <div *ngFor="let r of routers"
+             class="flex items-center gap-4 p-4 rounded-xl border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition">
+          <div class="flex-shrink-0 w-10 h-10 rounded-lg bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
             <svg class="w-5 h-5 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.25 14.25h13.5m-13.5 0a3 3 0 0 1-3-3m3 3a3 3 0 1 0 6 0m-6 0h6m6.75 0a3 3 0 0 1-3-3m3 3a3 3 0 1 0-6 0m6 0h.008v.008H18.75V14.25Zm-12-7.5h13.5m-13.5 0a3 3 0 0 0-3 3m3-3a3 3 0 1 1 6 0m-6 0h6m6.75 0a3 3 0 0 0-3 3m3-3a3 3 0 1 1-6 0m6 0h.008v.008H18.75V6.75Z"/>
             </svg>
           </div>
-          <div>
-            <h3 class="font-semibold text-gray-900 dark:text-white">Conexión Mikrotik</h3>
-            <p class="text-xs text-gray-500 dark:text-gray-400">API Winbox — puerto por defecto 8728</p>
+          <div class="flex-1 min-w-0">
+            <p class="text-sm font-semibold text-gray-900 dark:text-white truncate">
+              {{ r.name || 'Sin nombre' }}
+              <span *ngIf="r.id === selectedRouterId" class="ml-2 text-xs font-normal text-blue-600 dark:text-blue-400">(activo)</span>
+            </p>
+            <p class="text-xs text-gray-500 dark:text-gray-400 font-mono">{{ r.host }}:{{ r.port }}</p>
           </div>
-        </div>
-
-        <div *ngIf="loadingConfig" class="flex justify-center py-8">
-          <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-        </div>
-
-        <div *ngIf="configMsg" class="mb-4 p-3 rounded-lg text-sm"
-             [class.bg-green-50]="!configError" [class.text-green-800]="!configError"
-             [class.bg-red-50]="configError" [class.text-red-800]="configError">
-          {{ configMsg }}
-        </div>
-
-        <form *ngIf="!loadingConfig" (ngSubmit)="saveConfig()" class="space-y-4">
-          <div>
-            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
-              Dirección IP del Router *
-            </label>
-            <input type="text" [(ngModel)]="configForm.host" name="host" required
-                   placeholder="ej: 192.168.1.1"
-                   class="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
-          </div>
-
-          <div class="grid grid-cols-2 gap-3">
-            <div>
-              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
-                Puerto API *
-              </label>
-              <input type="number" [(ngModel)]="configForm.port" name="port" required
-                     placeholder="8728"
-                     class="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
-            </div>
-            <div>
-              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
-                Usuario *
-              </label>
-              <input type="text" [(ngModel)]="configForm.user" name="user" required
-                     placeholder="admin"
-                     class="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
-            </div>
-          </div>
-
-          <div>
-            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
-              Contraseña *
-            </label>
-            <div class="relative">
-              <input [type]="showPass ? 'text' : 'password'"
-                     [(ngModel)]="configForm.pass" name="pass" required
-                     placeholder="Contraseña del usuario API"
-                     class="w-full px-3 py-2.5 pr-10 border border-gray-300 rounded-lg text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
-              <button type="button" (click)="showPass=!showPass"
-                      class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
-                <svg *ngIf="!showPass" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"/>
-                </svg>
-                <svg *ngIf="showPass" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3.98 8.223A10.477 10.477 0 0 0 1.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.451 10.451 0 0 1 12 4.5c4.756 0 8.773 3.162 10.065 7.498a10.522 10.522 0 0 1-4.293 5.774M6.228 6.228 3 3m3.228 3.228 3.65 3.65m7.894 7.894L21 21m-3.228-3.228-3.65-3.65m0 0a3 3 0 1 0-4.243-4.243m4.242 4.242L9.88 9.88"/>
-                </svg>
-              </button>
-            </div>
-            <p class="text-xs text-gray-400 mt-1">La contraseña se guarda cifrada y nunca se muestra.</p>
-          </div>
-
-          <div class="pt-2">
-            <button type="submit"
-                    [disabled]="savingConfig || !configForm.host || !configForm.user || !configForm.pass"
-                    class="w-full sm:w-auto px-6 py-2.5 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
-              {{ savingConfig ? 'Guardando...' : 'Guardar Configuración' }}
+          <div class="flex items-center gap-2 flex-shrink-0">
+            <button (click)="openEditRouter(r)"
+                    class="text-xs text-blue-600 hover:text-blue-800 dark:text-blue-400 font-medium px-2 py-1 rounded hover:bg-blue-50 dark:hover:bg-blue-900/20 transition">
+              Editar
+            </button>
+            <button (click)="confirmDeleteRouter(r.id)" [disabled]="deletingRouterId === r.id"
+                    class="text-xs text-red-600 hover:text-red-800 dark:text-red-400 font-medium px-2 py-1 rounded hover:bg-red-50 dark:hover:bg-red-900/20 transition disabled:opacity-50">
+              {{ deletingRouterId === r.id ? '...' : 'Eliminar' }}
             </button>
           </div>
-        </form>
-
-        <!-- Info box -->
-        <div class="mt-6 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
-          <p class="text-xs font-medium text-blue-800 dark:text-blue-300 mb-1">Requisitos en el Mikrotik:</p>
-          <ul class="text-xs text-blue-700 dark:text-blue-400 space-y-1 list-disc list-inside">
-            <li>Habilitar API: <code class="bg-blue-100 dark:bg-blue-800 px-1 rounded">IP → Services → api (8728)</code></li>
-            <li>El usuario debe tener permiso de <strong>read</strong> y <strong>write</strong></li>
-            <li>Asegúrese que el servidor puede alcanzar la IP del router</li>
-          </ul>
         </div>
       </div>
     </div>
+
+    <!-- Info box -->
+    <div class="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-xl">
+      <p class="text-xs font-medium text-blue-800 dark:text-blue-300 mb-1">Requisitos en el Mikrotik:</p>
+      <ul class="text-xs text-blue-700 dark:text-blue-400 space-y-1 list-disc list-inside">
+        <li>Habilitar API: <code class="bg-blue-100 dark:bg-blue-800 px-1 rounded">IP → Services → api (8728)</code></li>
+        <li>El usuario debe tener permiso de <strong>read</strong> y <strong>write</strong></li>
+        <li>Asegúrese que el servidor puede alcanzar la IP del router</li>
+      </ul>
+    </div>
   </div>
 
+</div>
+
+<!-- ══ Modal Agregar/Editar Router ══ -->
+<div *ngIf="showRouterForm" class="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/50 p-4">
+  <div class="bg-white dark:bg-gray-800 rounded-xl shadow-xl w-full max-w-md p-5 sm:p-6 space-y-4">
+    <div class="flex items-center justify-between">
+      <h3 class="text-base sm:text-lg font-bold text-gray-900 dark:text-white">
+        {{ editingRouter ? 'Editar Mikrotik' : 'Agregar Mikrotik' }}
+      </h3>
+      <button (click)="showRouterForm=false" class="text-gray-400 hover:text-gray-600">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+        </svg>
+      </button>
+    </div>
+
+    <div class="space-y-3">
+      <div>
+        <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Nombre del router</label>
+        <input type="text" [(ngModel)]="routerForm.name" placeholder="ej: Router Principal"
+               class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white focus:ring-2 focus:ring-blue-500">
+      </div>
+      <div>
+        <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Dirección IP *</label>
+        <input type="text" [(ngModel)]="routerForm.host" placeholder="192.168.1.1"
+               class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white focus:ring-2 focus:ring-blue-500">
+      </div>
+      <div class="grid grid-cols-2 gap-3">
+        <div>
+          <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Puerto API</label>
+          <input type="number" [(ngModel)]="routerForm.port" placeholder="8728"
+                 class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white focus:ring-2 focus:ring-blue-500">
+        </div>
+        <div>
+          <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Usuario *</label>
+          <input type="text" [(ngModel)]="routerForm.user" placeholder="admin"
+                 class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white focus:ring-2 focus:ring-blue-500">
+        </div>
+      </div>
+      <div>
+        <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
+          Contraseña {{ editingRouter ? '(dejar vacío para no cambiar)' : '*' }}
+        </label>
+        <div class="relative">
+          <input [type]="showRouterPass ? 'text' : 'password'"
+                 [(ngModel)]="routerForm.pass" placeholder="Contraseña API"
+                 class="w-full px-3 py-2 pr-10 border border-gray-300 rounded-lg text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white focus:ring-2 focus:ring-blue-500">
+          <button type="button" (click)="showRouterPass=!showRouterPass"
+                  class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path *ngIf="!showRouterPass" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z"/><path *ngIf="!showRouterPass" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"/>
+              <path *ngIf="showRouterPass" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3.98 8.223A10.477 10.477 0 0 0 1.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.451 10.451 0 0 1 12 4.5c4.756 0 8.773 3.162 10.065 7.498a10.522 10.522 0 0 1-4.293 5.774M6.228 6.228 3 3m3.228 3.228 3.65 3.65m7.894 7.894L21 21m-3.228-3.228-3.65-3.65m0 0a3 3 0 1 0-4.243-4.243m4.242 4.242L9.88 9.88"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div *ngIf="routerFormMsg" class="p-3 rounded-lg text-sm"
+         [class.bg-red-50]="routerFormError" [class.text-red-800]="routerFormError"
+         [class.bg-green-50]="!routerFormError" [class.text-green-800]="!routerFormError">
+      {{ routerFormMsg }}
+    </div>
+
+    <div class="flex gap-3">
+      <button (click)="saveRouter()" [disabled]="savingRouter || !routerForm.host || !routerForm.user || (!editingRouter && !routerForm.pass)"
+              class="px-5 py-2 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 transition">
+        {{ savingRouter ? 'Guardando...' : (editingRouter ? 'Actualizar' : 'Agregar') }}
+      </button>
+      <button (click)="showRouterForm=false" class="px-5 py-2 text-sm bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition">
+        Cancelar
+      </button>
+    </div>
+  </div>
 </div>

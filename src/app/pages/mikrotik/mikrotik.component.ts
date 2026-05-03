@@ -12,11 +12,23 @@ import { MikrotikService } from '../../services/mikrotik.service';
 export class MikrotikComponent implements OnInit {
   activeTab: 'info' | 'clients' | 'queues' | 'config' = 'info';
 
-  // Router info
+  tabs: { key: 'info' | 'clients' | 'queues' | 'config'; label: string }[] = [
+    { key: 'info', label: 'Info Router' },
+    { key: 'clients', label: 'Clientes ARP' },
+    { key: 'queues', label: 'Ancho de Banda' },
+    { key: 'config', label: 'Configuración' },
+  ];
+
+  // ── Multi-router ──────────────────────────────────────────────────────────
+  routers: any[] = [];
+  selectedRouterId: number | null = null;
+  loadingRouters = false;
+
+  // ── Router info ───────────────────────────────────────────────────────────
   routerInfo: any = null;
   loadingInfo = false;
 
-  // Clients
+  // ── Clients ───────────────────────────────────────────────────────────────
   clients: any[] = [];
   filteredClients: any[] = [];
   clientSearch = '';
@@ -26,7 +38,7 @@ export class MikrotikComponent implements OnInit {
   suspendResult: string | null = null;
   suspendError = false;
 
-  // Queues
+  // ── Queues ────────────────────────────────────────────────────────────────
   queues: any[] = [];
   loadingQueues = false;
   showQueueForm = false;
@@ -36,50 +48,84 @@ export class MikrotikComponent implements OnInit {
   queueMsg = '';
   queueError = false;
 
-  // Config
-  configForm = { host: '', user: '', pass: '', port: 8728 };
-  loadingConfig = false;
-  savingConfig = false;
-  configMsg = '';
-  configError = false;
-  showPass = false;
+  // ── Config: lista de routers ──────────────────────────────────────────────
+  showRouterForm = false;
+  editingRouter: any = null;
+  routerForm = { name: '', host: '', user: '', pass: '', port: 8728 };
+  savingRouter = false;
+  routerFormMsg = '';
+  routerFormError = false;
+  showRouterPass = false;
+  deletingRouterId: number | null = null;
 
   constructor(private svc: MikrotikService) {}
 
   ngOnInit() {
-    this.loadInfo();
+    this.loadRouters();
   }
 
-  setTab(tab: 'info' | 'clients' | 'queues' | 'config') {
-    this.activeTab = tab;
-    if (tab === 'info' && !this.routerInfo) this.loadInfo();
-    if (tab === 'clients' && !this.clients.length) this.loadClients();
-    if (tab === 'queues' && !this.queues.length) this.loadQueues();
-    if (tab === 'config') this.loadConfig();
+  // ── Routers list ──────────────────────────────────────────────────────────
+
+  loadRouters() {
+    this.loadingRouters = true;
+    this.svc.getRouters().subscribe({
+      next: r => {
+        this.routers = r.data ?? [];
+        this.loadingRouters = false;
+        if (!this.selectedRouterId && this.routers.length) {
+          this.selectedRouterId = this.routers[0].id;
+        }
+        this.loadInfo();
+      },
+      error: () => { this.loadingRouters = false; this.loadInfo(); },
+    });
   }
 
-  refresh() {
+  get selectedRouterLabel(): string {
+    const r = this.routers.find(x => x.id === this.selectedRouterId);
+    return r ? (r.name || r.host) : 'Router';
+  }
+
+  onRouterChange() {
     if (this.activeTab === 'info') this.loadInfo();
     else if (this.activeTab === 'clients') this.loadClients();
     else if (this.activeTab === 'queues') this.loadQueues();
   }
 
+  // ── Tabs ──────────────────────────────────────────────────────────────────
+
+  setTab(tab: 'info' | 'clients' | 'queues' | 'config') {
+    this.activeTab = tab;
+    if (tab === 'info')    { this.loadInfo(); }
+    if (tab === 'clients') { if (!this.clients.length) this.loadClients(); }
+    if (tab === 'queues')  { if (!this.queues.length) this.loadQueues(); }
+    if (tab === 'config')  { this.loadRouters(); }
+  }
+
+  refresh() {
+    if (this.activeTab === 'info')    this.loadInfo();
+    else if (this.activeTab === 'clients') this.loadClients();
+    else if (this.activeTab === 'queues')  this.loadQueues();
+  }
+
   // ── Info ──────────────────────────────────────────────────────────────────
+
   loadInfo() {
     this.loadingInfo = true;
     this.routerInfo = null;
-    this.svc.getRouterInfo().subscribe({
+    this.svc.getRouterInfo(this.selectedRouterId).subscribe({
       next: r => { this.routerInfo = r.data; this.loadingInfo = false; },
       error: () => { this.loadingInfo = false; },
     });
   }
 
   // ── Clients ───────────────────────────────────────────────────────────────
+
   loadClients() {
     this.loadingClients = true;
     this.selectedIds.clear();
     this.suspendResult = null;
-    this.svc.getConnectedClients().subscribe({
+    this.svc.getConnectedClients(this.selectedRouterId).subscribe({
       next: r => {
         this.clients = r.data ?? [];
         this.filterClients();
@@ -126,7 +172,7 @@ export class MikrotikComponent implements OnInit {
     if (!this.selectedIds.size) return;
     this.suspending = true;
     this.suspendResult = null;
-    this.svc.suspendBulk(Array.from(this.selectedIds)).subscribe({
+    this.svc.suspendBulk(Array.from(this.selectedIds), this.selectedRouterId).subscribe({
       next: r => {
         this.suspendResult = r.message;
         this.suspendError = false;
@@ -142,9 +188,10 @@ export class MikrotikComponent implements OnInit {
   }
 
   // ── Queues ────────────────────────────────────────────────────────────────
+
   loadQueues() {
     this.loadingQueues = true;
-    this.svc.getQueues().subscribe({
+    this.svc.getQueues(this.selectedRouterId).subscribe({
       next: r => { this.queues = r.data ?? []; this.loadingQueues = false; },
       error: () => { this.loadingQueues = false; },
     });
@@ -176,8 +223,8 @@ export class MikrotikComponent implements OnInit {
     if (!this.queueForm.name || !this.queueForm.target || !this.queueForm.max_limit) return;
     this.savingQueue = true;
     const obs = this.editingQueue
-      ? this.svc.updateQueue(this.editingQueue['.id'], this.queueForm)
-      : this.svc.createQueue(this.queueForm);
+      ? this.svc.updateQueue(this.editingQueue['.id'], this.queueForm, this.selectedRouterId)
+      : this.svc.createQueue(this.queueForm, this.selectedRouterId);
 
     obs.subscribe({
       next: r => {
@@ -200,47 +247,65 @@ export class MikrotikComponent implements OnInit {
 
   deleteQueue(id: string) {
     if (!confirm('¿Eliminar esta cola de ancho de banda?')) return;
-    this.svc.deleteQueue(id).subscribe({ next: () => this.loadQueues() });
+    this.svc.deleteQueue(id, this.selectedRouterId).subscribe({ next: () => this.loadQueues() });
   }
 
-  // ── Config ────────────────────────────────────────────────────────────────
-  loadConfig() {
-    this.loadingConfig = true;
-    this.configMsg = '';
-    this.svc.getRouterConfig().subscribe({
+  // ── Config: CRUD de routers ───────────────────────────────────────────────
+
+  openAddRouter() {
+    this.editingRouter = null;
+    this.routerForm = { name: '', host: '', user: '', pass: '', port: 8728 };
+    this.routerFormMsg = '';
+    this.showRouterForm = true;
+  }
+
+  openEditRouter(r: any) {
+    this.editingRouter = r;
+    this.routerForm = { name: r.name ?? '', host: r.host ?? '', user: r.user ?? '', pass: '', port: r.port ?? 8728 };
+    this.routerFormMsg = '';
+    this.showRouterForm = true;
+  }
+
+  saveRouter() {
+    if (!this.routerForm.host || !this.routerForm.user) return;
+    if (!this.editingRouter && !this.routerForm.pass) return;
+    this.savingRouter = true;
+    this.routerFormMsg = '';
+
+    const obs = this.editingRouter
+      ? this.svc.editRouter(this.editingRouter.id, this.routerForm)
+      : this.svc.addRouter(this.routerForm);
+
+    obs.subscribe({
       next: r => {
-        this.loadingConfig = false;
-        if (r.data) {
-          this.configForm.host = r.data.host ?? '';
-          this.configForm.user = r.data.user ?? '';
-          this.configForm.port = r.data.port ?? 8728;
-          this.configForm.pass = '';
+        this.savingRouter = false;
+        if (r.status === 0) {
+          this.showRouterForm = false;
+          this.loadRouters();
+        } else {
+          this.routerFormMsg = r.message;
+          this.routerFormError = true;
         }
       },
-      error: () => { this.loadingConfig = false; },
+      error: e => {
+        this.savingRouter = false;
+        this.routerFormMsg = e.error?.message ?? 'Error al guardar';
+        this.routerFormError = true;
+      },
     });
   }
 
-  saveConfig() {
-    if (!this.configForm.host || !this.configForm.user || !this.configForm.pass) return;
-    this.savingConfig = true;
-    this.configMsg = '';
-    this.svc.saveRouterConfig(this.configForm).subscribe({
-      next: r => {
-        this.savingConfig = false;
-        this.configMsg = r.message;
-        this.configError = r.status !== 0;
-        if (r.status === 0) this.configForm.pass = '';
-      },
-      error: e => {
-        this.savingConfig = false;
-        this.configMsg = e.error?.message ?? 'Error al guardar';
-        this.configError = true;
-      },
+  confirmDeleteRouter(id: number) {
+    if (!confirm('¿Eliminar este Mikrotik? Esta acción no se puede deshacer.')) return;
+    this.deletingRouterId = id;
+    this.svc.removeRouter(id).subscribe({
+      next: () => { this.deletingRouterId = null; this.loadRouters(); },
+      error: () => { this.deletingRouterId = null; },
     });
   }
 
   // ── Helpers ───────────────────────────────────────────────────────────────
+
   formatBytes(bytes: number): string {
     if (!bytes || bytes === 0) return '0 B';
     const units = ['B', 'KB', 'MB', 'GB', 'TB'];
@@ -250,12 +315,13 @@ export class MikrotikComponent implements OnInit {
   }
 
   cpuPercent(): number {
-    return Number(this.routerInfo?.resource?.cpu_load ?? 0);
+    return parseInt(this.routerInfo?.resource?.cpu_load ?? '0', 10);
   }
 
   memPercent(): number {
-    const r = this.routerInfo?.resource;
-    if (!r?.total_memory) return 0;
-    return Math.round(((r.total_memory - r.free_memory) / r.total_memory) * 100);
+    const total = this.routerInfo?.resource?.total_memory ?? 0;
+    const free  = this.routerInfo?.resource?.free_memory ?? 0;
+    if (!total) return 0;
+    return Math.round(((total - free) / total) * 100);
   }
 }

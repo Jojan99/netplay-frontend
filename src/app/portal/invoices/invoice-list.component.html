@@ -1,0 +1,611 @@
+<!-- ═══ Header ═══════════════════════════════════════════════════════════════ -->
+<div class="flex items-center justify-between mb-6">
+  <div>
+    <h2 class="text-2xl font-bold text-gray-900 dark:text-white">Mis Facturas</h2>
+    <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Historial completo de tu facturación</p>
+  </div>
+  <button (click)="load()" title="Actualizar"
+          class="p-2 rounded-lg text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
+    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+    </svg>
+  </button>
+</div>
+
+<!-- ═══ Resumen de estados ════════════════════════════════════════════════════ -->
+<div *ngIf="summary()" class="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
+  <div class="bg-white dark:bg-gray-800 rounded-xl p-4 shadow-sm border border-gray-100 dark:border-gray-700 text-center">
+    <div class="text-2xl font-bold text-gray-900 dark:text-white">{{ summary().total }}</div>
+    <div class="text-xs text-gray-500 dark:text-gray-400 mt-1">Total</div>
+  </div>
+  <div class="bg-white dark:bg-gray-800 rounded-xl p-4 shadow-sm border border-gray-100 dark:border-gray-700 text-center">
+    <div class="text-2xl font-bold text-green-600 dark:text-green-400">{{ summary().paid }}</div>
+    <div class="text-xs text-gray-500 dark:text-gray-400 mt-1">Pagadas</div>
+  </div>
+  <div class="bg-white dark:bg-gray-800 rounded-xl p-4 shadow-sm border border-gray-100 dark:border-gray-700 text-center">
+    <div class="text-2xl font-bold text-yellow-600 dark:text-yellow-400">{{ summary().pending }}</div>
+    <div class="text-xs text-gray-500 dark:text-gray-400 mt-1">Pendientes</div>
+  </div>
+  <div class="bg-white dark:bg-gray-800 rounded-xl p-4 shadow-sm border border-gray-100 dark:border-gray-700 text-center">
+    <div class="text-2xl font-bold text-red-600 dark:text-red-400">{{ summary().overdue }}</div>
+    <div class="text-xs text-gray-500 dark:text-gray-400 mt-1">Vencidas</div>
+  </div>
+</div>
+
+<!-- ═══ Banner total a pagar ══════════════════════════════════════════════════ -->
+<div *ngIf="!loading() && unpaidInvoices().length > 0 && paymentAvailable()"
+     class="bg-gradient-to-r from-blue-600 to-blue-700 dark:from-blue-700 dark:to-blue-800 rounded-2xl p-5 mb-6 text-white shadow-lg">
+  <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+    <div>
+      <p class="text-sm font-medium text-blue-100 mb-1">
+        {{ unpaidInvoices().length === 1 ? '1 factura pendiente' : unpaidInvoices().length + ' facturas pendientes' }}
+      </p>
+      <p class="text-3xl font-bold tracking-tight">{{ formatCurrency(totalDue()) }}</p>
+      <p class="text-xs text-blue-200 mt-1">Total a pagar</p>
+    </div>
+    <button (click)="openPaySetup()"
+            class="flex items-center gap-2 bg-white text-blue-700 font-semibold text-sm px-5 py-2.5 rounded-xl hover:bg-blue-50 transition-colors shadow-sm flex-shrink-0">
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/>
+      </svg>
+      Pagar ahora
+    </button>
+  </div>
+</div>
+
+<!-- ═══ Notificaciones ════════════════════════════════════════════════════════ -->
+<div *ngIf="sendResult()"
+     [class]="'flex items-center gap-2 p-3 mb-4 rounded-lg border text-sm font-medium ' +
+       (sendResult()!.ok
+         ? 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800 text-green-800 dark:text-green-300'
+         : 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800 text-red-800 dark:text-red-300')">
+  {{ sendResult()!.msg }}
+</div>
+
+<!-- ═══ Skeleton loading ══════════════════════════════════════════════════════ -->
+<div *ngIf="loading()" class="space-y-3">
+  <div *ngFor="let i of [1,2,3,4]" class="h-20 bg-gray-200 dark:bg-gray-700 rounded-xl animate-pulse"></div>
+</div>
+
+<!-- ═══ Sin facturas ══════════════════════════════════════════════════════════ -->
+<div *ngIf="!loading() && invoices().length === 0"
+     class="text-center py-16 text-gray-400 dark:text-gray-500">
+  <svg class="w-16 h-16 mx-auto mb-4 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+          d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+  </svg>
+  <p class="font-medium">No tienes facturas registradas</p>
+</div>
+
+<!-- ═══ Tabla escritorio ══════════════════════════════════════════════════════ -->
+<div *ngIf="!loading() && invoices().length > 0"
+     class="hidden md:block bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">
+  <table class="w-full text-sm">
+    <thead>
+      <tr class="border-b border-gray-100 dark:border-gray-700 bg-gray-50 dark:bg-gray-700/50">
+        <th class="text-left px-5 py-3.5 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">Factura</th>
+        <th class="text-left px-5 py-3.5 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">Fecha</th>
+        <th class="text-right px-5 py-3.5 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">Valor</th>
+        <th class="text-right px-5 py-3.5 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">Abono</th>
+        <th class="text-center px-5 py-3.5 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">Estado</th>
+        <th class="text-center px-5 py-3.5 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">Acciones</th>
+      </tr>
+    </thead>
+    <tbody class="divide-y divide-gray-100 dark:divide-gray-700">
+      <tr *ngFor="let inv of invoices()" class="hover:bg-gray-50 dark:hover:bg-gray-700/30 transition-colors">
+
+        <td class="px-5 py-4">
+          <span class="font-mono font-medium text-gray-900 dark:text-white">{{ inv.number_facture }}</span>
+        </td>
+
+        <td class="px-5 py-4 text-gray-500 dark:text-gray-400 text-xs">{{ inv.date_facturation }}</td>
+
+        <td class="px-5 py-4 text-right font-semibold text-gray-900 dark:text-white">
+          {{ formatCurrency(inv.price_total) }}
+        </td>
+
+        <td class="px-5 py-4 text-right text-xs">
+          <span *ngIf="inv.abone > 0 && !inv.paid"
+                class="text-emerald-600 dark:text-emerald-400 font-medium">
+            +{{ formatCurrency(inv.abone) }}
+          </span>
+          <span *ngIf="!inv.abone || inv.paid" class="text-gray-300 dark:text-gray-600">—</span>
+        </td>
+
+        <td class="px-5 py-4 text-center">
+          <div class="flex flex-col items-center gap-1">
+            <span [class]="'text-xs font-medium px-2.5 py-1 rounded-full ' + statusClass(inv.invoice_status)">
+              {{ statusLabel(inv.invoice_status) }}
+            </span>
+            <span *ngIf="inv.payment_gateway"
+                  class="text-[10px] font-medium px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300">
+              {{ gatewayLabel(inv.payment_gateway) }}
+            </span>
+          </div>
+        </td>
+
+        <td class="px-5 py-4">
+          <div class="flex items-center justify-center gap-1.5">
+            <!-- PDF -->
+            <button (click)="openPdf(inv)" [disabled]="pdfLoadingId() === inv.id" title="Descargar PDF"
+                    class="p-2 rounded-lg text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors disabled:opacity-40">
+              <svg *ngIf="pdfLoadingId() !== inv.id" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+              </svg>
+              <svg *ngIf="pdfLoadingId() === inv.id" class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
+              </svg>
+            </button>
+            <!-- WhatsApp -->
+            <button (click)="sendWhatsapp(inv)" [disabled]="sendingId() === inv.id" title="Enviar por WhatsApp"
+                    class="p-2 rounded-lg text-green-600 dark:text-green-400 hover:bg-green-50 dark:hover:bg-green-900/20 transition-colors disabled:opacity-40">
+              <svg *ngIf="sendingId() !== inv.id" class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
+              </svg>
+              <svg *ngIf="sendingId() === inv.id" class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
+              </svg>
+            </button>
+            <!-- Pagar (solo facturas individuales no pagadas) -->
+            <button *ngIf="inv.invoice_status !== 'paid' && paymentAvailable()"
+                    (click)="openPaySetup()" title="Pagar en línea"
+                    class="p-2 rounded-lg text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/>
+              </svg>
+            </button>
+          </div>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- ═══ Cards móvil ═══════════════════════════════════════════════════════════ -->
+<div *ngIf="!loading() && invoices().length > 0" class="md:hidden space-y-3">
+  <div *ngFor="let inv of invoices()"
+       class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 p-4">
+    <div class="flex items-start justify-between mb-3">
+      <div>
+        <span class="font-mono font-semibold text-gray-900 dark:text-white text-sm">{{ inv.number_facture }}</span>
+        <p class="text-xs text-gray-400 dark:text-gray-500 mt-0.5">{{ inv.date_facturation }}</p>
+      </div>
+      <div class="flex flex-col items-end gap-1">
+        <span [class]="'text-xs font-medium px-2.5 py-1 rounded-full ' + statusClass(inv.invoice_status)">
+          {{ statusLabel(inv.invoice_status) }}
+        </span>
+        <span *ngIf="inv.payment_gateway"
+              class="text-[10px] font-medium px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300">
+          {{ gatewayLabel(inv.payment_gateway) }}
+        </span>
+      </div>
+    </div>
+    <div class="flex items-center justify-between">
+      <div>
+        <p class="text-lg font-bold text-gray-900 dark:text-white">{{ formatCurrency(inv.price_total) }}</p>
+        <p *ngIf="inv.abone > 0 && !inv.paid" class="text-xs text-emerald-600 dark:text-emerald-400 font-medium">
+          Abonado: {{ formatCurrency(inv.abone) }}
+        </p>
+      </div>
+      <div class="flex gap-2">
+        <button (click)="openPdf(inv)" [disabled]="pdfLoadingId() === inv.id"
+                class="p-2.5 bg-gray-100 dark:bg-gray-700 rounded-xl text-gray-600 dark:text-gray-300 disabled:opacity-40">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+          </svg>
+        </button>
+        <button (click)="sendWhatsapp(inv)" [disabled]="sendingId() === inv.id"
+                class="p-2.5 bg-green-100 dark:bg-green-900/30 rounded-xl text-green-600 dark:text-green-400 disabled:opacity-40">
+          <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+            <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
+          </svg>
+        </button>
+        <button *ngIf="inv.invoice_status !== 'paid' && paymentAvailable()"
+                (click)="openPaySetup()"
+                class="p-2.5 bg-blue-100 dark:bg-blue-900/30 rounded-xl text-blue-600 dark:text-blue-400">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════════════════════════════════════════ -->
+<!-- ═══ MODAL 1: Preparar pago (monto + distribución) ═══════════════════════ -->
+<!-- ══════════════════════════════════════════════════════════════════════════ -->
+<div *ngIf="paySetupOpen()"
+     class="fixed inset-0 bg-black/60 dark:bg-black/70 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4"
+     (click)="closePaySetup()">
+  <div class="bg-white dark:bg-gray-900 rounded-t-3xl sm:rounded-2xl shadow-2xl w-full sm:max-w-md overflow-hidden"
+       (click)="$event.stopPropagation()">
+
+    <!-- Drag handle móvil -->
+    <div class="sm:hidden flex justify-center pt-3 pb-1">
+      <div class="w-10 h-1 bg-gray-300 dark:bg-gray-600 rounded-full"></div>
+    </div>
+
+    <!-- Header modal -->
+    <div class="flex items-center justify-between px-6 pt-4 pb-3 border-b border-gray-100 dark:border-gray-700">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 bg-blue-100 dark:bg-blue-900/40 rounded-xl flex items-center justify-center">
+          <svg class="w-5 h-5 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/>
+          </svg>
+        </div>
+        <div>
+          <h3 class="font-bold text-gray-900 dark:text-white">Pago en línea</h3>
+          <p class="text-xs text-gray-500 dark:text-gray-400">{{ unpaidInvoices().length }} factura(s) pendiente(s)</p>
+        </div>
+      </div>
+      <button (click)="closePaySetup()"
+              class="p-2 rounded-lg text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+        </svg>
+      </button>
+    </div>
+
+    <div class="px-6 py-5 space-y-5 max-h-[80vh] overflow-y-auto">
+
+      <!-- Alerta modo prueba -->
+      <div *ngIf="payConfirm()?.sandbox || unpaidInvoices().length > 0"
+           class="hidden"><!-- sandbox se mostrará en paso 2 --></div>
+
+      <!-- Lista de facturas pendientes (expandible) -->
+      <div class="bg-gray-50 dark:bg-gray-800 rounded-xl overflow-hidden">
+        <button (click)="invoicesExpanded.set(!invoicesExpanded())"
+                class="w-full flex items-center justify-between px-4 py-3 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700/50 transition-colors">
+          <span class="flex items-center gap-2">
+            <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+            </svg>
+            {{ unpaidInvoices().length }} factura(s) · Total {{ formatCurrency(totalDue()) }}
+          </span>
+          <svg [class]="'w-4 h-4 transition-transform ' + (invoicesExpanded() ? 'rotate-180' : '')"
+               fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+          </svg>
+        </button>
+
+        <div *ngIf="invoicesExpanded()" class="border-t border-gray-200 dark:border-gray-700 divide-y divide-gray-100 dark:divide-gray-700/50">
+          <div *ngFor="let inv of unpaidInvoices()"
+               class="flex items-center justify-between px-4 py-2.5 text-sm">
+            <div class="flex items-center gap-2">
+              <span [class]="'w-1.5 h-1.5 rounded-full flex-shrink-0 ' + (inv.invoice_status === 'overdue' ? 'bg-red-400' : 'bg-yellow-400')"></span>
+              <span class="font-mono text-gray-700 dark:text-gray-300 text-xs">{{ inv.number_facture }}</span>
+              <span [class]="'text-xs px-1.5 py-0.5 rounded ' + statusClass(inv.invoice_status)">
+                {{ statusLabel(inv.invoice_status) }}
+              </span>
+            </div>
+            <span class="font-semibold text-gray-800 dark:text-gray-200 text-xs">{{ formatCurrency(inv.price_total) }}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Campo de monto -->
+      <div>
+        <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+          ¿Cuánto deseas pagar?
+        </label>
+        <div class="relative">
+          <span class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-400 font-semibold text-sm">$</span>
+          <input type="text"
+                 inputmode="numeric"
+                 [value]="payAmountStr()"
+                 (input)="onAmountInput($any($event.target).value)"
+                 class="w-full pl-8 pr-4 py-3.5 text-xl font-bold bg-gray-50 dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-600 rounded-xl focus:outline-none focus:border-blue-500 dark:focus:border-blue-400 text-gray-900 dark:text-white transition-colors"
+                 placeholder="0"/>
+        </div>
+        <div class="flex items-center justify-between mt-2">
+          <p *ngIf="payAmountError()" class="text-xs text-red-500 font-medium">{{ payAmountError() }}</p>
+          <p *ngIf="!payAmountError()" class="text-xs text-gray-400 dark:text-gray-500">
+            Mínimo: $1.000 · Máximo: {{ formatCurrency(totalDue()) }}
+          </p>
+          <button (click)="setFullAmount()"
+                  class="text-xs text-blue-600 dark:text-blue-400 font-medium hover:underline ml-auto">
+            Pagar total
+          </button>
+        </div>
+      </div>
+
+      <!-- Distribución del pago -->
+      <div *ngIf="payAmount() > 0 && allocationPreview().length > 0">
+        <p class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">
+          Distribución del pago
+        </p>
+        <div class="space-y-3">
+          <div *ngFor="let item of allocationPreview()" class="space-y-1.5">
+            <div class="flex items-center justify-between text-xs">
+              <div class="flex items-center gap-2">
+                <span class="font-mono text-gray-600 dark:text-gray-400">{{ item.number_facture }}</span>
+                <span *ngIf="item.fullCoverage"
+                      class="text-xs px-1.5 py-0.5 rounded-full bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400 font-medium">
+                  Completa
+                </span>
+                <span *ngIf="!item.fullCoverage"
+                      class="text-xs px-1.5 py-0.5 rounded-full bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400 font-medium">
+                  Abono parcial
+                </span>
+              </div>
+              <div class="text-right">
+                <span class="font-semibold text-gray-800 dark:text-gray-200">{{ formatCurrency(item.toPay) }}</span>
+                <span *ngIf="!item.fullCoverage" class="text-gray-400 dark:text-gray-500"> / {{ formatCurrency(item.price_total) }}</span>
+              </div>
+            </div>
+            <!-- Barra de progreso -->
+            <div class="h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+              <div [style.width.%]="item.pct"
+                   [class]="'h-full rounded-full transition-all duration-500 ' + (item.fullCoverage ? 'bg-green-500' : 'bg-amber-400')">
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Footer -->
+    <div class="px-6 pb-6 pt-2 flex gap-3">
+      <button (click)="closePaySetup()"
+              class="flex-1 px-4 py-3 rounded-xl border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 text-sm font-medium hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+        Cancelar
+      </button>
+      <button (click)="confirmPaySetup()"
+              [disabled]="payInitiating() || payAmount() < 1000"
+              class="flex-1 px-4 py-3 rounded-xl bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white text-sm font-semibold transition-colors flex items-center justify-center gap-2">
+        <svg *ngIf="payInitiating()" class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
+          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
+        </svg>
+        <span>{{ payInitiating() ? 'Generando link...' : 'Continuar →' }}</span>
+      </button>
+    </div>
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════════════════════════════════════════ -->
+<!-- ═══ MODAL 2: Confirmar y pagar ══════════════════════════════════════════ -->
+<!-- ══════════════════════════════════════════════════════════════════════════ -->
+<div *ngIf="payConfirm()"
+     class="fixed inset-0 bg-black/60 dark:bg-black/70 z-50 flex items-center justify-center p-4"
+     (click)="closePayConfirm()">
+  <div class="bg-white dark:bg-gray-900 rounded-2xl shadow-2xl w-full max-w-md overflow-hidden"
+       (click)="$event.stopPropagation()">
+
+    <!-- Alerta sandbox -->
+    <div *ngIf="payConfirm().sandbox"
+         class="flex items-center gap-2 bg-amber-50 dark:bg-amber-900/20 border-b border-amber-200 dark:border-amber-700 px-5 py-3 text-amber-800 dark:text-amber-300 text-xs font-medium">
+      <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+      </svg>
+      MODO PRUEBA — Este pago NO generará cargos reales
+    </div>
+
+    <div class="p-6">
+      <!-- Ícono ✓ -->
+      <div class="flex items-center gap-3 mb-5">
+        <div class="w-12 h-12 bg-green-100 dark:bg-green-900/30 rounded-xl flex items-center justify-center flex-shrink-0">
+          <svg class="w-6 h-6 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/>
+          </svg>
+        </div>
+        <div>
+          <h3 class="text-lg font-bold text-gray-900 dark:text-white">Listo para pagar</h3>
+          <p class="text-sm text-gray-500 dark:text-gray-400">vía {{ gatewayLabel(payConfirm().gateway) }}</p>
+        </div>
+      </div>
+
+      <!-- Resumen del pago -->
+      <div class="bg-gray-50 dark:bg-gray-800 rounded-xl p-4 mb-4 space-y-3">
+        <div class="flex justify-between items-center">
+          <span class="text-sm text-gray-500 dark:text-gray-400">Monto a pagar</span>
+          <span class="text-xl font-bold text-gray-900 dark:text-white">{{ formatCurrency(payConfirm().amount) }}</span>
+        </div>
+        <div class="flex justify-between text-xs">
+          <span class="text-gray-500 dark:text-gray-400">Referencia</span>
+          <span class="font-mono bg-gray-200 dark:bg-gray-700 px-2 py-0.5 rounded text-gray-700 dark:text-gray-300 truncate max-w-[180px]">
+            {{ payConfirm().reference }}
+          </span>
+        </div>
+      </div>
+
+      <!-- Distribución detallada -->
+      <div *ngIf="payConfirm().breakdown?.length > 0" class="mb-5">
+        <p class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-2">Se aplicará a:</p>
+        <div class="space-y-1.5">
+          <div *ngFor="let b of payConfirm().breakdown"
+               class="flex items-center justify-between bg-gray-50 dark:bg-gray-800 rounded-lg px-3 py-2 text-sm">
+            <div class="flex items-center gap-2">
+              <svg *ngIf="b.full_coverage" class="w-3.5 h-3.5 text-green-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/>
+              </svg>
+              <svg *ngIf="!b.full_coverage" class="w-3.5 h-3.5 text-amber-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+              </svg>
+              <span class="font-mono text-xs text-gray-600 dark:text-gray-400">{{ b.number_facture }}</span>
+              <span class="text-xs text-gray-400">{{ b.full_coverage ? 'pago completo' : 'abono' }}</span>
+            </div>
+            <span class="font-semibold text-gray-800 dark:text-gray-200 text-xs">{{ formatCurrency(b.amount_to_pay) }}</span>
+          </div>
+        </div>
+      </div>
+
+      <p class="text-xs text-gray-400 dark:text-gray-500 mb-5 leading-relaxed">
+        Serás redirigido a <strong>{{ gatewayLabel(payConfirm().gateway) }}</strong> para completar el pago de forma segura.
+        Guarda la referencia en caso de cualquier inconveniente.
+      </p>
+
+      <!-- Acciones -->
+      <div class="flex gap-3">
+        <button (click)="closePayConfirm()"
+                class="flex-1 px-4 py-3 rounded-xl border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 text-sm font-medium hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+          Volver
+        </button>
+        <button (click)="goToPay()"
+                class="flex-1 px-4 py-3 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold transition-colors flex items-center justify-center gap-2">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
+          </svg>
+          Ir a pagar
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════════════════════════════════════════ -->
+<!-- ═══ MODAL: Resultado del pago (retorno de pasarela) ═════════════════════ -->
+<!-- ══════════════════════════════════════════════════════════════════════════ -->
+<div *ngIf="payResultLoading() || payResult()"
+     class="fixed inset-0 bg-black/60 dark:bg-black/70 z-50 flex items-center justify-center p-4">
+  <div class="bg-white dark:bg-gray-900 rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden">
+
+    <!-- Verificando (con polling) -->
+    <div *ngIf="payResultLoading()" class="p-8 text-center">
+      <div class="relative w-20 h-20 mx-auto mb-5">
+        <!-- Círculo de progreso -->
+        <svg class="w-20 h-20 -rotate-90" viewBox="0 0 80 80">
+          <circle cx="40" cy="40" r="34" fill="none" stroke="currentColor"
+                  class="text-gray-200 dark:text-gray-700" stroke-width="6"/>
+          <circle cx="40" cy="40" r="34" fill="none" stroke="currentColor"
+                  class="text-blue-500 transition-all duration-500"
+                  stroke-width="6" stroke-linecap="round"
+                  [attr.stroke-dasharray]="'213.6'"
+                  [attr.stroke-dashoffset]="213.6 - (213.6 * payPollAttempt() / 12)"/>
+        </svg>
+        <div class="absolute inset-0 flex items-center justify-center">
+          <svg class="w-8 h-8 animate-spin text-blue-500" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
+          </svg>
+        </div>
+      </div>
+      <p class="text-gray-800 dark:text-gray-200 font-semibold mb-1">Verificando pago...</p>
+      <p class="text-sm text-gray-500 dark:text-gray-400">
+        Esperando confirmación de la pasarela
+        <span *ngIf="payPollAttempt() > 0">({{ payPollAttempt() }}/12)</span>
+      </p>
+      <p class="text-xs text-gray-400 dark:text-gray-500 mt-3">
+        Esto puede tardar algunos segundos. No cierres esta ventana.
+      </p>
+    </div>
+
+    <ng-container *ngIf="!payResultLoading() && payResult()">
+
+      <!-- ✓ Aprobado -->
+      <ng-container *ngIf="payResult().tx_status === 'approved'">
+        <div class="bg-green-50 dark:bg-green-900/20 px-6 pt-8 pb-6 text-center border-b border-green-100 dark:border-green-800">
+          <div class="w-16 h-16 bg-green-100 dark:bg-green-900/40 rounded-full flex items-center justify-center mx-auto mb-4">
+            <svg class="w-9 h-9 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/>
+            </svg>
+          </div>
+          <h3 class="text-xl font-bold text-green-700 dark:text-green-400 mb-1">¡Pago exitoso!</h3>
+          <p class="text-sm text-green-600 dark:text-green-400">Tu pago fue procesado correctamente.</p>
+        </div>
+        <div class="p-6 space-y-3">
+          <div *ngIf="payResult().amount" class="flex justify-between text-sm">
+            <span class="text-gray-500 dark:text-gray-400">Monto pagado</span>
+            <span class="font-bold text-green-700 dark:text-green-400">{{ formatCurrency(payResult().amount) }}</span>
+          </div>
+          <div *ngIf="payResult().gateway" class="flex justify-between text-sm">
+            <span class="text-gray-500 dark:text-gray-400">Pasarela</span>
+            <span class="font-medium text-gray-700 dark:text-gray-300">{{ gatewayLabel(payResult().gateway) }}</span>
+          </div>
+          <div *ngIf="payResult().reference" class="flex justify-between text-sm">
+            <span class="text-gray-500 dark:text-gray-400">Referencia</span>
+            <span class="font-mono text-xs bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded text-gray-600 dark:text-gray-400 truncate max-w-[160px]">
+              {{ payResult().reference }}
+            </span>
+          </div>
+          <div *ngIf="payResult().paid_at" class="flex justify-between text-sm">
+            <span class="text-gray-500 dark:text-gray-400">Fecha</span>
+            <span class="text-gray-700 dark:text-gray-300">{{ payResult().paid_at | date:'dd/MM/yyyy HH:mm' }}</span>
+          </div>
+          <button (click)="closePayResult()"
+                  class="w-full mt-2 px-4 py-2.5 rounded-xl bg-green-600 hover:bg-green-700 text-white text-sm font-semibold transition-colors">
+            Cerrar
+          </button>
+        </div>
+      </ng-container>
+
+      <!-- ⏳ Pendiente -->
+      <ng-container *ngIf="payResult().tx_status === 'pending'">
+        <div class="p-8 text-center">
+          <div class="w-16 h-16 bg-yellow-100 dark:bg-yellow-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
+            <svg class="w-9 h-9 text-yellow-600 dark:text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            </svg>
+          </div>
+          <h3 class="text-xl font-bold text-yellow-700 dark:text-yellow-400 mb-2">Confirmando pago</h3>
+          <p class="text-sm text-gray-500 dark:text-gray-400 mb-5">
+            Estamos esperando la confirmación de la pasarela de pago.<br>
+            La factura se actualizará automáticamente en unos segundos.
+          </p>
+          <button (click)="closePayResult()"
+                  class="w-full px-4 py-2.5 rounded-xl bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 text-sm font-medium transition-colors">
+            Entendido
+          </button>
+        </div>
+      </ng-container>
+
+      <!-- ✗ Cancelado -->
+      <ng-container *ngIf="payResult().tx_status === 'cancelled'">
+        <div class="p-8 text-center">
+          <div class="w-16 h-16 bg-gray-100 dark:bg-gray-700 rounded-full flex items-center justify-center mx-auto mb-4">
+            <svg class="w-9 h-9 text-gray-500 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            </svg>
+          </div>
+          <h3 class="text-xl font-bold text-gray-700 dark:text-gray-300 mb-2">Pago cancelado</h3>
+          <p class="text-sm text-gray-500 dark:text-gray-400 mb-5">
+            Cancelaste el proceso de pago. Puedes intentarlo de nuevo cuando quieras.
+          </p>
+          <button (click)="closePayResult()"
+                  class="w-full px-4 py-2.5 rounded-xl bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 text-sm font-medium transition-colors">
+            Cerrar
+          </button>
+        </div>
+      </ng-container>
+
+      <!-- ✗ Rechazado / Fallido -->
+      <ng-container *ngIf="payResult().tx_status === 'declined' || payResult().tx_status === 'failed'">
+        <div class="p-8 text-center">
+          <div class="w-16 h-16 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
+            <svg class="w-9 h-9 text-red-600 dark:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"/>
+            </svg>
+          </div>
+          <h3 class="text-xl font-bold text-red-700 dark:text-red-400 mb-2">Pago rechazado</h3>
+          <p class="text-sm text-gray-500 dark:text-gray-400 mb-5">
+            El pago no pudo ser procesado. Verifica los datos de tu tarjeta e intenta de nuevo.
+          </p>
+          <button (click)="closePayResult(); openPaySetup()"
+                  class="w-full px-4 py-2.5 rounded-xl bg-red-600 hover:bg-red-700 text-white text-sm font-semibold transition-colors mb-2">
+            Intentar de nuevo
+          </button>
+          <button (click)="closePayResult()"
+                  class="w-full px-4 py-2.5 rounded-xl bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 text-sm font-medium transition-colors">
+            Cerrar
+          </button>
+        </div>
+      </ng-container>
+
+    </ng-container>
+  </div>
+</div>

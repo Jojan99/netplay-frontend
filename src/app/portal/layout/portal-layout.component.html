@@ -1,0 +1,84 @@
+<div class="min-h-screen bg-gray-50 dark:bg-gray-900">
+
+  <!-- Navbar -->
+  <nav class="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 shadow-sm">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex items-center justify-between h-16">
+
+        <!-- Logo + Empresa -->
+        <div class="flex items-center gap-3">
+          <img *ngIf="companyLogo()" [src]="companyLogo()" alt="logo"
+               class="h-8 w-auto object-contain rounded">
+          <span class="font-bold text-gray-900 dark:text-white text-lg">
+            {{ companyName() || 'Portal Cliente' }}
+          </span>
+        </div>
+
+        <!-- Menú escritorio -->
+        <div class="hidden md:flex items-center gap-1">
+          <a routerLink="/portal/home" routerLinkActive="bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300"
+             class="px-4 py-2 rounded-lg text-sm font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
+            Inicio
+          </a>
+          <a routerLink="/portal/facturas" routerLinkActive="bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300"
+             class="px-4 py-2 rounded-lg text-sm font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
+            Facturas
+          </a>
+          <a routerLink="/portal/reportes" routerLinkActive="bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300"
+             class="px-4 py-2 rounded-lg text-sm font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
+            Reportes
+          </a>
+          <a routerLink="/portal/perfil" routerLinkActive="bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300"
+             class="px-4 py-2 rounded-lg text-sm font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
+            Mi Perfil
+          </a>
+        </div>
+
+        <!-- Usuario + Logout (escritorio) -->
+        <div class="hidden md:flex items-center gap-3">
+          <span class="text-sm text-gray-500 dark:text-gray-400">{{ fullName() }}</span>
+          <button (click)="logout()"
+                  class="flex items-center gap-1 text-sm font-medium text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-300 transition-colors">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
+            </svg>
+            Salir
+          </button>
+        </div>
+
+        <!-- Hamburguesa móvil -->
+        <button (click)="toggleMenu()" class="md:hidden p-2 rounded-lg text-gray-500 dark:text-gray-400
+               hover:bg-gray-100 dark:hover:bg-gray-700">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path *ngIf="!menuOpen()" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M4 6h16M4 12h16M4 18h16"/>
+            <path *ngIf="menuOpen()" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M6 18L18 6M6 6l12 12"/>
+          </svg>
+        </button>
+
+      </div>
+    </div>
+
+    <!-- Menú móvil -->
+    <div *ngIf="menuOpen()" class="md:hidden border-t border-gray-200 dark:border-gray-700 px-4 py-3 space-y-1">
+      <a routerLink="/portal/home"      (click)="toggleMenu()" class="block px-3 py-2 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 text-sm font-medium">Inicio</a>
+      <a routerLink="/portal/facturas"  (click)="toggleMenu()" class="block px-3 py-2 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 text-sm font-medium">Facturas</a>
+      <a routerLink="/portal/reportes"  (click)="toggleMenu()" class="block px-3 py-2 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 text-sm font-medium">Reportes</a>
+      <a routerLink="/portal/perfil"    (click)="toggleMenu()" class="block px-3 py-2 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 text-sm font-medium">Mi Perfil</a>
+      <div class="border-t border-gray-200 dark:border-gray-700 pt-2 mt-2">
+        <p class="px-3 py-1 text-xs text-gray-400 dark:text-gray-500">{{ fullName() }}</p>
+        <button (click)="logout()" class="w-full text-left px-3 py-2 rounded-lg text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-gray-700 text-sm font-medium">
+          Cerrar sesión
+        </button>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Contenido -->
+  <main class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <router-outlet />
+  </main>
+
+</div>

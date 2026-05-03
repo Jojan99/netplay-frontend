@@ -28,6 +28,7 @@ import { InstallationsComponent } from './pages/installations/installations.comp
 import { InstallationFormComponent } from './pages/installations/installation-form.component';
 import { TransfersComponent } from './pages/transfers/transfers.component';
 import { TransferFormComponent } from './pages/transfers/transfer-form.component';
+import { TechnicianMapComponent } from './pages/technician-map/technician-map.component';
 
 export const routes: Routes = [
   {
@@ -52,7 +53,8 @@ export const routes: Routes = [
         data: { module: 'olt-admin' },
       },
       { path: 'staff',          component: StaffComponent,             canActivate: [roleGuard], data: { module: 'staff' } },
-      { path: 'billing-config', component: BillingConfigComponent,     canActivate: [roleGuard], data: { module: 'billing-config' } },
+      { path: 'billing-config',  component: BillingConfigComponent, canActivate: [roleGuard], data: { module: 'billing-config' } },
+      { path: 'payment-gateway', component: BillingConfigComponent, canActivate: [roleGuard], data: { module: 'payment-gateway' } },
       { path: 'mikrotik',       component: MikrotikComponent,          canActivate: [roleGuard], data: { module: 'mikrotik' } },
       { path: 'resumen',        component: ResumenComponent,           canActivate: [roleGuard], data: { module: 'resumen' } },
       {
@@ -81,9 +83,22 @@ export const routes: Routes = [
       { path: 'installations/new', component: InstallationFormComponent },
       { path: 'transfers', component: TransfersComponent },
       { path: 'transfers/new', component: TransferFormComponent },
+      { path: 'technician-map', component: TechnicianMapComponent, canActivate: [roleGuard], data: { module: 'technician-map' } },
+      {
+        path: 'landing',
+        loadComponent: () => import('./pages/landing-editor/landing-editor.component').then(m => m.LandingEditorComponent),
+      },
       { path: '', redirectTo: 'home', pathMatch: 'full' },
       { path: '**', component: DashboardComponent },
     ],
+  },
+  {
+    path: 'portal',
+    loadChildren: () => import('./portal/portal.routes').then(m => m.PORTAL_ROUTES),
+  },
+  {
+    path: 'p',
+    loadChildren: () => import('./landing/landing.routes').then(m => m.LANDING_ROUTES),
   },
   { path: 'login',         component: SignInComponent },
   { path: 'inicio',        component: SignInComponent },

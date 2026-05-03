@@ -1,0 +1,137 @@
+<div class="max-w-2xl mx-auto">
+
+  <div class="mb-6">
+    <h2 class="text-2xl font-bold text-gray-900 dark:text-white">Mi Perfil</h2>
+    <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Información de tu cuenta y servicio</p>
+  </div>
+
+  <!-- Skeleton -->
+  <div *ngIf="loading()" class="space-y-4">
+    <div class="h-32 bg-gray-200 dark:bg-gray-700 rounded-2xl animate-pulse"></div>
+    <div class="h-48 bg-gray-200 dark:bg-gray-700 rounded-2xl animate-pulse"></div>
+  </div>
+
+  <ng-container *ngIf="!loading() && profile()">
+
+    <!-- Éxito -->
+    <div *ngIf="successMsg()"
+         class="flex items-center gap-2 p-4 mb-4 text-sm font-medium text-green-800 bg-green-50
+                dark:bg-green-900/20 dark:text-green-300 rounded-xl border border-green-200 dark:border-green-800">
+      <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+      </svg>
+      {{ successMsg() }}
+    </div>
+
+    <!-- Error -->
+    <div *ngIf="errorMsg()"
+         class="flex items-center gap-2 p-4 mb-4 text-sm text-red-800 bg-red-50
+                dark:bg-red-900/20 dark:text-red-400 rounded-xl border border-red-200 dark:border-red-800">
+      {{ errorMsg() }}
+    </div>
+
+    <!-- Mi Plan -->
+    <div class="bg-gradient-to-br from-blue-600 to-blue-700 rounded-2xl p-6 mb-4 text-white shadow-lg">
+      <div class="flex items-center justify-between mb-4">
+        <span class="text-sm font-medium text-blue-200">Mi Plan de Internet</span>
+        <span class="text-xs px-2.5 py-1 rounded-full font-medium"
+              [class]="profile().internet_status === 'Activo'
+                ? 'bg-green-400/20 text-green-200'
+                : 'bg-red-400/20 text-red-200'">
+          {{ profile().internet_status ?? 'Activo' }}
+        </span>
+      </div>
+      <div class="text-2xl font-bold mb-1">{{ profile().plan_name ?? 'Sin plan asignado' }}</div>
+      <div class="text-blue-200 text-sm">
+        <span *ngIf="profile().plan_download">↓ {{ profile().plan_download }} Mbps</span>
+        <span *ngIf="profile().plan_upload"> · ↑ {{ profile().plan_upload }} Mbps</span>
+      </div>
+      <div *ngIf="profile().plan_price" class="mt-3 text-xl font-semibold">
+        {{ formatCurrency(profile().plan_price) }}
+        <span class="text-sm font-normal text-blue-200">/mes</span>
+      </div>
+    </div>
+
+    <!-- Datos personales -->
+    <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 p-6">
+      <div class="flex items-center justify-between mb-5">
+        <h3 class="text-base font-semibold text-gray-900 dark:text-white">Datos de Contacto</h3>
+        <button *ngIf="!editing()" (click)="startEdit()"
+                class="flex items-center gap-1.5 text-sm font-medium text-blue-600 dark:text-blue-400
+                       hover:text-blue-800 dark:hover:text-blue-300 transition-colors">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+          </svg>
+          Editar
+        </button>
+      </div>
+
+      <!-- Modo vista -->
+      <div *ngIf="!editing()" class="space-y-4">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <p class="text-xs font-medium text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-1">Nombre completo</p>
+            <p class="text-sm font-medium text-gray-900 dark:text-white">{{ profile().names }} {{ profile().lastname }}</p>
+          </div>
+          <div>
+            <p class="text-xs font-medium text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-1">Documento</p>
+            <p class="text-sm font-medium text-gray-900 dark:text-white">{{ profile().dni_type }} {{ profile().dni }}</p>
+          </div>
+          <div>
+            <p class="text-xs font-medium text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-1">Teléfono</p>
+            <p class="text-sm font-medium text-gray-900 dark:text-white">{{ profile().phone || 'No registrado' }}</p>
+          </div>
+          <div>
+            <p class="text-xs font-medium text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-1">Correo</p>
+            <p class="text-sm font-medium text-gray-900 dark:text-white">{{ profile().email || 'No registrado' }}</p>
+          </div>
+          <div class="sm:col-span-2">
+            <p class="text-xs font-medium text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-1">Dirección</p>
+            <p class="text-sm font-medium text-gray-900 dark:text-white">{{ profile().address || 'No registrada' }}</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Modo edición -->
+      <form *ngIf="editing()" (ngSubmit)="save()" class="space-y-4">
+        <div>
+          <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1.5">Teléfono</label>
+          <input type="tel" [(ngModel)]="phone" name="phone"
+                 class="w-full px-4 py-2.5 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600
+                        text-gray-900 dark:text-white rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+        </div>
+        <div>
+          <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1.5">Correo</label>
+          <input type="email" [(ngModel)]="email" name="email"
+                 class="w-full px-4 py-2.5 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600
+                        text-gray-900 dark:text-white rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+        </div>
+        <div>
+          <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1.5">Dirección</label>
+          <input type="text" [(ngModel)]="address" name="address"
+                 class="w-full px-4 py-2.5 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600
+                        text-gray-900 dark:text-white rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+        </div>
+        <div class="flex gap-3 pt-2">
+          <button type="button" (click)="cancelEdit()"
+                  class="flex-1 py-2.5 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 rounded-lg hover:bg-gray-200 transition-colors">
+            Cancelar
+          </button>
+          <button type="submit" [disabled]="saving()"
+                  class="flex-1 flex items-center justify-center gap-2 py-2.5 text-sm font-semibold text-white
+                         bg-blue-600 rounded-lg hover:bg-blue-700 disabled:opacity-60 transition-colors">
+            <svg *ngIf="saving()" class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
+              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
+            </svg>
+            {{ saving() ? 'Guardando...' : 'Guardar cambios' }}
+          </button>
+        </div>
+      </form>
+
+    </div>
+
+  </ng-container>
+
+</div>

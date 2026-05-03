@@ -438,7 +438,7 @@
                   </div>
                   <div>
                     <p class="font-medium text-gray-900 dark:text-white">
-                      {{ (technicians.find(t => t.id === techId)?.first_name || '') + ' ' + (technicians.find(t => t.id === techId)?.last_name || '') || 'Técnico ' + techId }}
+                      {{ getTechnicianName(techId) }}
                     </p>
                   </div>
                 </div>

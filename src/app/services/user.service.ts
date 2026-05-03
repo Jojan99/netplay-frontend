@@ -50,6 +50,7 @@ export class UserService {
       planInternet: userData.plan_id,
       ip_assignment_id: userData.ip,
       group: userData.periode_facturation,
+      router_id: userData.router_id ?? undefined,
 
     });
 
@@ -81,11 +82,12 @@ export class UserService {
     const url = this.env.rootUrl + 'api/user/updateUserData'
     return this.http.put<any>(url, parameter, { headers: this.getHeaders() });
   }
-  disableUser(ip:any,id_user:any,internet_status:any){
+  disableUser(ip:any,id_user:any,internet_status:any, routerId?: number | null){
     var parameter = JSON.stringify({
       username: ip,
       id_user: id_user,
-      status:internet_status
+      status:internet_status,
+      router_id: routerId ?? undefined,
     });
 
     const url = this.env.rootUrl + 'api/management/UpdateStatus'
@@ -230,11 +232,10 @@ export class UserService {
 
   }
 
-  getneighborhoodAll(){
-
-    const url = this.env.rootUrl + 'api/management/getLanSegments'
-    return this.http.get<any>(url, { headers: this.getHeaders() })
-
+  getneighborhoodAll(routerId?: number | null){
+    let url = this.env.rootUrl + 'api/management/getLanSegments';
+    if (routerId) url += `?router_id=${routerId}`;
+    return this.http.get<any>(url, { headers: this.getHeaders() });
   }
 
 
@@ -267,18 +268,11 @@ export class UserService {
   }
 
 
-getIpzonebyZone(vlan: string, segment: string) {
-
-  const parameter = {
-    vlan: vlan,
-    segment: segment
-  };
-
+getIpzonebyZone(vlan: string, segment: string, routerId?: number | null) {
+  const parameter: any = { vlan, segment };
+  if (routerId) parameter.router_id = routerId;
   const url = this.env.rootUrl + 'api/management/getIpAvalibles';
-
-  return this.http.post<any>(url, parameter, {
-    headers: this.getHeaders()
-  });
+  return this.http.post<any>(url, parameter, { headers: this.getHeaders() });
 }
 
 
@@ -362,21 +356,26 @@ getIpzonebyZone(vlan: string, segment: string) {
     return this.http.post<any>(url, parameter, { headers: this.getHeaders() });
   }
 
-   autorizarServicio(data:any){
-
-    var parameter = JSON.stringify({
-        service_id : data['service_id'],
-        mac: data['mac'],
-        serial:data['serial'],
+  autorizarServicio(data: any): Observable<any> {
+    const parameter = JSON.stringify({
+      service_id: data['service_id'],
+      mac: data['mac'],
+      serial: data['serial'],
+      router_id: data['router_id'] ?? undefined,
     });
-    const url = this.env.rootUrl + 'api/management/autorizarServicio'
+    const url = this.env.rootUrl + 'api/management/autorizarServicio';
     return this.http.post<any>(url, parameter, { headers: this.getHeaders() });
   }
 
-  migrarIp(data: { service_id: number; new_ip: string; vlan: string }): Observable<any> {
+  migrarIp(data: { service_id: number; new_ip: string; vlan: string; router_id?: number | null }): Observable<any> {
     const parameter = JSON.stringify(data);
     const url = this.env.rootUrl + 'api/management/migrarIp';
     return this.http.post<any>(url, parameter, { headers: this.getHeaders() });
+  }
+
+  getRouters(): Observable<any> {
+    const url = this.env.rootUrl + 'api/management/routers';
+    return this.http.get<any>(url, { headers: this.getHeaders() });
   }
 
   

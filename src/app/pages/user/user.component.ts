@@ -104,6 +104,11 @@ export class UserComponent implements OnInit {
   priorities: any[] = [];
   technicians: any[] = [];
 
+  // ── Multi-router ──────────────────────────────────────────────────────────
+  routers: any[] = [];
+  selectedRouterId: number | null = null;
+  loadingRouters = false;
+
   loadCatalogs() {
     this.userSvc.getDataCorteAll().subscribe(r =>
       this.DataCortes = r.data.map((e: any) => ({ id: e.id, names: e.data_cortes })));
@@ -112,6 +117,20 @@ export class UserComponent implements OnInit {
     this.userSvc.getServiceTicket().subscribe(r => this.serviceTypes = r.data ?? []);
     this.userSvc.getPriorityTicket().subscribe(r => this.priorities = r.data ?? []);
     this.userSvc.getTechnicaAll().subscribe(r => this.technicians = r.data ?? []);
+  }
+
+  loadRouters() {
+    this.loadingRouters = true;
+    this.userSvc.getRouters().subscribe({
+      next: r => {
+        this.routers = r.data ?? [];
+        this.loadingRouters = false;
+        if (!this.selectedRouterId && this.routers.length) {
+          this.selectedRouterId = this.routers[0].id;
+        }
+      },
+      error: () => { this.loadingRouters = false; }
+    });
   }
 
   // ── User list ─────────────────────────────────────────────────────────────
@@ -134,6 +153,7 @@ export class UserComponent implements OnInit {
           date_create: e.date_create,
           alias: e.alias,
           whatsapp_enabled: e.whatsapp_enabled ?? false,
+          router_id: e.router_id ?? null,
         }));
         this.totalEntries = this.UserInterfaces.length;
         this.skeletor = false;
@@ -153,6 +173,7 @@ export class UserComponent implements OnInit {
             id_user: e.id, names: e.names, lastname: e.lastname, address: e.address,
             dni: e.dni, phone: e.phone, email: e.email, internet_status: e.internet_status,
             plan_name: e.plan_name, ip: e.ip, id_cab: e.id_cab, date_create: e.date_create, alias: e.alias,
+            router_id: e.router_id ?? null,
           }));
           this.totalEntries = this.UserInterfaces.length;
           this.currentPage = 1;
@@ -273,9 +294,11 @@ export class UserComponent implements OnInit {
   selectedUserStatus = '';
   pendingDeleteId = 0;
   pendingDeleteDni = '';
+  pendingDeleteRouterId: number | null = null;
   pendingSuspendId = 0;
   pendingSuspendDni = '';
   pendingSuspendStatus = '';
+  pendingSuspendRouterId: number | null = null;
 
   // ── Cliente modal (Soporte) ───────────────────────────────────────────────
   modalTab: 'resumen' | 'servicios' | 'facturacion' | 'tickets' | 'historial' = 'resumen';
@@ -363,7 +386,7 @@ export class UserComponent implements OnInit {
 
   onMigrSegChange(seg: any) {
     if (!seg || !this.migrVlan) { this.migrIpzone = []; return; }
-    this.userSvc.getIpzonebyZone(seg.names, seg.network).subscribe({
+    this.userSvc.getIpzonebyZone(seg.names, seg.network, this.selectedRouterId).subscribe({
       next: r => {
         this.migrIpzone = r.error === 0 && r.data?.ips ? r.data.ips.map((e: any) => ({ id: e.ip, names: e.ip })) : [];
       }
@@ -373,7 +396,7 @@ export class UserComponent implements OnInit {
   migrarIp() {
     if (!this.migrIp || !this.migrVlan) return;
     this.submittingMigr = true;
-    this.userSvc.migrarIp({ service_id: this.selectedUserId, new_ip: this.migrIp, vlan: this.migrVlan.names })
+    this.userSvc.migrarIp({ service_id: this.selectedUserId, new_ip: this.migrIp, vlan: this.migrVlan.names, router_id: this.selectedRouterId })
       .subscribe({
         next: r => {
           this.toast(r.message ?? (r.error ? 'Error' : 'IP migrada'), r.error ? 'error' : 'success');
@@ -399,17 +422,27 @@ export class UserComponent implements OnInit {
 
   openServiciosTab() {
     this.modalTab = 'servicios';
-    if (!this.interfaces.length) {
-      this.userSvc.getneighborhoodAll().subscribe({
-        next: r => { this.interfaces = r.error === 0 && r.data ? Object.values(r.data) : []; }
-      });
-    }
+    const userRouterId = this.selectedUserData?.router_id ? Number(this.selectedUserData.router_id) : null;
+    this.selectedRouterId = userRouterId;
+    if (!this.routers.length) this.loadRouters();
+    this.onServiceRouterChange();
     this.loadAssignedOnt(this.selectedUserId);
+  }
+
+  onServiceRouterChange() {
+    this.migrVlan = null;
+    this.migrSegments = [];
+    this.migrSeg = null;
+    this.migrIpzone = [];
+    this.migrIp = '';
+    this.userSvc.getneighborhoodAll(this.selectedRouterId).subscribe({
+      next: r => { this.interfaces = r.error === 0 && r.data ? Object.values(r.data) : []; }
+    });
   }
 
   autorizarServicio() {
     this.submittingService = true;
-    this.userSvc.autorizarServicio({ service_id: this.selectedUserId, mac: this.mac, serial: this.serial })
+    this.userSvc.autorizarServicio({ service_id: this.selectedUserId, mac: this.mac, serial: this.serial, router_id: this.selectedRouterId })
       .subscribe({
         next: r => {
           this.toast(r.message ?? 'Autorizado', 'success');
@@ -614,16 +647,17 @@ export class UserComponent implements OnInit {
   }
 
   // ── Suspend / Delete ──────────────────────────────────────────────────────
-  openSuspendModal(dni: any, id: any, status: any) {
-    this.pendingSuspendDni    = dni;
-    this.pendingSuspendId     = id;
-    this.pendingSuspendStatus = status;
-    this.showSuspendModal     = true;
+  openSuspendModal(dni: any, id: any, status: any, routerId?: number | null) {
+    this.pendingSuspendDni       = dni;
+    this.pendingSuspendId        = id;
+    this.pendingSuspendStatus    = status;
+    this.pendingSuspendRouterId  = routerId ?? null;
+    this.showSuspendModal        = true;
   }
 
   confirmSuspend() {
     const newStatus = this.pendingSuspendStatus === 'ACTIVE' ? 2 : 1;
-    this.userSvc.disableUser(this.pendingSuspendDni, this.pendingSuspendId, newStatus).subscribe({
+    this.userSvc.disableUser(this.pendingSuspendDni, this.pendingSuspendId, newStatus, this.pendingSuspendRouterId).subscribe({
       next: r => {
         this.toast(r.message ?? 'Estado actualizado', r.error ? 'error' : 'success');
         this.showSuspendModal = false;
@@ -633,17 +667,18 @@ export class UserComponent implements OnInit {
     });
   }
 
-  openDeleteModal(id: any, dni: any) {
-    this.pendingDeleteId  = id;
-    this.pendingDeleteDni = dni;
-    this.showDeleteModal  = true;
+  openDeleteModal(id: any, dni: any, routerId?: number | null) {
+    this.pendingDeleteId       = id;
+    this.pendingDeleteDni      = dni;
+    this.pendingDeleteRouterId = routerId ?? null;
+    this.showDeleteModal       = true;
   }
 
   confirmDelete() {
     this.userSvc.deleteUserData(this.pendingDeleteId).subscribe({
       next: r => {
         if (!r.error) {
-          this.userSvc.disableUser(this.pendingDeleteDni, this.pendingDeleteId, 2).subscribe();
+          this.userSvc.disableUser(this.pendingDeleteDni, this.pendingDeleteId, 2, this.pendingDeleteRouterId).subscribe();
         }
         this.toast(r.message ?? 'Eliminado', r.error ? 'error' : 'success');
         this.showDeleteModal = false;
@@ -710,6 +745,16 @@ export class UserComponent implements OnInit {
   selectedVlan: any = null;
   selectedSeg: any = null;
 
+  onCreateRouterChange() {
+    this.selectedVlan = null;
+    this.segments = [];
+    this.selectedSeg = null;
+    this.Ipzone = [];
+    this.userSvc.getneighborhoodAll(this.selectedRouterId).subscribe({
+      next: r => { this.interfaces = r.error === 0 && r.data ? Object.values(r.data) : []; }
+    });
+  }
+
   onInterfaceChange(iface: any) {
     this.selectedVlan = iface;
     this.segments = iface ? [iface] : [];
@@ -719,7 +764,7 @@ export class UserComponent implements OnInit {
 
   onSegmentChange(seg: any) {
     if (!seg || !this.selectedVlan) { this.Ipzone = []; return; }
-    this.userSvc.getIpzonebyZone(seg.names, seg.network).subscribe({
+    this.userSvc.getIpzonebyZone(seg.names, seg.network, this.selectedRouterId).subscribe({
       next: r => {
         this.Ipzone = r.error === 0 && r.data?.ips ? r.data.ips.map((e: any) => ({ id: e.ip, names: e.ip })) : [];
       },
@@ -731,7 +776,9 @@ export class UserComponent implements OnInit {
     this.newUser = { names: '', lastname: '', dni: '', phone: '', email: '', address: '', plan_id: 0, ip: 0, periode_facturation: 0, countries: 1 };
     this.showUserFormProfile = true;
     this.selectedVlan = null; this.selectedSeg = null; this.Ipzone = [];
-    if (!this.interfaces.length) this.userSvc.getneighborhoodAll().subscribe({
+    this.selectedRouterId = null;
+    if (!this.routers.length) this.loadRouters();
+    if (!this.interfaces.length) this.userSvc.getneighborhoodAll(this.selectedRouterId).subscribe({
       next: r => { this.interfaces = r.error === 0 && r.data ? Object.values(r.data) : []; }
     });
     this.showCreateUser = true;
@@ -740,6 +787,7 @@ export class UserComponent implements OnInit {
   createUser() {
     this.submittingNewUser = true;
     this.newUser.vlan = this.selectedVlan?.names ?? '';
+    this.newUser.router_id = this.selectedRouterId;
     this.userSvc.create(this.newUser).subscribe({
       next: r => {
         this.toast(r.message ?? (r.error ? 'Error' : 'Cliente creado'), r.error ? 'error' : 'success');
@@ -764,7 +812,7 @@ export class UserComponent implements OnInit {
     if (!d || this.togglingStatus) return;
     this.togglingStatus = true;
     const newStatus = d.status_internet === 'ACTIVE' ? 2 : 1;
-    this.userSvc.disableUser(d.dni, this.selectedUserId, newStatus).subscribe({
+    this.userSvc.disableUser(d.dni, this.selectedUserId, newStatus, d.router_id ? Number(d.router_id) : null).subscribe({
       next: r => {
         this.toast(r.message ?? 'Estado actualizado', r.error ? 'error' : 'success');
         this.togglingStatus = false;

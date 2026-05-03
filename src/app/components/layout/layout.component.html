@@ -109,6 +109,16 @@
 
     <flowbite-sidebar-item-group *ngFor="let item of filteredComponents">
 
+      <!-- Item simple (sin hijos) -->
+      <ng-container *ngIf="!item.group">
+        <flowbite-sidebar-item
+          [icon]="item.icon"
+          [link]="item.href">
+          {{ item.title }}
+        </flowbite-sidebar-item>
+      </ng-container>
+
+      <!-- Grupo con hijos -->
       <ng-container *ngIf="item.group">
 
         <flowbite-sidebar-item

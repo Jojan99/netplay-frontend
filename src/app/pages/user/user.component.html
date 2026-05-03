@@ -102,7 +102,7 @@
               <td class="p-2 sm:p-3">
                 <div class="flex items-center justify-center gap-1 sm:gap-2">
                   <!-- Suspend -->
-                  <button (click)="openSuspendModal(user.dni, user.id_user, user.internet_status)"
+                  <button (click)="openSuspendModal(user.dni, user.id_user, user.internet_status, user.router_id)"
                     title="Suspender/Activar"
                     class="rounded-full p-1 hover:bg-gray-100 dark:hover:bg-gray-700 transition">
                     <i *ngIf="user.internet_status === 'ACTIVE'" class="pi pi-power-off text-green-500 text-lg"></i>
@@ -115,7 +115,7 @@
                     <i class="pi pi-headphones text-lg"></i>
                   </button>
                   <!-- Delete -->
-                  <button (click)="openDeleteModal(user.id_user, user.dni)"
+                  <button (click)="openDeleteModal(user.id_user, user.dni, user.router_id)"
                     title="Eliminar"
                     class="rounded-full p-1 hover:bg-gray-100 dark:hover:bg-gray-700 text-red-500 hover:text-red-700 transition">
                     <i class="pi pi-trash text-lg"></i>
@@ -446,6 +446,22 @@
                   <i class="pi pi-server text-2xl opacity-40"></i>
                   Sin equipo ONT asignado. Puedes asignarlo desde <strong class="ml-1">Admin OLT → Autorizadas</strong>.
                 </div>
+              </div>
+            </div>
+
+            <!-- Selector de Router -->
+            <div *ngIf="routers.length">
+              <h4 class="font-semibold text-gray-800 dark:text-white mb-4">Router Mikrotik</h4>
+              <div class="bg-gray-50 dark:bg-gray-900 rounded-xl border dark:border-gray-700 p-5">
+                <select [(ngModel)]="selectedRouterId" (ngModelChange)="onServiceRouterChange()"
+                  class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white text-sm focus:ring-blue-500 focus:border-blue-500">
+                  <option [ngValue]="null" disabled>Seleccione router...</option>
+                  <option *ngFor="let r of routers" [value]="r.id">{{ r.name || r.host }}</option>
+                </select>
+                <p *ngIf="loadingRouters" class="text-xs text-gray-400 mt-1">Cargando routers...</p>
+                <p *ngIf="selectedRouterId && routers.length === 1" class="text-xs text-gray-400 mt-1">
+                  Cliente registrado en este router.
+                </p>
               </div>
             </div>
 
@@ -1020,6 +1036,15 @@
 
       <!-- Connection data -->
       <div *ngIf="!showUserFormProfile" class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div class="sm:col-span-2">
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Router Mikrotik</label>
+          <select [(ngModel)]="selectedRouterId" (ngModelChange)="onCreateRouterChange()"
+            class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white text-sm">
+            <option [ngValue]="null" disabled>Seleccione router...</option>
+            <option *ngFor="let r of routers" [value]="r.id">{{ r.name || r.host }}</option>
+          </select>
+          <p *ngIf="loadingRouters" class="text-xs text-gray-400 mt-1">Cargando routers...</p>
+        </div>
         <div>
           <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">VLAN</label>
           <select [(ngModel)]="selectedVlan" (ngModelChange)="onInterfaceChange($event)"
