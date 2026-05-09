@@ -7,6 +7,8 @@ import { CompanyService } from '../../services/company.service';
 import { AuthService } from '../../services/auth.service';
 import { UserService } from '../../services/user.service';
 import { FinanceService } from '../../services/finance.service';
+import { InvoiceTemplateEditorComponent } from '../../components/invoice-template-editor/invoice-template-editor.component';
+import { InvoiceTemplate, InvoiceTemplateService } from '../../services/invoice-template.service';
 import { environment } from '../../../environments/environment';
 
 const GW_API = environment.rootUrl + 'api/payment-gateway/';
@@ -21,7 +23,7 @@ interface Schedule {
 @Component({
   selector: 'app-billing-config',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, InvoiceTemplateEditorComponent],
   templateUrl: './billing-config.component.html',
 })
 export class BillingConfigComponent implements OnInit {
@@ -98,6 +100,7 @@ export class BillingConfigComponent implements OnInit {
     invoice_payment_info: '',
     invoice_footer: '',
     invoice_logo_url: '',
+    invoice_prefix: 'GL',
   };
   invoiceLoading     = false;
   invoiceSaving      = false;
@@ -105,6 +108,11 @@ export class BillingConfigComponent implements OnInit {
   invoiceError       = '';
   logoUploading      = false;
   logoUploadError    = '';
+
+  // ── Invoice template ──────────────────────────────────────
+  invoiceTemplate: InvoiceTemplate | null = null;
+  invoiceTemplateId: number | null = null;
+  showTemplateEditor = false;
 
   // ── Auto-suspend ──────────────────────────────────────────
   autoSuspendEnabled  = false;
@@ -139,6 +147,7 @@ export class BillingConfigComponent implements OnInit {
     private authService: AuthService,
     private userService: UserService,
     private financeService: FinanceService,
+    private invoiceTemplateService: InvoiceTemplateService,
     private route: ActivatedRoute,
   ) {}
 
@@ -169,10 +178,24 @@ export class BillingConfigComponent implements OnInit {
     this.userService.getInvoiceConfig().subscribe({
       next: (res) => {
         this.invoiceLoading = false;
-        if (res.data) Object.assign(this.invoiceForm, res.data);
+        if (res.data) {
+          Object.assign(this.invoiceForm, res.data);
+          this.invoiceTemplate = res.data.invoice_template ?? null;
+          this.invoiceTemplateId = res.data.invoice_template_id ?? null;
+        }
       },
       error: () => { this.invoiceLoading = false; },
     });
+  }
+
+  onTemplateChanged(template: InvoiceTemplate | null): void {
+    if (template) {
+      this.invoiceTemplate = template;
+      this.invoiceTemplateId = template.id ?? null;
+    } else {
+      // Recargar para obtener el estado actual
+      this.loadInvoiceConfig();
+    }
   }
 
   onLogoFileChange(event: Event): void {

@@ -38,6 +38,40 @@
 
     <div *ngIf="invoiceLoading" class="text-center py-10 text-gray-400">Cargando...</div>
 
+    <!-- ══ Plantilla activa / editor ══ -->
+    <div *ngIf="!invoiceLoading" class="mb-8">
+      <div class="flex items-center justify-between mb-3">
+        <h2 class="text-lg font-semibold text-gray-800 dark:text-white">Diseño de plantilla</h2>
+        <button (click)="showTemplateEditor = !showTemplateEditor"
+                class="text-sm px-4 py-2 rounded-lg bg-indigo-50 text-indigo-700 dark:bg-indigo-900/20 dark:text-indigo-300 hover:bg-indigo-100 transition">
+          {{ showTemplateEditor ? 'Ocultar editor' : (invoiceTemplate ? 'Editar plantilla' : 'Crear plantilla') }}
+        </button>
+      </div>
+
+      <div *ngIf="!showTemplateEditor && invoiceTemplate" class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4 flex items-center justify-between">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-lg bg-gray-100 dark:bg-gray-700 flex items-center justify-center">
+            <svg class="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+          </div>
+          <div>
+            <p class="text-sm font-medium text-gray-800 dark:text-white">{{ invoiceTemplate.name }}</p>
+            <p class="text-xs text-gray-500 dark:text-gray-400">{{ invoiceTemplate.type | titlecase }}</p>
+          </div>
+        </div>
+        <span *ngIf="invoiceTemplate.is_default" class="text-xs px-2 py-1 rounded-full bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300">Por defecto</span>
+      </div>
+
+      <div *ngIf="!showTemplateEditor && !invoiceTemplate" class="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700 rounded-xl p-4 text-sm text-amber-800 dark:text-amber-300">
+        No tienes una plantilla personalizada. Se usa el diseño clásico por defecto. Haz clic en "Crear plantilla" para diseñar tu propia factura.
+      </div>
+
+      <div *ngIf="showTemplateEditor" class="mt-4">
+        <app-invoice-template-editor (templateChanged)="onTemplateChanged($event)"></app-invoice-template-editor>
+      </div>
+    </div>
+
+    <hr class="border-gray-200 dark:border-gray-700 mb-8">
+
     <form *ngIf="!invoiceLoading" (ngSubmit)="saveInvoiceConfig()" class="space-y-5">
 
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -75,6 +109,22 @@
           <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">País</label>
           <input type="text" [(ngModel)]="invoiceForm.invoice_country" name="invoice_country"
                  class="w-full text-sm rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-800 dark:text-white px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+        </div>
+
+        <!-- Prefijo de factura (consecutivo) -->
+        <div>
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            Prefijo de factura
+            <span class="ml-1 text-xs text-gray-400 font-normal">(máx. 10 caracteres)</span>
+          </label>
+          <div class="flex items-center gap-2">
+            <input type="text" [(ngModel)]="invoiceForm.invoice_prefix" name="invoice_prefix"
+                   maxlength="10" placeholder="GL"
+                   class="w-full text-sm rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-800 dark:text-white px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 uppercase">
+            <span class="text-sm text-gray-500 dark:text-gray-400 whitespace-nowrap">
+              Ej: <strong>{{ invoiceForm.invoice_prefix || 'GL' }}1</strong>, {{ invoiceForm.invoice_prefix || 'GL' }}2...
+            </span>
+          </div>
         </div>
 
         <!-- Condición IVA -->
