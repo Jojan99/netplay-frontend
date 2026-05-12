@@ -34,14 +34,26 @@
       <h1 class="text-xl font-semibold text-gray-900 sm:text-2xl dark:text-white">INVENTARIO DE ÍTEMS</h1>
     </div>
 
-    <!-- Toolbar -->
-    <div class="flex flex-wrap gap-2 items-center justify-between">
-      <div class="flex items-center">
-        <select [(ngModel)]="selectedCategoryId" (change)="applyFilter()"
+    <!-- Filters & Toolbar -->
+    <div class="flex flex-wrap gap-2 items-center justify-between mb-4">
+      <div class="flex flex-wrap items-center gap-2">
+        <input type="text" [(ngModel)]="searchQuery" (keyup.enter)="applyFilters()"
+          placeholder="Buscar nombre, SKU, código..."
+          class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white w-48 sm:w-64" />
+        <select [(ngModel)]="selectedCategoryId" (change)="applyFilters()"
           class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white">
           <option value="">Todas las categorías</option>
           <option *ngFor="let cat of categories" [value]="cat.id">{{ cat.name }}</option>
         </select>
+        <select [(ngModel)]="selectedLocation" (change)="applyFilters()"
+          class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white">
+          <option value="">Todas las ubicaciones</option>
+          <option *ngFor="let loc of locations" [value]="loc">{{ loc }}</option>
+        </select>
+        <label class="flex items-center space-x-2 text-sm text-gray-700 dark:text-gray-300 cursor-pointer select-none">
+          <input type="checkbox" [(ngModel)]="showLowStockOnly" (change)="applyFilters()" class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 dark:bg-gray-700 dark:border-gray-600">
+          <span>Stock bajo</span>
+        </label>
       </div>
       <div class="flex flex-wrap items-center gap-2">
         <button (click)="openMovementModalFromList()"
@@ -74,31 +86,40 @@
         <div class="inline-block min-w-full align-middle">
           <div class="overflow-hidden shadow sm:rounded-lg">
 
-            <table *ngIf="!skeletor; else skeletonTable" class="min-w-[480px] w-full divide-y divide-gray-200 dark:divide-gray-600">
+            <table *ngIf="!skeletor; else skeletonTable" class="min-w-[640px] w-full divide-y divide-gray-200 dark:divide-gray-600">
               <thead class="bg-gray-50 dark:bg-gray-700">
                 <tr>
                   <th class="p-3 text-xs font-medium text-left text-gray-500 uppercase dark:text-gray-400">Nombre</th>
-                  <th class="p-3 text-xs font-medium text-left text-gray-500 uppercase dark:text-gray-400 hidden sm:table-cell">Categoría</th>
+                  <th class="p-3 text-xs font-medium text-left text-gray-500 uppercase dark:text-gray-400 hidden sm:table-cell">SKU / Código</th>
+                  <th class="p-3 text-xs font-medium text-left text-gray-500 uppercase dark:text-gray-400 hidden md:table-cell">Categoría</th>
                   <th class="p-3 text-xs font-medium text-left text-gray-500 uppercase dark:text-gray-400">Stock</th>
-                  <th class="p-3 text-xs font-medium text-left text-gray-500 uppercase dark:text-gray-400 hidden sm:table-cell">Precio</th>
-                  <th class="p-3 text-xs font-medium text-left text-gray-500 uppercase dark:text-gray-400 hidden md:table-cell">Unidad</th>
+                  <th class="p-3 text-xs font-medium text-left text-gray-500 uppercase dark:text-gray-400 hidden lg:table-cell">Costo Prom.</th>
+                  <th class="p-3 text-xs font-medium text-left text-gray-500 uppercase dark:text-gray-400 hidden sm:table-cell">Ubicación</th>
                   <th class="p-3 text-xs font-medium text-left text-gray-500 uppercase dark:text-gray-400">Acciones</th>
                 </tr>
               </thead>
               <tbody class="bg-white divide-y divide-gray-200 dark:bg-gray-800 dark:divide-gray-700">
                 <tr *ngFor="let item of filteredItems" class="hover:bg-gray-100 dark:hover:bg-gray-700">
-                  <td class="p-3 text-sm font-medium text-gray-900 dark:text-white max-w-[140px] truncate">{{ item.name }}</td>
+                  <td class="p-3 text-sm font-medium text-gray-900 dark:text-white max-w-[140px] truncate">
+                    {{ item.name }}
+                    <span *ngIf="isLowStock(item)" class="ml-1 inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300">
+                      Bajo
+                    </span>
+                  </td>
                   <td class="p-3 text-sm text-gray-500 dark:text-gray-400 hidden sm:table-cell">
+                    {{ item.sku || item.code || '-' }}
+                  </td>
+                  <td class="p-3 text-sm text-gray-500 dark:text-gray-400 hidden md:table-cell">
                     {{ item.category?.name || getCategoryName(item.category_id) }}
                   </td>
                   <td class="p-3 text-sm font-semibold whitespace-nowrap"
-                    [ngClass]="(item.quantity || 0) > 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'">
-                    {{ item.quantity || 0 }}
+                    [ngClass]="isLowStock(item) ? 'text-red-600 dark:text-red-400' : ((item.quantity || 0) > 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400')">
+                    {{ item.quantity || 0 }} {{ item.unit || '' }}
                   </td>
-                  <td class="p-3 text-sm text-gray-500 whitespace-nowrap dark:text-gray-400 hidden sm:table-cell">
-                    ${{ (item.unit_price || 0) | number:'1.0-0' }}
+                  <td class="p-3 text-sm text-gray-500 whitespace-nowrap dark:text-gray-400 hidden lg:table-cell">
+                    ${{ (item.average_cost || 0) | number:'1.0-0' }}
                   </td>
-                  <td class="p-3 text-sm text-gray-500 dark:text-gray-400 hidden md:table-cell">{{ item.unit || '-' }}</td>
+                  <td class="p-3 text-sm text-gray-500 dark:text-gray-400 hidden sm:table-cell">{{ item.location || '-' }}</td>
                   <td class="p-3">
                     <div class="flex flex-wrap items-center gap-1">
                       <button (click)="viewDetail(item)"
@@ -121,7 +142,7 @@
                   </td>
                 </tr>
                 <tr *ngIf="filteredItems.length === 0">
-                  <td colspan="6" class="p-6 text-sm text-center text-gray-500 dark:text-gray-400">
+                  <td colspan="7" class="p-6 text-sm text-center text-gray-500 dark:text-gray-400">
                     No hay ítems registrados.
                   </td>
                 </tr>
@@ -133,20 +154,22 @@
                 <thead class="bg-gray-50 dark:bg-gray-700">
                   <tr>
                     <th class="p-4 text-xs font-medium text-left text-gray-500 uppercase dark:text-gray-400">Nombre</th>
+                    <th class="p-4 text-xs font-medium text-left text-gray-500 uppercase dark:text-gray-400">SKU</th>
                     <th class="p-4 text-xs font-medium text-left text-gray-500 uppercase dark:text-gray-400">Categoría</th>
                     <th class="p-4 text-xs font-medium text-left text-gray-500 uppercase dark:text-gray-400">Stock</th>
-                    <th class="p-4 text-xs font-medium text-left text-gray-500 uppercase dark:text-gray-400">Precio Unitario</th>
-                    <th class="p-4 text-xs font-medium text-left text-gray-500 uppercase dark:text-gray-400">Unidad</th>
+                    <th class="p-4 text-xs font-medium text-left text-gray-500 uppercase dark:text-gray-400">Costo Prom.</th>
+                    <th class="p-4 text-xs font-medium text-left text-gray-500 uppercase dark:text-gray-400">Ubicación</th>
                     <th class="p-4 text-xs font-medium text-left text-gray-500 uppercase dark:text-gray-400">Acciones</th>
                   </tr>
                 </thead>
                 <tbody class="bg-white divide-y divide-gray-200 dark:bg-gray-800 dark:divide-gray-700">
                   <tr *ngFor="let i of [1,2,3,4,5]" class="animate-pulse">
                     <td class="p-4"><div class="h-4 bg-gray-200 rounded dark:bg-gray-700 w-36"></div></td>
+                    <td class="p-4"><div class="h-4 bg-gray-200 rounded dark:bg-gray-700 w-20"></div></td>
                     <td class="p-4"><div class="h-4 bg-gray-200 rounded dark:bg-gray-700 w-24"></div></td>
                     <td class="p-4"><div class="h-4 bg-gray-200 rounded dark:bg-gray-700 w-12"></div></td>
+                    <td class="p-4"><div class="h-4 bg-gray-200 rounded dark:bg-gray-700 w-20"></div></td>
                     <td class="p-4"><div class="h-4 bg-gray-200 rounded dark:bg-gray-700 w-24"></div></td>
-                    <td class="p-4"><div class="h-4 bg-gray-200 rounded dark:bg-gray-700 w-16"></div></td>
                     <td class="p-4"><div class="h-4 bg-gray-200 rounded dark:bg-gray-700 w-40"></div></td>
                   </tr>
                 </tbody>
@@ -158,12 +181,35 @@
       </div>
     </div>
 
+    <!-- Pagination -->
+    <div *ngIf="lastPage > 1" class="flex items-center justify-between mt-4">
+      <span class="text-sm text-gray-700 dark:text-gray-400">
+        Mostrando página {{ currentPage }} de {{ lastPage }} ({{ totalItems }} total)
+      </span>
+      <div class="inline-flex -space-x-px text-sm">
+        <button (click)="goToPage(currentPage - 1)" [disabled]="currentPage === 1"
+          class="flex items-center justify-center px-3 h-8 ml-0 leading-tight text-gray-500 bg-white border border-gray-300 rounded-l-lg hover:bg-gray-100 hover:text-gray-700 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white disabled:opacity-50">
+          Anterior
+        </button>
+        <button *ngFor="let p of [].constructor(lastPage); let i = index" (click)="goToPage(i + 1)"
+          [ngClass]="currentPage === i + 1
+            ? 'z-10 flex items-center justify-center px-3 h-8 leading-tight text-blue-600 border border-blue-300 bg-blue-50 hover:bg-blue-100 hover:text-blue-700 dark:border-gray-700 dark:bg-gray-700 dark:text-white'
+            : 'flex items-center justify-center px-3 h-8 leading-tight text-gray-500 bg-white border border-gray-300 hover:bg-gray-100 hover:text-gray-700 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white'">
+          {{ i + 1 }}
+        </button>
+        <button (click)="goToPage(currentPage + 1)" [disabled]="currentPage === lastPage"
+          class="flex items-center justify-center px-3 h-8 leading-tight text-gray-500 bg-white border border-gray-300 rounded-r-lg hover:bg-gray-100 hover:text-gray-700 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white disabled:opacity-50">
+          Siguiente
+        </button>
+      </div>
+    </div>
+
   </div>
 </div>
 
 <!-- ── Modal: Crear / Editar Ítem ─────────────────────────────────────────── -->
 <div id="item-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-  <div class="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-lg mx-4">
+  <div class="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-lg mx-4 max-h-[90vh] overflow-y-auto">
     <div class="flex items-center justify-between p-4 border-b dark:border-gray-700">
       <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
         {{ isEditing ? 'Editar Ítem' : 'Agregar Ítem' }}
@@ -180,6 +226,20 @@
         <input type="text" [(ngModel)]="itemForm.name"
           class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
           placeholder="Nombre del ítem" />
+      </div>
+      <div class="grid grid-cols-2 gap-4">
+        <div>
+          <label class="block mb-1 text-sm font-medium text-gray-700 dark:text-gray-300">SKU</label>
+          <input type="text" [(ngModel)]="itemForm.sku"
+            class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+            placeholder="Código SKU" />
+        </div>
+        <div>
+          <label class="block mb-1 text-sm font-medium text-gray-700 dark:text-gray-300">Código interno</label>
+          <input type="text" [(ngModel)]="itemForm.code"
+            class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+            placeholder="Código interno" />
+        </div>
       </div>
       <div>
         <label class="block mb-1 text-sm font-medium text-gray-700 dark:text-gray-300">Descripción</label>
@@ -203,16 +263,34 @@
             placeholder="0" />
         </div>
         <div>
+          <label class="block mb-1 text-sm font-medium text-gray-700 dark:text-gray-300">Unidad</label>
+          <input type="text" [(ngModel)]="itemForm.unit"
+            class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+            placeholder="ej: unidad, kg, m" />
+        </div>
+        <div>
+          <label class="block mb-1 text-sm font-medium text-gray-700 dark:text-gray-300">Stock mínimo</label>
+          <input type="number" [(ngModel)]="itemForm.stock_min" min="0"
+            class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+            placeholder="0" />
+        </div>
+        <div>
+          <label class="block mb-1 text-sm font-medium text-gray-700 dark:text-gray-300">Stock máximo</label>
+          <input type="number" [(ngModel)]="itemForm.stock_max" min="0"
+            class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+            placeholder="Opcional" />
+        </div>
+        <div>
           <label class="block mb-1 text-sm font-medium text-gray-700 dark:text-gray-300">Precio Unitario</label>
           <input type="number" [(ngModel)]="itemForm.unit_price" min="0"
             class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
             placeholder="0" />
         </div>
         <div>
-          <label class="block mb-1 text-sm font-medium text-gray-700 dark:text-gray-300">Unidad</label>
-          <input type="text" [(ngModel)]="itemForm.unit"
+          <label class="block mb-1 text-sm font-medium text-gray-700 dark:text-gray-300">Ubicación</label>
+          <input type="text" [(ngModel)]="itemForm.location"
             class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-            placeholder="ej: unidad, kg, m" />
+            placeholder="ej: Bodega A, Estante 3" />
         </div>
       </div>
     </div>
@@ -312,6 +390,19 @@
           <input type="number" [(ngModel)]="movementForm.unit_price" min="0"
             class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
             placeholder="0" />
+        </div>
+      </div>
+      <div class="grid grid-cols-2 gap-4">
+        <div>
+          <label class="block mb-1 text-sm font-medium text-gray-700 dark:text-gray-300">N° de Lote</label>
+          <input type="text" [(ngModel)]="movementForm.batch_number"
+            class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+            placeholder="Lote opcional" />
+        </div>
+        <div>
+          <label class="block mb-1 text-sm font-medium text-gray-700 dark:text-gray-300">Fecha de vencimiento</label>
+          <input type="date" [(ngModel)]="movementForm.expiry_date"
+            class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white" />
         </div>
       </div>
       <div>

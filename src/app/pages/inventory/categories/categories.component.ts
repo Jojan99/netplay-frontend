@@ -15,9 +15,11 @@ import { InventoryCategoryInterface } from '../../../models/inventory-category.i
 export class CategoriesComponent implements OnInit {
   skeletor   = true;
   showForm   = false;
+  isEditing  = false;
+  editingId: number | null = null;
   categories: InventoryCategoryInterface[] = [];
 
-  newCategory = { name: '', description: '' };
+  categoryForm = { name: '', description: '' };
 
   constructor(private inventoryService: InventoryService) {}
 
@@ -35,17 +37,48 @@ export class CategoriesComponent implements OnInit {
 
   toggleForm() {
     this.showForm = !this.showForm;
-    this.newCategory = { name: '', description: '' };
+    this.isEditing = false;
+    this.editingId = null;
+    this.categoryForm = { name: '', description: '' };
+  }
+
+  openEdit(category: InventoryCategoryInterface) {
+    this.showForm = true;
+    this.isEditing = true;
+    this.editingId = category.id || null;
+    this.categoryForm = { name: category.name || '', description: category.description || '' };
+  }
+
+  cancelForm() {
+    this.showForm = false;
+    this.isEditing = false;
+    this.editingId = null;
+    this.categoryForm = { name: '', description: '' };
   }
 
   saveCategory() {
-    if (!this.newCategory.name.trim()) {
+    if (!this.categoryForm.name.trim()) {
       alert('El nombre de la categoría es obligatorio.');
       return;
     }
-    this.inventoryService.createCategory(this.newCategory).subscribe(data => {
+    if (this.isEditing && this.editingId) {
+      this.inventoryService.updateCategory(this.editingId, this.categoryForm).subscribe(data => {
+        alert(data.message);
+        if (!data.error) { this.cancelForm(); this.loadCategories(); }
+      });
+    } else {
+      this.inventoryService.createCategory(this.categoryForm).subscribe(data => {
+        alert(data.message);
+        if (!data.error) { this.cancelForm(); this.loadCategories(); }
+      });
+    }
+  }
+
+  deleteCategory(category: InventoryCategoryInterface) {
+    if (!confirm(`¿Eliminar la categoría "${category.name}"? Los ítems asociados quedarán sin categoría.`)) return;
+    this.inventoryService.deleteCategory(category.id!).subscribe(data => {
       alert(data.message);
-      if (!data.error) { this.showForm = false; this.loadCategories(); }
+      if (!data.error) this.loadCategories();
     });
   }
 }

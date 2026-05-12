@@ -20,8 +20,19 @@ export class InventoryItemsComponent implements OnInit, OnDestroy {
   items:         InventoryItemInterface[]     = [];
   filteredItems: InventoryItemInterface[]     = [];
   categories:    InventoryCategoryInterface[] = [];
+  locations:     string[]                     = [];
 
+  // Pagination
+  currentPage = 1;
+  lastPage    = 1;
+  totalItems  = 0;
+  perPage     = 15;
+
+  // Filters
+  searchQuery = '';
   selectedCategoryId: number | '' = '';
+  selectedLocation = '';
+  showLowStockOnly = false;
 
   isEditing = false;
   itemForm: InventoryItemInterface = {};
@@ -34,13 +45,15 @@ export class InventoryItemsComponent implements OnInit, OnDestroy {
     unit_price: 0,
     description: '',
     reference: '',
+    batch_number: '',
+    expiry_date: '',
   };
 
   // ── Barcode scanner ──────────────────────────────────────────────────────────
   barcodeInput      = '';
   barcodeError      = '';
   cameraActive      = false;
-  cameraFallback    = false;   // true when BarcodeDetector not available → show file input
+  cameraFallback    = false;
   private videoStream: MediaStream | null = null;
   private scanInterval: any = null;
   @ViewChild('barcodeVideo') barcodeVideo?: ElementRef<HTMLVideoElement>;
@@ -62,14 +75,30 @@ export class InventoryItemsComponent implements OnInit, OnDestroy {
     this.onResize(null);
     this.loadItems();
     this.loadCategories();
+    this.loadLocations();
   }
 
   // ── Data loading ─────────────────────────────────────────────────────────────
 
-  loadItems() {
+  loadItems(page = 1) {
     this.skeletor = true;
-    this.inventoryService.getItems().subscribe(
-      data  => { this.items = data.data || []; this.applyFilter(); this.skeletor = false; },
+    this.currentPage = page;
+    this.inventoryService.getItems({
+      q: this.searchQuery,
+      category_id: this.selectedCategoryId ? +this.selectedCategoryId : undefined,
+      location: this.selectedLocation,
+      low_stock: this.showLowStockOnly,
+      per_page: this.perPage,
+      page,
+    }).subscribe(
+      data  => {
+        this.items = data.data?.data || [];
+        this.currentPage = data.data?.current_page || 1;
+        this.lastPage = data.data?.last_page || 1;
+        this.totalItems = data.data?.total || 0;
+        this.filteredItems = [...this.items];
+        this.skeletor = false;
+      },
       _err  => { this.skeletor = false; },
     );
   }
@@ -81,15 +110,33 @@ export class InventoryItemsComponent implements OnInit, OnDestroy {
     );
   }
 
-  applyFilter() {
-    this.filteredItems = this.selectedCategoryId === ''
-      ? [...this.items]
-      : this.items.filter(i => i.category_id === +this.selectedCategoryId);
+  loadLocations() {
+    this.inventoryService.getLocations().subscribe(
+      data => { this.locations = data.data || []; },
+      _err => {},
+    );
+  }
+
+  applyFilters() {
+    this.loadItems(1);
   }
 
   getCategoryName(id?: number): string {
     if (!id) return '-';
     return this.categories.find(c => c.id === id)?.name || '-';
+  }
+
+  isLowStock(item: InventoryItemInterface): boolean {
+    const qty = item.quantity || 0;
+    const min = item.stock_min || 0;
+    return min > 0 && qty <= min;
+  }
+
+  // ── Pagination ───────────────────────────────────────────────────────────────
+
+  goToPage(page: number) {
+    if (page < 1 || page > this.lastPage) return;
+    this.loadItems(page);
   }
 
   // ── Item modal ───────────────────────────────────────────────────────────────
@@ -114,12 +161,12 @@ export class InventoryItemsComponent implements OnInit, OnDestroy {
     if (this.isEditing && this.itemForm.id) {
       this.inventoryService.updateItem(this.itemForm.id, this.itemForm).subscribe(data => {
         alert(data.message);
-        if (!data.error) { this.closeItemModal(); this.loadItems(); }
+        if (!data.error) { this.closeItemModal(); this.loadItems(this.currentPage); }
       });
     } else {
       this.inventoryService.createItem(this.itemForm).subscribe(data => {
         alert(data.message);
-        if (!data.error) { this.closeItemModal(); this.loadItems(); }
+        if (!data.error) { this.closeItemModal(); this.loadItems(1); }
       });
     }
   }
@@ -128,7 +175,7 @@ export class InventoryItemsComponent implements OnInit, OnDestroy {
     if (!confirm(`¿Eliminar el ítem "${item.name}"? Esta acción no se puede deshacer.`)) return;
     this.inventoryService.deleteItem(item.id!).subscribe(data => {
       alert(data.message);
-      if (!data.error) this.loadItems();
+      if (!data.error) this.loadItems(this.currentPage);
     });
   }
 
@@ -147,6 +194,8 @@ export class InventoryItemsComponent implements OnInit, OnDestroy {
       unit_price: 0,
       description: '',
       reference: '',
+      batch_number: '',
+      expiry_date: '',
     };
     document.getElementById('movement-modal')?.classList.remove('hidden');
   }
@@ -160,6 +209,8 @@ export class InventoryItemsComponent implements OnInit, OnDestroy {
       unit_price: 0,
       description: '',
       reference: '',
+      batch_number: '',
+      expiry_date: '',
     };
     document.getElementById('movement-modal')?.classList.remove('hidden');
   }
@@ -190,7 +241,7 @@ export class InventoryItemsComponent implements OnInit, OnDestroy {
     }
     this.inventoryService.createMovement(this.movementForm).subscribe(data => {
       alert(data.message);
-      if (!data.error) { this.closeMovementModal(); this.loadItems(); }
+      if (!data.error) { this.closeMovementModal(); this.loadItems(this.currentPage); }
     });
   }
 
@@ -215,10 +266,13 @@ export class InventoryItemsComponent implements OnInit, OnDestroy {
 
   searchByBarcode(code: string): void {
     this.barcodeError = '';
-    // 1. Match by item ID
+    // 1. Match by SKU or code
+    const bySku = this.items.find(i => i.sku === code || i.code === code);
+    if (bySku) { this.selectItemForMovement(bySku); return; }
+    // 2. Match by item ID
     const byId = this.items.find(i => String(i.id) === code);
     if (byId) { this.selectItemForMovement(byId); return; }
-    // 2. Match by name (contains, case-insensitive)
+    // 3. Match by name (contains, case-insensitive)
     const byName = this.items.find(i => i.name?.toLowerCase().includes(code.toLowerCase()));
     if (byName) { this.selectItemForMovement(byName); return; }
     this.barcodeError = `No se encontró ningún ítem con código "${code}"`;

@@ -7,9 +7,7 @@
         <ol class="inline-flex items-center space-x-1 text-sm font-medium md:space-x-2">
           <li class="inline-flex items-center">
             <a class="inline-flex items-center text-gray-700 hover:text-primary-600 dark:text-gray-300 dark:hover:text-white">
-              <svg class="w-5 h-5 mr-2.5" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
-                <path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z"></path>
-              </svg>
+              <svg class="w-5 h-5 mr-2.5" fill="currentColor" viewBox="0 0 20 20"><path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z"></path></svg>
               Home
             </a>
           </li>
@@ -41,25 +39,31 @@
 
     <!-- Inline form -->
     <div *ngIf="showForm" class="p-5 mb-6 bg-white border border-gray-200 rounded-lg dark:bg-gray-800 dark:border-gray-700">
-      <h3 class="text-base font-semibold text-gray-900 dark:text-white mb-4">Nueva Categoría</h3>
+      <h3 class="text-base font-semibold text-gray-900 dark:text-white mb-4">
+        {{ isEditing ? 'Editar Categoría' : 'Nueva Categoría' }}
+      </h3>
       <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <div>
           <label class="block mb-1 text-sm font-medium text-gray-700 dark:text-gray-300">Nombre *</label>
-          <input type="text" [(ngModel)]="newCategory.name"
+          <input type="text" [(ngModel)]="categoryForm.name"
             class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
             placeholder="Nombre de la categoría" />
         </div>
         <div>
           <label class="block mb-1 text-sm font-medium text-gray-700 dark:text-gray-300">Descripción</label>
-          <input type="text" [(ngModel)]="newCategory.description"
+          <input type="text" [(ngModel)]="categoryForm.description"
             class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
             placeholder="Descripción opcional" />
         </div>
       </div>
-      <div class="flex justify-end mt-4">
+      <div class="flex justify-end mt-4 gap-2">
+        <button (click)="cancelForm()"
+          class="px-4 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-lg hover:bg-gray-100 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600 dark:hover:bg-gray-700">
+          Cancelar
+        </button>
         <button (click)="saveCategory()"
           class="px-4 py-2 text-sm font-medium text-white bg-blue-700 rounded-lg hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 dark:bg-blue-600 dark:hover:bg-blue-700">
-          Crear Categoría
+          {{ isEditing ? 'Guardar cambios' : 'Crear Categoría' }}
         </button>
       </div>
     </div>
@@ -76,7 +80,9 @@
                   <th class="p-4 text-xs font-medium text-left text-gray-500 uppercase dark:text-gray-400">#</th>
                   <th class="p-4 text-xs font-medium text-left text-gray-500 uppercase dark:text-gray-400">Nombre</th>
                   <th class="p-4 text-xs font-medium text-left text-gray-500 uppercase dark:text-gray-400">Descripción</th>
+                  <th class="p-4 text-xs font-medium text-left text-gray-500 uppercase dark:text-gray-400">Ítems</th>
                   <th class="p-4 text-xs font-medium text-left text-gray-500 uppercase dark:text-gray-400">Fecha creación</th>
+                  <th class="p-4 text-xs font-medium text-left text-gray-500 uppercase dark:text-gray-400">Acciones</th>
                 </tr>
               </thead>
               <tbody class="bg-white divide-y divide-gray-200 dark:bg-gray-800 dark:divide-gray-700">
@@ -84,12 +90,25 @@
                   <td class="p-4 text-sm text-gray-500 whitespace-nowrap dark:text-gray-400">{{ i + 1 }}</td>
                   <td class="p-4 text-sm font-medium text-gray-900 whitespace-nowrap dark:text-white">{{ cat.name }}</td>
                   <td class="p-4 text-sm text-gray-500 dark:text-gray-400">{{ cat.description || '-' }}</td>
+                  <td class="p-4 text-sm text-gray-500 whitespace-nowrap dark:text-gray-400">{{ cat.inventories_count || 0 }}</td>
                   <td class="p-4 text-sm text-gray-500 whitespace-nowrap dark:text-gray-400">
                     {{ cat.created_at | date:'dd/MM/yyyy' }}
                   </td>
+                  <td class="p-4">
+                    <div class="flex items-center gap-1">
+                      <button (click)="openEdit(cat)"
+                        class="px-2 py-1 text-xs font-medium text-white bg-yellow-500 rounded hover:bg-yellow-600">
+                        Editar
+                      </button>
+                      <button (click)="deleteCategory(cat)"
+                        class="px-2 py-1 text-xs font-medium text-white bg-red-600 rounded hover:bg-red-700">
+                        Eliminar
+                      </button>
+                    </div>
+                  </td>
                 </tr>
                 <tr *ngIf="categories.length === 0">
-                  <td colspan="4" class="p-6 text-sm text-center text-gray-500 dark:text-gray-400">
+                  <td colspan="6" class="p-6 text-sm text-center text-gray-500 dark:text-gray-400">
                     No hay categorías registradas.
                   </td>
                 </tr>
@@ -100,7 +119,7 @@
               <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-600">
                 <thead class="bg-gray-50 dark:bg-gray-700">
                   <tr>
-                    <th class="p-4 text-xs font-medium text-left text-gray-500 uppercase dark:text-gray-400" *ngFor="let h of ['#','Nombre','Descripción','Fecha']">{{ h }}</th>
+                    <th class="p-4 text-xs font-medium text-left text-gray-500 uppercase dark:text-gray-400" *ngFor="let h of ['#','Nombre','Descripción','Ítems','Fecha','Acciones']">{{ h }}</th>
                   </tr>
                 </thead>
                 <tbody class="bg-white divide-y divide-gray-200 dark:bg-gray-800 dark:divide-gray-700">
@@ -108,6 +127,8 @@
                     <td class="p-4"><div class="h-4 bg-gray-200 rounded dark:bg-gray-700 w-6"></div></td>
                     <td class="p-4"><div class="h-4 bg-gray-200 rounded dark:bg-gray-700 w-32"></div></td>
                     <td class="p-4"><div class="h-4 bg-gray-200 rounded dark:bg-gray-700 w-48"></div></td>
+                    <td class="p-4"><div class="h-4 bg-gray-200 rounded dark:bg-gray-700 w-10"></div></td>
+                    <td class="p-4"><div class="h-4 bg-gray-200 rounded dark:bg-gray-700 w-24"></div></td>
                     <td class="p-4"><div class="h-4 bg-gray-200 rounded dark:bg-gray-700 w-24"></div></td>
                   </tr>
                 </tbody>

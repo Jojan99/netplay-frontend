@@ -7,9 +7,7 @@
         <ol class="inline-flex items-center space-x-1 text-sm font-medium md:space-x-2">
           <li class="inline-flex items-center">
             <a class="inline-flex items-center text-gray-700 hover:text-primary-600 dark:text-gray-300 dark:hover:text-white">
-              <svg class="w-5 h-5 mr-2.5" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
-                <path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z"></path>
-              </svg>
+              <svg class="w-5 h-5 mr-2.5" fill="currentColor" viewBox="0 0 20 20"><path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z"></path></svg>
               Home
             </a>
           </li>
@@ -47,21 +45,40 @@
           <p class="text-sm font-semibold text-gray-900 dark:text-white">{{ item.name }}</p>
         </div>
         <div>
+          <p class="text-xs text-gray-500 dark:text-gray-400 uppercase mb-1">SKU / Código</p>
+          <p class="text-sm text-gray-700 dark:text-gray-300">{{ item.sku || item.code || '-' }}</p>
+        </div>
+        <div>
           <p class="text-xs text-gray-500 dark:text-gray-400 uppercase mb-1">Categoría</p>
           <p class="text-sm text-gray-700 dark:text-gray-300">{{ item.category?.name || '-' }}</p>
         </div>
         <div>
           <p class="text-xs text-gray-500 dark:text-gray-400 uppercase mb-1">Stock actual</p>
           <p class="text-sm font-bold"
-            [ngClass]="(item.quantity || 0) > 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'">
+            [ngClass]="isLowStock(item) ? 'text-red-600 dark:text-red-400' : ((item.quantity || 0) > 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400')">
             {{ item.quantity || 0 }} {{ item.unit || '' }}
+            <span *ngIf="isLowStock(item)" class="ml-1 text-[10px] bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300 px-1.5 py-0.5 rounded">Bajo</span>
           </p>
+        </div>
+        <div>
+          <p class="text-xs text-gray-500 dark:text-gray-400 uppercase mb-1">Costo Promedio</p>
+          <p class="text-sm text-gray-700 dark:text-gray-300">${{ (item.average_cost || 0) | number:'1.0-0' }}</p>
         </div>
         <div>
           <p class="text-xs text-gray-500 dark:text-gray-400 uppercase mb-1">Precio Unitario</p>
           <p class="text-sm text-gray-700 dark:text-gray-300">${{ (item.unit_price || 0) | number:'1.0-0' }}</p>
         </div>
         <div>
+          <p class="text-xs text-gray-500 dark:text-gray-400 uppercase mb-1">Stock Mín / Máx</p>
+          <p class="text-sm text-gray-700 dark:text-gray-300">
+            {{ item.stock_min || 0 }} / {{ item.stock_max || '∞' }}
+          </p>
+        </div>
+        <div>
+          <p class="text-xs text-gray-500 dark:text-gray-400 uppercase mb-1">Ubicación</p>
+          <p class="text-sm text-gray-700 dark:text-gray-300">{{ item.location || '-' }}</p>
+        </div>
+        <div class="col-span-2 sm:col-span-3 lg:col-span-2">
           <p class="text-xs text-gray-500 dark:text-gray-400 uppercase mb-1">Descripción</p>
           <p class="text-sm text-gray-700 dark:text-gray-300">{{ item.description || '-' }}</p>
         </div>
@@ -90,7 +107,10 @@
                 <th class="p-4 text-xs font-medium text-left text-gray-500 uppercase dark:text-gray-400">Fecha</th>
                 <th class="p-4 text-xs font-medium text-left text-gray-500 uppercase dark:text-gray-400">Tipo</th>
                 <th class="p-4 text-xs font-medium text-left text-gray-500 uppercase dark:text-gray-400">Cantidad</th>
-                <th class="p-4 text-xs font-medium text-left text-gray-500 uppercase dark:text-gray-400">Precio Unitario</th>
+                <th class="p-4 text-xs font-medium text-left text-gray-500 uppercase dark:text-gray-400">Saldo</th>
+                <th class="p-4 text-xs font-medium text-left text-gray-500 uppercase dark:text-gray-400">Precio Unit.</th>
+                <th class="p-4 text-xs font-medium text-left text-gray-500 uppercase dark:text-gray-400 hidden md:table-cell">Lote</th>
+                <th class="p-4 text-xs font-medium text-left text-gray-500 uppercase dark:text-gray-400 hidden md:table-cell">Vence</th>
                 <th class="p-4 text-xs font-medium text-left text-gray-500 uppercase dark:text-gray-400">Descripción</th>
                 <th class="p-4 text-xs font-medium text-left text-gray-500 uppercase dark:text-gray-400">Referencia</th>
               </tr>
@@ -109,13 +129,22 @@
                   {{ m.quantity }}
                 </td>
                 <td class="p-4 text-sm text-gray-500 whitespace-nowrap dark:text-gray-400">
+                  {{ m.balance_after !== undefined ? m.balance_after : '-' }}
+                </td>
+                <td class="p-4 text-sm text-gray-500 whitespace-nowrap dark:text-gray-400">
                   {{ m.unit_price ? '$' + (m.unit_price | number:'1.0-0') : '-' }}
+                </td>
+                <td class="p-4 text-sm text-gray-500 whitespace-nowrap dark:text-gray-400 hidden md:table-cell">
+                  {{ m.batch_number || '-' }}
+                </td>
+                <td class="p-4 text-sm text-gray-500 whitespace-nowrap dark:text-gray-400 hidden md:table-cell">
+                  {{ m.expiry_date ? (m.expiry_date | date:'dd/MM/yyyy') : '-' }}
                 </td>
                 <td class="p-4 text-sm text-gray-500 dark:text-gray-400">{{ m.description || '-' }}</td>
                 <td class="p-4 text-sm text-gray-500 whitespace-nowrap dark:text-gray-400">{{ m.reference || '-' }}</td>
               </tr>
               <tr *ngIf="movements.length === 0">
-                <td colspan="6" class="p-6 text-sm text-center text-gray-500 dark:text-gray-400">
+                <td colspan="9" class="p-6 text-sm text-center text-gray-500 dark:text-gray-400">
                   No hay movimientos registrados para este ítem.
                 </td>
               </tr>
@@ -126,12 +155,12 @@
             <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-600">
               <thead class="bg-gray-50 dark:bg-gray-700">
                 <tr>
-                  <th class="p-4 text-xs font-medium text-left text-gray-500 uppercase dark:text-gray-400" *ngFor="let h of ['Fecha','Tipo','Cantidad','Precio','Descripción','Referencia']">{{ h }}</th>
+                  <th class="p-4 text-xs font-medium text-left text-gray-500 uppercase dark:text-gray-400" *ngFor="let h of ['Fecha','Tipo','Cantidad','Saldo','Precio','Lote','Vence','Descripción','Referencia']">{{ h }}</th>
                 </tr>
               </thead>
               <tbody class="bg-white divide-y divide-gray-200 dark:bg-gray-800 dark:divide-gray-700">
                 <tr *ngFor="let i of [1,2,3]" class="animate-pulse">
-                  <td class="p-4" *ngFor="let j of [1,2,3,4,5,6]"><div class="h-4 bg-gray-200 rounded dark:bg-gray-700 w-24"></div></td>
+                  <td class="p-4" *ngFor="let j of [1,2,3,4,5,6,7,8,9]"><div class="h-4 bg-gray-200 rounded dark:bg-gray-700 w-24"></div></td>
                 </tr>
               </tbody>
             </table>
@@ -141,12 +170,35 @@
       </div>
     </div>
 
+    <!-- Pagination -->
+    <div *ngIf="movementLastPage > 1" class="flex items-center justify-between mt-4">
+      <span class="text-sm text-gray-700 dark:text-gray-400">
+        Página {{ movementPage }} de {{ movementLastPage }} ({{ movementTotal }} total)
+      </span>
+      <div class="inline-flex -space-x-px text-sm">
+        <button (click)="goToMovementPage(movementPage - 1)" [disabled]="movementPage === 1"
+          class="flex items-center justify-center px-3 h-8 ml-0 leading-tight text-gray-500 bg-white border border-gray-300 rounded-l-lg hover:bg-gray-100 hover:text-gray-700 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white disabled:opacity-50">
+          Anterior
+        </button>
+        <button *ngFor="let p of [].constructor(movementLastPage); let i = index" (click)="goToMovementPage(i + 1)"
+          [ngClass]="movementPage === i + 1
+            ? 'z-10 flex items-center justify-center px-3 h-8 leading-tight text-blue-600 border border-blue-300 bg-blue-50 hover:bg-blue-100 hover:text-blue-700 dark:border-gray-700 dark:bg-gray-700 dark:text-white'
+            : 'flex items-center justify-center px-3 h-8 leading-tight text-gray-500 bg-white border border-gray-300 hover:bg-gray-100 hover:text-gray-700 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white'">
+          {{ i + 1 }}
+        </button>
+        <button (click)="goToMovementPage(movementPage + 1)" [disabled]="movementPage === movementLastPage"
+          class="flex items-center justify-center px-3 h-8 leading-tight text-gray-500 bg-white border border-gray-300 rounded-r-lg hover:bg-gray-100 hover:text-gray-700 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white disabled:opacity-50">
+          Siguiente
+        </button>
+      </div>
+    </div>
+
   </div>
 </div>
 
 <!-- ── Modal: Registrar Movimiento ────────────────────────────────────────── -->
 <div id="movement-modal-detail" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-  <div class="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-lg mx-4">
+  <div class="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-lg mx-4 max-h-[90vh] overflow-y-auto">
     <div class="flex items-center justify-between p-4 border-b dark:border-gray-700">
       <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Registrar Movimiento</h3>
       <button (click)="closeMovementModal()" class="text-gray-400 hover:text-gray-900 dark:hover:text-white">
@@ -180,6 +232,19 @@
           <input type="number" [(ngModel)]="movementForm.unit_price" min="0"
             class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
             placeholder="0" />
+        </div>
+      </div>
+      <div class="grid grid-cols-2 gap-4">
+        <div>
+          <label class="block mb-1 text-sm font-medium text-gray-700 dark:text-gray-300">N° de Lote</label>
+          <input type="text" [(ngModel)]="movementForm.batch_number"
+            class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+            placeholder="Lote opcional" />
+        </div>
+        <div>
+          <label class="block mb-1 text-sm font-medium text-gray-700 dark:text-gray-300">Fecha de vencimiento</label>
+          <input type="date" [(ngModel)]="movementForm.expiry_date"
+            class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white" />
         </div>
       </div>
       <div>
