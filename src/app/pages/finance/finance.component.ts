@@ -532,6 +532,8 @@ export class FinanceComponent implements OnInit, OnDestroy {
     const msg = err.error?.message;
     if (code === 'NO_PHONE') return 'El cliente no tiene teléfono registrado.';
     if (code === 'NO_EMAIL') return 'El cliente no tiene correo válido registrado.';
+    if (code === 'WA_DISABLED') return 'El envío por WhatsApp está deshabilitado para esta empresa.';
+    if (code === 'EMAIL_DISABLED') return 'El envío por correo está deshabilitado para esta empresa.';
     if (msg) return msg;
     return 'Error al enviar factura. Intenta de nuevo.';
   }

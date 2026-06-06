@@ -101,6 +101,8 @@ export class BillingConfigComponent implements OnInit {
     invoice_footer: '',
     invoice_logo_url: '',
     invoice_prefix: 'GL',
+    whatsapp_enabled: true,
+    email_enabled: true,
   };
   invoiceLoading     = false;
   invoiceSaving      = false;
@@ -182,6 +184,9 @@ export class BillingConfigComponent implements OnInit {
           Object.assign(this.invoiceForm, res.data);
           this.invoiceTemplate = res.data.invoice_template ?? null;
           this.invoiceTemplateId = res.data.invoice_template_id ?? null;
+          // Ensure booleans are set correctly
+          this.invoiceForm.whatsapp_enabled = res.data.whatsapp_enabled !== undefined ? res.data.whatsapp_enabled : true;
+          this.invoiceForm.email_enabled = res.data.email_enabled !== undefined ? res.data.email_enabled : true;
         }
       },
       error: () => { this.invoiceLoading = false; },
