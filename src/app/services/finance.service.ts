@@ -349,4 +349,28 @@ export class FinanceService {
       '{}', { headers: this.getHeaders() }
     );
   }
+
+  // ── Logs de envío de facturas ─────────────────────────────────────────────
+
+  getSendLogs(params: {
+    channel?: string;
+    status?: string;
+    date_from?: string;
+    date_to?: string;
+    sent_to_email?: string;
+    number_facture?: string;
+    page?: number;
+    per_page?: number;
+  }): Observable<any> {
+    let httpParams = new HttpParams();
+    Object.entries(params).forEach(([key, value]) => {
+      if (value !== undefined && value !== null && value !== '') {
+        httpParams = httpParams.set(key, value);
+      }
+    });
+    return this.http.get<any>(
+      `${this.env.rootUrl}api/generatePdf/send-logs`,
+      { headers: this.getHeaders(), params: httpParams }
+    );
+  }
 }

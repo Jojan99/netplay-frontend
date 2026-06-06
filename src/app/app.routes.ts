@@ -29,6 +29,7 @@ import { InstallationFormComponent } from './pages/installations/installation-fo
 import { TransfersComponent } from './pages/transfers/transfers.component';
 import { TransferFormComponent } from './pages/transfers/transfer-form.component';
 import { TechnicianMapComponent } from './pages/technician-map/technician-map.component';
+import { SendLogsComponent } from './pages/send-logs/send-logs.component';
 
 export const routes: Routes = [
   {
@@ -84,6 +85,7 @@ export const routes: Routes = [
       { path: 'transfers', component: TransfersComponent },
       { path: 'transfers/new', component: TransferFormComponent },
       { path: 'technician-map', component: TechnicianMapComponent, canActivate: [roleGuard], data: { module: 'technician-map' } },
+      { path: 'send-logs', component: SendLogsComponent, canActivate: [roleGuard], data: { module: 'finanzas' } },
       {
         path: 'landing',
         loadComponent: () => import('./pages/landing-editor/landing-editor.component').then(m => m.LandingEditorComponent),
