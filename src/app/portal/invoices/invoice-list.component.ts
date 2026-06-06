@@ -19,9 +19,9 @@ export class InvoiceListComponent implements OnInit {
   invoices         = signal<any[]>([]);
   summary          = signal<any>(null);
   paymentAvailable = signal(false);
-  sendingId        = signal<number | null>(null);
-  sendResult       = signal<{ id: number; ok: boolean; msg: string } | null>(null);
-  pdfLoadingId     = signal<number | null>(null);
+  sendingId        = signal<string | null>(null);
+  sendResult       = signal<{ id: string; ok: boolean; msg: string } | null>(null);
+  pdfLoadingId     = signal<string | null>(null);
 
   // ── Pago — modal setup (paso 1) ──────────────────────────────────────────
   paySetupOpen    = signal(false);
@@ -134,8 +134,8 @@ export class InvoiceListComponent implements OnInit {
   // ── Acciones de factura ───────────────────────────────────────────────────
 
   openPdf(invoice: any): void {
-    this.pdfLoadingId.set(invoice.id);
-    this.api.getInvoicePdfUrl(invoice.id).subscribe({
+    this.pdfLoadingId.set(invoice.number_facture);
+    this.api.getInvoicePdfUrl(invoice.number_facture).subscribe({
       next: (res) => {
         this.pdfLoadingId.set(null);
         if (res.data?.pdf_url) window.open(res.data.pdf_url, '_blank');
@@ -163,7 +163,7 @@ export class InvoiceListComponent implements OnInit {
     this.sendHistoryData.set([]);
     this.sendHistoryLoading.set(true);
     this.sendHistoryModal.set(true);
-    this.api.getSendHistory(invoice.id).subscribe({
+    this.api.getSendHistory(invoice.number_facture).subscribe({
       next: (res) => {
         this.sendHistoryData.set(res.data || []);
         this.sendHistoryLoading.set(false);
@@ -183,9 +183,9 @@ export class InvoiceListComponent implements OnInit {
   }
 
   sendInvoice(invoice: any, channel: 'whatsapp' | 'email' | 'both'): void {
-    this.sendingId.set(invoice.id);
+    this.sendingId.set(invoice.number_facture);
     this.sendResult.set(null);
-    this.api.sendInvoice(invoice.id, channel).subscribe({
+    this.api.sendInvoice(invoice.number_facture, channel).subscribe({
       next: (res) => {
         this.sendingId.set(null);
         const msg = channel === 'whatsapp'
@@ -193,13 +193,13 @@ export class InvoiceListComponent implements OnInit {
           : channel === 'email'
             ? 'Factura enviada por correo'
             : 'Factura enviada por WhatsApp y correo';
-        this.sendResult.set({ id: invoice.id, ok: res.status === 'ok' || res.status === 0, msg: res.message || msg });
+        this.sendResult.set({ id: invoice.number_facture, ok: res.status === 'ok' || res.status === 0, msg: res.message || msg });
         setTimeout(() => this.sendResult.set(null), 4000);
       },
       error: (err) => {
         this.sendingId.set(null);
         const msg = this.formatSendError(err);
-        this.sendResult.set({ id: invoice.id, ok: false, msg });
+        this.sendResult.set({ id: invoice.number_facture, ok: false, msg });
         setTimeout(() => this.sendResult.set(null), 4000);
       },
     });

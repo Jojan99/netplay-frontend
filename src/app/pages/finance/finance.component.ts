@@ -97,9 +97,9 @@ export class FinanceComponent implements OnInit, OnDestroy {
   sendModal       = false;
   sendModalInv    : any[] = [];  // facturas a enviar
   sendChannel     : 'whatsapp' | 'email' | 'both' = 'whatsapp';
-  sendingIds      : Set<number> = new Set();
+  sendingIds      : Set<string> = new Set();
   sendResult      : { ok: boolean; msg: string } | null = null;
-  sendBulkIds     : Set<number> = new Set();
+  sendBulkIds     : Set<string> = new Set();
   sendBulkModal   = false;
   sendBulkChannel : 'whatsapp' | 'email' | 'both' = 'whatsapp';
   sendingBulk     = false;
@@ -466,7 +466,7 @@ export class FinanceComponent implements OnInit, OnDestroy {
     this.sendHistoryData = [];
     this.sendHistoryLoading = true;
     this.sendHistoryModal = true;
-    this.financeService.getSendHistory(invoice.id).subscribe({
+    this.financeService.getSendHistory(invoice.number_facture).subscribe({
       next: (res) => {
         this.sendHistoryData = res.data || [];
         this.sendHistoryLoading = false;
@@ -497,7 +497,7 @@ export class FinanceComponent implements OnInit, OnDestroy {
   openSendBulkModal(): void {
     const pending = this.invoices.filter(i => i.paid !== 1);
     if (pending.length === 0) { this.toast.error('No hay facturas pendientes para enviar'); return; }
-    this.sendBulkIds = new Set(pending.map(i => i.id));
+    this.sendBulkIds = new Set(pending.map(i => i.number_facture));
     this.sendBulkChannel = 'whatsapp';
     this.sendResult = null;
     this.sendBulkModal = true;
@@ -509,18 +509,18 @@ export class FinanceComponent implements OnInit, OnDestroy {
   confirmSend(): void {
     if (this.sendModalInv.length === 0) return;
     const inv = this.sendModalInv[0];
-    this.sendingIds.add(inv.id);
+    this.sendingIds.add(inv.number_facture);
     this.sendResult = null;
-    this.financeService.sendInvoice(inv.id, this.sendChannel).subscribe({
+    this.financeService.sendInvoice(inv.number_facture, this.sendChannel).subscribe({
       next: (res) => {
-        this.sendingIds.delete(inv.id);
+        this.sendingIds.delete(inv.number_facture);
         this.sendResult = { ok: res.status === 'ok' || res.status === 0, msg: res.message || 'Factura enviada' };
         if (this.sendResult.ok) {
           setTimeout(() => { this.closeSendModal(); this.sendResult = null; }, 2500);
         }
       },
       error: (err) => {
-        this.sendingIds.delete(inv.id);
+        this.sendingIds.delete(inv.number_facture);
         const msg = this.formatSendError(err);
         this.sendResult = { ok: false, msg };
       },
@@ -570,22 +570,22 @@ export class FinanceComponent implements OnInit, OnDestroy {
     });
   }
 
-  toggleSendBulkInvoice(id: number): void {
+  toggleSendBulkInvoice(id: string): void {
     this.sendBulkIds.has(id) ? this.sendBulkIds.delete(id) : this.sendBulkIds.add(id);
   }
 
   toggleAllSendBulk(): void {
     const pending = this.invoices.filter(i => i.paid !== 1);
-    if (pending.every(i => this.sendBulkIds.has(i.id))) {
-      pending.forEach(i => this.sendBulkIds.delete(i.id));
+    if (pending.every(i => this.sendBulkIds.has(i.number_facture))) {
+      pending.forEach(i => this.sendBulkIds.delete(i.number_facture));
     } else {
-      pending.forEach(i => this.sendBulkIds.add(i.id));
+      pending.forEach(i => this.sendBulkIds.add(i.number_facture));
     }
   }
 
   get allSendBulkSelected(): boolean {
     const pending = this.invoices.filter(i => i.paid !== 1);
-    return pending.length > 0 && pending.every(i => this.sendBulkIds.has(i.id));
+    return pending.length > 0 && pending.every(i => this.sendBulkIds.has(i.number_facture));
   }
 
   get sendBulkInvoices(): any[] {

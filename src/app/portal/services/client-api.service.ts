@@ -41,23 +41,23 @@ export class ClientApiService {
     return this.http.get(`${this.baseUrl}/invoices/${id}`, this.headers());
   }
 
-  getInvoicePdfUrl(id: number): Observable<any> {
+  getInvoicePdfUrl(id: string): Observable<any> {
     return this.http.get(`${this.baseUrl}/invoices/${id}/pdf-url`, this.headers());
   }
 
-  sendInvoiceWhatsapp(id: number): Observable<any> {
+  sendInvoiceWhatsapp(id: string): Observable<any> {
     return this.http.post(`${this.baseUrl}/invoices/${id}/send-whatsapp`, {}, this.headers());
   }
 
-  sendInvoiceEmail(id: number): Observable<any> {
+  sendInvoiceEmail(id: string): Observable<any> {
     return this.http.post(`${this.baseUrl}/invoices/${id}/send-email`, {}, this.headers());
   }
 
-  sendInvoice(id: number, channel: 'whatsapp' | 'email' | 'both'): Observable<any> {
+  sendInvoice(id: string, channel: 'whatsapp' | 'email' | 'both'): Observable<any> {
     return this.http.post(`${this.baseUrl}/invoices/${id}/send?channel=${channel}`, {}, this.headers());
   }
 
-  getSendHistory(id: number): Observable<any> {
+  getSendHistory(id: string): Observable<any> {
     return this.http.get(`${this.baseUrl}/invoices/${id}/send-history`, this.headers());
   }
 
