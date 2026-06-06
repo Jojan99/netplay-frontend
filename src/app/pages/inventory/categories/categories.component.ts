@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule }  from '@angular/forms';
 import { RouterLink }   from '@angular/router';
 import { InventoryService }           from '../../../services/inventory.service';
+import { ToastService }               from '../../../services/toast.service';
 import { InventoryCategoryInterface } from '../../../models/inventory-category.interface';
 
 @Component({
@@ -21,7 +22,10 @@ export class CategoriesComponent implements OnInit {
 
   categoryForm = { name: '', description: '' };
 
-  constructor(private inventoryService: InventoryService) {}
+  constructor(
+    private inventoryService: InventoryService,
+    private toast: ToastService,
+  ) {}
 
   ngOnInit() {
     this.loadCategories();
@@ -58,18 +62,18 @@ export class CategoriesComponent implements OnInit {
 
   saveCategory() {
     if (!this.categoryForm.name.trim()) {
-      alert('El nombre de la categoría es obligatorio.');
+      this.toast.warning('El nombre de la categoría es obligatorio.');
       return;
     }
     if (this.isEditing && this.editingId) {
       this.inventoryService.updateCategory(this.editingId, this.categoryForm).subscribe(data => {
-        alert(data.message);
-        if (!data.error) { this.cancelForm(); this.loadCategories(); }
+        if (data.error) { this.toast.error(data.message); }
+        else { this.toast.success(data.message); this.cancelForm(); this.loadCategories(); }
       });
     } else {
       this.inventoryService.createCategory(this.categoryForm).subscribe(data => {
-        alert(data.message);
-        if (!data.error) { this.cancelForm(); this.loadCategories(); }
+        if (data.error) { this.toast.error(data.message); }
+        else { this.toast.success(data.message); this.cancelForm(); this.loadCategories(); }
       });
     }
   }
@@ -77,8 +81,8 @@ export class CategoriesComponent implements OnInit {
   deleteCategory(category: InventoryCategoryInterface) {
     if (!confirm(`¿Eliminar la categoría "${category.name}"? Los ítems asociados quedarán sin categoría.`)) return;
     this.inventoryService.deleteCategory(category.id!).subscribe(data => {
-      alert(data.message);
-      if (!data.error) this.loadCategories();
+      if (data.error) { this.toast.error(data.message); }
+      else { this.toast.success(data.message); this.loadCategories(); }
     });
   }
 }

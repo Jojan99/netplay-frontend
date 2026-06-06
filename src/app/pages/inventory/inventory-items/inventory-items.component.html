@@ -221,6 +221,32 @@
       </button>
     </div>
     <div class="p-6 space-y-4">
+
+      <!-- Escáner SKU al crear -->
+      <div *ngIf="!isEditing" class="rounded-lg border border-blue-200 bg-blue-50 p-3 space-y-2 dark:border-blue-800 dark:bg-blue-900/20">
+        <div class="flex items-center justify-between">
+          <p class="text-xs font-semibold text-blue-700 dark:text-blue-300 flex items-center gap-1">
+            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 4.875c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5A1.125 1.125 0 0 1 3.75 9.375v-4.5ZM3.75 14.625c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5a1.125 1.125 0 0 1-1.125-1.125v-4.5ZM13.5 4.875c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5A1.125 1.125 0 0 1 13.5 9.375v-4.5Z" />
+            </svg>
+            Escanea el código del equipo para rellenar el SKU
+          </p>
+          <button type="button" (click)="itemScannerOpen = !itemScannerOpen"
+            class="text-xs font-medium px-2 py-1 rounded"
+            [ngClass]="itemScannerOpen
+              ? 'bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300'
+              : 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300'">
+            {{ itemScannerOpen ? 'Cerrar' : 'Abrir escáner' }}
+          </button>
+        </div>
+        <app-barcode-scanner *ngIf="itemScannerOpen" mode="ref"
+          (scanned)="onItemSkuScanned($event)">
+        </app-barcode-scanner>
+        <p *ngIf="itemForm.sku" class="text-xs text-blue-600 dark:text-blue-400">
+          SKU capturado: <span class="font-mono font-semibold">{{ itemForm.sku }}</span>
+        </p>
+      </div>
+
       <div>
         <label class="block mb-1 text-sm font-medium text-gray-700 dark:text-gray-300">Nombre *</label>
         <input type="text" [(ngModel)]="itemForm.name"
@@ -320,52 +346,74 @@
     </div>
     <div class="p-6 space-y-4">
 
-      <!-- ── Barcode Scanner ─────────────────────────────────────────────────── -->
-      <div class="p-3 bg-gray-50 border border-gray-200 rounded-lg dark:bg-gray-900 dark:border-gray-700">
-        <div class="flex items-center justify-between mb-2">
-          <span class="text-xs font-semibold text-gray-600 dark:text-gray-300 flex items-center gap-1">
-            <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 4.875c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5A1.125 1.125 0 0 1 3.75 9.375v-4.5ZM3.75 14.625c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5a1.125 1.125 0 0 1-1.125-1.125v-4.5ZM13.5 4.875c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5A1.125 1.125 0 0 1 13.5 9.375v-4.5Z" />
-              <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 6.75h.75v.75h-.75v-.75ZM6.75 16.5h.75v.75h-.75v-.75ZM16.5 6.75h.75v.75h-.75v-.75ZM13.5 13.5h.75v.75h-.75v-.75ZM13.5 19.5h.75v.75h-.75v-.75ZM19.5 13.5h.75v.75h-.75v-.75ZM19.5 19.5h.75v.75h-.75v-.75ZM16.5 16.5h.75v.75h-.75v-.75Z" />
-            </svg>
-            Escáner de código de barras
-          </span>
-          <button type="button" (click)="toggleCamera()"
-            class="text-xs font-medium px-2 py-1 rounded"
-            [ngClass]="(cameraActive || cameraFallback)
-              ? 'bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-300'
-              : 'bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300'">
-            {{ (cameraActive || cameraFallback) ? 'Cerrar cámara' : 'Usar cámara' }}
-          </button>
-          <!-- Hidden file input for fallback (BarcodeDetector not available) -->
-          <input #barcodeFileInput type="file" accept="image/*" capture="environment"
-            class="hidden" (change)="onImageCapture($event)" />
-        </div>
-        <!-- Input para pistola USB (también sirve de entrada manual) -->
-        <input type="text" [(ngModel)]="barcodeInput"
-          (keyup.enter)="onBarcodeEnter()"
-          placeholder="Escanea con pistola o escribe el código y presiona Enter..."
-          class="bg-white border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2 dark:bg-gray-800 dark:border-gray-600 dark:text-white" />
-        <!-- Feed de cámara -->
-        <video *ngIf="cameraActive" #barcodeVideo
-          class="w-full rounded-lg mt-2 max-h-44 bg-black"
-          autoplay playsinline muted></video>
-        <p *ngIf="cameraActive" class="mt-1 text-xs text-gray-400 dark:text-gray-500 text-center animate-pulse">
-          Apunta la cámara al código de barras...
-        </p>
-        <p *ngIf="barcodeError" class="mt-1 text-xs text-red-600 dark:text-red-400">{{ barcodeError }}</p>
+      <!-- ── Equipo ──────────────────────────────────────────────────────────── -->
+      <!-- Cuando el ítem ya viene seleccionado (desde botón "Mov.") -->
+      <div *ngIf="selectedItemForMovement"
+        class="flex items-center gap-2 rounded-lg border border-blue-200 bg-blue-50 px-3 py-2 text-sm dark:border-blue-800 dark:bg-blue-900/20">
+        <svg class="h-4 w-4 text-blue-600 dark:text-blue-400 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M21 7.5l-9-5.25L3 7.5m18 0l-9 5.25m9-5.25v9l-9 5.25M3 7.5l9 5.25M3 7.5v9l9 5.25m0-9v9" />
+        </svg>
+        <span class="font-medium text-blue-800 dark:text-blue-200">{{ selectedItemForMovement.name }}</span>
+        <span *ngIf="selectedItemForMovement.sku" class="font-mono text-xs text-blue-500 dark:text-blue-400">{{ selectedItemForMovement.sku }}</span>
+        <button type="button" (click)="scanStep='item'; selectedItemForMovement=null; movementForm.inventory_id=0"
+          class="ml-auto text-xs text-blue-500 hover:underline dark:text-blue-400">Cambiar</button>
       </div>
 
-      <div>
-        <label class="block mb-1 text-sm font-medium text-gray-700 dark:text-gray-300">Ítem *</label>
-        <select [(ngModel)]="movementForm.inventory_id" (change)="onMovementItemChange()"
-          class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
-          <option [value]="0">Selecciona un ítem</option>
-          <option *ngFor="let item of items" [value]="item.id">
-            {{ item.name }} (stock: {{ item.quantity || 0 }})
-          </option>
-        </select>
+      <!-- Cuando no hay ítem seleccionado: escanear REF o elegir manualmente -->
+      <div *ngIf="!selectedItemForMovement" class="rounded-lg border border-blue-200 bg-blue-50 p-3 space-y-2 dark:border-blue-800 dark:bg-blue-900/20">
+        <p class="text-xs font-semibold text-blue-700 dark:text-blue-300">
+          Paso 1 — Escanea la referencia del equipo (REF / SKU)
+        </p>
+        <app-barcode-scanner mode="ref" (scanned)="onRefScanned($event)"></app-barcode-scanner>
+        <div>
+          <label class="block mb-1 text-xs font-medium text-gray-600 dark:text-gray-400">O selecciona manualmente:</label>
+          <select [(ngModel)]="movementForm.inventory_id" (change)="onMovementItemChange()"
+            class="bg-white border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+            <option [value]="0">— Selecciona un ítem —</option>
+            <option *ngFor="let item of items" [value]="item.id">
+              {{ item.name }}{{ item.sku ? ' · ' + item.sku : '' }} (stock: {{ item.quantity || 0 }})
+            </option>
+          </select>
+        </div>
+        <p *ngIf="barcodeError" class="text-xs text-red-600 dark:text-red-400">{{ barcodeError }}</p>
       </div>
+
+      <!-- ── Serial del equipo — siempre visible cuando hay ítem ─────────────── -->
+      <div *ngIf="selectedItemForMovement" class="rounded-lg border border-green-300 bg-green-50 p-3 space-y-2 dark:border-green-700 dark:bg-green-900/20">
+        <p class="text-xs font-semibold text-green-700 dark:text-green-300 flex items-center gap-1">
+          <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 4.875c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5A1.125 1.125 0 0 1 3.75 9.375v-4.5ZM3.75 14.625c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5a1.125 1.125 0 0 1-1.125-1.125v-4.5ZM13.5 4.875c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5A1.125 1.125 0 0 1 13.5 9.375v-4.5Z" />
+          </svg>
+          Número de Serie del equipo (SN)
+        </p>
+
+        <!-- SN ya capturado -->
+        <div *ngIf="movementForm.serial_number"
+          class="flex items-center gap-2 rounded-lg border border-green-400 bg-white px-3 py-2 text-sm dark:border-green-600 dark:bg-gray-800">
+          <svg class="h-4 w-4 text-green-500 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+          </svg>
+          <span class="font-mono font-semibold text-gray-900 dark:text-white tracking-wider">{{ movementForm.serial_number }}</span>
+          <button type="button" (click)="movementForm.serial_number=''"
+            class="ml-auto text-xs text-red-500 hover:text-red-700 hover:underline">Borrar</button>
+        </div>
+
+        <!-- Scanner serial (siempre visible si no hay SN aún) -->
+        <ng-container *ngIf="!movementForm.serial_number">
+          <app-barcode-scanner mode="serial" (scanned)="onSerialScanned($event)"></app-barcode-scanner>
+          <div class="flex items-center gap-2">
+            <div class="flex-1 h-px bg-gray-200 dark:bg-gray-700"></div>
+            <span class="text-xs text-gray-400">o escríbelo</span>
+            <div class="flex-1 h-px bg-gray-200 dark:bg-gray-700"></div>
+          </div>
+          <input type="text" [(ngModel)]="movementForm.serial_number"
+            placeholder="SN del equipo (ej: HWTC1234ABCD)"
+            class="bg-white border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-green-500 focus:border-green-500 block w-full p-2.5 font-mono dark:bg-gray-800 dark:border-gray-600 dark:text-white" />
+        </ng-container>
+
+        <p *ngIf="barcodeError" class="text-xs text-red-600 dark:text-red-400">{{ barcodeError }}</p>
+      </div>
+
       <div>
         <label class="block mb-1 text-sm font-medium text-gray-700 dark:text-gray-300">Tipo *</label>
         <select [(ngModel)]="movementForm.type"

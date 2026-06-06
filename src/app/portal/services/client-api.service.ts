@@ -49,6 +49,14 @@ export class ClientApiService {
     return this.http.post(`${this.baseUrl}/invoices/${id}/send-whatsapp`, {}, this.headers());
   }
 
+  sendInvoiceEmail(id: number): Observable<any> {
+    return this.http.post(`${this.baseUrl}/invoices/${id}/send-email`, {}, this.headers());
+  }
+
+  sendInvoice(id: number, channel: 'whatsapp' | 'email' | 'both'): Observable<any> {
+    return this.http.post(`${this.baseUrl}/invoices/${id}/send?channel=${channel}`, {}, this.headers());
+  }
+
   generatePaymentLink(id: number): Observable<any> {
     return this.http.post(`${this.baseUrl}/invoices/${id}/pay-link`, {}, this.headers());
   }

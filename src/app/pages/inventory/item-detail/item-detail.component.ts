@@ -3,6 +3,7 @@ import { CommonModule }     from '@angular/common';
 import { FormsModule }      from '@angular/forms';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { InventoryService }          from '../../../services/inventory.service';
+import { ToastService }               from '../../../services/toast.service';
 import { InventoryItemInterface }    from '../../../models/inventory-item.interface';
 import { InventoryMovementInterface } from '../../../models/inventory-movement.interface';
 
@@ -38,6 +39,7 @@ export class ItemDetailComponent implements OnInit {
   constructor(
     private route: ActivatedRoute,
     private inventoryService: InventoryService,
+    private toast: ToastService,
   ) {}
 
   ngOnInit() {
@@ -90,18 +92,19 @@ export class ItemDetailComponent implements OnInit {
 
   saveMovement() {
     if (this.movementForm.quantity <= 0) {
-      alert('La cantidad debe ser mayor a 0.');
+      this.toast.warning('La cantidad debe ser mayor a 0.');
       return;
     }
     if (this.movementForm.type === 'salida' && this.item) {
       if (this.movementForm.quantity > (this.item.quantity || 0)) {
-        alert(`Stock insuficiente. Stock actual: ${this.item.quantity || 0}`);
+        this.toast.error(`Stock insuficiente. Stock actual: ${this.item.quantity || 0}`);
         return;
       }
     }
     this.inventoryService.createMovement(this.movementForm).subscribe(data => {
-      alert(data.message);
-      if (!data.error) {
+      if (data.error) { this.toast.error(data.message); }
+      else {
+        this.toast.success(data.message);
         this.closeMovementModal();
         this.loadItem(this.item!.id!);
       }

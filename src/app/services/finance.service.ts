@@ -287,6 +287,29 @@ export class FinanceService {
     return this.http.delete<any>(`${this.env.rootUrl}api/payment-methods/${id}`, { headers: this.getHeaders() });
   }
 
+  // ── Envío de facturas ──────────────────────────────────────────────────────
+
+  sendInvoiceByWhatsApp(invoiceId: number | string): Observable<any> {
+    return this.http.post<any>(
+      `${this.env.rootUrl}api/generatePdf/sendInvoiceByWhatsApp/${invoiceId}`,
+      {}, { headers: this.getHeaders() }
+    );
+  }
+
+  sendInvoiceByEmail(invoiceId: number | string): Observable<any> {
+    return this.http.post<any>(
+      `${this.env.rootUrl}api/generatePdf/sendInvoiceByEmail/${invoiceId}`,
+      {}, { headers: this.getHeaders() }
+    );
+  }
+
+  sendInvoice(invoiceId: number | string, channel: 'whatsapp' | 'email' | 'both' = 'whatsapp'): Observable<any> {
+    return this.http.post<any>(
+      `${this.env.rootUrl}api/generatePdf/sendInvoice/${invoiceId}?channel=${channel}`,
+      {}, { headers: this.getHeaders() }
+    );
+  }
+
   // ── Compromisos de pago ───────────────────────────────────────────────────
 
   getCommitments(cabId: number): Observable<any> {

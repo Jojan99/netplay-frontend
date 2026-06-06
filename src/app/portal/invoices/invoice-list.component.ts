@@ -145,17 +145,30 @@ export class InvoiceListComponent implements OnInit {
   }
 
   sendWhatsapp(invoice: any): void {
+    this.sendInvoice(invoice, 'whatsapp');
+  }
+
+  sendEmail(invoice: any): void {
+    this.sendInvoice(invoice, 'email');
+  }
+
+  sendInvoice(invoice: any, channel: 'whatsapp' | 'email' | 'both'): void {
     this.sendingId.set(invoice.id);
     this.sendResult.set(null);
-    this.api.sendInvoiceWhatsapp(invoice.id).subscribe({
-      next: () => {
+    this.api.sendInvoice(invoice.id, channel).subscribe({
+      next: (res) => {
         this.sendingId.set(null);
-        this.sendResult.set({ id: invoice.id, ok: true, msg: 'Factura enviada por WhatsApp' });
+        const msg = channel === 'whatsapp'
+          ? 'Factura enviada por WhatsApp'
+          : channel === 'email'
+            ? 'Factura enviada por correo'
+            : 'Factura enviada por WhatsApp y correo';
+        this.sendResult.set({ id: invoice.id, ok: res.status === 'ok' || res.status === 0, msg: res.message || msg });
         setTimeout(() => this.sendResult.set(null), 4000);
       },
-      error: () => {
+      error: (err) => {
         this.sendingId.set(null);
-        this.sendResult.set({ id: invoice.id, ok: false, msg: 'Error al enviar' });
+        this.sendResult.set({ id: invoice.id, ok: false, msg: err.error?.message || 'Error al enviar' });
         setTimeout(() => this.sendResult.set(null), 4000);
       },
     });

@@ -140,14 +140,15 @@ export class InventoryService {
   }
 
   createMovement(data: {
-    inventory_id: number;
-    type: 'entrada' | 'salida' | 'ajuste';
-    quantity: number;
-    unit_price?: number;
-    description?: string;
-    reference?: string;
-    batch_number?: string;
-    expiry_date?: string;
+    inventory_id:   number;
+    type:           'entrada' | 'salida' | 'ajuste';
+    quantity:       number;
+    unit_price?:    number;
+    description?:   string;
+    reference?:     string;
+    serial_number?: string;
+    batch_number?:  string;
+    expiry_date?:   string;
   }): Observable<any> {
     return this.http.post(
       `${this.env.rootUrl}api/inventory/movements`,

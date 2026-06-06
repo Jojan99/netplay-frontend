@@ -93,6 +93,17 @@ export class FinanceComponent implements OnInit, OnDestroy {
   savingCommitment   = false;
   commitmentError    = '';
 
+  // ── Envío de facturas ────────────────────────────────────────────────────
+  sendModal       = false;
+  sendModalInv    : any[] = [];  // facturas a enviar
+  sendChannel     : 'whatsapp' | 'email' | 'both' = 'whatsapp';
+  sendingIds      : Set<number> = new Set();
+  sendResult      : { ok: boolean; msg: string } | null = null;
+  sendBulkIds     : Set<number> = new Set();
+  sendBulkModal   = false;
+  sendBulkChannel : 'whatsapp' | 'email' | 'both' = 'whatsapp';
+  sendingBulk     = false;
+
   get commitmentTotal(): number {
     return this.invoices
       .filter(i => i.paid !== 1 && this.commitmentSelected.has(i.id))
@@ -433,6 +444,101 @@ export class FinanceComponent implements OnInit, OnDestroy {
 
   get activeCommitment(): any | null {
     return this.commitments.find(c => c.status === 'pending') ?? null;
+  }
+
+  // ── Envío de facturas ────────────────────────────────────────────────────
+
+  openSendModal(invoice: any): void {
+    this.sendModalInv = [invoice];
+    this.sendChannel = 'whatsapp';
+    this.sendResult = null;
+    this.sendModal = true;
+  }
+
+  openSendBulkModal(): void {
+    const pending = this.invoices.filter(i => i.paid !== 1);
+    if (pending.length === 0) { this.toast.error('No hay facturas pendientes para enviar'); return; }
+    this.sendBulkIds = new Set(pending.map(i => i.id));
+    this.sendBulkChannel = 'whatsapp';
+    this.sendResult = null;
+    this.sendBulkModal = true;
+  }
+
+  closeSendModal(): void { this.sendModal = false; this.sendModalInv = []; }
+  closeSendBulkModal(): void { this.sendBulkModal = false; this.sendBulkIds.clear(); }
+
+  confirmSend(): void {
+    if (this.sendModalInv.length === 0) return;
+    const inv = this.sendModalInv[0];
+    this.sendingIds.add(inv.id);
+    this.sendResult = null;
+    this.financeService.sendInvoice(inv.id, this.sendChannel).subscribe({
+      next: (res) => {
+        this.sendingIds.delete(inv.id);
+        this.sendResult = { ok: res.status === 'ok' || res.status === 0, msg: res.message || 'Factura enviada' };
+        if (this.sendResult.ok) {
+          setTimeout(() => { this.closeSendModal(); this.sendResult = null; }, 2500);
+        }
+      },
+      error: (err) => {
+        this.sendingIds.delete(inv.id);
+        this.sendResult = { ok: false, msg: err.error?.message || 'Error al enviar factura' };
+      },
+    });
+  }
+
+  confirmSendBulk(): void {
+    if (this.sendBulkIds.size === 0) { this.toast.error('Selecciona al menos una factura'); return; }
+    this.sendingBulk = true;
+    this.sendResult = null;
+    const ids = Array.from(this.sendBulkIds);
+    let completed = 0;
+    let errors: string[] = [];
+    ids.forEach(id => {
+      this.sendingIds.add(id);
+      this.financeService.sendInvoice(id, this.sendBulkChannel).subscribe({
+        next: (res) => {
+          this.sendingIds.delete(id);
+          completed++;
+          if (completed === ids.length) {
+            this.sendingBulk = false;
+            this.sendResult = { ok: errors.length === 0, msg: `${ids.length - errors.length}/${ids.length} enviadas` + (errors.length ? ` (${errors.length} fallidas)` : '') };
+            setTimeout(() => { this.closeSendBulkModal(); this.sendResult = null; }, 3000);
+          }
+        },
+        error: (err) => {
+          this.sendingIds.delete(id);
+          errors.push(err.error?.message || 'Error');
+          completed++;
+          if (completed === ids.length) {
+            this.sendingBulk = false;
+            this.sendResult = { ok: errors.length === 0, msg: `${ids.length - errors.length}/${ids.length} enviadas` + (errors.length ? ` (${errors.length} fallidas)` : '') };
+          }
+        },
+      });
+    });
+  }
+
+  toggleSendBulkInvoice(id: number): void {
+    this.sendBulkIds.has(id) ? this.sendBulkIds.delete(id) : this.sendBulkIds.add(id);
+  }
+
+  toggleAllSendBulk(): void {
+    const pending = this.invoices.filter(i => i.paid !== 1);
+    if (pending.every(i => this.sendBulkIds.has(i.id))) {
+      pending.forEach(i => this.sendBulkIds.delete(i.id));
+    } else {
+      pending.forEach(i => this.sendBulkIds.add(i.id));
+    }
+  }
+
+  get allSendBulkSelected(): boolean {
+    const pending = this.invoices.filter(i => i.paid !== 1);
+    return pending.length > 0 && pending.every(i => this.sendBulkIds.has(i.id));
+  }
+
+  get sendBulkInvoices(): any[] {
+    return this.invoices.filter(i => i.paid !== 1);
   }
 
   // ── CSV export ───────────────────────────────────────────────────────────

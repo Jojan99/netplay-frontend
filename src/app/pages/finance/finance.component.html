@@ -151,6 +151,14 @@
           </svg>
           CSV
         </button>
+        <button (click)="openSendBulkModal()"
+          class="flex items-center gap-1.5 px-3 py-1.5 text-xs bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors">
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/>
+          </svg>
+          Enviar
+        </button>
         <button (click)="closeDrawer()"
           class="p-1.5 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">
           <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -245,7 +253,7 @@
               </div>
 
               <!-- Actions -->
-              <div *ngIf="inv.paid !== 1" class="mt-3 flex gap-2">
+              <div *ngIf="inv.paid !== 1" class="mt-3 flex gap-2 flex-wrap">
                 <button (click)="openPayModal(inv)"
                   class="flex-1 py-1.5 bg-green-600 hover:bg-green-700 text-white text-xs rounded-lg transition-colors font-medium">
                   Pagar
@@ -258,11 +266,19 @@
                   class="flex-1 py-1.5 bg-gray-500 hover:bg-gray-600 text-white text-xs rounded-lg transition-colors font-medium">
                   Editar
                 </button>
+                <button (click)="openSendModal(inv)"
+                  class="flex-1 py-1.5 bg-purple-600 hover:bg-purple-700 text-white text-xs rounded-lg transition-colors font-medium">
+                  Enviar
+                </button>
               </div>
-              <div *ngIf="inv.paid === 1" class="mt-3">
+              <div *ngIf="inv.paid === 1" class="mt-3 flex gap-2">
                 <button (click)="openEditModal(inv)"
-                  class="w-full py-1.5 bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 text-xs rounded-lg transition-colors">
+                  class="flex-1 py-1.5 bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 text-xs rounded-lg transition-colors">
                   Editar factura
+                </button>
+                <button (click)="openSendModal(inv)"
+                  class="flex-1 py-1.5 bg-purple-600 hover:bg-purple-700 text-white text-xs rounded-lg transition-colors font-medium">
+                  Enviar
                 </button>
               </div>
             </div>
@@ -628,6 +644,162 @@
       <button (click)="confirmEdit()"
         class="flex-1 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-semibold transition-colors">
         Guardar cambios
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════ MODAL: ENVIAR FACTURA (INDIVIDUAL) ═══════════════════ -->
+<div *ngIf="sendModal" class="fixed inset-0 z-50 flex items-center justify-center p-4">
+  <div class="absolute inset-0 bg-black/50" (click)="closeSendModal()"></div>
+  <div class="relative bg-white dark:bg-gray-800 rounded-xl shadow-2xl w-full max-w-md p-6">
+    <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-4">Enviar factura</h3>
+
+    <div class="bg-gray-50 dark:bg-gray-700 rounded-lg p-4 mb-4 space-y-2 text-sm">
+      <div class="flex justify-between">
+        <span class="text-gray-500">Factura</span>
+        <span class="font-medium text-gray-800 dark:text-gray-200">{{ sendModalInv[0]?.number_facture }}</span>
+      </div>
+      <div class="flex justify-between">
+        <span class="text-gray-500">Cliente</span>
+        <span class="font-medium text-gray-800 dark:text-gray-200">{{ selectedClient?.names }} {{ selectedClient?.lastname }}</span>
+      </div>
+    </div>
+
+    <div class="mb-4">
+      <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Canal de envío</label>
+      <div class="grid grid-cols-3 gap-2">
+        <button (click)="sendChannel = 'whatsapp'"
+          [class]="sendChannel === 'whatsapp'
+            ? 'bg-green-600 text-white border-green-600'
+            : 'bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-600'"
+          class="flex flex-col items-center gap-1 px-3 py-2 border rounded-lg text-xs font-medium transition-colors">
+          <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+            <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
+          </svg>
+          WhatsApp
+        </button>
+        <button (click)="sendChannel = 'email'"
+          [class]="sendChannel === 'email'
+            ? 'bg-blue-600 text-white border-blue-600'
+            : 'bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-600'"
+          class="flex flex-col items-center gap-1 px-3 py-2 border rounded-lg text-xs font-medium transition-colors">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+          </svg>
+          Email
+        </button>
+        <button (click)="sendChannel = 'both'"
+          [class]="sendChannel === 'both'
+            ? 'bg-purple-600 text-white border-purple-600'
+            : 'bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-600'"
+          class="flex flex-col items-center gap-1 px-3 py-2 border rounded-lg text-xs font-medium transition-colors">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/>
+          </svg>
+          Ambos
+        </button>
+      </div>
+    </div>
+
+    <div *ngIf="sendResult" [class]="'flex items-center gap-2 p-3 mb-4 rounded-lg border text-sm ' + (sendResult.ok ? 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800 text-green-800 dark:text-green-300' : 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800 text-red-800 dark:text-red-300')">
+      {{ sendResult.msg }}
+    </div>
+
+    <div class="flex gap-3">
+      <button (click)="closeSendModal()"
+        class="flex-1 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+        Cancelar
+      </button>
+      <button (click)="confirmSend()" [disabled]="sendingIds.has(sendModalInv[0]?.id)"
+        class="flex-1 py-2 bg-purple-600 hover:bg-purple-700 disabled:opacity-50 text-white rounded-lg text-sm font-semibold transition-colors flex items-center justify-center gap-2">
+        <svg *ngIf="sendingIds.has(sendModalInv[0]?.id)" class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
+          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
+        </svg>
+        <span>{{ sendingIds.has(sendModalInv[0]?.id) ? 'Enviando...' : 'Enviar' }}</span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════ MODAL: ENVIAR FACTURAS (MASIVO) ═══════════════════ -->
+<div *ngIf="sendBulkModal" class="fixed inset-0 z-50 flex items-center justify-center p-4">
+  <div class="absolute inset-0 bg-black/50" (click)="closeSendBulkModal()"></div>
+  <div class="relative bg-white dark:bg-gray-800 rounded-xl shadow-2xl w-full max-w-lg p-6">
+    <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-1">Envío masivo de facturas</h3>
+    <p class="text-sm text-gray-500 dark:text-gray-400 mb-4">Selecciona las facturas y el canal de envío.</p>
+
+    <div class="mb-4">
+      <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Canal de envío</label>
+      <div class="grid grid-cols-3 gap-2">
+        <button (click)="sendBulkChannel = 'whatsapp'"
+          [class]="sendBulkChannel === 'whatsapp'
+            ? 'bg-green-600 text-white border-green-600'
+            : 'bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-600'"
+          class="flex flex-col items-center gap-1 px-3 py-2 border rounded-lg text-xs font-medium transition-colors">
+          <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+            <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
+          </svg>
+          WhatsApp
+        </button>
+        <button (click)="sendBulkChannel = 'email'"
+          [class]="sendBulkChannel === 'email'
+            ? 'bg-blue-600 text-white border-blue-600'
+            : 'bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-600'"
+          class="flex flex-col items-center gap-1 px-3 py-2 border rounded-lg text-xs font-medium transition-colors">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+          </svg>
+          Email
+        </button>
+        <button (click)="sendBulkChannel = 'both'"
+          [class]="sendBulkChannel === 'both'
+            ? 'bg-purple-600 text-white border-purple-600'
+            : 'bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-600'"
+          class="flex flex-col items-center gap-1 px-3 py-2 border rounded-lg text-xs font-medium transition-colors">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/>
+          </svg>
+          Ambos
+        </button>
+      </div>
+    </div>
+
+    <!-- Seleccionar todos -->
+    <div class="flex items-center gap-2 mb-3">
+      <input type="checkbox" id="sendbulk-all" [checked]="allSendBulkSelected" (change)="toggleAllSendBulk()"
+             class="w-4 h-4 text-blue-600 rounded border-gray-300 dark:border-gray-600">
+      <label for="sendbulk-all" class="text-sm font-medium text-gray-700 dark:text-gray-300">Seleccionar todas</label>
+    </div>
+
+    <div class="space-y-2 max-h-52 overflow-y-auto mb-4">
+      <div *ngFor="let inv of sendBulkInvoices" class="flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
+        <input type="checkbox" [id]="'send-'+inv.id" [checked]="sendBulkIds.has(inv.id)" (change)="toggleSendBulkInvoice(inv.id)"
+               class="w-4 h-4 text-blue-600 rounded border-gray-300 dark:border-gray-600">
+        <label [for]="'send-'+inv.id" class="flex-1 text-sm text-gray-700 dark:text-gray-200 cursor-pointer">
+          {{ inv.number_facture }} — <span class="font-semibold text-red-600">{{ formatCurrency(invoiceBalance(inv)) }}</span>
+        </label>
+      </div>
+      <p *ngIf="sendBulkInvoices.length === 0" class="text-sm text-gray-400 text-center py-4">No hay facturas pendientes.</p>
+    </div>
+
+    <div *ngIf="sendResult" [class]="'flex items-center gap-2 p-3 mb-4 rounded-lg border text-sm ' + (sendResult.ok ? 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800 text-green-800 dark:text-green-300' : 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800 text-red-800 dark:text-red-300')">
+      {{ sendResult.msg }}
+    </div>
+
+    <div class="flex gap-3">
+      <button (click)="closeSendBulkModal()"
+        class="flex-1 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+        Cancelar
+      </button>
+      <button (click)="confirmSendBulk()" [disabled]="sendingBulk || sendBulkIds.size === 0"
+        class="flex-1 py-2 bg-purple-600 hover:bg-purple-700 disabled:opacity-50 text-white rounded-lg text-sm font-semibold transition-colors flex items-center justify-center gap-2">
+        <svg *ngIf="sendingBulk" class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
+          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
+        </svg>
+        <span>{{ sendingBulk ? 'Enviando...' : 'Enviar (' + sendBulkIds.size + ')' }}</span>
       </button>
     </div>
   </div>
