@@ -57,6 +57,10 @@ export class ClientApiService {
     return this.http.post(`${this.baseUrl}/invoices/${id}/send?channel=${channel}`, {}, this.headers());
   }
 
+  getSendHistory(id: number): Observable<any> {
+    return this.http.get(`${this.baseUrl}/invoices/${id}/send-history`, this.headers());
+  }
+
   generatePaymentLink(id: number): Observable<any> {
     return this.http.post(`${this.baseUrl}/invoices/${id}/pay-link`, {}, this.headers());
   }

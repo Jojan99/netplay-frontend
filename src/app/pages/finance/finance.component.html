@@ -252,6 +252,16 @@
                 <span *ngIf="inv.paid_at"> &middot; {{ inv.paid_at | date:'dd/MM/yyyy HH:mm' }}</span>
               </div>
 
+              <div class="mt-2 flex items-center gap-2 text-xs">
+                <button (click)="openSendHistoryModal(inv)"
+                  class="text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1">
+                  <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                  </svg>
+                  Historial de envíos
+                </button>
+              </div>
+
               <!-- Actions -->
               <div *ngIf="inv.paid !== 1" class="mt-3 flex gap-2 flex-wrap">
                 <button (click)="openPayModal(inv)"
@@ -800,6 +810,51 @@
           <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
         </svg>
         <span>{{ sendingBulk ? 'Enviando...' : 'Enviar (' + sendBulkIds.size + ')' }}</span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════ MODAL: HISTORIAL DE ENVÍOS ═══════════════════ -->
+<div *ngIf="sendHistoryModal" class="fixed inset-0 z-50 flex items-center justify-center p-4">
+  <div class="absolute inset-0 bg-black/50" (click)="closeSendHistoryModal()"></div>
+  <div class="relative bg-white dark:bg-gray-800 rounded-xl shadow-2xl w-full max-w-lg p-6">
+    <div class="flex items-center justify-between mb-4">
+      <h3 class="text-lg font-bold text-gray-900 dark:text-white">Historial de envíos</h3>
+      <span class="text-xs text-gray-400 font-mono">{{ sendHistoryInvoice?.number_facture }}</span>
+    </div>
+
+    <div *ngIf="sendHistoryLoading" class="flex items-center justify-center py-8">
+      <svg class="w-6 h-6 animate-spin text-blue-500" fill="none" viewBox="0 0 24 24">
+        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
+        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
+      </svg>
+    </div>
+
+    <div *ngIf="!sendHistoryLoading && sendHistoryData.length === 0" class="text-center py-8 text-gray-400 dark:text-gray-500 text-sm">
+      Sin envíos registrados
+    </div>
+
+    <div *ngIf="!sendHistoryLoading && sendHistoryData.length > 0" class="space-y-2 max-h-80 overflow-y-auto">
+      <div *ngFor="let log of sendHistoryData" class="flex items-center justify-between p-3 rounded-lg border"
+        [class]="log.status === 'ok' ? 'bg-green-50 dark:bg-green-900/10 border-green-200 dark:border-green-800' : (log.status === 'partial' ? 'bg-yellow-50 dark:bg-yellow-900/10 border-yellow-200 dark:border-yellow-800' : 'bg-red-50 dark:bg-red-900/10 border-red-200 dark:border-red-800')">
+        <div class="flex items-center gap-3">
+          <span [class]="'text-xs font-medium px-2 py-0.5 rounded-full ' + sendHistoryStatusClass(log.status)">
+            {{ log.status === 'ok' ? 'Éxito' : (log.status === 'partial' ? 'Parcial' : 'Error') }}
+          </span>
+          <span class="text-xs font-medium text-gray-700 dark:text-gray-300">{{ sendHistoryChannelLabel(log.channel) }}</span>
+          <span class="text-xs text-gray-400">{{ log.created_at | date:'dd/MM/yyyy HH:mm' }}</span>
+        </div>
+        <div class="text-xs text-gray-500 dark:text-gray-400 max-w-[140px] truncate" [title]="log.message">
+          {{ log.message }}
+        </div>
+      </div>
+    </div>
+
+    <div class="flex justify-end mt-4">
+      <button (click)="closeSendHistoryModal()"
+        class="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+        Cerrar
       </button>
     </div>
   </div>

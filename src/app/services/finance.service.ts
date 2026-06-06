@@ -310,6 +310,13 @@ export class FinanceService {
     );
   }
 
+  getSendHistory(invoiceId: number | string): Observable<any> {
+    return this.http.get<any>(
+      `${this.env.rootUrl}api/generatePdf/sendHistory/${invoiceId}`,
+      { headers: this.getHeaders() }
+    );
+  }
+
   // ── Compromisos de pago ───────────────────────────────────────────────────
 
   getCommitments(cabId: number): Observable<any> {

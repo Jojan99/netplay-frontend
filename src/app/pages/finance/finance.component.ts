@@ -104,6 +104,12 @@ export class FinanceComponent implements OnInit, OnDestroy {
   sendBulkChannel : 'whatsapp' | 'email' | 'both' = 'whatsapp';
   sendingBulk     = false;
 
+  // Historial de envíos
+  sendHistoryModal = false;
+  sendHistoryInvoice: any = null;
+  sendHistoryData: any[] = [];
+  sendHistoryLoading = false;
+
   get commitmentTotal(): number {
     return this.invoices
       .filter(i => i.paid !== 1 && this.commitmentSelected.has(i.id))
@@ -455,6 +461,39 @@ export class FinanceComponent implements OnInit, OnDestroy {
     this.sendModal = true;
   }
 
+  openSendHistoryModal(invoice: any): void {
+    this.sendHistoryInvoice = invoice;
+    this.sendHistoryData = [];
+    this.sendHistoryLoading = true;
+    this.sendHistoryModal = true;
+    this.financeService.getSendHistory(invoice.id).subscribe({
+      next: (res) => {
+        this.sendHistoryData = res.data || [];
+        this.sendHistoryLoading = false;
+      },
+      error: () => { this.sendHistoryLoading = false; },
+    });
+  }
+
+  closeSendHistoryModal(): void {
+    this.sendHistoryModal = false;
+    this.sendHistoryInvoice = null;
+    this.sendHistoryData = [];
+  }
+
+  sendHistoryChannelLabel(ch: string): string {
+    return { whatsapp: 'WhatsApp', email: 'Email', both: 'Ambos' }[ch] || ch;
+  }
+
+  sendHistoryStatusClass(s: string): string {
+    const m: Record<string, string> = {
+      ok: 'bg-green-100 text-green-800',
+      error: 'bg-red-100 text-red-800',
+      partial: 'bg-yellow-100 text-yellow-800',
+    };
+    return m[s] ?? 'bg-gray-100 text-gray-700';
+  }
+
   openSendBulkModal(): void {
     const pending = this.invoices.filter(i => i.paid !== 1);
     if (pending.length === 0) { this.toast.error('No hay facturas pendientes para enviar'); return; }
@@ -482,9 +521,19 @@ export class FinanceComponent implements OnInit, OnDestroy {
       },
       error: (err) => {
         this.sendingIds.delete(inv.id);
-        this.sendResult = { ok: false, msg: err.error?.message || 'Error al enviar factura' };
+        const msg = this.formatSendError(err);
+        this.sendResult = { ok: false, msg };
       },
     });
+  }
+
+  private formatSendError(err: any): string {
+    const code = err.error?.error_code;
+    const msg = err.error?.message;
+    if (code === 'NO_PHONE') return 'El cliente no tiene teléfono registrado.';
+    if (code === 'NO_EMAIL') return 'El cliente no tiene correo válido registrado.';
+    if (msg) return msg;
+    return 'Error al enviar factura. Intenta de nuevo.';
   }
 
   confirmSendBulk(): void {

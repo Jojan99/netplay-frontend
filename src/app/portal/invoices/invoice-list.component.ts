@@ -152,6 +152,36 @@ export class InvoiceListComponent implements OnInit {
     this.sendInvoice(invoice, 'email');
   }
 
+  // ── Historial de envíos ────────────────────────────────────────────────
+  sendHistoryModal = signal(false);
+  sendHistoryData = signal<any[]>([]);
+  sendHistoryLoading = signal(false);
+  sendHistoryInvoice = signal<any | null>(null);
+
+  openSendHistory(invoice: any): void {
+    this.sendHistoryInvoice.set(invoice);
+    this.sendHistoryData.set([]);
+    this.sendHistoryLoading.set(true);
+    this.sendHistoryModal.set(true);
+    this.api.getSendHistory(invoice.id).subscribe({
+      next: (res) => {
+        this.sendHistoryData.set(res.data || []);
+        this.sendHistoryLoading.set(false);
+      },
+      error: () => { this.sendHistoryLoading.set(false); },
+    });
+  }
+
+  closeSendHistory(): void {
+    this.sendHistoryModal.set(false);
+    this.sendHistoryInvoice.set(null);
+    this.sendHistoryData.set([]);
+  }
+
+  sendHistoryChannelLabel(ch: string): string {
+    return { whatsapp: 'WhatsApp', email: 'Email', both: 'Ambos' }[ch] || ch;
+  }
+
   sendInvoice(invoice: any, channel: 'whatsapp' | 'email' | 'both'): void {
     this.sendingId.set(invoice.id);
     this.sendResult.set(null);
@@ -168,10 +198,20 @@ export class InvoiceListComponent implements OnInit {
       },
       error: (err) => {
         this.sendingId.set(null);
-        this.sendResult.set({ id: invoice.id, ok: false, msg: err.error?.message || 'Error al enviar' });
+        const msg = this.formatSendError(err);
+        this.sendResult.set({ id: invoice.id, ok: false, msg });
         setTimeout(() => this.sendResult.set(null), 4000);
       },
     });
+  }
+
+  private formatSendError(err: any): string {
+    const code = err.error?.error_code;
+    const msg = err.error?.message;
+    if (code === 'NO_PHONE') return 'El cliente no tiene teléfono registrado.';
+    if (code === 'NO_EMAIL') return 'El cliente no tiene correo válido registrado.';
+    if (msg) return msg;
+    return 'Error al enviar. Intenta de nuevo.';
   }
 
   // ── Flujo de pago ─────────────────────────────────────────────────────────
