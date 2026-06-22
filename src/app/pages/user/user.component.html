@@ -666,10 +666,16 @@
         <div *ngIf="modalTab === 'tickets'">
           <div class="flex flex-wrap items-center justify-between gap-2 mb-4">
             <h4 class="font-semibold text-gray-800 dark:text-white">Historial de Tickets</h4>
-            <button (click)="showNewTicketForm = !showNewTicketForm"
-              class="px-4 py-2 text-sm rounded-lg bg-orange-500 text-white hover:bg-orange-600 transition whitespace-nowrap flex items-center gap-2">
-              <i class="pi pi-plus text-sm"></i> Nuevo ticket
-            </button>
+            <div class="flex items-center gap-2">
+              <button (click)="openPingModal(selectedUserData?.ip, selectedUserData?.names, selectedUserData?.lastname, selectedUserData?.dni, selectedUserId)"
+                class="px-4 py-2 text-sm rounded-lg bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-white hover:bg-gray-300 dark:hover:bg-gray-600 transition whitespace-nowrap flex items-center gap-2">
+                <i class="pi pi-send text-sm"></i> Ping
+              </button>
+              <button (click)="showNewTicketForm = !showNewTicketForm"
+                class="px-4 py-2 text-sm rounded-lg bg-orange-500 text-white hover:bg-orange-600 transition whitespace-nowrap flex items-center gap-2">
+                <i class="pi pi-plus text-sm"></i> Nuevo ticket
+              </button>
+            </div>
           </div>
 
           <!-- New ticket form -->
