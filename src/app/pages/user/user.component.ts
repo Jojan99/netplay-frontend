@@ -116,7 +116,13 @@ export class UserComponent implements OnInit {
       this.PlanInternet = r.data.map((e: any) => ({ id: e.id, names: e.plan_name })));
     this.userSvc.getServiceTicket().subscribe(r => this.serviceTypes = r.data ?? []);
     this.userSvc.getPriorityTicket().subscribe(r => this.priorities = r.data ?? []);
-    this.userSvc.getTechnicaAll().subscribe(r => this.technicians = r.data ?? []);
+    this.userSvc.getTechnicaAll().subscribe(r => {
+      this.technicians = (r.data || []).map((e: any) => ({
+        id_user:  e.user_id,
+        names:    e.names,
+        lastname: e.lastname,
+      }));
+    });
   }
 
   loadRouters() {
@@ -606,8 +612,14 @@ export class UserComponent implements OnInit {
     });
   }
 
+  getTechnicianName(): string {
+    const techId = this.ticketForm.tecnichal;
+    const tech   = this.technicians.find((t: any) => t.id_user == techId);
+    return tech ? `${tech.names} ${tech.lastname}` : '';
+  }
+
   createTicket() {
-    if (!this.ticketForm.type_service || !this.ticketForm.priority || !this.ticketForm.tecnichal) {
+    if (!this.ticketForm.type_service || !this.ticketForm.priority || !this.ticketForm.tecnichal || !this.ticketForm.observation?.trim()) {
       this.toast('Complete los campos requeridos', 'error'); return;
     }
     this.submittingTicket = true;
@@ -619,13 +631,13 @@ export class UserComponent implements OnInit {
       phone:  d?.phone ?? '',
       address: this.ticketForm.address || d?.address || '',
       client_name: `${d?.names ?? ''} ${d?.lastname ?? ''}`,
-      technician_name: '',
+      technician_name: this.getTechnicianName(),
       search: '',
     }).subscribe({
       next: r => {
-        this.toast('Ticket creado', 'success');
+        this.toast(r.message ?? 'Ticket creado', r.error ? 'error' : 'success');
         this.showNewTicketForm = false;
-        this.ticketForm = { address: '', date: '', type_service: 0, priority: 0, status: 1, tecnichal: 0, observation: '', cedula: '', phone: '' };
+        this.ticketForm = { address: '', date: new Date().toISOString().substring(0, 10), type_service: 0, priority: 0, status: 1, tecnichal: 0, observation: '', cedula: '', phone: '' };
         this.submittingTicket = false;
         this.loadTickets(this.selectedUserId);
       },
