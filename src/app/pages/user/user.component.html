@@ -704,23 +704,18 @@
                 <select [(ngModel)]="ticketForm.tecnichal"
                   class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white text-sm">
                   <option [value]="0" disabled>Seleccione...</option>
-                  <option *ngFor="let t of technicians" [value]="t.user_id">{{ t.names }} {{ t.lastname }}</option>
+                  <option *ngFor="let t of technicians" [value]="t.id_user">{{ t.names }} {{ t.lastname }}</option>
                 </select>
               </div>
               <div>
                 <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Fecha</label>
-                <input type="datetime-local" [(ngModel)]="ticketForm.date"
-                  class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white text-sm"/>
-              </div>
-              <div>
-                <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Dirección</label>
-                <input type="text" [(ngModel)]="ticketForm.address" [placeholder]="selectedUserData?.address || ''"
+                <input type="date" [(ngModel)]="ticketForm.date"
                   class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white text-sm"/>
               </div>
               <div class="sm:col-span-2">
-                <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Observación</label>
-                <input type="text" [(ngModel)]="ticketForm.observation" placeholder="Descripción del problema"
-                  class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white text-sm"/>
+                <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Observación *</label>
+                <textarea [(ngModel)]="ticketForm.observation" rows="3" placeholder="Describe el problema o requerimiento..."
+                  class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white text-sm resize-none"></textarea>
               </div>
             </div>
             <div class="flex gap-2">

@@ -599,7 +599,7 @@ export class UserComponent implements OnInit {
   }
 
   ticketForm = {
-    address: '', date: '', type_service: 0, priority: 0, status: 1,
+    address: '', date: new Date().toISOString().substring(0, 10), type_service: 0, priority: 0, status: 1,
     tecnichal: 0, observation: '', cedula: '', phone: ''
   };
 
@@ -629,7 +629,7 @@ export class UserComponent implements OnInit {
       user_id: this.selectedUserId,
       cedula: d?.dni ?? '',
       phone:  d?.phone ?? '',
-      address: this.ticketForm.address || d?.address || '',
+      address: d?.address || '',
       client_name: `${d?.names ?? ''} ${d?.lastname ?? ''}`,
       technician_name: this.getTechnicianName(),
       search: '',
