@@ -1,10 +1,11 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { UserService } from '../../../services/user.service';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormsModule } from '@angular/forms';
 import { GenericInterface } from '../../../models/generic-interface';
 import { Router } from '@angular/router';
+import { Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-maintenance-ticket',
@@ -38,7 +39,8 @@ export class MaintenanceTicketComponent implements OnInit {
   constructor(
     private fb: FormBuilder,
     private userService: UserService,
-    private router: Router
+    private router: Router,
+    private cdr: ChangeDetectorRef
   ) {
     this.ticketForm = this.fb.group({
       date:         [new Date().toISOString().substring(0, 10), Validators.required],
@@ -171,5 +173,56 @@ export class MaintenanceTicketComponent implements OnInit {
   isInvalid(field: string): boolean {
     const ctrl = this.ticketForm.get(field);
     return !!(ctrl && ctrl.invalid && ctrl.touched);
+  }
+
+  // ── Ping ──────────────────────────────────────────────────────────────────
+  pingName = '';
+  pingDni: any = '';
+  pingCount = 5;
+  pingResults: Array<{ host: string; time: string; received: string; status: string }> = [];
+  showPingModal = false;
+  showPingForm = false;
+  isPinging = false;
+  private pingSubscription: Subscription | null = null;
+
+  openPingModal(name: string, lastname: string, dni: any) {
+    this.pingName     = `${name} ${lastname}`;
+    this.pingDni      = dni;
+    this.pingResults  = [];
+    this.showPingForm = false;
+    this.showPingModal = true;
+    if (this.pingSubscription) { this.pingSubscription.unsubscribe(); this.pingSubscription = null; }
+  }
+
+  closePingModal() {
+    this.showPingModal = false;
+    if (this.pingSubscription) { this.pingSubscription.unsubscribe(); this.pingSubscription = null; }
+    this.pingResults  = [];
+    this.isPinging    = false;
+  }
+
+  startPing() {
+    this.pingResults = [];
+    this.cdr.detectChanges();
+    if (this.pingSubscription) { this.pingSubscription.unsubscribe(); }
+    this.isPinging = true;
+    this.pingSubscription = this.userService.getPingResults(this.pingCount, this.pingDni).subscribe({
+      next: data => {
+        if (data.message === 'done') { this.isPinging = false; return; }
+        const p = typeof data === 'string' ? JSON.parse(data) : data;
+        const status = p['packet-loss'] === '100' ? '❌ Timeout' : p['packet-loss'] === '0' ? '✅ Activo' : '⚠️ Intermitente';
+        this.pingResults.push({ ...p, status });
+        this.cdr.detectChanges();
+      },
+      error: () => { this.isPinging = false; },
+      complete: () => { this.isPinging = false; }
+    });
+  }
+
+  convertToSeconds(time: string | undefined): string {
+    if (!time) return '❌ Timeout';
+    if (time.includes('us')) return (parseFloat(time) / 1_000_000).toFixed(2) + ' s';
+    if (time.includes('ms')) return (parseFloat(time) / 1_000).toFixed(2) + ' s';
+    return parseFloat(time).toFixed(2) + ' s';
   }
 }

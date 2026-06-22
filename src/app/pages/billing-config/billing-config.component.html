@@ -89,10 +89,10 @@
               <p class="text-xs text-gray-500 dark:text-gray-400">Permite enviar facturas por WhatsApp</p>
             </div>
           </div>
-          <button (click)="invoiceForm.whatsapp_enabled = !invoiceForm.whatsapp_enabled"
-                  [class]="invoiceForm.whatsapp_enabled ? 'bg-green-600' : 'bg-gray-300 dark:bg-gray-600'"
+          <button (click)="invoiceForm.invoice_whatsapp_enabled = !invoiceForm.invoice_whatsapp_enabled"
+                  [class]="invoiceForm.invoice_whatsapp_enabled ? 'bg-green-600' : 'bg-gray-300 dark:bg-gray-600'"
                   class="relative w-12 h-6 rounded-full transition-colors focus:outline-none">
-            <span [class]="invoiceForm.whatsapp_enabled ? 'translate-x-6' : 'translate-x-1'"
+            <span [class]="invoiceForm.invoice_whatsapp_enabled ? 'translate-x-6' : 'translate-x-1'"
                   class="absolute top-1 w-4 h-4 bg-white rounded-full shadow transition-transform block"></span>
           </button>
         </div>
@@ -115,6 +115,28 @@
             <span [class]="invoiceForm.email_enabled ? 'translate-x-6' : 'translate-x-1'"
                   class="absolute top-1 w-4 h-4 bg-white rounded-full shadow transition-transform block"></span>
           </button>
+        </div>
+
+        <!-- Límite diario de emails (solo visible si email está habilitado) -->
+        <div *ngIf="invoiceForm.email_enabled" class="pt-3 border-t border-gray-100 dark:border-gray-700">
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="text-sm font-medium text-gray-700 dark:text-gray-300">Límite diario de emails</p>
+              <p class="text-xs text-gray-500 dark:text-gray-400">0 = sin límite. Cantidad máxima de facturas enviadas por email cada día.</p>
+            </div>
+            <div class="flex items-center gap-2">
+              <input
+                type="number"
+                [(ngModel)]="invoiceForm.email_daily_limit"
+                name="email_daily_limit"
+                min="0"
+                step="1"
+                placeholder="0"
+                class="w-24 text-sm rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-800 dark:text-white px-3 py-2 text-right focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+              <span class="text-xs text-gray-500 dark:text-gray-400">/ día</span>
+            </div>
+          </div>
         </div>
       </div>
     </div>

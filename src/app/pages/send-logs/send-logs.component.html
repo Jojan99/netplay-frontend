@@ -113,9 +113,9 @@
             </div>
             <div *ngIf="!log.sent_to_email && !log.sent_to_phone" class="text-gray-300 dark:text-gray-600">—</div>
           </td>
-          <td class="px-5 py-4 text-gray-600 dark:text-gray-300 text-xs max-w-xs truncate" [title]="log.message">
-            {{ log.message }}
-          </td>
+           <td class="px-5 py-4 text-gray-600 dark:text-gray-300 text-xs max-w-xs break-words" [title]="log.message">
+             {{ log.message }}
+           </td>
           <td class="px-5 py-4 text-gray-500 dark:text-gray-400 text-xs">
             {{ formatDate(log.created_at) }}
           </td>
@@ -132,7 +132,7 @@
         <!-- Fila expandida con detalles JSON -->
         <tr *ngIf="log._showDetails && log.details" class="bg-gray-50 dark:bg-gray-700/50">
           <td colspan="7" class="px-5 py-3">
-            <pre class="text-xs text-gray-600 dark:text-gray-300 bg-gray-100 dark:bg-gray-800 rounded-lg p-3 overflow-auto max-h-40">{{ log.details | json }}</pre>
+            <pre class="text-xs text-gray-600 dark:text-gray-300 bg-gray-100 dark:bg-gray-800 rounded-lg p-3 overflow-auto max-h-40 whitespace-pre-wrap break-all">{{ log.details | json }}</pre>
           </td>
         </tr>
       </ng-container>
@@ -178,12 +178,12 @@
         {{ log.sent_to_phone }}
       </div>
     </div>
-    <p class="text-xs text-gray-600 dark:text-gray-300 mb-2">{{ log.message }}</p>
+    <p class="text-xs text-gray-600 dark:text-gray-300 mb-2 break-words">{{ log.message }}</p>
     <button *ngIf="log.details" (click)="toggleDetails(log)"
             class="text-xs text-blue-600 dark:text-blue-400 hover:underline">
       {{ log._showDetails ? 'Ocultar detalle' : 'Ver detalle' }}
     </button>
-    <pre *ngIf="log._showDetails && log.details" class="mt-2 text-xs text-gray-600 dark:text-gray-300 bg-gray-100 dark:bg-gray-800 rounded-lg p-2 overflow-auto max-h-32">{{ log.details | json }}</pre>
+    <pre *ngIf="log._showDetails && log.details" class="mt-2 text-xs text-gray-600 dark:text-gray-300 bg-gray-100 dark:bg-gray-800 rounded-lg p-2 overflow-auto max-h-32 whitespace-pre-wrap break-all">{{ log.details | json }}</pre>
   </div>
   <div *ngIf="!loading && logs.length === 0" class="text-center py-12 text-gray-400 dark:text-gray-500">
     <p class="font-medium text-sm">No hay registros</p>

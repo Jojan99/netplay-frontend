@@ -51,10 +51,16 @@
           <p class="text-xs text-gray-500 dark:text-gray-400 truncate max-w-[200px]">{{ selectedUser.address }}</p>
         </div>
       </div>
-      <button (click)="clearUser()"
-              class="text-xs text-red-500 hover:text-red-700 font-medium">
-        Cambiar
-      </button>
+      <div class="flex items-center gap-2">
+        <button (click)="openPingModal(selectedUser.names, selectedUser.lastname, selectedUser.dni)"
+                class="px-3 py-1.5 text-xs rounded-lg bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-white hover:bg-gray-300 dark:hover:bg-gray-600 transition flex items-center gap-1">
+          <i class="pi pi-send text-xs"></i> Ping
+        </button>
+        <button (click)="clearUser()"
+                class="text-xs text-red-500 hover:text-red-700 font-medium">
+          Cambiar
+        </button>
+      </div>
     </div>
 
     <!-- Search box (only if no user selected) -->
@@ -185,4 +191,57 @@
 
   </div>
 
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════════════════
+     PING MODAL
+   ══════════════════════════════════════════════════════════════════════════ -->
+<div *ngIf="showPingModal"
+     class="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/60 sm:p-4">
+  <div class="bg-white dark:bg-gray-800 rounded-t-2xl sm:rounded-xl shadow-2xl w-full sm:max-w-lg">
+    <div class="flex items-center justify-between px-5 py-4 border-b dark:border-gray-700">
+      <div>
+        <h3 class="font-semibold text-gray-900 dark:text-white">Diagnóstico Ping</h3>
+        <p class="text-sm text-gray-500 dark:text-gray-400">{{ pingName }}</p>
+      </div>
+      <button (click)="closePingModal()" class="text-gray-400 hover:text-red-500 transition">
+        <i class="pi pi-times text-lg"></i>
+      </button>
+    </div>
+    <div class="p-5 space-y-4">
+      <div class="flex items-center gap-3">
+        <div class="flex-1">
+          <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Cantidad de pings</label>
+          <input type="number" [(ngModel)]="pingCount" min="1" max="20"
+            class="w-full px-3 py-2 rounded-lg border dark:bg-gray-700 dark:border-gray-600 dark:text-white text-sm"/>
+        </div>
+        <button (click)="startPing()" [disabled]="isPinging"
+          class="mt-5 px-4 py-2 rounded-lg bg-blue-600 text-white text-sm hover:bg-blue-700 disabled:opacity-50 transition">
+          {{ isPinging ? 'Pinging...' : 'Enviar' }}
+        </button>
+      </div>
+
+      <div *ngIf="pingResults.length > 0"
+           class="rounded-lg border dark:border-gray-700 overflow-hidden max-h-64 overflow-y-auto">
+        <table class="w-full text-xs">
+          <thead class="bg-gray-50 dark:bg-gray-700">
+            <tr>
+              <th class="px-3 py-2 text-left">#</th>
+              <th class="px-3 py-2 text-left">Host</th>
+              <th class="px-3 py-2 text-left">Tiempo</th>
+              <th class="px-3 py-2 text-left">Estado</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-gray-200 dark:divide-gray-700 dark:bg-gray-800">
+            <tr *ngFor="let r of pingResults; let i = index" class="hover:bg-gray-50 dark:hover:bg-gray-700">
+              <td class="px-3 py-2 text-gray-500">{{ i + 1 }}</td>
+              <td class="px-3 py-2">{{ r.host }}</td>
+              <td class="px-3 py-2">{{ convertToSeconds(r.time) }}</td>
+              <td class="px-3 py-2">{{ r.status }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
 </div>
