@@ -125,7 +125,8 @@
             <div class="flex items-center gap-2 mt-2 flex-wrap">
               <span [class]="statusBadge(cc.status)"
                 class="text-xs px-2 py-0.5 rounded-full font-medium">
-                {{ cc.status === 'signed' ? '✓ Firmado' : '● Pendiente' }}
+                <span *ngIf="cc.status === 'signed'"><i class="fa-solid fa-file-signature text-emerald-500 mr-1"></i> Firmado</span>
+                <span *ngIf="cc.status !== 'signed'"><i class="fa-solid fa-hourglass-half text-amber-500 mr-1"></i> Pendiente</span>
               </span>
               <span *ngIf="cc.signed_at" class="text-xs text-gray-400">
                 {{ cc.signed_at | date:'dd/MM/yyyy HH:mm' }}

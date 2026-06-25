@@ -54,7 +54,7 @@
       <div class="flex items-center gap-2">
         <button (click)="openPingModal(selectedUser.names, selectedUser.lastname, selectedUser.dni)"
                 class="px-3 py-1.5 text-xs rounded-lg bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-white hover:bg-gray-300 dark:hover:bg-gray-600 transition flex items-center gap-1">
-          <i class="pi pi-send text-xs"></i> Ping
+          <i class="fa-solid fa-paper-plane text-xs"></i> Ping
         </button>
         <button (click)="clearUser()"
                 class="text-xs text-red-500 hover:text-red-700 font-medium">
@@ -205,7 +205,7 @@
         <p class="text-sm text-gray-500 dark:text-gray-400">{{ pingName }}</p>
       </div>
       <button (click)="closePingModal()" class="text-gray-400 hover:text-red-500 transition">
-        <i class="pi pi-times text-lg"></i>
+        <i class="fa-solid fa-xmark text-lg"></i>
       </button>
     </div>
     <div class="p-5 space-y-4">

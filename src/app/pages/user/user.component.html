@@ -19,11 +19,11 @@
     <div class="flex flex-wrap gap-2">
       <button (click)="openCreateUserModal()"
         class="px-4 py-2 text-sm font-medium rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition flex items-center gap-2">
-        <i class="pi pi-plus text-sm"></i> Nuevo cliente
+        <i class="fa-solid fa-plus text-sm"></i> Nuevo cliente
       </button>
       <button (click)="downloadCsvAll()" [disabled]="exportingCsv"
         class="px-4 py-2 text-sm font-medium rounded-lg bg-green-600 text-white hover:bg-green-700 disabled:opacity-50 transition flex items-center gap-2">
-        <i class="pi pi-download text-sm"></i> {{ exportingCsv ? 'Exportando...' : 'CSV Todos' }}
+        <i class="fa-solid fa-download text-sm"></i> {{ exportingCsv ? 'Exportando...' : 'CSV Todos' }}
       </button>
     </div>
   </div>
@@ -79,8 +79,8 @@
               <!-- Expand -->
               <td class="p-2 text-center">
                 <button (click)="toggleDetails(user)" class="text-gray-400 hover:text-gray-600 dark:hover:text-white">
-                  <i *ngIf="!user.expanded" class="pi pi-chevron-down text-xs"></i>
-                  <i *ngIf="user.expanded" class="pi pi-chevron-up text-xs"></i>
+                  <i *ngIf="!user.expanded" class="fa-solid fa-chevron-down text-xs"></i>
+                  <i *ngIf="user.expanded" class="fa-solid fa-chevron-up text-xs"></i>
                 </button>
               </td>
               <!-- Name -->
@@ -105,20 +105,20 @@
                   <button (click)="openSuspendModal(user.dni, user.id_user, user.internet_status, user.router_id)"
                     title="Suspender/Activar"
                     class="rounded-full p-1 hover:bg-gray-100 dark:hover:bg-gray-700 transition">
-                    <i *ngIf="user.internet_status === 'ACTIVE'" class="pi pi-power-off text-green-500 text-lg"></i>
-                    <i *ngIf="user.internet_status !== 'ACTIVE'" class="pi pi-power-off text-red-500 text-lg"></i>
+                    <i *ngIf="user.internet_status === 'ACTIVE'" class="fa-solid fa-power-off text-green-500 text-lg"></i>
+                    <i *ngIf="user.internet_status !== 'ACTIVE'" class="fa-solid fa-power-off text-red-500 text-lg"></i>
                   </button>
                   <!-- Soporte -->
                   <button (click)="openClienteModal(user.alias, user.id_user, user.id_cab)"
                     title="Soporte"
                     class="rounded-full p-1 hover:bg-gray-100 dark:hover:bg-gray-700 text-blue-600 hover:text-blue-800 transition">
-                    <i class="pi pi-headphones text-lg"></i>
+                    <i class="fa-solid fa-headset text-lg"></i>
                   </button>
                   <!-- Delete -->
                   <button (click)="openDeleteModal(user.id_user, user.dni, user.router_id)"
                     title="Eliminar"
                     class="rounded-full p-1 hover:bg-gray-100 dark:hover:bg-gray-700 text-red-500 hover:text-red-700 transition">
-                    <i class="pi pi-trash text-lg"></i>
+                    <i class="fa-solid fa-trash text-lg"></i>
                   </button>
                   <!-- WhatsApp toggle: solo si empresa tiene WA activo -->
                   <ng-container *ngIf="companyHasWA; else waDisabledTip">
@@ -148,13 +148,13 @@
             <tr *ngIf="user.expanded">
               <td colspan="7" class="bg-gray-50 dark:bg-gray-900 px-4 py-3">
                 <div class="flex flex-wrap gap-3 items-center text-sm text-gray-600 dark:text-gray-400">
-                  <span class="text-xs sm:text-sm flex items-center gap-1"><i class="pi pi-calendar text-xs"></i> <strong class="text-gray-800 dark:text-white">{{ user.date_create | date:'dd/MM/yyyy' }}</strong></span>
-                  <span class="text-xs sm:text-sm flex items-center gap-1"><i class="pi pi-wifi text-xs"></i> <strong class="text-gray-800 dark:text-white">{{ user.ip || 'Sin IP' }}</strong></span>
-                  <span class="text-xs sm:text-sm flex items-center gap-1"><i class="pi pi-box text-xs"></i> <strong class="text-gray-800 dark:text-white">{{ user.plan_name }}</strong></span>
+                  <span class="text-xs sm:text-sm flex items-center gap-1"><i class="fa-solid fa-calendar text-xs"></i> <strong class="text-gray-800 dark:text-white">{{ user.date_create | date:'dd/MM/yyyy' }}</strong></span>
+                  <span class="text-xs sm:text-sm flex items-center gap-1"><i class="fa-solid fa-wifi text-xs"></i> <strong class="text-gray-800 dark:text-white">{{ user.ip || 'Sin IP' }}</strong></span>
+                  <span class="text-xs sm:text-sm flex items-center gap-1"><i class="fa-solid fa-box text-xs"></i> <strong class="text-gray-800 dark:text-white">{{ user.plan_name }}</strong></span>
                   <div class="flex gap-2 ml-auto flex-shrink-0">
                     <button (click)="openPingModal(user.ip, user.names!, user.lastname!, user.dni, user.id_user)"
                       class="flex items-center gap-1 px-3 py-1.5 text-xs rounded-lg bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-700 dark:text-white transition">
-                      <i class="pi pi-send text-xs"></i>
+                      <i class="fa-solid fa-paper-plane text-xs"></i>
                       Ping
                     </button>
                   </div>
@@ -226,12 +226,12 @@
           <button (click)="toggleInternetStatus()" [disabled]="togglingStatus"
             class="px-2 sm:px-3 py-1 text-xs rounded-full font-semibold text-white transition disabled:opacity-60 whitespace-nowrap flex items-center gap-1"
             [ngClass]="selectedUserData?.status_internet === 'ACTIVE' ? 'bg-green-500 hover:bg-green-600' : 'bg-red-500 hover:bg-red-600'">
-            <span *ngIf="!togglingStatus"><i *ngIf="selectedUserData?.status_internet === 'ACTIVE'" class="pi pi-check text-xs"></i><i *ngIf="selectedUserData?.status_internet !== 'ACTIVE'" class="pi pi-times text-xs"></i> {{ selectedUserData?.status_internet === 'ACTIVE' ? 'Activo' : 'Inactivo' }}</span>
-            <span *ngIf="togglingStatus"><i class="pi pi-spin pi-spinner text-xs"></i> ...</span>
+            <span *ngIf="!togglingStatus"><i *ngIf="selectedUserData?.status_internet === 'ACTIVE'" class="fa-solid fa-check text-xs"></i><i *ngIf="selectedUserData?.status_internet !== 'ACTIVE'" class="fa-solid fa-xmark text-xs"></i> {{ selectedUserData?.status_internet === 'ACTIVE' ? 'Activo' : 'Inactivo' }}</span>
+            <span *ngIf="togglingStatus"><i class="fa-solid fa-circle-notch fa-spin text-xs"></i> ...</span>
           </button>
           <button (click)="closeClienteModal()"
             class="w-8 h-8 flex items-center justify-center rounded-lg text-gray-400 hover:text-red-500 hover:bg-gray-100 dark:hover:bg-gray-700 transition">
-            <i class="pi pi-times"></i>
+            <i class="fa-solid fa-xmark"></i>
           </button>
         </div>
       </div>
@@ -241,27 +241,27 @@
         <button (click)="modalTab='resumen'"
           class="px-5 py-3 text-sm font-medium whitespace-nowrap border-b-2 transition flex items-center gap-2"
           [ngClass]="modalTab==='resumen' ? 'border-blue-600 text-blue-600 dark:text-blue-400 dark:border-blue-400' : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'">
-          <i class="pi pi-user text-sm"></i> Resumen
+          <i class="fa-solid fa-user text-sm"></i> Resumen
         </button>
         <button (click)="openServiciosTab()"
           class="px-5 py-3 text-sm font-medium whitespace-nowrap border-b-2 transition flex items-center gap-2"
           [ngClass]="modalTab==='servicios' ? 'border-blue-600 text-blue-600 dark:text-blue-400 dark:border-blue-400' : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'">
-          <i class="pi pi-wrench text-sm"></i> Servicios
+          <i class="fa-solid fa-wrench text-sm"></i> Servicios
         </button>
         <button (click)="modalTab='facturacion'"
           class="px-5 py-3 text-sm font-medium whitespace-nowrap border-b-2 transition flex items-center gap-2"
           [ngClass]="modalTab==='facturacion' ? 'border-blue-600 text-blue-600 dark:text-blue-400 dark:border-blue-400' : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'">
-          <i class="pi pi-dollar text-sm"></i> Facturación
+          <i class="fa-solid fa-dollar-sign text-sm"></i> Facturación
         </button>
         <button (click)="modalTab='tickets'"
           class="px-5 py-3 text-sm font-medium whitespace-nowrap border-b-2 transition flex items-center gap-2"
           [ngClass]="modalTab==='tickets' ? 'border-blue-600 text-blue-600 dark:text-blue-400 dark:border-blue-400' : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'">
-          <i class="pi pi-ticket text-sm"></i> Tickets
+          <i class="fa-solid fa-ticket text-sm"></i> Tickets
         </button>
         <button (click)="modalTab='historial'"
           class="px-5 py-3 text-sm font-medium whitespace-nowrap border-b-2 transition flex items-center gap-2"
           [ngClass]="modalTab==='historial' ? 'border-blue-600 text-blue-600 dark:text-blue-400 dark:border-blue-400' : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'">
-          <i class="pi pi-history text-sm"></i> Historial
+          <i class="fa-solid fa-clock-rotate-left text-sm"></i> Historial
         </button>
       </div>
 
@@ -284,14 +284,14 @@
                 <div class="flex gap-2" *ngIf="!isEditing">
                   <button (click)="enableEdit()"
                     class="px-3 py-1.5 text-xs rounded-lg bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300 hover:bg-blue-200 transition flex items-center gap-1">
-                    <i class="pi pi-pencil text-xs"></i> Editar
+                    <i class="fa-solid fa-pen text-xs"></i> Editar
                   </button>
                 </div>
                 <div class="flex gap-2" *ngIf="isEditing">
                   <button (click)="saveUser()"
-                    class="px-3 py-1.5 text-xs rounded-lg bg-green-600 text-white hover:bg-green-700 transition flex items-center gap-1"><i class="pi pi-check text-xs"></i> Guardar</button>
+                    class="px-3 py-1.5 text-xs rounded-lg bg-green-600 text-white hover:bg-green-700 transition flex items-center gap-1"><i class="fa-solid fa-check text-xs"></i> Guardar</button>
                   <button (click)="cancelEdit()"
-                    class="px-3 py-1.5 text-xs rounded-lg bg-gray-200 text-gray-700 hover:bg-gray-300 transition flex items-center gap-1"><i class="pi pi-times text-xs"></i> Cancelar</button>
+                    class="px-3 py-1.5 text-xs rounded-lg bg-gray-200 text-gray-700 hover:bg-gray-300 transition flex items-center gap-1"><i class="fa-solid fa-xmark text-xs"></i> Cancelar</button>
                 </div>
               </div>
 
@@ -369,15 +369,15 @@
                 <div class="flex flex-col gap-2">
                   <button (click)="modalTab='facturacion'"
                     class="w-full px-3 py-2 text-xs rounded-lg bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 hover:bg-blue-100 transition text-left flex items-center gap-2">
-                    <i class="pi pi-dollar text-sm"></i> Ver facturación
+                    <i class="fa-solid fa-dollar-sign text-sm"></i> Ver facturación
                   </button>
                   <button (click)="modalTab='tickets'"
                     class="w-full px-3 py-2 text-xs rounded-lg bg-orange-50 dark:bg-orange-900/20 text-orange-700 dark:text-orange-300 hover:bg-orange-100 transition text-left flex items-center gap-2">
-                    <i class="pi pi-ticket text-sm"></i> Ver tickets
+                    <i class="fa-solid fa-ticket text-sm"></i> Ver tickets
                   </button>
                   <button (click)="downloadCsvUser()"
                     class="w-full px-3 py-2 text-xs rounded-lg bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-300 hover:bg-green-100 transition text-left flex items-center gap-2">
-                    <i class="pi pi-download text-sm"></i> Exportar CSV cliente
+                    <i class="fa-solid fa-download text-sm"></i> Exportar CSV cliente
                   </button>
                 </div>
               </div>
@@ -394,13 +394,13 @@
               <h4 class="font-semibold text-gray-800 dark:text-white mb-3">Equipo ONT</h4>
               <div class="bg-gray-50 dark:bg-gray-900 rounded-xl border dark:border-gray-700 p-5">
                 <div *ngIf="loadingOnt" class="flex items-center gap-2 text-sm text-gray-400 animate-pulse">
-                  <i class="pi pi-spin pi-spinner"></i>
+                  <i class="fa-solid fa-circle-notch fa-spin"></i>
                   Consultando equipo...
                 </div>
                 <div *ngIf="!loadingOnt && assignedOnt" class="space-y-3">
                   <div class="flex items-center gap-3 mb-1">
                     <div class="w-9 h-9 rounded-lg bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
-                      <i class="pi pi-server text-blue-600 dark:text-blue-400 text-lg"></i>
+                      <i class="fa-solid fa-server text-blue-600 dark:text-blue-400 text-lg"></i>
                     </div>
                     <div>
                       <p class="text-sm font-semibold text-gray-800 dark:text-white">{{ assignedOnt.olt?.name || 'OLT' }}</p>
@@ -443,7 +443,7 @@
                   </div>
                 </div>
                 <div *ngIf="!loadingOnt && !assignedOnt" class="flex items-center gap-3 text-sm text-gray-400">
-                  <i class="pi pi-server text-2xl opacity-40"></i>
+                  <i class="fa-solid fa-server text-2xl opacity-40"></i>
                   Sin equipo ONT asignado. Puedes asignarlo desde <strong class="ml-1">Admin OLT → Autorizadas</strong>.
                 </div>
               </div>
@@ -483,7 +483,7 @@
                 </div>
                 <button (click)="autorizarServicio()" [disabled]="submittingService || !mac"
                   class="w-full px-4 py-2 rounded-lg bg-green-600 text-white text-sm font-medium hover:bg-green-700 disabled:opacity-50 transition flex items-center justify-center gap-2">
-                  <i class="pi pi-plus"></i> {{ submittingService ? 'Autorizando...' : 'Autorizar Servicio' }}
+                  <i class="fa-solid fa-plus"></i> {{ submittingService ? 'Autorizando...' : 'Autorizar Servicio' }}
                 </button>
               </div>
             </div>
@@ -534,7 +534,7 @@
           <div class="flex flex-wrap items-center gap-2 sm:gap-3 mb-4">
             <button (click)="showCreateFactureForm = !showCreateFactureForm"
               class="px-4 py-2 text-sm rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition flex items-center gap-2">
-              <i class="pi pi-plus text-sm"></i> Nueva factura
+              <i class="fa-solid fa-plus text-sm"></i> Nueva factura
             </button>
             <div class="flex rounded-lg overflow-hidden border dark:border-gray-600 text-xs">
               <button (click)="factureFilter='all'"
@@ -628,26 +628,26 @@
                         [disabled]="payingFactureId === item.id"
                         title="Registrar pago"
                         class="p-1.5 rounded-lg bg-teal-100 text-teal-700 hover:bg-teal-200 dark:bg-teal-900/30 dark:text-teal-300 disabled:opacity-40 transition">
-                        <i class="pi pi-check-circle text-base"></i>
+                        <i class="fa-solid fa-check-circle text-base"></i>
                       </button>
                       <!-- PDF Invoice -->
                       <button (click)="downloadPdf(item.number_facture)" title="Descargar factura PDF"
                         class="p-1.5 rounded-lg bg-blue-100 text-blue-700 hover:bg-blue-200 dark:bg-blue-900/30 dark:text-blue-300 transition">
-                        <i class="pi pi-file-pdf text-base"></i>
+                        <i class="fa-solid fa-file-pdf text-base"></i>
                       </button>
                       <!-- WhatsApp: send invoice -->
                       <button (click)="sendInvoiceWA(item.number_facture!, item)"
                         [disabled]="item._waSending"
                         title="Enviar factura por WhatsApp"
                         class="p-1.5 rounded-lg bg-emerald-100 text-emerald-700 hover:bg-emerald-200 dark:bg-emerald-900/30 dark:text-emerald-300 disabled:opacity-40 transition">
-                        <i *ngIf="!item._waSending" class="pi pi-whatsapp text-base"></i>
-                        <i *ngIf="item._waSending" class="pi pi-spin pi-spinner text-base"></i>
+                        <i *ngIf="!item._waSending" class="fa-brands fa-whatsapp text-base"></i>
+                        <i *ngIf="item._waSending" class="fa-solid fa-circle-notch fa-spin text-base"></i>
                       </button>
                       <!-- PDF Comprobante -->
                       <button *ngIf="item.paid === 1"
                         (click)="downloadPayPdf(item.id, item.prueba)" title="Descargar comprobante"
                         class="p-1.5 rounded-lg bg-green-100 text-green-700 hover:bg-green-200 dark:bg-green-900/30 dark:text-green-300 transition">
-                        <i class="pi pi-verified text-base"></i>
+                        <i class="fa-solid fa-circle-check text-base"></i>
                       </button>
                     </div>
                   </td>
@@ -669,11 +669,11 @@
             <div class="flex items-center gap-2">
               <button (click)="openPingModal(selectedUserData?.ip, selectedUserData?.names, selectedUserData?.lastname, selectedUserData?.dni, selectedUserId)"
                 class="px-4 py-2 text-sm rounded-lg bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-white hover:bg-gray-300 dark:hover:bg-gray-600 transition whitespace-nowrap flex items-center gap-2">
-                <i class="pi pi-send text-sm"></i> Ping
+                <i class="fa-solid fa-paper-plane text-sm"></i> Ping
               </button>
               <button (click)="showNewTicketForm = !showNewTicketForm"
                 class="px-4 py-2 text-sm rounded-lg bg-orange-500 text-white hover:bg-orange-600 transition whitespace-nowrap flex items-center gap-2">
-                <i class="pi pi-plus text-sm"></i> Nuevo ticket
+                <i class="fa-solid fa-plus text-sm"></i> Nuevo ticket
               </button>
             </div>
           </div>
@@ -784,7 +784,7 @@
                   <td class="px-4 py-2.5 text-center">
                     <button (click)="downloadTicketPdf(t.id)" title="PDF Ticket"
                       class="p-1.5 rounded-lg bg-blue-100 text-blue-700 hover:bg-blue-200 dark:bg-blue-900/30 dark:text-blue-300 transition">
-                      <i class="pi pi-file-pdf text-base"></i>
+                      <i class="fa-solid fa-file-pdf text-base"></i>
                     </button>
                   </td>
                 </tr>
@@ -886,7 +886,7 @@
         <p class="text-sm text-gray-500 dark:text-gray-400">{{ pingName }}</p>
       </div>
       <button (click)="closePingModal()" class="text-gray-400 hover:text-red-500 transition">
-        <i class="pi pi-times text-lg"></i>
+        <i class="fa-solid fa-xmark text-lg"></i>
       </button>
     </div>
     <div class="p-5 space-y-4">
@@ -935,7 +935,7 @@
      class="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/60 p-4">
   <div class="bg-white dark:bg-gray-800 rounded-2xl sm:rounded-xl shadow-2xl w-full max-w-sm p-6 text-center mb-0 sm:mb-0">
     <div class="w-14 h-14 mx-auto mb-4 rounded-full bg-yellow-100 dark:bg-yellow-900/30 flex items-center justify-center">
-      <i class="pi pi-exclamation-triangle text-3xl text-yellow-500"></i>
+      <i class="fa-solid fa-triangle-exclamation text-3xl text-yellow-500"></i>
     </div>
     <h3 class="text-lg font-semibold text-gray-800 dark:text-white mb-2">
       {{ pendingSuspendStatus === 'ACTIVE' ? '¿Suspender cliente?' : '¿Activar cliente?' }}
@@ -963,7 +963,7 @@
      class="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/60 p-4">
   <div class="bg-white dark:bg-gray-800 rounded-2xl sm:rounded-xl shadow-2xl w-full max-w-sm p-6 text-center">
     <div class="w-14 h-14 mx-auto mb-4 rounded-full bg-red-100 dark:bg-red-900/30 flex items-center justify-center">
-      <i class="pi pi-exclamation-circle text-3xl text-red-500"></i>
+      <i class="fa-solid fa-circle-exclamation text-3xl text-red-500"></i>
     </div>
     <h3 class="text-lg font-semibold text-gray-800 dark:text-white mb-2">¿Eliminar cliente?</h3>
     <p class="text-sm text-gray-500 dark:text-gray-400 mb-6">Esta acción no se puede deshacer.</p>
@@ -990,7 +990,7 @@
     <div class="flex items-center justify-between px-6 py-4 border-b dark:border-gray-700">
       <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Registrar nuevo cliente</h3>
       <button (click)="showCreateUser = false" class="text-gray-400 hover:text-red-500 transition">
-        <i class="pi pi-times text-lg"></i>
+        <i class="fa-solid fa-xmark text-lg"></i>
       </button>
     </div>
 

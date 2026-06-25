@@ -243,7 +243,8 @@
           </svg>
         </div>
         <p class="text-gray-500 dark:text-gray-400 text-sm font-medium">
-          {{ selectedInstance ? 'Cola vacía ✓' : 'Selecciona una instancia' }}
+          <span *ngIf="selectedInstance">Cola vacía <i class="fa-solid fa-circle-check text-emerald-500 ml-1"></i></span>
+          <span *ngIf="!selectedInstance">Selecciona una instancia</span>
         </p>
       </div>
     </div>
