@@ -1,12 +1,12 @@
 <!-- ═══ NAVBAR ════════════════════════════════════════════════════════════ -->
 <header class="antialiased">
-  <nav class="bg-white border-b border-gray-200 px-4 lg:px-6 py-2.5 dark:bg-gray-800 dark:border-gray-700">
+  <nav class="bg-white border-b border-stone-200 px-4 lg:px-6 py-2.5 dark:bg-stone-800 dark:border-stone-700">
     <div class="flex flex-wrap justify-between items-center">
 
       <!-- Izquierda -->
       <div class="flex items-center gap-3">
         <button (click)="sidebarService.toggleCollapsed()"
-                class="p-2 rounded-lg text-gray-600 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-700">
+                class="p-2 rounded-lg text-stone-600 hover:bg-stone-100 dark:text-stone-400 dark:hover:bg-stone-700">
           <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16"/>
           </svg>
@@ -17,17 +17,17 @@
           <!-- Logo -->
           <img *ngIf="companyLogo; else initials"
                [src]="companyLogo"
-               class="h-8 w-8 rounded-full object-cover border border-gray-200"
+               class="h-8 w-8 rounded-full object-cover border border-stone-200"
                alt="logo">
 
           <!-- Inicial -->
           <ng-template #initials>
-            <div class="h-8 w-8 rounded-full bg-blue-600 flex items-center justify-center text-white font-bold text-sm">
+            <div class="h-8 w-8 rounded-full bg-slate-700 flex items-center justify-center text-white font-bold text-sm">
               {{ companyName?.charAt(0)?.toUpperCase() || 'N' }}
             </div>
           </ng-template>
 
-          <span class="text-lg font-semibold text-gray-900 dark:text-white hidden sm:block">
+          <span class="text-lg font-semibold text-stone-900 dark:text-white hidden sm:block">
             {{ companyName }}
           </span>
         </a>
@@ -40,13 +40,13 @@
 
         <button #dropdownButton
                 (click)="toggleDropdown()"
-                class="flex items-center gap-2 p-1 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700">
+                class="flex items-center gap-2 p-1 rounded-full hover:bg-stone-100 dark:hover:bg-stone-700">
 
-          <div class="w-8 h-8 rounded-full bg-blue-700 flex items-center justify-center text-white font-semibold text-sm">
+          <div class="w-8 h-8 rounded-full bg-slate-800 flex items-center justify-center text-white font-semibold text-sm">
             {{ username?.charAt(0)?.toUpperCase() || 'U' }}
           </div>
 
-          <span class="text-sm text-gray-700 dark:text-gray-300 hidden md:block">
+          <span class="text-sm text-stone-700 dark:text-stone-300 hidden md:block">
             {{ username || 'Usuario' }}
           </span>
         </button>
@@ -56,16 +56,16 @@
              *ngIf="isDropdownVisible"
              [style.top.px]="dropdownPosition.top"
              [style.left.px]="dropdownPosition.left"
-             class="fixed z-50 w-56 bg-white rounded-lg shadow-lg divide-y divide-gray-100 dark:bg-gray-700 dark:divide-gray-600">
+             class="fixed z-50 w-56 bg-white rounded-lg shadow-lg divide-y divide-stone-100 dark:bg-stone-700 dark:divide-stone-600">
 
           <div class="px-4 py-3">
-            <p class="text-sm font-semibold text-gray-900 dark:text-white truncate">
+            <p class="text-sm font-semibold text-stone-900 dark:text-white truncate">
               {{ username || 'Usuario' }}
             </p>
-            <p class="text-xs text-blue-600 dark:text-blue-400 font-medium">
+            <p class="text-xs text-slate-700 dark:text-slate-400 font-medium">
               {{ roleName || 'Sin rol' }}
             </p>
-            <p class="text-xs text-gray-500 dark:text-gray-400 truncate">
+            <p class="text-xs text-stone-500 dark:text-stone-400 truncate">
               {{ companyName }}
             </p>
           </div>
@@ -73,7 +73,7 @@
           <ul class="py-1">
             <li>
               <a routerLink="/dashboard/perfil" (click)="isDropdownVisible = false"
-                 class="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-600 flex items-center gap-2">
+                 class="w-full text-left px-4 py-2 text-sm text-stone-700 dark:text-stone-200 hover:bg-stone-100 dark:hover:bg-stone-600 flex items-center gap-2">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
                 </svg>
@@ -82,7 +82,7 @@
             </li>
             <li>
               <button (click)="signOut()"
-                      class="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100 dark:hover:bg-gray-600 flex items-center gap-2">
+                      class="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-stone-100 dark:hover:bg-stone-600 flex items-center gap-2">
                 Cerrar sesión
               </button>
             </li>
@@ -103,7 +103,7 @@
      (click)="sidebarService.toggleCollapsed()">
 </div>
 
-<div class="flex h-full overflow-hidden bg-gray-50 dark:bg-gray-900">
+<div class="flex h-full overflow-hidden bg-stone-50 dark:bg-stone-900">
 
   <flowbite-sidebar extraClass="border-r">
 
@@ -175,7 +175,7 @@
          [ngClass]="{
            'bg-green-50 border border-green-200 text-green-800': toast.type === 'success',
            'bg-red-50 border border-red-200 text-red-800':       toast.type === 'error',
-           'bg-blue-50 border border-blue-200 text-blue-800':    toast.type === 'info',
+           'bg-slate-50 border border-slate-200 text-blue-800':    toast.type === 'info',
            'bg-yellow-50 border border-yellow-200 text-yellow-800': toast.type === 'warning'
          }">
       <!-- icon -->
@@ -193,7 +193,7 @@
             <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v4m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
           </svg>
         } @else {
-          <svg class="w-4 h-4 text-blue-500" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+          <svg class="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M12 2a10 10 0 100 20A10 10 0 0012 2z"/>
           </svg>
         }
