@@ -3,11 +3,15 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ContractService } from '../../services/contract.service';
 import { UserService } from '../../services/user.service';
+import { DomSanitizer, SafeResourceUrl, SafeHtml } from '@angular/platform-browser';
 
 interface Contract {
   id: number;
   title: string;
   content: string;
+  logo?: string;
+  pdf_path?: string;
+  pdf_url?: string;
   active: boolean;
   created_at: string;
 }
@@ -51,6 +55,36 @@ export class ContractsComponent implements OnInit {
   templateForm               = { id: 0, title: '', content: '', active: true };
   deleteConfirmId: number | null = null;
   isDeleting                 = false;
+
+  // ── PDF Upload / Guía ────────────────────────────────────────────────────
+  pdfFile: File | null       = null;
+  isUploadingPdf             = false;
+  pdfGuideUrl: string | null = null;   // URL del PDF original para mostrar como guía
+
+  // ── PDF Base (fondo exacto del contrato) ───────────────────────────────────
+  pdfBaseFile: File | null   = null;
+  isUploadingPdfBase         = false;
+  hasPdfBase                 = false;  // Indica si el contrato ya tiene PDF base
+
+  // ── Logo Upload ───────────────────────────────────────────────────────────
+  logoFile: File | null      = null;
+  logoPreview: string | null = null;
+  isUploadingLogo            = false;
+
+  // ── Preview HTML ──────────────────────────────────────────────────────────
+  showPreview                = false;
+
+  // ── Variables rápidas ─────────────────────────────────────────────────────
+  quickVars = [
+    { label: 'Nombre',         code: '{{nombre}}' },
+    { label: 'Apellido',       code: '{{apellido}}' },
+    { label: 'Nombre completo',code: '{{nombre_completo}}' },
+    { label: 'DNI',            code: '{{dni}}' },
+    { label: 'Teléfono',       code: '{{telefono}}' },
+    { label: 'Email',          code: '{{email}}' },
+    { label: 'Dirección',      code: '{{direccion}}' },
+    { label: 'Fecha',          code: '{{fecha}}' },
+  ];
 
   // ── Asignación ────────────────────────────────────────────────────────────
   assignedContracts: ClientContract[] = [];
@@ -97,6 +131,7 @@ export class ContractsComponent implements OnInit {
   constructor(
     private contractService: ContractService,
     private userService: UserService,
+    private sanitizer: DomSanitizer,
   ) {}
 
   ngOnInit(): void {
@@ -117,6 +152,11 @@ export class ContractsComponent implements OnInit {
   openCreate(): void {
     this.isEditing     = false;
     this.templateForm  = { id: 0, title: '', content: '', active: true };
+    this.logoFile      = null;
+    this.logoPreview   = null;
+    this.pdfFile       = null;
+    this.pdfGuideUrl   = null;
+    this.showPreview   = false;
     this.errorMsg      = '';
     this.showTemplateModal = true;
   }
@@ -124,6 +164,11 @@ export class ContractsComponent implements OnInit {
   openEdit(c: Contract): void {
     this.isEditing    = true;
     this.templateForm = { id: c.id, title: c.title, content: c.content, active: c.active };
+    this.logoPreview  = c.logo ?? null;
+    this.hasPdfBase   = !!c.pdf_path;
+    this.pdfGuideUrl  = null;
+    this.pdfFile      = null;
+    this.pdfBaseFile  = null;
     this.errorMsg     = '';
     this.showTemplateModal = true;
   }
@@ -131,9 +176,15 @@ export class ContractsComponent implements OnInit {
   saveTemplate(): void {
     this.isSaving = true;
     this.errorMsg = '';
+
+    const payload: any = { ...this.templateForm };
+    if (this.logoPreview) {
+      payload.logo = this.logoPreview;
+    }
+
     const obs = this.isEditing
-      ? this.contractService.update(this.templateForm.id, this.templateForm)
-      : this.contractService.create(this.templateForm);
+      ? this.contractService.update(this.templateForm.id, payload)
+      : this.contractService.create(payload);
 
     obs.subscribe({
       next: r => {
@@ -289,6 +340,195 @@ export class ContractsComponent implements OnInit {
       a.click();
       URL.revokeObjectURL(url);
     });
+  }
+
+  // ── PDF Upload ────────────────────────────────────────────────────────────
+
+  onPdfSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    if (input.files && input.files[0]) {
+      this.pdfFile = input.files[0];
+      this.uploadPdf();
+    }
+  }
+
+  uploadPdf(): void {
+    if (!this.pdfFile) return;
+    this.isUploadingPdf = true;
+    this.contractService.uploadPdf(this.pdfFile).subscribe({
+      next: (r) => {
+        this.isUploadingPdf = false;
+        if (r.status === 0) {
+          if (r.data?.html) {
+            this.templateForm.content = r.data.html;
+          }
+          if (r.data?.pdfUrl) {
+            this.pdfGuideUrl = r.data.pdfUrl;
+            this.showPreview = true;
+          }
+          this.toast('PDF cargado. Puede editar el contenido y usar el PDF original como guía.');
+        } else {
+          this.errorMsg = r.message || 'Error al convertir PDF.';
+        }
+      },
+      error: () => {
+        this.isUploadingPdf = false;
+        this.errorMsg = 'Error al subir PDF.';
+      },
+    });
+  }
+
+  // ── PDF Base Upload (fondo exacto del contrato) ───────────────────────────
+
+  onPdfBaseSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    if (input.files && input.files[0]) {
+      this.pdfBaseFile = input.files[0];
+      this.uploadPdfBase();
+    }
+  }
+
+  uploadPdfBase(): void {
+    if (!this.pdfBaseFile || !this.isEditing) return;
+    this.isUploadingPdfBase = true;
+    this.contractService.uploadPdfBase(this.templateForm.id, this.pdfBaseFile).subscribe({
+      next: (r) => {
+        this.isUploadingPdfBase = false;
+        if (r.status === 0) {
+          this.hasPdfBase = true;
+          this.toast('PDF base guardado. El PDF descargado será una copia exacta del original con la firma agregada.');
+        } else {
+          this.errorMsg = r.message || 'Error al guardar PDF base.';
+        }
+      },
+      error: () => {
+        this.isUploadingPdfBase = false;
+        this.errorMsg = 'Error al subir PDF base.';
+      },
+    });
+  }
+
+  // ── Logo Upload ───────────────────────────────────────────────────────────
+
+  onLogoSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    if (input.files && input.files[0]) {
+      this.logoFile = input.files[0];
+      const reader = new FileReader();
+      reader.onload = () => {
+        this.logoPreview = reader.result as string;
+      };
+      reader.readAsDataURL(this.logoFile);
+      this.uploadLogo();
+    }
+  }
+
+  uploadLogo(): void {
+    if (!this.logoFile || !this.isEditing) return;
+    this.isUploadingLogo = true;
+    this.contractService.uploadLogo(this.templateForm.id, this.logoFile).subscribe({
+      next: (r) => {
+        this.isUploadingLogo = false;
+        if (r.status === 0) {
+          this.toast('Logo guardado.');
+        } else {
+          this.errorMsg = r.message || 'Error al subir logo.';
+        }
+      },
+      error: () => {
+        this.isUploadingLogo = false;
+        this.errorMsg = 'Error al subir logo.';
+      },
+    });
+  }
+
+  // ── Variables rápidas ─────────────────────────────────────────────────────
+
+  insertVar(code: string): void {
+    const ta = document.getElementById('contractContent') as HTMLTextAreaElement | null;
+    if (!ta) {
+      this.templateForm.content += ' ' + code;
+      return;
+    }
+    const start = ta.selectionStart;
+    const end   = ta.selectionEnd;
+    const text  = this.templateForm.content;
+    this.templateForm.content = text.substring(0, start) + code + text.substring(end);
+    setTimeout(() => {
+      ta.selectionStart = ta.selectionEnd = start + code.length;
+      ta.focus();
+    }, 0);
+  }
+
+  togglePreview(): void {
+    this.showPreview = !this.showPreview;
+  }
+
+  safePdfUrl(): SafeResourceUrl | null {
+    return this.pdfGuideUrl ? this.sanitizer.bypassSecurityTrustResourceUrl(this.pdfGuideUrl) : null;
+  }
+
+  /**
+   * Limpia todos los inline styles del HTML, dejando solo etiquetas semánticas limpias.
+   * Esto permite que el CSS de la página de firma aplique el diseño formal.
+   */
+  cleanStyles(): void {
+    if (!this.templateForm.content) return;
+    let html = this.templateForm.content;
+    // Quitar atributos style="..." de todas las etiquetas
+    html = html.replace(/\s*style\s*=\s*["'][^"']*["']/gi, '');
+    // Quitar atributos class que sean del wrapper viejo
+    html = html.replace(/\s*class\s*=\s*["']contract-body["']/gi, '');
+    html = html.replace(/\s*class\s*=\s*["']contract-guide["']/gi, '');
+    // Quitar el wrapper viejo con inline style
+    html = html.replace(/<div\s*>\s*<p\s*><strong>Guía:<\/strong>[^<]*<\/p>/i, '');
+    html = html.replace(/<\/div>\s*$/i, '');
+    // Limpiar espacios extra
+    html = html.replace(/>\s+</g, '><');
+    html = html.replace(/\n\s*\n/g, '\n');
+    this.templateForm.content = html.trim();
+    this.toast('Estilos limpiados. El contrato ahora usará el diseño formal.');
+  }
+
+  /**
+   * Renderiza el HTML de preview aplicando estilos formales de contrato
+   * y reemplazando las variables {{xxx}} con badges de colores.
+   */
+  renderPreviewHtml(): SafeHtml {
+    let html = this.templateForm.content || '';
+
+    // Aplicar estilos formales de contrato a headings (simulando la página de firma)
+    html = html.replace(/<h2>/gi, '<h2 style="font-family:Georgia,serif; font-size:16px; font-weight:bold; text-align:center; color:#1a1a2e; margin:20px 0 10px; text-transform:uppercase; letter-spacing:0.5px; border-bottom:1px solid #ccc; padding-bottom:4px;">');
+    html = html.replace(/<h3>/gi, '<h3 style="font-family:Georgia,serif; font-size:14px; font-weight:bold; text-align:left; color:#333; margin:16px 0 8px; background:#f5f5f5; padding:4px 8px; border-left:3px solid #6c63ff;">');
+    html = html.replace(/<p>/gi, '<p style="font-size:14px; line-height:1.85; color:#222; margin-bottom:10px; text-indent:30px; text-align:justify;">');
+    html = html.replace(/<table>/gi, '<table style="width:100%; border-collapse:collapse; margin:12px 0; font-size:13px;">');
+    html = html.replace(/<td>/gi, '<td style="border:1px solid #bbb; padding:8px 10px; text-align:left; background:#fafafa;">');
+    html = html.replace(/<th>/gi, '<th style="border:1px solid #bbb; padding:8px 10px; text-align:left; background:#f0f0f0; font-weight:bold;">');
+
+    // Badges de variables con colores distintivos
+    const varBadges: Record<string, { label: string; bg: string; color: string }> = {
+      '{{nombre}}':          { label: 'NOMBRE',          bg: '#dbeafe', color: '#1e40af' },
+      '{{apellido}}':        { label: 'APELLIDO',        bg: '#dcfce7', color: '#166534' },
+      '{{nombre_completo}}': { label: 'NOMBRE COMPLETO', bg: '#e0e7ff', color: '#3730a3' },
+      '{{dni}}':             { label: 'DNI',             bg: '#fef3c7', color: '#92400e' },
+      '{{telefono}}':        { label: 'TELÉFONO',        bg: '#fce7f3', color: '#9d174d' },
+      '{{email}}':           { label: 'EMAIL',           bg: '#ccfbf1', color: '#115e59' },
+      '{{direccion}}':       { label: 'DIRECCIÓN',       bg: '#f3e8ff', color: '#6b21a8' },
+      '{{fecha}}':           { label: 'FECHA',           bg: '#ffedd5', color: '#9a3412' },
+      '{{fecha_hora}}':      { label: 'FECHA Y HORA',    bg: '#ecfccb', color: '#3f6212' },
+      '{{contrato_id}}':     { label: 'N° CONTRATO',     bg: '#f1f5f9', color: '#475569' },
+    };
+
+    Object.entries(varBadges).forEach(([code, badge]) => {
+      const escaped = code.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      const regex = new RegExp(escaped, 'g');
+      html = html.replace(
+        regex,
+        `<span style="display:inline-block; padding:2px 8px; border-radius:4px; font-size:12px; font-weight:700; background:${badge.bg}; color:${badge.color}; border:1px solid ${badge.color}; font-family:Arial,sans-serif; white-space:nowrap;">${badge.label}</span>`
+      );
+    });
+
+    return this.sanitizer.bypassSecurityTrustHtml(html);
   }
 
   // ── Helpers ───────────────────────────────────────────────────────────────

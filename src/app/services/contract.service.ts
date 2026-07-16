@@ -90,4 +90,37 @@ export class ContractService {
   getSignUrl(token: string): string {
     return `${this.env.rootUrl}contrato/firmar/${token}`;
   }
+
+  // ── Upload PDF → HTML ─────────────────────────────────────────────────────
+
+  uploadPdf(file: File): Observable<any> {
+    const formData = new FormData();
+    formData.append('pdf', file);
+    const headers = new HttpHeaders({
+      Authorization: `Bearer ${localStorage.getItem('token')}`,
+    });
+    return this.http.post(`${this.env.rootUrl}api/contracts/upload-pdf`, formData, { headers });
+  }
+
+  // ── Upload PDF Base (fondo exacto) ──────────────────────────────────────────
+
+  uploadPdfBase(contractId: number, file: File): Observable<any> {
+    const formData = new FormData();
+    formData.append('pdf', file);
+    const headers = new HttpHeaders({
+      Authorization: `Bearer ${localStorage.getItem('token')}`,
+    });
+    return this.http.post(`${this.env.rootUrl}api/contracts/${contractId}/pdf-base`, formData, { headers });
+  }
+
+  // ── Logo de plantilla ─────────────────────────────────────────────────────
+
+  uploadLogo(contractId: number, file: File): Observable<any> {
+    const formData = new FormData();
+    formData.append('logo', file);
+    const headers = new HttpHeaders({
+      Authorization: `Bearer ${localStorage.getItem('token')}`,
+    });
+    return this.http.post(`${this.env.rootUrl}api/contracts/${contractId}/logo`, formData, { headers });
+  }
 }
