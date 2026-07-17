@@ -181,7 +181,7 @@
     <!-- Table -->
     <div *ngIf="!loading && tickets.length > 0" class="overflow-x-auto">
       <table class="min-w-full divide-y divide-slate-200/60 dark:divide-slate-700/60">
-        <thead class="bg-slate-50/80 dark:bg-slate-700/80 backdrop-blur-sm">
+        <thead class="bg-slate-50/80 dark:bg-slate-700/80 ">
           <tr>
             <th class="px-4 py-3 text-left text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">#</th>
             <th class="px-4 py-3 text-left text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Cliente</th>
@@ -256,7 +256,7 @@
 
 <!-- ═══ CLOSE TICKET MODAL ════════════════════════════════════════════════ -->
 <div *ngIf="showCloseModal"
-     class="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm">
+     class="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-slate-900/50 ">
   <div class="bg-white/95 dark:bg-slate-800/95 backdrop-blur-xl rounded-2xl shadow-2xl border border-slate-100 dark:border-slate-700 w-full max-w-md">
 
     <div class="p-5 border-b dark:border-slate-700/60">
@@ -299,7 +299,7 @@
 
 <!-- ═══ REOPEN TICKET MODAL ══════════════════════════════════════════════ -->
 <div *ngIf="showReopenModal"
-     class="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm">
+     class="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-slate-900/50 ">
   <div class="bg-white/95 dark:bg-slate-800/95 backdrop-blur-xl rounded-2xl shadow-2xl border border-slate-100 dark:border-slate-700 w-full max-w-md">
 
     <div class="p-5 border-b dark:border-slate-700/60">
@@ -342,7 +342,7 @@
 
 <!-- ═══ DELETE TICKET MODAL ═══════════════════════════════════════════════ -->
 <div *ngIf="showDeleteModal"
-     class="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm">
+     class="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-slate-900/50 ">
   <div class="bg-white/95 dark:bg-slate-800/95 backdrop-blur-xl rounded-2xl shadow-2xl border border-slate-100 dark:border-slate-700 w-full max-w-sm">
 
     <div class="p-5">
@@ -382,7 +382,7 @@
 </div>
 
 <!-- ═══ DETAIL DRAWER ════════════════════════════════════════════════════= -->
-<div *ngIf="showDetail" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-40" (click)="closeDetail()"></div>
+<div *ngIf="showDetail" class="fixed inset-0 bg-slate-900/50  z-40" (click)="closeDetail()"></div>
 
 <div *ngIf="showDetail && selectedTicket"
      class="fixed inset-y-0 right-0 z-50 w-full sm:w-[480px] lg:w-[540px] bg-white/95 dark:bg-slate-800/95 backdrop-blur-xl shadow-2xl border border-slate-100 dark:border-slate-700 flex flex-col overflow-hidden">

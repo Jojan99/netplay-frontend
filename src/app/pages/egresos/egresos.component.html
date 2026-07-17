@@ -72,7 +72,7 @@
     <div class="bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl rounded-2xl border border-slate-200/60 dark:border-slate-700/60 shadow-sm hover:shadow-md transition-all duration-300 overflow-hidden">
       <div class="overflow-x-auto">
         <table class="w-full text-sm text-left">
-          <thead class="text-xs text-slate-500 dark:text-slate-400 bg-slate-50/80 dark:bg-slate-700/80 backdrop-blur-sm uppercase tracking-wider text-xs font-bold">
+          <thead class="text-xs text-slate-500 dark:text-slate-400 bg-slate-50/80 dark:bg-slate-700/80  uppercase tracking-wider text-xs font-bold">
             <tr>
               <th class="px-4 py-3">Concepto</th>
               <th class="px-4 py-3">Categoría</th>
@@ -178,7 +178,7 @@
 
 <!-- ═══════════════════ MODAL: ADD / EDIT ═══════════════════ -->
 <div *ngIf="modal" class="fixed inset-0 z-50 flex items-center justify-center p-4">
-  <div class="absolute inset-0 bg-slate-900/50 backdrop-blur-sm" (click)="modal = false"></div>
+  <div class="absolute inset-0 bg-slate-900/50 " (click)="modal = false"></div>
   <div class="relative bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl rounded-2xl border border-slate-200/60 dark:border-slate-700/60 shadow-sm hover:shadow-md transition-all duration-300-2xl w-full max-w-md p-6">
     <h3 class="text-lg font-bold text-slate-900 dark:text-white mb-5">
       {{ modalMode === 'create' ? 'Nuevo egreso' : 'Editar egreso' }}
@@ -227,7 +227,7 @@
 
 <!-- ═══════════════════ MODAL: DELETE CONFIRM ═══════════════════ -->
 <div *ngIf="deleteModal" class="fixed inset-0 z-50 flex items-center justify-center p-4">
-  <div class="absolute inset-0 bg-slate-900/50 backdrop-blur-sm" (click)="deleteModal = false"></div>
+  <div class="absolute inset-0 bg-slate-900/50 " (click)="deleteModal = false"></div>
   <div class="relative bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl rounded-2xl border border-slate-200/60 dark:border-slate-700/60 shadow-sm hover:shadow-md transition-all duration-300-2xl w-full max-w-sm p-6 text-center">
     <div class="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
       <svg class="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">

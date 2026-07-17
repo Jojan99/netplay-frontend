@@ -75,7 +75,7 @@
           <div class="overflow-hidden shadow sm:rounded-lg">
 
             <table *ngIf="!skeletor; else skeletonTable" class="min-w-full divide-y divide-slate-200/60 dark:divide-slate-600/60">
-              <thead class="bg-slate-50/80 dark:bg-slate-700/80 backdrop-blur-sm">
+              <thead class="bg-slate-50/80 dark:bg-slate-700/80 ">
                 <tr>
                   <th class="p-4 text-xs font-medium text-left text-slate-500 uppercase dark:text-slate-400">#</th>
                   <th class="p-4 text-xs font-medium text-left text-slate-500 uppercase dark:text-slate-400">Nombre</th>
@@ -117,7 +117,7 @@
 
             <ng-template #skeletonTable>
               <table class="min-w-full divide-y divide-slate-200/60 dark:divide-slate-600/60">
-                <thead class="bg-slate-50/80 dark:bg-slate-700/80 backdrop-blur-sm">
+                <thead class="bg-slate-50/80 dark:bg-slate-700/80 ">
                   <tr>
                     <th class="p-4 text-xs font-medium text-left text-slate-500 uppercase dark:text-slate-400" *ngFor="let h of ['#','Nombre','Descripción','Ítems','Fecha','Acciones']">{{ h }}</th>
                   </tr>

@@ -87,7 +87,7 @@
           <div class="overflow-hidden shadow sm:rounded-lg">
 
             <table *ngIf="!skeletor; else skeletonTable" class="min-w-[640px] w-full divide-y divide-slate-200/60 dark:divide-slate-600/60">
-              <thead class="bg-slate-50/80 dark:bg-slate-700/80 backdrop-blur-sm">
+              <thead class="bg-slate-50/80 dark:bg-slate-700/80 ">
                 <tr>
                   <th class="p-3 text-xs font-bold text-left text-slate-500 uppercase tracking-wider dark:text-slate-400">Nombre</th>
                   <th class="p-3 text-xs font-bold text-left text-slate-500 uppercase tracking-wider dark:text-slate-400 hidden sm:table-cell">SKU / Código</th>
@@ -151,7 +151,7 @@
 
             <ng-template #skeletonTable>
               <table class="min-w-full divide-y divide-slate-200/60 dark:divide-slate-600/60">
-                <thead class="bg-slate-50/80 dark:bg-slate-700/80 backdrop-blur-sm">
+                <thead class="bg-slate-50/80 dark:bg-slate-700/80 ">
                   <tr>
                     <th class="p-4 text-xs font-bold text-left text-slate-500 uppercase tracking-wider dark:text-slate-400">Nombre</th>
                     <th class="p-4 text-xs font-bold text-left text-slate-500 uppercase tracking-wider dark:text-slate-400">SKU</th>
@@ -208,7 +208,7 @@
 </div>
 
 <!-- ── Modal: Crear / Editar Ítem ─────────────────────────────────────────── -->
-<div id="item-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-sm">
+<div id="item-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 ">
   <div class="bg-white/95 dark:bg-slate-800/95 backdrop-blur-xl rounded-2xl shadow-2xl border border-slate-100 dark:border-slate-700 w-full max-w-lg mx-4 max-h-[90vh] overflow-y-auto">
     <div class="flex items-center justify-between p-4 border-b dark:border-slate-700/60">
       <h3 class="text-lg font-semibold text-slate-900 dark:text-white">
@@ -334,7 +334,7 @@
 </div>
 
 <!-- ── Modal: Registrar Movimiento ────────────────────────────────────────── -->
-<div id="movement-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-sm">
+<div id="movement-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 ">
   <div class="bg-white/95 dark:bg-slate-800/95 backdrop-blur-xl rounded-2xl shadow-2xl border border-slate-100 dark:border-slate-700 w-full max-w-lg mx-4 max-h-screen overflow-y-auto">
     <div class="flex items-center justify-between p-4 border-b dark:border-slate-700/60">
       <h3 class="text-lg font-semibold text-slate-900 dark:text-white">Registrar Movimiento</h3>
