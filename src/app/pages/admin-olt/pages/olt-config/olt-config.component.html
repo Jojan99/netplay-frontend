@@ -3,12 +3,12 @@
   <!-- Header -->
   <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
     <div>
-      <h1 class="text-xl font-bold text-gray-800 dark:text-white">Configuración OLT</h1>
-      <p class="text-sm text-gray-500 dark:text-gray-400 mt-0.5">Edita los parámetros de conexión de la OLT seleccionada.</p>
+      <h1 class="text-2xl font-bold bg-gradient-to-r from-slate-800 to-slate-600 bg-clip-text text-transparent dark:from-white dark:to-slate-300">Configuración OLT</h1>
+      <p class="text-sm text-slate-500 dark:text-slate-400 mt-0.5">Edita los parámetros de conexión de la OLT seleccionada.</p>
     </div>
     <select [(ngModel)]="selectedOltId" (ngModelChange)="onOltChange()"
             [disabled]="loadingOlts"
-            class="text-sm px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500">
+            class="px-3.5 py-2 text-sm bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl border border-slate-200/60 dark:border-slate-700/60 rounded-xl text-slate-700 dark:text-slate-300 focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-400 transition-all shadow-sm">
       <option [ngValue]="null">{{ loadingOlts ? 'Cargando...' : 'Seleccionar OLT' }}</option>
       <option *ngFor="let olt of olts" [ngValue]="olt.id">{{ olt.name }}</option>
     </select>
@@ -16,7 +16,7 @@
 
   <!-- No OLT -->
   <div *ngIf="!selectedOltId && !loadingOlts"
-       class="flex flex-col items-center justify-center py-20 text-gray-400">
+       class="flex flex-col items-center justify-center py-20 text-slate-400">
     <svg class="w-14 h-14 mb-3 opacity-40" fill="none" viewBox="0 0 24 24" stroke-width="1" stroke="currentColor">
       <path stroke-linecap="round" stroke-linejoin="round" d="M9.594 3.94c.09-.542.56-.94 1.11-.94h2.593c.55 0 1.02.398 1.11.94l.213 1.281c.063.374.313.686.645.87.074.04.147.083.22.127.325.196.72.257 1.075.124l1.217-.456a1.125 1.125 0 0 1 1.37.49l1.296 2.247a1.125 1.125 0 0 1-.26 1.431l-1.003.827c-.293.241-.438.613-.43.992a7.723 7.723 0 0 1 0 .255c-.008.378.137.75.43.991l1.004.827c.424.35.534.955.26 1.43l-1.298 2.247a1.125 1.125 0 0 1-1.369.491l-1.217-.456c-.355-.133-.75-.072-1.076.124a6.47 6.47 0 0 1-.22.128c-.331.183-.581.495-.644.87l-.213 1.28c-.09.543-.56.94-1.11.94h-2.594c-.55 0-1.019-.398-1.11-.94l-.213-1.281c-.062-.374-.312-.686-.644-.87a6.52 6.52 0 0 1-.22-.127c-.325-.196-.72-.257-1.076-.124l-1.217.456a1.125 1.125 0 0 1-1.369-.49l-1.297-2.247a1.125 1.125 0 0 1 .26-1.431l1.004-.827c.292-.24.437-.613.43-.991a6.932 6.932 0 0 1 0-.255c.007-.38-.138-.751-.43-.992l-1.004-.827a1.125 1.125 0 0 1-.26-1.43l1.297-2.247a1.125 1.125 0 0 1 1.37-.491l1.216.456c.356.133.751.072 1.076-.124.072-.044.146-.086.22-.128.332-.183.582-.495.644-.869l.214-1.28Z"/>
       <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"/>
@@ -25,56 +25,56 @@
   </div>
 
   <!-- Form -->
-  <div *ngIf="selectedOltId" class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-6 space-y-6">
+  <div *ngIf="selectedOltId" class="bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl rounded-2xl border border-slate-200/60 dark:border-slate-700/60 shadow-sm hover:shadow-md transition-all duration-300 p-6 space-y-6">
 
     <!-- Sección: Conexión principal -->
     <div>
-      <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-4 flex items-center gap-2">
+      <h3 class="text-sm font-semibold text-slate-700 dark:text-slate-300 mb-4 flex items-center gap-2">
         <span class="w-2 h-2 rounded-full bg-blue-500"></span>
         Conexión principal
       </h3>
       <div class="grid grid-cols-2 gap-4">
         <div class="col-span-2 sm:col-span-1">
-          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Nombre *</label>
+          <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Nombre *</label>
           <input type="text" [(ngModel)]="form.name"
-                 class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
+                 class="w-full px-3.5 py-2 text-sm bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl border border-slate-200/60 dark:border-slate-700/60 rounded-xl text-slate-800 dark:text-white focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-400 transition-all shadow-sm">
         </div>
         <div>
-          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Marca</label>
+          <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Marca</label>
           <select [(ngModel)]="form.brand"
-                  class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
+                  class="w-full px-3.5 py-2 text-sm bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl border border-slate-200/60 dark:border-slate-700/60 rounded-xl text-slate-800 dark:text-white focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-400 transition-all shadow-sm">
             <option>Huawei</option><option>ZTE</option><option>Fiberhome</option>
           </select>
         </div>
         <div>
-          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Host / IP *</label>
+          <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Host / IP *</label>
           <input type="text" [(ngModel)]="form.host"
-                 class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono">
+                 class="w-full px-3.5 py-2 text-sm bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl border border-slate-200/60 dark:border-slate-700/60 rounded-xl text-slate-800 dark:text-white focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-400 transition-all shadow-sm font-mono">
         </div>
         <div>
-          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Puerto</label>
+          <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Puerto</label>
           <input type="number" [(ngModel)]="form.port"
-                 class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
+                 class="w-full px-3.5 py-2 text-sm bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl border border-slate-200/60 dark:border-slate-700/60 rounded-xl text-slate-800 dark:text-white focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-400 transition-all shadow-sm">
         </div>
         <div>
-          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Usuario</label>
+          <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Usuario</label>
           <input type="text" [(ngModel)]="form.username"
-                 class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
+                 class="w-full px-3.5 py-2 text-sm bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl border border-slate-200/60 dark:border-slate-700/60 rounded-xl text-slate-800 dark:text-white focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-400 transition-all shadow-sm">
         </div>
         <div>
-          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Nueva contraseña (vacío = sin cambio)</label>
+          <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Nueva contraseña (vacío = sin cambio)</label>
           <input type="password" [(ngModel)]="form.password" placeholder="••••••••"
-                 class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
+                 class="w-full px-3.5 py-2 text-sm bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl border border-slate-200/60 dark:border-slate-700/60 rounded-xl text-slate-800 dark:text-white focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-400 transition-all shadow-sm">
         </div>
         <div>
-          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Enable Password</label>
+          <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Enable Password</label>
           <input type="password" [(ngModel)]="form.enable_password" placeholder="••••••••"
-                 class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
+                 class="w-full px-3.5 py-2 text-sm bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl border border-slate-200/60 dark:border-slate-700/60 rounded-xl text-slate-800 dark:text-white focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-400 transition-all shadow-sm">
         </div>
         <div>
-          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Modo acceso</label>
+          <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Modo acceso</label>
           <select [(ngModel)]="form.access_mode"
-                  class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
+                  class="w-full px-3.5 py-2 text-sm bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl border border-slate-200/60 dark:border-slate-700/60 rounded-xl text-slate-800 dark:text-white focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-400 transition-all shadow-sm">
             <option value="telnet">Telnet</option>
             <option value="ssh">SSH</option>
           </select>
@@ -82,39 +82,39 @@
       </div>
     </div>
 
-    <hr class="border-gray-200 dark:border-gray-700">
+    <hr class="border-slate-200/60 dark:border-slate-700/60">
 
     <!-- Sección: ONT Defaults -->
     <div>
-      <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-4 flex items-center gap-2">
+      <h3 class="text-sm font-semibold text-slate-700 dark:text-slate-300 mb-4 flex items-center gap-2">
         <span class="w-2 h-2 rounded-full bg-green-500"></span>
         Parámetros por defecto para ONTs
       </h3>
       <div class="grid grid-cols-3 gap-4">
         <div>
-          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">VLAN por defecto</label>
+          <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">VLAN por defecto</label>
           <input type="number" [(ngModel)]="form.default_vlan" placeholder="100"
-                 class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
+                 class="w-full px-3.5 py-2 text-sm bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl border border-slate-200/60 dark:border-slate-700/60 rounded-xl text-slate-800 dark:text-white focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-400 transition-all shadow-sm">
         </div>
         <div>
-          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Line Profile ID</label>
+          <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Line Profile ID</label>
           <input type="number" [(ngModel)]="form.ont_lineprofile_id" placeholder="10"
-                 class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
+                 class="w-full px-3.5 py-2 text-sm bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl border border-slate-200/60 dark:border-slate-700/60 rounded-xl text-slate-800 dark:text-white focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-400 transition-all shadow-sm">
         </div>
         <div>
-          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Srv Profile ID</label>
+          <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Srv Profile ID</label>
           <input type="number" [(ngModel)]="form.ont_srvprofile_id" placeholder="10"
-                 class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
+                 class="w-full px-3.5 py-2 text-sm bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl border border-slate-200/60 dark:border-slate-700/60 rounded-xl text-slate-800 dark:text-white focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-400 transition-all shadow-sm">
         </div>
       </div>
     </div>
 
-    <hr class="border-gray-200 dark:border-gray-700">
+    <hr class="border-slate-200/60 dark:border-slate-700/60">
 
     <!-- Jump Host collapsible -->
     <div>
       <button type="button" (click)="showAdvanced = !showAdvanced"
-              class="flex items-center gap-2 text-sm font-semibold text-gray-700 dark:text-gray-300 mb-4 w-full text-left">
+              class="flex items-center gap-2 text-sm font-semibold text-slate-700 dark:text-slate-300 mb-4 w-full text-left">
         <svg class="w-4 h-4 transition-transform text-blue-500" [class.rotate-90]="showAdvanced" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
           <path stroke-linecap="round" stroke-linejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5"/>
         </svg>
@@ -123,34 +123,34 @@
       </button>
       <div *ngIf="showAdvanced" class="grid grid-cols-2 gap-4 pl-4 border-l-2 border-orange-200 dark:border-orange-800">
         <div>
-          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Jump Host IP</label>
+          <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Jump Host IP</label>
           <input type="text" [(ngModel)]="form.jump_host" placeholder="10.0.0.1"
-                 class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono">
+                 class="w-full px-3.5 py-2 text-sm bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl border border-slate-200/60 dark:border-slate-700/60 rounded-xl text-slate-800 dark:text-white focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-400 transition-all shadow-sm font-mono">
         </div>
         <div>
-          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Puerto SSH</label>
+          <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Puerto SSH</label>
           <input type="number" [(ngModel)]="form.jump_port"
-                 class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
+                 class="w-full px-3.5 py-2 text-sm bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl border border-slate-200/60 dark:border-slate-700/60 rounded-xl text-slate-800 dark:text-white focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-400 transition-all shadow-sm">
         </div>
         <div>
-          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Usuario bastión</label>
+          <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Usuario bastión</label>
           <input type="text" [(ngModel)]="form.jump_user"
-                 class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
+                 class="w-full px-3.5 py-2 text-sm bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl border border-slate-200/60 dark:border-slate-700/60 rounded-xl text-slate-800 dark:text-white focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-400 transition-all shadow-sm">
         </div>
         <div>
-          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Contraseña bastión (vacío = sin cambio)</label>
+          <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Contraseña bastión (vacío = sin cambio)</label>
           <input type="password" [(ngModel)]="form.jump_pass"
-                 class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
+                 class="w-full px-3.5 py-2 text-sm bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl border border-slate-200/60 dark:border-slate-700/60 rounded-xl text-slate-800 dark:text-white focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-400 transition-all shadow-sm">
         </div>
       </div>
     </div>
 
-    <hr class="border-gray-200 dark:border-gray-700">
+    <hr class="border-slate-200/60 dark:border-slate-700/60">
 
     <!-- SNMP collapsible -->
     <div>
       <button type="button" (click)="showSnmp = !showSnmp"
-              class="flex items-center gap-2 text-sm font-semibold text-gray-700 dark:text-gray-300 mb-4 w-full text-left">
+              class="flex items-center gap-2 text-sm font-semibold text-slate-700 dark:text-slate-300 mb-4 w-full text-left">
         <svg class="w-4 h-4 transition-transform text-purple-500" [class.rotate-90]="showSnmp" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
           <path stroke-linecap="round" stroke-linejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5"/>
         </svg>
@@ -159,36 +159,36 @@
       </button>
       <div *ngIf="showSnmp" class="grid grid-cols-2 gap-4 pl-4 border-l-2 border-purple-200 dark:border-purple-800">
         <div>
-          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">SNMP Host</label>
+          <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">SNMP Host</label>
           <input type="text" [(ngModel)]="form.snmp_host" placeholder="Vacío = mismo host OLT"
-                 class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono">
+                 class="w-full px-3.5 py-2 text-sm bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl border border-slate-200/60 dark:border-slate-700/60 rounded-xl text-slate-800 dark:text-white focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-400 transition-all shadow-sm font-mono">
         </div>
         <div>
-          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Community</label>
+          <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Community</label>
           <input type="text" [(ngModel)]="form.snmp_community"
-                 class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono">
+                 class="w-full px-3.5 py-2 text-sm bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl border border-slate-200/60 dark:border-slate-700/60 rounded-xl text-slate-800 dark:text-white focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-400 transition-all shadow-sm font-mono">
         </div>
         <div>
-          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Versión SNMP</label>
+          <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Versión SNMP</label>
           <select [(ngModel)]="form.snmp_version"
-                  class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
+                  class="w-full px-3.5 py-2 text-sm bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl border border-slate-200/60 dark:border-slate-700/60 rounded-xl text-slate-800 dark:text-white focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-400 transition-all shadow-sm">
             <option value="2c">2c</option><option value="1">1</option>
           </select>
         </div>
         <div>
-          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Puerto SNMP</label>
+          <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Puerto SNMP</label>
           <input type="number" [(ngModel)]="form.snmp_port"
-                 class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
+                 class="w-full px-3.5 py-2 text-sm bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl border border-slate-200/60 dark:border-slate-700/60 rounded-xl text-slate-800 dark:text-white focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-400 transition-all shadow-sm">
         </div>
         <div>
-          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">SNMP Jump Host</label>
+          <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">SNMP Jump Host</label>
           <input type="text" [(ngModel)]="form.snmp_jump_host"
-                 class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono">
+                 class="w-full px-3.5 py-2 text-sm bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl border border-slate-200/60 dark:border-slate-700/60 rounded-xl text-slate-800 dark:text-white focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-400 transition-all shadow-sm font-mono">
         </div>
         <div>
-          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">SNMP Jump Usuario</label>
+          <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">SNMP Jump Usuario</label>
           <input type="text" [(ngModel)]="form.snmp_jump_user"
-                 class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
+                 class="w-full px-3.5 py-2 text-sm bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl border border-slate-200/60 dark:border-slate-700/60 rounded-xl text-slate-800 dark:text-white focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-400 transition-all shadow-sm">
         </div>
       </div>
     </div>
@@ -196,7 +196,7 @@
     <!-- Save button -->
     <div class="flex justify-end pt-2">
       <button (click)="saveForm()" [disabled]="saving || !form.name.trim() || !form.host.trim()"
-              class="px-6 py-2.5 text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-50 rounded-lg transition-colors flex items-center gap-2">
+              class="px-6 py-2.5 text-sm font-semibold bg-gradient-to-br from-indigo-500 to-violet-600 text-white shadow-md shadow-indigo-500/20 hover:shadow-lg transition-all disabled:opacity-50 rounded-lg transition-colors flex items-center gap-2">
         <svg *ngIf="saving" class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
           <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
           <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/>

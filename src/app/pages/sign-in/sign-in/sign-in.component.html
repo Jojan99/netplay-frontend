@@ -3,8 +3,8 @@
     <a href="" class="flex items-center justify-center mb-8 text-2xl font-semibold lg:mb-10 dark:text-white">
       <span>WispSmart</span>
     </a>
-    <div  class="w-full max-w-xl p-6 space-y-8 sm:p-8 bg-white rounded-lg shadow dark:bg-stone-800">
-      <div *ngIf="Islogin" class="flex items-center p-4 mb-4 text-sm text-red-800 rounded-lg bg-red-50 dark:bg-stone-800 dark:text-red-400" role="alert">
+    <div  class="w-full max-w-xl p-6 space-y-8 sm:p-8 bg-white/80 dark:bg-stone-800/80 backdrop-blur-xl rounded-2xl border border-slate-200/60 dark:border-slate-700/60 shadow-sm hover:shadow-md transition-all duration-300">
+      <div *ngIf="Islogin" class="flex items-center p-4 mb-4 text-sm text-red-800 rounded-lg bg-red-50 dark:bg-stone-800/80 dark:text-red-400" role="alert">
         <svg class="flex-shrink-0 inline w-4 h-4 me-3" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 20 20">
           <path d="M10 .5a9.5 9.5 0 1 0 9.5 9.5A9.51 9.51 0 0 0 10 .5ZM9.5 4a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3ZM12 15H8a1 1 0 0 1 0-2h1v-3H8a1 1 0 0 1 0-2h2a1 1 0 0 1 1 1v4h1a1 1 0 0 1 0 2Z"/>
         </svg>
@@ -12,21 +12,21 @@
           <span class="font-medium">Mensaje:</span> Incorrect username or password.
         </div>
       </div>
-      <h2 class="text-2xl font-bold text-stone-900 dark:text-white">
+      <h2 class="text-2xl font-bold bg-gradient-to-r from-slate-800 to-slate-600 bg-clip-text text-transparent dark:from-white dark:to-slate-300">
         Iniciar Session
       </h2>
       <form (ngSubmit)="signin()" class="mt-8 space-y-6" action="#">
         <div>
           <label for="text" class="block mb-2 text-sm font-medium text-stone-900 dark:text-white">Documento</label>
-          <input type="text" name="text" id="text" autocomplete="username" [(ngModel)]="SignInInterfaces.user" class="bg-stone-50 border border-stone-300 text-stone-900 sm:text-sm rounded-lg focus:ring-primary-500 focus:border-primary-500 block w-full p-2.5 dark:bg-stone-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500" placeholder="122554121" required>
+          <input type="text" name="text" id="text" autocomplete="username" [(ngModel)]="SignInInterfaces.user" class="block w-full px-3.5 py-2 text-sm bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl border border-slate-200/60 dark:border-slate-700/60 rounded-xl text-slate-700 dark:text-slate-300 focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-400 transition-all shadow-sm" placeholder="122554121" required>
         </div>
         <div>
           <label for="password" class="block mb-2 text-sm font-medium text-stone-900 dark:text-white">Contraseña</label>
-          <input type="password" name="password" id="password" autocomplete="current-password" [(ngModel)]="SignInInterfaces.password" placeholder="••••••••" class="bg-stone-50 border border-stone-300 text-stone-900 sm:text-sm rounded-lg focus:ring-primary-500 focus:border-primary-500 block w-full p-2.5 dark:bg-stone-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500" required>
+          <input type="password" name="password" id="password" autocomplete="current-password" [(ngModel)]="SignInInterfaces.password" placeholder="••••••••" class="block w-full px-3.5 py-2 text-sm bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl border border-slate-200/60 dark:border-slate-700/60 rounded-xl text-slate-700 dark:text-slate-300 focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-400 transition-all shadow-sm" required>
         </div>
         <div class="flex items-start">
         </div>
-        <button type="submit" class="w-full px-5 py-3 text-base font-medium text-center text-white bg-primary-700 rounded-lg hover:bg-primary-800 focus:ring-4 focus:ring-primary-300 dark:bg-primary-600 dark:hover:bg-primary-700 dark:focus:ring-primary-800">Login</button>
+        <button type="submit" class="w-full px-5 py-3 text-base font-medium text-center bg-gradient-to-br from-indigo-500 to-violet-600 text-white shadow-md shadow-indigo-500/20 hover:shadow-lg transition-all rounded-xl">Login</button>
         <p class="text-sm text-stone-500 dark:text-stone-400 text-center">
           ¿No tienes empresa?
           <a routerLink="/register" class="font-medium text-slate-700 hover:underline dark:text-slate-400">Registra tu empresa</a>
@@ -36,7 +36,7 @@
   </div>
   <div *ngIf="isLoading" class="overlay">
     <div class="flex-col gap-4 w-full flex items-center justify-center spinner">
-      <div class="w-28 h-28 border-8 text-slate-400 text-4xl animate-spin border-stone-300 flex items-center justify-center border-t-blue-400 rounded-full">
+      <div class="w-28 h-28 border-8 border-indigo-200 dark:border-indigo-900/30 border-t-indigo-500 rounded-full animate-spin flex items-center justify-center shadow-lg shadow-indigo-500/20">
         <svg viewBox="0 0 24 24" fill="currentColor" height="1em" width="1em" class="animate-ping">
           <path d=""></path>
         </svg>

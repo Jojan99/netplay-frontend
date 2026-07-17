@@ -1,40 +1,40 @@
-<div class="min-h-full bg-gray-50 dark:bg-gray-900 p-5 space-y-4">
+<div class="min-h-full bg-slate-50/80 dark:bg-slate-900/80 p-5 space-y-4">
 
   <!-- Header -->
   <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
     <div>
-      <h1 class="text-xl font-semibold text-gray-800 dark:text-white">
+      <h1 class="text-2xl font-bold bg-gradient-to-r from-slate-800 to-slate-600 bg-clip-text text-transparent dark:from-white dark:to-slate-300">
         Métodos de Pago
       </h1>
-      <p class="text-sm text-gray-500 dark:text-gray-400">
+      <p class="text-sm text-slate-500 dark:text-slate-400">
         Recaudo por método de pago
       </p>
     </div>
     <input type="month" [(ngModel)]="period" (ngModelChange)="onPeriodChange()"
-           class="px-3 py-2 text-sm bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-300 focus:ring-2 focus:ring-blue-500">
+           class="px-3.5 py-2 text-sm bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl border border-slate-200/60 dark:border-slate-700/60 rounded-xl text-slate-700 dark:text-slate-300 focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-400 transition-all shadow-sm">
   </div>
 
   <!-- Method Selection (when no method selected) -->
   <ng-container *ngIf="!selectedMethod">
     <div *ngIf="loading" class="flex justify-center py-12">
-      <svg class="w-8 h-8 animate-spin text-blue-600" fill="none" viewBox="0 0 24 24">
+      <svg class="w-8 h-8 animate-spin text-indigo-500" fill="none" viewBox="0 0 24 24">
         <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
         <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"/>
       </svg>
     </div>
 
     <div *ngIf="!loading && methods.length === 0"
-         class="bg-white dark:bg-gray-800 rounded-2xl p-8 border border-gray-100 dark:border-gray-700 text-center">
-      <p class="text-gray-500 dark:text-gray-400">No hay pagos registrados en este período.</p>
+         class="bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl rounded-2xl border border-slate-200/60 dark:border-slate-700/60 shadow-sm hover:shadow-md transition-all duration-300 p-8 text-center">
+      <p class="text-slate-500 dark:text-slate-400">No hay pagos registrados en este período.</p>
     </div>
 
     <div *ngIf="!loading && methods.length > 0" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
       <div *ngFor="let m of methods"
            (click)="selectMethod(m)"
-           class="bg-white dark:bg-gray-800 rounded-2xl p-5 border border-gray-100 dark:border-gray-700 shadow-sm hover:shadow-md hover:border-blue-300 dark:hover:border-blue-500 cursor-pointer transition-all">
-        <p class="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1 truncate">{{ m.name }}</p>
-        <p class="text-xl font-bold text-gray-900 dark:text-white">$ {{ m.total | number:'1.0-0' }}</p>
-        <p class="text-xs text-gray-400 mt-1">{{ m.count }} pago(s)</p>
+           class="bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl rounded-2xl border border-slate-200/60 dark:border-slate-700/60 shadow-sm hover:shadow-md transition-all duration-300 p-5 hover:border-blue-300 dark:hover:border-blue-500 cursor-pointer transition-all">
+        <p class="text-sm font-medium text-slate-500 dark:text-slate-400 mb-1 truncate">{{ m.name }}</p>
+        <p class="text-xl font-bold text-slate-900 dark:text-white">$ {{ m.total | number:'1.0-0' }}</p>
+        <p class="text-xs text-slate-400 mt-1">{{ m.count }} pago(s)</p>
       </div>
     </div>
   </ng-container>
@@ -44,70 +44,70 @@
     <!-- Back button + Header -->
     <div class="flex items-center gap-4 mb-4">
       <button (click)="goBack()"
-              class="flex items-center gap-2 px-3 py-2 text-sm text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors">
+              class="flex items-center gap-2 px-3 py-2 text-sm text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700/50 rounded-lg transition-colors">
         <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
           <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/>
         </svg>
         Volver
       </button>
       <div>
-        <h2 class="text-lg font-semibold text-gray-800 dark:text-white">{{ selectedMethod }}</h2>
-        <p class="text-sm text-gray-500 dark:text-gray-400">{{ period }}</p>
+        <h2 class="text-lg font-semibold text-slate-800 dark:text-white">{{ selectedMethod }}</h2>
+        <p class="text-sm text-slate-500 dark:text-slate-400">{{ period }}</p>
       </div>
     </div>
 
     <!-- Summary cards -->
     <div class="grid grid-cols-2 md:grid-cols-3 gap-4 mb-4">
-      <div class="bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-100 dark:border-gray-700">
-        <p class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Total recaudo</p>
-        <div *ngIf="paymentsLoading" class="h-8 bg-gray-200 dark:bg-gray-600 rounded animate-pulse"></div>
-        <p *ngIf="!paymentsLoading" class="text-xl font-bold text-gray-900 dark:text-white">$ {{ displayTotal | number:'1.0-0' }}</p>
+      <div class="bg-white dark:bg-slate-800/80 rounded-xl p-4 border border-slate-100/60 dark:border-slate-700/60">
+        <p class="text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider text-xs font-bold">Total recaudo</p>
+        <div *ngIf="paymentsLoading" class="h-8 bg-slate-200/60 dark:bg-slate-600 rounded animate-pulse"></div>
+        <p *ngIf="!paymentsLoading" class="text-xl font-bold text-slate-900 dark:text-white">$ {{ displayTotal | number:'1.0-0' }}</p>
       </div>
-      <div class="bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-100 dark:border-gray-700">
-        <p class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Cantidad pagos</p>
-        <div *ngIf="paymentsLoading" class="h-8 bg-gray-200 dark:bg-gray-600 rounded animate-pulse"></div>
-        <p *ngIf="!paymentsLoading" class="text-xl font-bold text-gray-900 dark:text-white">{{ total }}</p>
+      <div class="bg-white dark:bg-slate-800/80 rounded-xl p-4 border border-slate-100/60 dark:border-slate-700/60">
+        <p class="text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider text-xs font-bold">Cantidad pagos</p>
+        <div *ngIf="paymentsLoading" class="h-8 bg-slate-200/60 dark:bg-slate-600 rounded animate-pulse"></div>
+        <p *ngIf="!paymentsLoading" class="text-xl font-bold text-slate-900 dark:text-white">{{ total }}</p>
       </div>
-      <div class="bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-100 dark:border-gray-700">
-        <p class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Promedio</p>
-        <div *ngIf="paymentsLoading" class="h-8 bg-gray-200 dark:bg-gray-600 rounded animate-pulse"></div>
-        <p *ngIf="!paymentsLoading" class="text-xl font-bold text-gray-900 dark:text-white">$ {{ displayAverage | number:'1.0-0' }}</p>
+      <div class="bg-white dark:bg-slate-800/80 rounded-xl p-4 border border-slate-100/60 dark:border-slate-700/60">
+        <p class="text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider text-xs font-bold">Promedio</p>
+        <div *ngIf="paymentsLoading" class="h-8 bg-slate-200/60 dark:bg-slate-600 rounded animate-pulse"></div>
+        <p *ngIf="!paymentsLoading" class="text-xl font-bold text-slate-900 dark:text-white">$ {{ displayAverage | number:'1.0-0' }}</p>
       </div>
     </div>
 
     <!-- Filters -->
     <div class="flex flex-wrap gap-2 items-center">
       <div class="relative">
-        <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0"/>
         </svg>
         <input type="text" [(ngModel)]="searchTerm" (input)="onSearchInput($event)"
           placeholder="Buscar cliente..."
-          class="pl-9 pr-3 py-2 w-64 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
+          class="pl-9 pr-3 py-2 w-64 px-3.5 py-2 text-sm bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl border border-slate-200/60 dark:border-slate-700/60 rounded-xl text-slate-700 dark:text-slate-300 focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-400 transition-all shadow-sm">
       </div>
       <select [(ngModel)]="perPage" (ngModelChange)="changePerPage()"
-              class="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
+              class="px-3 px-3.5 py-2 text-sm bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl border border-slate-200/60 dark:border-slate-700/60 rounded-xl text-slate-700 dark:text-slate-300 focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-400 transition-all shadow-sm">
         <option *ngFor="let n of perPageOptions" [value]="n">{{ n }} / pág.</option>
       </select>
     </div>
 
     <!-- Payments table -->
-    <div class="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 overflow-hidden">
+    <div class="bg-white dark:bg-slate-800/80 rounded-2xl border border-slate-100/60 dark:border-slate-700/60 overflow-hidden">
       <div *ngIf="paymentsLoading" class="flex justify-center py-12">
-        <svg class="w-8 h-8 animate-spin text-blue-600" fill="none" viewBox="0 0 24 24">
+        <svg class="w-8 h-8 animate-spin text-indigo-500" fill="none" viewBox="0 0 24 24">
           <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
           <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"/>
         </svg>
       </div>
 
       <div *ngIf="!paymentsLoading && payments.length === 0"
-           class="text-center py-12 text-gray-500 dark:text-gray-400">
+           class="text-center py-12 text-slate-500 dark:text-slate-400">
         No hay pagos registrados.
       </div>
 
       <table *ngIf="!paymentsLoading && payments.length > 0"
              class="w-full text-sm">
-        <thead class="text-xs text-gray-500 dark:text-gray-400 uppercase bg-gray-50 dark:bg-gray-700">
+        <thead class="text-xs text-slate-500 dark:text-slate-400 bg-slate-50/80 dark:bg-slate-700/80 backdrop-blur-sm uppercase tracking-wider text-xs font-bold">
           <tr>
             <th class="px-4 py-3 text-left font-medium">Fecha</th>
             <th class="px-4 py-3 text-left font-medium">Cliente</th>
@@ -115,22 +115,22 @@
             <th class="px-4 py-3 text-center font-medium">Factura</th>
           </tr>
         </thead>
-        <tbody class="divide-y divide-gray-100 dark:divide-gray-700">
-          <tr *ngFor="let p of payments" class="hover:bg-gray-50 dark:hover:bg-gray-700/50">
-            <td class="px-4 py-3 text-gray-600 dark:text-gray-300">
+        <tbody class="divide-y divide-slate-100 dark:divide-slate-700">
+          <tr *ngFor="let p of payments" class="hover:bg-slate-50 dark:hover:bg-slate-700/50/50">
+            <td class="px-4 py-3 text-slate-600 dark:text-slate-300">
               {{ p.payment_date | date:'dd/MM/yyyy HH:mm' }}
             </td>
-            <td class="px-4 py-3 text-gray-800 dark:text-gray-200">
+            <td class="px-4 py-3 text-slate-800 dark:text-slate-200">
               {{ p.client_name }}
             </td>
-            <td class="px-4 py-3 text-right font-medium text-gray-900 dark:text-white">
+            <td class="px-4 py-3 text-right font-medium text-slate-900 dark:text-white">
               $ {{ p.amount | number:'1.0-0' }}
             </td>
             <td class="px-4 py-3 text-center">
               <span *ngIf="p.invoice_id" class="px-2 py-1 rounded-full text-xs bg-green-50 text-green-700 dark:bg-green-900/30 dark:text-green-400">
                 #{{ p.invoice_id }}
               </span>
-              <span *ngIf="!p.invoice_id" class="text-gray-400">-</span>
+              <span *ngIf="!p.invoice_id" class="text-slate-400">-</span>
             </td>
           </tr>
         </tbody>
@@ -138,19 +138,19 @@
 
       <!-- Pagination -->
       <div *ngIf="!paymentsLoading && displayFiltered > perPage"
-           class="flex flex-wrap items-center justify-between gap-2 px-4 py-3 border-t border-gray-100 dark:border-gray-700">
-        <p class="text-xs text-gray-500 dark:text-gray-400">
+           class="flex flex-wrap items-center justify-between gap-2 px-4 py-3 border-t border-slate-100/60 dark:border-slate-700/60">
+        <p class="text-xs text-slate-500 dark:text-slate-400">
           Mostrando {{ (page - 1) * perPage + 1 }}–{{ page * perPage > displayFiltered ? displayFiltered : page * perPage }} de {{ displayFiltered }} registros
         </p>
         <div class="flex gap-1">
           <button (click)="prevPage()" [disabled]="page === 1"
                   [class]="'px-3 py-1.5 text-sm rounded-lg border transition-colors ' +
-                    (page === 1 ? 'bg-gray-100 dark:bg-gray-700 text-gray-400 cursor-not-allowed' : 'bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-600')">
+                    (page === 1 ? 'bg-slate-100/80 dark:bg-slate-700/80 text-slate-400 cursor-not-allowed' : 'bg-white dark:bg-slate-700/80 border-slate-300/60 dark:border-slate-600/60 hover:bg-slate-50 dark:hover:bg-slate-600/60')">
             Anterior
           </button>
           <button (click)="nextPage()" [disabled]="page === lastPage"
                   [class]="'px-3 py-1.5 text-sm rounded-lg border transition-colors ' +
-                    (page === lastPage ? 'bg-gray-100 dark:bg-gray-700 text-gray-400 cursor-not-allowed' : 'bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-600')">
+                    (page === lastPage ? 'bg-slate-100/80 dark:bg-slate-700/80 text-slate-400 cursor-not-allowed' : 'bg-white dark:bg-slate-700/80 border-slate-300/60 dark:border-slate-600/60 hover:bg-slate-50 dark:hover:bg-slate-600/60')">
             Siguiente
           </button>
         </div>

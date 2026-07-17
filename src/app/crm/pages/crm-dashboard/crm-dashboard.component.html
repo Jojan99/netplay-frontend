@@ -1,21 +1,20 @@
-<div class="h-full overflow-y-auto px-6 py-6" style="background: #0f172a; color: #e2e8f0; font-family:'Inter',sans-serif;">
+<div class="h-full overflow-y-auto px-6 py-6 bg-slate-900 text-slate-200" style="font-family:'Inter',sans-serif;">
 
   <!-- HEADER -->
   <div class="flex items-center justify-between mb-6">
     <div>
-      <h1 class="text-lg font-bold" style="color: #e2e8f0;">Dashboard CRM</h1>
-      <p class="text-xs mt-0.5" style="color: #64748b;">Métricas de conversaciones</p>
+      <h1 class="text-2xl font-bold bg-gradient-to-r from-slate-800 to-slate-600 bg-clip-text text-transparent dark:from-white dark:to-slate-300">Dashboard CRM</h1>
+      <p class="text-xs mt-0.5 text-slate-500">Métricas de conversaciones</p>
     </div>
-    <button class="px-4 py-2 rounded-xl text-xs font-semibold transition flex items-center gap-2"
-            style="background: #1e293b; color: #10b981; border: 1px solid #334155;"
+    <button class="px-4 py-2 rounded-xl text-xs font-semibold transition flex items-center gap-2 bg-slate-800/80 backdrop-blur-xl border border-slate-700/60 text-slate-300 hover:bg-slate-700"
             (click)="loadMetrics()">
       <i class="fa-solid fa-rotate-right text-xs"></i> Actualizar
     </button>
   </div>
 
   <!-- LOADING -->
-  <div *ngIf="loading" class="flex items-center justify-center py-20 gap-3" style="color: #64748b;">
-    <div class="w-5 h-5 border-2 rounded-full animate-spin" style="border-color: #334155; border-top-color: #10b981;"></div>
+  <div *ngIf="loading" class="flex items-center justify-center py-20 gap-3 text-slate-500">
+    <div class="w-5 h-5 border-2 border-slate-600 border-t-indigo-500 rounded-full animate-spin"></div>
     Cargando métricas…
   </div>
 
@@ -25,31 +24,31 @@
     <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
 
       <!-- Total -->
-      <div class="rounded-2xl p-4" style="background: #1e293b; border: 1px solid #334155;">
-        <div class="text-xs font-semibold mb-1 uppercase tracking-wide" style="color: #64748b;">Total</div>
-        <div class="text-3xl font-bold" style="color: #e2e8f0;">{{ metrics.total }}</div>
-        <div class="text-xs mt-1" style="color: #64748b;">conversaciones</div>
+      <div class="bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl rounded-2xl border border-slate-200/60 dark:border-slate-700/60 shadow-sm hover:shadow-md transition-all duration-300 p-4">
+        <div class="text-xs font-semibold mb-1 uppercase tracking-wide text-slate-500 dark:text-slate-400">Total</div>
+        <div class="text-3xl font-bold text-slate-200 dark:text-white">{{ metrics.total }}</div>
+        <div class="text-xs mt-1 text-slate-500">conversaciones</div>
       </div>
 
       <!-- Hoy -->
-      <div class="rounded-2xl p-4" style="background: #1e293b; border: 1px solid #334155;">
-        <div class="text-xs font-semibold mb-1 uppercase tracking-wide" style="color: #64748b;">Hoy</div>
-        <div class="text-3xl font-bold" style="color: #10b981;">{{ metrics.today }}</div>
-        <div class="text-xs mt-1" style="color: #64748b;">nuevas</div>
+      <div class="bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl rounded-2xl border border-slate-200/60 dark:border-slate-700/60 shadow-sm hover:shadow-md transition-all duration-300 p-4">
+        <div class="text-xs font-semibold mb-1 uppercase tracking-wide text-slate-500 dark:text-slate-400">Hoy</div>
+        <div class="text-3xl font-bold text-teal-400">{{ metrics.today }}</div>
+        <div class="text-xs mt-1 text-slate-500">nuevas</div>
       </div>
 
       <!-- En progreso -->
-      <div class="rounded-2xl p-4" style="background: #1e293b; border: 1px solid #334155;">
-        <div class="text-xs font-semibold mb-1 uppercase tracking-wide" style="color: #64748b;">En curso</div>
-        <div class="text-3xl font-bold" style="color: #3b82f6;">{{ metrics.by_status?.in_progress || 0 }}</div>
-        <div class="text-xs mt-1" style="color: #64748b;">conversaciones</div>
+      <div class="bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl rounded-2xl border border-slate-200/60 dark:border-slate-700/60 shadow-sm hover:shadow-md transition-all duration-300 p-4">
+        <div class="text-xs font-semibold mb-1 uppercase tracking-wide text-slate-500 dark:text-slate-400">En curso</div>
+        <div class="text-3xl font-bold text-violet-400">{{ metrics.by_status?.in_progress || 0 }}</div>
+        <div class="text-xs mt-1 text-slate-500">conversaciones</div>
       </div>
 
       <!-- Tiempo respuesta -->
-      <div class="rounded-2xl p-4" style="background: #1e293b; border: 1px solid #334155;">
-        <div class="text-xs font-semibold mb-1 uppercase tracking-wide" style="color: #64748b;">T. Respuesta</div>
-        <div class="text-3xl font-bold" style="color: #f59e0b;">{{ metrics.avg_response_minutes }}</div>
-        <div class="text-xs mt-1" style="color: #64748b;">min promedio</div>
+      <div class="bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl rounded-2xl border border-slate-200/60 dark:border-slate-700/60 shadow-sm hover:shadow-md transition-all duration-300 p-4">
+        <div class="text-xs font-semibold mb-1 uppercase tracking-wide text-slate-500 dark:text-slate-400">T. Respuesta</div>
+        <div class="text-3xl font-bold text-orange-400">{{ metrics.avg_response_minutes }}</div>
+        <div class="text-xs mt-1 text-slate-500">min promedio</div>
       </div>
 
     </div>
@@ -58,14 +57,14 @@
     <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
 
       <!-- Donut por estado -->
-      <div class="rounded-2xl p-4" style="background: #1e293b; border: 1px solid #334155;">
-        <div class="text-xs font-semibold mb-4 uppercase tracking-wide" style="color: #64748b;">Por Estado</div>
+      <div class="bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl rounded-2xl border border-slate-200/60 dark:border-slate-700/60 shadow-sm hover:shadow-md transition-all duration-300 p-4">
+        <div class="text-xs font-semibold mb-4 uppercase tracking-wide text-slate-500 dark:text-slate-400">Por Estado</div>
         <canvas #chartStatus></canvas>
       </div>
 
       <!-- Barras últimos 7 días -->
-      <div class="rounded-2xl p-4 col-span-1 md:col-span-2" style="background: #1e293b; border: 1px solid #334155;">
-        <div class="text-xs font-semibold mb-4 uppercase tracking-wide" style="color: #64748b;">Últimos 7 días</div>
+      <div class="bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl rounded-2xl border border-slate-200/60 dark:border-slate-700/60 shadow-sm hover:shadow-md transition-all duration-300 p-4 col-span-1 md:col-span-2">
+        <div class="text-xs font-semibold mb-4 uppercase tracking-wide text-slate-500 dark:text-slate-400">Últimos 7 días</div>
         <canvas #chartDays></canvas>
       </div>
 
@@ -75,17 +74,17 @@
     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
 
       <!-- Por agente -->
-      <div class="rounded-2xl p-4" style="background: #1e293b; border: 1px solid #334155;">
-        <div class="text-xs font-semibold mb-4 uppercase tracking-wide" style="color: #64748b;">Carga por Agente</div>
+      <div class="bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl rounded-2xl border border-slate-200/60 dark:border-slate-700/60 shadow-sm hover:shadow-md transition-all duration-300 p-4">
+        <div class="text-xs font-semibold mb-4 uppercase tracking-wide text-slate-500 dark:text-slate-400">Carga por Agente</div>
         <canvas *ngIf="metrics.by_agent?.length; else noAgents" #chartAgents></canvas>
         <ng-template #noAgents>
-          <div class="text-xs text-center py-8" style="color: #475569;">Sin datos de agentes</div>
+          <div class="text-xs text-center py-8 text-slate-600">Sin datos de agentes</div>
         </ng-template>
       </div>
 
       <!-- Por prioridad -->
-      <div class="rounded-2xl p-4" style="background: #1e293b; border: 1px solid #334155;">
-        <div class="text-xs font-semibold mb-4 uppercase tracking-wide" style="color: #64748b;">Por Prioridad</div>
+      <div class="bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl rounded-2xl border border-slate-200/60 dark:border-slate-700/60 shadow-sm hover:shadow-md transition-all duration-300 p-4">
+        <div class="text-xs font-semibold mb-4 uppercase tracking-wide text-slate-500 dark:text-slate-400">Por Prioridad</div>
         <div class="flex flex-col gap-3">
           <div *ngFor="let item of [
             {key:'high',   label:'Alta',   color:'#ef4444'},
@@ -94,9 +93,9 @@
           ]">
             <div class="flex justify-between text-xs mb-1">
               <span [style.color]="item.color">{{ item.label }}</span>
-              <span style="color: #e2e8f0;">{{ metrics.by_priority?.[item.key] || 0 }}</span>
+              <span class="text-slate-200">{{ metrics.by_priority?.[item.key] || 0 }}</span>
             </div>
-            <div class="w-full rounded-full h-2" style="background: #334155;">
+            <div class="w-full rounded-full h-2 bg-slate-700/50">
               <div class="h-2 rounded-full transition-all"
                    [style.background]="item.color"
                    [style.width]="metrics.total ? ((metrics.by_priority?.[item.key] || 0) / metrics.total * 100) + '%' : '0%'">

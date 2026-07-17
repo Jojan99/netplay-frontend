@@ -1,20 +1,20 @@
 <div class="max-w-2xl mx-auto py-8 px-4">
 
   <!-- Header card -->
-  <div class="bg-white dark:bg-gray-800 rounded-2xl shadow p-6 mb-6 flex items-center gap-5">
+  <div class="bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl rounded-2xl border border-slate-200/60 dark:border-slate-700/60 shadow-sm hover:shadow-md transition-all duration-300 p-6 mb-6 flex items-center gap-5">
     <div class="w-16 h-16 rounded-full bg-blue-600 flex items-center justify-center text-white text-2xl font-bold shrink-0">
       {{ (profile?.username || 'U').charAt(0).toUpperCase() }}
     </div>
     <div class="flex-1 min-w-0">
-      <p class="text-xl font-semibold text-gray-900 dark:text-white truncate">
+      <p class="text-2xl font-bold bg-gradient-to-r from-slate-800 to-slate-600 bg-clip-text text-transparent dark:from-white dark:to-slate-300 truncate">
         {{ profile?.names }} {{ profile?.lastname }}
       </p>
-      <p class="text-sm text-gray-500 dark:text-gray-400">{{ '@' + profile?.username }}</p>
+      <p class="text-sm text-slate-500 dark:text-slate-400">{{ '@' + profile?.username }}</p>
       <div class="mt-1 flex flex-wrap gap-2">
         <span class="text-xs font-medium px-2 py-0.5 rounded-full" [ngClass]="roleClass">
           {{ profile?.profile_name }}
         </span>
-        <span class="text-xs font-medium px-2 py-0.5 rounded-full bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300">
+        <span class="text-xs font-medium px-2 py-0.5 rounded-full bg-slate-100/80 text-slate-700 dark:bg-slate-700/80 dark:text-slate-300">
           {{ profile?.company_name }}
         </span>
       </div>
@@ -22,28 +22,30 @@
   </div>
 
   <!-- Tabs -->
-  <div class="bg-white dark:bg-gray-800 rounded-2xl shadow overflow-hidden">
+  <div class="bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl rounded-2xl border border-slate-200/60 dark:border-slate-700/60 shadow-sm hover:shadow-md transition-all duration-300 overflow-hidden">
 
-    <div class="flex border-b border-gray-200 dark:border-gray-700">
+    <div class="flex border-b border-slate-200/60 dark:border-slate-700/60">
       <button (click)="tab='info'"
               class="flex-1 py-3 text-sm font-medium transition-colors"
               [ngClass]="tab === 'info'
-                ? 'text-blue-600 border-b-2 border-blue-600'
-                : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200'">
+                ? 'border-indigo-500 text-indigo-600 dark:text-indigo-400 font-bold border-b-2'
+                : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 border-b-2 border-transparent'">
         Información personal
       </button>
       <button (click)="tab='password'; pwError=''"
               class="flex-1 py-3 text-sm font-medium transition-colors"
               [ngClass]="tab === 'password'
-                ? 'text-blue-600 border-b-2 border-blue-600'
-                : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200'">
+                ? 'border-indigo-500 text-indigo-600 dark:text-indigo-400 font-bold border-b-2'
+                : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 border-b-2 border-transparent'">
         Cambiar contraseña
       </button>
     </div>
 
     <!-- Loading -->
     <div *ngIf="loading" class="flex justify-center py-12">
-      <div class="w-6 h-6 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+      <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center animate-pulse shadow-lg shadow-indigo-500/30">
+        <svg class="w-5 h-5 text-white animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"/></svg>
+      </div>
     </div>
 
     <!-- Tab: Info -->
@@ -51,38 +53,38 @@
 
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
-          <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Nombres</label>
+          <label class="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">Nombres</label>
           <input [(ngModel)]="infoForm.names" type="text"
-                 class="w-full rounded-lg border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 px-3 py-2 text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
+                 class="w-full px-3.5 py-2 text-sm bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl border border-slate-200/60 dark:border-slate-700/60 rounded-xl text-slate-700 dark:text-slate-300 focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-400 transition-all shadow-sm">
         </div>
         <div>
-          <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Apellidos</label>
+          <label class="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">Apellidos</label>
           <input [(ngModel)]="infoForm.lastname" type="text"
-                 class="w-full rounded-lg border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 px-3 py-2 text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
+                 class="w-full px-3.5 py-2 text-sm bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl border border-slate-200/60 dark:border-slate-700/60 rounded-xl text-slate-700 dark:text-slate-300 focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-400 transition-all shadow-sm">
         </div>
         <div>
-          <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Correo electrónico</label>
+          <label class="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">Correo electrónico</label>
           <input [(ngModel)]="infoForm.email" type="email"
-                 class="w-full rounded-lg border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 px-3 py-2 text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
+                 class="w-full px-3.5 py-2 text-sm bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl border border-slate-200/60 dark:border-slate-700/60 rounded-xl text-slate-700 dark:text-slate-300 focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-400 transition-all shadow-sm">
         </div>
         <div>
-          <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Teléfono</label>
+          <label class="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">Teléfono</label>
           <input [(ngModel)]="infoForm.phone" type="text"
-                 class="w-full rounded-lg border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 px-3 py-2 text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
+                 class="w-full px-3.5 py-2 text-sm bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl border border-slate-200/60 dark:border-slate-700/60 rounded-xl text-slate-700 dark:text-slate-300 focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-400 transition-all shadow-sm">
         </div>
       </div>
 
       <!-- Read-only fields -->
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
         <div>
-          <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Usuario</label>
-          <div class="w-full rounded-lg border border-gray-100 dark:border-gray-600 bg-gray-100 dark:bg-gray-700/50 px-3 py-2 text-sm text-gray-500 dark:text-gray-400 select-none">
+          <label class="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">Usuario</label>
+          <div class="w-full rounded-xl border border-slate-100/60 dark:border-slate-600/60 bg-slate-100/80 dark:bg-slate-700/50 px-3 py-2 text-sm text-slate-500 dark:text-slate-400 select-none">
             {{ profile?.username }}
           </div>
         </div>
         <div>
-          <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Empresa</label>
-          <div class="w-full rounded-lg border border-gray-100 dark:border-gray-600 bg-gray-100 dark:bg-gray-700/50 px-3 py-2 text-sm text-gray-500 dark:text-gray-400 select-none">
+          <label class="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">Empresa</label>
+          <div class="w-full rounded-xl border border-slate-100/60 dark:border-slate-600/60 bg-slate-100/80 dark:bg-slate-700/50 px-3 py-2 text-sm text-slate-500 dark:text-slate-400 select-none">
             {{ profile?.company_name }}
           </div>
         </div>
@@ -90,7 +92,7 @@
 
       <div class="flex justify-end pt-2">
         <button (click)="saveInfo()" [disabled]="saving"
-                class="px-5 py-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white text-sm font-medium rounded-lg flex items-center gap-2 transition-colors">
+                class="px-5 py-2 bg-gradient-to-br from-indigo-500 to-violet-600 text-white shadow-md shadow-indigo-500/20 hover:shadow-lg disabled:opacity-50 transition-all text-sm font-medium rounded-xl flex items-center gap-2">
           <span *ngIf="saving" class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
           Guardar cambios
         </button>
@@ -105,12 +107,12 @@
       </div>
 
       <div>
-        <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Contraseña actual</label>
+        <label class="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">Contraseña actual</label>
         <div class="relative">
-          <input [(ngModel)]="pwForm.current_password" [type]="showCurrent ? 'text' : 'password'"
-                 class="w-full rounded-lg border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 px-3 py-2 pr-10 text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
+           <input [(ngModel)]="pwForm.current_password" [type]="showCurrent ? 'text' : 'password'"
+                  class="w-full px-3.5 py-2 pr-10 text-sm bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl border border-slate-200/60 dark:border-slate-700/60 rounded-xl text-slate-700 dark:text-slate-300 focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-400 transition-all shadow-sm">
           <button type="button" (click)="showCurrent = !showCurrent"
-                  class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
+                  class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
               <path *ngIf="!showCurrent" stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
               <path *ngIf="showCurrent" stroke-linecap="round" stroke-linejoin="round" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"/>
@@ -120,12 +122,12 @@
       </div>
 
       <div>
-        <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Nueva contraseña</label>
+        <label class="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">Nueva contraseña</label>
         <div class="relative">
-          <input [(ngModel)]="pwForm.new_password" [type]="showNew ? 'text' : 'password'"
-                 class="w-full rounded-lg border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 px-3 py-2 pr-10 text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
+           <input [(ngModel)]="pwForm.new_password" [type]="showNew ? 'text' : 'password'"
+                  class="w-full px-3.5 py-2 pr-10 text-sm bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl border border-slate-200/60 dark:border-slate-700/60 rounded-xl text-slate-700 dark:text-slate-300 focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-400 transition-all shadow-sm">
           <button type="button" (click)="showNew = !showNew"
-                  class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
+                  class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
               <path *ngIf="!showNew" stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
               <path *ngIf="showNew" stroke-linecap="round" stroke-linejoin="round" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"/>
@@ -135,12 +137,12 @@
       </div>
 
       <div>
-        <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Confirmar nueva contraseña</label>
+        <label class="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">Confirmar nueva contraseña</label>
         <div class="relative">
-          <input [(ngModel)]="pwForm.new_password_confirmation" [type]="showConfirm ? 'text' : 'password'"
-                 class="w-full rounded-lg border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 px-3 py-2 pr-10 text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
+           <input [(ngModel)]="pwForm.new_password_confirmation" [type]="showConfirm ? 'text' : 'password'"
+                  class="w-full px-3.5 py-2 pr-10 text-sm bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl border border-slate-200/60 dark:border-slate-700/60 rounded-xl text-slate-700 dark:text-slate-300 focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-400 transition-all shadow-sm">
           <button type="button" (click)="showConfirm = !showConfirm"
-                  class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
+                  class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
               <path *ngIf="!showConfirm" stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
               <path *ngIf="showConfirm" stroke-linecap="round" stroke-linejoin="round" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"/>
@@ -151,7 +153,7 @@
 
       <div class="flex justify-end pt-2">
         <button (click)="savePassword()" [disabled]="saving"
-                class="px-5 py-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white text-sm font-medium rounded-lg flex items-center gap-2 transition-colors">
+                class="px-5 py-2 bg-gradient-to-br from-indigo-500 to-violet-600 text-white shadow-md shadow-indigo-500/20 hover:shadow-lg disabled:opacity-50 transition-all text-sm font-medium rounded-xl flex items-center gap-2">
           <span *ngIf="saving" class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
           Cambiar contraseña
         </button>

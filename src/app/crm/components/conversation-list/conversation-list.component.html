@@ -1,14 +1,12 @@
-<div class="h-full flex flex-col min-h-0 border-r"
-     style="background: #1e293b; border-color: #334155;">
+<div class="h-full flex flex-col min-h-0 border-r bg-slate-800/80 backdrop-blur-xl border-slate-700/60">
 
   <!-- HEADER -->
-  <div class="px-4 pt-4 pb-3 border-b shrink-0" style="border-color: #334155;">
+  <div class="px-4 pt-4 pb-3 border-b shrink-0 border-slate-700/60">
 
     <!-- TITLE ROW -->
     <div class="flex items-center justify-between mb-3">
-      <span class="text-sm font-bold" style="color: #e2e8f0;">Conversaciones</span>
-      <span class="text-xs px-2.5 py-1 rounded-full font-bold"
-            style="background: #10b98120; color: #10b981; border: 1px solid #10b98130;">
+      <span class="text-sm font-bold text-slate-200">Conversaciones</span>
+      <span class="text-xs px-2.5 py-1 rounded-full font-bold bg-teal-500/10 text-teal-400 border border-teal-500/20">
         {{ filtered.length }}
       </span>
     </div>
@@ -19,11 +17,10 @@
              [(ngModel)]="searchQuery"
              (ngModelChange)="applySearch()"
              placeholder="Buscar por nombre o teléfono…"
-             class="w-full pl-9 pr-3 py-2 rounded-xl text-sm outline-none transition"
-             style="background: #0f172a; border: 1px solid #334155; color: #e2e8f0;"
+             class="w-full pl-9 pr-3.5 py-2 text-sm bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl border border-slate-200/60 dark:border-slate-700/60 rounded-xl text-slate-700 dark:text-slate-300 focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-400 transition-all shadow-sm outline-none"
              onfocus="this.style.borderColor='#10b981'"
              onblur="this.style.borderColor='#334155'" />
-      <i class="fa-solid fa-magnifying-glass absolute left-3 top-2.5 text-xs" style="color: #64748b;"></i>
+      <i class="fa-solid fa-magnifying-glass absolute left-3 top-2.5 text-xs text-slate-500"></i>
     </div>
 
     <!-- FILTERS -->
@@ -49,8 +46,7 @@
   <div class="flex-1 min-h-0 overflow-y-auto">
 
     <button *ngFor="let c of filtered; trackBy: trackByConversationId"
-            class="w-full text-left px-4 py-3 transition-all duration-150 border-b relative"
-            [style.borderColor]="'#1e293b'"
+            class="w-full text-left px-4 py-3 transition-all duration-150 border-b relative border-slate-800"
             [style.background]="activeConversationId === c.id ? '#0f172a' : 'transparent'"
             [style.borderLeft]="activeConversationId === c.id ? '3px solid #10b981' : '3px solid transparent'"
             onmouseenter="if(this.style.borderLeft === '3px solid transparent') this.style.background='#0f172a22'"
@@ -61,9 +57,7 @@
 
         <!-- AVATAR -->
         <div class="relative flex-shrink-0">
-          <div class="h-10 w-10 rounded-full flex items-center justify-center font-bold text-sm"
-               style="background: linear-gradient(135deg, #1e3a5f 0%, #0f2f1f 100%);
-                      color: #10b981; border: 1.5px solid #334155;">
+          <div class="h-10 w-10 rounded-full flex items-center justify-center font-bold text-sm bg-gradient-to-br from-teal-500 to-violet-600 text-white shadow-md shadow-teal-500/20 border border-slate-600">
             {{ getInitials(c.customer?.name || '') }}
           </div>
           <!-- Prioridad dot -->
@@ -87,19 +81,18 @@
             <div class="flex items-center gap-1.5 flex-shrink-0">
               <!-- UNREAD BADGE -->
               <span *ngIf="c.unread_count && activeConversationId !== c.id"
-                    class="text-xs font-bold rounded-full min-w-[18px] h-[18px] px-1 flex items-center justify-center"
-                    style="background: #10b981; color: #000;">
+                    class="text-xs font-bold rounded-full min-w-[18px] h-[18px] px-1 flex items-center justify-center bg-teal-500 text-white">
                 {{ c.unread_count }}
               </span>
               <!-- HORA -->
-              <span *ngIf="c.last_message?.at" class="text-xs flex-shrink-0" style="color: #475569;">
+              <span *ngIf="c.last_message?.at" class="text-xs flex-shrink-0 text-slate-600">
                 {{ c.last_message.at | date:'HH:mm' }}
               </span>
             </div>
           </div>
 
           <!-- LAST MESSAGE -->
-          <div class="flex items-center gap-1.5 text-xs truncate mt-0.5" style="color: #64748b;">
+          <div class="flex items-center gap-1.5 text-xs truncate mt-0.5 text-slate-500">
             <span class="truncate">{{ lastMessagePreview(c.last_message) }}</span>
           </div>
 
@@ -112,8 +105,7 @@
             </span>
 
             <span *ngIf="c.assigned_user"
-                  class="text-xs truncate max-w-[80px]"
-                  style="color: #64748b;">
+                  class="text-xs truncate max-w-[80px] text-slate-500">
               <i class="fa-solid fa-user text-xs mr-0.5"></i>
               {{ c.assigned_user.names }}
             </span>
@@ -127,8 +119,8 @@
     <div *ngIf="!filtered || filtered.length === 0"
          class="flex flex-col items-center justify-center py-16 gap-3">
       <div class="text-4xl opacity-20">💬</div>
-      <div class="text-sm font-medium" style="color: #475569;">Sin conversaciones</div>
-      <div class="text-xs" style="color: #334155;">
+      <div class="text-sm font-medium text-slate-600">Sin conversaciones</div>
+      <div class="text-xs text-slate-700">
         {{ searchQuery ? 'Sin resultados para "' + searchQuery + '"' : 'Intenta cambiar el filtro' }}
       </div>
     </div>

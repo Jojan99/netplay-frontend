@@ -3,8 +3,8 @@
     <!-- Header -->
     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6">
       <div>
-        <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Gestionar Ingresos</h1>
-        <p class="text-sm text-gray-500 dark:text-gray-400">Clientes con facturas pendientes</p>
+        <h1 class="text-2xl font-bold bg-gradient-to-r from-slate-800 to-slate-600 bg-clip-text text-transparent dark:from-white dark:to-slate-300">Gestionar Ingresos</h1>
+        <p class="text-sm text-slate-500 dark:text-slate-400">Clientes con facturas pendientes</p>
       </div>
       <button (click)="exportAllCSV()"
         class="flex items-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg text-sm font-medium transition-colors">
@@ -19,24 +19,24 @@
     <!-- Search + per-page -->
     <div class="flex flex-col sm:flex-row gap-3 mb-4">
       <div class="relative flex-1">
-        <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0" />
         </svg>
         <input type="text" [(ngModel)]="searchTerm" (ngModelChange)="onSearchChange()"
           placeholder="Buscar por nombre, DNI, teléfono..."
-          class="w-full pl-9 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500" />
+          class="w-full pl-9 pr-4 px-3.5 py-2 text-sm bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl border border-slate-200/60 dark:border-slate-700/60 rounded-xl text-slate-700 dark:text-slate-300 focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-400 transition-all shadow-sm" />
       </div>
       <select [(ngModel)]="perPage" (ngModelChange)="changePerPage()"
-        class="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
+        class="px-3 px-3.5 py-2 text-sm bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl border border-slate-200/60 dark:border-slate-700/60 rounded-xl text-slate-700 dark:text-slate-300 focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-400 transition-all shadow-sm">
         <option *ngFor="let n of perPageOptions" [value]="n">{{ n }} por página</option>
       </select>
     </div>
 
     <!-- Table -->
-    <div class="bg-white dark:bg-gray-800 rounded-xl shadow overflow-hidden">
+    <div class="bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl rounded-2xl border border-slate-200/60 dark:border-slate-700/60 shadow-sm hover:shadow-md transition-all duration-300 overflow-hidden">
       <div class="overflow-x-auto">
         <table class="w-full text-sm text-left">
-          <thead class="text-xs text-gray-500 dark:text-gray-400 uppercase bg-gray-50 dark:bg-gray-700">
+          <thead class="text-xs text-slate-500 dark:text-slate-400 bg-slate-50/80 dark:bg-slate-700/80 backdrop-blur-sm uppercase tracking-wider text-xs font-bold">
             <tr>
               <th class="px-4 py-3">Cliente</th>
               <th class="px-4 py-3 hidden md:table-cell">DNI</th>
@@ -46,36 +46,36 @@
               <th class="px-4 py-3 text-center">Acción</th>
             </tr>
           </thead>
-          <tbody class="divide-y divide-gray-100 dark:divide-gray-700">
+          <tbody class="divide-y divide-slate-100 dark:divide-slate-700">
 
             <!-- Skeleton -->
             <ng-container *ngIf="loading">
               <tr *ngFor="let i of [1,2,3,4,5,6,7,8]" class="animate-pulse">
-                <td class="px-4 py-3"><div class="h-4 bg-gray-200 dark:bg-gray-600 rounded w-36"></div></td>
-                <td class="px-4 py-3 hidden md:table-cell"><div class="h-4 bg-gray-200 dark:bg-gray-600 rounded w-24"></div></td>
-                <td class="px-4 py-3 hidden md:table-cell"><div class="h-4 bg-gray-200 dark:bg-gray-600 rounded w-24"></div></td>
-                <td class="px-4 py-3 text-right"><div class="h-4 bg-gray-200 dark:bg-gray-600 rounded w-8 ml-auto"></div></td>
-                <td class="px-4 py-3 text-right"><div class="h-4 bg-gray-200 dark:bg-gray-600 rounded w-20 ml-auto"></div></td>
-                <td class="px-4 py-3 text-center"><div class="h-7 bg-gray-200 dark:bg-gray-600 rounded w-14 mx-auto"></div></td>
+                <td class="px-4 py-3"><div class="h-4 bg-slate-200/60 dark:bg-slate-600 rounded w-36"></div></td>
+                <td class="px-4 py-3 hidden md:table-cell"><div class="h-4 bg-slate-200/60 dark:bg-slate-600 rounded w-24"></div></td>
+                <td class="px-4 py-3 hidden md:table-cell"><div class="h-4 bg-slate-200/60 dark:bg-slate-600 rounded w-24"></div></td>
+                <td class="px-4 py-3 text-right"><div class="h-4 bg-slate-200/60 dark:bg-slate-600 rounded w-8 ml-auto"></div></td>
+                <td class="px-4 py-3 text-right"><div class="h-4 bg-slate-200/60 dark:bg-slate-600 rounded w-20 ml-auto"></div></td>
+                <td class="px-4 py-3 text-center"><div class="h-7 bg-slate-200/60 dark:bg-slate-600 rounded w-14 mx-auto"></div></td>
               </tr>
             </ng-container>
 
             <!-- Empty -->
             <tr *ngIf="!loading && clients.length === 0">
-              <td colspan="6" class="px-4 py-10 text-center text-gray-400 dark:text-gray-500">
+              <td colspan="6" class="px-4 py-10 text-center text-slate-400 dark:text-slate-500">
                 No hay clientes con facturas pendientes
               </td>
             </tr>
 
             <!-- Data -->
             <tr *ngFor="let c of clients"
-              class="hover:bg-gray-50 dark:hover:bg-gray-750 transition-colors cursor-pointer"
+              class="hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors cursor-pointer"
               (click)="openDrawer(c)">
-              <td class="px-4 py-3 font-medium text-gray-900 dark:text-white">
+              <td class="px-4 py-3 font-medium text-slate-900 dark:text-white">
                 {{ c.names }} {{ c.lastname }}
               </td>
-              <td class="px-4 py-3 text-gray-500 dark:text-gray-400 hidden md:table-cell">{{ c.dni }}</td>
-              <td class="px-4 py-3 text-gray-500 dark:text-gray-400 hidden md:table-cell">{{ c.phone }}</td>
+              <td class="px-4 py-3 text-slate-500 dark:text-slate-400 hidden md:table-cell">{{ c.dni }}</td>
+              <td class="px-4 py-3 text-slate-500 dark:text-slate-400 hidden md:table-cell">{{ c.phone }}</td>
               <td class="px-4 py-3 text-right">
                 <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-orange-100 text-orange-800">
                   {{ c.months_pending }}
@@ -86,7 +86,7 @@
               </td>
               <td class="px-4 py-3 text-center">
                 <button (click)="$event.stopPropagation(); openDrawer(c)"
-                  class="px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white text-xs rounded-lg transition-colors">
+                  class="px-3 py-1 bg-gradient-to-br from-indigo-500 to-violet-600 text-white shadow-md shadow-indigo-500/20 hover:shadow-lg transition-all text-xs rounded-lg transition-colors">
                   Ver
                 </button>
               </td>
@@ -98,23 +98,23 @@
 
       <!-- Pagination -->
       <div *ngIf="!loading && totalClients > 0"
-        class="flex flex-col sm:flex-row items-center justify-between gap-3 px-4 py-3 border-t border-gray-100 dark:border-gray-700">
-        <span class="text-sm text-gray-500 dark:text-gray-400">
+        class="flex flex-col sm:flex-row items-center justify-between gap-3 px-4 py-3 border-t border-slate-100/60 dark:border-slate-700/60">
+        <span class="text-sm text-slate-500 dark:text-slate-400">
           Mostrando {{ (page - 1) * perPage + 1 }}–{{ page * perPage > totalClients ? totalClients : page * perPage }} de {{ totalClients }} clientes
         </span>
         <div class="flex items-center gap-1">
           <button (click)="prevPage()" [disabled]="page === 1"
-            class="px-2 py-1 rounded text-sm border border-gray-300 dark:border-gray-600 disabled:opacity-40 hover:bg-gray-50 dark:hover:bg-gray-700">
+            class="px-2 py-1 rounded text-sm border border-slate-300/60 dark:border-slate-600/60 disabled:opacity-40 hover:bg-slate-50 dark:hover:bg-slate-700/50">
             ←
           </button>
           <button *ngFor="let p of pages" (click)="goToPage(p)"
             [class]="p === page
-              ? 'px-3 py-1 rounded text-sm bg-blue-600 text-white font-medium'
-              : 'px-3 py-1 rounded text-sm border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700'">
+              ? 'px-3 py-1 rounded text-sm bg-gradient-to-br from-indigo-500 to-violet-600 text-white shadow-md shadow-indigo-500/20 hover:shadow-lg transition-all font-medium'
+              : 'px-3 py-1 rounded text-sm border border-slate-300/60 dark:border-slate-600/60 hover:bg-slate-50 dark:hover:bg-slate-700/50'">
             {{ p }}
           </button>
           <button (click)="nextPage()" [disabled]="page === lastPage"
-            class="px-2 py-1 rounded text-sm border border-gray-300 dark:border-gray-600 disabled:opacity-40 hover:bg-gray-50 dark:hover:bg-gray-700">
+            class="px-2 py-1 rounded text-sm border border-slate-300/60 dark:border-slate-600/60 disabled:opacity-40 hover:bg-slate-50 dark:hover:bg-slate-700/50">
             →
           </button>
         </div>
@@ -126,21 +126,21 @@
 <!-- ═══════════════════ DRAWER ═══════════════════ -->
 <div *ngIf="drawerOpen" class="fixed inset-0 z-40 flex justify-end">
   <!-- Backdrop -->
-  <div class="absolute inset-0 bg-black/40 backdrop-blur-sm" (click)="closeDrawer()"></div>
+  <div class="absolute inset-0 bg-slate-900/50 backdrop-blur-sm" (click)="closeDrawer()"></div>
 
   <!-- Panel -->
-  <div class="relative z-50 w-full max-w-2xl bg-white dark:bg-gray-900 h-full flex flex-col shadow-2xl overflow-hidden">
+  <div class="relative z-50 w-full max-w-2xl bg-white/95 dark:bg-slate-800/95 backdrop-blur-xl h-full border-r border-slate-100 dark:border-slate-700 flex flex-col shadow-2xl overflow-hidden">
 
     <!-- Drawer header -->
-    <div class="flex items-start justify-between px-5 py-4 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800">
+    <div class="flex items-start justify-between px-5 py-4 border-b border-slate-200/60 dark:border-slate-700/60 bg-slate-50/80 dark:bg-slate-800/80">
       <div>
-        <h2 class="text-lg font-bold text-gray-900 dark:text-white">
+        <h2 class="text-lg font-bold text-slate-900 dark:text-white">
           {{ selectedClient?.names }} {{ selectedClient?.lastname }}
         </h2>
-        <p class="text-sm text-gray-500 dark:text-gray-400 mt-0.5">
+        <p class="text-sm text-slate-500 dark:text-slate-400 mt-0.5">
           DNI: {{ selectedClient?.dni }} &middot; Tel: {{ selectedClient?.phone }}
         </p>
-        <p *ngIf="selectedClient?.address" class="text-xs text-gray-400 mt-0.5">{{ selectedClient?.address }}</p>
+        <p *ngIf="selectedClient?.address" class="text-xs text-slate-400 mt-0.5">{{ selectedClient?.address }}</p>
       </div>
       <div class="flex items-center gap-2">
         <button (click)="exportCSV()"
@@ -152,7 +152,7 @@
           CSV
         </button>
         <button (click)="openSendBulkModal()"
-          class="flex items-center gap-1.5 px-3 py-1.5 text-xs bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors">
+          class="flex items-center gap-1.5 px-3 py-1.5 text-xs bg-gradient-to-br from-indigo-500 to-violet-600 text-white shadow-md shadow-indigo-500/20 hover:shadow-lg transition-all rounded-lg transition-colors">
           <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
               d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/>
@@ -160,7 +160,7 @@
           Enviar
         </button>
         <button (click)="closeDrawer()"
-          class="p-1.5 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">
+          class="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-200/60 dark:hover:bg-slate-700/50 transition-colors">
           <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
           </svg>
@@ -173,7 +173,7 @@
 
       <!-- Loading skeleton -->
       <div *ngIf="drawerLoading" class="space-y-3 animate-pulse">
-        <div *ngFor="let i of [1,2,3]" class="h-16 bg-gray-200 dark:bg-gray-700 rounded-lg"></div>
+        <div *ngFor="let i of [1,2,3]" class="h-16 bg-slate-200/60 dark:bg-slate-700/80 rounded-lg"></div>
       </div>
 
       <ng-container *ngIf="!drawerLoading">
@@ -181,12 +181,12 @@
         <!-- Invoices section -->
         <div>
           <!-- Tabs -->
-          <div class="flex border-b border-gray-200 dark:border-gray-700 mb-3">
+          <div class="flex border-b border-slate-200/60 dark:border-slate-700/60 mb-3">
             <button (click)="drawerTab = 'pending'"
               [class]="'flex-1 py-2 text-sm font-medium transition-colors ' +
                 (drawerTab === 'pending'
                   ? 'border-b-2 border-red-500 text-red-600 dark:text-red-400'
-                  : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200')">
+                  : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200')">
               Pendientes
               <span class="ml-1.5 px-1.5 py-0.5 text-xs rounded-full bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-300">
                 {{ drawerPendingCount }}
@@ -196,7 +196,7 @@
               [class]="'flex-1 py-2 text-sm font-medium transition-colors ' +
                 (drawerTab === 'paid'
                   ? 'border-b-2 border-green-500 text-green-600 dark:text-green-400'
-                  : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200')">
+                  : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200')">
               Pagadas
               <span class="ml-1.5 px-1.5 py-0.5 text-xs rounded-full bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300">
                 {{ drawerPaidCount }}
@@ -212,43 +212,43 @@
             </button>
           </div>
 
-          <div *ngIf="drawerInvoices.length === 0" class="text-sm text-gray-400 py-4 text-center">
+          <div *ngIf="drawerInvoices.length === 0" class="text-sm text-slate-400 py-4 text-center">
             No hay facturas {{ drawerTab === 'pending' ? 'pendientes' : 'pagadas' }}
           </div>
 
           <div class="space-y-2">
             <div *ngFor="let inv of drawerInvoices"
-              class="bg-gray-50 dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
+              class="bg-slate-50/80 dark:bg-slate-800/80 rounded-lg p-4 border border-slate-200/60 dark:border-slate-700/60">
 
               <div class="flex items-center justify-between flex-wrap gap-2">
                 <div class="flex items-center gap-3">
-                  <span class="text-xs font-mono font-medium text-gray-600 dark:text-gray-400">{{ inv.number_facture }}</span>
+                  <span class="text-xs font-mono font-medium text-slate-600 dark:text-slate-400">{{ inv.number_facture }}</span>
                   <span [class]="'px-2 py-0.5 text-xs rounded-full font-medium ' + invoiceStatusClass(inv)">
                     {{ invoiceStatusLabel(inv) }}
                   </span>
                 </div>
-                <div class="text-xs text-gray-400">{{ inv.date_facturation | date:'dd MMM yyyy' }}</div>
+                <div class="text-xs text-slate-400">{{ inv.date_facturation | date:'dd MMM yyyy' }}</div>
               </div>
 
               <div class="mt-2 grid grid-cols-3 gap-3 text-xs">
                 <div>
-                  <div class="text-gray-400">Total</div>
-                  <div class="font-semibold text-gray-800 dark:text-gray-200">{{ formatCurrency(inv.price_total) }}</div>
+                  <div class="text-slate-400">Total</div>
+                  <div class="font-semibold text-slate-800 dark:text-slate-200">{{ formatCurrency(inv.price_total) }}</div>
                 </div>
                 <div>
-                  <div class="text-gray-400">Abono</div>
+                  <div class="text-slate-400">Abono</div>
                   <div class="font-semibold text-blue-600">{{ formatCurrency(inv.price_abone) }}</div>
                 </div>
                 <div>
-                  <div class="text-gray-400">Balance</div>
+                  <div class="text-slate-400">Balance</div>
                   <div [class]="'font-semibold ' + (invoiceBalance(inv) > 0 ? 'text-red-600' : 'text-green-600')">
                     {{ formatCurrency(invoiceBalance(inv)) }}
                   </div>
                 </div>
               </div>
 
-              <div *ngIf="inv.paid === 1" class="mt-2 text-xs text-gray-400">
-                Pagado por <span class="font-medium text-gray-600 dark:text-gray-300">{{ inv.paid_by_name }}</span>
+              <div *ngIf="inv.paid === 1" class="mt-2 text-xs text-slate-400">
+                Pagado por <span class="font-medium text-slate-600 dark:text-slate-300">{{ inv.paid_by_name }}</span>
                 <span *ngIf="inv.paid_at"> &middot; {{ inv.paid_at | date:'dd/MM/yyyy HH:mm' }}</span>
               </div>
 
@@ -269,11 +269,11 @@
                   Pagar
                 </button>
                 <button (click)="openAbonarModal(inv)"
-                  class="flex-1 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs rounded-lg transition-colors font-medium">
+                  class="flex-1 py-1.5 bg-gradient-to-br from-indigo-500 to-violet-600 text-white shadow-md shadow-indigo-500/20 hover:shadow-lg transition-all text-xs rounded-lg transition-colors font-medium">
                   Abonar
                 </button>
                 <button (click)="openEditModal(inv)"
-                  class="flex-1 py-1.5 bg-gray-500 hover:bg-gray-600 text-white text-xs rounded-lg transition-colors font-medium">
+                  class="flex-1 py-1.5 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 text-xs rounded-lg transition-colors font-medium">
                   Editar
                 </button>
                 <button (click)="openSendModal(inv)"
@@ -283,7 +283,7 @@
               </div>
               <div *ngIf="inv.paid === 1" class="mt-3 flex gap-2">
                 <button (click)="openEditModal(inv)"
-                  class="flex-1 py-1.5 bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 text-xs rounded-lg transition-colors">
+                  class="flex-1 py-1.5 bg-slate-100/80 hover:bg-slate-200/60 dark:bg-slate-700/80 dark:hover:bg-slate-600/60 text-slate-700 dark:text-slate-300 text-xs rounded-lg transition-colors">
                   Editar factura
                 </button>
                 <button (click)="openSendModal(inv)"
@@ -297,22 +297,22 @@
 
         <!-- Payment logs timeline -->
         <div *ngIf="paymentLogs.length > 0">
-          <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wide mb-3">
+          <h3 class="text-sm font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wide mb-3">
             Historial de pagos
           </h3>
-          <div class="relative pl-5 border-l-2 border-gray-200 dark:border-gray-700 space-y-4">
+          <div class="relative pl-5 border-l-2 border-slate-200/60 dark:border-slate-700/60 space-y-4">
             <div *ngFor="let log of paymentLogs" class="relative">
-              <div class="absolute -left-[1.4rem] w-3 h-3 rounded-full bg-blue-500 ring-2 ring-white dark:ring-gray-900"></div>
-              <div class="bg-gray-50 dark:bg-gray-800 rounded-lg p-3 border border-gray-200 dark:border-gray-700">
+              <div class="absolute -left-[1.4rem] w-3 h-3 rounded-full bg-blue-500 ring-2 ring-white dark:ring-slate-900"></div>
+              <div class="bg-slate-50/80 dark:bg-slate-800/80 rounded-lg p-3 border border-slate-200/60 dark:border-slate-700/60">
                 <div class="flex items-center justify-between gap-2 flex-wrap">
                   <span [class]="'px-2 py-0.5 text-xs rounded-full font-medium ' + logTypeClass(log.type)">
                     {{ logTypeLabel(log.type) }}
                   </span>
-                  <span class="text-xs text-gray-400">{{ log.created_at | date:'dd/MM/yyyy HH:mm' }}</span>
+                  <span class="text-xs text-slate-400">{{ log.created_at | date:'dd/MM/yyyy HH:mm' }}</span>
                 </div>
                 <div class="mt-1.5 flex items-center justify-between">
-                  <span class="text-xs text-gray-500">{{ log.number_facture }} &middot; por {{ log.recorded_by_name }}</span>
-                  <span class="font-semibold text-sm text-gray-800 dark:text-gray-200">{{ formatCurrency(log.amount) }}</span>
+                  <span class="text-xs text-slate-500">{{ log.number_facture }} &middot; por {{ log.recorded_by_name }}</span>
+                  <span class="font-semibold text-sm text-slate-800 dark:text-slate-200">{{ formatCurrency(log.amount) }}</span>
                 </div>
                 <div class="mt-1 flex items-center gap-2 flex-wrap">
                   <span *ngIf="log.payment_method?.name || log.payment_method_name"
@@ -321,8 +321,8 @@
                     {{ log.payment_method?.name || log.payment_method_name }}
                   </span>
                   <span *ngIf="!log.payment_method?.name && !log.payment_method_name"
-                        class="text-xs text-gray-400 italic">Sin método registrado</span>
-                  <span *ngIf="log.notes" class="text-xs text-gray-400 italic">{{ log.notes }}</span>
+                        class="text-xs text-slate-400 italic">Sin método registrado</span>
+                  <span *ngIf="log.notes" class="text-xs text-slate-400 italic">{{ log.notes }}</span>
                 </div>
               </div>
             </div>
@@ -330,9 +330,9 @@
         </div>
 
         <!-- ── Compromiso de pago ──────────────────────────────────────── -->
-        <div class="pt-2 border-t border-gray-200 dark:border-gray-700">
+        <div class="pt-2 border-t border-slate-200/60 dark:border-slate-700/60">
           <div class="flex items-center justify-between mb-3">
-            <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wide flex items-center gap-1.5">
+            <h3 class="text-sm font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wide flex items-center gap-1.5">
               <svg class="w-4 h-4 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                   d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
@@ -352,12 +352,12 @@
               <div>
                 <div class="flex items-center gap-2 flex-wrap">
                   <span class="text-xs font-bold text-orange-700 dark:text-orange-400">Compromiso activo</span>
-                  <span class="text-xs text-gray-500">vence {{ activeCommitment.commitment_date | date:'dd/MM/yyyy' }}</span>
+                  <span class="text-xs text-slate-500">vence {{ activeCommitment.commitment_date | date:'dd/MM/yyyy' }}</span>
                 </div>
-                <p *ngIf="activeCommitment.amount_committed" class="mt-0.5 text-sm font-semibold text-gray-800 dark:text-gray-200">
+                <p *ngIf="activeCommitment.amount_committed" class="mt-0.5 text-sm font-semibold text-slate-800 dark:text-slate-200">
                   {{ formatCurrency(activeCommitment.amount_committed) }}
                 </p>
-                <p *ngIf="activeCommitment.notes" class="mt-0.5 text-xs text-gray-500 italic">{{ activeCommitment.notes }}</p>
+                <p *ngIf="activeCommitment.notes" class="mt-0.5 text-xs text-slate-500 italic">{{ activeCommitment.notes }}</p>
                 <!-- Facturas vinculadas -->
                 <div *ngIf="activeCommitment.invoices?.length" class="mt-1.5 flex flex-wrap gap-1">
                   <span *ngFor="let inv of activeCommitment.invoices"
@@ -366,11 +366,11 @@
                   </span>
                 </div>
                 <div class="mt-1 flex items-center gap-1 text-xs">
-                  <svg class="w-3 h-3" [class]="activeCommitment.auto_suspend ? 'text-red-500' : 'text-gray-400'"
+                  <svg class="w-3 h-3" [class]="activeCommitment.auto_suspend ? 'text-red-500' : 'text-slate-400'"
                     fill="currentColor" viewBox="0 0 20 20">
                     <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm.75-11.25a.75.75 0 00-1.5 0v4.59L7.3 9.24a.75.75 0 00-1.1 1.02l3.25 3.5a.75.75 0 001.1 0l3.25-3.5a.75.75 0 10-1.1-1.02l-1.95 2.1V6.75z" clip-rule="evenodd"/>
                   </svg>
-                  <span [class]="activeCommitment.auto_suspend ? 'text-red-600 dark:text-red-400' : 'text-gray-400'">
+                  <span [class]="activeCommitment.auto_suspend ? 'text-red-600 dark:text-red-400' : 'text-slate-400'">
                     {{ activeCommitment.auto_suspend ? 'Suspensión automática activada' : 'Sin suspensión automática' }}
                   </span>
                 </div>
@@ -381,7 +381,7 @@
                   ✓ Cumplido
                 </button>
                 <button (click)="cancelCommitment(activeCommitment)"
-                  class="px-2 py-1 text-xs bg-gray-400 hover:bg-gray-500 text-white rounded-lg">
+                  class="px-2 py-1 text-xs bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-lg">
                   Cancelar
                 </button>
               </div>
@@ -393,13 +393,13 @@
             class="space-y-1.5">
             <ng-container *ngFor="let c of commitments">
               <div *ngIf="c.status !== 'pending'"
-                class="flex items-center justify-between px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800">
+                class="flex items-center justify-between px-3 py-2 rounded-lg border border-slate-200/60 dark:border-slate-700/60 bg-slate-50/80 dark:bg-slate-800/80">
                 <div class="flex items-center gap-2 flex-wrap">
                   <span [class]="'px-2 py-0.5 text-xs rounded-full font-medium ' + commitmentStatusClass(c.status)">
                     {{ commitmentStatusLabel(c.status) }}
                   </span>
-                  <span class="text-xs text-gray-400">{{ c.commitment_date | date:'dd/MM/yyyy' }}</span>
-                  <span *ngIf="c.amount_committed" class="text-xs font-medium text-gray-600 dark:text-gray-300">
+                  <span class="text-xs text-slate-400">{{ c.commitment_date | date:'dd/MM/yyyy' }}</span>
+                  <span *ngIf="c.amount_committed" class="text-xs font-medium text-slate-600 dark:text-slate-300">
                     {{ formatCurrency(c.amount_committed) }}
                   </span>
                 </div>
@@ -409,7 +409,7 @@
           </div>
 
           <p *ngIf="commitments.length === 0"
-            class="text-xs text-gray-400 dark:text-gray-500 text-center py-3">
+            class="text-xs text-slate-400 dark:text-slate-500 text-center py-3">
             Sin compromisos registrados
           </p>
         </div>
@@ -421,28 +421,28 @@
 
 <!-- ═══════════════════ MODAL: PAY ═══════════════════ -->
 <div *ngIf="payModal" class="fixed inset-0 z-50 flex items-center justify-center p-4">
-  <div class="absolute inset-0 bg-black/50" (click)="payModal = false"></div>
-  <div class="relative bg-white dark:bg-gray-800 rounded-xl shadow-2xl w-full max-w-md p-6">
-    <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-4">Confirmar pago completo</h3>
+  <div class="absolute inset-0 bg-slate-900/50 backdrop-blur-sm" (click)="payModal = false"></div>
+  <div class="relative bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl rounded-2xl border border-slate-200/60 dark:border-slate-700/60 shadow-sm hover:shadow-md transition-all duration-300-2xl w-full max-w-md p-6">
+    <h3 class="text-lg font-bold text-slate-900 dark:text-white mb-4">Confirmar pago completo</h3>
 
-    <div class="bg-gray-50 dark:bg-gray-700 rounded-lg p-4 mb-4 space-y-2 text-sm">
+    <div class="bg-slate-50/80 dark:bg-slate-700/80 rounded-lg p-4 mb-4 space-y-2 text-sm">
       <div class="flex justify-between">
-        <span class="text-gray-500">Factura</span>
-        <span class="font-medium text-gray-800 dark:text-gray-200">{{ payingInvoice?.number_facture }}</span>
+        <span class="text-slate-500">Factura</span>
+        <span class="font-medium text-slate-800 dark:text-slate-200">{{ payingInvoice?.number_facture }}</span>
       </div>
       <div class="flex justify-between">
-        <span class="text-gray-500">Cliente</span>
-        <span class="font-medium text-gray-800 dark:text-gray-200">{{ selectedClient?.names }} {{ selectedClient?.lastname }}</span>
+        <span class="text-slate-500">Cliente</span>
+        <span class="font-medium text-slate-800 dark:text-slate-200">{{ selectedClient?.names }} {{ selectedClient?.lastname }}</span>
       </div>
       <div class="flex justify-between">
-        <span class="text-gray-500">Balance a pagar</span>
+        <span class="text-slate-500">Balance a pagar</span>
         <span class="font-bold text-green-600 text-base">{{ formatCurrency(invoiceBalance(payingInvoice)) }}</span>
       </div>
     </div>
 
     <div *ngIf="activePaymentMethods.length > 0" class="mb-4">
-      <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Método de pago <span class="text-red-500">*</span></label>
-      <select [(ngModel)]="payMethodId" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
+      <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Método de pago <span class="text-red-500">*</span></label>
+      <select [(ngModel)]="payMethodId" class="w-full px-3 px-3.5 py-2 text-sm bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl border border-slate-200/60 dark:border-slate-700/60 rounded-xl text-slate-700 dark:text-slate-300 focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-400 transition-all shadow-sm">
         <option [ngValue]="null">Seleccionar...</option>
         <option *ngFor="let pm of activePaymentMethods" [ngValue]="pm.id">{{ pm.name }}</option>
       </select>
@@ -450,7 +450,7 @@
 
     <div class="flex gap-3">
       <button (click)="payModal = false"
-        class="flex-1 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+        class="flex-1 py-2 border border-slate-300/60 dark:border-slate-600/60 rounded-lg text-sm text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors">
         Cancelar
       </button>
       <button (click)="confirmPay()"
@@ -463,32 +463,32 @@
 
 <!-- ═══════════════════ MODAL: ABONAR ═══════════════════ -->
 <div *ngIf="abonarModal" class="fixed inset-0 z-50 flex items-center justify-center p-4">
-  <div class="absolute inset-0 bg-black/50" (click)="abonarModal = false"></div>
-  <div class="relative bg-white dark:bg-gray-800 rounded-xl shadow-2xl w-full max-w-md p-6">
-    <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-4">Registrar abono</h3>
+  <div class="absolute inset-0 bg-slate-900/50 backdrop-blur-sm" (click)="abonarModal = false"></div>
+  <div class="relative bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl rounded-2xl border border-slate-200/60 dark:border-slate-700/60 shadow-sm hover:shadow-md transition-all duration-300-2xl w-full max-w-md p-6">
+    <h3 class="text-lg font-bold text-slate-900 dark:text-white mb-4">Registrar abono</h3>
 
     <div class="space-y-4">
-      <div class="bg-gray-50 dark:bg-gray-700 rounded-lg p-3 text-sm">
+      <div class="bg-slate-50/80 dark:bg-slate-700/80 rounded-lg p-3 text-sm">
         <div class="flex justify-between">
-          <span class="text-gray-500">Factura</span>
+          <span class="text-slate-500">Factura</span>
           <span class="font-medium">{{ abonarInvoice?.number_facture }}</span>
         </div>
         <div class="flex justify-between mt-1">
-          <span class="text-gray-500">Balance pendiente</span>
+          <span class="text-slate-500">Balance pendiente</span>
           <span class="font-semibold text-red-600">{{ formatCurrency(invoiceBalance(abonarInvoice)) }}</span>
         </div>
       </div>
 
       <div>
-        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Monto del abono</label>
+        <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Monto del abono</label>
         <input type="number" [(ngModel)]="abonarAmount" min="1"
           placeholder="0"
-          class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500" />
+          class="w-full px-3 px-3.5 py-2 text-sm bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl border border-slate-200/60 dark:border-slate-700/60 rounded-xl text-slate-700 dark:text-slate-300 focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-400 transition-all shadow-sm" />
       </div>
 
       <div *ngIf="activePaymentMethods.length > 0">
-        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Método de pago <span class="text-red-500">*</span></label>
-        <select [(ngModel)]="abonarMethodId" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
+        <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Método de pago <span class="text-red-500">*</span></label>
+        <select [(ngModel)]="abonarMethodId" class="w-full px-3 px-3.5 py-2 text-sm bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl border border-slate-200/60 dark:border-slate-700/60 rounded-xl text-slate-700 dark:text-slate-300 focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-400 transition-all shadow-sm">
           <option [ngValue]="null">Seleccionar...</option>
           <option *ngFor="let pm of activePaymentMethods" [ngValue]="pm.id">{{ pm.name }}</option>
         </select>
@@ -497,11 +497,11 @@
 
     <div class="flex gap-3 mt-6">
       <button (click)="abonarModal = false"
-        class="flex-1 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+        class="flex-1 py-2 border border-slate-300/60 dark:border-slate-600/60 rounded-lg text-sm text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors">
         Cancelar
       </button>
       <button (click)="confirmAbonar()" [disabled]="abonarAmount <= 0"
-        class="flex-1 py-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white rounded-lg text-sm font-semibold transition-colors">
+        class="flex-1 py-2 bg-gradient-to-br from-indigo-500 to-violet-600 text-white shadow-md shadow-indigo-500/20 hover:shadow-lg transition-all disabled:opacity-50 rounded-lg text-sm font-semibold">
         Registrar Abono
       </button>
     </div>
@@ -510,32 +510,32 @@
 
 <!-- ═══════════════════ MODAL: LIQUIDACIÓN MASIVA ═══════════════════ -->
 <div *ngIf="liquidateModal" class="fixed inset-0 z-50 flex items-center justify-center p-4">
-  <div class="absolute inset-0 bg-black/50" (click)="liquidateModal = false"></div>
-  <div class="relative bg-white dark:bg-gray-800 rounded-xl shadow-2xl w-full max-w-lg p-6">
-    <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-1">Liquidación masiva</h3>
-    <p class="text-sm text-gray-500 dark:text-gray-400 mb-4">Selecciona las facturas pendientes a pagar de una vez.</p>
+  <div class="absolute inset-0 bg-slate-900/50 backdrop-blur-sm" (click)="liquidateModal = false"></div>
+  <div class="relative bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl rounded-2xl border border-slate-200/60 dark:border-slate-700/60 shadow-sm hover:shadow-md transition-all duration-300-2xl w-full max-w-lg p-6">
+    <h3 class="text-lg font-bold text-slate-900 dark:text-white mb-1">Liquidación masiva</h3>
+    <p class="text-sm text-slate-500 dark:text-slate-400 mb-4">Selecciona las facturas pendientes a pagar de una vez.</p>
 
     <!-- Seleccionar todos -->
     <div class="flex items-center gap-2 mb-3">
       <input type="checkbox" id="liquidate-all" [checked]="allLiquidateSelected" (change)="toggleAllLiquidate()"
-             class="w-4 h-4 text-blue-600 rounded border-gray-300 dark:border-gray-600">
-      <label for="liquidate-all" class="text-sm font-medium text-gray-700 dark:text-gray-300">Seleccionar todas</label>
+             class="w-4 h-4 text-blue-600 rounded border-slate-300/60 dark:border-slate-600/60">
+      <label for="liquidate-all" class="text-sm font-medium text-slate-700 dark:text-slate-300">Seleccionar todas</label>
     </div>
 
     <div class="space-y-2 max-h-52 overflow-y-auto mb-4">
-      <div *ngFor="let inv of liquidateInvoices" class="flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
+      <div *ngFor="let inv of liquidateInvoices" class="flex items-center gap-3 p-3 bg-slate-50/80 dark:bg-slate-700/80 rounded-lg">
         <input type="checkbox" [id]="'liq-'+inv.id" [checked]="liquidateSelected.has(inv.id)" (change)="toggleLiquidateInvoice(inv.id)"
-               class="w-4 h-4 text-blue-600 rounded border-gray-300 dark:border-gray-600">
-        <label [for]="'liq-'+inv.id" class="flex-1 text-sm text-gray-700 dark:text-gray-200 cursor-pointer">
+               class="w-4 h-4 text-blue-600 rounded border-slate-300/60 dark:border-slate-600/60">
+        <label [for]="'liq-'+inv.id" class="flex-1 text-sm text-slate-700 dark:text-slate-200 cursor-pointer">
           {{ inv.number_facture }} — <span class="font-semibold text-red-600">{{ formatCurrency(invoiceBalance(inv)) }}</span>
         </label>
       </div>
-      <p *ngIf="liquidateInvoices.length === 0" class="text-sm text-gray-400 text-center py-4">No hay facturas pendientes.</p>
+      <p *ngIf="liquidateInvoices.length === 0" class="text-sm text-slate-400 text-center py-4">No hay facturas pendientes.</p>
     </div>
 
     <div *ngIf="activePaymentMethods.length > 0" class="mb-4">
-      <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Método de pago <span class="text-red-500">*</span></label>
-      <select [(ngModel)]="liquidateMethodId" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
+      <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Método de pago <span class="text-red-500">*</span></label>
+      <select [(ngModel)]="liquidateMethodId" class="w-full px-3 px-3.5 py-2 text-sm bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl border border-slate-200/60 dark:border-slate-700/60 rounded-xl text-slate-700 dark:text-slate-300 focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-400 transition-all shadow-sm">
         <option [ngValue]="null">Seleccionar...</option>
         <option *ngFor="let pm of activePaymentMethods" [ngValue]="pm.id">{{ pm.name }}</option>
       </select>
@@ -543,7 +543,7 @@
 
     <div class="flex gap-3">
       <button (click)="liquidateModal = false"
-        class="flex-1 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+        class="flex-1 py-2 border border-slate-300/60 dark:border-slate-600/60 rounded-lg text-sm text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors">
         Cancelar
       </button>
       <button (click)="confirmLiquidate()" [disabled]="liquidating || liquidateSelected.size === 0"
@@ -556,11 +556,11 @@
 
 <!-- ═══════════════════ MODAL: EDIT INVOICE ═══════════════════ -->
 <div *ngIf="editModal" class="fixed inset-0 z-50 flex items-center justify-center p-4">
-  <div class="absolute inset-0 bg-black/50" (click)="editModal = false"></div>
-  <div class="relative bg-white dark:bg-gray-800 rounded-xl shadow-2xl w-full max-w-lg p-6">
+  <div class="absolute inset-0 bg-slate-900/50 backdrop-blur-sm" (click)="editModal = false"></div>
+  <div class="relative bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl rounded-2xl border border-slate-200/60 dark:border-slate-700/60 shadow-sm hover:shadow-md transition-all duration-300-2xl w-full max-w-lg p-6">
     <div class="flex items-center justify-between mb-4">
-      <h3 class="text-lg font-bold text-gray-900 dark:text-white">Editar factura</h3>
-      <span class="text-xs text-gray-400 font-mono">{{ editingInvoice?.number_facture }}</span>
+      <h3 class="text-lg font-bold text-slate-900 dark:text-white">Editar factura</h3>
+      <span class="text-xs text-slate-400 font-mono">{{ editingInvoice?.number_facture }}</span>
     </div>
 
     <!-- Live result banner -->
@@ -577,19 +577,19 @@
 
       <!-- Precio total -->
       <div class="col-span-2">
-        <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Precio base</label>
+        <label class="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">Precio base</label>
         <input type="number" [(ngModel)]="editForm.price_total" (ngModelChange)="onPriceTotalChange()"
-          class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500" />
+          class="w-full px-3 px-3.5 py-2 text-sm bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl border border-slate-200/60 dark:border-slate-700/60 rounded-xl text-slate-700 dark:text-slate-300 focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-400 transition-all shadow-sm" />
       </div>
 
       <!-- % Descuento + live hint -->
       <div>
-        <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">% Descuento</label>
+        <label class="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">% Descuento</label>
         <div class="relative">
           <input type="number" [(ngModel)]="editForm.porcentage_discount" (ngModelChange)="onPorcentajeChange()"
             min="0" max="100"
-            class="w-full px-3 py-2 pr-8 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-purple-500" />
-          <span class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 text-xs">%</span>
+            class="w-full px-3 py-2 pr-8 px-3.5 py-2 text-sm bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl border border-slate-200/60 dark:border-slate-700/60 rounded-xl text-slate-700 dark:text-slate-300 focus:ring-2 focus:ring-purple-500/50 focus:border-purple-400 transition-all shadow-sm" />
+          <span class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs">%</span>
         </div>
         <!-- live: show computed discount amount -->
         <div *ngIf="editForm.porcentage_discount > 0" class="mt-1 text-xs text-purple-600 dark:text-purple-400 font-medium">
@@ -599,10 +599,10 @@
 
       <!-- Descuento en $ + live hint -->
       <div>
-        <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Valor descuento ($)</label>
+        <label class="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">Valor descuento ($)</label>
         <input type="number" [(ngModel)]="editForm.price_discount" (ngModelChange)="onDiscountChange()"
           min="0"
-          class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-purple-500" />
+          class="w-full px-3 px-3.5 py-2 text-sm bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl border border-slate-200/60 dark:border-slate-700/60 rounded-xl text-slate-700 dark:text-slate-300 focus:ring-2 focus:ring-purple-500/50 focus:border-purple-400 transition-all shadow-sm" />
         <!-- live: show computed % -->
         <div *ngIf="editForm.price_discount > 0" class="mt-1 text-xs text-purple-600 dark:text-purple-400 font-medium">
           = {{ editForm.porcentage_discount }}% del total
@@ -610,27 +610,27 @@
       </div>
 
       <!-- Desglose visual -->
-      <div class="col-span-2 bg-gray-50 dark:bg-gray-700/50 rounded-lg px-4 py-3 text-xs space-y-1.5 border border-gray-200 dark:border-gray-600">
+      <div class="col-span-2 bg-slate-50/80 dark:bg-slate-700/50 rounded-lg px-4 py-3 text-xs space-y-1.5 border border-slate-200/60 dark:border-slate-600/60">
         <div class="flex justify-between">
-          <span class="text-gray-400">Precio base</span>
-          <span class="font-medium text-gray-700 dark:text-gray-300">{{ formatCurrency(editForm.price_total) }}</span>
+          <span class="text-slate-400">Precio base</span>
+          <span class="font-medium text-slate-700 dark:text-slate-300">{{ formatCurrency(editForm.price_total) }}</span>
         </div>
         <div class="flex justify-between" *ngIf="editForm.price_discount > 0">
-          <span class="text-gray-400">Descuento ({{ editForm.porcentage_discount }}%)</span>
+          <span class="text-slate-400">Descuento ({{ editForm.porcentage_discount }}%)</span>
           <span class="font-medium text-purple-600">- {{ formatCurrency(editForm.price_discount) }}</span>
         </div>
-        <div class="flex justify-between border-t border-gray-200 dark:border-gray-600 pt-1.5 mt-1">
-          <span class="font-semibold text-gray-600 dark:text-gray-300">Total a cobrar</span>
+        <div class="flex justify-between border-t border-slate-200/60 dark:border-slate-600/60 pt-1.5 mt-1">
+          <span class="font-semibold text-slate-600 dark:text-slate-300">Total a cobrar</span>
           <span class="font-bold text-blue-600">{{ formatCurrency(editFinalPrice) }}</span>
         </div>
       </div>
 
       <!-- Días factura + daily rate -->
       <div>
-        <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Días facturados</label>
+        <label class="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">Días facturados</label>
         <input type="number" [(ngModel)]="editForm.days_facture"
           min="1"
-          class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500" />
+          class="w-full px-3 px-3.5 py-2 text-sm bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl border border-slate-200/60 dark:border-slate-700/60 rounded-xl text-slate-700 dark:text-slate-300 focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-400 transition-all shadow-sm" />
         <!-- live: price per day -->
         <div *ngIf="editDailyRate > 0" class="mt-1 text-xs text-blue-600 dark:text-blue-400 font-medium">
           ≈ {{ formatCurrency(editDailyRate) }} / día
@@ -639,20 +639,20 @@
 
       <!-- Fecha -->
       <div>
-        <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Fecha facturación</label>
+        <label class="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">Fecha facturación</label>
         <input type="date" [(ngModel)]="editForm.date_facturation"
-          class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500" />
+          class="w-full px-3 px-3.5 py-2 text-sm bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl border border-slate-200/60 dark:border-slate-700/60 rounded-xl text-slate-700 dark:text-slate-300 focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-400 transition-all shadow-sm" />
       </div>
 
     </div>
 
     <div class="flex gap-3 mt-6">
       <button (click)="editModal = false"
-        class="flex-1 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+        class="flex-1 py-2 border border-slate-300/60 dark:border-slate-600/60 rounded-lg text-sm text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors">
         Cancelar
       </button>
       <button (click)="confirmEdit()"
-        class="flex-1 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-semibold transition-colors">
+        class="flex-1 py-2 bg-gradient-to-br from-indigo-500 to-violet-600 text-white shadow-md shadow-indigo-500/20 hover:shadow-lg transition-all rounded-lg text-sm font-semibold transition-colors">
         Guardar cambios
       </button>
     </div>
@@ -661,28 +661,28 @@
 
 <!-- ═══════════════════ MODAL: ENVIAR FACTURA (INDIVIDUAL) ═══════════════════ -->
 <div *ngIf="sendModal" class="fixed inset-0 z-50 flex items-center justify-center p-4">
-  <div class="absolute inset-0 bg-black/50" (click)="closeSendModal()"></div>
-  <div class="relative bg-white dark:bg-gray-800 rounded-xl shadow-2xl w-full max-w-md p-6">
-    <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-4">Enviar factura</h3>
+  <div class="absolute inset-0 bg-slate-900/50 backdrop-blur-sm" (click)="closeSendModal()"></div>
+  <div class="relative bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl rounded-2xl border border-slate-200/60 dark:border-slate-700/60 shadow-sm hover:shadow-md transition-all duration-300-2xl w-full max-w-md p-6">
+    <h3 class="text-lg font-bold text-slate-900 dark:text-white mb-4">Enviar factura</h3>
 
-    <div class="bg-gray-50 dark:bg-gray-700 rounded-lg p-4 mb-4 space-y-2 text-sm">
+    <div class="bg-slate-50/80 dark:bg-slate-700/80 rounded-lg p-4 mb-4 space-y-2 text-sm">
       <div class="flex justify-between">
-        <span class="text-gray-500">Factura</span>
-        <span class="font-medium text-gray-800 dark:text-gray-200">{{ sendModalInv[0]?.number_facture }}</span>
+        <span class="text-slate-500">Factura</span>
+        <span class="font-medium text-slate-800 dark:text-slate-200">{{ sendModalInv[0]?.number_facture }}</span>
       </div>
       <div class="flex justify-between">
-        <span class="text-gray-500">Cliente</span>
-        <span class="font-medium text-gray-800 dark:text-gray-200">{{ selectedClient?.names }} {{ selectedClient?.lastname }}</span>
+        <span class="text-slate-500">Cliente</span>
+        <span class="font-medium text-slate-800 dark:text-slate-200">{{ selectedClient?.names }} {{ selectedClient?.lastname }}</span>
       </div>
     </div>
 
     <div class="mb-4">
-      <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Canal de envío</label>
+      <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Canal de envío</label>
       <div class="grid grid-cols-3 gap-2">
         <button (click)="sendChannel = 'whatsapp'"
           [class]="sendChannel === 'whatsapp'
             ? 'bg-green-600 text-white border-green-600'
-            : 'bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-600'"
+            : 'bg-white dark:bg-slate-700/80 text-slate-700 dark:text-slate-300 border-slate-300/60 dark:border-slate-600/60 hover:bg-slate-50 dark:hover:bg-slate-600/60'"
           class="flex flex-col items-center gap-1 px-3 py-2 border rounded-lg text-xs font-medium transition-colors">
           <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
             <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
@@ -691,8 +691,8 @@
         </button>
         <button (click)="sendChannel = 'email'"
           [class]="sendChannel === 'email'
-            ? 'bg-blue-600 text-white border-blue-600'
-            : 'bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-600'"
+            ? 'bg-gradient-to-br from-indigo-500 to-violet-600 text-white shadow-md shadow-indigo-500/20 hover:shadow-lg transition-all border-indigo-500'
+            : 'bg-white dark:bg-slate-700/80 text-slate-700 dark:text-slate-300 border-slate-300/60 dark:border-slate-600/60 hover:bg-slate-50 dark:hover:bg-slate-600/60'"
           class="flex flex-col items-center gap-1 px-3 py-2 border rounded-lg text-xs font-medium transition-colors">
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
@@ -702,7 +702,7 @@
         <button (click)="sendChannel = 'both'"
           [class]="sendChannel === 'both'
             ? 'bg-purple-600 text-white border-purple-600'
-            : 'bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-600'"
+            : 'bg-white dark:bg-slate-700/80 text-slate-700 dark:text-slate-300 border-slate-300/60 dark:border-slate-600/60 hover:bg-slate-50 dark:hover:bg-slate-600/60'"
           class="flex flex-col items-center gap-1 px-3 py-2 border rounded-lg text-xs font-medium transition-colors">
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/>
@@ -718,7 +718,7 @@
 
     <div class="flex gap-3">
       <button (click)="closeSendModal()"
-        class="flex-1 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+        class="flex-1 py-2 border border-slate-300/60 dark:border-slate-600/60 rounded-lg text-sm text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors">
         Cancelar
       </button>
       <button (click)="confirmSend()" [disabled]="sendingIds.has(sendModalInv[0]?.number_facture)"
@@ -735,18 +735,18 @@
 
 <!-- ═══════════════════ MODAL: ENVIAR FACTURAS (MASIVO) ═══════════════════ -->
 <div *ngIf="sendBulkModal" class="fixed inset-0 z-50 flex items-center justify-center p-4">
-  <div class="absolute inset-0 bg-black/50" (click)="closeSendBulkModal()"></div>
-  <div class="relative bg-white dark:bg-gray-800 rounded-xl shadow-2xl w-full max-w-lg p-6">
-    <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-1">Envío masivo de facturas</h3>
-    <p class="text-sm text-gray-500 dark:text-gray-400 mb-4">Selecciona las facturas y el canal de envío.</p>
+  <div class="absolute inset-0 bg-slate-900/50 backdrop-blur-sm" (click)="closeSendBulkModal()"></div>
+  <div class="relative bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl rounded-2xl border border-slate-200/60 dark:border-slate-700/60 shadow-sm hover:shadow-md transition-all duration-300-2xl w-full max-w-lg p-6">
+    <h3 class="text-lg font-bold text-slate-900 dark:text-white mb-1">Envío masivo de facturas</h3>
+    <p class="text-sm text-slate-500 dark:text-slate-400 mb-4">Selecciona las facturas y el canal de envío.</p>
 
     <div class="mb-4">
-      <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Canal de envío</label>
+      <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Canal de envío</label>
       <div class="grid grid-cols-3 gap-2">
         <button (click)="sendBulkChannel = 'whatsapp'"
           [class]="sendBulkChannel === 'whatsapp'
             ? 'bg-green-600 text-white border-green-600'
-            : 'bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-600'"
+            : 'bg-white dark:bg-slate-700/80 text-slate-700 dark:text-slate-300 border-slate-300/60 dark:border-slate-600/60 hover:bg-slate-50 dark:hover:bg-slate-600/60'"
           class="flex flex-col items-center gap-1 px-3 py-2 border rounded-lg text-xs font-medium transition-colors">
           <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
             <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
@@ -755,8 +755,8 @@
         </button>
         <button (click)="sendBulkChannel = 'email'"
           [class]="sendBulkChannel === 'email'
-            ? 'bg-blue-600 text-white border-blue-600'
-            : 'bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-600'"
+            ? 'bg-gradient-to-br from-indigo-500 to-violet-600 text-white shadow-md shadow-indigo-500/20 hover:shadow-lg transition-all border-indigo-500'
+            : 'bg-white dark:bg-slate-700/80 text-slate-700 dark:text-slate-300 border-slate-300/60 dark:border-slate-600/60 hover:bg-slate-50 dark:hover:bg-slate-600/60'"
           class="flex flex-col items-center gap-1 px-3 py-2 border rounded-lg text-xs font-medium transition-colors">
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
@@ -766,7 +766,7 @@
         <button (click)="sendBulkChannel = 'both'"
           [class]="sendBulkChannel === 'both'
             ? 'bg-purple-600 text-white border-purple-600'
-            : 'bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-600'"
+            : 'bg-white dark:bg-slate-700/80 text-slate-700 dark:text-slate-300 border-slate-300/60 dark:border-slate-600/60 hover:bg-slate-50 dark:hover:bg-slate-600/60'"
           class="flex flex-col items-center gap-1 px-3 py-2 border rounded-lg text-xs font-medium transition-colors">
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/>
@@ -779,19 +779,19 @@
     <!-- Seleccionar todos -->
     <div class="flex items-center gap-2 mb-3">
       <input type="checkbox" id="sendbulk-all" [checked]="allSendBulkSelected" (change)="toggleAllSendBulk()"
-             class="w-4 h-4 text-blue-600 rounded border-gray-300 dark:border-gray-600">
-      <label for="sendbulk-all" class="text-sm font-medium text-gray-700 dark:text-gray-300">Seleccionar todas</label>
+             class="w-4 h-4 text-blue-600 rounded border-slate-300/60 dark:border-slate-600/60">
+      <label for="sendbulk-all" class="text-sm font-medium text-slate-700 dark:text-slate-300">Seleccionar todas</label>
     </div>
 
     <div class="space-y-2 max-h-52 overflow-y-auto mb-4">
-      <div *ngFor="let inv of sendBulkInvoices" class="flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
+      <div *ngFor="let inv of sendBulkInvoices" class="flex items-center gap-3 p-3 bg-slate-50/80 dark:bg-slate-700/80 rounded-lg">
         <input type="checkbox" [id]="'send-'+inv.number_facture" [checked]="sendBulkIds.has(inv.number_facture)" (change)="toggleSendBulkInvoice(inv.number_facture)"
-               class="w-4 h-4 text-blue-600 rounded border-gray-300 dark:border-gray-600">
-        <label [for]="'send-'+inv.number_facture" class="flex-1 text-sm text-gray-700 dark:text-gray-200 cursor-pointer">
+               class="w-4 h-4 text-blue-600 rounded border-slate-300/60 dark:border-slate-600/60">
+        <label [for]="'send-'+inv.number_facture" class="flex-1 text-sm text-slate-700 dark:text-slate-200 cursor-pointer">
           {{ inv.number_facture }} — <span class="font-semibold text-red-600">{{ formatCurrency(invoiceBalance(inv)) }}</span>
         </label>
       </div>
-      <p *ngIf="sendBulkInvoices.length === 0" class="text-sm text-gray-400 text-center py-4">No hay facturas pendientes.</p>
+      <p *ngIf="sendBulkInvoices.length === 0" class="text-sm text-slate-400 text-center py-4">No hay facturas pendientes.</p>
     </div>
 
     <div *ngIf="sendResult" [class]="'flex items-center gap-2 p-3 mb-4 rounded-lg border text-sm ' + (sendResult.ok ? 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800 text-green-800 dark:text-green-300' : 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800 text-red-800 dark:text-red-300')">
@@ -800,7 +800,7 @@
 
     <div class="flex gap-3">
       <button (click)="closeSendBulkModal()"
-        class="flex-1 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+        class="flex-1 py-2 border border-slate-300/60 dark:border-slate-600/60 rounded-lg text-sm text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors">
         Cancelar
       </button>
       <button (click)="confirmSendBulk()" [disabled]="sendingBulk || sendBulkIds.size === 0"
@@ -817,21 +817,21 @@
 
 <!-- ═══════════════════ MODAL: HISTORIAL DE ENVÍOS ═══════════════════ -->
 <div *ngIf="sendHistoryModal" class="fixed inset-0 z-50 flex items-center justify-center p-4">
-  <div class="absolute inset-0 bg-black/50" (click)="closeSendHistoryModal()"></div>
-  <div class="relative bg-white dark:bg-gray-800 rounded-xl shadow-2xl w-full max-w-lg p-6">
+  <div class="absolute inset-0 bg-slate-900/50 backdrop-blur-sm" (click)="closeSendHistoryModal()"></div>
+  <div class="relative bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl rounded-2xl border border-slate-200/60 dark:border-slate-700/60 shadow-sm hover:shadow-md transition-all duration-300-2xl w-full max-w-lg p-6">
     <div class="flex items-center justify-between mb-4">
-      <h3 class="text-lg font-bold text-gray-900 dark:text-white">Historial de envíos</h3>
-      <span class="text-xs text-gray-400 font-mono">{{ sendHistoryInvoice?.number_facture }}</span>
+      <h3 class="text-lg font-bold text-slate-900 dark:text-white">Historial de envíos</h3>
+      <span class="text-xs text-slate-400 font-mono">{{ sendHistoryInvoice?.number_facture }}</span>
     </div>
 
     <div *ngIf="sendHistoryLoading" class="flex items-center justify-center py-8">
-      <svg class="w-6 h-6 animate-spin text-blue-500" fill="none" viewBox="0 0 24 24">
+      <svg class="w-6 h-6 animate-spin text-indigo-500" fill="none" viewBox="0 0 24 24">
         <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
         <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
       </svg>
     </div>
 
-    <div *ngIf="!sendHistoryLoading && sendHistoryData.length === 0" class="text-center py-8 text-gray-400 dark:text-gray-500 text-sm">
+    <div *ngIf="!sendHistoryLoading && sendHistoryData.length === 0" class="text-center py-8 text-slate-400 dark:text-slate-500 text-sm">
       Sin envíos registrados
     </div>
 
@@ -842,10 +842,10 @@
           <span [class]="'text-xs font-medium px-2 py-0.5 rounded-full ' + sendHistoryStatusClass(log.status)">
             {{ log.status === 'ok' ? 'Éxito' : (log.status === 'partial' ? 'Parcial' : 'Error') }}
           </span>
-          <span class="text-xs font-medium text-gray-700 dark:text-gray-300">{{ sendHistoryChannelLabel(log.channel) }}</span>
-          <span class="text-xs text-gray-400">{{ log.created_at | date:'dd/MM/yyyy HH:mm' }}</span>
+          <span class="text-xs font-medium text-slate-700 dark:text-slate-300">{{ sendHistoryChannelLabel(log.channel) }}</span>
+          <span class="text-xs text-slate-400">{{ log.created_at | date:'dd/MM/yyyy HH:mm' }}</span>
         </div>
-        <div class="text-xs text-gray-500 dark:text-gray-400 max-w-[140px] truncate" [title]="log.message">
+        <div class="text-xs text-slate-500 dark:text-slate-400 max-w-[140px] truncate" [title]="log.message">
           {{ log.message }}
         </div>
       </div>
@@ -853,7 +853,7 @@
 
     <div class="flex justify-end mt-4">
       <button (click)="closeSendHistoryModal()"
-        class="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+        class="px-4 py-2 border border-slate-300/60 dark:border-slate-600/60 rounded-lg text-sm text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors">
         Cerrar
       </button>
     </div>
@@ -862,18 +862,18 @@
 
 <!-- ═══════════════════ MODAL: COMPROMISO DE PAGO ═══════════════════ -->
 <div *ngIf="commitmentModal" class="fixed inset-0 z-50 flex items-center justify-center p-4">
-  <div class="absolute inset-0 bg-black/50" (click)="commitmentModal = false"></div>
-  <div class="relative bg-white dark:bg-gray-800 rounded-xl shadow-2xl w-full max-w-lg flex flex-col max-h-[90vh]">
+  <div class="absolute inset-0 bg-slate-900/50 backdrop-blur-sm" (click)="commitmentModal = false"></div>
+  <div class="relative bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl rounded-2xl border border-slate-200/60 dark:border-slate-700/60 shadow-sm hover:shadow-md transition-all duration-300-2xl w-full max-w-lg flex flex-col max-h-[90vh]">
 
     <!-- Header -->
-    <div class="flex items-center gap-2 px-6 pt-6 pb-4 border-b border-gray-200 dark:border-gray-700">
+    <div class="flex items-center gap-2 px-6 pt-6 pb-4 border-b border-slate-200/60 dark:border-slate-700/60">
       <svg class="w-5 h-5 text-orange-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
           d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
       </svg>
       <div>
-        <h3 class="text-base font-bold text-gray-900 dark:text-white">Compromiso de pago</h3>
-        <p class="text-xs text-gray-400">{{ selectedClient?.names }} {{ selectedClient?.lastname }}</p>
+        <h3 class="text-base font-bold text-slate-900 dark:text-white">Compromiso de pago</h3>
+        <p class="text-xs text-slate-400">{{ selectedClient?.names }} {{ selectedClient?.lastname }}</p>
       </div>
     </div>
 
@@ -890,12 +890,12 @@
 
       <!-- Facturas pendientes para seleccionar -->
       <div>
-        <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+        <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">
           Facturas incluidas en el compromiso *
         </label>
 
         <div *ngIf="invoices.length === 0"
-          class="text-xs text-gray-400 py-3 text-center">No hay facturas pendientes.</div>
+          class="text-xs text-slate-400 py-3 text-center">No hay facturas pendientes.</div>
 
         <div class="space-y-1.5 max-h-44 overflow-y-auto pr-1">
           <ng-container *ngFor="let inv of invoices">
@@ -903,17 +903,17 @@
               class="flex items-center gap-3 px-3 py-2.5 rounded-lg border cursor-pointer transition-colors"
               [class]="commitmentSelected.has(inv.id)
                 ? 'bg-orange-50 border-orange-400 dark:bg-orange-900/20 dark:border-orange-600'
-                : 'bg-white border-gray-200 dark:bg-gray-700 dark:border-gray-600 hover:border-orange-300'">
+                : 'bg-white border-slate-200/60 dark:bg-slate-700/80 dark:border-slate-600/60 hover:border-orange-300'">
               <input type="checkbox" [checked]="commitmentSelected.has(inv.id)"
                 (change)="toggleCommitmentInvoice(inv.id)"
                 class="w-4 h-4 accent-orange-600 flex-shrink-0" />
               <div class="flex-1 min-w-0">
                 <div class="flex items-center justify-between gap-2">
-                  <span class="text-xs font-mono font-medium text-gray-700 dark:text-gray-300">{{ inv.number_facture }}</span>
-                  <span class="text-xs text-gray-400">{{ inv.date_facturation | date:'dd MMM yyyy' }}</span>
+                  <span class="text-xs font-mono font-medium text-slate-700 dark:text-slate-300">{{ inv.number_facture }}</span>
+                  <span class="text-xs text-slate-400">{{ inv.date_facturation | date:'dd MMM yyyy' }}</span>
                 </div>
                 <div class="flex items-center justify-between gap-2 mt-0.5">
-                  <span class="text-xs text-gray-500">
+                  <span class="text-xs text-slate-500">
                     Saldo: <span class="font-semibold text-red-600">{{ formatCurrency(invoiceBalance(inv)) }}</span>
                   </span>
                   <span *ngIf="inv.abone === 1" class="text-xs text-blue-500">Con abono</span>
@@ -937,32 +937,32 @@
 
       <!-- Fecha límite -->
       <div>
-        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Fecha límite *</label>
+        <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Fecha límite *</label>
         <input type="date" [(ngModel)]="commitmentForm.commitment_date"
-          class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-orange-500" />
+          class="w-full px-3 px-3.5 py-2 text-sm bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl border border-slate-200/60 dark:border-slate-700/60 rounded-xl text-slate-700 dark:text-slate-300 focus:ring-2 focus:ring-orange-500/50 focus:border-orange-400 transition-all shadow-sm" />
       </div>
 
       <!-- Notas -->
       <div>
-        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Observaciones</label>
+        <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Observaciones</label>
         <textarea [(ngModel)]="commitmentForm.notes" rows="2"
           placeholder="Ej: cliente llamó y prometió pagar el viernes..."
-          class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-orange-500 resize-none"></textarea>
+          class="w-full px-3 px-3.5 py-2 text-sm bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl border border-slate-200/60 dark:border-slate-700/60 rounded-xl text-slate-700 dark:text-slate-300 focus:ring-2 focus:ring-orange-500/50 focus:border-orange-400 transition-all shadow-sm resize-none"></textarea>
       </div>
 
       <!-- Auto-suspensión -->
       <div class="flex items-start gap-3 p-3 rounded-lg border"
         [class]="commitmentForm.auto_suspend
           ? 'bg-red-50 border-red-200 dark:bg-red-900/20 dark:border-red-700'
-          : 'bg-gray-50 border-gray-200 dark:bg-gray-700 dark:border-gray-600'">
+          : 'bg-slate-50/80 border-slate-200/60 dark:bg-slate-700/80 dark:border-slate-600/60'">
         <input type="checkbox" id="auto_suspend" [(ngModel)]="commitmentForm.auto_suspend"
           class="mt-0.5 w-4 h-4 accent-red-600 flex-shrink-0" />
         <label for="auto_suspend" class="text-sm cursor-pointer">
           <span class="font-medium"
-            [class]="commitmentForm.auto_suspend ? 'text-red-700 dark:text-red-400' : 'text-gray-700 dark:text-gray-300'">
+            [class]="commitmentForm.auto_suspend ? 'text-red-700 dark:text-red-400' : 'text-slate-700 dark:text-slate-300'">
             Suspender servicio si no paga
           </span>
-          <p class="text-xs text-gray-400 mt-0.5">
+          <p class="text-xs text-slate-400 mt-0.5">
             Si las facturas siguen sin pagar al día siguiente de la fecha límite, el sistema suspenderá el servicio automáticamente.
           </p>
         </label>
@@ -971,11 +971,11 @@
     </div>
 
     <!-- Footer -->
-    <div class="px-6 py-4 border-t border-gray-200 dark:border-gray-700">
+    <div class="px-6 py-4 border-t border-slate-200/60 dark:border-slate-700/60">
       <p *ngIf="commitmentError" class="mb-3 text-sm text-red-600 dark:text-red-400">{{ commitmentError }}</p>
       <div class="flex gap-3">
         <button (click)="commitmentModal = false"
-          class="flex-1 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700">
+          class="flex-1 py-2 border border-slate-300/60 dark:border-slate-600/60 rounded-lg text-sm text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700/50">
           Cancelar
         </button>
         <button (click)="saveCommitment()" [disabled]="savingCommitment"

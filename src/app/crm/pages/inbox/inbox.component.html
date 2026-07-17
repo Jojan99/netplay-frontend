@@ -2,16 +2,14 @@
 <div class="crm-mobile-root h-screen flex flex-col" style="font-family:'Inter',sans-serif;">
 
   <!-- ══════════════════════ TOP NAV BAR ══════════════════════ -->
-  <div class="shrink-0 flex items-center gap-3 px-4 py-2.5 border-b"
-       style="background: #1e293b; border-color: #334155;">
+  <div class="shrink-0 flex items-center gap-3 px-4 py-2.5 border-b bg-slate-800/80 backdrop-blur-xl border-slate-700/60">
 
     <!-- LOGO / TÍTULO -->
     <div class="flex items-center gap-2 mr-2">
-      <div class="w-7 h-7 rounded-lg flex items-center justify-center"
-           style="background: linear-gradient(135deg, #10b981, #059669);">
-        <i class="fa-brands fa-whatsapp text-white text-sm"></i>
+      <div class="w-7 h-7 rounded-lg flex items-center justify-center bg-gradient-to-br from-teal-500 to-emerald-600 shadow-md shadow-teal-500/20">
+        <i class="fa-brands fa-whatsapp text-white w-5 h-5 flex items-center justify-center text-sm"></i>
       </div>
-      <span class="text-sm font-bold" style="color: #e2e8f0;">Bandeja CRM</span>
+      <span class="text-sm font-bold text-slate-200">Bandeja CRM</span>
     </div>
 
     <!-- TABS: INBOX / DASHBOARD -->
@@ -40,24 +38,21 @@
     <div class="flex items-center gap-2">
 
       <!-- RECARGAR -->
-      <button class="w-8 h-8 flex items-center justify-center rounded-full transition"
-              style="background: #334155; color: #94a3b8;"
+      <button class="w-8 h-8 flex items-center justify-center rounded-full transition bg-slate-700 text-slate-400 hover:bg-slate-600"
               title="Recargar inbox"
               (click)="loadInbox()">
         <i class="fa-solid fa-rotate-right text-sm"></i>
       </button>
 
       <!-- NUEVA CONVERSACIÓN -->
-      <button class="w-8 h-8 flex items-center justify-center rounded-full transition"
-              style="background: #10b981; color: #fff;"
+      <button class="w-8 h-8 flex items-center justify-center rounded-full transition bg-gradient-to-br from-teal-500 to-emerald-600 text-white shadow-md shadow-teal-500/20 hover:shadow-lg"
               title="Nueva conversación"
               (click)="showNewConversationModal = true">
         <i class="fa-solid fa-plus text-sm"></i>
       </button>
 
       <!-- BROADCAST -->
-      <button class="px-3 py-1.5 rounded-xl text-xs font-semibold transition flex items-center gap-1.5"
-              style="background: #334155; color: #94a3b8; border: 1px solid #475569;"
+      <button class="px-3 py-1.5 rounded-xl text-xs font-semibold transition flex items-center gap-1.5 bg-slate-700 text-slate-400 border border-slate-600 hover:bg-slate-600 hover:text-slate-200"
               onmouseenter="this.style.background='#475569'; this.style.color='#e2e8f0'"
               onmouseleave="this.style.background='#334155'; this.style.color='#94a3b8'"
               title="Mensaje masivo"
@@ -67,8 +62,7 @@
       </button>
 
       <!-- DARK/LIGHT -->
-      <button class="w-8 h-8 flex items-center justify-center rounded-full transition"
-              style="background: #334155; color: #94a3b8;"
+      <button class="w-8 h-8 flex items-center justify-center rounded-full transition bg-slate-700 text-slate-400 hover:bg-slate-600"
               title="Cambiar tema"
               (click)="themeService.toggle()">
         <i class="fa-solid text-sm"

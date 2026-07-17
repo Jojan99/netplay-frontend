@@ -1,17 +1,17 @@
 
 <button (click)="ejecutarComando()">Ejecutar Comando</button>
-<div class="max-w-8xl mx-auto mt-8  rounded-lg shadow  p-6"> 
+<div class="max-w-8xl mx-auto mt-8 bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl rounded-2xl border border-slate-200/60 dark:border-slate-700/60 shadow-sm hover:shadow-md transition-all duration-300 p-6"> 
 <div class="flex flex-col">
     <div class="overflow-x-auto">
         <div class="inline-block min-w-full align-middle">
             <div class="overflow-hidden shadow">
-                <ul class="divide-y divide-gray-200 dark:divide-gray-700">
-                    <li *ngFor="let file of UserInterface" class="flex justify-between items-center p-4 hover:bg-gray-100 dark:hover:bg-gray-700">
+                <ul class="divide-y divide-slate-200/60 dark:divide-slate-700/60">
+                    <li *ngFor="let file of UserInterface" class="flex justify-between items-center p-4 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors">
                         <div class="flex items-center">
-                            <span class="ml-2 text-gray-500 uppercase dark:text-gray-400">{{ file.names }}</span>
+                            <span class="ml-2 text-slate-500 uppercase dark:text-slate-400">{{ file.names }}</span>
                         </div>
-                        <button (click)="downloadFiles(file.names)" class="relative inline-flex items-center justify-center p-0.5 mb-2 me-2 overflow-hidden text-sm font-medium text-gray-900 rounded-lg group bg-gradient-to-br from-red-200 via-red-300 to-yellow-200 group-hover:from-red-200 group-hover:via-red-300 group-hover:to-yellow-200 dark:text-white dark:hover:text-gray-900 focus:ring-4 focus:outline-none focus:ring-red-100 dark:focus:ring-red-400">
-                            <span class="relative px-5 py-1 transition-all ease-in duration-75 bg-white dark:bg-gray-900 rounded-md group-hover:bg-opacity-0">
+                        <button (click)="downloadFiles(file.names)" class="relative inline-flex items-center justify-center p-0.5 mb-2 me-2 overflow-hidden text-sm font-medium text-slate-900 rounded-lg group bg-gradient-to-br from-red-200 via-red-300 to-yellow-200 group-hover:from-red-200 group-hover:via-red-300 group-hover:to-yellow-200 dark:text-white dark:hover:text-slate-900 focus:ring-4 focus:outline-none focus:ring-red-100 dark:focus:ring-red-400">
+                            <span class="relative px-5 py-1 transition-all ease-in duration-75 bg-white dark:bg-slate-900/80 rounded-md group-hover:bg-opacity-0">
                                 Descargar
                             </span>
                             </button>

@@ -3,11 +3,11 @@
   <!-- Header -->
   <div class="flex items-center justify-between mb-6">
     <div>
-      <h1 class="text-xl font-bold text-gray-900 dark:text-white">Gestión de Empleados</h1>
-      <p class="text-sm text-gray-500 dark:text-gray-400 mt-0.5">Administra tu equipo de trabajo</p>
+      <h1 class="text-2xl font-bold bg-gradient-to-r from-slate-800 to-slate-600 bg-clip-text text-transparent dark:from-white dark:to-slate-300">Gestión de Empleados</h1>
+      <p class="text-sm text-slate-500 dark:text-slate-400 mt-0.5">Administra tu equipo de trabajo</p>
     </div>
     <button (click)="openCreate()"
-      class="flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium rounded-lg transition">
+      class="flex items-center gap-2 px-4 py-2 bg-gradient-to-br from-indigo-500 to-violet-600 text-white shadow-md shadow-indigo-500/20 hover:shadow-lg transition-all text-sm font-medium rounded-xl">
       <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
       </svg>
@@ -25,41 +25,41 @@
 
     <!-- ── Lista ── -->
     <div class="lg:col-span-1">
-      <div class="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 overflow-hidden">
+      <div class="bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl rounded-2xl border border-slate-200/60 dark:border-slate-700/60 shadow-sm hover:shadow-md transition-all duration-300 overflow-hidden">
 
         <!-- Búsqueda -->
-        <div class="p-3 border-b border-gray-100 dark:border-gray-700">
+        <div class="p-3 border-b border-slate-100/80 dark:border-slate-700/60">
           <div class="relative">
-            <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-4.35-4.35M17 11A6 6 0 1 1 5 11a6 6 0 0 1 12 0z"/>
             </svg>
             <input [(ngModel)]="search" (ngModelChange)="loadEmployees()" placeholder="Buscar empleado..."
-              class="w-full pl-9 pr-3 py-2 text-sm border border-gray-200 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500 outline-none"/>
+              class="w-full pl-9 pr-3 py-2 text-sm bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl border border-slate-200/60 dark:border-slate-700/60 rounded-xl text-slate-700 dark:text-slate-300 focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-400 transition-all shadow-sm outline-none"/>
           </div>
         </div>
 
-        <div *ngIf="isLoading && !selected" class="p-6 text-center text-sm text-gray-400">Cargando...</div>
+        <div *ngIf="isLoading && !selected" class="p-6 text-center text-sm text-slate-400">Cargando...</div>
 
-        <div *ngIf="!isLoading && employees.length === 0" class="p-10 text-center text-sm text-gray-400">
+        <div *ngIf="!isLoading && employees.length === 0" class="p-10 text-center text-sm text-slate-400">
           Sin empleados registrados
         </div>
 
-        <div class="divide-y divide-gray-100 dark:divide-gray-700 max-h-[calc(100vh-240px)] overflow-y-auto">
+        <div class="divide-y divide-slate-100/80 dark:divide-slate-700/60 max-h-[calc(100vh-240px)] overflow-y-auto">
           <div *ngFor="let e of employees"
             (click)="selectEmployee(e)"
             [ngClass]="selected?.id === e.id ? 'bg-indigo-50 dark:bg-indigo-900/20' : ''"
-            class="flex items-center gap-3 p-3 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 transition">
+            class="flex items-center gap-3 p-3 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors">
             <div class="w-10 h-10 rounded-full bg-indigo-100 dark:bg-indigo-900/40 flex items-center justify-center text-indigo-700 dark:text-indigo-300 font-bold text-sm shrink-0">
               {{ e.first_name[0] }}{{ e.last_name[0] }}
             </div>
             <div class="flex-1 min-w-0">
-              <p class="font-medium text-sm text-gray-900 dark:text-white truncate">{{ e.first_name }} {{ e.last_name }}</p>
-              <p class="text-xs text-gray-500 dark:text-gray-400 truncate">{{ e.job_title || 'Sin cargo' }}</p>
+              <p class="font-medium text-sm text-slate-900 dark:text-white truncate">{{ e.first_name }} {{ e.last_name }}</p>
+              <p class="text-xs text-slate-500 dark:text-slate-400 truncate">{{ e.job_title || 'Sin cargo' }}</p>
               <span *ngIf="e.staff_profile" class="inline-block text-xs bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-300 px-1.5 py-0.5 rounded font-medium mt-0.5">
                 {{ e.staff_profile }}
               </span>
             </div>
-            <span [class]="e.active ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'"
+            <span [class]="e.active ? 'bg-green-100 text-green-700' : 'bg-slate-100/80 text-slate-500'"
               class="text-xs px-2 py-0.5 rounded-full font-medium shrink-0">
               {{ e.active ? 'Activo' : 'Inactivo' }}
             </span>
@@ -70,8 +70,8 @@
 
     <!-- ── Detalle ── -->
     <div class="lg:col-span-2">
-      <div *ngIf="!selected" class="h-full flex items-center justify-center bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 p-12">
-        <div class="text-center text-gray-400">
+      <div *ngIf="!selected" class="h-full flex items-center justify-center bg-white dark:bg-slate-800/80 rounded-2xl border border-slate-200/60 dark:border-slate-700/60 p-12">
+        <div class="text-center text-slate-400">
           <svg class="w-16 h-16 mx-auto mb-4 opacity-30" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
           </svg>
@@ -80,7 +80,7 @@
         </div>
       </div>
 
-      <div *ngIf="selected" class="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 overflow-hidden">
+      <div *ngIf="selected" class="bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl rounded-2xl border border-slate-200/60 dark:border-slate-700/60 shadow-sm hover:shadow-md transition-all duration-300 overflow-hidden">
 
         <!-- Cabecera empleado -->
         <div class="bg-gradient-to-r from-indigo-600 to-indigo-700 p-5 text-white">
@@ -99,7 +99,7 @@
                   <span *ngIf="upcomingBirthday()" class="text-xs bg-yellow-400 text-yellow-900 px-2 py-0.5 rounded-full font-medium">
                     🎂 Cumpleaños próximo
                   </span>
-                  <span [class]="selected.active ? 'bg-green-400/30 text-green-100' : 'bg-gray-400/30 text-gray-200'"
+                  <span [class]="selected.active ? 'bg-green-400/30 text-green-100' : 'bg-slate-400/30 text-slate-200'"
                     class="text-xs px-2 py-0.5 rounded-full">
                     {{ selected.active ? 'Activo' : 'Inactivo' }}
                   </span>
@@ -145,24 +145,24 @@
           <!-- ── PERFIL ── -->
           <div *ngIf="activeTab === 'profile'" class="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div class="space-y-1">
-              <p class="text-xs text-gray-400 uppercase tracking-wide">Correo</p>
-              <p class="text-sm text-gray-900 dark:text-white">{{ selected.email || '—' }}</p>
+              <p class="text-xs text-slate-400 uppercase tracking-wide">Correo</p>
+              <p class="text-sm text-slate-900 dark:text-white">{{ selected.email || '—' }}</p>
             </div>
             <div class="space-y-1">
-              <p class="text-xs text-gray-400 uppercase tracking-wide">Teléfono</p>
-              <p class="text-sm text-gray-900 dark:text-white">{{ selected.phone || '—' }}</p>
+              <p class="text-xs text-slate-400 uppercase tracking-wide">Teléfono</p>
+              <p class="text-sm text-slate-900 dark:text-white">{{ selected.phone || '—' }}</p>
             </div>
             <div class="space-y-1">
-              <p class="text-xs text-gray-400 uppercase tracking-wide">Dirección</p>
-              <p class="text-sm text-gray-900 dark:text-white">{{ selected.address || '—' }}</p>
+              <p class="text-xs text-slate-400 uppercase tracking-wide">Dirección</p>
+              <p class="text-sm text-slate-900 dark:text-white">{{ selected.address || '—' }}</p>
             </div>
             <div class="space-y-1">
-              <p class="text-xs text-gray-400 uppercase tracking-wide">Fecha de ingreso</p>
-              <p class="text-sm text-gray-900 dark:text-white">{{ selected.start_date ? (selected.start_date | date:'dd/MM/yyyy') : '—' }}</p>
+              <p class="text-xs text-slate-400 uppercase tracking-wide">Fecha de ingreso</p>
+              <p class="text-sm text-slate-900 dark:text-white">{{ selected.start_date ? (selected.start_date | date:'dd/MM/yyyy') : '—' }}</p>
             </div>
             <div class="space-y-1">
-              <p class="text-xs text-gray-400 uppercase tracking-wide">Cumpleaños</p>
-              <p class="text-sm text-gray-900 dark:text-white">{{ selected.birthday ? (selected.birthday | date:'dd/MM') : '—' }}</p>
+              <p class="text-xs text-slate-400 uppercase tracking-wide">Cumpleaños</p>
+              <p class="text-sm text-slate-900 dark:text-white">{{ selected.birthday ? (selected.birthday | date:'dd/MM') : '—' }}</p>
             </div>
           </div>
 
@@ -170,8 +170,8 @@
           <div *ngIf="activeTab === 'contract'" class="space-y-4">
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Tipo de contrato</label>
-                <select [(ngModel)]="contractForm.type" class="w-full px-3 py-2 text-sm border border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500 outline-none">
+                <label class="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">Tipo de contrato</label>
+                <select [(ngModel)]="contractForm.type" class="w-full px-3.5 py-2 text-sm bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl border border-slate-200/60 dark:border-slate-700/60 rounded-xl text-slate-700 dark:text-slate-300 focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-400 transition-all shadow-sm">
                   <option value="indefinido">Indefinido</option>
                   <option value="fijo">Término fijo</option>
                   <option value="obra_labor">Obra o labor</option>
@@ -179,24 +179,24 @@
                 </select>
               </div>
               <div>
-                <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Duración (meses)</label>
-                <input [(ngModel)]="contractForm.duration_months" type="number" placeholder="Solo si es fijo" class="w-full px-3 py-2 text-sm border border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500 outline-none"/>
+                <label class="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">Duración (meses)</label>
+                <input [(ngModel)]="contractForm.duration_months" type="number" placeholder="Solo si es fijo" class="w-full px-3.5 py-2 text-sm bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl border border-slate-200/60 dark:border-slate-700/60 rounded-xl text-slate-700 dark:text-slate-300 focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-400 transition-all shadow-sm"/>
               </div>
               <div>
-                <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Salario base</label>
-                <input [(ngModel)]="contractForm.salary" type="number" placeholder="0" class="w-full px-3 py-2 text-sm border border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500 outline-none"/>
+                <label class="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">Salario base</label>
+                <input [(ngModel)]="contractForm.salary" type="number" placeholder="0" class="w-full px-3.5 py-2 text-sm bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl border border-slate-200/60 dark:border-slate-700/60 rounded-xl text-slate-700 dark:text-slate-300 focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-400 transition-all shadow-sm"/>
               </div>
               <div>
-                <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Fecha inicio</label>
-                <input [(ngModel)]="contractForm.start_date" type="date" class="w-full px-3 py-2 text-sm border border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500 outline-none"/>
+                <label class="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">Fecha inicio</label>
+                <input [(ngModel)]="contractForm.start_date" type="date" class="w-full px-3.5 py-2 text-sm bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl border border-slate-200/60 dark:border-slate-700/60 rounded-xl text-slate-700 dark:text-slate-300 focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-400 transition-all shadow-sm"/>
               </div>
               <div>
-                <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Fecha fin</label>
-                <input [(ngModel)]="contractForm.end_date" type="date" class="w-full px-3 py-2 text-sm border border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500 outline-none"/>
+                <label class="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">Fecha fin</label>
+                <input [(ngModel)]="contractForm.end_date" type="date" class="w-full px-3.5 py-2 text-sm bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl border border-slate-200/60 dark:border-slate-700/60 rounded-xl text-slate-700 dark:text-slate-300 focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-400 transition-all shadow-sm"/>
               </div>
             </div>
             <button (click)="saveContract()" [disabled]="isSaving"
-              class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium rounded-lg transition disabled:opacity-50">
+              class="px-4 py-2 bg-gradient-to-br from-indigo-500 to-violet-600 text-white shadow-md shadow-indigo-500/20 hover:shadow-lg transition-all text-white text-sm font-medium rounded-lg transition disabled:opacity-50">
               {{ isSaving ? 'Guardando...' : 'Guardar contrato' }}
             </button>
           </div>
@@ -205,24 +205,24 @@
           <div *ngIf="activeTab === 'affiliations'" class="space-y-4">
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">ARL</label>
-                <input [(ngModel)]="affiliationForm.arl" placeholder="Nombre de la ARL" class="w-full px-3 py-2 text-sm border border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500 outline-none"/>
+                <label class="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">ARL</label>
+                <input [(ngModel)]="affiliationForm.arl" placeholder="Nombre de la ARL" class="w-full px-3.5 py-2 text-sm bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl border border-slate-200/60 dark:border-slate-700/60 rounded-xl text-slate-700 dark:text-slate-300 focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-400 transition-all shadow-sm"/>
               </div>
               <div>
-                <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">EPS</label>
-                <input [(ngModel)]="affiliationForm.eps" placeholder="Nombre de la EPS" class="w-full px-3 py-2 text-sm border border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500 outline-none"/>
+                <label class="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">EPS</label>
+                <input [(ngModel)]="affiliationForm.eps" placeholder="Nombre de la EPS" class="w-full px-3.5 py-2 text-sm bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl border border-slate-200/60 dark:border-slate-700/60 rounded-xl text-slate-700 dark:text-slate-300 focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-400 transition-all shadow-sm"/>
               </div>
               <div>
-                <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Fondo de pensión</label>
-                <input [(ngModel)]="affiliationForm.pension_fund" placeholder="Nombre del fondo" class="w-full px-3 py-2 text-sm border border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500 outline-none"/>
+                <label class="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">Fondo de pensión</label>
+                <input [(ngModel)]="affiliationForm.pension_fund" placeholder="Nombre del fondo" class="w-full px-3.5 py-2 text-sm bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl border border-slate-200/60 dark:border-slate-700/60 rounded-xl text-slate-700 dark:text-slate-300 focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-400 transition-all shadow-sm"/>
               </div>
               <div>
-                <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Caja de compensación</label>
-                <input [(ngModel)]="affiliationForm.compensation_fund" placeholder="Nombre de la caja" class="w-full px-3 py-2 text-sm border border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500 outline-none"/>
+                <label class="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">Caja de compensación</label>
+                <input [(ngModel)]="affiliationForm.compensation_fund" placeholder="Nombre de la caja" class="w-full px-3.5 py-2 text-sm bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl border border-slate-200/60 dark:border-slate-700/60 rounded-xl text-slate-700 dark:text-slate-300 focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-400 transition-all shadow-sm"/>
               </div>
             </div>
             <button (click)="saveAffiliation()" [disabled]="isSaving"
-              class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium rounded-lg transition disabled:opacity-50">
+              class="px-4 py-2 bg-gradient-to-br from-indigo-500 to-violet-600 text-white shadow-md shadow-indigo-500/20 hover:shadow-lg transition-all text-white text-sm font-medium rounded-lg transition disabled:opacity-50">
               {{ isSaving ? 'Guardando...' : 'Guardar afiliaciones' }}
             </button>
           </div>
@@ -231,23 +231,23 @@
           <div *ngIf="activeTab === 'bank'" class="space-y-4">
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Banco</label>
-                <input [(ngModel)]="bankForm.bank_name" placeholder="Nombre del banco" class="w-full px-3 py-2 text-sm border border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500 outline-none"/>
+                <label class="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">Banco</label>
+                <input [(ngModel)]="bankForm.bank_name" placeholder="Nombre del banco" class="w-full px-3.5 py-2 text-sm bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl border border-slate-200/60 dark:border-slate-700/60 rounded-xl text-slate-700 dark:text-slate-300 focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-400 transition-all shadow-sm"/>
               </div>
               <div>
-                <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Tipo de cuenta</label>
-                <select [(ngModel)]="bankForm.account_type" class="w-full px-3 py-2 text-sm border border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500 outline-none">
+                <label class="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">Tipo de cuenta</label>
+                <select [(ngModel)]="bankForm.account_type" class="w-full px-3.5 py-2 text-sm bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl border border-slate-200/60 dark:border-slate-700/60 rounded-xl text-slate-700 dark:text-slate-300 focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-400 transition-all shadow-sm">
                   <option value="ahorros">Ahorros</option>
                   <option value="corriente">Corriente</option>
                 </select>
               </div>
               <div class="sm:col-span-2">
-                <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Número de cuenta</label>
-                <input [(ngModel)]="bankForm.account_number" placeholder="Número de cuenta nómina" class="w-full px-3 py-2 text-sm border border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500 outline-none"/>
+                <label class="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">Número de cuenta</label>
+                <input [(ngModel)]="bankForm.account_number" placeholder="Número de cuenta nómina" class="w-full px-3.5 py-2 text-sm bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl border border-slate-200/60 dark:border-slate-700/60 rounded-xl text-slate-700 dark:text-slate-300 focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-400 transition-all shadow-sm"/>
               </div>
             </div>
             <button (click)="saveBankAccount()" [disabled]="isSaving"
-              class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium rounded-lg transition disabled:opacity-50">
+              class="px-4 py-2 bg-gradient-to-br from-indigo-500 to-violet-600 text-white shadow-md shadow-indigo-500/20 hover:shadow-lg transition-all text-white text-sm font-medium rounded-lg transition disabled:opacity-50">
               {{ isSaving ? 'Guardando...' : 'Guardar cuenta' }}
             </button>
           </div>
@@ -255,36 +255,36 @@
           <!-- ── DOTACIONES ── -->
           <div *ngIf="activeTab === 'equipment'">
             <div class="flex justify-between items-center mb-3">
-              <p class="text-sm font-medium text-gray-700 dark:text-gray-300">Dotaciones y herramientas ({{ equipment.length }})</p>
+              <p class="text-sm font-medium text-slate-700 dark:text-slate-300">Dotaciones y herramientas ({{ equipment.length }})</p>
               <button (click)="openCreateEq()"
-                class="flex items-center gap-1 px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-medium rounded-lg transition">
+                class="flex items-center gap-1 px-3 py-1.5 bg-gradient-to-br from-indigo-500 to-violet-600 text-white shadow-md shadow-indigo-500/20 hover:shadow-lg transition-all text-white text-xs font-medium rounded-lg transition">
                 <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
                 </svg>
                 Agregar
               </button>
             </div>
-            <div *ngIf="equipment.length === 0" class="text-center py-8 text-gray-400 text-sm">Sin dotaciones registradas</div>
+            <div *ngIf="equipment.length === 0" class="text-center py-8 text-slate-400 text-sm">Sin dotaciones registradas</div>
             <div class="space-y-2">
-              <div *ngFor="let eq of equipment" class="flex items-center justify-between bg-gray-50 dark:bg-gray-700 rounded-xl p-3">
+              <div *ngFor="let eq of equipment" class="flex items-center justify-between bg-slate-50/80 dark:bg-slate-700/80 rounded-xl p-3">
                 <div class="flex-1 min-w-0">
                   <div class="flex items-center gap-2">
-                    <p class="font-medium text-sm text-gray-900 dark:text-white truncate">{{ eq.name }}</p>
+                    <p class="font-medium text-sm text-slate-900 dark:text-white truncate">{{ eq.name }}</p>
                     <span [class]="conditionClass(eq.condition)" class="text-xs px-2 py-0.5 rounded-full font-medium">{{ conditionLabel(eq.condition) }}</span>
-                    <span *ngIf="eq.returned_at" class="text-xs bg-gray-200 dark:bg-gray-600 text-gray-600 dark:text-gray-300 px-2 py-0.5 rounded-full">Devuelto</span>
+                    <span *ngIf="eq.returned_at" class="text-xs bg-slate-200/60 dark:bg-slate-600/60 text-slate-600 dark:text-slate-300 px-2 py-0.5 rounded-full">Devuelto</span>
                   </div>
-                  <p class="text-xs text-gray-400 mt-0.5">
+                  <p class="text-xs text-slate-400 mt-0.5">
                     Serial: {{ eq.serial || '—' }} · Asignado: {{ eq.assigned_at | date:'dd/MM/yyyy' }}
                     <span *ngIf="eq.returned_at"> · Devuelto: {{ eq.returned_at | date:'dd/MM/yyyy' }}</span>
                   </p>
                 </div>
                 <div class="flex gap-1 ml-2">
-                  <button (click)="openEditEq(eq)" class="p-1.5 text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 rounded-lg transition">
+                  <button (click)="openEditEq(eq)" class="p-1.5 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 rounded-lg transition">
                     <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536M6.5 21.036H3v-3.572L16.732 3.732a2.5 2.5 0 013.536 3.536L6.5 21.036z"/>
                     </svg>
                   </button>
-                  <button (click)="confirmDeleteEq(eq.id)" class="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition">
+                  <button (click)="confirmDeleteEq(eq.id)" class="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition">
                     <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7M10 11v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
                     </svg>
@@ -297,7 +297,7 @@
           <!-- ── DESCARGOS ── -->
           <div *ngIf="activeTab === 'disciplinary'">
             <div class="flex justify-between items-center mb-3">
-              <p class="text-sm font-medium text-gray-700 dark:text-gray-300">Descargos disciplinarios ({{ disciplinary.length }})</p>
+              <p class="text-sm font-medium text-slate-700 dark:text-slate-300">Descargos disciplinarios ({{ disciplinary.length }})</p>
               <button (click)="openCreateDisc()"
                 class="flex items-center gap-1 px-3 py-1.5 bg-red-600 hover:bg-red-700 text-white text-xs font-medium rounded-lg transition">
                 <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -306,7 +306,7 @@
                 Nuevo descargo
               </button>
             </div>
-            <div *ngIf="disciplinary.length === 0" class="text-center py-8 text-gray-400 text-sm">Sin descargos registrados</div>
+            <div *ngIf="disciplinary.length === 0" class="text-center py-8 text-slate-400 text-sm">Sin descargos registrados</div>
             <div class="space-y-3">
               <div *ngFor="let d of disciplinary" class="bg-red-50 dark:bg-red-900/10 border border-red-100 dark:border-red-900/30 rounded-xl p-4">
                 <div class="flex justify-between items-start">
@@ -314,20 +314,20 @@
                     <div class="flex items-center gap-2 mb-1">
                       <span class="text-xs text-red-600 dark:text-red-400 font-medium">{{ d.incident_date | date:'dd/MM/yyyy' }}</span>
                     </div>
-                    <p class="font-medium text-sm text-gray-900 dark:text-white">{{ d.reason }}</p>
-                    <p *ngIf="d.description" class="text-xs text-gray-500 dark:text-gray-400 mt-1">{{ d.description }}</p>
-                    <div *ngIf="d.resolution" class="mt-2 bg-white dark:bg-gray-800 rounded-lg p-2">
-                      <p class="text-xs text-gray-400 uppercase tracking-wide mb-0.5">Resolución</p>
-                      <p class="text-xs text-gray-700 dark:text-gray-300">{{ d.resolution }}</p>
+                    <p class="font-medium text-sm text-slate-900 dark:text-white">{{ d.reason }}</p>
+                    <p *ngIf="d.description" class="text-xs text-slate-500 dark:text-slate-400 mt-1">{{ d.description }}</p>
+                    <div *ngIf="d.resolution" class="mt-2 bg-white dark:bg-slate-800/80 rounded-lg p-2">
+                      <p class="text-xs text-slate-400 uppercase tracking-wide mb-0.5">Resolución</p>
+                      <p class="text-xs text-slate-700 dark:text-slate-300">{{ d.resolution }}</p>
                     </div>
                   </div>
                   <div class="flex gap-1 ml-3">
-                    <button (click)="openEditDisc(d)" class="p-1.5 text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition">
+                    <button (click)="openEditDisc(d)" class="p-1.5 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition">
                       <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536M6.5 21.036H3v-3.572L16.732 3.732a2.5 2.5 0 013.536 3.536L6.5 21.036z"/>
                       </svg>
                     </button>
-                    <button (click)="confirmDeleteDisc(d.id)" class="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition">
+                    <button (click)="confirmDeleteDisc(d.id)" class="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition">
                       <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7M10 11v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
                       </svg>
@@ -342,8 +342,8 @@
           <div *ngIf="activeTab === 'payroll'">
             <div class="flex justify-between items-center mb-3">
               <div>
-                <p class="text-sm font-medium text-gray-700 dark:text-gray-300">Historial de nómina ({{ payrolls.length }} períodos)</p>
-                <p class="text-xs text-gray-400">Total pagado: ${{ totalPayrolls() | number:'1.0-0' }}</p>
+                <p class="text-sm font-medium text-slate-700 dark:text-slate-300">Historial de nómina ({{ payrolls.length }} períodos)</p>
+                <p class="text-xs text-slate-400">Total pagado: ${{ totalPayrolls() | number:'1.0-0' }}</p>
               </div>
               <button (click)="openCreatePay()"
                 class="flex items-center gap-1 px-3 py-1.5 bg-green-600 hover:bg-green-700 text-white text-xs font-medium rounded-lg transition">
@@ -353,11 +353,11 @@
                 Registrar pago
               </button>
             </div>
-            <div *ngIf="payrolls.length === 0" class="text-center py-8 text-gray-400 text-sm">Sin pagos registrados</div>
+            <div *ngIf="payrolls.length === 0" class="text-center py-8 text-slate-400 text-sm">Sin pagos registrados</div>
             <div class="overflow-x-auto">
               <table *ngIf="payrolls.length > 0" class="w-full text-sm">
                 <thead>
-                  <tr class="text-xs text-gray-400 uppercase border-b border-gray-100 dark:border-gray-700">
+                  <tr class="text-xs text-slate-400 uppercase border-b border-slate-100/80 dark:border-slate-700/60">
                     <th class="pb-2 text-left">Período</th>
                     <th class="pb-2 text-right">Salario</th>
                     <th class="pb-2 text-right">Bonif.</th>
@@ -367,24 +367,24 @@
                     <th class="pb-2"></th>
                   </tr>
                 </thead>
-                <tbody class="divide-y divide-gray-50 dark:divide-gray-700">
-                  <tr *ngFor="let p of payrolls" class="hover:bg-gray-50 dark:hover:bg-gray-700">
-                    <td class="py-2 font-medium text-gray-900 dark:text-white">{{ p.period }}</td>
-                    <td class="py-2 text-right text-gray-600 dark:text-gray-300">${{ p.base_salary | number:'1.0-0' }}</td>
+                <tbody class="divide-y divide-gray-50 dark:divide-slate-700/60">
+                  <tr *ngFor="let p of payrolls" class="hover:bg-slate-50/80 dark:hover:bg-slate-700/50">
+                    <td class="py-2 font-medium text-slate-900 dark:text-white">{{ p.period }}</td>
+                    <td class="py-2 text-right text-slate-600 dark:text-slate-300">${{ p.base_salary | number:'1.0-0' }}</td>
                     <td class="py-2 text-right text-green-600">+${{ p.bonuses | number:'1.0-0' }}</td>
                     <td class="py-2 text-right text-red-500">-${{ p.deductions | number:'1.0-0' }}</td>
-                    <td class="py-2 text-right font-bold text-gray-900 dark:text-white">${{ p.total_paid | number:'1.0-0' }}</td>
+                    <td class="py-2 text-right font-bold text-slate-900 dark:text-white">${{ p.total_paid | number:'1.0-0' }}</td>
                     <td class="py-2 text-center">
-                      <span class="text-xs bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 px-2 py-0.5 rounded-full capitalize">{{ p.payment_method }}</span>
+                      <span class="text-xs bg-slate-100/80 dark:bg-slate-700/80 text-slate-600 dark:text-slate-300 px-2 py-0.5 rounded-full capitalize">{{ p.payment_method }}</span>
                     </td>
                     <td class="py-2">
                       <div class="flex gap-1 justify-end">
-                        <button (click)="openEditPay(p)" class="p-1 text-gray-400 hover:text-indigo-600 rounded transition">
+                        <button (click)="openEditPay(p)" class="p-1 text-slate-400 hover:text-indigo-600 rounded transition">
                           <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536M6.5 21.036H3v-3.572L16.732 3.732a2.5 2.5 0 013.536 3.536L6.5 21.036z"/>
                           </svg>
                         </button>
-                        <button (click)="confirmDeletePay(p.id)" class="p-1 text-gray-400 hover:text-red-600 rounded transition">
+                        <button (click)="confirmDeletePay(p.id)" class="p-1 text-slate-400 hover:text-red-600 rounded transition">
                           <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7M10 11v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
                           </svg>
@@ -406,11 +406,11 @@
 <!-- ═══════════════ MODALES ═══════════════ -->
 
 <!-- Modal Empleado -->
-<div *ngIf="showModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
-  <div class="bg-white dark:bg-gray-900 rounded-2xl w-full max-w-lg shadow-2xl">
-    <div class="flex items-center justify-between px-5 py-4 border-b border-gray-100 dark:border-gray-800">
-      <h2 class="font-semibold text-gray-900 dark:text-white">{{ isEditing ? 'Editar empleado' : 'Nuevo empleado' }}</h2>
-      <button (click)="showModal = false" class="text-gray-400 hover:text-gray-600">
+<div *ngIf="showModal" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4">
+  <div class="bg-white/95 dark:bg-slate-800/95 backdrop-blur-xl rounded-2xl shadow-2xl border border-slate-100 dark:border-slate-700 w-full max-w-lg">
+    <div class="flex items-center justify-between px-5 py-4 border-b border-slate-100/80 dark:border-slate-800/80">
+      <h2 class="font-semibold text-slate-900 dark:text-white">{{ isEditing ? 'Editar empleado' : 'Nuevo empleado' }}</h2>
+      <button (click)="showModal = false" class="text-slate-400 hover:text-slate-600">
         <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
         </svg>
@@ -421,61 +421,61 @@
 
       <!-- Selector de staff existente (solo al crear) -->
       <div *ngIf="!isEditing" class="sm:col-span-2">
-        <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Vincular con técnico / staff existente</label>
+        <label class="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">Vincular con técnico / staff existente</label>
         <select [(ngModel)]="selectedStaffId" (ngModelChange)="onStaffSelected()"
-          class="w-full px-3 py-2 text-sm border border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500 outline-none">
+          class="w-full px-3.5 py-2 text-sm bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl border border-slate-200/60 dark:border-slate-700/60 rounded-xl text-slate-700 dark:text-slate-300 focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-400 transition-all shadow-sm">
           <option [ngValue]="null">— Empleado nuevo sin cuenta de sistema —</option>
           <option *ngFor="let s of availableStaff" [ngValue]="s.id">
             {{ s.names }} {{ s.lastname }} · {{ s.profile }}
           </option>
         </select>
-        <p *ngIf="availableStaff.length === 0" class="text-xs text-gray-400 mt-1">Todos los técnicos/admins ya tienen perfil de empleado.</p>
+        <p *ngIf="availableStaff.length === 0" class="text-xs text-slate-400 mt-1">Todos los técnicos/admins ya tienen perfil de empleado.</p>
       </div>
 
       <div>
-        <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Nombres *</label>
-        <input [(ngModel)]="empForm.first_name" class="w-full px-3 py-2 text-sm border border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500 outline-none" placeholder="Nombres"/>
+        <label class="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">Nombres *</label>
+        <input [(ngModel)]="empForm.first_name" class="w-full px-3.5 py-2 text-sm bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl border border-slate-200/60 dark:border-slate-700/60 rounded-xl text-slate-700 dark:text-slate-300 focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-400 transition-all shadow-sm" placeholder="Nombres"/>
       </div>
       <div>
-        <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Apellidos *</label>
-        <input [(ngModel)]="empForm.last_name" class="w-full px-3 py-2 text-sm border border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500 outline-none" placeholder="Apellidos"/>
+        <label class="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">Apellidos *</label>
+        <input [(ngModel)]="empForm.last_name" class="w-full px-3.5 py-2 text-sm bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl border border-slate-200/60 dark:border-slate-700/60 rounded-xl text-slate-700 dark:text-slate-300 focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-400 transition-all shadow-sm" placeholder="Apellidos"/>
       </div>
       <div>
-        <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Cédula *</label>
-        <input [(ngModel)]="empForm.dni" class="w-full px-3 py-2 text-sm border border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500 outline-none" placeholder="Número de documento"/>
+        <label class="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">Cédula *</label>
+        <input [(ngModel)]="empForm.dni" class="w-full px-3.5 py-2 text-sm bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl border border-slate-200/60 dark:border-slate-700/60 rounded-xl text-slate-700 dark:text-slate-300 focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-400 transition-all shadow-sm" placeholder="Número de documento"/>
       </div>
       <div>
-        <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Cargo</label>
-        <input [(ngModel)]="empForm.job_title" class="w-full px-3 py-2 text-sm border border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500 outline-none" placeholder="Ej: Técnico de campo"/>
+        <label class="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">Cargo</label>
+        <input [(ngModel)]="empForm.job_title" class="w-full px-3.5 py-2 text-sm bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl border border-slate-200/60 dark:border-slate-700/60 rounded-xl text-slate-700 dark:text-slate-300 focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-400 transition-all shadow-sm" placeholder="Ej: Técnico de campo"/>
       </div>
       <div>
-        <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Correo</label>
-        <input [(ngModel)]="empForm.email" type="email" class="w-full px-3 py-2 text-sm border border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500 outline-none" placeholder="correo@empresa.com"/>
+        <label class="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">Correo</label>
+        <input [(ngModel)]="empForm.email" type="email" class="w-full px-3.5 py-2 text-sm bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl border border-slate-200/60 dark:border-slate-700/60 rounded-xl text-slate-700 dark:text-slate-300 focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-400 transition-all shadow-sm" placeholder="correo@empresa.com"/>
       </div>
       <div>
-        <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Teléfono</label>
-        <input [(ngModel)]="empForm.phone" class="w-full px-3 py-2 text-sm border border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500 outline-none" placeholder="+57..."/>
+        <label class="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">Teléfono</label>
+        <input [(ngModel)]="empForm.phone" class="w-full px-3.5 py-2 text-sm bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl border border-slate-200/60 dark:border-slate-700/60 rounded-xl text-slate-700 dark:text-slate-300 focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-400 transition-all shadow-sm" placeholder="+57..."/>
       </div>
       <div class="sm:col-span-2">
-        <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Dirección</label>
-        <input [(ngModel)]="empForm.address" class="w-full px-3 py-2 text-sm border border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500 outline-none" placeholder="Dirección"/>
+        <label class="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">Dirección</label>
+        <input [(ngModel)]="empForm.address" class="w-full px-3.5 py-2 text-sm bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl border border-slate-200/60 dark:border-slate-700/60 rounded-xl text-slate-700 dark:text-slate-300 focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-400 transition-all shadow-sm" placeholder="Dirección"/>
       </div>
       <div>
-        <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Fecha de ingreso</label>
-        <input [(ngModel)]="empForm.start_date" type="date" class="w-full px-3 py-2 text-sm border border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500 outline-none"/>
+        <label class="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">Fecha de ingreso</label>
+        <input [(ngModel)]="empForm.start_date" type="date" class="w-full px-3.5 py-2 text-sm bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl border border-slate-200/60 dark:border-slate-700/60 rounded-xl text-slate-700 dark:text-slate-300 focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-400 transition-all shadow-sm"/>
       </div>
       <div>
-        <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Cumpleaños</label>
-        <input [(ngModel)]="empForm.birthday" type="date" class="w-full px-3 py-2 text-sm border border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500 outline-none"/>
+        <label class="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">Cumpleaños</label>
+        <input [(ngModel)]="empForm.birthday" type="date" class="w-full px-3.5 py-2 text-sm bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl border border-slate-200/60 dark:border-slate-700/60 rounded-xl text-slate-700 dark:text-slate-300 focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-400 transition-all shadow-sm"/>
       </div>
       <div class="flex items-center gap-2">
         <input [(ngModel)]="empForm.active" type="checkbox" id="activeEmp" class="w-4 h-4 text-indigo-600 rounded"/>
-        <label for="activeEmp" class="text-sm text-gray-700 dark:text-gray-300">Empleado activo</label>
+        <label for="activeEmp" class="text-sm text-slate-700 dark:text-slate-300">Empleado activo</label>
       </div>
     </div>
     <div class="flex gap-3 px-5 pb-5">
-      <button (click)="showModal = false" class="flex-1 px-4 py-2 border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 text-sm rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition">Cancelar</button>
-      <button (click)="saveEmployee()" [disabled]="isSaving" class="flex-1 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium rounded-lg transition disabled:opacity-50">
+      <button (click)="showModal = false" class="flex-1 px-4 py-2 border border-slate-200/60 dark:border-slate-700/60 text-slate-700 dark:text-slate-300 text-sm rounded-lg hover:bg-slate-50/80 dark:hover:bg-slate-800/80 transition">Cancelar</button>
+      <button (click)="saveEmployee()" [disabled]="isSaving" class="flex-1 px-4 py-2 bg-gradient-to-br from-indigo-500 to-violet-600 text-white shadow-md shadow-indigo-500/20 hover:shadow-lg transition-all text-white text-sm font-medium rounded-lg transition disabled:opacity-50">
         {{ isSaving ? 'Guardando...' : (isEditing ? 'Actualizar' : 'Crear') }}
       </button>
     </div>
@@ -483,24 +483,24 @@
 </div>
 
 <!-- Modal Dotación -->
-<div *ngIf="showEqModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
-  <div class="bg-white dark:bg-gray-900 rounded-2xl w-full max-w-md shadow-2xl">
-    <div class="flex items-center justify-between px-5 py-4 border-b border-gray-100 dark:border-gray-800">
-      <h2 class="font-semibold text-gray-900 dark:text-white">{{ isEditingEq ? 'Editar dotación' : 'Nueva dotación' }}</h2>
-      <button (click)="showEqModal = false" class="text-gray-400 hover:text-gray-600"><svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg></button>
+<div *ngIf="showEqModal" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4">
+  <div class="bg-white/95 dark:bg-slate-800/95 backdrop-blur-xl rounded-2xl shadow-2xl border border-slate-100 dark:border-slate-700 w-full max-w-md">
+    <div class="flex items-center justify-between px-5 py-4 border-b border-slate-100/80 dark:border-slate-800/80">
+      <h2 class="font-semibold text-slate-900 dark:text-white">{{ isEditingEq ? 'Editar dotación' : 'Nueva dotación' }}</h2>
+      <button (click)="showEqModal = false" class="text-slate-400 hover:text-slate-600"><svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg></button>
     </div>
     <div class="p-5 grid grid-cols-1 sm:grid-cols-2 gap-4">
       <div class="sm:col-span-2">
-        <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Nombre *</label>
-        <input [(ngModel)]="eqForm.name" class="w-full px-3 py-2 text-sm border border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500 outline-none" placeholder="Ej: Laptop, Casco, Herramienta..."/>
+        <label class="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">Nombre *</label>
+        <input [(ngModel)]="eqForm.name" class="w-full px-3.5 py-2 text-sm bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl border border-slate-200/60 dark:border-slate-700/60 rounded-xl text-slate-700 dark:text-slate-300 focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-400 transition-all shadow-sm" placeholder="Ej: Laptop, Casco, Herramienta..."/>
       </div>
       <div>
-        <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Serial</label>
-        <input [(ngModel)]="eqForm.serial" class="w-full px-3 py-2 text-sm border border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500 outline-none" placeholder="Número de serie"/>
+        <label class="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">Serial</label>
+        <input [(ngModel)]="eqForm.serial" class="w-full px-3.5 py-2 text-sm bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl border border-slate-200/60 dark:border-slate-700/60 rounded-xl text-slate-700 dark:text-slate-300 focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-400 transition-all shadow-sm" placeholder="Número de serie"/>
       </div>
       <div>
-        <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Condición</label>
-        <select [(ngModel)]="eqForm.condition" class="w-full px-3 py-2 text-sm border border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500 outline-none">
+        <label class="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">Condición</label>
+        <select [(ngModel)]="eqForm.condition" class="w-full px-3.5 py-2 text-sm bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl border border-slate-200/60 dark:border-slate-700/60 rounded-xl text-slate-700 dark:text-slate-300 focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-400 transition-all shadow-sm">
           <option value="nuevo">Nuevo</option>
           <option value="bueno">Bueno</option>
           <option value="regular">Regular</option>
@@ -508,21 +508,21 @@
         </select>
       </div>
       <div>
-        <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Fecha asignación *</label>
-        <input [(ngModel)]="eqForm.assigned_at" type="date" class="w-full px-3 py-2 text-sm border border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500 outline-none"/>
+        <label class="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">Fecha asignación *</label>
+        <input [(ngModel)]="eqForm.assigned_at" type="date" class="w-full px-3.5 py-2 text-sm bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl border border-slate-200/60 dark:border-slate-700/60 rounded-xl text-slate-700 dark:text-slate-300 focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-400 transition-all shadow-sm"/>
       </div>
       <div>
-        <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Fecha devolución</label>
-        <input [(ngModel)]="eqForm.returned_at" type="date" class="w-full px-3 py-2 text-sm border border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500 outline-none"/>
+        <label class="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">Fecha devolución</label>
+        <input [(ngModel)]="eqForm.returned_at" type="date" class="w-full px-3.5 py-2 text-sm bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl border border-slate-200/60 dark:border-slate-700/60 rounded-xl text-slate-700 dark:text-slate-300 focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-400 transition-all shadow-sm"/>
       </div>
       <div class="sm:col-span-2">
-        <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Descripción</label>
-        <textarea [(ngModel)]="eqForm.description" rows="2" class="w-full px-3 py-2 text-sm border border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500 outline-none resize-none" placeholder="Descripción adicional..."></textarea>
+        <label class="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">Descripción</label>
+        <textarea [(ngModel)]="eqForm.description" rows="2" class="w-full px-3.5 py-2 text-sm bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl border border-slate-200/60 dark:border-slate-700/60 rounded-xl text-slate-700 dark:text-slate-300 focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-400 transition-all shadow-sm resize-none" placeholder="Descripción adicional..."></textarea>
       </div>
     </div>
     <div class="flex gap-3 px-5 pb-5">
-      <button (click)="showEqModal = false" class="flex-1 px-4 py-2 border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 text-sm rounded-lg hover:bg-gray-50 transition">Cancelar</button>
-      <button (click)="saveEquipment()" [disabled]="isSaving" class="flex-1 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium rounded-lg transition disabled:opacity-50">
+      <button (click)="showEqModal = false" class="flex-1 px-4 py-2 border border-slate-200/60 dark:border-slate-700/60 text-slate-700 dark:text-slate-300 text-sm rounded-lg hover:bg-slate-50/80 transition">Cancelar</button>
+      <button (click)="saveEquipment()" [disabled]="isSaving" class="flex-1 px-4 py-2 bg-gradient-to-br from-indigo-500 to-violet-600 text-white shadow-md shadow-indigo-500/20 hover:shadow-lg transition-all text-white text-sm font-medium rounded-lg transition disabled:opacity-50">
         {{ isSaving ? 'Guardando...' : 'Guardar' }}
       </button>
     </div>
@@ -530,32 +530,32 @@
 </div>
 
 <!-- Modal Descargo -->
-<div *ngIf="showDiscModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
-  <div class="bg-white dark:bg-gray-900 rounded-2xl w-full max-w-md shadow-2xl">
-    <div class="flex items-center justify-between px-5 py-4 border-b border-gray-100 dark:border-gray-800">
-      <h2 class="font-semibold text-gray-900 dark:text-white">{{ isEditingDisc ? 'Editar descargo' : 'Nuevo descargo' }}</h2>
-      <button (click)="showDiscModal = false" class="text-gray-400 hover:text-gray-600"><svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg></button>
+<div *ngIf="showDiscModal" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4">
+  <div class="bg-white/95 dark:bg-slate-800/95 backdrop-blur-xl rounded-2xl shadow-2xl border border-slate-100 dark:border-slate-700 w-full max-w-md">
+    <div class="flex items-center justify-between px-5 py-4 border-b border-slate-100/80 dark:border-slate-800/80">
+      <h2 class="font-semibold text-slate-900 dark:text-white">{{ isEditingDisc ? 'Editar descargo' : 'Nuevo descargo' }}</h2>
+      <button (click)="showDiscModal = false" class="text-slate-400 hover:text-slate-600"><svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg></button>
     </div>
     <div class="p-5 space-y-3">
       <div>
-        <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Fecha del incidente *</label>
-        <input [(ngModel)]="discForm.incident_date" type="date" class="w-full px-3 py-2 text-sm border border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500 outline-none"/>
+        <label class="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">Fecha del incidente *</label>
+        <input [(ngModel)]="discForm.incident_date" type="date" class="w-full px-3.5 py-2 text-sm bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl border border-slate-200/60 dark:border-slate-700/60 rounded-xl text-slate-700 dark:text-slate-300 focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-400 transition-all shadow-sm"/>
       </div>
       <div>
-        <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Motivo *</label>
-        <input [(ngModel)]="discForm.reason" class="w-full px-3 py-2 text-sm border border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500 outline-none" placeholder="Motivo del descargo"/>
+        <label class="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">Motivo *</label>
+        <input [(ngModel)]="discForm.reason" class="w-full px-3.5 py-2 text-sm bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl border border-slate-200/60 dark:border-slate-700/60 rounded-xl text-slate-700 dark:text-slate-300 focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-400 transition-all shadow-sm" placeholder="Motivo del descargo"/>
       </div>
       <div>
-        <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Descripción</label>
-        <textarea [(ngModel)]="discForm.description" rows="3" class="w-full px-3 py-2 text-sm border border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500 outline-none resize-none" placeholder="Descripción detallada..."></textarea>
+        <label class="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">Descripción</label>
+        <textarea [(ngModel)]="discForm.description" rows="3" class="w-full px-3.5 py-2 text-sm bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl border border-slate-200/60 dark:border-slate-700/60 rounded-xl text-slate-700 dark:text-slate-300 focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-400 transition-all shadow-sm resize-none" placeholder="Descripción detallada..."></textarea>
       </div>
       <div>
-        <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Resolución</label>
-        <textarea [(ngModel)]="discForm.resolution" rows="2" class="w-full px-3 py-2 text-sm border border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500 outline-none resize-none" placeholder="Resolución o sanción aplicada..."></textarea>
+        <label class="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">Resolución</label>
+        <textarea [(ngModel)]="discForm.resolution" rows="2" class="w-full px-3.5 py-2 text-sm bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl border border-slate-200/60 dark:border-slate-700/60 rounded-xl text-slate-700 dark:text-slate-300 focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-400 transition-all shadow-sm resize-none" placeholder="Resolución o sanción aplicada..."></textarea>
       </div>
     </div>
     <div class="flex gap-3 px-5 pb-5">
-      <button (click)="showDiscModal = false" class="flex-1 px-4 py-2 border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 text-sm rounded-lg hover:bg-gray-50 transition">Cancelar</button>
+      <button (click)="showDiscModal = false" class="flex-1 px-4 py-2 border border-slate-200/60 dark:border-slate-700/60 text-slate-700 dark:text-slate-300 text-sm rounded-lg hover:bg-slate-50/80 transition">Cancelar</button>
       <button (click)="saveDisciplinary()" [disabled]="isSaving" class="flex-1 px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-sm font-medium rounded-lg transition disabled:opacity-50">
         {{ isSaving ? 'Guardando...' : 'Guardar' }}
       </button>
@@ -564,53 +564,53 @@
 </div>
 
 <!-- Modal Nómina -->
-<div *ngIf="showPayModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
-  <div class="bg-white dark:bg-gray-900 rounded-2xl w-full max-w-md shadow-2xl">
-    <div class="flex items-center justify-between px-5 py-4 border-b border-gray-100 dark:border-gray-800">
-      <h2 class="font-semibold text-gray-900 dark:text-white">{{ isEditingPay ? 'Editar nómina' : 'Registrar pago de nómina' }}</h2>
-      <button (click)="showPayModal = false" class="text-gray-400 hover:text-gray-600"><svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg></button>
+<div *ngIf="showPayModal" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4">
+  <div class="bg-white/95 dark:bg-slate-800/95 backdrop-blur-xl rounded-2xl shadow-2xl border border-slate-100 dark:border-slate-700 w-full max-w-md">
+    <div class="flex items-center justify-between px-5 py-4 border-b border-slate-100/80 dark:border-slate-800/80">
+      <h2 class="font-semibold text-slate-900 dark:text-white">{{ isEditingPay ? 'Editar nómina' : 'Registrar pago de nómina' }}</h2>
+      <button (click)="showPayModal = false" class="text-slate-400 hover:text-slate-600"><svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg></button>
     </div>
     <div class="p-5 grid grid-cols-2 gap-4">
       <div>
-        <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Período *</label>
-        <input [(ngModel)]="payForm.period" class="w-full px-3 py-2 text-sm border border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500 outline-none" placeholder="2026-04"/>
+        <label class="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">Período *</label>
+        <input [(ngModel)]="payForm.period" class="w-full px-3.5 py-2 text-sm bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl border border-slate-200/60 dark:border-slate-700/60 rounded-xl text-slate-700 dark:text-slate-300 focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-400 transition-all shadow-sm" placeholder="2026-04"/>
       </div>
       <div>
-        <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Método de pago</label>
-        <select [(ngModel)]="payForm.payment_method" class="w-full px-3 py-2 text-sm border border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500 outline-none">
+        <label class="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">Método de pago</label>
+        <select [(ngModel)]="payForm.payment_method" class="w-full px-3.5 py-2 text-sm bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl border border-slate-200/60 dark:border-slate-700/60 rounded-xl text-slate-700 dark:text-slate-300 focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-400 transition-all shadow-sm">
           <option value="transferencia">Transferencia</option>
           <option value="efectivo">Efectivo</option>
           <option value="cheque">Cheque</option>
         </select>
       </div>
       <div>
-        <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Salario base</label>
-        <input [(ngModel)]="payForm.base_salary" type="number" class="w-full px-3 py-2 text-sm border border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500 outline-none" placeholder="0"/>
+        <label class="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">Salario base</label>
+        <input [(ngModel)]="payForm.base_salary" type="number" class="w-full px-3.5 py-2 text-sm bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl border border-slate-200/60 dark:border-slate-700/60 rounded-xl text-slate-700 dark:text-slate-300 focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-400 transition-all shadow-sm" placeholder="0"/>
       </div>
       <div>
-        <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Bonificaciones</label>
-        <input [(ngModel)]="payForm.bonuses" type="number" class="w-full px-3 py-2 text-sm border border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500 outline-none" placeholder="0"/>
+        <label class="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">Bonificaciones</label>
+        <input [(ngModel)]="payForm.bonuses" type="number" class="w-full px-3.5 py-2 text-sm bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl border border-slate-200/60 dark:border-slate-700/60 rounded-xl text-slate-700 dark:text-slate-300 focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-400 transition-all shadow-sm" placeholder="0"/>
       </div>
       <div>
-        <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Deducciones</label>
-        <input [(ngModel)]="payForm.deductions" type="number" class="w-full px-3 py-2 text-sm border border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500 outline-none" placeholder="0"/>
+        <label class="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">Deducciones</label>
+        <input [(ngModel)]="payForm.deductions" type="number" class="w-full px-3.5 py-2 text-sm bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl border border-slate-200/60 dark:border-slate-700/60 rounded-xl text-slate-700 dark:text-slate-300 focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-400 transition-all shadow-sm" placeholder="0"/>
       </div>
       <div>
-        <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Total pagado *</label>
-        <input [(ngModel)]="payForm.total_paid" type="number" class="w-full px-3 py-2 text-sm border border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500 outline-none" placeholder="0"/>
+        <label class="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">Total pagado *</label>
+        <input [(ngModel)]="payForm.total_paid" type="number" class="w-full px-3.5 py-2 text-sm bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl border border-slate-200/60 dark:border-slate-700/60 rounded-xl text-slate-700 dark:text-slate-300 focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-400 transition-all shadow-sm" placeholder="0"/>
       </div>
       <div>
-        <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Fecha de pago</label>
-        <input [(ngModel)]="payForm.payment_date" type="date" class="w-full px-3 py-2 text-sm border border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500 outline-none"/>
+        <label class="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">Fecha de pago</label>
+        <input [(ngModel)]="payForm.payment_date" type="date" class="w-full px-3.5 py-2 text-sm bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl border border-slate-200/60 dark:border-slate-700/60 rounded-xl text-slate-700 dark:text-slate-300 focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-400 transition-all shadow-sm"/>
       </div>
       <div></div>
       <div class="col-span-2">
-        <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Notas</label>
-        <textarea [(ngModel)]="payForm.notes" rows="2" class="w-full px-3 py-2 text-sm border border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500 outline-none resize-none" placeholder="Observaciones..."></textarea>
+        <label class="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">Notas</label>
+        <textarea [(ngModel)]="payForm.notes" rows="2" class="w-full px-3.5 py-2 text-sm bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl border border-slate-200/60 dark:border-slate-700/60 rounded-xl text-slate-700 dark:text-slate-300 focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-400 transition-all shadow-sm resize-none" placeholder="Observaciones..."></textarea>
       </div>
     </div>
     <div class="flex gap-3 px-5 pb-5">
-      <button (click)="showPayModal = false" class="flex-1 px-4 py-2 border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 text-sm rounded-lg hover:bg-gray-50 transition">Cancelar</button>
+      <button (click)="showPayModal = false" class="flex-1 px-4 py-2 border border-slate-200/60 dark:border-slate-700/60 text-slate-700 dark:text-slate-300 text-sm rounded-lg hover:bg-slate-50/80 transition">Cancelar</button>
       <button (click)="savePayroll()" [disabled]="isSaving" class="flex-1 px-4 py-2 bg-green-600 hover:bg-green-700 text-white text-sm font-medium rounded-lg transition disabled:opacity-50">
         {{ isSaving ? 'Guardando...' : 'Guardar' }}
       </button>
@@ -619,17 +619,17 @@
 </div>
 
 <!-- Confirmar eliminar empleado -->
-<div *ngIf="deleteEmpId" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
-  <div class="bg-white dark:bg-gray-900 rounded-2xl w-full max-w-sm shadow-2xl p-6 text-center">
+<div *ngIf="deleteEmpId" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4">
+  <div class="bg-white/95 dark:bg-slate-800/95 backdrop-blur-xl rounded-2xl shadow-2xl border border-slate-100 dark:border-slate-700 w-full max-w-sm p-6 text-center">
     <div class="w-12 h-12 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
       <svg class="w-6 h-6 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
       </svg>
     </div>
-    <h3 class="font-semibold text-gray-900 dark:text-white mb-1">Eliminar empleado</h3>
-    <p class="text-sm text-gray-500 mb-6">Se eliminarán también todos sus registros asociados. Esta acción no se puede deshacer.</p>
+    <h3 class="font-semibold text-slate-900 dark:text-white mb-1">Eliminar empleado</h3>
+    <p class="text-sm text-slate-500 mb-6">Se eliminarán también todos sus registros asociados. Esta acción no se puede deshacer.</p>
     <div class="flex gap-3">
-      <button (click)="cancelDeleteEmp()" class="flex-1 px-4 py-2 border border-gray-200 dark:border-gray-700 text-sm rounded-lg hover:bg-gray-50 transition">Cancelar</button>
+      <button (click)="cancelDeleteEmp()" class="flex-1 px-4 py-2 border border-slate-200/60 dark:border-slate-700/60 text-sm rounded-lg hover:bg-slate-50/80 transition">Cancelar</button>
       <button (click)="deleteEmployee()" [disabled]="isDeleting" class="flex-1 px-4 py-2 bg-red-600 text-white text-sm font-medium rounded-lg hover:bg-red-700 transition disabled:opacity-50">
         {{ isDeleting ? 'Eliminando...' : 'Eliminar' }}
       </button>
@@ -638,36 +638,36 @@
 </div>
 
 <!-- Confirmar eliminar dotación -->
-<div *ngIf="deleteEqId" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
-  <div class="bg-white dark:bg-gray-900 rounded-2xl w-full max-w-sm shadow-2xl p-6 text-center">
-    <p class="font-semibold text-gray-900 dark:text-white mb-1">¿Eliminar esta dotación?</p>
-    <p class="text-sm text-gray-500 mb-5">Esta acción no se puede deshacer.</p>
+<div *ngIf="deleteEqId" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4">
+  <div class="bg-white/95 dark:bg-slate-800/95 backdrop-blur-xl rounded-2xl shadow-2xl border border-slate-100 dark:border-slate-700 w-full max-w-sm p-6 text-center">
+    <p class="font-semibold text-slate-900 dark:text-white mb-1">¿Eliminar esta dotación?</p>
+    <p class="text-sm text-slate-500 mb-5">Esta acción no se puede deshacer.</p>
     <div class="flex gap-3">
-      <button (click)="cancelDeleteEq()" class="flex-1 px-4 py-2 border border-gray-200 dark:border-gray-700 text-sm rounded-lg hover:bg-gray-50 transition">Cancelar</button>
+      <button (click)="cancelDeleteEq()" class="flex-1 px-4 py-2 border border-slate-200/60 dark:border-slate-700/60 text-sm rounded-lg hover:bg-slate-50/80 transition">Cancelar</button>
       <button (click)="deleteEquipment()" class="flex-1 px-4 py-2 bg-red-600 text-white text-sm font-medium rounded-lg hover:bg-red-700 transition">Eliminar</button>
     </div>
   </div>
 </div>
 
 <!-- Confirmar eliminar descargo -->
-<div *ngIf="deleteDiscId" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
-  <div class="bg-white dark:bg-gray-900 rounded-2xl w-full max-w-sm shadow-2xl p-6 text-center">
-    <p class="font-semibold text-gray-900 dark:text-white mb-1">¿Eliminar este descargo?</p>
-    <p class="text-sm text-gray-500 mb-5">Esta acción no se puede deshacer.</p>
+<div *ngIf="deleteDiscId" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4">
+  <div class="bg-white/95 dark:bg-slate-800/95 backdrop-blur-xl rounded-2xl shadow-2xl border border-slate-100 dark:border-slate-700 w-full max-w-sm p-6 text-center">
+    <p class="font-semibold text-slate-900 dark:text-white mb-1">¿Eliminar este descargo?</p>
+    <p class="text-sm text-slate-500 mb-5">Esta acción no se puede deshacer.</p>
     <div class="flex gap-3">
-      <button (click)="cancelDeleteDisc()" class="flex-1 px-4 py-2 border border-gray-200 dark:border-gray-700 text-sm rounded-lg hover:bg-gray-50 transition">Cancelar</button>
+      <button (click)="cancelDeleteDisc()" class="flex-1 px-4 py-2 border border-slate-200/60 dark:border-slate-700/60 text-sm rounded-lg hover:bg-slate-50/80 transition">Cancelar</button>
       <button (click)="deleteDisciplinary()" class="flex-1 px-4 py-2 bg-red-600 text-white text-sm font-medium rounded-lg hover:bg-red-700 transition">Eliminar</button>
     </div>
   </div>
 </div>
 
 <!-- Confirmar eliminar nómina -->
-<div *ngIf="deletePayId" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
-  <div class="bg-white dark:bg-gray-900 rounded-2xl w-full max-w-sm shadow-2xl p-6 text-center">
-    <p class="font-semibold text-gray-900 dark:text-white mb-1">¿Eliminar este registro de nómina?</p>
-    <p class="text-sm text-gray-500 mb-5">Esta acción no se puede deshacer.</p>
+<div *ngIf="deletePayId" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4">
+  <div class="bg-white/95 dark:bg-slate-800/95 backdrop-blur-xl rounded-2xl shadow-2xl border border-slate-100 dark:border-slate-700 w-full max-w-sm p-6 text-center">
+    <p class="font-semibold text-slate-900 dark:text-white mb-1">¿Eliminar este registro de nómina?</p>
+    <p class="text-sm text-slate-500 mb-5">Esta acción no se puede deshacer.</p>
     <div class="flex gap-3">
-      <button (click)="cancelDeletePay()" class="flex-1 px-4 py-2 border border-gray-200 dark:border-gray-700 text-sm rounded-lg hover:bg-gray-50 transition">Cancelar</button>
+      <button (click)="cancelDeletePay()" class="flex-1 px-4 py-2 border border-slate-200/60 dark:border-slate-700/60 text-sm rounded-lg hover:bg-slate-50/80 transition">Cancelar</button>
       <button (click)="deletePayroll()" class="flex-1 px-4 py-2 bg-red-600 text-white text-sm font-medium rounded-lg hover:bg-red-700 transition">Eliminar</button>
     </div>
   </div>

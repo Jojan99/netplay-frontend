@@ -2,8 +2,8 @@
 
   <!-- Header -->
   <div>
-    <h1 class="text-xl font-bold text-gray-800 dark:text-white">Service Ports</h1>
-    <p class="text-sm text-gray-500 dark:text-gray-400 mt-0.5">Consulta los service-ports asignados a una ONT específica.</p>
+    <h1 class="text-2xl font-bold bg-gradient-to-r from-slate-800 to-slate-600 bg-clip-text text-transparent dark:from-white dark:to-slate-300">Service Ports</h1>
+    <p class="text-sm text-slate-500 dark:text-slate-400 mt-0.5">Consulta los service-ports asignados a una ONT específica.</p>
   </div>
 
   <!-- Selectors row -->
@@ -11,10 +11,10 @@
 
     <!-- OLT selector -->
     <div class="flex-1">
-      <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1 uppercase tracking-wide">OLT</label>
+      <label class="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1 uppercase tracking-wider">OLT</label>
       <select [(ngModel)]="selectedOltId" (ngModelChange)="onOltChange()"
               [disabled]="loadingOlts"
-              class="w-full text-sm px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500">
+              class="w-full px-3.5 py-2 text-sm bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl border border-slate-200/60 dark:border-slate-700/60 rounded-xl text-slate-700 dark:text-slate-300 focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-400 transition-all shadow-sm">
         <option [ngValue]="null">{{ loadingOlts ? 'Cargando...' : 'Seleccionar OLT' }}</option>
         <option *ngFor="let olt of olts" [ngValue]="olt.id">{{ olt.name }}</option>
       </select>
@@ -22,10 +22,10 @@
 
     <!-- ONT selector -->
     <div class="flex-1">
-      <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1 uppercase tracking-wide">ONT</label>
+      <label class="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1 uppercase tracking-wider">ONT</label>
       <select [(ngModel)]="selectedOnt" (ngModelChange)="onOntChange()"
               [disabled]="!selectedOltId || loadingOnts || onts.length === 0"
-              class="w-full text-sm px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500">
+              class="w-full px-3.5 py-2 text-sm bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl border border-slate-200/60 dark:border-slate-700/60 rounded-xl text-slate-700 dark:text-slate-300 focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-400 transition-all shadow-sm">
         <option [ngValue]="null">
           {{ !selectedOltId ? 'Selecciona una OLT primero' : loadingOnts ? 'Cargando ONTs...' : 'Seleccionar ONT' }}
         </option>
@@ -38,7 +38,7 @@
     <!-- Refresh -->
     <div class="flex items-end">
       <button (click)="loadPorts()" [disabled]="!selectedOnt || loadingPorts"
-              class="flex items-center gap-1.5 px-3 py-2 text-sm bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white rounded-lg transition-colors h-[38px]">
+              class="flex items-center gap-1.5 px-3 py-2 text-sm bg-gradient-to-br from-indigo-500 to-violet-600 text-white shadow-md shadow-indigo-500/20 hover:shadow-lg transition-all disabled:opacity-50 rounded-lg h-[38px]">
         <svg *ngIf="!loadingPorts" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
           <path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182m0-4.991v4.99"/>
         </svg>
@@ -53,7 +53,7 @@
 
   <!-- Placeholder -->
   <div *ngIf="!selectedOnt"
-       class="flex flex-col items-center justify-center py-20 text-gray-400">
+       class="flex flex-col items-center justify-center py-20 text-slate-400">
     <svg class="w-14 h-14 mb-3 opacity-40" fill="none" viewBox="0 0 24 24" stroke-width="1" stroke="currentColor">
       <path stroke-linecap="round" stroke-linejoin="round" d="M7.5 21 3 16.5m0 0L7.5 12M3 16.5h13.5m0-13.5L21 7.5m0 0L16.5 12M21 7.5H7.5"/>
     </svg>
@@ -62,7 +62,7 @@
 
   <!-- Loading ports -->
   <div *ngIf="loadingPorts" class="space-y-3 animate-pulse">
-    <div *ngFor="let i of [1,2,3]" class="h-14 bg-gray-200 dark:bg-gray-700 rounded-xl"></div>
+    <div *ngFor="let i of [1,2,3]" class="h-14 bg-slate-200/60 dark:bg-slate-700/60 rounded-xl"></div>
   </div>
 
   <!-- Results -->
@@ -81,7 +81,7 @@
 
     <!-- Empty -->
     <div *ngIf="ports.length === 0"
-         class="flex flex-col items-center justify-center py-12 text-gray-400">
+         class="flex flex-col items-center justify-center py-12 text-slate-400">
       <svg class="w-10 h-10 mb-2 opacity-40" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
         <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/>
       </svg>
@@ -89,9 +89,9 @@
     </div>
 
     <!-- Table -->
-    <div *ngIf="ports.length > 0" class="overflow-x-auto rounded-xl border border-gray-200 dark:border-gray-700">
+    <div *ngIf="ports.length > 0" class="overflow-x-auto rounded-xl border border-slate-200/60 dark:border-slate-700/60">
       <table class="w-full text-sm">
-        <thead class="bg-gray-50 dark:bg-gray-800 text-xs uppercase text-gray-500 dark:text-gray-400">
+        <thead class="bg-slate-50/80 dark:bg-slate-700/80 backdrop-blur-sm text-xs text-slate-500 dark:text-slate-400 uppercase tracking-wider font-bold">
           <tr>
             <th class="px-4 py-3 text-left">Índice SP</th>
             <th class="px-4 py-3 text-left">VLAN</th>
@@ -101,24 +101,24 @@
             <th class="px-4 py-3 text-left">Estado</th>
           </tr>
         </thead>
-        <tbody class="divide-y divide-gray-100 dark:divide-gray-700 bg-white dark:bg-gray-900">
-          <tr *ngFor="let sp of ports" class="hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
+        <tbody class="divide-y divide-slate-100 dark:divide-slate-700/60 bg-white dark:bg-slate-900/80">
+          <tr *ngFor="let sp of ports" class="hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors">
             <td class="px-4 py-3">
               <span class="font-mono text-xs font-semibold bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 px-2 py-1 rounded">
                 {{ sp.index ?? sp.sp_index ?? '—' }}
               </span>
             </td>
-            <td class="px-4 py-3 text-xs font-mono text-gray-700 dark:text-gray-300">{{ sp.vlan ?? '—' }}</td>
+            <td class="px-4 py-3 text-xs font-mono text-slate-700 dark:text-slate-300">{{ sp.vlan ?? '—' }}</td>
             <td class="px-4 py-3">
-              <span class="font-mono text-xs bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 px-2 py-1 rounded">
+              <span class="font-mono text-xs bg-slate-100/80 dark:bg-slate-700/80 text-slate-600 dark:text-slate-300 px-2 py-1 rounded">
                 {{ sp.fsp ?? selectedOnt?.fsp ?? '—' }}
               </span>
             </td>
-            <td class="px-4 py-3 text-xs text-gray-500 dark:text-gray-400">{{ sp.ont_id ?? selectedOnt?.ont_id }}</td>
-            <td class="px-4 py-3 text-xs text-gray-600 dark:text-gray-300">{{ sp.description ?? sp.desc ?? '—' }}</td>
+            <td class="px-4 py-3 text-xs text-slate-500 dark:text-slate-400">{{ sp.ont_id ?? selectedOnt?.ont_id }}</td>
+            <td class="px-4 py-3 text-xs text-slate-600 dark:text-slate-300">{{ sp.description ?? sp.desc ?? '—' }}</td>
             <td class="px-4 py-3">
               <span class="px-2 py-0.5 text-xs rounded-full font-medium"
-                    [ngClass]="(sp.status === 'online' || sp.admin_state === 'up') ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' : 'bg-gray-100 text-gray-500 dark:bg-gray-700 dark:text-gray-400'">
+                    [ngClass]="(sp.status === 'online' || sp.admin_state === 'up') ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' : 'bg-slate-100/80 text-slate-500 dark:bg-slate-700/80 dark:text-slate-400'">
                 {{ sp.status ?? sp.admin_state ?? 'activo' }}
               </span>
             </td>

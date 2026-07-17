@@ -1,21 +1,21 @@
 <div class="p-6 max-w-4xl mx-auto">
 
   <!-- Tabs -->
-  <div class="flex gap-1 mb-6 border-b border-gray-200 dark:border-gray-700">
+  <div class="flex gap-1 mb-6 border-b border-slate-200/60 dark:border-slate-700/60">
     <button (click)="activeTab = 'billing'"
-            [class]="activeTab === 'billing' ? 'px-4 py-2 text-sm font-medium text-blue-600 border-b-2 border-blue-600' : 'px-4 py-2 text-sm font-medium text-gray-500 hover:text-gray-700'">
+            [class]="activeTab === 'billing' ? 'px-4 py-2 text-sm font-medium border-b-2 border-indigo-500 text-indigo-600 dark:text-indigo-400 font-bold' : 'px-4 py-2 text-sm font-medium text-slate-500 dark:text-slate-400 hover:text-slate-700'">
       Grupos de facturación
     </button>
     <button (click)="activeTab = 'invoice'"
-            [class]="activeTab === 'invoice' ? 'px-4 py-2 text-sm font-medium text-blue-600 border-b-2 border-blue-600' : 'px-4 py-2 text-sm font-medium text-gray-500 hover:text-gray-700'">
+            [class]="activeTab === 'invoice' ? 'px-4 py-2 text-sm font-medium border-b-2 border-indigo-500 text-indigo-600 dark:text-indigo-400 font-bold' : 'px-4 py-2 text-sm font-medium text-slate-500 dark:text-slate-400 hover:text-slate-700'">
       Plantilla de factura
     </button>
     <button (click)="activeTab = 'payment-methods'"
-            [class]="activeTab === 'payment-methods' ? 'px-4 py-2 text-sm font-medium text-blue-600 border-b-2 border-blue-600' : 'px-4 py-2 text-sm font-medium text-gray-500 hover:text-gray-700'">
+            [class]="activeTab === 'payment-methods' ? 'px-4 py-2 text-sm font-medium border-b-2 border-indigo-500 text-indigo-600 dark:text-indigo-400 font-bold' : 'px-4 py-2 text-sm font-medium text-slate-500 dark:text-slate-400 hover:text-slate-700'">
       Métodos de pago
     </button>
     <button (click)="activeTab = 'gateway'; loadGatewayConfig()"
-            [class]="activeTab === 'gateway' ? 'px-4 py-2 text-sm font-medium text-blue-600 border-b-2 border-blue-600' : 'px-4 py-2 text-sm font-medium text-gray-500 hover:text-gray-700'">
+            [class]="activeTab === 'gateway' ? 'px-4 py-2 text-sm font-medium border-b-2 border-indigo-500 text-indigo-600 dark:text-indigo-400 font-bold' : 'px-4 py-2 text-sm font-medium text-slate-500 dark:text-slate-400 hover:text-slate-700'">
       Pasarela online
     </button>
   </div>
@@ -23,39 +23,39 @@
   <!-- ═══════════════ INVOICE CONFIG TAB ═══════════════ -->
   <ng-container *ngIf="activeTab === 'invoice'">
     <div class="mb-6">
-      <h1 class="text-2xl font-bold text-gray-800 dark:text-white">Plantilla de factura</h1>
-      <p class="text-sm text-gray-500 dark:text-gray-400">
+      <h1 class="text-2xl font-bold bg-gradient-to-r from-slate-800 to-slate-600 bg-clip-text text-transparent dark:from-white dark:to-slate-300">Plantilla de factura</h1>
+      <p class="text-sm text-slate-500 dark:text-slate-400">
         Personaliza los datos de tu empresa que aparecen en cada factura generada.
       </p>
     </div>
 
-    <div *ngIf="invoiceSuccess" class="flex items-center gap-2 p-4 mb-5 text-sm text-green-700 bg-green-50 rounded-lg dark:bg-green-900/20 dark:text-green-400">
+    <div *ngIf="invoiceSuccess" class="flex items-center gap-2 p-4 mb-5 text-sm text-emerald-800 bg-white border border-emerald-200 rounded-2xl backdrop-blur-xl shadow-emerald-500/10 dark:bg-slate-800/80 dark:border-emerald-800/60 dark:text-emerald-300">
       {{ invoiceSuccess }}
     </div>
-    <div *ngIf="invoiceError" class="flex items-center gap-2 p-4 mb-5 text-sm text-red-700 bg-red-50 rounded-lg dark:bg-red-900/20 dark:text-red-400">
+    <div *ngIf="invoiceError" class="flex items-center gap-2 p-4 mb-5 text-sm text-red-800 bg-white border border-red-200 rounded-2xl backdrop-blur-xl shadow-red-500/10 dark:bg-slate-800/80 dark:border-red-800/60 dark:text-red-300">
       {{ invoiceError }}
     </div>
 
-    <div *ngIf="invoiceLoading" class="text-center py-10 text-gray-400">Cargando...</div>
+    <div *ngIf="invoiceLoading" class="text-center py-10 text-slate-400">Cargando...</div>
 
     <!-- ══ Plantilla activa / editor ══ -->
     <div *ngIf="!invoiceLoading" class="mb-8">
       <div class="flex items-center justify-between mb-3">
-        <h2 class="text-lg font-semibold text-gray-800 dark:text-white">Diseño de plantilla</h2>
+        <h2 class="text-lg font-semibold text-slate-800 dark:text-white">Diseño de plantilla</h2>
         <button (click)="showTemplateEditor = !showTemplateEditor"
                 class="text-sm px-4 py-2 rounded-lg bg-indigo-50 text-indigo-700 dark:bg-indigo-900/20 dark:text-indigo-300 hover:bg-indigo-100 transition">
           {{ showTemplateEditor ? 'Ocultar editor' : (invoiceTemplate ? 'Editar plantilla' : 'Crear plantilla') }}
         </button>
       </div>
 
-      <div *ngIf="!showTemplateEditor && invoiceTemplate" class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4 flex items-center justify-between">
+      <div *ngIf="!showTemplateEditor && invoiceTemplate" class="bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl rounded-2xl border border-slate-200/60 dark:border-slate-700/60 shadow-sm hover:shadow-md transition-all duration-300 p-4 flex items-center justify-between">
         <div class="flex items-center gap-3">
-          <div class="w-10 h-10 rounded-lg bg-gray-100 dark:bg-gray-700 flex items-center justify-center">
-            <svg class="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+            <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-slate-500 to-slate-600 flex items-center justify-center shrink-0 shadow-md shadow-slate-500/20">
+            <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
           </div>
           <div>
-            <p class="text-sm font-medium text-gray-800 dark:text-white">{{ invoiceTemplate.name }}</p>
-            <p class="text-xs text-gray-500 dark:text-gray-400">{{ invoiceTemplate.type | titlecase }}</p>
+            <p class="text-sm font-medium text-slate-800 dark:text-white">{{ invoiceTemplate.name }}</p>
+            <p class="text-xs text-slate-500 dark:text-slate-400">{{ invoiceTemplate.type | titlecase }}</p>
           </div>
         </div>
         <span *ngIf="invoiceTemplate.is_default" class="text-xs px-2 py-1 rounded-full bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300">Por defecto</span>
@@ -70,47 +70,47 @@
       </div>
     </div>
 
-    <hr class="border-gray-200 dark:border-gray-700 mb-8">
+    <hr class="border-slate-200/60 dark:border-slate-700/60 mb-8">
 
     <!-- ══ Canales de envío de facturas ══ -->
     <div class="mb-8">
-      <h2 class="text-lg font-semibold text-gray-800 dark:text-white mb-4">Canales de envío de facturas</h2>
-      <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-5 space-y-4">
+      <h2 class="text-lg font-semibold text-slate-800 dark:text-white mb-4">Canales de envío de facturas</h2>
+      <div class="bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl rounded-2xl border border-slate-200/60 dark:border-slate-700/60 shadow-sm hover:shadow-md transition-all duration-300 p-5 space-y-4">
         <!-- WhatsApp -->
         <div class="flex items-center justify-between">
           <div class="flex items-center gap-3">
-            <div class="w-10 h-10 rounded-lg bg-green-100 dark:bg-green-900/30 flex items-center justify-center">
-              <svg class="w-5 h-5 text-green-600" fill="currentColor" viewBox="0 0 24 24">
+            <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-teal-500 to-emerald-600 flex items-center justify-center shrink-0 shadow-md shadow-teal-500/20">
+              <svg class="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 24 24">
                 <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
               </svg>
             </div>
             <div>
-              <p class="text-sm font-medium text-gray-800 dark:text-white">WhatsApp</p>
-              <p class="text-xs text-gray-500 dark:text-gray-400">Permite enviar facturas por WhatsApp</p>
+              <p class="text-sm font-medium text-slate-800 dark:text-white">WhatsApp</p>
+              <p class="text-xs text-slate-500 dark:text-slate-400">Permite enviar facturas por WhatsApp</p>
             </div>
           </div>
           <button (click)="invoiceForm.invoice_whatsapp_enabled = !invoiceForm.invoice_whatsapp_enabled"
-                  [class]="invoiceForm.invoice_whatsapp_enabled ? 'bg-green-600' : 'bg-gray-300 dark:bg-gray-600'"
+                  [class]="invoiceForm.invoice_whatsapp_enabled ? 'bg-green-600' : 'bg-slate-300/60 dark:bg-slate-600/60'"
                   class="relative w-12 h-6 rounded-full transition-colors focus:outline-none">
             <span [class]="invoiceForm.invoice_whatsapp_enabled ? 'translate-x-6' : 'translate-x-1'"
                   class="absolute top-1 w-4 h-4 bg-white rounded-full shadow transition-transform block"></span>
           </button>
         </div>
         <!-- Email -->
-        <div class="flex items-center justify-between pt-4 border-t border-gray-100 dark:border-gray-700">
+        <div class="flex items-center justify-between pt-4 border-t border-slate-100/80 dark:border-slate-700/60">
           <div class="flex items-center gap-3">
-            <div class="w-10 h-10 rounded-lg bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
-              <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-violet-500 to-blue-600 flex items-center justify-center shrink-0 shadow-md shadow-violet-500/20">
+              <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
               </svg>
             </div>
             <div>
-              <p class="text-sm font-medium text-gray-800 dark:text-white">Correo electrónico</p>
-              <p class="text-xs text-gray-500 dark:text-gray-400">Permite enviar facturas por email con Mailjet</p>
+              <p class="text-sm font-medium text-slate-800 dark:text-white">Correo electrónico</p>
+              <p class="text-xs text-slate-500 dark:text-slate-400">Permite enviar facturas por email con Mailjet</p>
             </div>
           </div>
           <button (click)="invoiceForm.email_enabled = !invoiceForm.email_enabled"
-                  [class]="invoiceForm.email_enabled ? 'bg-blue-600' : 'bg-gray-300 dark:bg-gray-600'"
+                  [class]="invoiceForm.email_enabled ? 'bg-blue-600' : 'bg-slate-300/60 dark:bg-slate-600/60'"
                   class="relative w-12 h-6 rounded-full transition-colors focus:outline-none">
             <span [class]="invoiceForm.email_enabled ? 'translate-x-6' : 'translate-x-1'"
                   class="absolute top-1 w-4 h-4 bg-white rounded-full shadow transition-transform block"></span>
@@ -118,11 +118,11 @@
         </div>
 
         <!-- Límite diario de emails (solo visible si email está habilitado) -->
-        <div *ngIf="invoiceForm.email_enabled" class="pt-3 border-t border-gray-100 dark:border-gray-700">
+        <div *ngIf="invoiceForm.email_enabled" class="pt-3 border-t border-slate-100/80 dark:border-slate-700/60">
           <div class="flex items-center justify-between">
             <div>
-              <p class="text-sm font-medium text-gray-700 dark:text-gray-300">Límite diario de emails</p>
-              <p class="text-xs text-gray-500 dark:text-gray-400">0 = sin límite. Cantidad máxima de facturas enviadas por email cada día.</p>
+              <p class="text-sm font-medium text-slate-700 dark:text-slate-300">Límite diario de emails</p>
+              <p class="text-xs text-slate-500 dark:text-slate-400">0 = sin límite. Cantidad máxima de facturas enviadas por email cada día.</p>
             </div>
             <div class="flex items-center gap-2">
               <input
@@ -132,16 +132,16 @@
                 min="0"
                 step="1"
                 placeholder="0"
-                class="w-24 text-sm rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-800 dark:text-white px-3 py-2 text-right focus:outline-none focus:ring-2 focus:ring-blue-500"
+                class="w-24 text-sm rounded-lg border border-slate-300/60 dark:border-slate-600/60 bg-white dark:bg-slate-700/80 text-slate-800 dark:text-white px-3 py-2 text-right focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-400"
               />
-              <span class="text-xs text-gray-500 dark:text-gray-400">/ día</span>
+              <span class="text-xs text-slate-500 dark:text-slate-400">/ día</span>
             </div>
           </div>
         </div>
       </div>
     </div>
 
-    <hr class="border-gray-200 dark:border-gray-700 mb-8">
+    <hr class="border-slate-200/60 dark:border-slate-700/60 mb-8">
 
     <form *ngIf="!invoiceLoading" (ngSubmit)="saveInvoiceConfig()" class="space-y-5">
 
@@ -149,50 +149,50 @@
 
         <!-- Razon Social -->
         <div>
-          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Razón Social</label>
+          <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Razón Social</label>
           <input type="text" [(ngModel)]="invoiceForm.invoice_business_name" name="invoice_business_name"
-                 class="w-full text-sm rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-800 dark:text-white px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                 class="w-full text-sm rounded-lg border border-slate-300/60 dark:border-slate-600/60 bg-white dark:bg-slate-700/80 text-slate-800 dark:text-white px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-400">
         </div>
 
         <!-- NIT -->
         <div>
-          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">NIT / Identificación</label>
+          <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">NIT / Identificación</label>
           <input type="text" [(ngModel)]="invoiceForm.invoice_nit" name="invoice_nit"
-                 class="w-full text-sm rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-800 dark:text-white px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                 class="w-full text-sm rounded-lg border border-slate-300/60 dark:border-slate-600/60 bg-white dark:bg-slate-700/80 text-slate-800 dark:text-white px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-400">
         </div>
 
         <!-- Teléfono -->
         <div>
-          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Teléfono</label>
+          <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Teléfono</label>
           <input type="text" [(ngModel)]="invoiceForm.invoice_phone" name="invoice_phone"
-                 class="w-full text-sm rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-800 dark:text-white px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                 class="w-full text-sm rounded-lg border border-slate-300/60 dark:border-slate-600/60 bg-white dark:bg-slate-700/80 text-slate-800 dark:text-white px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-400">
         </div>
 
         <!-- Ciudad -->
         <div>
-          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Ciudad / Municipio</label>
+          <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Ciudad / Municipio</label>
           <input type="text" [(ngModel)]="invoiceForm.invoice_city" name="invoice_city"
-                 class="w-full text-sm rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-800 dark:text-white px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                 class="w-full text-sm rounded-lg border border-slate-300/60 dark:border-slate-600/60 bg-white dark:bg-slate-700/80 text-slate-800 dark:text-white px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-400">
         </div>
 
         <!-- País -->
         <div>
-          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">País</label>
+          <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">País</label>
           <input type="text" [(ngModel)]="invoiceForm.invoice_country" name="invoice_country"
-                 class="w-full text-sm rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-800 dark:text-white px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                 class="w-full text-sm rounded-lg border border-slate-300/60 dark:border-slate-600/60 bg-white dark:bg-slate-700/80 text-slate-800 dark:text-white px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-400">
         </div>
 
         <!-- Prefijo de factura (consecutivo) -->
         <div>
-          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+          <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
             Prefijo de factura
-            <span class="ml-1 text-xs text-gray-400 font-normal">(máx. 10 caracteres)</span>
+            <span class="ml-1 text-xs text-slate-400 font-normal">(máx. 10 caracteres)</span>
           </label>
           <div class="flex items-center gap-2">
             <input type="text" [(ngModel)]="invoiceForm.invoice_prefix" name="invoice_prefix"
                    maxlength="10" placeholder="GL"
-                   class="w-full text-sm rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-800 dark:text-white px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 uppercase">
-            <span class="text-sm text-gray-500 dark:text-gray-400 whitespace-nowrap">
+                   class="w-full text-sm rounded-lg border border-slate-300/60 dark:border-slate-600/60 bg-white dark:bg-slate-700/80 text-slate-800 dark:text-white px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-400 uppercase">
+            <span class="text-sm text-slate-500 dark:text-slate-400 whitespace-nowrap">
               Ej: <strong>{{ invoiceForm.invoice_prefix || 'GL' }}1</strong>, {{ invoiceForm.invoice_prefix || 'GL' }}2...
             </span>
           </div>
@@ -200,9 +200,9 @@
 
         <!-- Condición IVA -->
         <div>
-          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Condición IVA</label>
+          <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Condición IVA</label>
           <select [(ngModel)]="invoiceForm.invoice_iva_condition" name="invoice_iva_condition"
-                  class="w-full text-sm rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-800 dark:text-white px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                  class="w-full text-sm rounded-lg border border-slate-300/60 dark:border-slate-600/60 bg-white dark:bg-slate-700/80 text-slate-800 dark:text-white px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-400">
             <option value="No Aplica">No Aplica</option>
             <option value="Responsable de IVA">Responsable de IVA</option>
             <option value="No responsable de IVA">No responsable de IVA</option>
@@ -212,30 +212,30 @@
 
         <!-- Actividad Económica -->
         <div class="md:col-span-2">
-          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Actividad Económica</label>
+          <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Actividad Económica</label>
           <input type="text" [(ngModel)]="invoiceForm.invoice_economic_activity" name="invoice_economic_activity"
                  placeholder="Ej: 6110 - Actividades de telecomunicaciones alámbricas"
-                 class="w-full text-sm rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-800 dark:text-white px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                 class="w-full text-sm rounded-lg border border-slate-300/60 dark:border-slate-600/60 bg-white dark:bg-slate-700/80 text-slate-800 dark:text-white px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-400">
         </div>
 
         <!-- Dirección -->
         <div class="md:col-span-2">
-          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Dirección</label>
+          <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Dirección</label>
           <input type="text" [(ngModel)]="invoiceForm.invoice_address" name="invoice_address"
-                 class="w-full text-sm rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-800 dark:text-white px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                 class="w-full text-sm rounded-lg border border-slate-300/60 dark:border-slate-600/60 bg-white dark:bg-slate-700/80 text-slate-800 dark:text-white px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-400">
         </div>
 
         <!-- Logo upload -->
         <div class="md:col-span-2">
-          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Logo de la empresa</label>
+          <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Logo de la empresa</label>
 
           <!-- Preview -->
           <div class="flex items-center gap-4 mb-3">
-            <div class="w-24 h-16 rounded-lg border border-gray-200 dark:border-gray-600 bg-white flex items-center justify-center overflow-hidden p-1">
+            <div class="w-24 h-16 rounded-lg border border-slate-200/60 dark:border-slate-600/60 bg-white flex items-center justify-center overflow-hidden p-1">
               <img *ngIf="invoiceForm.invoice_logo_url; else noLogo" [src]="invoiceForm.invoice_logo_url"
                    class="h-full w-full object-contain" alt="Logo">
               <ng-template #noLogo>
-                <svg class="w-8 h-8 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <svg class="w-8 h-8 text-slate-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
                 </svg>
               </ng-template>
@@ -249,7 +249,7 @@
                 <input type="file" accept="image/png,image/jpeg,image/jpg" class="hidden" [disabled]="logoUploading"
                        (change)="onLogoFileChange($event)">
               </label>
-              <p class="text-xs text-gray-400 mt-1">JPG o PNG, máx. 2 MB.</p>
+              <p class="text-xs text-slate-400 mt-1">JPG o PNG, máx. 2 MB.</p>
               <p *ngIf="logoUploadError" class="text-xs text-red-500 mt-1">{{ logoUploadError }}</p>
             </div>
           </div>
@@ -257,31 +257,31 @@
           <!-- URL manual como fallback -->
           <input type="url" [(ngModel)]="invoiceForm.invoice_logo_url" name="invoice_logo_url"
                  placeholder="O pega la URL del logo aquí"
-                 class="w-full text-sm rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-800 dark:text-white px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                 class="w-full text-sm rounded-lg border border-slate-300/60 dark:border-slate-600/60 bg-white dark:bg-slate-700/80 text-slate-800 dark:text-white px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-400">
         </div>
 
         <!-- Métodos de pago -->
         <div class="md:col-span-2">
-          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Información de pago</label>
+          <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Información de pago</label>
           <textarea [(ngModel)]="invoiceForm.invoice_payment_info" name="invoice_payment_info" rows="4"
                     placeholder="- BANCOLOMBIA CTA AHO 47800013328&#10;- NEQUI 3022042294"
-                    class="w-full text-sm rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-800 dark:text-white px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-y"></textarea>
-          <p class="text-xs text-gray-400 mt-1">Aparece al pie de la factura. Usa saltos de línea para listar los medios de pago.</p>
+                    class="w-full text-sm rounded-lg border border-slate-300/60 dark:border-slate-600/60 bg-white dark:bg-slate-700/80 text-slate-800 dark:text-white px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-400 resize-y"></textarea>
+          <p class="text-xs text-slate-400 mt-1">Aparece al pie de la factura. Usa saltos de línea para listar los medios de pago.</p>
         </div>
 
         <!-- Pie de página -->
         <div class="md:col-span-2">
-          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Pie de página / Mensaje final</label>
+          <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Pie de página / Mensaje final</label>
           <input type="text" [(ngModel)]="invoiceForm.invoice_footer" name="invoice_footer"
                  placeholder="¡Gracias por preferirnos!"
-                 class="w-full text-sm rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-800 dark:text-white px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                 class="w-full text-sm rounded-lg border border-slate-300/60 dark:border-slate-600/60 bg-white dark:bg-slate-700/80 text-slate-800 dark:text-white px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-400">
         </div>
 
       </div>
 
       <div class="flex justify-end pt-2">
         <button type="submit" [disabled]="invoiceSaving"
-                class="px-6 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-50 rounded-lg transition">
+                class="px-6 py-2 text-sm font-medium text-white bg-gradient-to-br from-indigo-500 to-violet-600 shadow-md shadow-indigo-500/20 hover:shadow-lg transition-all disabled:opacity-50 rounded-lg transition">
           {{ invoiceSaving ? 'Guardando...' : 'Guardar plantilla' }}
         </button>
       </div>
@@ -292,42 +292,42 @@
   <!-- ═══════════════ PAYMENT METHODS TAB ═══════════════ -->
   <ng-container *ngIf="activeTab === 'payment-methods'">
     <div class="mb-6">
-      <h1 class="text-2xl font-bold text-gray-800 dark:text-white">Métodos de pago</h1>
-      <p class="text-sm text-gray-500 dark:text-gray-400">
+      <h1 class="text-2xl font-bold bg-gradient-to-r from-slate-800 to-slate-600 bg-clip-text text-transparent dark:from-white dark:to-slate-300">Métodos de pago</h1>
+      <p class="text-sm text-slate-500 dark:text-slate-400">
         Activa o desactiva los métodos de pago disponibles para cobrar facturas. Si al menos uno está activo, será requerido al registrar un pago.
       </p>
     </div>
 
-    <div *ngIf="pmMsg" class="p-3 mb-4 text-sm text-green-700 bg-green-50 rounded-lg dark:bg-green-900/20 dark:text-green-400">{{ pmMsg }}</div>
-    <div *ngIf="pmError" class="p-3 mb-4 text-sm text-red-700 bg-red-50 rounded-lg dark:bg-red-900/20 dark:text-red-400">{{ pmError }}</div>
+    <div *ngIf="pmMsg" class="p-3 mb-4 text-sm text-emerald-800 bg-white border border-emerald-200 rounded-2xl backdrop-blur-xl shadow-emerald-500/10 dark:bg-slate-800/80 dark:border-emerald-800/60 dark:text-emerald-300">{{ pmMsg }}</div>
+    <div *ngIf="pmError" class="p-3 mb-4 text-sm text-red-800 bg-white border border-red-200 rounded-2xl backdrop-blur-xl shadow-red-500/10 dark:bg-slate-800/80 dark:border-red-800/60 dark:text-red-300">{{ pmError }}</div>
 
     <!-- Create -->
     <div class="flex gap-2 mb-6">
       <input type="text" [(ngModel)]="newPmName" placeholder="Nombre del método (ej. Nequi)"
-             class="flex-1 text-sm rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-800 dark:text-white px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+             class="flex-1 text-sm rounded-lg border border-slate-300/60 dark:border-slate-600/60 bg-white dark:bg-slate-700/80 text-slate-800 dark:text-white px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-400">
       <button (click)="createPaymentMethod()" [disabled]="pmCreating || !newPmName.trim()"
-              class="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-50 rounded-lg">
+              class="px-4 py-2 text-sm font-medium text-white bg-gradient-to-br from-indigo-500 to-violet-600 shadow-md shadow-indigo-500/20 hover:shadow-lg transition-all disabled:opacity-50 rounded-lg">
         {{ pmCreating ? 'Creando...' : 'Agregar' }}
       </button>
     </div>
 
-    <div *ngIf="pmLoading" class="text-center py-10 text-gray-400">Cargando...</div>
+    <div *ngIf="pmLoading" class="text-center py-10 text-slate-400">Cargando...</div>
 
     <div *ngIf="!pmLoading" class="space-y-3">
       <div *ngFor="let pm of paymentMethods"
-           class="flex items-center justify-between p-4 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700">
+           class="flex items-center justify-between p-4 bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl rounded-2xl border border-slate-200/60 dark:border-slate-700/60 shadow-sm hover:shadow-md transition-all duration-300">
 
         <ng-container *ngIf="editPmId !== pm.id">
           <div class="flex items-center gap-3">
             <!-- Toggle -->
             <button (click)="togglePaymentMethod(pm)" class="relative inline-flex h-6 w-11 items-center rounded-full transition-colors"
-                    [class]="pm.active ? 'bg-blue-600' : 'bg-gray-300 dark:bg-gray-600'">
+                    [class]="pm.active ? 'bg-blue-600' : 'bg-slate-300/60 dark:bg-slate-600/60'">
               <span class="inline-block h-4 w-4 transform rounded-full bg-white transition-transform"
                     [class]="pm.active ? 'translate-x-6' : 'translate-x-1'"></span>
             </button>
-            <span class="text-sm font-medium text-gray-800 dark:text-white">{{ pm.name }}</span>
+            <span class="text-sm font-medium text-slate-800 dark:text-white">{{ pm.name }}</span>
             <span *ngIf="pm.active" class="text-xs text-green-600 dark:text-green-400">Activo</span>
-            <span *ngIf="!pm.active" class="text-xs text-gray-400">Inactivo</span>
+            <span *ngIf="!pm.active" class="text-xs text-slate-400">Inactivo</span>
           </div>
           <div class="flex gap-2">
             <button (click)="startEditPm(pm)" class="text-xs text-blue-600 hover:underline">Editar</button>
@@ -337,16 +337,16 @@
 
         <ng-container *ngIf="editPmId === pm.id">
           <input type="text" [(ngModel)]="editPmName"
-                 class="flex-1 text-sm rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-800 dark:text-white px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-blue-500 mr-3">
+                 class="flex-1 text-sm rounded-lg border border-slate-300/60 dark:border-slate-600/60 bg-white dark:bg-slate-700/80 text-slate-800 dark:text-white px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-400 mr-3">
           <div class="flex gap-2">
             <button (click)="saveEditPm()" [disabled]="pmUpdating"
-                    class="text-xs px-3 py-1.5 bg-blue-600 text-white rounded-lg disabled:opacity-50">Guardar</button>
-            <button (click)="cancelEditPm()" class="text-xs px-3 py-1.5 bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-gray-200 rounded-lg">Cancelar</button>
+                    class="text-xs px-3 py-1.5 bg-gradient-to-br from-indigo-500 to-violet-600 shadow-md shadow-indigo-500/20 hover:shadow-lg transition-all text-white rounded-lg disabled:opacity-50">Guardar</button>
+            <button (click)="cancelEditPm()" class="text-xs px-3 py-1.5 bg-slate-200/60 dark:bg-slate-600/60 text-slate-700 dark:text-slate-200 rounded-lg">Cancelar</button>
           </div>
         </ng-container>
       </div>
 
-      <p *ngIf="paymentMethods.length === 0" class="text-sm text-gray-400 text-center py-6">
+      <p *ngIf="paymentMethods.length === 0" class="text-sm text-slate-400 text-center py-6">
         No hay métodos de pago configurados aún.
       </p>
     </div>
@@ -357,8 +357,8 @@
 
   <!-- Header -->
   <div class="mb-6">
-    <h1 class="text-2xl font-bold text-gray-800 dark:text-white">Configuración de facturación</h1>
-    <p class="text-sm text-gray-500 dark:text-gray-400">
+      <h1 class="text-2xl font-bold bg-gradient-to-r from-slate-800 to-slate-600 bg-clip-text text-transparent dark:from-white dark:to-slate-300">Configuración de facturación</h1>
+    <p class="text-sm text-slate-500 dark:text-slate-400">
       Define hasta 4 grupos de corte con su día, hora y si se ejecutan automáticamente.
     </p>
   </div>
@@ -378,29 +378,28 @@
 
   <!-- Loading -->
   <div *ngIf="isLoading" class="flex justify-center py-16">
-    <svg class="w-8 h-8 animate-spin text-blue-600" fill="none" viewBox="0 0 24 24">
-      <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
-      <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"/>
-    </svg>
+    <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center animate-pulse shadow-lg shadow-indigo-500/30">
+      <svg class="w-5 h-5 text-white animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"/></svg>
+    </div>
   </div>
 
   <!-- Grupos -->
   <div *ngIf="!isLoading" class="space-y-4 mb-6">
 
     <div *ngFor="let s of schedules; let i = index"
-         class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-6">
+         class="bg-white dark:bg-slate-800/80 rounded-xl shadow-sm border border-slate-100/80 dark:border-slate-700/60 p-6">
 
       <div class="flex items-center justify-between mb-5">
         <div class="flex items-center gap-3">
-          <div class="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center text-white font-bold text-sm">
+          <div class="w-8 h-8 rounded-full bg-gradient-to-br from-violet-500 to-indigo-600 flex items-center justify-center text-white font-bold text-sm">
             {{ s.grupo }}
           </div>
           <div>
-            <span class="font-semibold text-gray-700 dark:text-gray-200">Grupo {{ s.grupo }}</span>
+            <span class="font-semibold text-slate-700 dark:text-slate-200">Grupo {{ s.grupo }}</span>
             <span class="ml-2 text-xs px-2 py-0.5 rounded-full"
                   [ngClass]="(groupUserCounts[s.grupo] ?? 0) > 0
                     ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300'
-                    : 'bg-gray-100 text-gray-500 dark:bg-gray-700 dark:text-gray-400'">
+                    : 'bg-slate-100/80 text-slate-500 dark:bg-slate-700/80 dark:text-slate-400'">
               {{ groupUserCounts[s.grupo] ?? 0 }} usuarios
             </span>
           </div>
@@ -411,7 +410,7 @@
           <label class="flex items-center gap-2 cursor-pointer select-none">
             <div class="relative">
               <input type="checkbox" [(ngModel)]="s.active" class="sr-only">
-              <div [class]="s.active ? 'bg-blue-600' : 'bg-gray-300 dark:bg-gray-600'"
+              <div [class]="s.active ? 'bg-blue-600' : 'bg-slate-300/60 dark:bg-slate-600/60'"
                    class="block w-10 h-6 rounded-full transition-colors duration-200"
                    (click)="s.active = !s.active">
               </div>
@@ -419,7 +418,7 @@
                    class="absolute left-1 top-1 w-4 h-4 rounded-full bg-white shadow transition-transform duration-200">
               </div>
             </div>
-            <span class="text-sm text-gray-600 dark:text-gray-300">{{ s.active ? 'Activo' : 'Inactivo' }}</span>
+            <span class="text-sm text-slate-600 dark:text-slate-300">{{ s.active ? 'Activo' : 'Inactivo' }}</span>
           </label>
 
           <button (click)="removeGroup(i)"
@@ -427,7 +426,7 @@
                   class="transition"
                   [ngClass]="(groupUserCounts[s.grupo] ?? 0) > 0
                     ? 'text-yellow-500 hover:text-yellow-700'
-                    : 'text-gray-400 hover:text-red-500'">
+                    : 'text-slate-400 hover:text-red-500'">
             <svg *ngIf="(groupUserCounts[s.grupo] ?? 0) === 0" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                     d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
@@ -442,29 +441,29 @@
 
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
-          <label class="block mb-1.5 text-sm font-medium text-gray-700 dark:text-gray-300">
+          <label class="block mb-1.5 text-sm font-medium text-slate-700 dark:text-slate-300">
             Día del mes (1–28)
           </label>
           <select [(ngModel)]="s.billing_day"
-                  class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg bg-gray-50 dark:bg-gray-700 dark:border-gray-600 dark:text-white focus:ring-2 focus:ring-blue-500">
+                  class="w-full px-3 py-2 text-sm border border-slate-300/60 rounded-lg bg-slate-50/80 dark:bg-slate-700/80 dark:border-slate-600/60 dark:text-white focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-400">
             <option *ngFor="let d of days" [ngValue]="d">Día {{ d }}</option>
           </select>
         </div>
 
         <div>
-          <label class="block mb-1.5 text-sm font-medium text-gray-700 dark:text-gray-300">
+          <label class="block mb-1.5 text-sm font-medium text-slate-700 dark:text-slate-300">
             Hora de ejecución automática
           </label>
           <select [(ngModel)]="s.billing_hour"
-                  class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg bg-gray-50 dark:bg-gray-700 dark:border-gray-600 dark:text-white focus:ring-2 focus:ring-blue-500">
+                  class="w-full px-3 py-2 text-sm border border-slate-300/60 rounded-lg bg-slate-50/80 dark:bg-slate-700/80 dark:border-slate-600/60 dark:text-white focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-400">
             <option *ngFor="let h of hours" [ngValue]="h">{{ hourLabel(h) }}</option>
           </select>
         </div>
       </div>
 
       <!-- Trigger manual -->
-      <div class="mt-5 pt-4 border-t border-gray-100 dark:border-gray-700 flex items-center justify-between">
-        <p class="text-xs text-gray-400 dark:text-gray-500">
+      <div class="mt-5 pt-4 border-t border-slate-100/80 dark:border-slate-700/60 flex items-center justify-between">
+        <p class="text-xs text-slate-400 dark:text-slate-500">
           Ejecutar proceso de facturación manualmente — día <strong>{{ s.billing_day }}</strong> del mes que selecciones
         </p>
         <button (click)="openTrigger(s)"
@@ -480,7 +479,7 @@
 
     <!-- Vacío -->
     <div *ngIf="schedules.length === 0"
-         class="text-center py-12 text-gray-400 dark:text-gray-500 bg-white dark:bg-gray-800 rounded-xl border border-dashed border-gray-200 dark:border-gray-700">
+         class="text-center py-12 text-slate-400 dark:text-slate-500 bg-white dark:bg-slate-800/80 rounded-xl border border-dashed border-slate-200/60 dark:border-slate-700/60">
       No hay grupos configurados. Agrega uno para comenzar.
     </div>
   </div>
@@ -496,7 +495,7 @@
     </button>
 
     <button (click)="save()" [disabled]="isSaving"
-            class="flex items-center gap-2 px-5 py-2.5 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition ml-auto">
+            class="flex items-center gap-2 px-5 py-2.5 text-sm font-medium text-white bg-gradient-to-br from-indigo-500 to-violet-600 shadow-md shadow-indigo-500/20 hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed rounded-lg ml-auto">
       <svg *ngIf="!isSaving" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
       </svg>
@@ -513,48 +512,48 @@
   <!-- ═══════════════ PASARELA DE PAGO ONLINE ═══════════════ -->
   <ng-container *ngIf="activeTab === 'gateway'">
     <div class="mb-6">
-      <h1 class="text-2xl font-bold text-gray-800 dark:text-white">Pasarela de pago online</h1>
-      <p class="text-sm text-gray-500 dark:text-gray-400">
+      <h1 class="text-2xl font-bold bg-gradient-to-r from-slate-800 to-slate-600 bg-clip-text text-transparent dark:from-white dark:to-slate-300">Pasarela de pago online</h1>
+      <p class="text-sm text-slate-500 dark:text-slate-400">
         Permite que tus clientes paguen sus facturas en línea desde el portal.
       </p>
     </div>
 
-    <div *ngIf="gwMsg" class="flex items-center gap-2 p-4 mb-4 text-sm text-green-700 bg-green-50 rounded-lg dark:bg-green-900/20 dark:text-green-400">{{ gwMsg }}</div>
-    <div *ngIf="gwError" class="flex items-center gap-2 p-4 mb-4 text-sm text-red-700 bg-red-50 rounded-lg dark:bg-red-900/20 dark:text-red-400">{{ gwError }}</div>
-    <div *ngIf="gwLoading" class="text-center py-10 text-gray-400">Cargando...</div>
+    <div *ngIf="gwMsg" class="flex items-center gap-2 p-4 mb-4 text-sm text-emerald-800 bg-white border border-emerald-200 rounded-2xl backdrop-blur-xl shadow-emerald-500/10 dark:bg-slate-800/80 dark:border-emerald-800/60 dark:text-emerald-300">{{ gwMsg }}</div>
+    <div *ngIf="gwError" class="flex items-center gap-2 p-4 mb-4 text-sm text-red-800 bg-white border border-red-200 rounded-2xl backdrop-blur-xl shadow-red-500/10 dark:bg-slate-800/80 dark:border-red-800/60 dark:text-red-300">{{ gwError }}</div>
+    <div *ngIf="gwLoading" class="text-center py-10 text-slate-400">Cargando...</div>
 
     <div *ngIf="!gwLoading" class="space-y-6">
 
       <!-- Selector de pasarela -->
-      <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-5 space-y-4">
-        <h3 class="font-semibold text-gray-800 dark:text-white">Pasarela activa</h3>
+      <div class="bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl rounded-2xl border border-slate-200/60 dark:border-slate-700/60 shadow-sm hover:shadow-md transition-all duration-300 p-5 space-y-4">
+        <h3 class="font-semibold text-slate-800 dark:text-white">Pasarela activa</h3>
 
         <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
           <div *ngFor="let gw of gwAvailable"
                (click)="gwForm.gateway = gw.id"
                [class]="gwForm.gateway === gw.id
                  ? 'border-2 border-blue-500 bg-blue-50 dark:bg-blue-900/20'
-                 : 'border-2 border-gray-200 dark:border-gray-700 hover:border-gray-300 cursor-pointer'"
+                 : 'border-2 border-slate-200/60 dark:border-slate-700/60 hover:border-slate-300/60 cursor-pointer'"
                class="rounded-xl p-4 transition-all cursor-pointer">
-            <div class="font-semibold text-sm text-gray-800 dark:text-white">{{ gw.name }}</div>
+            <div class="font-semibold text-sm text-slate-800 dark:text-white">{{ gw.name }}</div>
             <div *ngIf="gw.id === 'zonapago'" class="text-xs text-amber-600 dark:text-amber-400 mt-1">Requiere contacto previo</div>
           </div>
         </div>
 
         <!-- Modo sandbox / producción -->
-        <div class="flex items-center justify-between pt-2 border-t border-gray-100 dark:border-gray-700">
+        <div class="flex items-center justify-between pt-2 border-t border-slate-100/80 dark:border-slate-700/60">
           <div>
-            <p class="text-sm font-medium text-gray-700 dark:text-gray-300">Modo de operación</p>
-            <p class="text-xs text-gray-500 dark:text-gray-400">En modo prueba los pagos NO son reales</p>
+            <p class="text-sm font-medium text-slate-700 dark:text-slate-300">Modo de operación</p>
+            <p class="text-xs text-slate-500 dark:text-slate-400">En modo prueba los pagos NO son reales</p>
           </div>
           <div class="flex gap-2">
             <button (click)="gwForm.sandbox = true"
-                    [class]="gwForm.sandbox ? 'bg-amber-500 text-white' : 'bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-300'"
+                    [class]="gwForm.sandbox ? 'bg-amber-500 text-white' : 'bg-slate-200/60 dark:bg-slate-700/80 text-slate-600 dark:text-slate-300'"
                     class="px-4 py-1.5 rounded-lg text-sm font-medium transition-colors">
               Prueba
             </button>
             <button (click)="gwForm.sandbox = false"
-                    [class]="!gwForm.sandbox ? 'bg-green-600 text-white' : 'bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-300'"
+                    [class]="!gwForm.sandbox ? 'bg-green-600 text-white' : 'bg-slate-200/60 dark:bg-slate-700/80 text-slate-600 dark:text-slate-300'"
                     class="px-4 py-1.5 rounded-lg text-sm font-medium transition-colors">
               Producción
             </button>
@@ -564,11 +563,11 @@
         <!-- Activar / desactivar -->
         <div class="flex items-center justify-between">
           <div>
-            <p class="text-sm font-medium text-gray-700 dark:text-gray-300">Pago online activo</p>
-            <p class="text-xs text-gray-500 dark:text-gray-400">Los clientes verán el botón de pago en el portal</p>
+            <p class="text-sm font-medium text-slate-700 dark:text-slate-300">Pago online activo</p>
+            <p class="text-xs text-slate-500 dark:text-slate-400">Los clientes verán el botón de pago en el portal</p>
           </div>
           <button (click)="gwForm.active = !gwForm.active"
-                  [class]="gwForm.active ? 'bg-blue-600' : 'bg-gray-300 dark:bg-gray-600'"
+                  [class]="gwForm.active ? 'bg-blue-600' : 'bg-slate-300/60 dark:bg-slate-600/60'"
                   class="relative w-12 h-6 rounded-full transition-colors focus:outline-none">
             <span [class]="gwForm.active ? 'translate-x-6' : 'translate-x-1'"
                   class="absolute top-1 w-4 h-4 bg-white rounded-full shadow transition-transform block"></span>
@@ -578,9 +577,9 @@
 
       <!-- Credenciales -->
       <!-- autocomplete="off" + name ficticios evitan que el navegador rellene con contraseñas guardadas -->
-      <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-5 space-y-4">
-        <h3 class="font-semibold text-gray-800 dark:text-white">Credenciales</h3>
-        <p class="text-xs text-gray-500 dark:text-gray-400">
+      <div class="bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl rounded-2xl border border-slate-200/60 dark:border-slate-700/60 shadow-sm hover:shadow-md transition-all duration-300 p-5 space-y-4">
+        <h3 class="font-semibold text-slate-800 dark:text-white">Credenciales</h3>
+        <p class="text-xs text-slate-500 dark:text-slate-400">
           Deja el campo en blanco para conservar el valor guardado. Solo se actualizan los campos que completes.
         </p>
         <!-- Campo trampa invisible: engaña al autocompletado del navegador -->
@@ -593,15 +592,15 @@
 
             <!-- Llave Pública -->
             <div>
-              <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">
-                Llave Pública <span class="text-gray-400">(pub_test_... / pub_prod_...)</span>
+              <label class="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">
+                Llave Pública <span class="text-slate-400">(pub_test_... / pub_prod_...)</span>
               </label>
-              <div *ngIf="gwConfig.public_key" class="flex items-center gap-1 mb-1 bg-gray-50 dark:bg-gray-700/50 border border-gray-200 dark:border-gray-600 rounded-lg px-3 py-1.5">
-                <span class="font-mono text-xs text-gray-700 dark:text-gray-300 flex-1 truncate">
+              <div *ngIf="gwConfig.public_key" class="flex items-center gap-1 mb-1 bg-slate-50/80 dark:bg-slate-700/80/50 border border-slate-200/60 dark:border-slate-600/60 rounded-lg px-3 py-1.5">
+                <span class="font-mono text-xs text-slate-700 dark:text-slate-300 flex-1 truncate">
                   {{ gwShowKeys['public_key'] ? gwConfig.public_key : maskKey(gwConfig.public_key) }}
                 </span>
                 <button (click)="toggleKey('public_key')" title="{{ gwShowKeys['public_key'] ? 'Ocultar' : 'Ver' }}"
-                        class="p-1 rounded text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-colors flex-shrink-0">
+                        class="p-1 rounded text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors flex-shrink-0">
                   <svg *ngIf="!gwShowKeys['public_key']" class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
                   </svg>
@@ -610,7 +609,7 @@
                   </svg>
                 </button>
                 <button (click)="copyText(gwConfig.public_key)" title="Copiar"
-                        class="p-1 rounded text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-colors flex-shrink-0">
+                        class="p-1 rounded text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors flex-shrink-0">
                   <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
                   </svg>
@@ -619,20 +618,20 @@
               <input type="text" [(ngModel)]="gwForm.public_key"
                      autocomplete="off"
                      placeholder="{{ gwConfig.has_public_key ? 'Nueva llave (dejar vacío para conservar)' : 'pub_test_...' }}"
-                     class="w-full text-sm rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-800 dark:text-white px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                     class="w-full text-sm rounded-lg border border-slate-300/60 dark:border-slate-600/60 bg-white dark:bg-slate-700/80 text-slate-800 dark:text-white px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-400">
             </div>
 
             <!-- Llave Privada -->
             <div>
-              <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">
-                Llave Privada <span class="text-gray-400">(prv_test_... / prv_prod_...)</span>
+              <label class="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">
+                Llave Privada <span class="text-slate-400">(prv_test_... / prv_prod_...)</span>
               </label>
-              <div *ngIf="gwConfig.private_key" class="flex items-center gap-1 mb-1 bg-gray-50 dark:bg-gray-700/50 border border-gray-200 dark:border-gray-600 rounded-lg px-3 py-1.5">
-                <span class="font-mono text-xs text-gray-700 dark:text-gray-300 flex-1 truncate">
+              <div *ngIf="gwConfig.private_key" class="flex items-center gap-1 mb-1 bg-slate-50/80 dark:bg-slate-700/80/50 border border-slate-200/60 dark:border-slate-600/60 rounded-lg px-3 py-1.5">
+                <span class="font-mono text-xs text-slate-700 dark:text-slate-300 flex-1 truncate">
                   {{ gwShowKeys['private_key'] ? gwConfig.private_key : maskKey(gwConfig.private_key) }}
                 </span>
                 <button (click)="toggleKey('private_key')" title="{{ gwShowKeys['private_key'] ? 'Ocultar' : 'Ver' }}"
-                        class="p-1 rounded text-gray-400 hover:text-gray-600 transition-colors flex-shrink-0">
+                        class="p-1 rounded text-slate-400 hover:text-slate-600 transition-colors flex-shrink-0">
                   <svg *ngIf="!gwShowKeys['private_key']" class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
                   </svg>
@@ -641,7 +640,7 @@
                   </svg>
                 </button>
                 <button (click)="copyText(gwConfig.private_key)" title="Copiar"
-                        class="p-1 rounded text-gray-400 hover:text-gray-600 transition-colors flex-shrink-0">
+                        class="p-1 rounded text-slate-400 hover:text-slate-600 transition-colors flex-shrink-0">
                   <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
                   </svg>
@@ -650,20 +649,20 @@
               <input type="password" [(ngModel)]="gwForm.private_key"
                      autocomplete="new-password"
                      placeholder="{{ gwConfig.has_private_key ? 'Nueva llave (dejar vacío para conservar)' : 'prv_test_...' }}"
-                     class="w-full text-sm rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-800 dark:text-white px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                     class="w-full text-sm rounded-lg border border-slate-300/60 dark:border-slate-600/60 bg-white dark:bg-slate-700/80 text-slate-800 dark:text-white px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-400">
             </div>
 
             <!-- Events Secret -->
             <div>
-              <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">
-                Events Secret <span class="text-gray-400">(test_events_... / prod_events_...)</span>
+              <label class="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">
+                Events Secret <span class="text-slate-400">(test_events_... / prod_events_...)</span>
               </label>
-              <div *ngIf="gwConfig.events_secret" class="flex items-center gap-1 mb-1 bg-gray-50 dark:bg-gray-700/50 border border-gray-200 dark:border-gray-600 rounded-lg px-3 py-1.5">
-                <span class="font-mono text-xs text-gray-700 dark:text-gray-300 flex-1 truncate">
+              <div *ngIf="gwConfig.events_secret" class="flex items-center gap-1 mb-1 bg-slate-50/80 dark:bg-slate-700/80/50 border border-slate-200/60 dark:border-slate-600/60 rounded-lg px-3 py-1.5">
+                <span class="font-mono text-xs text-slate-700 dark:text-slate-300 flex-1 truncate">
                   {{ gwShowKeys['events_secret'] ? gwConfig.events_secret : maskKey(gwConfig.events_secret) }}
                 </span>
                 <button (click)="toggleKey('events_secret')"
-                        class="p-1 rounded text-gray-400 hover:text-gray-600 transition-colors flex-shrink-0">
+                        class="p-1 rounded text-slate-400 hover:text-slate-600 transition-colors flex-shrink-0">
                   <svg *ngIf="!gwShowKeys['events_secret']" class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
                   </svg>
@@ -675,20 +674,20 @@
               <input type="password" [(ngModel)]="gwForm.events_secret"
                      autocomplete="new-password"
                      placeholder="{{ gwConfig.has_events_secret ? 'Nuevo valor (dejar vacío para conservar)' : 'test_events_...' }}"
-                     class="w-full text-sm rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-800 dark:text-white px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                     class="w-full text-sm rounded-lg border border-slate-300/60 dark:border-slate-600/60 bg-white dark:bg-slate-700/80 text-slate-800 dark:text-white px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-400">
             </div>
 
             <!-- Integrity Secret -->
             <div>
-              <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">
-                Integrity Secret <span class="text-gray-400">(test_integrity_... / prod_integrity_...)</span>
+              <label class="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">
+                Integrity Secret <span class="text-slate-400">(test_integrity_... / prod_integrity_...)</span>
               </label>
-              <div *ngIf="gwConfig.integrity_secret" class="flex items-center gap-1 mb-1 bg-gray-50 dark:bg-gray-700/50 border border-gray-200 dark:border-gray-600 rounded-lg px-3 py-1.5">
-                <span class="font-mono text-xs text-gray-700 dark:text-gray-300 flex-1 truncate">
+              <div *ngIf="gwConfig.integrity_secret" class="flex items-center gap-1 mb-1 bg-slate-50/80 dark:bg-slate-700/80/50 border border-slate-200/60 dark:border-slate-600/60 rounded-lg px-3 py-1.5">
+                <span class="font-mono text-xs text-slate-700 dark:text-slate-300 flex-1 truncate">
                   {{ gwShowKeys['integrity_secret'] ? gwConfig.integrity_secret : maskKey(gwConfig.integrity_secret) }}
                 </span>
                 <button (click)="toggleKey('integrity_secret')"
-                        class="p-1 rounded text-gray-400 hover:text-gray-600 transition-colors flex-shrink-0">
+                        class="p-1 rounded text-slate-400 hover:text-slate-600 transition-colors flex-shrink-0">
                   <svg *ngIf="!gwShowKeys['integrity_secret']" class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
                   </svg>
@@ -700,7 +699,7 @@
               <input type="password" [(ngModel)]="gwForm.integrity_secret"
                      autocomplete="new-password"
                      placeholder="{{ gwConfig.has_integrity_secret ? 'Nuevo valor (dejar vacío para conservar)' : 'test_integrity_...' }}"
-                     class="w-full text-sm rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-800 dark:text-white px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                     class="w-full text-sm rounded-lg border border-slate-300/60 dark:border-slate-600/60 bg-white dark:bg-slate-700/80 text-slate-800 dark:text-white px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-400">
             </div>
 
           </div>
@@ -730,15 +729,15 @@
 
             <!-- P_CUST_ID_CLIENTE -->
             <div>
-              <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">
-                P_CUST_ID_CLIENTE <span class="text-gray-400 font-normal">(ID de cliente — número)</span>
+              <label class="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">
+                P_CUST_ID_CLIENTE <span class="text-slate-400 font-normal">(ID de cliente — número)</span>
               </label>
-              <div *ngIf="gwConfig.client_id" class="flex items-center gap-1 mb-1 bg-gray-50 dark:bg-gray-700/50 border border-gray-200 dark:border-gray-600 rounded-lg px-3 py-1.5">
-                <span class="font-mono text-xs text-gray-700 dark:text-gray-300 flex-1">
+              <div *ngIf="gwConfig.client_id" class="flex items-center gap-1 mb-1 bg-slate-50/80 dark:bg-slate-700/80/50 border border-slate-200/60 dark:border-slate-600/60 rounded-lg px-3 py-1.5">
+                <span class="font-mono text-xs text-slate-700 dark:text-slate-300 flex-1">
                   {{ gwShowKeys['client_id'] ? gwConfig.client_id : maskKey(gwConfig.client_id) }}
                 </span>
                 <button (click)="toggleKey('client_id')"
-                        class="p-1 rounded text-gray-400 hover:text-gray-600 transition-colors flex-shrink-0">
+                        class="p-1 rounded text-slate-400 hover:text-slate-600 transition-colors flex-shrink-0">
                   <svg *ngIf="!gwShowKeys['client_id']" class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
                   </svg>
@@ -750,20 +749,20 @@
               <input type="text" [(ngModel)]="gwForm.client_id"
                      autocomplete="off"
                      placeholder="{{ gwConfig.has_client_id ? 'Nuevo valor (dejar vacío para conservar)' : 'Ej: 12345' }}"
-                     class="w-full text-sm rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-800 dark:text-white px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                     class="w-full text-sm rounded-lg border border-slate-300/60 dark:border-slate-600/60 bg-white dark:bg-slate-700/80 text-slate-800 dark:text-white px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-400">
             </div>
 
             <!-- P_KEY -->
             <div>
-              <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">
-                P_KEY <span class="text-gray-400 font-normal">(Llave secreta — usada en firma y webhooks)</span>
+              <label class="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">
+                P_KEY <span class="text-slate-400 font-normal">(Llave secreta — usada en firma y webhooks)</span>
               </label>
-              <div *ngIf="gwConfig.private_key" class="flex items-center gap-1 mb-1 bg-gray-50 dark:bg-gray-700/50 border border-gray-200 dark:border-gray-600 rounded-lg px-3 py-1.5">
-                <span class="font-mono text-xs text-gray-700 dark:text-gray-300 flex-1 truncate">
+              <div *ngIf="gwConfig.private_key" class="flex items-center gap-1 mb-1 bg-slate-50/80 dark:bg-slate-700/80/50 border border-slate-200/60 dark:border-slate-600/60 rounded-lg px-3 py-1.5">
+                <span class="font-mono text-xs text-slate-700 dark:text-slate-300 flex-1 truncate">
                   {{ gwShowKeys['epayco_private_key'] ? gwConfig.private_key : maskKey(gwConfig.private_key) }}
                 </span>
                 <button (click)="toggleKey('epayco_private_key')"
-                        class="p-1 rounded text-gray-400 hover:text-gray-600 transition-colors flex-shrink-0">
+                        class="p-1 rounded text-slate-400 hover:text-slate-600 transition-colors flex-shrink-0">
                   <svg *ngIf="!gwShowKeys['epayco_private_key']" class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
                   </svg>
@@ -775,7 +774,7 @@
               <input type="password" [(ngModel)]="gwForm.private_key"
                      autocomplete="new-password"
                      placeholder="{{ gwConfig.has_private_key ? 'Nueva llave (dejar vacío para conservar)' : 'p_key_xxxxxxxxxxxxxxxx' }}"
-                     class="w-full text-sm rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-800 dark:text-white px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                     class="w-full text-sm rounded-lg border border-slate-300/60 dark:border-slate-600/60 bg-white dark:bg-slate-700/80 text-slate-800 dark:text-white px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-400">
             </div>
           </div>
 
@@ -808,17 +807,17 @@
       <!-- Botón guardar -->
       <div class="flex justify-end">
         <button (click)="saveGatewayConfig()" [disabled]="gwSaving"
-                class="px-6 py-2.5 bg-blue-600 hover:bg-blue-700 disabled:opacity-60 text-white text-sm font-semibold rounded-xl transition-colors">
+                class="px-6 py-2.5 bg-gradient-to-br from-indigo-500 to-violet-600 shadow-md shadow-indigo-500/20 hover:shadow-lg transition-all disabled:opacity-60 text-white text-sm font-semibold rounded-xl transition-colors">
           {{ gwSaving ? 'Guardando...' : 'Guardar configuración' }}
         </button>
       </div>
 
       <!-- Factura de prueba -->
-      <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
-        <div class="flex items-center justify-between px-5 py-4 border-b border-gray-100 dark:border-gray-700">
+      <div class="bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl rounded-2xl border border-slate-200/60 dark:border-slate-700/60 shadow-sm hover:shadow-md transition-all duration-300 overflow-hidden">
+        <div class="flex items-center justify-between px-5 py-4 border-b border-slate-100/80 dark:border-slate-700/60">
           <div>
-            <h3 class="font-semibold text-gray-800 dark:text-white">Probar flujo de pago</h3>
-            <p class="text-xs text-gray-400 mt-0.5">Crea una factura temporal para un cliente y obtén su link de pago sandbox.</p>
+            <h3 class="font-semibold text-slate-800 dark:text-white">Probar flujo de pago</h3>
+            <p class="text-xs text-slate-400 mt-0.5">Crea una factura temporal para un cliente y obtén su link de pago sandbox.</p>
           </div>
           <button (click)="loadTestUsers()" [disabled]="testUsersLoading"
                   class="text-xs px-3 py-1.5 rounded-lg bg-indigo-50 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-300 hover:bg-indigo-100 disabled:opacity-50">
@@ -829,26 +828,26 @@
         <div *ngIf="testUsers.length > 0" class="p-5 space-y-4">
           <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
-              <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Cliente</label>
-              <select [(ngModel)]="testForm.user_id" class="w-full text-sm rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200 px-3 py-2 focus:ring-2 focus:ring-indigo-400 outline-none">
+              <label class="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">Cliente</label>
+              <select [(ngModel)]="testForm.user_id" class="w-full text-sm rounded-lg border border-slate-300/60 dark:border-slate-600/60 bg-white dark:bg-slate-700/80 text-slate-800 dark:text-slate-200 px-3 py-2 focus:ring-2 focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-400 transition-all shadow-sm outline-none">
                 <option [value]="0" disabled>Seleccionar...</option>
                 <option *ngFor="let u of testUsers" [value]="u.id">{{ u.names }} {{ u.lastname }} — {{ u.email }}</option>
               </select>
             </div>
             <div>
-              <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Monto (COP)</label>
-              <input type="number" [(ngModel)]="testForm.amount" min="100" class="w-full text-sm rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200 px-3 py-2 focus:ring-2 focus:ring-indigo-400 outline-none">
+              <label class="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">Monto (COP)</label>
+              <input type="number" [(ngModel)]="testForm.amount" min="100" class="w-full text-sm rounded-lg border border-slate-300/60 dark:border-slate-600/60 bg-white dark:bg-slate-700/80 text-slate-800 dark:text-slate-200 px-3 py-2 focus:ring-2 focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-400 transition-all shadow-sm outline-none">
             </div>
             <div>
-              <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Descripción (opcional)</label>
-              <input type="text" [(ngModel)]="testForm.description" placeholder="Factura de prueba" class="w-full text-sm rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200 px-3 py-2 focus:ring-2 focus:ring-indigo-400 outline-none">
+              <label class="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">Descripción (opcional)</label>
+              <input type="text" [(ngModel)]="testForm.description" placeholder="Factura de prueba" class="w-full text-sm rounded-lg border border-slate-300/60 dark:border-slate-600/60 bg-white dark:bg-slate-700/80 text-slate-800 dark:text-slate-200 px-3 py-2 focus:ring-2 focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-400 transition-all shadow-sm outline-none">
             </div>
           </div>
 
           <div *ngIf="testError" class="text-sm text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/20 rounded-lg px-4 py-2">{{ testError }}</div>
 
           <button (click)="createTestInvoice()" [disabled]="testSaving || !testForm.user_id"
-                  class="px-4 py-2 rounded-lg bg-indigo-600 text-white text-sm font-medium hover:bg-indigo-700 disabled:opacity-50">
+                  class="px-4 py-2 rounded-lg bg-gradient-to-br from-indigo-500 to-violet-600 shadow-md shadow-indigo-500/20 hover:shadow-lg transition-all text-white text-sm font-medium disabled:opacity-50">
             {{ testSaving ? 'Generando...' : 'Crear factura y obtener link de pago' }}
           </button>
 
@@ -861,31 +860,31 @@
             </div>
             <div class="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm">
               <div>
-                <div class="text-xs text-gray-500 dark:text-gray-400">Número</div>
-                <div class="font-mono font-medium text-gray-800 dark:text-gray-200">{{ testResult.number_facture }}</div>
+                <div class="text-xs text-slate-500 dark:text-slate-400">Número</div>
+                <div class="font-mono font-medium text-slate-800 dark:text-slate-200">{{ testResult.number_facture }}</div>
               </div>
               <div>
-                <div class="text-xs text-gray-500 dark:text-gray-400">Monto</div>
-                <div class="font-semibold text-gray-800 dark:text-gray-200">{{ formatCurrency(testResult.amount) }}</div>
+                <div class="text-xs text-slate-500 dark:text-slate-400">Monto</div>
+                <div class="font-semibold text-slate-800 dark:text-slate-200">{{ formatCurrency(testResult.amount) }}</div>
               </div>
               <div>
-                <div class="text-xs text-gray-500 dark:text-gray-400">Cliente</div>
-                <div class="text-gray-800 dark:text-gray-200">{{ testResult.customer_name }}</div>
+                <div class="text-xs text-slate-500 dark:text-slate-400">Cliente</div>
+                <div class="text-slate-800 dark:text-slate-200">{{ testResult.customer_name }}</div>
               </div>
               <div>
-                <div class="text-xs text-gray-500 dark:text-gray-400">ID Factura</div>
-                <div class="font-mono text-gray-800 dark:text-gray-200">#{{ testResult.invoice_id }}</div>
+                <div class="text-xs text-slate-500 dark:text-slate-400">ID Factura</div>
+                <div class="font-mono text-slate-800 dark:text-slate-200">#{{ testResult.invoice_id }}</div>
               </div>
             </div>
             <div class="flex items-center gap-2">
-              <span class="text-xs text-gray-500 dark:text-gray-400 font-mono truncate flex-1">{{ testResult.reference }}</span>
+              <span class="text-xs text-slate-500 dark:text-slate-400 font-mono truncate flex-1">{{ testResult.reference }}</span>
               <button (click)="copyText(testResult.reference)" title="Copiar referencia"
-                      class="text-xs px-2 py-1 rounded bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-300 hover:bg-gray-50">
+                      class="text-xs px-2 py-1 rounded bg-white dark:bg-slate-700/80 border border-slate-200/60 dark:border-slate-600/60 text-slate-600 dark:text-slate-300 hover:bg-slate-50/80">
                 Copiar ref
               </button>
             </div>
             <button (click)="openTestPayUrl()"
-                    class="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg bg-indigo-600 text-white text-sm font-medium hover:bg-indigo-700">
+                    class="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg bg-gradient-to-br from-indigo-500 to-violet-600 shadow-md shadow-indigo-500/20 hover:shadow-lg transition-all text-white text-sm font-medium">
               <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
               </svg>
@@ -894,51 +893,51 @@
           </div>
         </div>
 
-        <div *ngIf="testUsers.length === 0 && !testUsersLoading" class="px-5 py-8 text-center text-gray-400 text-sm">
+        <div *ngIf="testUsers.length === 0 && !testUsersLoading" class="px-5 py-8 text-center text-slate-400 text-sm">
           Haz clic en "Cargar clientes" para listar los clientes disponibles.
         </div>
       </div>
 
       <!-- Historial de transacciones online -->
-      <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
-        <div class="flex items-center justify-between px-5 py-4 border-b border-gray-100 dark:border-gray-700">
-          <h3 class="font-semibold text-gray-800 dark:text-white">Transacciones online
-            <span class="ml-2 text-xs font-normal text-gray-400">— clic en una fila para ver detalle</span>
+      <div class="bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl rounded-2xl border border-slate-200/60 dark:border-slate-700/60 shadow-sm hover:shadow-md transition-all duration-300 overflow-hidden">
+        <div class="flex items-center justify-between px-5 py-4 border-b border-slate-100/80 dark:border-slate-700/60">
+          <h3 class="font-semibold text-slate-800 dark:text-white">Transacciones online
+            <span class="ml-2 text-xs font-normal text-slate-400">— clic en una fila para ver detalle</span>
           </h3>
           <button (click)="loadGatewayTransactions()" class="text-xs text-blue-600 dark:text-blue-400 hover:underline">Actualizar</button>
         </div>
 
-        <div *ngIf="gwTxLoading" class="py-8 text-center text-gray-400 text-sm">Cargando...</div>
+        <div *ngIf="gwTxLoading" class="py-8 text-center text-slate-400 text-sm">Cargando...</div>
 
-        <div *ngIf="!gwTxLoading && gwTransactions.length === 0" class="py-8 text-center text-gray-400 text-sm">
+        <div *ngIf="!gwTxLoading && gwTransactions.length === 0" class="py-8 text-center text-slate-400 text-sm">
           Sin transacciones registradas aún.
         </div>
 
-        <div *ngIf="!gwTxLoading && gwTransactions.length > 0" class="overflow-x-auto">
+        <div *ngIf="!gwTxLoading && gwTransactions.length > 0" class="overflow-x-auto rounded-2xl border border-slate-200/60 dark:border-slate-700/60">
           <table class="w-full text-xs">
             <thead>
-              <tr class="bg-gray-50 dark:bg-gray-700/50 border-b border-gray-100 dark:border-gray-700">
-                <th class="text-left px-4 py-3 font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">Referencia</th>
-                <th class="text-left px-4 py-3 font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">Cliente</th>
-                <th class="text-right px-4 py-3 font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">Monto</th>
-                <th class="text-center px-4 py-3 font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">Estado</th>
-                <th class="text-center px-4 py-3 font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">Pasarela</th>
-                <th class="text-left px-4 py-3 font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">Fecha</th>
+              <tr class="bg-slate-50/80 dark:bg-slate-700/80 backdrop-blur-sm border-b border-slate-100/80 dark:border-slate-700/60">
+                <th class="text-left px-4 py-3 font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider text-xs">Referencia</th>
+                <th class="text-left px-4 py-3 font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider text-xs">Cliente</th>
+                <th class="text-right px-4 py-3 font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider text-xs">Monto</th>
+                <th class="text-center px-4 py-3 font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider text-xs">Estado</th>
+                <th class="text-center px-4 py-3 font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider text-xs">Pasarela</th>
+                <th class="text-left px-4 py-3 font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider text-xs">Fecha</th>
               </tr>
             </thead>
-            <tbody class="divide-y divide-gray-100 dark:divide-gray-700">
+            <tbody class="divide-y divide-slate-100/80 dark:divide-slate-700/60">
               <tr *ngFor="let tx of gwTransactions"
                   (click)="openTxDetail(tx)"
-                  class="hover:bg-blue-50 dark:hover:bg-blue-900/10 cursor-pointer transition-colors">
+                  class="hover:bg-slate-50 dark:hover:bg-slate-700/50 cursor-pointer transition-colors">
                 <td class="px-4 py-3">
-                  <span class="font-mono text-gray-700 dark:text-gray-300">{{ tx.reference }}</span>
+                  <span class="font-mono text-slate-700 dark:text-slate-300">{{ tx.reference }}</span>
                   <span *ngIf="tx.sandbox" class="ml-1.5 px-1.5 py-0.5 rounded text-amber-700 bg-amber-100 dark:bg-amber-900/30 dark:text-amber-300 text-[10px] font-medium">prueba</span>
                 </td>
                 <td class="px-4 py-3">
-                  <div class="text-gray-800 dark:text-gray-200 font-medium">{{ tx.customer_name || '—' }}</div>
-                  <div class="text-gray-400">{{ tx.customer_email || '' }}</div>
+                  <div class="text-slate-800 dark:text-slate-200 font-medium">{{ tx.customer_name || '—' }}</div>
+                  <div class="text-slate-400">{{ tx.customer_email || '' }}</div>
                 </td>
-                <td class="px-4 py-3 text-right font-semibold text-gray-900 dark:text-white">
+                <td class="px-4 py-3 text-right font-semibold text-slate-900 dark:text-white">
                   {{ formatCurrency(tx.amount) }}
                 </td>
                 <td class="px-4 py-3 text-center">
@@ -951,7 +950,7 @@
                     {{ gatewayLabel(tx.gateway) }}
                   </span>
                 </td>
-                <td class="px-4 py-3 text-gray-500 dark:text-gray-400">{{ tx.initiated_at }}</td>
+                <td class="px-4 py-3 text-slate-500 dark:text-slate-400">{{ tx.initiated_at }}</td>
               </tr>
             </tbody>
           </table>
@@ -963,26 +962,31 @@
 
   <!-- ── Modal detalle de transacción ───────────────────────────────────── -->
   <div *ngIf="gwDetailTx"
-       class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm"
+       class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm"
        (click)="closeTxDetail()">
-    <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-xl max-h-[90vh] overflow-y-auto"
+    <div class="bg-white/95 dark:bg-slate-800/95 backdrop-blur-xl rounded-2xl shadow-2xl border border-slate-100 dark:border-slate-700 w-full max-w-xl max-h-[90vh] overflow-y-auto"
          (click)="$event.stopPropagation()">
 
       <!-- Header -->
-      <div class="flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+      <div class="flex items-center justify-between px-6 py-4 border-b border-slate-200/60 dark:border-slate-700/60">
         <div class="flex items-center gap-3">
-          <h3 class="text-lg font-bold text-gray-900 dark:text-white">Detalle de transacción</h3>
+          <h3 class="text-lg font-bold text-slate-900 dark:text-white">Detalle de transacción</h3>
           <span *ngIf="gwDetailTx.sandbox" class="px-2 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300">Sandbox</span>
           <span [class]="'px-2 py-0.5 rounded-full text-xs font-medium ' + gatewayBadgeClass(gwDetailTx.gateway)">{{ gatewayLabel(gwDetailTx.gateway) }}</span>
         </div>
-        <button (click)="closeTxDetail()" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200">
+        <button (click)="closeTxDetail()" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">
           <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
           </svg>
         </button>
       </div>
 
-      <div *ngIf="gwDetailLoading" class="py-12 text-center text-gray-400">Cargando...</div>
+      <div *ngIf="gwDetailLoading" class="py-12 text-center text-slate-400 flex items-center justify-center gap-3">
+      <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center animate-pulse shadow-lg shadow-indigo-500/30">
+        <svg class="w-5 h-5 text-white animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"/></svg>
+      </div>
+      Cargando...
+    </div>
 
       <div *ngIf="!gwDetailLoading" class="p-6 space-y-5">
 
@@ -991,15 +995,15 @@
           <span [class]="'px-3 py-1 rounded-full text-sm font-semibold ' + txStatusClass(gwDetailTx.status)">
             {{ txStatusLabel(gwDetailTx.status) }}
           </span>
-          <span class="text-2xl font-bold text-gray-900 dark:text-white">{{ formatCurrency(gwDetailTx.amount) }}</span>
+          <span class="text-2xl font-bold text-slate-900 dark:text-white">{{ formatCurrency(gwDetailTx.amount) }}</span>
         </div>
 
         <!-- Referencia -->
-        <div class="bg-gray-50 dark:bg-gray-700/50 rounded-xl p-4">
-          <div class="text-xs text-gray-500 dark:text-gray-400 mb-1">Referencia</div>
+        <div class="bg-slate-50/80 dark:bg-slate-700/80/50 rounded-xl p-4">
+          <div class="text-xs text-slate-500 dark:text-slate-400 mb-1">Referencia</div>
           <div class="flex items-center gap-2">
-            <span class="font-mono text-sm font-medium text-gray-800 dark:text-gray-200 break-all">{{ gwDetailTx.reference }}</span>
-            <button (click)="copyText(gwDetailTx.reference)" class="shrink-0 text-xs px-2 py-1 rounded bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-300 hover:bg-gray-100">
+            <span class="font-mono text-sm font-medium text-slate-800 dark:text-slate-200 break-all">{{ gwDetailTx.reference }}</span>
+            <button (click)="copyText(gwDetailTx.reference)" class="shrink-0 text-xs px-2 py-1 rounded bg-white dark:bg-slate-700/80 border border-slate-200/60 dark:border-slate-600/60 text-slate-600 dark:text-slate-300 hover:bg-slate-100/80">
               Copiar
             </button>
           </div>
@@ -1008,45 +1012,45 @@
         <!-- Cliente -->
         <div class="grid grid-cols-2 gap-4">
           <div>
-            <div class="text-xs text-gray-500 dark:text-gray-400 mb-1">Cliente</div>
-            <div class="text-sm font-medium text-gray-800 dark:text-gray-200">{{ gwDetailTx.customer_name || '—' }}</div>
+            <div class="text-xs text-slate-500 dark:text-slate-400 mb-1">Cliente</div>
+            <div class="text-sm font-medium text-slate-800 dark:text-slate-200">{{ gwDetailTx.customer_name || '—' }}</div>
           </div>
           <div>
-            <div class="text-xs text-gray-500 dark:text-gray-400 mb-1">Email</div>
-            <div class="text-sm text-gray-800 dark:text-gray-200">{{ gwDetailTx.customer_email || '—' }}</div>
+            <div class="text-xs text-slate-500 dark:text-slate-400 mb-1">Email</div>
+            <div class="text-sm text-slate-800 dark:text-slate-200">{{ gwDetailTx.customer_email || '—' }}</div>
           </div>
         </div>
 
         <!-- Fechas -->
         <div class="grid grid-cols-2 gap-4">
           <div>
-            <div class="text-xs text-gray-500 dark:text-gray-400 mb-1">Iniciado</div>
-            <div class="text-sm text-gray-800 dark:text-gray-200">{{ gwDetailTx.initiated_at || '—' }}</div>
+            <div class="text-xs text-slate-500 dark:text-slate-400 mb-1">Iniciado</div>
+            <div class="text-sm text-slate-800 dark:text-slate-200">{{ gwDetailTx.initiated_at || '—' }}</div>
           </div>
           <div>
-            <div class="text-xs text-gray-500 dark:text-gray-400 mb-1">Pagado</div>
-            <div class="text-sm text-gray-800 dark:text-gray-200">{{ gwDetailTx.paid_at || '—' }}</div>
+            <div class="text-xs text-slate-500 dark:text-slate-400 mb-1">Pagado</div>
+            <div class="text-sm text-slate-800 dark:text-slate-200">{{ gwDetailTx.paid_at || '—' }}</div>
           </div>
         </div>
 
         <!-- ID de pasarela -->
         <div *ngIf="gwDetailTx.gateway_transaction_id">
-          <div class="text-xs text-gray-500 dark:text-gray-400 mb-1">ID en {{ gatewayLabel(gwDetailTx.gateway) }}</div>
+          <div class="text-xs text-slate-500 dark:text-slate-400 mb-1">ID en {{ gatewayLabel(gwDetailTx.gateway) }}</div>
           <div class="flex items-center gap-2">
-            <span class="font-mono text-xs text-gray-700 dark:text-gray-300 break-all">{{ gwDetailTx.gateway_transaction_id }}</span>
-            <button (click)="copyText(gwDetailTx.gateway_transaction_id)" class="shrink-0 text-xs px-2 py-1 rounded bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-300 hover:bg-gray-100">
+            <span class="font-mono text-xs text-slate-700 dark:text-slate-300 break-all">{{ gwDetailTx.gateway_transaction_id }}</span>
+            <button (click)="copyText(gwDetailTx.gateway_transaction_id)" class="shrink-0 text-xs px-2 py-1 rounded bg-white dark:bg-slate-700/80 border border-slate-200/60 dark:border-slate-600/60 text-slate-600 dark:text-slate-300 hover:bg-slate-100/80">
               Copiar
             </button>
           </div>
         </div>
 
         <!-- Factura relacionada -->
-        <div *ngIf="gwDetailTx.invoice" class="bg-gray-50 dark:bg-gray-700/50 rounded-xl p-4">
-          <div class="text-xs text-gray-500 dark:text-gray-400 mb-2">Factura</div>
+        <div *ngIf="gwDetailTx.invoice" class="bg-slate-50/80 dark:bg-slate-700/80/50 rounded-xl p-4">
+          <div class="text-xs text-slate-500 dark:text-slate-400 mb-2">Factura</div>
           <div class="flex items-center justify-between">
             <div>
-              <span class="font-mono font-semibold text-gray-800 dark:text-gray-200">{{ gwDetailTx.invoice.number_facture }}</span>
-              <span class="ml-2 text-sm text-gray-500 dark:text-gray-400">— {{ formatCurrency(gwDetailTx.invoice.price_total) }}</span>
+              <span class="font-mono font-semibold text-slate-800 dark:text-slate-200">{{ gwDetailTx.invoice.number_facture }}</span>
+              <span class="ml-2 text-sm text-slate-500 dark:text-slate-400">— {{ formatCurrency(gwDetailTx.invoice.price_total) }}</span>
             </div>
             <span *ngIf="gwDetailTx.invoice.paid"
                   class="px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300">
@@ -1065,19 +1069,19 @@
 </div>
 
 <!-- ═══ SECCIÓN: Cortes automáticos por mora ════════════════════════════════ -->
-<div class="mt-6 bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm p-6">
+<div class="mt-6 bg-white dark:bg-slate-800/80 rounded-2xl border border-slate-100/80 dark:border-slate-700/60 shadow-sm p-6">
 
   <div class="flex items-start justify-between mb-5">
     <div>
-      <h2 class="text-base font-semibold text-gray-800 dark:text-white">Cortes automáticos por mora</h2>
-      <p class="text-sm text-gray-500 dark:text-gray-400 mt-0.5">
+      <h2 class="text-base font-semibold text-slate-800 dark:text-white">Cortes automáticos por mora</h2>
+      <p class="text-sm text-slate-500 dark:text-slate-400 mt-0.5">
         Suspende clientes con facturas vencidas más de N días. Se reactivan automáticamente al pagar.
       </p>
     </div>
     <!-- Toggle -->
     <button (click)="autoSuspendEnabled = !autoSuspendEnabled" type="button"
             class="relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 focus:outline-none"
-            [ngClass]="autoSuspendEnabled ? 'bg-blue-600' : 'bg-gray-200 dark:bg-gray-600'">
+            [ngClass]="autoSuspendEnabled ? 'bg-blue-600' : 'bg-slate-200/60 dark:bg-slate-600/60'">
       <span class="pointer-events-none inline-block h-5 w-5 rounded-full bg-white shadow transform transition duration-200"
             [ngClass]="autoSuspendEnabled ? 'translate-x-5' : 'translate-x-0'">
       </span>
@@ -1106,13 +1110,13 @@
 
       <!-- Mínimo de facturas vencidas -->
       <div>
-        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+        <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">
           Facturas pendientes para suspender
         </label>
         <div class="flex items-center gap-2">
           <input type="number" [(ngModel)]="autoSuspendDays" min="1" max="12"
-                 class="w-24 px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-blue-500">
-          <span class="text-sm text-gray-500 dark:text-gray-400">
+                 class="w-24 px-3 py-2 text-sm border border-slate-300/60 dark:border-slate-600/60 rounded-lg bg-slate-50/80 dark:bg-slate-700/80 dark:text-white focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-400">
+          <span class="text-sm text-slate-500 dark:text-slate-400">
             factura(s) sin pagar
           </span>
         </div>
@@ -1120,15 +1124,15 @@
 
       <!-- Día del mes para ejecutar -->
       <div>
-        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+        <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">
           Día del mes para ejecutar cortes
         </label>
         <div class="flex items-center gap-2">
           <select [(ngModel)]="autoSuspendDay"
-                  class="w-28 px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-blue-500">
+                  class="w-28 px-3 py-2 text-sm border border-slate-300/60 dark:border-slate-600/60 rounded-lg bg-slate-50/80 dark:bg-slate-700/80 dark:text-white focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-400">
             <option *ngFor="let d of days" [value]="d">Día {{ d }}</option>
           </select>
-          <span class="text-sm text-gray-500 dark:text-gray-400">del mes</span>
+          <span class="text-sm text-slate-500 dark:text-slate-400">del mes</span>
         </div>
       </div>
 
@@ -1142,7 +1146,7 @@
 
       <!-- Ejecutar ahora -->
       <button (click)="runAutoSuspendNow()" [disabled]="autoSuspendRunning"
-              class="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 disabled:opacity-50 transition">
+              class="flex items-center gap-2 px-4 py-2 text-sm font-medium text-slate-700 dark:text-slate-300 bg-slate-100/80 dark:bg-slate-700/80 rounded-lg hover:bg-slate-200/60 dark:hover:bg-gray-600 disabled:opacity-50 transition">
         <svg *ngIf="autoSuspendRunning" class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
           <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
           <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"/>
@@ -1155,7 +1159,7 @@
 
       <!-- Guardar -->
       <button (click)="saveAutoSuspend()" [disabled]="autoSuspendSaving"
-              class="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 disabled:opacity-50 transition">
+              class="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-gradient-to-br from-indigo-500 to-violet-600 shadow-md shadow-indigo-500/20 hover:shadow-lg transition-all disabled:opacity-50 rounded-lg">
         <svg *ngIf="autoSuspendSaving" class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
           <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
           <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"/>
@@ -1180,29 +1184,29 @@
 
 <!-- ═══ MODAL: Ejecutar proceso ════════════════════════════════════════════ -->
 <div *ngIf="triggerModal"
-     class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4"
+     class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-sm px-4"
      (click)="triggerModal = false">
-  <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-xl w-full max-w-sm p-6" (click)="$event.stopPropagation()">
+  <div class="bg-white/95 dark:bg-slate-800/95 backdrop-blur-xl rounded-2xl shadow-2xl border border-slate-100 dark:border-slate-700 w-full max-w-sm p-6" (click)="$event.stopPropagation()">
 
-    <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-1">
+    <h3 class="text-lg font-semibold text-slate-900 dark:text-white mb-1">
       Ejecutar proceso — Grupo {{ triggerGrupo }}
     </h3>
-    <p class="text-xs text-gray-400 mb-5">
+    <p class="text-xs text-slate-400 mb-5">
       El día de corte configurado es <strong>{{ triggerDay }}</strong>. Selecciona el mes y año de la factura.
     </p>
 
     <div class="grid grid-cols-2 gap-3 mb-5">
       <div>
-        <label class="block text-xs font-medium text-gray-500 mb-1">Mes</label>
+        <label class="block text-xs font-medium text-slate-500 mb-1">Mes</label>
         <select [(ngModel)]="triggerMonth"
-                class="w-full px-3 py-2 text-sm border border-gray-200 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-blue-500">
+                class="w-full px-3.5 py-2 text-sm bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl border border-slate-200/60 dark:border-slate-700/60 rounded-xl text-slate-700 dark:text-slate-300 focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-400 transition-all shadow-sm">
           <option *ngFor="let m of months" [ngValue]="m.v">{{ m.l }}</option>
         </select>
       </div>
       <div>
-        <label class="block text-xs font-medium text-gray-500 mb-1">Año</label>
+        <label class="block text-xs font-medium text-slate-500 mb-1">Año</label>
         <select [(ngModel)]="triggerYear"
-                class="w-full px-3 py-2 text-sm border border-gray-200 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-blue-500">
+                class="w-full px-3.5 py-2 text-sm bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl border border-slate-200/60 dark:border-slate-700/60 rounded-xl text-slate-700 dark:text-slate-300 focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-400 transition-all shadow-sm">
           <option *ngFor="let y of years" [ngValue]="y">{{ y }}</option>
         </select>
       </div>
@@ -1214,11 +1218,11 @@
 
     <div class="flex gap-3 justify-end">
       <button (click)="triggerModal = false"
-              class="px-4 py-2 text-sm text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition">
+              class="px-4 py-2 text-sm text-slate-600 dark:text-slate-300 hover:bg-slate-100/80 dark:hover:bg-slate-700/50 rounded-lg transition">
         Cancelar
       </button>
       <button (click)="confirmTrigger()" [disabled]="isTriggerBusy"
-              class="px-4 py-2 text-sm font-medium text-white bg-green-600 hover:bg-green-700 disabled:opacity-50 rounded-lg flex items-center gap-2 transition">
+              class="px-4 py-2 text-sm font-medium text-white bg-gradient-to-br from-emerald-500 to-teal-600 shadow-md shadow-emerald-500/20 hover:shadow-lg transition-all disabled:opacity-50 rounded-lg flex items-center gap-2">
         <svg *ngIf="isTriggerBusy" class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
           <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
           <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"/>
@@ -1231,26 +1235,26 @@
 
 <!-- ═══ MODAL: Trasladar usuarios ══════════════════════════════════════════ -->
 <div *ngIf="transferModal"
-     class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4"
+     class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-sm px-4"
      (click)="transferModal = false">
-  <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-xl w-full max-w-sm p-6" (click)="$event.stopPropagation()">
+  <div class="bg-white/95 dark:bg-slate-800/95 backdrop-blur-xl rounded-2xl shadow-2xl border border-slate-100 dark:border-slate-700 w-full max-w-sm p-6" (click)="$event.stopPropagation()">
 
     <div class="flex items-center gap-3 mb-4">
-      <div class="w-10 h-10 rounded-full bg-yellow-100 flex items-center justify-center shrink-0">
-        <svg class="w-5 h-5 text-yellow-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+      <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-orange-500 to-amber-600 flex items-center justify-center shrink-0 shadow-md shadow-orange-500/20">
+        <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
         </svg>
       </div>
       <div>
-        <h3 class="text-base font-semibold text-gray-900 dark:text-white">Grupo con usuarios</h3>
-        <p class="text-xs text-gray-500">El grupo {{ transferFrom }} tiene {{ groupUserCounts[transferFrom] ?? 0 }} usuario(s). Traslada antes de eliminar.</p>
+        <h3 class="text-base font-semibold text-slate-900 dark:text-white">Grupo con usuarios</h3>
+        <p class="text-xs text-slate-500">El grupo {{ transferFrom }} tiene {{ groupUserCounts[transferFrom] ?? 0 }} usuario(s). Traslada antes de eliminar.</p>
       </div>
     </div>
 
     <div class="mb-5">
-      <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Trasladar al grupo</label>
+      <label class="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">Trasladar al grupo</label>
       <select [(ngModel)]="transferTo"
-              class="w-full px-3 py-2 text-sm border border-gray-200 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-blue-500">
+              class="w-full px-3.5 py-2 text-sm bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl border border-slate-200/60 dark:border-slate-700/60 rounded-xl text-slate-700 dark:text-slate-300 focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-400 transition-all shadow-sm">
         <option [ngValue]="null" disabled>Seleccionar grupo destino</option>
         <option *ngFor="let s of otherGroups(transferFrom)" [ngValue]="s.grupo">
           Grupo {{ s.grupo }} ({{ groupUserCounts[s.grupo] ?? 0 }} usuarios)
@@ -1260,11 +1264,11 @@
 
     <div class="flex gap-3 justify-end">
       <button (click)="transferModal = false; pendingRemoveIndex = -1"
-              class="px-4 py-2 text-sm text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition">
+              class="px-4 py-2 text-sm text-slate-600 dark:text-slate-300 hover:bg-slate-100/80 dark:hover:bg-slate-700/50 rounded-lg transition">
         Cancelar
       </button>
       <button (click)="confirmTransfer()" [disabled]="!transferTo || isTransferBusy"
-              class="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-50 rounded-lg flex items-center gap-2 transition">
+              class="px-4 py-2 text-sm font-medium text-white bg-gradient-to-br from-indigo-500 to-violet-600 shadow-md shadow-indigo-500/20 hover:shadow-lg transition-all disabled:opacity-50 rounded-lg flex items-center gap-2 transition">
         <svg *ngIf="isTransferBusy" class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
           <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
           <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"/>

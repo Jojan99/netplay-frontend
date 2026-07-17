@@ -8,31 +8,31 @@
 </div>
 
 <!-- ── User table card ──────────────────────────────────────────────────── -->
-<div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border dark:border-gray-700">
+<div class="bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl rounded-2xl border border-slate-200/60 dark:border-slate-700/60 shadow-sm hover:shadow-md transition-all duration-300">
 
   <!-- Header -->
-  <div class="border-b p-4 dark:border-gray-700 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
+  <div class="border-b p-4 dark:border-slate-700/60 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
     <div>
-      <h2 class="text-xl font-semibold text-gray-900 dark:text-white">Clientes</h2>
-      <p class="text-sm text-gray-500 dark:text-gray-400">{{ totalEntries }} registros</p>
+      <h2 class="text-2xl font-bold bg-gradient-to-r from-slate-800 to-slate-600 bg-clip-text text-transparent dark:from-white dark:to-slate-300">Clientes</h2>
+      <p class="text-sm text-slate-400 dark:text-slate-500">{{ totalEntries }} registros</p>
     </div>
     <div class="flex flex-wrap gap-2">
       <button (click)="openCreateUserModal()"
-        class="px-4 py-2 text-sm font-medium rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition flex items-center gap-2">
+        class="px-4 py-2 text-sm font-medium rounded-xl bg-gradient-to-br from-indigo-500 to-violet-600 text-white shadow-md shadow-indigo-500/20 hover:shadow-lg transition-all flex items-center gap-2">
         <i class="fa-solid fa-plus text-sm"></i> Nuevo cliente
       </button>
       <button (click)="downloadCsvAll()" [disabled]="exportingCsv"
-        class="px-4 py-2 text-sm font-medium rounded-lg bg-green-600 text-white hover:bg-green-700 disabled:opacity-50 transition flex items-center gap-2">
+        class="px-4 py-2 text-sm font-medium rounded-xl bg-gradient-to-br from-teal-500 to-emerald-600 text-white shadow-md shadow-teal-500/20 hover:shadow-lg disabled:opacity-50 transition-all flex items-center gap-2">
         <i class="fa-solid fa-download text-sm"></i> {{ exportingCsv ? 'Exportando...' : 'CSV Todos' }}
       </button>
     </div>
   </div>
 
   <!-- Controls -->
-  <div class="p-4 flex flex-col sm:flex-row flex-wrap gap-3 items-center border-b dark:border-gray-700">
-    <div class="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
+  <div class="p-4 flex flex-col sm:flex-row flex-wrap gap-3 items-center border-b dark:border-slate-700/60">
+    <div class="flex items-center gap-2 text-sm text-slate-700 dark:text-slate-300">
       <span>Vista</span>
-      <select class="border rounded px-2 py-1 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+      <select class="px-3.5 py-2 text-sm bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl border border-slate-200/60 dark:border-slate-700/60 rounded-xl text-slate-700 dark:text-slate-300 focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-400 transition-all shadow-sm"
               [value]="entriesPerPage" (change)="onEntriesPerPageChange($event)">
         <option value="12">12</option>
         <option value="25">25</option>
@@ -43,31 +43,31 @@
 
     <div class="flex items-center gap-2 w-full sm:w-auto">
       <input type="search" placeholder="Buscar cliente..." (input)="getSearchUser()" [(ngModel)]="search"
-        class="border rounded-lg px-3 py-2 w-full sm:w-64 text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400" />
+        class="px-3.5 py-2 text-sm bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl border border-slate-200/60 dark:border-slate-700/60 rounded-xl text-slate-700 dark:text-slate-300 focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-400 transition-all shadow-sm w-full sm:w-64" />
     </div>
   </div>
 
   <!-- Table -->
-  <div class="overflow-x-auto">
-    <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-      <thead class="bg-gray-50 dark:bg-gray-700">
+  <div class="overflow-x-auto rounded-2xl border border-slate-200/60 dark:border-slate-700/60">
+    <table class="min-w-full divide-y divide-slate-200/60 dark:divide-slate-700/60">
+      <thead class="bg-slate-50/80 dark:bg-slate-700/80 backdrop-blur-sm">
         <tr>
           <th class="w-8 p-3"></th>
-          <th class="p-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Cliente</th>
-          <th class="p-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase hidden md:table-cell">Documento</th>
-          <th class="p-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase hidden lg:table-cell">Teléfono</th>
-          <th class="p-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Estado</th>
-          <th class="p-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase hidden xl:table-cell">Dirección</th>
-          <th class="p-3 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Acciones</th>
+          <th class="p-3 text-left text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Cliente</th>
+          <th class="p-3 text-left text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider hidden md:table-cell">Documento</th>
+          <th class="p-3 text-left text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider hidden lg:table-cell">Teléfono</th>
+          <th class="p-3 text-left text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Estado</th>
+          <th class="p-3 text-left text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider hidden xl:table-cell">Dirección</th>
+          <th class="p-3 text-center text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Acciones</th>
         </tr>
       </thead>
-      <tbody class="divide-y divide-gray-200 dark:divide-gray-700 dark:bg-gray-800">
+      <tbody class="divide-y divide-slate-200/60 dark:divide-slate-700/60 dark:bg-slate-800/80">
 
         <!-- Skeleton -->
         <ng-container *ngIf="skeletor">
           <tr *ngFor="let _ of [1,2,3,4,5,6]">
             <td colspan="7" class="p-3">
-              <div class="h-3 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
+              <div class="h-3 bg-slate-200/60 dark:bg-slate-700/80 rounded animate-pulse"></div>
             </td>
           </tr>
         </ng-container>
@@ -75,21 +75,21 @@
         <!-- Data rows -->
         <ng-container *ngIf="!skeletor">
           <ng-container *ngFor="let user of UserInterfaces.slice(startIndex, endIndex)">
-            <tr class="hover:bg-gray-50 dark:hover:bg-gray-700 transition">
+            <tr class="hover:bg-slate-50/80 dark:hover:bg-slate-700/50 transition">
               <!-- Expand -->
               <td class="p-2 text-center">
-                <button (click)="toggleDetails(user)" class="text-gray-400 hover:text-gray-600 dark:hover:text-white">
+                <button (click)="toggleDetails(user)" class="text-slate-400 hover:text-slate-600 dark:hover:text-white">
                   <i *ngIf="!user.expanded" class="fa-solid fa-chevron-down text-xs"></i>
                   <i *ngIf="user.expanded" class="fa-solid fa-chevron-up text-xs"></i>
                 </button>
               </td>
               <!-- Name -->
               <td class="p-3">
-                <div class="font-medium text-gray-900 dark:text-white text-sm">{{ user.names }} {{ user.lastname }}</div>
-                <div class="text-xs text-gray-500 dark:text-gray-400">{{ user.plan_name }}</div>
+                <div class="font-medium text-slate-900 dark:text-white text-sm">{{ user.names }} {{ user.lastname }}</div>
+                <div class="text-xs text-slate-500 dark:text-slate-400">{{ user.plan_name }}</div>
               </td>
-              <td class="p-3 text-sm text-gray-700 dark:text-gray-300 hidden md:table-cell">{{ user.dni }}</td>
-              <td class="p-3 text-sm text-gray-700 dark:text-gray-300 hidden lg:table-cell">{{ user.phone }}</td>
+              <td class="p-3 text-sm text-slate-700 dark:text-slate-300 hidden md:table-cell">{{ user.dni }}</td>
+              <td class="p-3 text-sm text-slate-700 dark:text-slate-300 hidden lg:table-cell">{{ user.phone }}</td>
               <!-- Status -->
               <td class="p-3">
                 <span class="px-2 py-0.5 rounded-full text-xs font-semibold text-white"
@@ -97,35 +97,35 @@
                   {{ user.internet_status }}
                 </span>
               </td>
-              <td class="p-3 text-sm text-gray-700 dark:text-gray-300 hidden xl:table-cell truncate max-w-xs">{{ user.address }}</td>
+              <td class="p-3 text-sm text-slate-700 dark:text-slate-300 hidden xl:table-cell truncate max-w-xs">{{ user.address }}</td>
               <!-- Actions -->
               <td class="p-2 sm:p-3">
                 <div class="flex items-center justify-center gap-1 sm:gap-2">
                   <!-- Suspend -->
                   <button (click)="openSuspendModal(user.dni, user.id_user, user.internet_status, user.router_id)"
                     title="Suspender/Activar"
-                    class="rounded-full p-1 hover:bg-gray-100 dark:hover:bg-gray-700 transition">
+                    class="rounded-full p-1 hover:bg-slate-100/80 dark:hover:bg-slate-700/50 transition">
                     <i *ngIf="user.internet_status === 'ACTIVE'" class="fa-solid fa-power-off text-green-500 text-lg"></i>
                     <i *ngIf="user.internet_status !== 'ACTIVE'" class="fa-solid fa-power-off text-red-500 text-lg"></i>
                   </button>
                   <!-- Soporte -->
                   <button (click)="openClienteModal(user.alias, user.id_user, user.id_cab)"
                     title="Soporte"
-                    class="rounded-full p-1 hover:bg-gray-100 dark:hover:bg-gray-700 text-blue-600 hover:text-blue-800 transition">
+                    class="rounded-full p-1 hover:bg-slate-100/80 dark:hover:bg-slate-700/50 text-blue-600 hover:text-blue-800 transition">
                     <i class="fa-solid fa-headset text-lg"></i>
                   </button>
                   <!-- Delete -->
                   <button (click)="openDeleteModal(user.id_user, user.dni, user.router_id)"
                     title="Eliminar"
-                    class="rounded-full p-1 hover:bg-gray-100 dark:hover:bg-gray-700 text-red-500 hover:text-red-700 transition">
+                    class="rounded-full p-1 hover:bg-slate-100/80 dark:hover:bg-slate-700/50 text-red-500 hover:text-red-700 transition">
                     <i class="fa-solid fa-trash text-lg"></i>
                   </button>
                   <!-- WhatsApp toggle: solo si empresa tiene WA activo -->
                   <ng-container *ngIf="companyHasWA; else waDisabledTip">
                     <label class="relative inline-flex items-center gap-1.5 cursor-pointer" title="Notificaciones WhatsApp">
                       <input type="checkbox" class="sr-only peer" [checked]="user.whatsapp_enabled" (change)="toggleWhatsapp(user)"/>
-                      <div class="w-8 h-4 bg-gray-200 rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[1px] after:bg-white after:rounded-full after:h-3 after:w-3 after:transition-all peer-checked:bg-green-500 shrink-0"></div>
-                      <svg class="w-4 h-4 shrink-0" [class.text-green-500]="user.whatsapp_enabled" [class.text-gray-400]="!user.whatsapp_enabled" viewBox="0 0 24 24" fill="currentColor">
+                      <div class="w-8 h-4 bg-slate-200/60 rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[1px] after:bg-white after:rounded-full after:h-3 after:w-3 after:transition-all peer-checked:bg-green-500 shrink-0"></div>
+                      <svg class="w-4 h-4 shrink-0" [class.text-green-500]="user.whatsapp_enabled" [class.text-slate-400]="!user.whatsapp_enabled" viewBox="0 0 24 24" fill="currentColor">
                         <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/>
                         <path d="M12 0C5.373 0 0 5.373 0 12c0 2.089.534 4.049 1.475 5.762L0 24l6.435-1.44A11.945 11.945 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.818a9.818 9.818 0 01-5.007-1.373l-.36-.214-3.724.834.849-3.629-.236-.373A9.818 9.818 0 1112 21.818z"/>
                       </svg>
@@ -134,7 +134,7 @@
                   <ng-template #waDisabledTip>
                     <span class="relative inline-flex items-center gap-1 opacity-40 cursor-not-allowed"
                           title="Activa WhatsApp en Configuración > WhatsApp para habilitar esta opción">
-                      <svg class="w-4 h-4 text-gray-400" viewBox="0 0 24 24" fill="currentColor">
+                      <svg class="w-4 h-4 text-slate-400" viewBox="0 0 24 24" fill="currentColor">
                         <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/>
                         <path d="M12 0C5.373 0 0 5.373 0 12c0 2.089.534 4.049 1.475 5.762L0 24l6.435-1.44A11.945 11.945 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.818a9.818 9.818 0 01-5.007-1.373l-.36-.214-3.724.834.849-3.629-.236-.373A9.818 9.818 0 1112 21.818z"/>
                       </svg>
@@ -146,14 +146,14 @@
 
             <!-- Expanded row -->
             <tr *ngIf="user.expanded">
-              <td colspan="7" class="bg-gray-50 dark:bg-gray-900 px-4 py-3">
-                <div class="flex flex-wrap gap-3 items-center text-sm text-gray-600 dark:text-gray-400">
-                  <span class="text-xs sm:text-sm flex items-center gap-1"><i class="fa-solid fa-calendar text-xs"></i> <strong class="text-gray-800 dark:text-white">{{ user.date_create | date:'dd/MM/yyyy' }}</strong></span>
-                  <span class="text-xs sm:text-sm flex items-center gap-1"><i class="fa-solid fa-wifi text-xs"></i> <strong class="text-gray-800 dark:text-white">{{ user.ip || 'Sin IP' }}</strong></span>
-                  <span class="text-xs sm:text-sm flex items-center gap-1"><i class="fa-solid fa-box text-xs"></i> <strong class="text-gray-800 dark:text-white">{{ user.plan_name }}</strong></span>
+              <td colspan="7" class="bg-slate-50/80 dark:bg-slate-900/80 px-4 py-3">
+                <div class="flex flex-wrap gap-3 items-center text-sm text-slate-600 dark:text-slate-400">
+                  <span class="text-xs sm:text-sm flex items-center gap-1"><i class="fa-solid fa-calendar text-xs"></i> <strong class="text-slate-800 dark:text-white">{{ user.date_create | date:'dd/MM/yyyy' }}</strong></span>
+                  <span class="text-xs sm:text-sm flex items-center gap-1"><i class="fa-solid fa-wifi text-xs"></i> <strong class="text-slate-800 dark:text-white">{{ user.ip || 'Sin IP' }}</strong></span>
+                  <span class="text-xs sm:text-sm flex items-center gap-1"><i class="fa-solid fa-box text-xs"></i> <strong class="text-slate-800 dark:text-white">{{ user.plan_name }}</strong></span>
                   <div class="flex gap-2 ml-auto flex-shrink-0">
                     <button (click)="openPingModal(user.ip, user.names!, user.lastname!, user.dni, user.id_user)"
-                      class="flex items-center gap-1 px-3 py-1.5 text-xs rounded-lg bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-700 dark:text-white transition">
+                      class="flex items-center gap-1 px-3 py-1.5 text-xs rounded-xl bg-slate-200/60 dark:bg-slate-700/80 hover:bg-slate-300/80 dark:hover:bg-slate-600/80 text-slate-700 dark:text-white transition">
                       <i class="fa-solid fa-paper-plane text-xs"></i>
                       Ping
                     </button>
@@ -165,7 +165,7 @@
 
           <!-- Empty state -->
           <tr *ngIf="UserInterfaces.length === 0">
-            <td colspan="7" class="p-8 text-center text-gray-400 dark:text-gray-500">
+            <td colspan="7" class="p-8 text-center text-slate-400 dark:text-slate-500">
               No se encontraron clientes
             </td>
           </tr>
@@ -175,24 +175,24 @@
   </div>
 
   <!-- Pagination -->
-  <div class="p-4 flex flex-col sm:flex-row justify-between items-center gap-3 text-sm border-t dark:border-gray-700">
-    <span class="text-gray-500 dark:text-gray-400">
+  <div class="p-4 flex flex-col sm:flex-row justify-between items-center gap-3 text-sm border-t dark:border-slate-700/60">
+    <span class="text-slate-500 dark:text-slate-400">
       Mostrando {{ startIndex + 1 }} – {{ endIndex }} de {{ totalEntries }}
     </span>
     <div class="flex items-center gap-1 overflow-x-auto max-w-full pb-0.5">
-      <button (click)="prevPage()" [disabled]="currentPage === 1"
-        class="px-2 sm:px-3 py-1.5 rounded border text-gray-600 dark:text-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 disabled:opacity-40 transition whitespace-nowrap flex-shrink-0">
-        ‹
-      </button>
-      <button *ngFor="let p of pageNumbers" (click)="goToPage(p)"
-        class="px-2.5 sm:px-3 py-1.5 rounded border transition flex-shrink-0"
-        [ngClass]="p === currentPage ? 'bg-blue-600 text-white border-blue-600' : 'text-gray-600 dark:text-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700'">
-        {{ p }}
-      </button>
-      <button (click)="nextPage()" [disabled]="isLastPage"
-        class="px-2 sm:px-3 py-1.5 rounded border text-gray-600 dark:text-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 disabled:opacity-40 transition whitespace-nowrap flex-shrink-0">
-        ›
-      </button>
+       <button (click)="prevPage()" [disabled]="currentPage === 1"
+         class="px-2 sm:px-3 py-1.5 rounded-xl border text-slate-600 dark:text-slate-300 dark:border-slate-600/60 hover:bg-slate-100/80 dark:hover:bg-slate-700/50 disabled:opacity-40 transition whitespace-nowrap flex-shrink-0">
+         ‹
+       </button>
+       <button *ngFor="let p of pageNumbers" (click)="goToPage(p)"
+         class="px-2.5 sm:px-3 py-1.5 rounded-xl border transition flex-shrink-0"
+         [ngClass]="p === currentPage ? 'bg-gradient-to-br from-indigo-500 to-violet-600 text-white shadow-md border-transparent' : 'text-slate-600 dark:text-slate-300 dark:border-slate-600/60 hover:bg-slate-100/80 dark:hover:bg-slate-700/50'">
+         {{ p }}
+       </button>
+        <button (click)="nextPage()" [disabled]="isLastPage"
+          class="px-2 sm:px-3 py-1.5 rounded-xl border text-slate-600 dark:text-slate-300 dark:border-slate-600/60 hover:bg-slate-100/80 dark:hover:bg-slate-700/50 disabled:opacity-40 transition whitespace-nowrap flex-shrink-0">
+          ›
+        </button>
     </div>
   </div>
 </div>
@@ -202,21 +202,21 @@
      CLIENTE MODAL (Soporte)
 ══════════════════════════════════════════════════════════════════════════ -->
 <div *ngIf="showClienteModal"
-     class="fixed inset-0 z-50 flex items-start justify-center bg-black/60 sm:p-4 overflow-y-auto">
+     class="fixed inset-0 z-50 flex items-start justify-center bg-slate-900/50 backdrop-blur-sm sm:p-4 overflow-y-auto">
   <div class="relative w-full sm:max-w-6xl sm:my-4 min-h-full sm:min-h-0">
-    <div class="bg-white dark:bg-gray-800 sm:rounded-xl shadow-2xl overflow-hidden min-h-screen sm:min-h-0">
+    <div class="bg-white/95 dark:bg-slate-800/95 backdrop-blur-xl rounded-2xl shadow-2xl border border-slate-100 dark:border-slate-700 overflow-hidden min-h-screen sm:min-h-0">
 
       <!-- Modal header -->
-      <div class="flex flex-wrap items-center justify-between gap-2 px-4 sm:px-6 py-3 sm:py-4 border-b dark:border-gray-700 bg-gray-50 dark:bg-gray-900">
+      <div class="flex flex-wrap items-center justify-between gap-2 px-4 sm:px-6 py-3 sm:py-4 border-b dark:border-slate-700/60 bg-slate-50/80 dark:bg-slate-900/80 backdrop-blur-sm">
         <div class="flex items-center gap-3 min-w-0 flex-1">
           <div class="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-blue-600 flex-shrink-0 flex items-center justify-center text-white font-bold text-sm">
             {{ (selectedUserData?.names ?? 'C').charAt(0).toUpperCase() }}
           </div>
           <div class="min-w-0">
-            <h3 class="text-base sm:text-lg font-semibold text-gray-900 dark:text-white truncate">
+            <h3 class="text-base sm:text-lg font-semibold text-slate-900 dark:text-white truncate">
               {{ selectedUserData?.names }} {{ selectedUserData?.lastname }}
             </h3>
-            <p class="text-xs text-gray-500 dark:text-gray-400 truncate">
+            <p class="text-xs text-slate-500 dark:text-slate-400 truncate">
               {{ selectedUserData?.dni }} · IP: {{ selectedUserData?.ip || 'Sin IP' }}
             </p>
           </div>
@@ -230,44 +230,46 @@
             <span *ngIf="togglingStatus"><i class="fa-solid fa-circle-notch fa-spin text-xs"></i> ...</span>
           </button>
           <button (click)="closeClienteModal()"
-            class="w-8 h-8 flex items-center justify-center rounded-lg text-gray-400 hover:text-red-500 hover:bg-gray-100 dark:hover:bg-gray-700 transition">
+            class="w-8 h-8 flex items-center justify-center rounded-lg text-slate-400 hover:text-red-500 hover:bg-slate-100/80 dark:hover:bg-slate-700/50 transition">
             <i class="fa-solid fa-xmark"></i>
           </button>
         </div>
       </div>
 
       <!-- Tabs -->
-      <div class="flex border-b dark:border-gray-700 overflow-x-auto">
+      <div class="flex border-b dark:border-slate-700/60 overflow-x-auto">
         <button (click)="modalTab='resumen'"
           class="px-5 py-3 text-sm font-medium whitespace-nowrap border-b-2 transition flex items-center gap-2"
-          [ngClass]="modalTab==='resumen' ? 'border-blue-600 text-blue-600 dark:text-blue-400 dark:border-blue-400' : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'">
+          [ngClass]="modalTab==='resumen' ? 'border-indigo-500 text-indigo-600 dark:text-indigo-400 font-bold' : 'border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-700'">
           <i class="fa-solid fa-user text-sm"></i> Resumen
         </button>
         <button (click)="openServiciosTab()"
           class="px-5 py-3 text-sm font-medium whitespace-nowrap border-b-2 transition flex items-center gap-2"
-          [ngClass]="modalTab==='servicios' ? 'border-blue-600 text-blue-600 dark:text-blue-400 dark:border-blue-400' : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'">
+          [ngClass]="modalTab==='servicios' ? 'border-indigo-500 text-indigo-600 dark:text-indigo-400 font-bold' : 'border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-700'">
           <i class="fa-solid fa-wrench text-sm"></i> Servicios
         </button>
         <button (click)="modalTab='facturacion'"
           class="px-5 py-3 text-sm font-medium whitespace-nowrap border-b-2 transition flex items-center gap-2"
-          [ngClass]="modalTab==='facturacion' ? 'border-blue-600 text-blue-600 dark:text-blue-400 dark:border-blue-400' : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'">
+          [ngClass]="modalTab==='facturacion' ? 'border-indigo-500 text-indigo-600 dark:text-indigo-400 font-bold' : 'border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-700'">
           <i class="fa-solid fa-dollar-sign text-sm"></i> Facturación
         </button>
         <button (click)="modalTab='tickets'"
           class="px-5 py-3 text-sm font-medium whitespace-nowrap border-b-2 transition flex items-center gap-2"
-          [ngClass]="modalTab==='tickets' ? 'border-blue-600 text-blue-600 dark:text-blue-400 dark:border-blue-400' : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'">
+          [ngClass]="modalTab==='tickets' ? 'border-indigo-500 text-indigo-600 dark:text-indigo-400 font-bold' : 'border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-700'">
           <i class="fa-solid fa-ticket text-sm"></i> Tickets
         </button>
         <button (click)="modalTab='historial'"
           class="px-5 py-3 text-sm font-medium whitespace-nowrap border-b-2 transition flex items-center gap-2"
-          [ngClass]="modalTab==='historial' ? 'border-blue-600 text-blue-600 dark:text-blue-400 dark:border-blue-400' : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'">
+          [ngClass]="modalTab==='historial' ? 'border-indigo-500 text-indigo-600 dark:text-indigo-400 font-bold' : 'border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-700'">
           <i class="fa-solid fa-clock-rotate-left text-sm"></i> Historial
         </button>
       </div>
 
       <!-- Loading overlay -->
       <div *ngIf="loadingModal" class="p-12 flex justify-center">
-        <div class="w-10 h-10 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center animate-pulse shadow-lg shadow-indigo-500/30">
+          <svg class="w-5 h-5 text-white animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"/></svg>
+        </div>
       </div>
 
       <!-- Tab content -->
@@ -278,20 +280,20 @@
           <div class="grid grid-cols-1 xl:grid-cols-3 gap-4 sm:gap-6">
 
             <!-- Left: Client data -->
-            <div class="xl:col-span-2 bg-white dark:bg-gray-900 rounded-xl border dark:border-gray-700 p-4 sm:p-6">
+            <div class="xl:col-span-2 bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl rounded-2xl border border-slate-200/60 dark:border-slate-700/60 shadow-sm hover:shadow-md transition-all duration-300 p-4 sm:p-6">
               <div class="flex items-center justify-between mb-5">
-                <h4 class="font-semibold text-gray-800 dark:text-white">Datos del cliente</h4>
+                <h4 class="font-semibold text-slate-800 dark:text-white">Datos del cliente</h4>
                 <div class="flex gap-2" *ngIf="!isEditing">
                   <button (click)="enableEdit()"
-                    class="px-3 py-1.5 text-xs rounded-lg bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300 hover:bg-blue-200 transition flex items-center gap-1">
+                    class="px-3 py-1.5 text-xs rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 transition flex items-center gap-1">
                     <i class="fa-solid fa-pen text-xs"></i> Editar
                   </button>
                 </div>
                 <div class="flex gap-2" *ngIf="isEditing">
                   <button (click)="saveUser()"
-                    class="px-3 py-1.5 text-xs rounded-lg bg-green-600 text-white hover:bg-green-700 transition flex items-center gap-1"><i class="fa-solid fa-check text-xs"></i> Guardar</button>
+                    class="px-3 py-1.5 text-xs rounded-xl bg-gradient-to-br from-indigo-500 to-violet-600 text-white shadow-md shadow-indigo-500/20 hover:shadow-lg transition-all flex items-center gap-1"><i class="fa-solid fa-check text-xs"></i> Guardar</button>
                   <button (click)="cancelEdit()"
-                    class="px-3 py-1.5 text-xs rounded-lg bg-gray-200 text-gray-700 hover:bg-gray-300 transition flex items-center gap-1"><i class="fa-solid fa-xmark text-xs"></i> Cancelar</button>
+                    class="px-3 py-1.5 text-xs rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 transition flex items-center gap-1"><i class="fa-solid fa-xmark text-xs"></i> Cancelar</button>
                 </div>
               </div>
 
@@ -308,14 +310,14 @@
                     {label:'Fecha registro', key:'date_create', readonly: true}
                   ]">
                   <div>
-                    <span class="text-gray-500 dark:text-gray-400 text-xs uppercase tracking-wide">{{ field.label }}</span>
-                    <p *ngIf="!isEditing" class="mt-0.5 font-medium text-gray-800 dark:text-white">
+                    <span class="text-slate-500 dark:text-slate-400 text-xs uppercase tracking-wide">{{ field.label }}</span>
+                    <p *ngIf="!isEditing" class="mt-0.5 font-medium text-slate-800 dark:text-white">
                       {{ selectedUserData?.[field.key] || '—' }}
                     </p>
                     <input *ngIf="isEditing && !field.readonly"
                       [(ngModel)]="selectedUserData[field.key]"
-                      class="mt-0.5 w-full border-b border-gray-300 dark:border-gray-600 bg-transparent focus:outline-none focus:border-blue-500 text-gray-800 dark:text-white py-1"/>
-                    <p *ngIf="isEditing && field.readonly" class="mt-0.5 font-medium text-gray-400">
+                      class="mt-0.5 w-full px-3.5 py-2 text-sm bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl border border-slate-200/60 dark:border-slate-700/60 rounded-xl text-slate-700 dark:text-slate-300 focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-400 transition-all shadow-sm"/>
+                    <p *ngIf="isEditing && field.readonly" class="mt-0.5 font-medium text-slate-400">
                       {{ selectedUserData?.[field.key] || '—' }}
                     </p>
                   </div>
@@ -323,22 +325,22 @@
 
                 <!-- Plan (select when editing) -->
                 <div>
-                  <span class="text-gray-500 dark:text-gray-400 text-xs uppercase tracking-wide">Plan</span>
-                  <p *ngIf="!isEditing" class="mt-0.5 font-medium text-gray-800 dark:text-white">
+                  <span class="text-slate-500 dark:text-slate-400 text-xs uppercase tracking-wide">Plan</span>
+                  <p *ngIf="!isEditing" class="mt-0.5 font-medium text-slate-800 dark:text-white">
                     {{ selectedUserData?.plan_name || '—' }}
                   </p>
                   <select *ngIf="isEditing" [(ngModel)]="internet_plan"
-                    class="mt-0.5 w-full border-b border-gray-300 dark:border-gray-600 bg-transparent focus:outline-none focus:border-blue-500 dark:text-white py-1">
+                    class="mt-0.5 w-full px-3.5 py-2 text-sm bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl border border-slate-200/60 dark:border-slate-700/60 rounded-xl text-slate-700 dark:text-slate-300 focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-400 transition-all shadow-sm">
                     <option *ngFor="let p of PlanInternet" [value]="p.id">{{ p.names }}</option>
                   </select>
                 </div>
                 <div>
-                  <span class="text-gray-500 dark:text-gray-400 text-xs uppercase tracking-wide">Grupo facturación</span>
-                  <p *ngIf="!isEditing" class="mt-0.5 font-medium text-gray-800 dark:text-white">
+                  <span class="text-slate-500 dark:text-slate-400 text-xs uppercase tracking-wide">Grupo facturación</span>
+                  <p *ngIf="!isEditing" class="mt-0.5 font-medium text-slate-800 dark:text-white">
                     {{ dataCorteLabel }}
                   </p>
                   <select *ngIf="isEditing" [(ngModel)]="data_cortes"
-                    class="mt-0.5 w-full border-b border-gray-300 dark:border-gray-600 bg-transparent focus:outline-none focus:border-blue-500 dark:text-white py-1">
+                    class="mt-0.5 w-full px-3.5 py-2 text-sm bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl border border-slate-200/60 dark:border-slate-700/60 rounded-xl text-slate-700 dark:text-slate-300 focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-400 transition-all shadow-sm">
                     <option *ngFor="let d of DataCortes" [value]="d.id">{{ d.names }}</option>
                   </select>
                 </div>
@@ -347,36 +349,36 @@
 
             <!-- Right: Summary cards -->
             <div class="space-y-4">
-              <div class="bg-white dark:bg-gray-900 rounded-xl border dark:border-gray-700 p-5">
-                <h4 class="font-semibold text-gray-800 dark:text-white mb-4 text-sm">Resumen financiero</h4>
+              <div class="bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl rounded-2xl border border-slate-200/60 dark:border-slate-700/60 shadow-sm hover:shadow-md transition-all duration-300 p-5">
+                <h4 class="font-semibold text-slate-800 dark:text-white mb-4 text-sm">Resumen financiero</h4>
                 <div class="space-y-3 text-sm">
                   <div class="flex justify-between items-center">
-                    <span class="text-gray-500 dark:text-gray-400">Facturas pendientes</span>
+                    <span class="text-slate-500 dark:text-slate-400">Facturas pendientes</span>
                     <span class="font-bold text-red-500">{{ pendingFacturesCount }}</span>
                   </div>
                   <div class="flex justify-between items-center">
-                    <span class="text-gray-500 dark:text-gray-400">Total adeudado</span>
+                    <span class="text-slate-500 dark:text-slate-400">Total adeudado</span>
                     <span class="font-bold text-red-500">$ {{ pendingFacturesTotal | number:'1.2-2' }}</span>
                   </div>
                   <div class="flex justify-between items-center">
-                    <span class="text-gray-500 dark:text-gray-400">Tickets abiertos</span>
+                    <span class="text-slate-500 dark:text-slate-400">Tickets abiertos</span>
                     <span class="font-bold text-orange-500">{{ userTickets.length }}</span>
                   </div>
                 </div>
               </div>
-              <div class="bg-white dark:bg-gray-900 rounded-xl border dark:border-gray-700 p-5">
-                <h4 class="font-semibold text-gray-800 dark:text-white mb-3 text-sm">Acciones rápidas</h4>
+              <div class="bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl rounded-2xl border border-slate-200/60 dark:border-slate-700/60 shadow-sm hover:shadow-md transition-all duration-300 p-5">
+                <h4 class="font-semibold text-slate-800 dark:text-white mb-3 text-sm">Acciones rápidas</h4>
                 <div class="flex flex-col gap-2">
                   <button (click)="modalTab='facturacion'"
-                    class="w-full px-3 py-2 text-xs rounded-lg bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 hover:bg-blue-100 transition text-left flex items-center gap-2">
+                     class="w-full px-3 py-2 text-xs rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 transition text-left flex items-center gap-2">
                     <i class="fa-solid fa-dollar-sign text-sm"></i> Ver facturación
                   </button>
                   <button (click)="modalTab='tickets'"
-                    class="w-full px-3 py-2 text-xs rounded-lg bg-orange-50 dark:bg-orange-900/20 text-orange-700 dark:text-orange-300 hover:bg-orange-100 transition text-left flex items-center gap-2">
+                     class="w-full px-3 py-2 text-xs rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 transition text-left flex items-center gap-2">
                     <i class="fa-solid fa-ticket text-sm"></i> Ver tickets
                   </button>
                   <button (click)="downloadCsvUser()"
-                    class="w-full px-3 py-2 text-xs rounded-lg bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-300 hover:bg-green-100 transition text-left flex items-center gap-2">
+                     class="w-full px-3 py-2 text-xs rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 transition text-left flex items-center gap-2">
                     <i class="fa-solid fa-download text-sm"></i> Exportar CSV cliente
                   </button>
                 </div>
@@ -391,20 +393,20 @@
 
             <!-- Equipo ONT asignado -->
             <div>
-              <h4 class="font-semibold text-gray-800 dark:text-white mb-3">Equipo ONT</h4>
-              <div class="bg-gray-50 dark:bg-gray-900 rounded-xl border dark:border-gray-700 p-5">
-                <div *ngIf="loadingOnt" class="flex items-center gap-2 text-sm text-gray-400 animate-pulse">
+              <h4 class="font-semibold text-slate-800 dark:text-white mb-3">Equipo ONT</h4>
+              <div class="bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl rounded-2xl border border-slate-200/60 dark:border-slate-700/60 shadow-sm hover:shadow-md transition-all duration-300 p-5">
+                <div *ngIf="loadingOnt" class="flex items-center gap-2 text-sm text-slate-400 animate-pulse">
                   <i class="fa-solid fa-circle-notch fa-spin"></i>
                   Consultando equipo...
                 </div>
                 <div *ngIf="!loadingOnt && assignedOnt" class="space-y-3">
                   <div class="flex items-center gap-3 mb-1">
-                    <div class="w-9 h-9 rounded-lg bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
-                      <i class="fa-solid fa-server text-blue-600 dark:text-blue-400 text-lg"></i>
+                     <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center shrink-0 shadow-md shadow-violet-500/20">
+                       <i class="fa-solid fa-server text-white text-lg"></i>
                     </div>
                     <div>
-                      <p class="text-sm font-semibold text-gray-800 dark:text-white">{{ assignedOnt.olt?.name || 'OLT' }}</p>
-                      <p class="text-xs text-gray-400">{{ assignedOnt.olt?.host }}</p>
+                      <p class="text-sm font-semibold text-slate-800 dark:text-white">{{ assignedOnt.olt?.name || 'OLT' }}</p>
+                      <p class="text-xs text-slate-400">{{ assignedOnt.olt?.host }}</p>
                     </div>
                     <span class="ml-auto px-2 py-0.5 text-xs rounded-full font-medium"
                           [ngClass]="assignedOnt.status === 'online'
@@ -414,26 +416,26 @@
                     </span>
                   </div>
                   <div class="grid grid-cols-2 gap-3 text-sm">
-                    <div class="bg-white dark:bg-gray-800 rounded-lg px-3 py-2 border dark:border-gray-700">
-                      <p class="text-xs text-gray-400 mb-0.5">Puerto (FSP)</p>
-                      <p class="font-mono font-medium text-gray-800 dark:text-white">{{ assignedOnt.fsp }}</p>
+                     <div class="bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl rounded-xl border border-slate-200/60 dark:border-slate-700/60 px-3.5 py-2 shadow-sm">
+                      <p class="text-xs text-slate-400 mb-0.5">Puerto (FSP)</p>
+                      <p class="font-mono font-medium text-slate-800 dark:text-white">{{ assignedOnt.fsp }}</p>
                     </div>
-                    <div class="bg-white dark:bg-gray-800 rounded-lg px-3 py-2 border dark:border-gray-700">
-                      <p class="text-xs text-gray-400 mb-0.5">ONT ID</p>
-                      <p class="font-mono font-medium text-gray-800 dark:text-white">{{ assignedOnt.ont_id }}</p>
+                     <div class="bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl rounded-xl border border-slate-200/60 dark:border-slate-700/60 px-3.5 py-2 shadow-sm">
+                      <p class="text-xs text-slate-400 mb-0.5">ONT ID</p>
+                      <p class="font-mono font-medium text-slate-800 dark:text-white">{{ assignedOnt.ont_id }}</p>
                     </div>
-                    <div *ngIf="assignedOnt.serial" class="bg-white dark:bg-gray-800 rounded-lg px-3 py-2 border dark:border-gray-700">
-                      <p class="text-xs text-gray-400 mb-0.5">Serial</p>
-                      <p class="font-mono font-medium text-gray-800 dark:text-white text-xs">{{ assignedOnt.serial }}</p>
+                    <div *ngIf="assignedOnt.serial" class="bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl rounded-xl border border-slate-200/60 dark:border-slate-700/60 px-3.5 py-2 shadow-sm">
+                      <p class="text-xs text-slate-400 mb-0.5">Serial</p>
+                      <p class="font-mono font-medium text-slate-800 dark:text-white text-xs">{{ assignedOnt.serial }}</p>
                     </div>
-                    <div *ngIf="assignedOnt.description" class="bg-white dark:bg-gray-800 rounded-lg px-3 py-2 border dark:border-gray-700">
-                      <p class="text-xs text-gray-400 mb-0.5">Descripción</p>
-                      <p class="text-sm font-medium text-gray-800 dark:text-white">{{ assignedOnt.description }}</p>
+                    <div *ngIf="assignedOnt.description" class="bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl rounded-xl border border-slate-200/60 dark:border-slate-700/60 px-3.5 py-2 shadow-sm">
+                      <p class="text-xs text-slate-400 mb-0.5">Descripción</p>
+                      <p class="text-sm font-medium text-slate-800 dark:text-white">{{ assignedOnt.description }}</p>
                     </div>
                   </div>
                   <!-- Service ports -->
                   <div *ngIf="assignedOnt.service_ports?.length">
-                    <p class="text-xs text-gray-400 mb-1.5">Service Ports</p>
+                    <p class="text-xs text-slate-400 mb-1.5">Service Ports</p>
                     <div class="flex flex-wrap gap-1.5">
                       <span *ngFor="let sp of assignedOnt.service_ports"
                             class="inline-flex items-center gap-1 font-mono text-xs bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 px-2 py-0.5 rounded-full border border-blue-200 dark:border-blue-700">
@@ -442,7 +444,7 @@
                     </div>
                   </div>
                 </div>
-                <div *ngIf="!loadingOnt && !assignedOnt" class="flex items-center gap-3 text-sm text-gray-400">
+                <div *ngIf="!loadingOnt && !assignedOnt" class="flex items-center gap-3 text-sm text-slate-400">
                   <i class="fa-solid fa-server text-2xl opacity-40"></i>
                   Sin equipo ONT asignado. Puedes asignarlo desde <strong class="ml-1">Admin OLT → Autorizadas</strong>.
                 </div>
@@ -451,15 +453,15 @@
 
             <!-- Selector de Router -->
             <div *ngIf="routers.length">
-              <h4 class="font-semibold text-gray-800 dark:text-white mb-4">Router Mikrotik</h4>
-              <div class="bg-gray-50 dark:bg-gray-900 rounded-xl border dark:border-gray-700 p-5">
+              <h4 class="font-semibold text-slate-800 dark:text-white mb-4">Router Mikrotik</h4>
+              <div class="bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl rounded-2xl border border-slate-200/60 dark:border-slate-700/60 shadow-sm hover:shadow-md transition-all duration-300 p-5">
                 <select [(ngModel)]="selectedRouterId" (ngModelChange)="onServiceRouterChange()"
-                  class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white text-sm focus:ring-blue-500 focus:border-blue-500">
+                   class="w-full px-3.5 py-2 text-sm bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl border border-slate-200/60 dark:border-slate-700/60 rounded-xl text-slate-700 dark:text-slate-300 focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-400 transition-all shadow-sm">
                   <option [ngValue]="null" disabled>Seleccione router...</option>
                   <option *ngFor="let r of routers" [value]="r.id">{{ r.name || r.host }}</option>
                 </select>
-                <p *ngIf="loadingRouters" class="text-xs text-gray-400 mt-1">Cargando routers...</p>
-                <p *ngIf="selectedRouterId && routers.length === 1" class="text-xs text-gray-400 mt-1">
+                <p *ngIf="loadingRouters" class="text-xs text-slate-400 mt-1">Cargando routers...</p>
+                <p *ngIf="selectedRouterId && routers.length === 1" class="text-xs text-slate-400 mt-1">
                   Cliente registrado en este router.
                 </p>
               </div>
@@ -467,22 +469,22 @@
 
             <!-- Autorizar servicio -->
             <div>
-              <h4 class="font-semibold text-gray-800 dark:text-white mb-4">Autorizar servicio</h4>
-              <div class="bg-gray-50 dark:bg-gray-900 rounded-xl border dark:border-gray-700 p-5">
+              <h4 class="font-semibold text-slate-800 dark:text-white mb-4">Autorizar servicio</h4>
+              <div class="bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl rounded-2xl border border-slate-200/60 dark:border-slate-700/60 shadow-sm hover:shadow-md transition-all duration-300 p-5">
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
                   <div>
-                    <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">MAC Address</label>
+                    <label class="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">MAC Address</label>
                     <input type="text" [(ngModel)]="mac" placeholder="AA:BB:CC:DD:EE:FF"
-                      class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white text-sm focus:ring-blue-500 focus:border-blue-500"/>
+                       class="w-full px-3.5 py-2 text-sm bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl border border-slate-200/60 dark:border-slate-700/60 rounded-xl text-slate-700 dark:text-slate-300 focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-400 transition-all shadow-sm"/>
                   </div>
                   <div>
-                    <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Serial</label>
+                    <label class="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">Serial</label>
                     <input type="text" [(ngModel)]="serial" placeholder="Serial del equipo"
-                      class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white text-sm focus:ring-blue-500 focus:border-blue-500"/>
+                       class="w-full px-3.5 py-2 text-sm bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl border border-slate-200/60 dark:border-slate-700/60 rounded-xl text-slate-700 dark:text-slate-300 focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-400 transition-all shadow-sm"/>
                   </div>
                 </div>
                 <button (click)="autorizarServicio()" [disabled]="submittingService || !mac"
-                  class="w-full px-4 py-2 rounded-lg bg-green-600 text-white text-sm font-medium hover:bg-green-700 disabled:opacity-50 transition flex items-center justify-center gap-2">
+                  class="w-full px-4 py-2 rounded-xl bg-gradient-to-br from-indigo-500 to-violet-600 text-white shadow-md shadow-indigo-500/20 hover:shadow-lg text-sm font-medium disabled:opacity-50 transition-all flex items-center justify-center gap-2">
                   <i class="fa-solid fa-plus"></i> {{ submittingService ? 'Autorizando...' : 'Autorizar Servicio' }}
                 </button>
               </div>
@@ -490,36 +492,36 @@
 
             <!-- Migración de IP -->
             <div>
-              <h4 class="font-semibold text-gray-800 dark:text-white mb-4">Migración de IP</h4>
-              <div class="bg-gray-50 dark:bg-gray-900 rounded-xl border dark:border-gray-700 p-5">
+              <h4 class="font-semibold text-slate-800 dark:text-white mb-4">Migración de IP</h4>
+              <div class="bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl rounded-2xl border border-slate-200/60 dark:border-slate-700/60 shadow-sm hover:shadow-md transition-all duration-300 p-5">
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
                   <div>
-                    <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">VLAN</label>
+                    <label class="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">VLAN</label>
                     <select [(ngModel)]="migrVlan" (ngModelChange)="onMigrVlanChange($event)"
-                      class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white text-sm">
+                      class="w-full px-3.5 py-2 text-sm bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl border border-slate-200/60 dark:border-slate-700/60 rounded-xl text-slate-700 dark:text-slate-300 focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-400 transition-all shadow-sm">
                       <option [ngValue]="null" disabled>Seleccione VLAN...</option>
                       <option *ngFor="let iface of interfaces" [ngValue]="iface">{{ iface.names }}</option>
                     </select>
                   </div>
                   <div>
-                    <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Segmento</label>
+                    <label class="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">Segmento</label>
                     <select [(ngModel)]="migrSeg" (ngModelChange)="onMigrSegChange($event)" [disabled]="!migrSegments.length"
-                      class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white text-sm disabled:opacity-50">
+                      class="w-full px-3.5 py-2 text-sm bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl border border-slate-200/60 dark:border-slate-700/60 rounded-xl text-slate-700 dark:text-slate-300 focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-400 transition-all shadow-sm disabled:opacity-50">
                       <option [ngValue]="null" disabled>Seleccione segmento...</option>
                       <option *ngFor="let s of migrSegments" [ngValue]="s">{{ s.network }}</option>
                     </select>
                   </div>
                   <div class="sm:col-span-2">
-                    <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">IP ({{ migrIpzone.length }} disponibles)</label>
+                    <label class="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">IP ({{ migrIpzone.length }} disponibles)</label>
                     <select [(ngModel)]="migrIp" [disabled]="!migrIpzone.length"
-                      class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white text-sm disabled:opacity-50">
+                      class="w-full px-3.5 py-2 text-sm bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl border border-slate-200/60 dark:border-slate-700/60 rounded-xl text-slate-700 dark:text-slate-300 focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-400 transition-all shadow-sm disabled:opacity-50">
                       <option value="" disabled>Seleccione IP...</option>
                       <option *ngFor="let ip of migrIpzone" [value]="ip.id">{{ ip.names }}</option>
                     </select>
                   </div>
                 </div>
                 <button (click)="migrarIp()" [disabled]="submittingMigr || !migrIp || !migrVlan"
-                  class="w-full px-4 py-2 rounded-lg bg-orange-600 text-white text-sm font-medium hover:bg-orange-700 disabled:opacity-50 transition">
+                  class="w-full px-4 py-2 rounded-xl bg-gradient-to-br from-orange-500 to-red-600 text-white shadow-md shadow-orange-500/20 hover:shadow-lg text-sm font-medium disabled:opacity-50 transition-all">
                   {{ submittingMigr ? 'Migrando...' : 'Migrar IP' }}
                 </button>
               </div>
@@ -533,53 +535,53 @@
           <!-- Toolbar -->
           <div class="flex flex-wrap items-center gap-2 sm:gap-3 mb-4">
             <button (click)="showCreateFactureForm = !showCreateFactureForm"
-              class="px-4 py-2 text-sm rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition flex items-center gap-2">
+              class="px-4 py-2 text-sm rounded-xl bg-gradient-to-br from-indigo-500 to-violet-600 text-white shadow-md shadow-indigo-500/20 hover:shadow-lg transition-all flex items-center gap-2">
               <i class="fa-solid fa-plus text-sm"></i> Nueva factura
             </button>
-            <div class="flex rounded-lg overflow-hidden border dark:border-gray-600 text-xs">
+            <div class="flex rounded-xl overflow-hidden border dark:border-slate-600/60 text-xs">
               <button (click)="factureFilter='all'"
                 class="px-3 py-1.5 transition"
-                [ngClass]="factureFilter==='all' ? 'bg-blue-600 text-white' : 'bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:bg-gray-100'">
+                [ngClass]="factureFilter==='all' ? 'bg-gradient-to-br from-indigo-500 to-violet-600 text-white shadow-md' : 'bg-white dark:bg-slate-800/80 text-slate-600 dark:text-slate-300 hover:bg-slate-100/80'">
                 Todas
               </button>
               <button (click)="factureFilter='pending'"
                 class="px-3 py-1.5 transition"
-                [ngClass]="factureFilter==='pending' ? 'bg-yellow-500 text-white' : 'bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:bg-gray-100'">
+                [ngClass]="factureFilter==='pending' ? 'bg-yellow-500 text-white' : 'bg-white dark:bg-slate-800/80 text-slate-600 dark:text-slate-300 hover:bg-slate-100/80'">
                 Pendientes
               </button>
               <button (click)="factureFilter='paid'"
                 class="px-3 py-1.5 transition"
-                [ngClass]="factureFilter==='paid' ? 'bg-green-600 text-white' : 'bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:bg-gray-100'">
+                [ngClass]="factureFilter==='paid' ? 'bg-green-600 text-white' : 'bg-white dark:bg-slate-800/80 text-slate-600 dark:text-slate-300 hover:bg-slate-100/80'">
                 Pagadas
               </button>
             </div>
             <input type="search" [(ngModel)]="factureSearch" placeholder="Buscar N° factura..."
-              class="w-full sm:w-auto border rounded-lg px-3 py-1.5 text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white"/>
+              class="w-full sm:w-auto px-3.5 py-2 text-sm bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl border border-slate-200/60 dark:border-slate-700/60 rounded-xl text-slate-700 dark:text-slate-300 focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-400 transition-all shadow-sm"/>
           </div>
 
           <!-- Create facture form -->
           <div *ngIf="showCreateFactureForm"
-               class="mb-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-xl p-4">
-            <h5 class="font-medium text-blue-800 dark:text-blue-200 mb-3 text-sm">Nueva factura</h5>
+                class="mb-4 bg-indigo-50/50 dark:bg-indigo-900/20 border border-indigo-200/60 dark:border-indigo-800/60 rounded-xl p-4">
+            <h5 class="font-medium text-indigo-800 dark:text-indigo-200 mb-3 text-sm">Nueva factura</h5>
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Valor total</label>
+                <label class="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">Valor total</label>
                 <input type="number" [(ngModel)]="newFacture.price_total"
-                  class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white text-sm"/>
+                  class="w-full px-3.5 py-2 text-sm bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl border border-slate-200/60 dark:border-slate-700/60 rounded-xl text-slate-700 dark:text-slate-300 focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-400 transition-all shadow-sm"/>
               </div>
               <div>
-                <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Fecha</label>
+                <label class="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">Fecha</label>
                 <input type="datetime-local" [(ngModel)]="newFacture.date_facturation"
-                  class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white text-sm"/>
+                  class="w-full px-3.5 py-2 text-sm bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl border border-slate-200/60 dark:border-slate-700/60 rounded-xl text-slate-700 dark:text-slate-300 focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-400 transition-all shadow-sm"/>
               </div>
             </div>
             <div class="flex gap-2 mt-3">
               <button (click)="createFacture()" [disabled]="submittingFacture"
-                class="px-4 py-2 text-sm rounded-lg bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50 transition">
+                class="px-4 py-2 text-sm rounded-xl bg-gradient-to-br from-indigo-500 to-violet-600 text-white shadow-md shadow-indigo-500/20 hover:shadow-lg disabled:opacity-50 transition-all">
                 {{ submittingFacture ? 'Creando...' : 'Crear factura' }}
               </button>
               <button (click)="showCreateFactureForm = false"
-                class="px-4 py-2 text-sm rounded-lg bg-gray-200 text-gray-700 hover:bg-gray-300 transition">
+                class="px-4 py-2 text-sm rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 transition">
                 Cancelar
               </button>
             </div>
@@ -587,13 +589,15 @@
 
           <!-- Loading -->
           <div *ngIf="loadingFacture" class="flex justify-center py-8">
-            <div class="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+            <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center animate-pulse shadow-lg shadow-indigo-500/30">
+              <svg class="w-5 h-5 text-white animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"/></svg>
+            </div>
           </div>
 
           <!-- Table -->
-          <div *ngIf="!loadingFacture" class="overflow-x-auto rounded-xl border dark:border-gray-700">
-            <table class="min-w-[750px] w-full text-sm divide-y divide-gray-200 dark:divide-gray-700">
-              <thead class="bg-gray-50 dark:bg-gray-700 text-xs uppercase text-gray-500 dark:text-gray-400">
+          <div *ngIf="!loadingFacture" class="overflow-x-auto rounded-xl border dark:border-slate-700/60">
+            <table class="min-w-[750px] w-full text-sm divide-y divide-slate-200/60 dark:divide-slate-700/60">
+              <thead class="bg-slate-50/80 dark:bg-slate-700/80 text-xs uppercase tracking-wider font-bold text-slate-500 dark:text-slate-400">
                 <tr>
                   <th class="px-4 py-3">N° Factura</th>
                   <th class="px-4 py-3">Emitido</th>
@@ -604,11 +608,11 @@
                   <th class="px-4 py-3 text-center">Acciones</th>
                 </tr>
               </thead>
-              <tbody class="divide-y divide-gray-200 dark:divide-gray-700 dark:bg-gray-800">
+              <tbody class="divide-y divide-slate-200/60 dark:divide-slate-700/60 dark:bg-slate-800/80">
                 <tr *ngFor="let item of filteredFactures"
-                    class="hover:bg-gray-50 dark:hover:bg-gray-700 transition">
+                    class="hover:bg-slate-50/80 dark:hover:bg-slate-700/50 transition">
                   <td class="px-4 py-2.5 font-medium text-blue-600 dark:text-blue-400">{{ item.number_facture }}</td>
-                  <td class="px-4 py-2.5 text-gray-600 dark:text-gray-300">{{ item.date_facturation | date:'dd/MM/yyyy' }}</td>
+                  <td class="px-4 py-2.5 text-slate-600 dark:text-slate-300">{{ item.date_facturation | date:'dd/MM/yyyy' }}</td>
                   <td class="px-4 py-2.5">
                     <span class="px-2 py-0.5 rounded-full text-xs font-semibold text-white"
                           [ngClass]="item.paid === 1 ? 'bg-teal-500' : 'bg-yellow-500'">
@@ -616,10 +620,10 @@
                     </span>
                   </td>
                   <td class="px-4 py-2.5 text-right font-medium">$ {{ item.price_total | number:'1.2-2' }}</td>
-                  <td class="px-4 py-2.5 text-right" [ngClass]="(item.restante ?? 0) > 0 ? 'text-red-500 font-semibold' : 'text-gray-500'">
+                  <td class="px-4 py-2.5 text-right" [ngClass]="(item.restante ?? 0) > 0 ? 'text-red-500 font-semibold' : 'text-slate-500'">
                     $ {{ item.restante | number:'1.2-2' }}
                   </td>
-                  <td class="px-4 py-2.5 text-gray-500 dark:text-gray-400">{{ item.updated_at | date:'dd/MM/yyyy' }}</td>
+                  <td class="px-4 py-2.5 text-slate-500 dark:text-slate-400">{{ item.updated_at | date:'dd/MM/yyyy' }}</td>
                   <td class="px-4 py-2.5">
                     <div class="flex items-center justify-center gap-1">
                       <!-- Pay -->
@@ -653,7 +657,7 @@
                   </td>
                 </tr>
                 <tr *ngIf="filteredFactures.length === 0">
-                  <td colspan="7" class="px-4 py-8 text-center text-gray-400 dark:text-gray-500">
+                  <td colspan="7" class="px-4 py-8 text-center text-slate-400 dark:text-slate-500">
                     No hay facturas {{ factureFilter !== 'all' ? 'en este estado' : '' }}
                   </td>
                 </tr>
@@ -665,14 +669,14 @@
         <!-- ── Tickets ──────────────────────────────────────────────────── -->
         <div *ngIf="modalTab === 'tickets'">
           <div class="flex flex-wrap items-center justify-between gap-2 mb-4">
-            <h4 class="font-semibold text-gray-800 dark:text-white">Historial de Tickets</h4>
+            <h4 class="font-semibold text-slate-800 dark:text-white">Historial de Tickets</h4>
             <div class="flex items-center gap-2">
               <button (click)="openPingModal(selectedUserData?.ip, selectedUserData?.names, selectedUserData?.lastname, selectedUserData?.dni, selectedUserId)"
-                class="px-4 py-2 text-sm rounded-lg bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-white hover:bg-gray-300 dark:hover:bg-gray-600 transition whitespace-nowrap flex items-center gap-2">
+                 class="px-4 py-2 text-sm rounded-xl bg-slate-200/60 dark:bg-slate-700/80 text-slate-700 dark:text-white hover:bg-slate-300/80 dark:hover:bg-slate-600/80 transition whitespace-nowrap flex items-center gap-2">
                 <i class="fa-solid fa-paper-plane text-sm"></i> Ping
               </button>
               <button (click)="showNewTicketForm = !showNewTicketForm"
-                class="px-4 py-2 text-sm rounded-lg bg-orange-500 text-white hover:bg-orange-600 transition whitespace-nowrap flex items-center gap-2">
+                class="px-4 py-2 text-sm rounded-xl bg-gradient-to-br from-orange-500 to-red-600 text-white shadow-md shadow-orange-500/20 hover:shadow-lg transition-all whitespace-nowrap flex items-center gap-2">
                 <i class="fa-solid fa-plus text-sm"></i> Nuevo ticket
               </button>
             </div>
@@ -680,51 +684,51 @@
 
           <!-- New ticket form -->
           <div *ngIf="showNewTicketForm"
-               class="mb-4 bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800 rounded-xl p-5">
+                class="mb-4 bg-orange-50/50 dark:bg-orange-900/20 border border-orange-200/60 dark:border-orange-800/60 rounded-xl p-5">
             <h5 class="font-medium text-orange-800 dark:text-orange-200 mb-4 text-sm">Crear nuevo ticket</h5>
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
               <div>
-                <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Tipo de servicio *</label>
+                <label class="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">Tipo de servicio *</label>
                 <select [(ngModel)]="ticketForm.type_service"
-                  class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white text-sm">
+                  class="w-full px-3.5 py-2 text-sm bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl border border-slate-200/60 dark:border-slate-700/60 rounded-xl text-slate-700 dark:text-slate-300 focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-400 transition-all shadow-sm">
                   <option [value]="0" disabled>Seleccione...</option>
                   <option *ngFor="let s of serviceTypes" [value]="s.id">{{ s.name }}</option>
                 </select>
               </div>
               <div>
-                <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Prioridad *</label>
+                <label class="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">Prioridad *</label>
                 <select [(ngModel)]="ticketForm.priority"
-                  class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white text-sm">
+                  class="w-full px-3.5 py-2 text-sm bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl border border-slate-200/60 dark:border-slate-700/60 rounded-xl text-slate-700 dark:text-slate-300 focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-400 transition-all shadow-sm">
                   <option [value]="0" disabled>Seleccione...</option>
                   <option *ngFor="let p of priorities" [value]="p.id">{{ p.name }}</option>
                 </select>
               </div>
               <div>
-                <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Técnico *</label>
+                <label class="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">Técnico *</label>
                 <select [(ngModel)]="ticketForm.tecnichal"
-                  class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white text-sm">
+                  class="w-full px-3.5 py-2 text-sm bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl border border-slate-200/60 dark:border-slate-700/60 rounded-xl text-slate-700 dark:text-slate-300 focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-400 transition-all shadow-sm">
                   <option [value]="0" disabled>Seleccione...</option>
                   <option *ngFor="let t of technicians" [value]="t.id_user">{{ t.names }} {{ t.lastname }}</option>
                 </select>
               </div>
               <div>
-                <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Fecha</label>
+                <label class="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">Fecha</label>
                 <input type="date" [(ngModel)]="ticketForm.date"
-                  class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white text-sm"/>
+                  class="w-full px-3.5 py-2 text-sm bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl border border-slate-200/60 dark:border-slate-700/60 rounded-xl text-slate-700 dark:text-slate-300 focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-400 transition-all shadow-sm"/>
               </div>
               <div class="sm:col-span-2">
-                <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Observación *</label>
+                <label class="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">Observación *</label>
                 <textarea [(ngModel)]="ticketForm.observation" rows="3" placeholder="Describe el problema o requerimiento..."
-                  class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white text-sm resize-none"></textarea>
+                  class="w-full px-3.5 py-2 text-sm bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl border border-slate-200/60 dark:border-slate-700/60 rounded-xl text-slate-700 dark:text-slate-300 focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-400 transition-all shadow-sm resize-none"></textarea>
               </div>
             </div>
             <div class="flex gap-2">
               <button (click)="createTicket()" [disabled]="submittingTicket"
-                class="px-4 py-2 text-sm rounded-lg bg-orange-500 text-white hover:bg-orange-600 disabled:opacity-50 transition">
+                class="px-4 py-2 text-sm rounded-xl bg-gradient-to-br from-orange-500 to-red-600 text-white shadow-md shadow-orange-500/20 hover:shadow-lg disabled:opacity-50 transition-all">
                 {{ submittingTicket ? 'Creando...' : 'Crear ticket' }}
               </button>
               <button (click)="showNewTicketForm = false"
-                class="px-4 py-2 text-sm rounded-lg bg-gray-200 text-gray-700 hover:bg-gray-300 transition">
+                class="px-4 py-2 text-sm rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 transition">
                 Cancelar
               </button>
             </div>
@@ -732,13 +736,15 @@
 
           <!-- Loading -->
           <div *ngIf="loadingTickets" class="flex justify-center py-8">
-            <div class="w-8 h-8 border-4 border-orange-500 border-t-transparent rounded-full animate-spin"></div>
+            <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-orange-500 to-red-600 flex items-center justify-center animate-pulse shadow-lg shadow-orange-500/30">
+              <svg class="w-5 h-5 text-white animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"/></svg>
+            </div>
           </div>
 
           <!-- Table -->
-          <div *ngIf="!loadingTickets" class="overflow-x-auto rounded-xl border dark:border-gray-700">
-            <table class="min-w-[700px] w-full text-sm divide-y divide-gray-200 dark:divide-gray-700">
-              <thead class="bg-gray-50 dark:bg-gray-700 text-xs uppercase text-gray-500 dark:text-gray-400">
+          <div *ngIf="!loadingTickets" class="overflow-x-auto rounded-xl border dark:border-slate-700/60">
+            <table class="min-w-[700px] w-full text-sm divide-y divide-slate-200/60 dark:divide-slate-700/60">
+              <thead class="bg-slate-50/80 dark:bg-slate-700/80 text-xs uppercase tracking-wider font-bold text-slate-500 dark:text-slate-400">
                 <tr>
                   <th class="px-4 py-3">N°</th>
                   <th class="px-4 py-3">Servicio</th>
@@ -750,9 +756,9 @@
                   <th class="px-4 py-3 text-center">PDF</th>
                 </tr>
               </thead>
-              <tbody class="divide-y divide-gray-200 dark:divide-gray-700 dark:bg-gray-800">
-                <tr *ngFor="let t of pagedTickets" class="hover:bg-gray-50 dark:hover:bg-gray-700 transition">
-                  <td class="px-4 py-2.5 font-medium text-gray-700 dark:text-white">{{ t.id }}</td>
+              <tbody class="divide-y divide-slate-200/60 dark:divide-slate-700/60 dark:bg-slate-800/80">
+                <tr *ngFor="let t of pagedTickets" class="hover:bg-slate-50/80 dark:hover:bg-slate-700/50 transition">
+                  <td class="px-4 py-2.5 font-medium text-slate-700 dark:text-white">{{ t.id }}</td>
                   <td class="px-4 py-2.5">
                     <span class="px-2 py-0.5 rounded bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300 text-xs">
                       {{ t.service }}
@@ -763,13 +769,13 @@
                           [ngClass]="{
                             'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300': t.prioritys === 'ALTA',
                             'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-300': t.prioritys === 'MEDIA',
-                            'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300': t.prioritys !== 'ALTA' && t.prioritys !== 'MEDIA'
+                            'bg-slate-100/80 text-slate-700 dark:bg-slate-700/80 dark:text-slate-300': t.prioritys !== 'ALTA' && t.prioritys !== 'MEDIA'
                           }">
                       {{ t.prioritys }}
                     </span>
                   </td>
-                  <td class="px-4 py-2.5 text-gray-600 dark:text-gray-300">{{ t.tech_names }} {{ t.tech_lastname }}</td>
-                  <td class="px-4 py-2.5 text-gray-500 dark:text-gray-400">{{ t.date | date:'dd/MM/yyyy' }}</td>
+                  <td class="px-4 py-2.5 text-slate-600 dark:text-slate-300">{{ t.tech_names }} {{ t.tech_lastname }}</td>
+                  <td class="px-4 py-2.5 text-slate-500 dark:text-slate-400">{{ t.date | date:'dd/MM/yyyy' }}</td>
                   <td class="px-4 py-2.5">
                     <span class="px-2 py-0.5 rounded-full text-xs font-semibold text-white"
                           [ngClass]="{
@@ -780,7 +786,7 @@
                       {{ t.status }}
                     </span>
                   </td>
-                  <td class="px-4 py-2.5 text-gray-500 dark:text-gray-400 truncate max-w-[160px]">{{ t.observation }}</td>
+                  <td class="px-4 py-2.5 text-slate-500 dark:text-slate-400 truncate max-w-[160px]">{{ t.observation }}</td>
                   <td class="px-4 py-2.5 text-center">
                     <button (click)="downloadTicketPdf(t.id)" title="PDF Ticket"
                       class="p-1.5 rounded-lg bg-blue-100 text-blue-700 hover:bg-blue-200 dark:bg-blue-900/30 dark:text-blue-300 transition">
@@ -789,7 +795,7 @@
                   </td>
                 </tr>
                 <tr *ngIf="userTickets.length === 0">
-                  <td colspan="8" class="px-4 py-8 text-center text-gray-400 dark:text-gray-500">
+                  <td colspan="8" class="px-4 py-8 text-center text-slate-400 dark:text-slate-500">
                     No hay tickets registrados para este cliente
                   </td>
                 </tr>
@@ -799,20 +805,20 @@
 
           <!-- Ticket pagination -->
           <div *ngIf="ticketPageCount > 1" class="flex items-center justify-between mt-3 px-1">
-            <span class="text-xs text-gray-400 dark:text-gray-500">
+            <span class="text-xs text-slate-400 dark:text-slate-500">
               {{ (ticketPage-1)*ticketPerPage+1 }}–{{ ticketPage*ticketPerPage > userTickets.length ? userTickets.length : ticketPage*ticketPerPage }} de {{ userTickets.length }}
             </span>
             <div class="flex gap-1">
               <button (click)="ticketPage = ticketPage - 1" [disabled]="ticketPage === 1"
-                class="px-2 py-1 text-xs rounded border border-gray-300 dark:border-gray-600 disabled:opacity-40 hover:bg-gray-50 dark:hover:bg-gray-700">
+                 class="px-2 py-1 text-xs rounded-xl border border-slate-200/60 dark:border-slate-600/60 disabled:opacity-40 hover:bg-slate-50/80 dark:hover:bg-slate-700/50">
                 ←
               </button>
               <button *ngFor="let p of ticketPageNumbers" (click)="ticketPage = p"
-                [class]="'px-2 py-1 text-xs rounded ' + (p === ticketPage ? 'bg-blue-600 text-white' : 'border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700')">
+                [class]="'px-2 py-1 text-xs rounded-xl ' + (p === ticketPage ? 'bg-gradient-to-br from-indigo-500 to-violet-600 text-white shadow-md' : 'border border-slate-200/60 dark:border-slate-600/60 hover:bg-slate-50/80 dark:hover:bg-slate-700/50')">
                 {{ p }}
               </button>
               <button (click)="ticketPage = ticketPage + 1" [disabled]="ticketPage === ticketPageCount"
-                class="px-2 py-1 text-xs rounded border border-gray-300 dark:border-gray-600 disabled:opacity-40 hover:bg-gray-50 dark:hover:bg-gray-700">
+                 class="px-2 py-1 text-xs rounded-xl border border-slate-200/60 dark:border-slate-600/60 disabled:opacity-40 hover:bg-slate-50/80 dark:hover:bg-slate-700/50">
                 →
               </button>
             </div>
@@ -821,15 +827,17 @@
 
         <!-- ── Historial de cambios ───────────────────────────────────── -->
         <div *ngIf="modalTab === 'historial'">
-          <h4 class="font-semibold text-gray-800 dark:text-white mb-4">Historial de cambios</h4>
+          <h4 class="font-semibold text-slate-800 dark:text-white mb-4">Historial de cambios</h4>
 
           <div *ngIf="loadingAudit" class="flex justify-center py-8">
-            <div class="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+            <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center animate-pulse shadow-lg shadow-indigo-500/30">
+              <svg class="w-5 h-5 text-white animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"/></svg>
+            </div>
           </div>
 
-          <div *ngIf="!loadingAudit" class="overflow-x-auto rounded-xl border dark:border-gray-700">
-            <table class="min-w-[600px] w-full text-sm divide-y divide-gray-200 dark:divide-gray-700">
-              <thead class="bg-gray-50 dark:bg-gray-700 text-xs uppercase text-gray-500 dark:text-gray-400">
+          <div *ngIf="!loadingAudit" class="overflow-x-auto rounded-xl border dark:border-slate-700/60">
+            <table class="min-w-[600px] w-full text-sm divide-y divide-slate-200/60 dark:divide-slate-700/60">
+              <thead class="bg-slate-50/80 dark:bg-slate-700/80 text-xs uppercase tracking-wider font-bold text-slate-500 dark:text-slate-400">
                 <tr>
                   <th class="px-4 py-3">Fecha</th>
                   <th class="px-4 py-3">Campo</th>
@@ -838,9 +846,9 @@
                   <th class="px-4 py-3">Descripción</th>
                 </tr>
               </thead>
-              <tbody class="divide-y divide-gray-200 dark:divide-gray-700 dark:bg-gray-800">
-                <tr *ngFor="let log of auditLogs" class="hover:bg-gray-50 dark:hover:bg-gray-700 transition">
-                  <td class="px-4 py-2.5 text-gray-500 dark:text-gray-400 whitespace-nowrap">
+              <tbody class="divide-y divide-slate-200/60 dark:divide-slate-700/60 dark:bg-slate-800/80">
+                <tr *ngFor="let log of auditLogs" class="hover:bg-slate-50/80 dark:hover:bg-slate-700/50 transition">
+                  <td class="px-4 py-2.5 text-slate-500 dark:text-slate-400 whitespace-nowrap">
                     {{ log.created_at | date:'dd/MM/yyyy HH:mm' }}
                   </td>
                   <td class="px-4 py-2.5">
@@ -854,12 +862,12 @@
                   <td class="px-4 py-2.5 text-green-600 dark:text-green-400 text-xs font-medium">
                     {{ log.new_value || '—' }}
                   </td>
-                  <td class="px-4 py-2.5 text-gray-500 dark:text-gray-400 text-xs">
+                  <td class="px-4 py-2.5 text-slate-500 dark:text-slate-400 text-xs">
                     {{ log.description }}
                   </td>
                 </tr>
                 <tr *ngIf="auditLogs.length === 0">
-                  <td colspan="5" class="px-4 py-8 text-center text-gray-400 dark:text-gray-500">
+                  <td colspan="5" class="px-4 py-8 text-center text-slate-400 dark:text-slate-500">
                     No hay registros de cambios para este cliente
                   </td>
                 </tr>
@@ -878,34 +886,34 @@
      PING MODAL
 ══════════════════════════════════════════════════════════════════════════ -->
 <div *ngIf="showPingModal"
-     class="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/60 sm:p-4">
-  <div class="bg-white dark:bg-gray-800 rounded-t-2xl sm:rounded-xl shadow-2xl w-full sm:max-w-lg">
-    <div class="flex items-center justify-between px-5 py-4 border-b dark:border-gray-700">
+     class="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-slate-900/50 backdrop-blur-sm sm:p-4">
+  <div class="bg-white/95 dark:bg-slate-800/95 backdrop-blur-xl rounded-2xl shadow-2xl border border-slate-100 dark:border-slate-700 w-full sm:max-w-lg">
+    <div class="flex items-center justify-between px-5 py-4 border-b dark:border-slate-700/60">
       <div>
-        <h3 class="font-semibold text-gray-900 dark:text-white">Diagnóstico Ping</h3>
-        <p class="text-sm text-gray-500 dark:text-gray-400">{{ pingName }}</p>
+        <h3 class="font-semibold text-slate-900 dark:text-white">Diagnóstico Ping</h3>
+        <p class="text-sm text-slate-500 dark:text-slate-400">{{ pingName }}</p>
       </div>
-      <button (click)="closePingModal()" class="text-gray-400 hover:text-red-500 transition">
+      <button (click)="closePingModal()" class="text-slate-400 hover:text-red-500 transition">
         <i class="fa-solid fa-xmark text-lg"></i>
       </button>
     </div>
     <div class="p-5 space-y-4">
       <div class="flex items-center gap-3">
         <div class="flex-1">
-          <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Cantidad de pings</label>
+          <label class="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">Cantidad de pings</label>
           <input type="number" [(ngModel)]="pingCount" min="1" max="20"
-            class="w-full px-3 py-2 rounded-lg border dark:bg-gray-700 dark:border-gray-600 dark:text-white text-sm"/>
+            class="w-full px-3.5 py-2 text-sm bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl border border-slate-200/60 dark:border-slate-700/60 rounded-xl text-slate-700 dark:text-slate-300 focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-400 transition-all shadow-sm"/>
         </div>
         <button (click)="startPing()" [disabled]="isPinging"
-          class="mt-5 px-4 py-2 rounded-lg bg-blue-600 text-white text-sm hover:bg-blue-700 disabled:opacity-50 transition">
+          class="mt-5 px-4 py-2 rounded-xl bg-gradient-to-br from-indigo-500 to-violet-600 text-white shadow-md shadow-indigo-500/20 hover:shadow-lg text-sm disabled:opacity-50 transition-all">
           {{ isPinging ? 'Pinging...' : 'Enviar' }}
         </button>
       </div>
 
       <div *ngIf="pingResults.length > 0"
-           class="rounded-lg border dark:border-gray-700 overflow-hidden max-h-64 overflow-y-auto">
+           class="rounded-xl border dark:border-slate-700/60 overflow-hidden max-h-64 overflow-y-auto">
         <table class="w-full text-xs">
-          <thead class="bg-gray-50 dark:bg-gray-700">
+          <thead class="bg-slate-50/80 dark:bg-slate-700/80">
             <tr>
               <th class="px-3 py-2 text-left">#</th>
               <th class="px-3 py-2 text-left">Host</th>
@@ -913,9 +921,9 @@
               <th class="px-3 py-2 text-left">Estado</th>
             </tr>
           </thead>
-          <tbody class="divide-y divide-gray-200 dark:divide-gray-700 dark:bg-gray-800">
-            <tr *ngFor="let r of pingResults; let i = index" class="hover:bg-gray-50 dark:hover:bg-gray-700">
-              <td class="px-3 py-2 text-gray-500">{{ i + 1 }}</td>
+          <tbody class="divide-y divide-slate-200/60 dark:divide-slate-700/60 dark:bg-slate-800/80">
+            <tr *ngFor="let r of pingResults; let i = index" class="hover:bg-slate-50/80 dark:hover:bg-slate-700/50">
+              <td class="px-3 py-2 text-slate-500">{{ i + 1 }}</td>
               <td class="px-3 py-2">{{ r.host }}</td>
               <td class="px-3 py-2">{{ convertToSeconds(r.time) }}</td>
               <td class="px-3 py-2">{{ r.status }}</td>
@@ -932,15 +940,15 @@
      CONFIRM SUSPEND MODAL
 ══════════════════════════════════════════════════════════════════════════ -->
 <div *ngIf="showSuspendModal"
-     class="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/60 p-4">
-  <div class="bg-white dark:bg-gray-800 rounded-2xl sm:rounded-xl shadow-2xl w-full max-w-sm p-6 text-center mb-0 sm:mb-0">
+     class="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4">
+  <div class="bg-white/95 dark:bg-slate-800/95 backdrop-blur-xl rounded-2xl shadow-2xl border border-slate-100 dark:border-slate-700 w-full max-w-sm p-6 text-center mb-0 sm:mb-0">
     <div class="w-14 h-14 mx-auto mb-4 rounded-full bg-yellow-100 dark:bg-yellow-900/30 flex items-center justify-center">
       <i class="fa-solid fa-triangle-exclamation text-3xl text-yellow-500"></i>
     </div>
-    <h3 class="text-lg font-semibold text-gray-800 dark:text-white mb-2">
+    <h3 class="text-lg font-semibold text-slate-800 dark:text-white mb-2">
       {{ pendingSuspendStatus === 'ACTIVE' ? '¿Suspender cliente?' : '¿Activar cliente?' }}
     </h3>
-    <p class="text-sm text-gray-500 dark:text-gray-400 mb-6">Esta acción cambiará el estado del servicio de internet.</p>
+    <p class="text-sm text-slate-500 dark:text-slate-400 mb-6">Esta acción cambiará el estado del servicio de internet.</p>
     <div class="flex gap-3 justify-center">
       <button (click)="confirmSuspend()"
         class="px-5 py-2 rounded-lg text-sm font-medium text-white transition"
@@ -948,7 +956,7 @@
         Confirmar
       </button>
       <button (click)="showSuspendModal = false"
-        class="px-5 py-2 rounded-lg bg-gray-200 text-gray-700 text-sm hover:bg-gray-300 transition">
+        class="px-5 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-sm hover:bg-slate-200 transition">
         Cancelar
       </button>
     </div>
@@ -960,20 +968,20 @@
      CONFIRM DELETE MODAL
 ══════════════════════════════════════════════════════════════════════════ -->
 <div *ngIf="showDeleteModal"
-     class="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/60 p-4">
-  <div class="bg-white dark:bg-gray-800 rounded-2xl sm:rounded-xl shadow-2xl w-full max-w-sm p-6 text-center">
+     class="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4">
+  <div class="bg-white/95 dark:bg-slate-800/95 backdrop-blur-xl rounded-2xl shadow-2xl border border-slate-100 dark:border-slate-700 w-full max-w-sm p-6 text-center">
     <div class="w-14 h-14 mx-auto mb-4 rounded-full bg-red-100 dark:bg-red-900/30 flex items-center justify-center">
       <i class="fa-solid fa-circle-exclamation text-3xl text-red-500"></i>
     </div>
-    <h3 class="text-lg font-semibold text-gray-800 dark:text-white mb-2">¿Eliminar cliente?</h3>
-    <p class="text-sm text-gray-500 dark:text-gray-400 mb-6">Esta acción no se puede deshacer.</p>
+    <h3 class="text-lg font-semibold text-slate-800 dark:text-white mb-2">¿Eliminar cliente?</h3>
+    <p class="text-sm text-slate-500 dark:text-slate-400 mb-6">Esta acción no se puede deshacer.</p>
     <div class="flex gap-3 justify-center">
       <button (click)="confirmDelete()"
-        class="px-5 py-2 rounded-lg bg-red-500 text-white text-sm hover:bg-red-600 transition">
+        class="px-5 py-2 rounded-xl bg-gradient-to-br from-pink-500 to-rose-600 text-white shadow-md shadow-pink-500/20 hover:shadow-lg text-sm transition-all">
         Eliminar
       </button>
       <button (click)="showDeleteModal = false"
-        class="px-5 py-2 rounded-lg bg-gray-200 text-gray-700 text-sm hover:bg-gray-300 transition">
+        class="px-5 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-sm hover:bg-slate-200 transition">
         Cancelar
       </button>
     </div>
@@ -985,25 +993,25 @@
      CREATE USER MODAL
 ══════════════════════════════════════════════════════════════════════════ -->
 <div *ngIf="showCreateUser"
-     class="fixed inset-0 z-50 flex items-start sm:items-center justify-center bg-black/60 sm:p-4 overflow-y-auto">
-  <div class="bg-white dark:bg-gray-800 sm:rounded-xl shadow-2xl w-full sm:max-w-2xl sm:my-4 min-h-screen sm:min-h-0">
-    <div class="flex items-center justify-between px-6 py-4 border-b dark:border-gray-700">
-      <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Registrar nuevo cliente</h3>
-      <button (click)="showCreateUser = false" class="text-gray-400 hover:text-red-500 transition">
+     class="fixed inset-0 z-50 flex items-start sm:items-center justify-center bg-slate-900/50 backdrop-blur-sm sm:p-4 overflow-y-auto">
+   <div class="bg-white/95 dark:bg-slate-800/95 backdrop-blur-xl rounded-2xl shadow-2xl border border-slate-100 dark:border-slate-700 w-full sm:max-w-2xl sm:my-4 min-h-screen sm:min-h-0">
+    <div class="flex items-center justify-between px-6 py-4 border-b dark:border-slate-700/60">
+      <h3 class="text-lg font-semibold text-slate-900 dark:text-white">Registrar nuevo cliente</h3>
+      <button (click)="showCreateUser = false" class="text-slate-400 hover:text-red-500 transition">
         <i class="fa-solid fa-xmark text-lg"></i>
       </button>
     </div>
 
     <!-- Sub-tabs -->
-    <div class="flex border-b dark:border-gray-700">
+    <div class="flex border-b dark:border-slate-700/60">
       <button (click)="showUserFormProfile = true"
         class="px-5 py-3 text-sm font-medium border-b-2 transition"
-        [ngClass]="showUserFormProfile ? 'border-blue-600 text-blue-600' : 'border-transparent text-gray-500'">
+        [ngClass]="showUserFormProfile ? 'border-indigo-500 text-indigo-600 font-bold' : 'border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-700'">
         Datos personales
       </button>
       <button (click)="showUserFormProfile = false"
         class="px-5 py-3 text-sm font-medium border-b-2 transition"
-        [ngClass]="!showUserFormProfile ? 'border-blue-600 text-blue-600' : 'border-transparent text-gray-500'">
+        [ngClass]="!showUserFormProfile ? 'border-indigo-500 text-indigo-600 font-bold' : 'border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-700'">
         Conexión
       </button>
     </div>
@@ -1020,15 +1028,15 @@
             {label:'Dirección', key:'address', type:'text', ph:'Ingrese dirección'}
           ]">
           <div>
-            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{{ f.label }}</label>
+            <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">{{ f.label }}</label>
             <input [type]="f.type" [(ngModel)]="newUser[f.key]" [placeholder]="f.ph"
-              class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white text-sm focus:ring-blue-500 focus:border-blue-500"/>
+              class="w-full px-3.5 py-2 text-sm bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl border border-slate-200/60 dark:border-slate-700/60 rounded-xl text-slate-700 dark:text-slate-300 focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-400 transition-all shadow-sm"/>
           </div>
         </div>
         <div>
-          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Periodo facturación</label>
+          <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Periodo facturación</label>
           <select [(ngModel)]="newUser.periode_facturation"
-            class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white text-sm">
+            class="w-full px-3.5 py-2 text-sm bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl border border-slate-200/60 dark:border-slate-700/60 rounded-xl text-slate-700 dark:text-slate-300 focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-400 transition-all shadow-sm">
             <option [value]="0" disabled>Seleccione...</option>
             <option *ngFor="let d of DataCortes" [value]="d.id">{{ d.names }}</option>
           </select>
@@ -1038,42 +1046,42 @@
       <!-- Connection data -->
       <div *ngIf="!showUserFormProfile" class="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div class="sm:col-span-2">
-          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Router Mikrotik</label>
+          <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Router Mikrotik</label>
           <select [(ngModel)]="selectedRouterId" (ngModelChange)="onCreateRouterChange()"
-            class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white text-sm">
+            class="w-full px-3.5 py-2 text-sm bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl border border-slate-200/60 dark:border-slate-700/60 rounded-xl text-slate-700 dark:text-slate-300 focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-400 transition-all shadow-sm">
             <option [ngValue]="null" disabled>Seleccione router...</option>
             <option *ngFor="let r of routers" [value]="r.id">{{ r.name || r.host }}</option>
           </select>
-          <p *ngIf="loadingRouters" class="text-xs text-gray-400 mt-1">Cargando routers...</p>
+          <p *ngIf="loadingRouters" class="text-xs text-slate-400 mt-1">Cargando routers...</p>
         </div>
         <div>
-          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">VLAN</label>
+          <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">VLAN</label>
           <select [(ngModel)]="selectedVlan" (ngModelChange)="onInterfaceChange($event)"
-            class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white text-sm">
+            class="w-full px-3.5 py-2 text-sm bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl border border-slate-200/60 dark:border-slate-700/60 rounded-xl text-slate-700 dark:text-slate-300 focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-400 transition-all shadow-sm">
             <option [ngValue]="null" disabled>Seleccione VLAN...</option>
             <option *ngFor="let iface of interfaces" [ngValue]="iface">{{ iface.names }}</option>
           </select>
         </div>
         <div>
-          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Segmento</label>
+          <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Segmento</label>
           <select [(ngModel)]="selectedSeg" (ngModelChange)="onSegmentChange($event)" [disabled]="!segments.length"
-            class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white text-sm disabled:opacity-50">
+            class="w-full px-3.5 py-2 text-sm bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl border border-slate-200/60 dark:border-slate-700/60 rounded-xl text-slate-700 dark:text-slate-300 focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-400 transition-all shadow-sm disabled:opacity-50">
             <option [ngValue]="null" disabled>Seleccione segmento...</option>
             <option *ngFor="let s of segments" [ngValue]="s">{{ s.network }}</option>
           </select>
         </div>
         <div>
-          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">IP ({{ Ipzone.length }} disponibles)</label>
+          <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">IP ({{ Ipzone.length }} disponibles)</label>
           <select [(ngModel)]="newUser.ip" [disabled]="!Ipzone.length"
-            class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white text-sm disabled:opacity-50">
+            class="w-full px-3.5 py-2 text-sm bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl border border-slate-200/60 dark:border-slate-700/60 rounded-xl text-slate-700 dark:text-slate-300 focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-400 transition-all shadow-sm disabled:opacity-50">
             <option [value]="0" disabled>Seleccione IP...</option>
             <option *ngFor="let ip of Ipzone" [value]="ip.id">{{ ip.names }}</option>
           </select>
         </div>
         <div>
-          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Plan de Internet</label>
+          <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Plan de Internet</label>
           <select [(ngModel)]="newUser.plan_id"
-            class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white text-sm">
+            class="w-full px-3.5 py-2 text-sm bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl border border-slate-200/60 dark:border-slate-700/60 rounded-xl text-slate-700 dark:text-slate-300 focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-400 transition-all shadow-sm">
             <option [value]="0" disabled>Seleccione plan...</option>
             <option *ngFor="let p of PlanInternet" [value]="p.id">{{ p.names }}</option>
           </select>
@@ -1082,12 +1090,12 @@
 
       <div class="flex gap-3 mt-6">
         <button (click)="createUser()" [disabled]="submittingNewUser"
-          class="px-6 py-2.5 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700 disabled:opacity-50 transition">
+          class="px-6 py-2.5 rounded-xl bg-gradient-to-br from-indigo-500 to-violet-600 text-white shadow-md shadow-indigo-500/20 hover:shadow-lg text-sm font-medium disabled:opacity-50 transition-all">
           {{ submittingNewUser ? 'Registrando...' : 'Registrar cliente' }}
         </button>
         <button (click)="showCreateUser = false"
-          class="px-6 py-2.5 rounded-lg bg-gray-200 text-gray-700 text-sm hover:bg-gray-300 transition">
-          Cancelar
+           class="px-6 py-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-sm hover:bg-slate-200 transition">
+           Cancelar
         </button>
       </div>
     </div>

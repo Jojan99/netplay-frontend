@@ -1,4 +1,4 @@
-<div class="max-w-8xl mx-auto mt-4 sm:mt-8 rounded-lg shadow p-3 sm:p-6">
+<div class="max-w-8xl mx-auto mt-4 sm:mt-8 bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl rounded-2xl border border-slate-200/60 dark:border-slate-700/60 shadow-sm hover:shadow-md transition-all duration-300 p-3 sm:p-6">
   <div class="w-full mb-1">
 
     <!-- Breadcrumb -->
@@ -6,29 +6,29 @@
       <nav class="flex mb-5" aria-label="Breadcrumb">
         <ol class="inline-flex items-center space-x-1 text-sm font-medium md:space-x-2">
           <li class="inline-flex items-center">
-            <a class="inline-flex items-center text-gray-700 hover:text-primary-600 dark:text-gray-300 dark:hover:text-white">
+            <a class="inline-flex items-center text-slate-700 hover:text-primary-600 dark:text-slate-300 dark:hover:text-white">
               <svg class="w-5 h-5 mr-2.5" fill="currentColor" viewBox="0 0 20 20"><path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z"></path></svg>
               Home
             </a>
           </li>
           <li>
             <div class="flex items-center">
-              <svg class="w-6 h-6 text-gray-400" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"></path></svg>
-              <a [routerLink]="['/dashboard/inventory']" class="ml-1 text-gray-700 hover:text-primary-600 md:ml-2 dark:text-gray-300 dark:hover:text-white cursor-pointer">Inventario</a>
+              <svg class="w-6 h-6 text-slate-400" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"></path></svg>
+              <a [routerLink]="['/dashboard/inventory']" class="ml-1 text-slate-700 hover:text-primary-600 md:ml-2 dark:text-slate-300 dark:hover:text-white cursor-pointer">Inventario</a>
             </div>
           </li>
           <li>
             <div class="flex items-center">
-              <svg class="w-6 h-6 text-gray-400" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"></path></svg>
-              <span class="ml-1 text-gray-400 md:ml-2 dark:text-gray-500" aria-current="page">Categorías</span>
+              <svg class="w-6 h-6 text-slate-400" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"></path></svg>
+              <span class="ml-1 text-slate-400 md:ml-2 dark:text-slate-500" aria-current="page">Categorías</span>
             </div>
           </li>
         </ol>
       </nav>
       <div class="flex flex-wrap items-center justify-between gap-3">
-        <h1 class="text-lg sm:text-2xl font-semibold text-gray-900 dark:text-white">CATEGORÍAS DE INVENTARIO</h1>
+        <h1 class="text-2xl font-bold bg-gradient-to-r from-slate-800 to-slate-600 bg-clip-text text-transparent dark:from-white dark:to-slate-300">CATEGORÍAS DE INVENTARIO</h1>
         <button (click)="toggleForm()"
-          class="flex items-center px-4 py-2 text-sm font-medium text-white bg-blue-700 rounded-lg hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 dark:bg-blue-600 dark:hover:bg-blue-700">
+          class="flex items-center px-4 py-2 text-sm font-medium bg-gradient-to-br from-indigo-500 to-violet-600 text-white shadow-md shadow-indigo-500/20 hover:shadow-lg transition-all rounded-xl">
           <svg class="w-4 h-4 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
           </svg>
@@ -38,31 +38,31 @@
     </div>
 
     <!-- Inline form -->
-    <div *ngIf="showForm" class="p-5 mb-6 bg-white border border-gray-200 rounded-lg dark:bg-gray-800 dark:border-gray-700">
-      <h3 class="text-base font-semibold text-gray-900 dark:text-white mb-4">
+    <div *ngIf="showForm" class="p-5 mb-6 bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl rounded-2xl border border-slate-200/60 dark:border-slate-700/60 shadow-sm hover:shadow-md transition-all duration-300">
+      <h3 class="text-base font-semibold text-slate-900 dark:text-white mb-4">
         {{ isEditing ? 'Editar Categoría' : 'Nueva Categoría' }}
       </h3>
       <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <div>
-          <label class="block mb-1 text-sm font-medium text-gray-700 dark:text-gray-300">Nombre *</label>
+          <label class="block mb-1 text-sm font-medium text-slate-700 dark:text-slate-300">Nombre *</label>
           <input type="text" [(ngModel)]="categoryForm.name"
-            class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+            class="px-3.5 py-2 text-sm bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl border border-slate-200/60 dark:border-slate-700/60 rounded-xl text-slate-700 dark:text-slate-300 focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-400 transition-all shadow-sm block w-full"
             placeholder="Nombre de la categoría" />
         </div>
         <div>
-          <label class="block mb-1 text-sm font-medium text-gray-700 dark:text-gray-300">Descripción</label>
+          <label class="block mb-1 text-sm font-medium text-slate-700 dark:text-slate-300">Descripción</label>
           <input type="text" [(ngModel)]="categoryForm.description"
-            class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+            class="px-3.5 py-2 text-sm bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl border border-slate-200/60 dark:border-slate-700/60 rounded-xl text-slate-700 dark:text-slate-300 focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-400 transition-all shadow-sm block w-full"
             placeholder="Descripción opcional" />
         </div>
       </div>
       <div class="flex justify-end mt-4 gap-2">
         <button (click)="cancelForm()"
-          class="px-4 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-lg hover:bg-gray-100 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600 dark:hover:bg-gray-700">
+          class="px-4 py-2 text-sm font-medium text-slate-500 bg-white border border-slate-300/60 rounded-lg hover:bg-slate-50 dark:bg-slate-800/80 dark:text-slate-400 dark:border-slate-600/60 dark:hover:bg-slate-700/50">
           Cancelar
         </button>
         <button (click)="saveCategory()"
-          class="px-4 py-2 text-sm font-medium text-white bg-blue-700 rounded-lg hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 dark:bg-blue-600 dark:hover:bg-blue-700">
+          class="px-4 py-2 text-sm font-medium bg-gradient-to-br from-indigo-500 to-violet-600 text-white shadow-md shadow-indigo-500/20 hover:shadow-lg transition-all rounded-xl">
           {{ isEditing ? 'Guardar cambios' : 'Crear Categoría' }}
         </button>
       </div>
@@ -74,24 +74,24 @@
         <div class="inline-block min-w-full align-middle">
           <div class="overflow-hidden shadow sm:rounded-lg">
 
-            <table *ngIf="!skeletor; else skeletonTable" class="min-w-full divide-y divide-gray-200 dark:divide-gray-600">
-              <thead class="bg-gray-50 dark:bg-gray-700">
+            <table *ngIf="!skeletor; else skeletonTable" class="min-w-full divide-y divide-slate-200/60 dark:divide-slate-600/60">
+              <thead class="bg-slate-50/80 dark:bg-slate-700/80 backdrop-blur-sm">
                 <tr>
-                  <th class="p-4 text-xs font-medium text-left text-gray-500 uppercase dark:text-gray-400">#</th>
-                  <th class="p-4 text-xs font-medium text-left text-gray-500 uppercase dark:text-gray-400">Nombre</th>
-                  <th class="p-4 text-xs font-medium text-left text-gray-500 uppercase dark:text-gray-400">Descripción</th>
-                  <th class="p-4 text-xs font-medium text-left text-gray-500 uppercase dark:text-gray-400">Ítems</th>
-                  <th class="p-4 text-xs font-medium text-left text-gray-500 uppercase dark:text-gray-400">Fecha creación</th>
-                  <th class="p-4 text-xs font-medium text-left text-gray-500 uppercase dark:text-gray-400">Acciones</th>
+                  <th class="p-4 text-xs font-medium text-left text-slate-500 uppercase dark:text-slate-400">#</th>
+                  <th class="p-4 text-xs font-medium text-left text-slate-500 uppercase dark:text-slate-400">Nombre</th>
+                  <th class="p-4 text-xs font-medium text-left text-slate-500 uppercase dark:text-slate-400">Descripción</th>
+                  <th class="p-4 text-xs font-medium text-left text-slate-500 uppercase dark:text-slate-400">Ítems</th>
+                  <th class="p-4 text-xs font-medium text-left text-slate-500 uppercase dark:text-slate-400">Fecha creación</th>
+                  <th class="p-4 text-xs font-medium text-left text-slate-500 uppercase dark:text-slate-400">Acciones</th>
                 </tr>
               </thead>
-              <tbody class="bg-white divide-y divide-gray-200 dark:bg-gray-800 dark:divide-gray-700">
-                <tr *ngFor="let cat of categories; let i = index" class="hover:bg-gray-100 dark:hover:bg-gray-700">
-                  <td class="p-4 text-sm text-gray-500 whitespace-nowrap dark:text-gray-400">{{ i + 1 }}</td>
-                  <td class="p-4 text-sm font-medium text-gray-900 whitespace-nowrap dark:text-white">{{ cat.name }}</td>
-                  <td class="p-4 text-sm text-gray-500 dark:text-gray-400">{{ cat.description || '-' }}</td>
-                  <td class="p-4 text-sm text-gray-500 whitespace-nowrap dark:text-gray-400">{{ cat.inventories_count || 0 }}</td>
-                  <td class="p-4 text-sm text-gray-500 whitespace-nowrap dark:text-gray-400">
+              <tbody class="bg-white divide-y divide-slate-200/60 dark:bg-slate-800/80 dark:divide-slate-700/60">
+                <tr *ngFor="let cat of categories; let i = index" class="hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors/50">
+                  <td class="p-4 text-sm text-slate-500 whitespace-nowrap dark:text-slate-400">{{ i + 1 }}</td>
+                  <td class="p-4 text-sm font-medium text-slate-900 whitespace-nowrap dark:text-white">{{ cat.name }}</td>
+                  <td class="p-4 text-sm text-slate-500 dark:text-slate-400">{{ cat.description || '-' }}</td>
+                  <td class="p-4 text-sm text-slate-500 whitespace-nowrap dark:text-slate-400">{{ cat.inventories_count || 0 }}</td>
+                  <td class="p-4 text-sm text-slate-500 whitespace-nowrap dark:text-slate-400">
                     {{ cat.created_at | date:'dd/MM/yyyy' }}
                   </td>
                   <td class="p-4">
@@ -108,7 +108,7 @@
                   </td>
                 </tr>
                 <tr *ngIf="categories.length === 0">
-                  <td colspan="6" class="p-6 text-sm text-center text-gray-500 dark:text-gray-400">
+                  <td colspan="6" class="p-6 text-sm text-center text-slate-500 dark:text-slate-400">
                     No hay categorías registradas.
                   </td>
                 </tr>
@@ -116,20 +116,20 @@
             </table>
 
             <ng-template #skeletonTable>
-              <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-600">
-                <thead class="bg-gray-50 dark:bg-gray-700">
+              <table class="min-w-full divide-y divide-slate-200/60 dark:divide-slate-600/60">
+                <thead class="bg-slate-50/80 dark:bg-slate-700/80 backdrop-blur-sm">
                   <tr>
-                    <th class="p-4 text-xs font-medium text-left text-gray-500 uppercase dark:text-gray-400" *ngFor="let h of ['#','Nombre','Descripción','Ítems','Fecha','Acciones']">{{ h }}</th>
+                    <th class="p-4 text-xs font-medium text-left text-slate-500 uppercase dark:text-slate-400" *ngFor="let h of ['#','Nombre','Descripción','Ítems','Fecha','Acciones']">{{ h }}</th>
                   </tr>
                 </thead>
-                <tbody class="bg-white divide-y divide-gray-200 dark:bg-gray-800 dark:divide-gray-700">
+                <tbody class="bg-white divide-y divide-slate-200/60 dark:bg-slate-800/80 dark:divide-slate-700/60">
                   <tr *ngFor="let i of [1,2,3,4]" class="animate-pulse">
-                    <td class="p-4"><div class="h-4 bg-gray-200 rounded dark:bg-gray-700 w-6"></div></td>
-                    <td class="p-4"><div class="h-4 bg-gray-200 rounded dark:bg-gray-700 w-32"></div></td>
-                    <td class="p-4"><div class="h-4 bg-gray-200 rounded dark:bg-gray-700 w-48"></div></td>
-                    <td class="p-4"><div class="h-4 bg-gray-200 rounded dark:bg-gray-700 w-10"></div></td>
-                    <td class="p-4"><div class="h-4 bg-gray-200 rounded dark:bg-gray-700 w-24"></div></td>
-                    <td class="p-4"><div class="h-4 bg-gray-200 rounded dark:bg-gray-700 w-24"></div></td>
+                    <td class="p-4"><div class="h-4 bg-slate-200/60 rounded-lg dark:bg-slate-700/60 w-6"></div></td>
+                    <td class="p-4"><div class="h-4 bg-slate-200/60 rounded-lg dark:bg-slate-700/60 w-32"></div></td>
+                    <td class="p-4"><div class="h-4 bg-slate-200/60 rounded-lg dark:bg-slate-700/60 w-48"></div></td>
+                    <td class="p-4"><div class="h-4 bg-slate-200/60 rounded-lg dark:bg-slate-700/60 w-10"></div></td>
+                    <td class="p-4"><div class="h-4 bg-slate-200/60 rounded-lg dark:bg-slate-700/60 w-24"></div></td>
+                    <td class="p-4"><div class="h-4 bg-slate-200/60 rounded-lg dark:bg-slate-700/60 w-24"></div></td>
                   </tr>
                 </tbody>
               </table>

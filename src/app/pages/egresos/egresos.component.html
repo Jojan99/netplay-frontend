@@ -3,8 +3,8 @@
     <!-- Header -->
     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6">
       <div>
-        <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Gestionar Egresos</h1>
-        <p class="text-sm text-gray-500 dark:text-gray-400">Control de gastos operativos</p>
+        <h1 class="text-2xl font-bold bg-gradient-to-r from-slate-800 to-slate-600 bg-clip-text text-transparent dark:from-white dark:to-slate-300">Gestionar Egresos</h1>
+        <p class="text-sm text-slate-500 dark:text-slate-400">Control de gastos operativos</p>
       </div>
       <div class="flex gap-2">
         <button (click)="exportCSV()"
@@ -16,7 +16,7 @@
           CSV
         </button>
         <button (click)="openCreate()"
-          class="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium transition-colors">
+          class="flex items-center gap-2 px-4 py-2 bg-gradient-to-br from-indigo-500 to-violet-600 text-white shadow-md shadow-indigo-500/20 hover:shadow-lg transition-all rounded-lg text-sm font-medium transition-colors">
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
           </svg>
@@ -27,17 +27,17 @@
 
     <!-- Stats card -->
     <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-5">
-      <div class="bg-white dark:bg-gray-800 rounded-xl shadow p-4 border border-gray-100 dark:border-gray-700">
-        <div class="text-xs text-gray-400 uppercase tracking-wide">Total período</div>
+      <div class="bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl rounded-2xl border border-slate-200/60 dark:border-slate-700/60 shadow-sm hover:shadow-md transition-all duration-300 p-4">
+        <div class="text-xs text-slate-400 uppercase tracking-wide">Total período</div>
         <div class="text-2xl font-bold text-red-600 mt-1">{{ formatCurrency(totalPeriod) }}</div>
       </div>
-      <div class="bg-white dark:bg-gray-800 rounded-xl shadow p-4 border border-gray-100 dark:border-gray-700">
-        <div class="text-xs text-gray-400 uppercase tracking-wide">Registros</div>
-        <div class="text-2xl font-bold text-gray-800 dark:text-white mt-1">{{ total }}</div>
+      <div class="bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl rounded-2xl border border-slate-200/60 dark:border-slate-700/60 shadow-sm hover:shadow-md transition-all duration-300 p-4">
+        <div class="text-xs text-slate-400 uppercase tracking-wide">Registros</div>
+        <div class="text-2xl font-bold text-slate-800 dark:text-white mt-1">{{ total }}</div>
       </div>
-      <div class="bg-white dark:bg-gray-800 rounded-xl shadow p-4 border border-gray-100 dark:border-gray-700">
-        <div class="text-xs text-gray-400 uppercase tracking-wide">Promedio</div>
-        <div class="text-2xl font-bold text-gray-800 dark:text-white mt-1">
+      <div class="bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl rounded-2xl border border-slate-200/60 dark:border-slate-700/60 shadow-sm hover:shadow-md transition-all duration-300 p-4">
+        <div class="text-xs text-slate-400 uppercase tracking-wide">Promedio</div>
+        <div class="text-2xl font-bold text-slate-800 dark:text-white mt-1">
           {{ total > 0 ? formatCurrency(totalPeriod / total) : '$0' }}
         </div>
       </div>
@@ -46,33 +46,33 @@
     <!-- Filters -->
     <div class="flex flex-col sm:flex-row gap-3 mb-4">
       <div class="relative flex-1">
-        <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0" />
         </svg>
         <input type="text" [(ngModel)]="searchTerm" (ngModelChange)="onSearchChange()"
           placeholder="Buscar por concepto..."
-          class="w-full pl-9 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500" />
+          class="w-full pl-9 pr-4 px-3.5 py-2 text-sm bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl border border-slate-200/60 dark:border-slate-700/60 rounded-xl text-slate-700 dark:text-slate-300 focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-400 transition-all shadow-sm" />
       </div>
       <input type="date" [(ngModel)]="filterFrom" (ngModelChange)="onFilterChange()"
-        class="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500" />
+        class="px-3 px-3.5 py-2 text-sm bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl border border-slate-200/60 dark:border-slate-700/60 rounded-xl text-slate-700 dark:text-slate-300 focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-400 transition-all shadow-sm" />
       <input type="date" [(ngModel)]="filterTo" (ngModelChange)="onFilterChange()"
-        class="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500" />
+        class="px-3 px-3.5 py-2 text-sm bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl border border-slate-200/60 dark:border-slate-700/60 rounded-xl text-slate-700 dark:text-slate-300 focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-400 transition-all shadow-sm" />
       <select [(ngModel)]="filterCategory" (ngModelChange)="onFilterChange()"
-        class="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
+        class="px-3 px-3.5 py-2 text-sm bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl border border-slate-200/60 dark:border-slate-700/60 rounded-xl text-slate-700 dark:text-slate-300 focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-400 transition-all shadow-sm">
         <option value="">Todas las categorías</option>
         <option *ngFor="let cat of categories" [value]="cat">{{ cat }}</option>
       </select>
       <select [(ngModel)]="perPage" (ngModelChange)="changePerPage()"
-        class="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
+        class="px-3 px-3.5 py-2 text-sm bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl border border-slate-200/60 dark:border-slate-700/60 rounded-xl text-slate-700 dark:text-slate-300 focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-400 transition-all shadow-sm">
         <option *ngFor="let n of perPageOptions" [value]="n">{{ n }} / pág.</option>
       </select>
     </div>
 
     <!-- Table -->
-    <div class="bg-white dark:bg-gray-800 rounded-xl shadow overflow-hidden">
+    <div class="bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl rounded-2xl border border-slate-200/60 dark:border-slate-700/60 shadow-sm hover:shadow-md transition-all duration-300 overflow-hidden">
       <div class="overflow-x-auto">
         <table class="w-full text-sm text-left">
-          <thead class="text-xs text-gray-500 dark:text-gray-400 uppercase bg-gray-50 dark:bg-gray-700">
+          <thead class="text-xs text-slate-500 dark:text-slate-400 bg-slate-50/80 dark:bg-slate-700/80 backdrop-blur-sm uppercase tracking-wider text-xs font-bold">
             <tr>
               <th class="px-4 py-3">Concepto</th>
               <th class="px-4 py-3">Categoría</th>
@@ -82,29 +82,29 @@
               <th class="px-4 py-3 text-center">Acciones</th>
             </tr>
           </thead>
-          <tbody class="divide-y divide-gray-100 dark:divide-gray-700">
+          <tbody class="divide-y divide-slate-100 dark:divide-slate-700">
 
             <!-- Skeleton -->
             <ng-container *ngIf="loading">
               <tr *ngFor="let i of [1,2,3,4,5,6]" class="animate-pulse">
-                <td class="px-4 py-3"><div class="h-4 bg-gray-200 dark:bg-gray-600 rounded w-48"></div></td>
-                <td class="px-4 py-3"><div class="h-5 bg-gray-200 dark:bg-gray-600 rounded-full w-24"></div></td>
-                <td class="px-4 py-3 text-right"><div class="h-4 bg-gray-200 dark:bg-gray-600 rounded w-20 ml-auto"></div></td>
-                <td class="px-4 py-3 hidden sm:table-cell"><div class="h-4 bg-gray-200 dark:bg-gray-600 rounded w-24"></div></td>
-                <td class="px-4 py-3 text-center"><div class="h-7 bg-gray-200 dark:bg-gray-600 rounded w-20 mx-auto"></div></td>
+                <td class="px-4 py-3"><div class="h-4 bg-slate-200/60 dark:bg-slate-600 rounded w-48"></div></td>
+                <td class="px-4 py-3"><div class="h-5 bg-slate-200/60 dark:bg-slate-600 rounded-full w-24"></div></td>
+                <td class="px-4 py-3 text-right"><div class="h-4 bg-slate-200/60 dark:bg-slate-600 rounded w-20 ml-auto"></div></td>
+                <td class="px-4 py-3 hidden sm:table-cell"><div class="h-4 bg-slate-200/60 dark:bg-slate-600 rounded w-24"></div></td>
+                <td class="px-4 py-3 text-center"><div class="h-7 bg-slate-200/60 dark:bg-slate-600 rounded w-20 mx-auto"></div></td>
               </tr>
             </ng-container>
 
             <!-- Empty -->
             <tr *ngIf="!loading && egresos.length === 0">
-              <td colspan="5" class="px-4 py-10 text-center text-gray-400 dark:text-gray-500">
+              <td colspan="5" class="px-4 py-10 text-center text-slate-400 dark:text-slate-500">
                 No hay egresos registrados para este período
               </td>
             </tr>
 
             <!-- Data -->
-            <tr *ngFor="let e of egresos" class="hover:bg-gray-50 dark:hover:bg-gray-750 transition-colors">
-              <td class="px-4 py-3 text-gray-800 dark:text-gray-200 font-medium">{{ e.concept }}</td>
+            <tr *ngFor="let e of egresos" class="hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors">
+              <td class="px-4 py-3 text-slate-800 dark:text-slate-200 font-medium">{{ e.concept }}</td>
               <td class="px-4 py-3">
                 <span [class]="'px-2.5 py-0.5 text-xs font-medium rounded-full ' + categoryClass(e.category)">
                   {{ e.category || 'General' }}
@@ -118,9 +118,9 @@
                       class="px-2 py-0.5 text-xs rounded-full bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300">
                   {{ e.payment_method_name }}
                 </span>
-                <span *ngIf="!e.payment_method_name" class="text-xs text-gray-400">—</span>
+                <span *ngIf="!e.payment_method_name" class="text-xs text-slate-400">—</span>
               </td>
-              <td class="px-4 py-3 text-gray-500 dark:text-gray-400 hidden sm:table-cell">
+              <td class="px-4 py-3 text-slate-500 dark:text-slate-400 hidden sm:table-cell">
                 {{ e.created_at | date:'dd/MM/yyyy' }}
               </td>
               <td class="px-4 py-3 text-center">
@@ -151,23 +151,23 @@
 
       <!-- Pagination -->
       <div *ngIf="!loading && total > 0"
-        class="flex flex-col sm:flex-row items-center justify-between gap-3 px-4 py-3 border-t border-gray-100 dark:border-gray-700">
-        <span class="text-sm text-gray-500 dark:text-gray-400">
+        class="flex flex-col sm:flex-row items-center justify-between gap-3 px-4 py-3 border-t border-slate-100/60 dark:border-slate-700/60">
+        <span class="text-sm text-slate-500 dark:text-slate-400">
           Mostrando {{ (page - 1) * perPage + 1 }}–{{ page * perPage > total ? total : page * perPage }} de {{ total }} registros
         </span>
         <div class="flex items-center gap-1">
           <button (click)="prevPage()" [disabled]="page === 1"
-            class="px-2 py-1 rounded text-sm border border-gray-300 dark:border-gray-600 disabled:opacity-40 hover:bg-gray-50 dark:hover:bg-gray-700">
+            class="px-2 py-1 rounded text-sm border border-slate-300/60 dark:border-slate-600/60 disabled:opacity-40 hover:bg-slate-50 dark:hover:bg-slate-700/50">
             ←
           </button>
           <button *ngFor="let p of pages" (click)="goToPage(p)"
             [class]="p === page
-              ? 'px-3 py-1 rounded text-sm bg-blue-600 text-white font-medium'
-              : 'px-3 py-1 rounded text-sm border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700'">
+              ? 'px-3 py-1 rounded text-sm bg-gradient-to-br from-indigo-500 to-violet-600 text-white shadow-md shadow-indigo-500/20 hover:shadow-lg transition-all font-medium'
+              : 'px-3 py-1 rounded text-sm border border-slate-300/60 dark:border-slate-600/60 hover:bg-slate-50 dark:hover:bg-slate-700/50'">
             {{ p }}
           </button>
           <button (click)="nextPage()" [disabled]="page === lastPage"
-            class="px-2 py-1 rounded text-sm border border-gray-300 dark:border-gray-600 disabled:opacity-40 hover:bg-gray-50 dark:hover:bg-gray-700">
+            class="px-2 py-1 rounded text-sm border border-slate-300/60 dark:border-slate-600/60 disabled:opacity-40 hover:bg-slate-50 dark:hover:bg-slate-700/50">
             →
           </button>
         </div>
@@ -178,34 +178,34 @@
 
 <!-- ═══════════════════ MODAL: ADD / EDIT ═══════════════════ -->
 <div *ngIf="modal" class="fixed inset-0 z-50 flex items-center justify-center p-4">
-  <div class="absolute inset-0 bg-black/50" (click)="modal = false"></div>
-  <div class="relative bg-white dark:bg-gray-800 rounded-xl shadow-2xl w-full max-w-md p-6">
-    <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-5">
+  <div class="absolute inset-0 bg-slate-900/50 backdrop-blur-sm" (click)="modal = false"></div>
+  <div class="relative bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl rounded-2xl border border-slate-200/60 dark:border-slate-700/60 shadow-sm hover:shadow-md transition-all duration-300-2xl w-full max-w-md p-6">
+    <h3 class="text-lg font-bold text-slate-900 dark:text-white mb-5">
       {{ modalMode === 'create' ? 'Nuevo egreso' : 'Editar egreso' }}
     </h3>
 
     <div class="space-y-4">
       <div>
-        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Concepto *</label>
+        <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Concepto *</label>
         <input type="text" [(ngModel)]="form.concept" placeholder="Descripción del gasto"
-          class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500" />
+          class="w-full px-3 px-3.5 py-2 text-sm bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl border border-slate-200/60 dark:border-slate-700/60 rounded-xl text-slate-700 dark:text-slate-300 focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-400 transition-all shadow-sm" />
       </div>
       <div>
-        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Categoría</label>
+        <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Categoría</label>
         <select [(ngModel)]="form.category"
-          class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
+          class="w-full px-3 px-3.5 py-2 text-sm bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl border border-slate-200/60 dark:border-slate-700/60 rounded-xl text-slate-700 dark:text-slate-300 focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-400 transition-all shadow-sm">
           <option *ngFor="let cat of categories" [value]="cat">{{ cat }}</option>
         </select>
       </div>
       <div>
-        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Valor *</label>
+        <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Valor *</label>
         <input type="number" [(ngModel)]="form.value" min="1" placeholder="0"
-          class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500" />
+          class="w-full px-3 px-3.5 py-2 text-sm bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl border border-slate-200/60 dark:border-slate-700/60 rounded-xl text-slate-700 dark:text-slate-300 focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-400 transition-all shadow-sm" />
       </div>
       <div *ngIf="activePaymentMethods.length > 0">
-        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Método de pago</label>
+        <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Método de pago</label>
         <select [(ngModel)]="form.payment_method_id"
-          class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
+          class="w-full px-3 px-3.5 py-2 text-sm bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl border border-slate-200/60 dark:border-slate-700/60 rounded-xl text-slate-700 dark:text-slate-300 focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-400 transition-all shadow-sm">
           <option [ngValue]="null">Sin especificar</option>
           <option *ngFor="let pm of activePaymentMethods" [ngValue]="pm.id">{{ pm.name }}</option>
         </select>
@@ -214,11 +214,11 @@
 
     <div class="flex gap-3 mt-6">
       <button (click)="modal = false"
-        class="flex-1 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+        class="flex-1 py-2 border border-slate-300/60 dark:border-slate-600/60 rounded-lg text-sm text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors">
         Cancelar
       </button>
       <button (click)="saveForm()" [disabled]="!form.concept.trim() || form.value <= 0"
-        class="flex-1 py-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white rounded-lg text-sm font-semibold transition-colors">
+        class="flex-1 py-2 bg-gradient-to-br from-indigo-500 to-violet-600 text-white shadow-md shadow-indigo-500/20 hover:shadow-lg transition-all disabled:opacity-50 rounded-lg text-sm font-semibold">
         {{ modalMode === 'create' ? 'Guardar' : 'Actualizar' }}
       </button>
     </div>
@@ -227,19 +227,19 @@
 
 <!-- ═══════════════════ MODAL: DELETE CONFIRM ═══════════════════ -->
 <div *ngIf="deleteModal" class="fixed inset-0 z-50 flex items-center justify-center p-4">
-  <div class="absolute inset-0 bg-black/50" (click)="deleteModal = false"></div>
-  <div class="relative bg-white dark:bg-gray-800 rounded-xl shadow-2xl w-full max-w-sm p-6 text-center">
+  <div class="absolute inset-0 bg-slate-900/50 backdrop-blur-sm" (click)="deleteModal = false"></div>
+  <div class="relative bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl rounded-2xl border border-slate-200/60 dark:border-slate-700/60 shadow-sm hover:shadow-md transition-all duration-300-2xl w-full max-w-sm p-6 text-center">
     <div class="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
       <svg class="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
           d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
       </svg>
     </div>
-    <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-2">¿Eliminar egreso?</h3>
-    <p class="text-sm text-gray-500 dark:text-gray-400 mb-6">Esta acción no se puede deshacer.</p>
+    <h3 class="text-lg font-bold text-slate-900 dark:text-white mb-2">¿Eliminar egreso?</h3>
+    <p class="text-sm text-slate-500 dark:text-slate-400 mb-6">Esta acción no se puede deshacer.</p>
     <div class="flex gap-3">
       <button (click)="deleteModal = false"
-        class="flex-1 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+        class="flex-1 py-2 border border-slate-300/60 dark:border-slate-600/60 rounded-lg text-sm text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors">
         Cancelar
       </button>
       <button (click)="confirmDelete()"

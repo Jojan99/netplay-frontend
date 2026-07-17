@@ -1,38 +1,34 @@
-<div class="shrink-0 flex items-center px-4 py-3 border-b"
-     style="background: #1e293b; border-color: #334155;">
+<div class="shrink-0 flex items-center px-4 py-3 border-b bg-slate-800/80 backdrop-blur-xl border-slate-700/60">
 
   <!-- IZQUIERDA -->
   <div class="flex items-center gap-3 min-w-0">
 
     <!-- BACK MOBILE -->
-    <button class="md:hidden w-8 h-8 flex items-center justify-center rounded-full transition flex-shrink-0"
-            style="background: #334155; color: #94a3b8;"
+    <button class="md:hidden w-8 h-8 flex items-center justify-center rounded-full transition flex-shrink-0 bg-slate-700 text-slate-400 hover:bg-slate-600"
             (click)="back.emit()">
       <i class="fa-solid fa-arrow-left text-xs"></i>
     </button>
 
     <!-- AVATAR -->
     <div class="relative flex-shrink-0">
-      <div class="h-10 w-10 rounded-full flex items-center justify-center font-bold text-sm"
-           style="background: linear-gradient(135deg, #1e3a5f 0%, #0f2f1f 100%); color: #10b981; border: 1.5px solid #334155;">
+      <div class="h-10 w-10 rounded-full flex items-center justify-center font-bold text-sm bg-gradient-to-br from-teal-500 to-violet-600 text-white shadow-md shadow-teal-500/20 border border-slate-600">
         {{ initials }}
       </div>
-      <span class="absolute bottom-0 right-0 h-2.5 w-2.5 rounded-full border-2"
-            style="background: #10b981; border-color: #1e293b;"></span>
+      <span class="absolute bottom-0 right-0 h-2.5 w-2.5 rounded-full border-2 bg-teal-500 border-slate-800"></span>
     </div>
 
     <!-- INFO -->
     <div class="min-w-0 leading-tight">
-      <h4 class="font-semibold truncate text-sm" style="color: #e2e8f0;">
+      <h4 class="font-semibold truncate text-sm text-slate-200">
         {{ data.customerName }}
       </h4>
-      <div class="flex items-center gap-2 text-xs" style="color: #64748b;">
-        <span style="color: #10b981;" class="font-medium">● En línea</span>
-        <span style="color: #334155;">•</span>
+      <div class="flex items-center gap-2 text-xs text-slate-500">
+        <span class="text-teal-400 font-medium">● En línea</span>
+        <span class="text-slate-700">•</span>
         <span>{{ priorityLabel }}</span>
         <ng-container *ngIf="data.agentName">
-          <span style="color: #334155;">•</span>
-          <span class="truncate max-w-[100px]" style="color: #60a5fa;">
+          <span class="text-slate-700">•</span>
+          <span class="truncate max-w-[100px] text-violet-400">
             <i class="fa-solid fa-user text-xs mr-0.5"></i>{{ data.agentName }}
           </span>
         </ng-container>
@@ -50,8 +46,7 @@
     </span>
 
     <!-- INFO PANEL TOGGLE -->
-    <button class="w-8 h-8 flex items-center justify-center rounded-full transition"
-            style="background: #334155; color: #94a3b8;"
+    <button class="w-8 h-8 flex items-center justify-center rounded-full transition bg-slate-700 text-slate-400 hover:bg-slate-600"
             title="Información del cliente"
             onmouseenter="this.style.background='#475569'; this.style.color='#e2e8f0'"
             onmouseleave="this.style.background='#334155'; this.style.color='#94a3b8'"
@@ -60,8 +55,7 @@
     </button>
 
     <!-- TRANSFERIR -->
-    <button class="px-3 py-1.5 text-xs rounded-xl font-medium transition flex items-center gap-1.5"
-            style="background: #334155; color: #94a3b8; border: 1px solid #475569;"
+    <button class="px-3 py-1.5 text-xs rounded-xl font-medium transition flex items-center gap-1.5 bg-slate-700 text-slate-400 border border-slate-600 hover:bg-slate-600 hover:text-slate-200"
             onmouseenter="this.style.background='#475569'; this.style.color='#e2e8f0'"
             onmouseleave="this.style.background='#334155'; this.style.color='#94a3b8'"
             (click)="openTransfer.emit()">
@@ -71,8 +65,7 @@
 
     <!-- FINALIZAR -->
     <button *ngIf="data.status !== 'closed'"
-            class="px-3 py-1.5 text-xs rounded-xl font-semibold transition flex items-center gap-1.5"
-            style="background: #2f0f0f; color: #ef4444; border: 1px solid #ef444430;"
+            class="px-3 py-1.5 text-xs rounded-xl font-semibold transition flex items-center gap-1.5 bg-pink-900/30 text-pink-500 border border-pink-500/20 hover:bg-pink-900/50 hover:border-pink-500"
             onmouseenter="this.style.background='#ef444415'; this.style.borderColor='#ef4444'"
             onmouseleave="this.style.background='#2f0f0f'; this.style.borderColor='#ef444430'"
             (click)="finish.emit()">
