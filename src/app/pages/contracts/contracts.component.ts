@@ -1,9 +1,15 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ElementRef, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ContractService } from '../../services/contract.service';
 import { UserService } from '../../services/user.service';
 import { DomSanitizer, SafeResourceUrl, SafeHtml } from '@angular/platform-browser';
+import { environment } from '../../../environments/environment';
+import * as pdfjsLib from 'pdfjs-dist';
+
+// Configurar worker de pdfjs (requerido en producción)
+const PDFJS_VERSION = (pdfjsLib as any).version || '4.5.136';
+pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${PDFJS_VERSION}/pdf.worker.min.mjs`;
 
 interface Contract {
   id: number;
@@ -12,6 +18,7 @@ interface Contract {
   logo?: string;
   pdf_path?: string;
   pdf_url?: string;
+  installation_value?: string;
   active: boolean;
   created_at: string;
 }
@@ -52,7 +59,7 @@ export class ContractsComponent implements OnInit {
   showTemplateModal          = false;
   isEditing                  = false;
   isSaving                   = false;
-  templateForm               = { id: 0, title: '', content: '', active: true };
+  templateForm               = { id: 0, title: '', content: '', active: true, installation_value: '' };
   deleteConfirmId: number | null = null;
   isDeleting                 = false;
 
@@ -65,6 +72,7 @@ export class ContractsComponent implements OnInit {
   pdfBaseFile: File | null   = null;
   isUploadingPdfBase         = false;
   hasPdfBase                 = false;  // Indica si el contrato ya tiene PDF base
+  pdfBaseUrl: string | null  = null;   // URL pública del PDF base
 
   // ── Logo Upload ───────────────────────────────────────────────────────────
   logoFile: File | null      = null;
@@ -74,16 +82,97 @@ export class ContractsComponent implements OnInit {
   // ── Preview HTML ──────────────────────────────────────────────────────────
   showPreview                = false;
 
+  // ── PDF Coordinate Picker ─────────────────────────────────────────────────
+  pdfPickerActive            = false;
+  pdfPickerVariable          = '';
+  pdfFields: Array<{id?:number, variable:string, page:number, x:number, y:number, font_size:number, color:string, max_width:number}> = [];
+  pdfDimensions: {pageCount:number, pages:Array<{page:number, width:number, height:number, orientation:string}>} | null = null;
+  pdfPickerPage              = 1;
+
+  // Canvas rendering del PDF (pixel-perfect)
+  @ViewChild('pdfCanvas') pdfCanvasRef!: ElementRef<HTMLCanvasElement>;
+  @ViewChild('pdfImage') pdfImageRef!: ElementRef<HTMLImageElement>;
+  pdfCanvasUrl: string | null = null;
+  isRenderingPdf = false;
+  pdfRenderScale = 1.5;
+  pdfImageUrl: string | null = null;
+  cursorCoords: {x:number, y:number, pdfX:number, pdfY:number} | null = null;
+  pdfPreviewMode = false;  // true = muestra datos dummy sobre el PDF
+
+  // Valores dummy para preview visual (se actualizan dinámicamente)
+  get pdfPreviewValues(): Record<string, string> {
+    const instVal = this.templateForm.installation_value;
+    const formattedInst = instVal && parseFloat(instVal) > 0
+      ? '$' + new Intl.NumberFormat('es-CO', { minimumFractionDigits: 0, maximumFractionDigits: 2 }).format(parseFloat(instVal))
+      : '$60.000';
+
+    return {
+      '{{nombre}}': 'JUAN',
+      '{{apellido}}': 'PEREZ',
+      '{{nombre_completo}}': 'JUAN PEREZ',
+      '{{dni}}': '12345678',
+      '{{telefono}}': '3001234567',
+      '{{email}}': 'juan@ejemplo.com',
+      '{{direccion}}': 'Calle 123 # 45-67',
+      '{{fecha}}': '16/07/2026',
+      '{{contrato_id}}': '999',
+      '{{dia}}': '16',
+      '{{mes}}': '07',
+      '{{anio}}': '2026',
+      '{{plan_nombre}}': 'INTERNET 200MB',
+      '{{plan_velocidad}}': '200 Mb',
+      '{{plan_precio}}': '$50.000',
+      '{{plan_instalacion}}': formattedInst,
+      '{{promocion_nombre}}': 'PROMO VERANO',
+      '{{check_200mb}}': 'X',
+      '{{check_300mb}}': '',
+      '{{check_400mb}}': '',
+      '{{check_otra}}': '',
+      '{{check_os_nuevo}}': 'X',
+      '{{check_os_mod}}': '',
+      '{{check}}': 'X',
+      '{{tipo_documento}}': 'CC',
+      '{{valor_instalacion}}': formattedInst,
+      '{{firma}}': 'FIRMA',
+    };
+  }
+
   // ── Variables rápidas ─────────────────────────────────────────────────────
   quickVars = [
-    { label: 'Nombre',         code: '{{nombre}}' },
-    { label: 'Apellido',       code: '{{apellido}}' },
-    { label: 'Nombre completo',code: '{{nombre_completo}}' },
-    { label: 'DNI',            code: '{{dni}}' },
-    { label: 'Teléfono',       code: '{{telefono}}' },
-    { label: 'Email',          code: '{{email}}' },
-    { label: 'Dirección',      code: '{{direccion}}' },
-    { label: 'Fecha',          code: '{{fecha}}' },
+    { label: 'Nombre',            code: '{{nombre}}' },
+    { label: 'Apellido',          code: '{{apellido}}' },
+    { label: 'Nombre completo',   code: '{{nombre_completo}}' },
+    { label: 'DNI',               code: '{{dni}}' },
+    { label: 'Teléfono',          code: '{{telefono}}' },
+    { label: 'Email',             code: '{{email}}' },
+    { label: 'Dirección',         code: '{{direccion}}' },
+    { label: 'Fecha',             code: '{{fecha}}' },
+    // Fecha separada
+    { label: 'Día',               code: '{{dia}}' },
+    { label: 'Mes',               code: '{{mes}}' },
+    { label: 'Año',               code: '{{anio}}' },
+    // Documento
+    { label: 'Tipo documento',    code: '{{tipo_documento}}' },
+    // Plan de internet
+    { label: 'Plan nombre',       code: '{{plan_nombre}}' },
+    { label: 'Plan velocidad',    code: '{{plan_velocidad}}' },
+    { label: 'Plan precio',       code: '{{plan_precio}}' },
+    { label: 'Plan instalación',  code: '{{plan_instalacion}}' },
+    { label: 'Promoción',         code: '{{promocion_nombre}}' },
+    { label: 'Valor instalación', code: '{{valor_instalacion}}' },
+    // Checks velocidad
+    { label: 'Check 200 Mb',      code: '{{check_200mb}}' },
+    { label: 'Check 300 Mb',      code: '{{check_300mb}}' },
+    { label: 'Check 400 Mb',      code: '{{check_400mb}}' },
+    { label: 'Check Otra vel.',   code: '{{check_otra}}' },
+    // Checks OS
+    { label: 'Check OS Nuevo',    code: '{{check_os_nuevo}}' },
+    { label: 'Check OS Modif.',   code: '{{check_os_mod}}' },
+    // Check simple
+    { label: 'Check (siempre X)', code: '{{check}}' },
+    // Firma posicionada
+    { label: 'Firma (imagen)',    code: '{{firma}}' },
+    { label: 'ID Contrato',       code: '{{contrato_id}}' },
   ];
 
   // ── Asignación ────────────────────────────────────────────────────────────
@@ -134,6 +223,12 @@ export class ContractsComponent implements OnInit {
     private sanitizer: DomSanitizer,
   ) {}
 
+  get safePdfBaseUrl(): SafeResourceUrl | null {
+    if (!this.pdfBaseUrl) return null;
+    const url = this.pdfBaseUrl + '#page=' + this.pdfPickerPage + '&toolbar=0&navpanes=0&scrollbar=0&zoom=page-width';
+    return this.sanitizer.bypassSecurityTrustResourceUrl(url);
+  }
+
   ngOnInit(): void {
     this.loadContracts();
     this.loadAssigned();
@@ -151,10 +246,13 @@ export class ContractsComponent implements OnInit {
 
   openCreate(): void {
     this.isEditing     = false;
-    this.templateForm  = { id: 0, title: '', content: '', active: true };
+    this.templateForm  = { id: 0, title: '', content: '', active: true, installation_value: '' };
     this.logoFile      = null;
     this.logoPreview   = null;
     this.pdfFile       = null;
+    this.pdfBaseFile   = null;
+    this.hasPdfBase    = false;
+    this.pdfBaseUrl    = null;
     this.pdfGuideUrl   = null;
     this.showPreview   = false;
     this.errorMsg      = '';
@@ -163,14 +261,26 @@ export class ContractsComponent implements OnInit {
 
   openEdit(c: Contract): void {
     this.isEditing    = true;
-    this.templateForm = { id: c.id, title: c.title, content: c.content, active: c.active };
+    this.templateForm = {
+      id: c.id,
+      title: c.title,
+      content: c.content,
+      active: c.active,
+      installation_value: c.installation_value ?? '',
+    };
     this.logoPreview  = c.logo ?? null;
     this.hasPdfBase   = !!c.pdf_path;
+    this.pdfBaseUrl   = c.pdf_path ? environment.rootUrl + 'storage/' + c.pdf_path : null;
     this.pdfGuideUrl  = null;
     this.pdfFile      = null;
     this.pdfBaseFile  = null;
     this.errorMsg     = '';
+    this.pdfPickerActive = false;
+    this.pdfFields    = [];
     this.showTemplateModal = true;
+    if (this.hasPdfBase) {
+      this.loadPdfDimensionsAndFields();
+    }
   }
 
   saveTemplate(): void {
@@ -282,22 +392,50 @@ export class ContractsComponent implements OnInit {
 
   openSend(cc: ClientContract): void {
     this.showSendModal = cc;
-    this.phoneInput    = cc.user.phone  ?? '';
-    this.emailInput    = cc.user.email  ?? '';
+    // Normalizar teléfono para mostrar con prefijo +57 si es colombiano
+    const rawPhone = (cc.user.phone ?? '').trim();
+    const digitsOnly = rawPhone.replace(/\D/g, '');
+    if (/^3\d{9}$/.test(digitsOnly)) {
+      this.phoneInput = '+57' + digitsOnly;
+    } else if (/^57\d{10}$/.test(digitsOnly)) {
+      this.phoneInput = '+' + digitsOnly;
+    } else {
+      this.phoneInput = rawPhone;
+    }
+    this.emailInput = cc.user.email ?? '';
   }
 
   closeSend(): void { this.showSendModal = null; }
 
   sendWhatsApp(): void {
     if (!this.showSendModal || !this.phoneInput) return;
+
+    // Normalizar número: quitar todo excepto dígitos
+    let phone = this.phoneInput.replace(/\D/g, '');
+
+    // Validar formato colombiano: 10 dígitos (3xxxxxxxxxx) o 12 dígitos (57xxxxxxxxxx)
+    const isValidColombian = /^(57\d{10}|3\d{9})$/.test(phone);
+    if (!isValidColombian) {
+      this.errorMsg = 'Número inválido. Ingrese 10 dígitos (3XX...) o 12 dígitos (57...). Ej: 3245127868 o 573245127868';
+      return;
+    }
+
     this.isSendingWa = true;
-    this.contractService.sendByWhatsApp(this.showSendModal.id, this.phoneInput).subscribe({
-      next: () => {
-        this.isSendingWa   = false;
-        this.showSendModal = null;
-        this.toast('Mensaje enviado por WhatsApp.');
+    this.errorMsg = '';
+    this.contractService.sendByWhatsApp(this.showSendModal.id, phone).subscribe({
+      next: (r) => {
+        this.isSendingWa = false;
+        if (r.status === 0) {
+          this.showSendModal = null;
+          this.toast('Mensaje enviado por WhatsApp.');
+        } else {
+          this.errorMsg = r.message || 'Error al enviar WhatsApp.';
+        }
       },
-      error: () => { this.isSendingWa = false; },
+      error: (err) => {
+        this.isSendingWa = false;
+        this.errorMsg = err.error?.message || 'Error de conexión al enviar WhatsApp.';
+      },
     });
   }
 
@@ -396,7 +534,9 @@ export class ContractsComponent implements OnInit {
         this.isUploadingPdfBase = false;
         if (r.status === 0) {
           this.hasPdfBase = true;
-          this.toast('PDF base guardado. El PDF descargado será una copia exacta del original con la firma agregada.');
+          this.pdfBaseUrl = r.data?.pdf_url ?? null;
+          this.loadPdfDimensionsAndFields();
+          this.toast('PDF base guardado. Ahora configurá las coordenadas de cada variable.');
         } else {
           this.errorMsg = r.message || 'Error al guardar PDF base.';
         }
@@ -404,6 +544,327 @@ export class ContractsComponent implements OnInit {
       error: () => {
         this.isUploadingPdfBase = false;
         this.errorMsg = 'Error al subir PDF base.';
+      },
+    });
+  }
+
+  // ── PDF Coordinate Picker ────────────────────────────────────────────────
+
+  loadPdfDimensionsAndFields(): void {
+    if (!this.templateForm.id || !this.hasPdfBase) return;
+    this.contractService.getPdfDimensions(this.templateForm.id).subscribe({
+      next: (r) => {
+        if (r.status === 0) {
+          this.pdfDimensions = r.data;
+          this.pdfPickerPage = 1;
+          // Re-renderizar una vez que las dimensiones estén listas y el DOM se haya actualizado
+          if (this.pdfPickerActive) {
+            setTimeout(() => this.renderPdfPage(), 0);
+          }
+        }
+      },
+    });
+    this.contractService.getPdfFields(this.templateForm.id).subscribe({
+      next: (r) => {
+        if (r.status === 0 && r.data) {
+          this.pdfFields = r.data.map((f: any) => ({
+            id: f.id,
+            variable: f.variable,
+            page: f.page,
+            x: f.x,
+            y: f.y,
+            font_size: f.font_size,
+            color: f.color,
+            max_width: f.max_width,
+          }));
+        } else {
+          this.pdfFields = [];
+        }
+        // Re-renderizar cuando carguen los campos (para mostrar puntos al abrir)
+        if (this.pdfPickerActive) {
+          setTimeout(() => this.renderPdfPage(), 0);
+        }
+      },
+    });
+  }
+
+  openPdfPicker(): void {
+    this.pdfPickerActive = true;
+    this.pdfCanvasUrl = this.pdfBaseUrl;
+    this.loadPdfDimensionsAndFields();
+  }
+
+  closePdfPicker(): void {
+    this.pdfPickerActive = false;
+    this.pdfPickerVariable = '';
+  }
+
+  /**
+   * Renderiza la página actual del PDF base en el canvas usando pdfjs-dist.
+   * Esto da una imagen pixel-perfect del PDF sin márgenes del visor de iframe.
+   */
+  async renderPdfPage(): Promise<void> {
+    if (!this.pdfCanvasUrl || !this.pdfDimensions) {
+      console.warn('[PDF Picker] Falta pdfCanvasUrl o pdfDimensions');
+      return;
+    }
+    const canvas = this.pdfCanvasRef?.nativeElement;
+    if (!canvas) {
+      console.warn('[PDF Picker] Canvas no disponible en DOM');
+      this.errorMsg = 'Canvas no disponible. Cerrá y volvé a abrir el editor.';
+      return;
+    }
+
+    this.isRenderingPdf = true;
+    this.errorMsg = '';
+    // Asegurar que pdfPickerPage sea un número entero (el <select> lo convierte a string)
+    const pageNum = parseInt(String(this.pdfPickerPage), 10);
+    try {
+      console.log('[PDF Picker] Cargando PDF:', this.pdfCanvasUrl);
+      const loadingTask = pdfjsLib.getDocument(this.pdfCanvasUrl);
+      const pdf = await loadingTask.promise;
+      console.log('[PDF Picker] PDF cargado. Páginas:', pdf.numPages);
+
+      if (pageNum < 1 || pageNum > pdf.numPages) {
+        throw new Error(`Página ${pageNum} fuera de rango (1-${pdf.numPages})`);
+      }
+
+      const page = await pdf.getPage(pageNum);
+      console.log('[PDF Picker] Página', pageNum, 'cargada');
+
+      // Escala: dibujamos a 1.5x para buena calidad visual
+      const viewport = page.getViewport({ scale: this.pdfRenderScale });
+      canvas.width = viewport.width;
+      canvas.height = viewport.height;
+      console.log('[PDF Picker] Canvas size:', canvas.width, 'x', canvas.height);
+
+      const ctx = canvas.getContext('2d')!;
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      await page.render({ canvasContext: ctx, viewport }).promise;
+
+      // Dibujar marcadores de campos ya colocados (directo sobre el canvas = pixel-perfect)
+      const currentPageData = this.pdfDimensions!.pages[this.pdfPickerPage - 1];
+      this.drawMarkersOnCanvas(ctx, canvas.width, canvas.height, { width: currentPageData.width, height: currentPageData.height });
+
+      // Convertir canvas a imagen base64 para mostrar como <img>
+      this.pdfImageUrl = canvas.toDataURL('image/png');
+      console.log('[PDF Picker] Imagen generada con marcadores. Size:', this.pdfImageUrl.length);
+    } catch (e: any) {
+      console.error('[PDF Picker] Error renderizando PDF:', e);
+      this.errorMsg = 'No se pudo renderizar el PDF. Probá recargar la página o usar el botón de abajo.';
+    } finally {
+      this.isRenderingPdf = false;
+    }
+  }
+
+  /**
+   * Dibuja marcadores + labels sobre el canvas.
+   * En modo preview también dibuja el valor dummy como se vería en el PDF final.
+   */
+  private drawMarkersOnCanvas(
+    ctx: CanvasRenderingContext2D,
+    canvasW: number,
+    _canvasH: number,
+    pageData: { width: number; height: number }
+  ): void {
+    const scaleX = canvasW / pageData.width;
+    const currentPageNum = parseInt(String(this.pdfPickerPage), 10);
+
+    this.pdfFields.forEach((f) => {
+      if (f.page !== currentPageNum) return;
+
+      const px = f.x * scaleX;
+      const py = f.y * scaleX;
+      const isFirma = f.variable === '{{firma}}';
+      const varName = f.variable.replace('{{', '').replace('}}', '');
+
+      // Tamaño de fuente base: pt * 1.5 (escala canvas) -> luego CSS escala proporcionalmente
+      const fontSizePx = Math.round(f.font_size * 1.5);
+
+      if (this.pdfPreviewMode && !isFirma) {
+        // ── MODO PREVIEW: dibujar valor dummy como texto real ──
+        const previewVal = this.pdfPreviewValues[f.variable] || 'VALOR';
+
+        // Fondo blanco semitransparente para legibilidad
+        ctx.font = `bold ${fontSizePx}px Arial, sans-serif`;
+        const textMetrics = ctx.measureText(previewVal);
+        const textW = textMetrics.width + 8;
+        const textH = fontSizePx + 6;
+        ctx.fillStyle = 'rgba(255,255,255,0.92)';
+        ctx.fillRect(px - 2, py - 2, textW, textH);
+
+        // Texto dummy (color del campo)
+        const colorHex = f.color || '000000';
+        const r = parseInt(colorHex.substring(0, 2), 16);
+        const g = parseInt(colorHex.substring(2, 4), 16);
+        const b = parseInt(colorHex.substring(4, 6), 16);
+        ctx.fillStyle = `rgb(${r},${g},${b})`;
+        ctx.textAlign = 'left';
+        ctx.textBaseline = 'top';
+        ctx.fillText(previewVal, px, py);
+
+        // Label pequeño arriba indicando la variable
+        const labelFont = Math.max(8, Math.round(fontSizePx * 0.7));
+        ctx.font = `bold ${labelFont}px Arial, sans-serif`;
+        ctx.fillStyle = '#ef4444';
+        ctx.fillText(varName, px, py - labelFont - 2);
+
+        // Punto indicador pequeño al inicio
+        ctx.beginPath();
+        ctx.arc(px - 6, py + fontSizePx / 2, 3, 0, Math.PI * 2);
+        ctx.fillStyle = '#ef4444';
+        ctx.fill();
+
+      } else if (this.pdfPreviewMode && isFirma) {
+        // ── MODO PREVIEW: firma como rectángulo gris ──
+        ctx.fillStyle = 'rgba(200,200,200,0.4)';
+        ctx.fillRect(px, py, 80 * scaleX, 25 * scaleX);
+        ctx.strokeStyle = '#6b7280';
+        ctx.lineWidth = 1;
+        ctx.strokeRect(px, py, 80 * scaleX, 25 * scaleX);
+        ctx.font = `bold ${fontSizePx}px Arial, sans-serif`;
+        ctx.fillStyle = '#6b7280';
+        ctx.textAlign = 'left';
+        ctx.textBaseline = 'top';
+        ctx.fillText('( FIRMA )', px + 4, py + 4);
+
+      } else {
+        // ── MODO NORMAL: punto + label de variable ──
+        // Punto visible
+        ctx.beginPath();
+        ctx.arc(px, py, 5, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(255,255,255,0.95)';
+        ctx.fill();
+        ctx.beginPath();
+        ctx.arc(px, py, 4, 0, Math.PI * 2);
+        ctx.fillStyle = isFirma ? '#10b981' : '#ef4444';
+        ctx.fill();
+        ctx.beginPath();
+        ctx.arc(px, py, 4, 0, Math.PI * 2);
+        ctx.strokeStyle = 'rgba(0,0,0,0.4)';
+        ctx.lineWidth = 0.8;
+        ctx.stroke();
+
+        // Label de variable arriba del punto
+        ctx.font = `bold ${Math.max(9, fontSizePx)}px Arial, sans-serif`;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'bottom';
+        const labelY = py - 7;
+        // Fondo blanco para el label
+        const labelMetrics = ctx.measureText(varName);
+        const labelW = labelMetrics.width + 6;
+        ctx.fillStyle = 'rgba(255,255,255,0.9)';
+        ctx.fillRect(px - labelW / 2, labelY - 11, labelW, 13);
+        ctx.fillStyle = isFirma ? '#047857' : '#b91c1c';
+        ctx.fillText(varName, px, labelY);
+      }
+    });
+  }
+
+  onPdfPreviewClick(event: MouseEvent): void {
+    if (!this.pdfPickerActive || !this.pdfPickerVariable || !this.pdfDimensions) return;
+
+    const img = event.target as HTMLImageElement;
+    if (!img || !img.clientWidth) return;
+
+    const currentPageNum = parseInt(String(this.pdfPickerPage), 10);
+    const pageData = this.pdfDimensions.pages[currentPageNum - 1];
+    if (!pageData) return;
+
+    // offsetX/Y son la posición exacta dentro de la imagen renderizada (px del DOM)
+    const clickX = event.offsetX;
+    const clickY = event.offsetY;
+
+    // Escala: puntos PDF = click_px * (pdf_pts / img_px)
+    const scaleX = pageData.width / img.clientWidth;
+    const scaleY = pageData.height / img.clientHeight;
+
+    const pdfX = clickX * scaleX;
+    const pdfY = clickY * scaleY;
+
+    // Debug en consola para verificar precisión
+    console.log('[PDF Click]', { clickX, clickY, imgW: img.clientWidth, imgH: img.clientHeight, pdfX, pdfY, pageW: pageData.width, pageH: pageData.height });
+
+    // Siempre agregar una nueva instancia
+    this.pdfFields.push({
+      variable: this.pdfPickerVariable,
+      page: this.pdfPickerPage,
+      x: parseFloat(pdfX.toFixed(2)),
+      y: parseFloat(pdfY.toFixed(2)),
+      font_size: this.pdfPickerVariable === '{{firma}}' ? 12 : 10,
+      color: '000000',
+      max_width: 200,
+    });
+
+    const existingCount = this.pdfFields.filter(
+      f => f.variable === this.pdfPickerVariable && f.page === this.pdfPickerPage
+    ).length;
+    const msg = existingCount > 1
+      ? `Nueva posición #${existingCount} agregada: ${this.pdfPickerVariable}`
+      : `Posición guardada: ${this.pdfPickerVariable}`;
+    this.toast(`${msg} (página ${this.pdfPickerPage})`);
+
+    // Re-renderizar para mostrar el nuevo marcador dibujado sobre el PDF
+    this.renderPdfPage();
+  }
+
+  onPdfMouseMove(event: MouseEvent): void {
+    if (!this.pdfDimensions) return;
+    const img = event.target as HTMLImageElement;
+    if (!img || !img.clientWidth) return;
+
+    const pageData = this.pdfDimensions.pages[this.pdfPickerPage - 1];
+    if (!pageData) return;
+
+    const scaleX = pageData.width / img.clientWidth;
+    const scaleY = pageData.height / img.clientHeight;
+
+    this.cursorCoords = {
+      x: Math.round(event.offsetX),
+      y: Math.round(event.offsetY),
+      pdfX: Math.round(event.offsetX * scaleX),
+      pdfY: Math.round(event.offsetY * scaleY),
+    };
+  }
+
+  removePdfField(idx: number): void {
+    this.pdfFields.splice(idx, 1);
+    // Re-renderizar para quitar el punto del canvas
+    this.renderPdfPage();
+  }
+
+  savePdfFields(): void {
+    if (!this.templateForm.id) return;
+    const payload = this.pdfFields.map(f => ({
+      variable: f.variable,
+      page: f.page,
+      x: f.x,
+      y: f.y,
+      font_size: f.font_size,
+      color: f.color,
+      max_width: f.max_width,
+    }));
+    this.contractService.savePdfFields(this.templateForm.id, payload).subscribe({
+      next: (r) => {
+        if (r.status === 0) {
+          this.toast('Coordenadas guardadas exitosamente.');
+        } else {
+          this.errorMsg = r.message || 'Error al guardar coordenadas.';
+        }
+      },
+      error: () => this.errorMsg = 'Error de red al guardar coordenadas.',
+    });
+  }
+
+  openPdfPreview(): void {
+    if (!this.templateForm.id) return;
+    this.contractService.getPdfPreviewBlob(this.templateForm.id).subscribe({
+      next: (blob) => {
+        const url = URL.createObjectURL(blob);
+        window.open(url, '_blank');
+      },
+      error: () => {
+        this.errorMsg = 'Error al generar la vista previa del PDF.';
       },
     });
   }

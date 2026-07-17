@@ -30,11 +30,11 @@ export class ContractService {
     return this.http.get(`${this.base}/${id}`, { headers: this.getHeaders() });
   }
 
-  create(data: { title: string; content: string }): Observable<any> {
+  create(data: { title: string; content: string; active?: boolean; installation_value?: string }): Observable<any> {
     return this.http.post(this.base, JSON.stringify(data), { headers: this.getHeaders() });
   }
 
-  update(id: number, data: { title: string; content: string; active: boolean }): Observable<any> {
+  update(id: number, data: { title: string; content: string; active: boolean; logo?: string; installation_value?: string; pdf_path?: string }): Observable<any> {
     return this.http.put(`${this.base}/${id}`, JSON.stringify(data), { headers: this.getHeaders() });
   }
 
@@ -122,5 +122,40 @@ export class ContractService {
       Authorization: `Bearer ${localStorage.getItem('token')}`,
     });
     return this.http.post(`${this.env.rootUrl}api/contracts/${contractId}/logo`, formData, { headers });
+  }
+
+  // ── PDF Fields / coordenadas ────────────────────────────────────────────────
+
+  getPdfFields(contractId: number): Observable<any> {
+    return this.http.get(`${this.env.rootUrl}api/contracts/${contractId}/pdf-fields`, {
+      headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
+    });
+  }
+
+  savePdfFields(contractId: number, fields: any[]): Observable<any> {
+    return this.http.post(`${this.env.rootUrl}api/contracts/${contractId}/pdf-fields`,
+      { fields },
+      { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }
+    );
+  }
+
+  getPdfDimensions(contractId: number): Observable<any> {
+    return this.http.get(`${this.env.rootUrl}api/contracts/${contractId}/pdf-dimensions`, {
+      headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
+    });
+  }
+
+  getPdfPreview(contractId: number): string {
+    return `${this.env.rootUrl}api/contracts/${contractId}/pdf-preview?token=${localStorage.getItem('token')}`;
+  }
+
+  getPdfPreviewBlob(contractId: number): Observable<Blob> {
+    const headers = new HttpHeaders({
+      Authorization: `Bearer ${localStorage.getItem('token')}`,
+    });
+    return this.http.get(`${this.env.rootUrl}api/contracts/${contractId}/pdf-preview`, {
+      headers,
+      responseType: 'blob',
+    });
   }
 }

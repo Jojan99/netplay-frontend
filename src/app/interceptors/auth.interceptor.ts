@@ -1,4 +1,7 @@
 import { HttpInterceptorFn } from '@angular/common/http';
+import { catchError, throwError } from 'rxjs';
+import { inject } from '@angular/core';
+import { Router } from '@angular/router';
 
 const WA_API = 'http://181.48.150.43:3001';
 
@@ -18,5 +21,22 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
     });
   }
 
-  return next(req);
+  return next(req).pipe(
+    catchError((err) => {
+      const status = err?.status;
+      const router = inject(Router);
+
+      // Token expirado o inválido → desloguear y mandar al login
+      if (status === 401 || status === 403) {
+        localStorage.removeItem('token');
+        localStorage.removeItem('auth_user');
+        localStorage.removeItem('allowed_modules');
+        localStorage.removeItem('employee_id');
+        localStorage.removeItem('user_role');
+        router.navigate(['/login']);
+      }
+
+      return throwError(() => err);
+    })
+  );
 };

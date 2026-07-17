@@ -227,6 +227,20 @@
           class="w-full px-3 py-2 text-sm border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none"/>
       </div>
 
+      <!-- Valor de instalación -->
+      <div *ngIf="isEditing">
+        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Valor de instalación (fijo para este contrato)</label>
+        <div class="flex items-center gap-2">
+          <span class="text-gray-500 text-sm">$</span>
+          <input [(ngModel)]="templateForm.installation_value" type="number" min="0" step="1000"
+            placeholder="60000"
+            class="w-full px-3 py-2 text-sm border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none"/>
+        </div>
+        <p class="text-xs text-gray-400 mt-1" ngNonBindable>
+          Este valor se usará para <code>{{valor_instalacion}}</code> en todos los clientes que firmen esta plantilla.
+        </p>
+      </div>
+
       <!-- Logo del contrato -->
       <div>
         <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Logo del contrato</label>
@@ -283,6 +297,166 @@
         <p class="text-xs text-gray-400 mt-1">
           Este PDF se usará como <strong>copia exacta</strong> en el documento final. Se le agregará la firma del cliente al final.
         </p>
+      </div>
+
+      <!-- Configurar posiciones de variables sobre PDF -->
+      <div *ngIf="hasPdfBase && isEditing" class="border border-indigo-200 dark:border-indigo-800 rounded-lg p-3 bg-indigo-50/50 dark:bg-indigo-900/20">
+        <div class="flex items-center justify-between mb-2">
+          <label class="block text-sm font-medium text-indigo-700 dark:text-indigo-300">Posicionar variables sobre PDF</label>
+          <div class="flex gap-2">
+            <button (click)="openPdfPreview()"
+              class="px-3 py-1.5 text-xs font-semibold rounded-md bg-slate-600 text-white hover:bg-slate-700 transition"
+              title="Ver PDF de prueba con datos dummy">
+              Preview
+            </button>
+            <button (click)="pdfPickerActive ? closePdfPicker() : openPdfPicker()"
+              class="px-3 py-1.5 text-xs font-semibold rounded-md bg-indigo-600 text-white hover:bg-indigo-700 transition">
+              {{ pdfPickerActive ? 'Cerrar editor' : 'Configurar posiciones' }}
+            </button>
+          </div>
+        </div>
+        <p class="text-xs text-gray-500 dark:text-gray-400">
+          Hacé clic sobre el PDF para posicionar cada variable. Usá <strong>Preview</strong> para verificar que queden bien antes de firmar.
+        </p>
+
+        <!-- Editor de coordenadas -->
+        <div *ngIf="pdfPickerActive" class="mt-3 space-y-3">
+
+          <!-- Selector de variable y página + toggle preview -->
+          <div class="flex flex-wrap items-center gap-3">
+            <div>
+              <label class="text-xs font-medium text-gray-600 dark:text-gray-300">Variable</label>
+              <select [(ngModel)]="pdfPickerVariable" class="mt-1 block w-40 text-sm border-gray-300 dark:border-gray-600 rounded-md dark:bg-slate-800">
+                <option value="">— Elegir —</option>
+                <option *ngFor="let v of quickVars" [value]="v.code">{{ v.label }}</option>
+                <option [value]="'{{contrato_id}}'">ID Contrato</option>
+              </select>
+            </div>
+            <div *ngIf="pdfDimensions && pdfDimensions.pageCount > 1">
+              <label class="text-xs font-medium text-gray-600 dark:text-gray-300">Página</label>
+              <select [(ngModel)]="pdfPickerPage" (change)="renderPdfPage()"
+                class="mt-1 block w-20 text-sm border-gray-300 dark:border-gray-600 rounded-md dark:bg-slate-800">
+                <option *ngFor="let p of pdfDimensions.pages" [ngValue]="p.page">{{ p.page }}</option>
+              </select>
+            </div>
+            <div>
+              <button (click)="pdfPreviewMode = !pdfPreviewMode; renderPdfPage();"
+                class="mt-5 px-3 py-1.5 text-xs font-semibold rounded-md transition"
+                [class.bg-indigo-600]="!pdfPreviewMode"
+                [class.text-white]="!pdfPreviewMode"
+                [class.bg-emerald-100]="pdfPreviewMode"
+                [class.text-emerald-700]="pdfPreviewMode"
+                [class.hover:bg-indigo-700]="!pdfPreviewMode"
+                [class.hover:bg-emerald-200]="pdfPreviewMode">
+                {{ pdfPreviewMode ? 'Ocultar preview' : 'Ver preview' }}
+              </button>
+            </div>
+            <div class="text-xs text-gray-500 dark:text-gray-400">
+              <span *ngIf="pdfPickerVariable && !pdfPreviewMode">Hacé clic sobre el PDF para posicionar.</span>
+              <span *ngIf="pdfPickerVariable && pdfPreviewMode">Modo preview: verás datos de ejemplo.</span>
+              <span *ngIf="!pdfPickerVariable">Primero seleccioná una variable.</span>
+            </div>
+          </div>
+
+          <!-- Vista previa del PDF: estructura ultra-plana, sin contenedores extra -->
+          <div class="mt-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white shadow-inner"
+            style="max-height: 70vh; overflow-y: auto; text-align: center;"
+            *ngIf="pdfDimensions && pdfDimensions.pages[pdfPickerPage-1] as pageData">
+
+            <canvas #pdfCanvas style="display: none;"></canvas>
+
+            <!-- Spinner -->
+            <div *ngIf="isRenderingPdf" class="flex items-center justify-center py-12 text-gray-400 text-sm">
+              <svg class="animate-spin w-5 h-5 mr-2 text-indigo-500" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+              </svg>
+              Renderizando PDF...
+            </div>
+
+            <!-- Error -->
+            <div *ngIf="!isRenderingPdf && errorMsg" class="p-6">
+              <p class="text-red-600 text-sm mb-3">{{ errorMsg }}</p>
+              <button (click)="renderPdfPage()"
+                class="px-4 py-2 bg-indigo-600 text-white text-xs font-semibold rounded hover:bg-indigo-700 transition">
+                Recargar PDF
+              </button>
+            </div>
+
+            <!-- Imagen del PDF + marcadores (mismo contenedor, misma escala) -->
+            <div *ngIf="!isRenderingPdf && pdfImageUrl"
+              style="position: relative; display: inline-block; width: 100%; max-width: 900px; line-height: 0;">
+
+              <img #pdfImage
+                [src]="pdfImageUrl"
+                style="width: 100%; display: block; cursor: crosshair; border-radius: 4px;"
+                (click)="onPdfPreviewClick($event)"
+                (mousemove)="onPdfMouseMove($event)"
+                alt="Página del contrato" />
+
+              <!-- Crosshair que sigue el cursor (preview visual del punto) -->
+              <div *ngIf="pdfPickerVariable && cursorCoords"
+                style="position: absolute; pointer-events: none; z-index: 30; transform: translate(-50%, -50%);"
+                [style.left.%]="(cursorCoords.pdfX / pageData.width) * 100"
+                [style.top.%]="(cursorCoords.pdfY / pageData.height) * 100">
+                <div class="w-3 h-3 rounded-full border-2 border-indigo-500 bg-indigo-500/30 animate-pulse"></div>
+              </div>
+            </div>
+
+            <!-- Debug: coordenadas del cursor en tiempo real -->
+            <div class="text-[10px] text-gray-400 mt-1 font-mono" *ngIf="cursorCoords">
+              Cursor: {{ cursorCoords.x }} , {{ cursorCoords.y }} (px DOM) → {{ cursorCoords.pdfX }} , {{ cursorCoords.pdfY }} (pts PDF)
+            </div>
+          </div>
+
+          <!-- Tabla de campos configurados con edición manual -->
+          <div *ngIf="pdfFields.length > 0" class="space-y-2">
+            <label class="text-xs font-medium text-gray-600 dark:text-gray-300">Campos configurados (podés ajustar manualmente)</label>
+            <div class="overflow-x-auto">
+              <table class="w-full text-xs border border-gray-200 dark:border-gray-700 rounded">
+                <thead class="bg-gray-50 dark:bg-gray-800">
+                  <tr>
+                    <th class="px-2 py-1 text-left">Variable</th>
+                    <th class="px-2 py-1 text-left">Pág</th>
+                    <th class="px-2 py-1 text-left">X (pts)</th>
+                    <th class="px-2 py-1 text-left">Y (pts)</th>
+                    <th class="px-2 py-1 text-left">Tamaño</th>
+                    <th class="px-2 py-1"></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr *ngFor="let f of pdfFields; let i = index" class="border-t border-gray-100 dark:border-gray-700">
+                    <td class="px-2 py-1 font-medium">{{ f.variable }} <span class="text-gray-400 text-[10px] ml-0.5">#{{ i+1 }}</span></td>
+                    <td class="px-2 py-1">{{ f.page }}</td>
+                    <td class="px-2 py-1">
+                      <input type="number" [(ngModel)]="f.x" class="w-16 text-xs border rounded px-1 dark:bg-slate-800 dark:border-slate-600" step="0.5">
+                    </td>
+                    <td class="px-2 py-1">
+                      <input type="number" [(ngModel)]="f.y" class="w-16 text-xs border rounded px-1 dark:bg-slate-800 dark:border-slate-600" step="0.5">
+                    </td>
+                    <td class="px-2 py-1">
+                      <input type="number" [(ngModel)]="f.font_size" class="w-12 text-xs border rounded px-1 dark:bg-slate-800 dark:border-slate-600" min="6" max="72">
+                    </td>
+                    <td class="px-2 py-1">
+                      <button (click)="removePdfField(i)" class="text-red-500 hover:text-red-700 font-bold px-1">×</button>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="flex justify-end gap-2">
+            <button (click)="pdfFields = []; savePdfFields();"
+              class="px-4 py-2 text-xs font-semibold rounded-md bg-red-50 text-red-600 hover:bg-red-100 transition border border-red-200">
+              Borrar todas
+            </button>
+            <button (click)="savePdfFields()"
+              class="px-4 py-2 text-xs font-semibold rounded-md bg-emerald-600 text-white hover:bg-emerald-700 transition">
+              Guardar coordenadas
+            </button>
+          </div>
+        </div>
       </div>
 
       <!-- Variables rápidas -->
