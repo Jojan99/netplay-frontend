@@ -44,10 +44,10 @@ export class ContractService {
 
   // ── Asignación a clientes ─────────────────────────────────────────────────
 
-  assign(contractId: number, userId: number): Observable<any> {
+  assign(contractId: number, userId: number, requireDocuments: boolean = false): Observable<any> {
     return this.http.post(
       `${this.base}/assign`,
-      JSON.stringify({ contract_id: contractId, user_id: userId }),
+      JSON.stringify({ contract_id: contractId, user_id: userId, require_documents: requireDocuments }),
       { headers: this.getHeaders() }
     );
   }
@@ -156,6 +156,26 @@ export class ContractService {
     return this.http.get(`${this.env.rootUrl}api/contracts/${contractId}/pdf-preview`, {
       headers,
       responseType: 'blob',
+    });
+  }
+
+  // ── Documentos de identidad ───────────────────────────────────────────────
+
+  uploadDocument(clientContractId: number, frontFile?: File, backFile?: File, docNumberFront?: string, docNumberBack?: string): Observable<any> {
+    const formData = new FormData();
+    if (frontFile) formData.append('document_front', frontFile);
+    if (backFile) formData.append('document_back', backFile);
+    if (docNumberFront) formData.append('document_number_front', docNumberFront);
+    if (docNumberBack) formData.append('document_number_back', docNumberBack);
+    const headers = new HttpHeaders({
+      Authorization: `Bearer ${localStorage.getItem('token')}`,
+    });
+    return this.http.post(`${this.env.rootUrl}api/contracts/client-contract/${clientContractId}/documents`, formData, { headers });
+  }
+
+  getDocuments(clientContractId: number): Observable<any> {
+    return this.http.get(`${this.env.rootUrl}api/contracts/client-contract/${clientContractId}/documents`, {
+      headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
     });
   }
 }

@@ -19,6 +19,7 @@ interface Contract {
   pdf_path?: string;
   pdf_url?: string;
   installation_value?: string;
+  plazo?: string;
   active: boolean;
   created_at: string;
 }
@@ -28,6 +29,11 @@ interface ClientContract {
   status: 'pending' | 'signed';
   token: string;
   signed_at: string | null;
+  require_documents: boolean;
+  document_front_path?: string;
+  document_back_path?: string;
+  document_number_front?: string;
+  document_number_back?: string;
   contract: { id: number; title: string };
   user: { id: number; username: string; names?: string; lastname?: string; phone?: string; email?: string; dni?: string };
 }
@@ -59,7 +65,7 @@ export class ContractsComponent implements OnInit {
   showTemplateModal          = false;
   isEditing                  = false;
   isSaving                   = false;
-  templateForm               = { id: 0, title: '', content: '', active: true, installation_value: '' };
+  templateForm               = { id: 0, title: '', content: '', active: true, installation_value: '', plazo: '12' };
   deleteConfirmId: number | null = null;
   isDeleting                 = false;
 
@@ -102,9 +108,11 @@ export class ContractsComponent implements OnInit {
   // Valores dummy para preview visual (se actualizan dinámicamente)
   get pdfPreviewValues(): Record<string, string> {
     const instVal = this.templateForm.installation_value;
+    const instValP = this.templateForm.plazo;
     const formattedInst = instVal && parseFloat(instVal) > 0
       ? '$' + new Intl.NumberFormat('es-CO', { minimumFractionDigits: 0, maximumFractionDigits: 2 }).format(parseFloat(instVal))
       : '$60.000';
+    const plazo = instValP ? parseInt(instValP) : 12; // meses
 
     return {
       '{{nombre}}': 'JUAN',
@@ -133,6 +141,7 @@ export class ContractsComponent implements OnInit {
       '{{check}}': 'X',
       '{{tipo_documento}}': 'CC',
       '{{valor_instalacion}}': formattedInst,
+      '{{plazo}}': plazo.toString(),
       '{{firma}}': 'FIRMA',
     };
   }
@@ -160,6 +169,7 @@ export class ContractsComponent implements OnInit {
     { label: 'Plan instalación',  code: '{{plan_instalacion}}' },
     { label: 'Promoción',         code: '{{promocion_nombre}}' },
     { label: 'Valor instalación', code: '{{valor_instalacion}}' },
+    { label: 'Plazo',             code: '{{plazo}}' },
     // Checks velocidad
     { label: 'Check 200 Mb',      code: '{{check_200mb}}' },
     { label: 'Check 300 Mb',      code: '{{check_300mb}}' },
@@ -185,6 +195,17 @@ export class ContractsComponent implements OnInit {
   isSearching                         = false;
   selectedClient: Client | null       = null;
   selectedContractId                  = 0;
+  requireDocuments                    = false;
+
+  // ── Documentos ────────────────────────────────────────────────────────────
+  showDocumentsModal: ClientContract | null = null;
+  documentFrontFile: File | null = null;
+  documentBackFile: File | null = null;
+  documentFrontPreview: string | null = null;
+  documentBackPreview: string | null = null;
+  isUploadingDocuments = false;
+  documentNumberFront = '';
+  documentNumberBack = '';
 
   // ── Filtro asignados ─────────────────────────────────────────────────────
   assignedSearch = '';
@@ -217,6 +238,8 @@ export class ContractsComponent implements OnInit {
   successMsg = '';
   errorMsg   = '';
 
+  env = environment;
+
   constructor(
     private contractService: ContractService,
     private userService: UserService,
@@ -246,7 +269,7 @@ export class ContractsComponent implements OnInit {
 
   openCreate(): void {
     this.isEditing     = false;
-    this.templateForm  = { id: 0, title: '', content: '', active: true, installation_value: '' };
+    this.templateForm  = { id: 0, title: '', content: '', active: true, installation_value: '', plazo: '12' };
     this.logoFile      = null;
     this.logoPreview   = null;
     this.pdfFile       = null;
@@ -267,6 +290,7 @@ export class ContractsComponent implements OnInit {
       content: c.content,
       active: c.active,
       installation_value: c.installation_value ?? '',
+      plazo: c.plazo ?? '12',
     };
     this.logoPreview  = c.logo ?? null;
     this.hasPdfBase   = !!c.pdf_path;
@@ -345,6 +369,7 @@ export class ContractsComponent implements OnInit {
     this.clientResults     = [];
     this.selectedClient    = null;
     this.selectedContractId = this.contracts[0]?.id ?? 0;
+    this.requireDocuments   = false;
     this.errorMsg          = '';
     this.showAssignModal   = true;
   }
@@ -367,7 +392,7 @@ export class ContractsComponent implements OnInit {
   assign(): void {
     if (!this.selectedClient || !this.selectedContractId) return;
     this.isAssigning = true;
-    this.contractService.assign(this.selectedContractId, this.selectedClient.id).subscribe({
+    this.contractService.assign(this.selectedContractId, this.selectedClient.id, this.requireDocuments).subscribe({
       next: r => {
         this.isAssigning     = false;
         this.showAssignModal = false;
@@ -684,6 +709,11 @@ export class ContractsComponent implements OnInit {
       if (this.pdfPreviewMode && !isFirma) {
         // ── MODO PREVIEW: dibujar valor dummy como texto real ──
         const previewVal = this.pdfPreviewValues[f.variable] || 'VALOR';
+        console.log({
+    variable: f.variable,
+    valor: this.pdfPreviewValues[f.variable],
+    todos: this.pdfPreviewValues
+});
 
         // Fondo blanco semitransparente para legibilidad
         ctx.font = `bold ${fontSizePx}px Arial, sans-serif`;
@@ -997,6 +1027,86 @@ export class ContractsComponent implements OnInit {
   toast(msg: string): void {
     this.successMsg = msg;
     setTimeout(() => { this.successMsg = ''; }, 3500);
+  }
+
+  // ── Documentos de identidad ─────────────────────────────────────────────
+
+  openDocuments(cc: ClientContract): void {
+    this.showDocumentsModal = cc;
+    this.documentFrontFile = null;
+    this.documentBackFile = null;
+    this.documentFrontPreview = null;
+    this.documentBackPreview = null;
+    this.documentNumberFront = cc.document_number_front || cc.user?.dni || '';
+    this.documentNumberBack = cc.document_number_back || cc.user?.dni || '';
+    this.isUploadingDocuments = false;
+  }
+
+  closeDocuments(): void {
+    this.showDocumentsModal = null;
+  }
+
+  onDocumentFrontSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    if (input.files && input.files[0]) {
+      this.documentFrontFile = input.files[0];
+      const reader = new FileReader();
+      reader.onload = () => { this.documentFrontPreview = reader.result as string; };
+      reader.readAsDataURL(this.documentFrontFile);
+    }
+  }
+
+  onDocumentBackSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    if (input.files && input.files[0]) {
+      this.documentBackFile = input.files[0];
+      const reader = new FileReader();
+      reader.onload = () => { this.documentBackPreview = reader.result as string; };
+      reader.readAsDataURL(this.documentBackFile);
+    }
+  }
+
+  uploadDocuments(): void {
+    if (!this.showDocumentsModal) return;
+    const cc = this.showDocumentsModal;
+
+    // Validar número de documento contra el DNI del contrato
+    const clientDni = cc.user?.dni || '';
+    if (clientDni) {
+      if (this.documentNumberFront && this.documentNumberFront !== clientDni) {
+        this.errorMsg = `El número frontal (${this.documentNumberFront}) no coincide con el DNI del contrato (${clientDni}).`;
+        return;
+      }
+      if (this.documentNumberBack && this.documentNumberBack !== clientDni) {
+        this.errorMsg = `El número trasero (${this.documentNumberBack}) no coincide con el DNI del contrato (${clientDni}).`;
+        return;
+      }
+    }
+
+    this.isUploadingDocuments = true;
+    this.errorMsg = '';
+    this.contractService.uploadDocument(
+      cc.id,
+      this.documentFrontFile || undefined,
+      this.documentBackFile || undefined,
+      this.documentNumberFront || undefined,
+      this.documentNumberBack || undefined
+    ).subscribe({
+      next: (r) => {
+        this.isUploadingDocuments = false;
+        if (r.status === 0) {
+          this.closeDocuments();
+          this.toast('Documentos guardados exitosamente.');
+          this.loadAssigned();
+        } else {
+          this.errorMsg = r.message || 'Error al guardar documentos.';
+        }
+      },
+      error: () => {
+        this.isUploadingDocuments = false;
+        this.errorMsg = 'Error de red al subir documentos.';
+      },
+    });
   }
 
   statusBadge(status: string): string {
