@@ -134,12 +134,12 @@
   </div>
 
 <!-- ═══════════════════ DRAWER ═══════════════════ -->
-<div *ngIf="drawerOpen" class="fixed inset-0 z-[30] flex justify-end">
+<div *ngIf="drawerOpen" class="fixed inset-0 z-[55] flex justify-end">
   <!-- Backdrop -->
-  <div class="absolute inset-0 bg-slate-900/50 " (click)="closeDrawer()"></div>
+  <div class="absolute inset-0 bg-slate-900/50" (click)="closeDrawer()"></div>
 
   <!-- Panel -->
-  <div class="relative z-[40] w-full max-w-2xl bg-white/95 dark:bg-slate-800/95 backdrop-blur-xl h-full border-r border-slate-100 dark:border-slate-700 flex flex-col shadow-2xl overflow-hidden">
+  <div class="relative z-[60] w-full max-w-2xl bg-white/95 dark:bg-slate-800/95 backdrop-blur-xl h-full border-r border-slate-100 dark:border-slate-700 flex flex-col shadow-2xl overflow-hidden">
 
     <!-- Drawer header -->
     <div class="flex items-start justify-between px-5 py-4 border-b border-slate-200/60 dark:border-slate-700/60 bg-slate-50/80 dark:bg-slate-800/80">
