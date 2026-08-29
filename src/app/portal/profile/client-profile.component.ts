@@ -21,16 +21,23 @@ export class ClientProfileComponent implements OnInit {
 
   // Campos editables
   phone   = '';
-  address = '';
   email   = '';
+
+  // Cambio de contraseña
+  pwModalOpen     = signal(false);
+  pwCurrent       = '';
+  pwNew           = '';
+  pwConfirm       = '';
+  pwLoading       = signal(false);
+  pwSuccess       = signal('');
+  pwError         = signal('');
 
   ngOnInit(): void {
     this.api.getProfile().subscribe({
       next: (res) => {
         this.profile.set(res.data);
-        this.phone   = res.data?.phone   ?? '';
-        this.address = res.data?.address ?? '';
-        this.email   = res.data?.email   ?? '';
+        this.phone = res.data?.phone ?? '';
+        this.email = res.data?.email ?? '';
         this.loading.set(false);
       },
       error: () => { this.loading.set(false); },
@@ -39,9 +46,8 @@ export class ClientProfileComponent implements OnInit {
 
   startEdit(): void {
     const p = this.profile();
-    this.phone   = p?.phone   ?? '';
-    this.address = p?.address ?? '';
-    this.email   = p?.email   ?? '';
+    this.phone = p?.phone ?? '';
+    this.email = p?.email ?? '';
     this.editing.set(true);
     this.successMsg.set('');
     this.errorMsg.set('');
@@ -56,18 +62,63 @@ export class ClientProfileComponent implements OnInit {
     this.saving.set(true);
     this.errorMsg.set('');
 
-    this.api.updateProfile({ phone: this.phone, address: this.address, email: this.email }).subscribe({
+    this.api.updateProfile({ phone: this.phone, email: this.email }).subscribe({
       next: (res) => {
         this.saving.set(false);
         this.editing.set(false);
         this.successMsg.set('Perfil actualizado correctamente');
         // Actualizar perfil local
-        this.profile.update(p => ({ ...p, phone: this.phone, address: this.address, email: this.email }));
+        this.profile.update(p => ({ ...p, phone: this.phone, email: this.email }));
         setTimeout(() => this.successMsg.set(''), 4000);
       },
       error: (err) => {
         this.saving.set(false);
         this.errorMsg.set(err.error?.message ?? 'Error al actualizar el perfil');
+      },
+    });
+  }
+
+  // ── Cambio de contraseña ─────────────────────────────────────────────────
+
+  openPwModal(): void {
+    this.pwModalOpen.set(true);
+    this.pwCurrent = '';
+    this.pwNew = '';
+    this.pwConfirm = '';
+    this.pwSuccess.set('');
+    this.pwError.set('');
+  }
+
+  closePwModal(): void {
+    this.pwModalOpen.set(false);
+  }
+
+  submitChangePassword(): void {
+    if (!this.pwCurrent || !this.pwNew || !this.pwConfirm) {
+      this.pwError.set('Todos los campos son obligatorios');
+      return;
+    }
+    if (this.pwNew.length < 6) {
+      this.pwError.set('La nueva contraseña debe tener al menos 6 caracteres');
+      return;
+    }
+    if (this.pwNew !== this.pwConfirm) {
+      this.pwError.set('Las contraseñas no coinciden');
+      return;
+    }
+
+    this.pwLoading.set(true);
+    this.pwError.set('');
+
+    this.api.changePassword(this.pwCurrent, this.pwNew, this.pwConfirm).subscribe({
+      next: (res) => {
+        this.pwLoading.set(false);
+        this.pwSuccess.set(res.message ?? 'Contraseña actualizada correctamente');
+        setTimeout(() => this.closePwModal(), 2000);
+      },
+      error: (err) => {
+        this.pwLoading.set(false);
+        this.pwError.set(err.error?.message ?? 'Error al cambiar la contraseña');
       },
     });
   }

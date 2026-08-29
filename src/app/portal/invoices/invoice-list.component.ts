@@ -19,9 +19,20 @@ export class InvoiceListComponent implements OnInit {
   invoices         = signal<any[]>([]);
   summary          = signal<any>(null);
   paymentAvailable = signal(false);
-  sendingId        = signal<string | null>(null);
-  sendResult       = signal<{ id: string; ok: boolean; msg: string } | null>(null);
-  pdfLoadingId     = signal<string | null>(null);
+  sendingId        = signal<number | null>(null);
+  sendResult       = signal<{ id: number; ok: boolean; msg: string } | null>(null);
+  pdfLoadingId     = signal<number | null>(null);
+
+  // ── Paginación ───────────────────────────────────────────────────────────
+  currentPage      = signal(1);
+  pageSize         = signal(10);
+  paginatedInvoices = computed(() => {
+    const start = (this.currentPage() - 1) * this.pageSize();
+    return this.invoices().slice(start, start + this.pageSize());
+  });
+  totalPages = computed(() => Math.ceil(this.invoices().length / this.pageSize()) || 1);
+  showingFrom = computed(() => (this.currentPage() - 1) * this.pageSize() + 1);
+  showingTo   = computed(() => Math.min(this.currentPage() * this.pageSize(), this.invoices().length));
 
   // ── Pago — modal setup (paso 1) ──────────────────────────────────────────
   paySetupOpen    = signal(false);
@@ -117,6 +128,7 @@ export class InvoiceListComponent implements OnInit {
 
   load(autoOpenPay = false): void {
     this.loading.set(true);
+    this.currentPage.set(1);
     this.api.getInvoices().subscribe({
       next: (res) => {
         this.invoices.set(res.data?.invoices ?? []);
@@ -131,11 +143,19 @@ export class InvoiceListComponent implements OnInit {
     });
   }
 
+  goToPage(p: number): void {
+    if (p < 1 || p > this.totalPages()) return;
+    this.currentPage.set(p);
+  }
+
+  prevPage(): void { this.goToPage(this.currentPage() - 1); }
+  nextPage(): void { this.goToPage(this.currentPage() + 1); }
+
   // ── Acciones de factura ───────────────────────────────────────────────────
 
   openPdf(invoice: any): void {
-    this.pdfLoadingId.set(invoice.number_facture);
-    this.api.getInvoicePdfUrl(invoice.number_facture).subscribe({
+    this.pdfLoadingId.set(invoice.id);
+    this.api.getInvoicePdfUrl(invoice.id).subscribe({
       next: (res) => {
         this.pdfLoadingId.set(null);
         if (res.data?.pdf_url) window.open(res.data.pdf_url, '_blank');
@@ -163,7 +183,7 @@ export class InvoiceListComponent implements OnInit {
     this.sendHistoryData.set([]);
     this.sendHistoryLoading.set(true);
     this.sendHistoryModal.set(true);
-    this.api.getSendHistory(invoice.number_facture).subscribe({
+    this.api.getSendHistory(invoice.id).subscribe({
       next: (res) => {
         this.sendHistoryData.set(res.data || []);
         this.sendHistoryLoading.set(false);
@@ -183,9 +203,9 @@ export class InvoiceListComponent implements OnInit {
   }
 
   sendInvoice(invoice: any, channel: 'whatsapp' | 'email' | 'both'): void {
-    this.sendingId.set(invoice.number_facture);
+    this.sendingId.set(invoice.id);
     this.sendResult.set(null);
-    this.api.sendInvoice(invoice.number_facture, channel).subscribe({
+    this.api.sendInvoice(invoice.id, channel).subscribe({
       next: (res) => {
         this.sendingId.set(null);
         const msg = channel === 'whatsapp'
@@ -193,13 +213,13 @@ export class InvoiceListComponent implements OnInit {
           : channel === 'email'
             ? 'Factura enviada por correo'
             : 'Factura enviada por WhatsApp y correo';
-        this.sendResult.set({ id: invoice.number_facture, ok: res.status === 'ok' || res.status === 0, msg: res.message || msg });
+        this.sendResult.set({ id: invoice.id, ok: res.status === 'ok' || res.status === 0, msg: res.message || msg });
         setTimeout(() => this.sendResult.set(null), 4000);
       },
       error: (err) => {
         this.sendingId.set(null);
         const msg = this.formatSendError(err);
-        this.sendResult.set({ id: invoice.number_facture, ok: false, msg });
+        this.sendResult.set({ id: invoice.id, ok: false, msg });
         setTimeout(() => this.sendResult.set(null), 4000);
       },
     });
