@@ -489,7 +489,7 @@
 <!-- ═══════════════════ MODAL: ABONAR ═══════════════════ -->
 <div *ngIf="abonarModal" class="fixed inset-0 z-[60] flex items-center justify-center p-4">
   <div class="absolute inset-0 bg-slate-900/50 " (click)="abonarModal = false"></div>
-  <div class="relative bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl rounded-2xl border border-slate-200/60 dark:border-slate-700/60 shadow-sm hover:shadow-md transition-all duration-300-2xl w-full max-w-md p-6">
+  <div class="relative bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl rounded-2xl border border-slate-200/60 dark:border-slate-700/60 shadow-sm hover:shadow-md transition-all duration-300 shadow-2xl w-full max-w-md p-6">
     <h3 class="text-lg font-bold text-slate-900 dark:text-white mb-4">Registrar abono</h3>
 
     <div class="space-y-4">
@@ -536,7 +536,7 @@
 <!-- ═══════════════════ MODAL: LIQUIDACIÓN MASIVA ═══════════════════ -->
 <div *ngIf="liquidateModal" class="fixed inset-0 z-[60] flex items-center justify-center p-4">
   <div class="absolute inset-0 bg-slate-900/50 " (click)="liquidateModal = false"></div>
-  <div class="relative bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl rounded-2xl border border-slate-200/60 dark:border-slate-700/60 shadow-sm hover:shadow-md transition-all duration-300-2xl w-full max-w-lg p-6">
+  <div class="relative bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl rounded-2xl border border-slate-200/60 dark:border-slate-700/60 shadow-sm hover:shadow-md transition-all duration-300 shadow-2xl w-full max-w-lg p-6">
     <h3 class="text-lg font-bold text-slate-900 dark:text-white mb-1">Liquidación masiva</h3>
     <p class="text-sm text-slate-500 dark:text-slate-400 mb-4">Selecciona las facturas pendientes a pagar de una vez.</p>
 
@@ -582,7 +582,7 @@
 <!-- ═══════════════════ MODAL: EDIT INVOICE ═══════════════════ -->
 <div *ngIf="editModal" class="fixed inset-0 z-[60] flex items-center justify-center p-4">
   <div class="absolute inset-0 bg-slate-900/50 " (click)="editModal = false"></div>
-  <div class="relative bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl rounded-2xl border border-slate-200/60 dark:border-slate-700/60 shadow-sm hover:shadow-md transition-all duration-300-2xl w-full max-w-lg p-6">
+  <div class="relative bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl rounded-2xl border border-slate-200/60 dark:border-slate-700/60 shadow-sm hover:shadow-md transition-all duration-300 shadow-2xl w-full max-w-lg p-6">
     <div class="flex items-center justify-between mb-4">
       <h3 class="text-lg font-bold text-slate-900 dark:text-white">Editar factura</h3>
       <span class="text-xs text-slate-400 font-mono">{{ editingInvoice?.number_facture }}</span>
@@ -687,7 +687,7 @@
 <!-- ═══════════════════ MODAL: ENVIAR FACTURA (INDIVIDUAL) ═══════════════════ -->
 <div *ngIf="sendModal" class="fixed inset-0 z-[60] flex items-center justify-center p-4">
   <div class="absolute inset-0 bg-slate-900/50 " (click)="closeSendModal()"></div>
-  <div class="relative bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl rounded-2xl border border-slate-200/60 dark:border-slate-700/60 shadow-sm hover:shadow-md transition-all duration-300-2xl w-full max-w-md p-6">
+  <div class="relative bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl rounded-2xl border border-slate-200/60 dark:border-slate-700/60 shadow-sm hover:shadow-md transition-all duration-300 shadow-2xl w-full max-w-md p-6">
     <h3 class="text-lg font-bold text-slate-900 dark:text-white mb-4">Enviar factura</h3>
 
     <div class="bg-slate-50/80 dark:bg-slate-700/80 rounded-lg p-4 mb-4 space-y-2 text-sm">
@@ -761,7 +761,7 @@
 <!-- ═══════════════════ MODAL: ENVIAR FACTURAS (MASIVO) ═══════════════════ -->
 <div *ngIf="sendBulkModal" class="fixed inset-0 z-[60] flex items-center justify-center p-4">
   <div class="absolute inset-0 bg-slate-900/50 " (click)="closeSendBulkModal()"></div>
-  <div class="relative bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl rounded-2xl border border-slate-200/60 dark:border-slate-700/60 shadow-sm hover:shadow-md transition-all duration-300-2xl w-full max-w-lg p-6">
+  <div class="relative bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl rounded-2xl border border-slate-200/60 dark:border-slate-700/60 shadow-sm hover:shadow-md transition-all duration-300 shadow-2xl w-full max-w-lg p-6">
     <h3 class="text-lg font-bold text-slate-900 dark:text-white mb-1">Envío masivo de facturas</h3>
     <p class="text-sm text-slate-500 dark:text-slate-400 mb-4">Selecciona las facturas y el canal de envío.</p>
 
@@ -843,7 +843,7 @@
 <!-- ═══════════════════ MODAL: HISTORIAL DE ENVÍOS ═══════════════════ -->
 <div *ngIf="sendHistoryModal" class="fixed inset-0 z-[60] flex items-center justify-center p-4">
   <div class="absolute inset-0 bg-slate-900/50 " (click)="closeSendHistoryModal()"></div>
-  <div class="relative bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl rounded-2xl border border-slate-200/60 dark:border-slate-700/60 shadow-sm hover:shadow-md transition-all duration-300-2xl w-full max-w-lg p-6">
+  <div class="relative bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl rounded-2xl border border-slate-200/60 dark:border-slate-700/60 shadow-sm hover:shadow-md transition-all duration-300 shadow-2xl w-full max-w-lg p-6">
     <div class="flex items-center justify-between mb-4">
       <h3 class="text-lg font-bold text-slate-900 dark:text-white">Historial de envíos</h3>
       <span class="text-xs text-slate-400 font-mono">{{ sendHistoryInvoice?.number_facture }}</span>
@@ -888,7 +888,7 @@
 <!-- ═══════════════════ MODAL: COMPROMISO DE PAGO ═══════════════════ -->
 <div *ngIf="commitmentModal" class="fixed inset-0 z-[60] flex items-center justify-center p-4">
   <div class="absolute inset-0 bg-slate-900/50 " (click)="commitmentModal = false"></div>
-  <div class="relative bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl rounded-2xl border border-slate-200/60 dark:border-slate-700/60 shadow-sm hover:shadow-md transition-all duration-300-2xl w-full max-w-lg flex flex-col max-h-[90vh]">
+  <div class="relative bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl rounded-2xl border border-slate-200/60 dark:border-slate-700/60 shadow-sm hover:shadow-md transition-all duration-300 shadow-2xl w-full max-w-lg flex flex-col max-h-[90vh]">
 
     <!-- Header -->
     <div class="flex items-center gap-2 px-6 pt-6 pb-4 border-b border-slate-200/60 dark:border-slate-700/60">
