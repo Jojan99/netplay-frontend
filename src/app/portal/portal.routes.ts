@@ -6,6 +6,7 @@ import { PortalHomeComponent }   from './home/portal-home.component';
 import { InvoiceListComponent }  from './invoices/invoice-list.component';
 import { TicketListComponent }   from './tickets/ticket-list.component';
 import { TicketFormComponent }   from './tickets/ticket-form.component';
+import { TicketDetailComponent } from './tickets/ticket-detail.component';
 import { ClientProfileComponent } from './profile/client-profile.component';
 
 export const PORTAL_ROUTES: Routes = [
@@ -22,6 +23,7 @@ export const PORTAL_ROUTES: Routes = [
       { path: 'facturas',        component: InvoiceListComponent },
       { path: 'reportes',        component: TicketListComponent },
       { path: 'reportes/nuevo',  component: TicketFormComponent },
+      { path: 'reportes/:id',    component: TicketDetailComponent },
       { path: 'perfil',          component: ClientProfileComponent },
       { path: '',                redirectTo: 'home', pathMatch: 'full' },
       { path: '**',              redirectTo: 'home' },

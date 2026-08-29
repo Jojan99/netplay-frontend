@@ -41,23 +41,23 @@ export class ClientApiService {
     return this.http.get(`${this.baseUrl}/invoices/${id}`, this.headers());
   }
 
-  getInvoicePdfUrl(id: string): Observable<any> {
+  getInvoicePdfUrl(id: number): Observable<any> {
     return this.http.get(`${this.baseUrl}/invoices/${id}/pdf-url`, this.headers());
   }
 
-  sendInvoiceWhatsapp(id: string): Observable<any> {
+  sendInvoiceWhatsapp(id: number): Observable<any> {
     return this.http.post(`${this.baseUrl}/invoices/${id}/send-whatsapp`, {}, this.headers());
   }
 
-  sendInvoiceEmail(id: string): Observable<any> {
+  sendInvoiceEmail(id: number): Observable<any> {
     return this.http.post(`${this.baseUrl}/invoices/${id}/send-email`, {}, this.headers());
   }
 
-  sendInvoice(id: string, channel: 'whatsapp' | 'email' | 'both'): Observable<any> {
+  sendInvoice(id: number, channel: 'whatsapp' | 'email' | 'both'): Observable<any> {
     return this.http.post(`${this.baseUrl}/invoices/${id}/send?channel=${channel}`, {}, this.headers());
   }
 
-  getSendHistory(id: string): Observable<any> {
+  getSendHistory(id: number): Observable<any> {
     return this.http.get(`${this.baseUrl}/invoices/${id}/send-history`, this.headers());
   }
 
@@ -93,5 +93,13 @@ export class ClientApiService {
 
   updateProfile(data: { phone?: string; address?: string; email?: string }): Observable<any> {
     return this.http.put(`${this.baseUrl}/profile`, data, this.headers());
+  }
+
+  changePassword(currentPassword: string, newPassword: string, newPasswordConfirmation: string): Observable<any> {
+    return this.http.post(`${this.baseUrl}/change-password`, {
+      current_password: currentPassword,
+      new_password: newPassword,
+      new_password_confirmation: newPasswordConfirmation,
+    }, this.headers());
   }
 }
