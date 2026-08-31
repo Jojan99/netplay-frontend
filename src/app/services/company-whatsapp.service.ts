@@ -30,6 +30,7 @@ export class CompanyWhatsappService {
     wa_provider?: string | null;
     wa_instance_id?: string | null;
     wa_phone_number_id?: string | null;
+    wa_business_id?: string | null;
     wa_access_token?: string | null;
     whatsapp_enabled?: boolean;
   }): Observable<any> {

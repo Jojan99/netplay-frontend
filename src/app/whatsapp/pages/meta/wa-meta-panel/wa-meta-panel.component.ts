@@ -17,6 +17,11 @@ import { CompanyWhatsappService } from '../../../../services/company-whatsapp.se
           <input type="text" [(ngModel)]="phoneNumberId" class="w-full p-2.5 border rounded-lg dark:bg-gray-700 dark:border-gray-600" />
         </div>
         <div>
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">WhatsApp Business Account ID (WABA ID)</label>
+          <input type="text" [(ngModel)]="businessId" class="w-full p-2.5 border rounded-lg dark:bg-gray-700 dark:border-gray-600" />
+          <p class="text-xs text-gray-500 mt-1">Necesario para gestionar plantillas. Lo encuentras en Facebook Developers → WhatsApp → API Setup.</p>
+        </div>
+        <div>
           <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Access Token</label>
           <input type="password" [(ngModel)]="accessToken" class="w-full p-2.5 border rounded-lg dark:bg-gray-700 dark:border-gray-600" />
         </div>
@@ -37,6 +42,7 @@ import { CompanyWhatsappService } from '../../../../services/company-whatsapp.se
 })
 export class WaMetaPanelComponent implements OnInit {
   phoneNumberId = '';
+  businessId = '';
   accessToken = '';
   saving = false;
   msg = '';
@@ -49,6 +55,7 @@ export class WaMetaPanelComponent implements OnInit {
       next: (r: any) => {
         const d = r.data ?? r;
         this.phoneNumberId = d.wa_phone_number_id || '';
+        this.businessId = d.wa_business_id || '';
       }
     });
   }
@@ -59,6 +66,7 @@ export class WaMetaPanelComponent implements OnInit {
     this.cwa.updateConfig({
       wa_provider: 'meta',
       wa_phone_number_id: this.phoneNumberId || null,
+      wa_business_id: this.businessId || null,
       wa_access_token: this.accessToken || null,
     }).subscribe({
       next: () => {
