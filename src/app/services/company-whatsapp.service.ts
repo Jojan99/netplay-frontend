@@ -26,7 +26,13 @@ export class CompanyWhatsappService {
     return this.http.get(`${this.base}/config`, { headers: this.getHeaders() });
   }
 
-  updateConfig(data: { wa_instance_id?: string | null; whatsapp_enabled?: boolean }): Observable<any> {
+  updateConfig(data: {
+    wa_provider?: string | null;
+    wa_instance_id?: string | null;
+    wa_phone_number_id?: string | null;
+    wa_access_token?: string | null;
+    whatsapp_enabled?: boolean;
+  }): Observable<any> {
     return this.http.put(
       `${this.base}/config`,
       JSON.stringify(data),
