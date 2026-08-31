@@ -46,87 +46,19 @@
     <div class="mb-6 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow p-4">
       <div class="flex items-center justify-between mb-3">
         <h2 class="text-sm font-semibold text-gray-900 dark:text-white">Proveedor de WhatsApp</h2>
-        <span class="text-xs px-2 py-0.5 rounded-full font-medium"
-          [ngClass]="isMeta ? 'bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300' : 'bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300'">
-          {{ isMeta ? 'API Oficial de Meta' : 'WhatsApp Web (QR)' }}
+        <span class="text-xs px-2 py-0.5 rounded-full font-medium bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300">
+          WhatsApp Web (QR)
         </span>
       </div>
 
-      <div class="flex gap-2 mb-4">
-        <button (click)="switchProvider('netplay')"
-          class="flex-1 px-4 py-2.5 text-sm font-medium rounded-lg border transition"
-          [ngClass]="isNetplay
-            ? 'bg-green-600 text-white border-green-600'
-            : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-600 dark:hover:bg-gray-600'">
-          <svg class="w-4 h-4 inline mr-1.5" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M12 18v-5.25m0 0a6.01 6.01 0 001.5-.189m-1.5.189a6.01 6.01 0 01-1.5-.189m3.75 7.478a12.06 12.06 0 01-4.5 0m3.75 2.383a14.406 14.406 0 01-3 0M14.25 18v-.192c0-.983.658-1.823 1.508-2.316a7.5 7.5 0 10-7.517 0c.85.493 1.509 1.333 1.509 2.316V18" />
-          </svg>
-          WhatsApp Web (QR)
-        </button>
-        <button (click)="switchProvider('meta')"
-          class="flex-1 px-4 py-2.5 text-sm font-medium rounded-lg border transition"
-          [ngClass]="isMeta
-            ? 'bg-blue-600 text-white border-blue-600'
-            : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-600 dark:hover:bg-gray-600'">
-          <svg class="w-4 h-4 inline mr-1.5" fill="currentColor" viewBox="0 0 24 24">
-            <path d="M12 2C6.477 2 2 6.477 2 12c0 1.89.525 3.66 1.438 5.175L2 22l4.825-1.438A9.96 9.96 0 0012 22c5.523 0 10-4.477 10-10S17.523 2 12 2zm0 18a8 8 0 01-4.287-1.235l-.307-.184-2.86.76.76-2.86-.184-.307A8 8 0 1112 20z"/>
-          </svg>
-          API Oficial de Meta
-        </button>
-      </div>
-
-      <!-- Botón guardar proveedor -->
-      <div class="flex items-center gap-3">
-        <button (click)="saveProvider()" [disabled]="savingProvider"
-          class="px-4 py-2 text-sm font-medium text-white rounded-lg focus:ring-4 disabled:opacity-50"
-          [ngClass]="isMeta ? 'bg-blue-600 hover:bg-blue-700 focus:ring-blue-300' : 'bg-green-600 hover:bg-green-700 focus:ring-green-300'">
-          <span *ngIf="!savingProvider">Guardar proveedor</span>
-          <span *ngIf="savingProvider">Guardando...</span>
-        </button>
-        <p *ngIf="providerError" class="text-sm text-red-600 dark:text-red-400">{{ providerError }}</p>
-      </div>
+      <p class="text-sm text-gray-600 dark:text-gray-400">
+        Estás usando el servicio interno de WhatsApp Web con QR. Si prefieres usar la API oficial de Meta, 
+        <a routerLink="/dashboard/whatsapp" class="text-blue-600 hover:underline">haz clic aquí</a>.
+      </p>
     </div>
 
-    <!-- Configuración Meta -->
-    <div *ngIf="isMeta" class="mb-6 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow p-4">
-      <h2 class="text-sm font-semibold text-gray-900 dark:text-white mb-3">Configuración de Meta</h2>
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-        <div>
-          <label class="block mb-1 text-xs font-medium text-gray-700 dark:text-gray-300">Phone Number ID</label>
-          <input type="text" [(ngModel)]="metaPhoneNumberId"
-            class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-            placeholder="Ej: 123456789012345" />
-        </div>
-        <div>
-          <label class="block mb-1 text-xs font-medium text-gray-700 dark:text-gray-300">Access Token</label>
-          <input type="password" [(ngModel)]="metaAccessToken"
-            class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-            placeholder="EAAxxxxxxxx..." />
-          <p *ngIf="metaTokenMasked && !metaAccessToken" class="mt-1 text-xs text-gray-500 dark:text-gray-400">
-            Token guardado: {{ metaTokenMasked }}
-          </p>
-        </div>
-      </div>
-      <div class="flex items-center gap-3">
-        <button (click)="saveMetaConfig()" [disabled]="savingMeta"
-          class="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 focus:ring-4 focus:ring-blue-300 disabled:opacity-50">
-          <span *ngIf="!savingMeta">Guardar configuración Meta</span>
-          <span *ngIf="savingMeta">Guardando...</span>
-        </button>
-        <p *ngIf="metaError" class="text-sm text-red-600 dark:text-red-400">{{ metaError }}</p>
-        <p *ngIf="metaSuccess" class="text-sm text-green-600 dark:text-green-400">{{ metaSuccess }}</p>
-      </div>
-
-      <!-- Info webhook -->
-      <div class="mt-4 p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
-        <p class="text-xs font-medium text-blue-800 dark:text-blue-300 mb-1">Webhook URL para Meta:</p>
-        <code class="text-xs text-blue-700 dark:text-blue-400 bg-blue-100 dark:bg-blue-900/40 px-2 py-1 rounded">https://netplay.com.co/api/webhooks/whatsapp-meta</code>
-        <p class="text-xs text-blue-600 dark:text-blue-400 mt-1">Verifica que esta URL esté configurada en tu app de Facebook Developers.</p>
-      </div>
-    </div>
-
-    <!-- Controles superiores (solo Netplay) -->
-    <div *ngIf="!loading && isNetplay" class="flex flex-wrap items-stretch gap-3 mb-6">
+    <!-- Controles superiores (Netplay) -->
+    <div *ngIf="!loading" class="flex flex-wrap items-stretch gap-3 mb-6">
 
       <!-- Toggle global -->
       <div class="flex items-center p-3 sm:p-4 bg-white border border-gray-200 rounded-lg shadow dark:bg-gray-800 dark:border-gray-700 w-full sm:w-auto sm:min-w-[260px]">
@@ -218,22 +150,7 @@
     </div>
 
     <!-- Toggle global para Meta -->
-    <div *ngIf="!loading && isMeta" class="flex flex-wrap items-stretch gap-3 mb-6">
-      <div class="flex items-center p-3 sm:p-4 bg-white border border-gray-200 rounded-lg shadow dark:bg-gray-800 dark:border-gray-700 w-full sm:w-auto sm:min-w-[260px]">
-        <div class="flex-1">
-          <p class="text-sm font-medium text-gray-700 dark:text-gray-300">WhatsApp global</p>
-          <p class="text-xs text-gray-400 dark:text-gray-500 mt-0.5">
-            {{ whatsappEnabled ? 'Habilitado — los clientes recibirán notificaciones' : 'Deshabilitado — sin notificaciones activas' }}
-          </p>
-        </div>
-        <label class="relative inline-flex items-center cursor-pointer ml-4">
-          <input type="checkbox" class="sr-only peer"
-            [(ngModel)]="whatsappEnabled"
-            (change)="toggleGlobal()" />
-          <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-green-300 dark:peer-focus:ring-green-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-green-500"></div>
-        </label>
-      </div>
-    </div>
+    <!-- Esta sección fue movida al módulo de Meta -->
 
     <!-- Skeleton global -->
     <div *ngIf="loading" class="flex flex-wrap gap-4 mb-6 animate-pulse">
@@ -242,8 +159,8 @@
       <div class="h-10 bg-gray-200 rounded-lg dark:bg-gray-700 w-40 self-center"></div>
     </div>
 
-    <!-- Error banner when WA service unreachable (solo Netplay) -->
-    <div *ngIf="instancesError && isNetplay"
+    <!-- Error banner when WA service unreachable -->
+    <div *ngIf="instancesError"
       class="mb-3 flex items-center gap-2 p-3 bg-yellow-50 dark:bg-yellow-900/30 border border-yellow-200 dark:border-yellow-700 rounded-lg text-sm text-yellow-800 dark:text-yellow-300">
       <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
@@ -343,24 +260,10 @@
     </div>
 
     <!-- Info para Meta -->
-    <div *ngIf="isMeta && !loading" class="mt-4 p-6 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow text-center">
-      <svg class="mx-auto mb-3 w-12 h-12 text-blue-500" fill="currentColor" viewBox="0 0 24 24">
-        <path d="M12 2C6.477 2 2 6.477 2 12c0 1.89.525 3.66 1.438 5.175L2 22l4.825-1.438A9.96 9.96 0 0012 22c5.523 0 10-4.477 10-10S17.523 2 12 2zm0 18a8 8 0 01-4.287-1.235l-.307-.184-2.86.76.76-2.86-.184-.307A8 8 0 1112 20z"/>
-      </svg>
-      <h3 class="text-base font-semibold text-gray-900 dark:text-white mb-1">API Oficial de Meta activa</h3>
-      <p class="text-sm text-gray-500 dark:text-gray-400 mb-3">
-        Estás usando la API oficial de WhatsApp Business. Los mensajes se enviarán y recibirán directamente a través de Meta.
-      </p>
-      <div class="inline-flex items-center gap-2 px-3 py-1.5 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg">
-        <svg class="w-4 h-4 text-green-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-        </svg>
-        <span class="text-sm text-green-700 dark:text-green-400">Webhook configurado y activo</span>
-      </div>
-    </div>
+    <!-- Esta sección fue movida al módulo de Meta -->
 
-  <!-- ── Plan Requests Panel (solo Netplay) ──────────────────────────────────────── -->
-  <div *ngIf="showReqsPanel && isNetplay"
+  <!-- ── Plan Requests Panel ──────────────────────────────────────── -->
+  <div *ngIf="showReqsPanel"
     class="mt-4 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow p-5">
     <div class="flex items-center justify-between mb-4">
       <h2 class="text-base font-semibold text-gray-900 dark:text-white">Solicitudes de activación de plan</h2>

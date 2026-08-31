@@ -23,16 +23,6 @@ export class WaPanelComponent implements OnInit, OnDestroy {
 
   // ── Provider ─────────────────────────────────────────────────────────────────
   waProvider: 'netplay' | 'meta' = 'netplay';
-  savingProvider = false;
-  providerError  = '';
-
-  // ── Meta config ──────────────────────────────────────────────────────────────
-  metaPhoneNumberId = '';
-  metaAccessToken   = '';
-  metaTokenMasked   = '';
-  savingMeta        = false;
-  metaError         = '';
-  metaSuccess       = '';
 
   // ── Create ───────────────────────────────────────────────────────────────────
   newInstanceName = '';
@@ -72,10 +62,6 @@ export class WaPanelComponent implements OnInit, OnDestroy {
     return this.waProvider === 'netplay';
   }
 
-  get isMeta(): boolean {
-    return this.waProvider === 'meta';
-  }
-
   constructor(private cwaSvc: CompanyWhatsappService) {}
 
   ngOnInit(): void  { this.loadConfig(); }
@@ -99,9 +85,6 @@ export class WaPanelComponent implements OnInit, OnDestroy {
         this.whatsappEnabled = d.whatsapp_enabled  ?? false;
         this.activeInstanceId = d.wa_instance_id   ?? null;
         this.waProvider      = d.wa_provider ?? 'netplay';
-        this.metaPhoneNumberId = d.wa_phone_number_id ?? '';
-        this.metaAccessToken   = d.wa_access_token ?? '';
-        this.metaTokenMasked   = d.wa_access_token ?? '';
         this.subscriptionStatus = d.subscription?.status ?? null;
         this.subscriptionPlan   = d.subscription?.plan   ?? null;
 
@@ -130,53 +113,6 @@ export class WaPanelComponent implements OnInit, OnDestroy {
       error: () => {
         this.whatsappEnabled = !this.whatsappEnabled;
         alert('Error al actualizar la configuración.');
-      },
-    });
-  }
-
-  // ── Provider switcher ────────────────────────────────────────────────────────
-
-  switchProvider(provider: 'netplay' | 'meta'): void {
-    if (this.waProvider === provider) return;
-    this.waProvider = provider;
-    this.providerError = '';
-  }
-
-  saveProvider(): void {
-    this.savingProvider = true;
-    this.providerError = '';
-    this.cwaSvc.updateConfig({ wa_provider: this.waProvider }).subscribe({
-      next: () => {
-        this.savingProvider = false;
-        this.loadConfig();
-      },
-      error: (e: any) => {
-        this.savingProvider = false;
-        this.providerError = e.error?.message ?? 'Error al cambiar el proveedor.';
-      },
-    });
-  }
-
-  // ── Meta config ──────────────────────────────────────────────────────────────
-
-  saveMetaConfig(): void {
-    this.savingMeta = true;
-    this.metaError = '';
-    this.metaSuccess = '';
-
-    this.cwaSvc.updateConfig({
-      wa_provider: this.waProvider,
-      wa_phone_number_id: this.metaPhoneNumberId || null,
-      wa_access_token: this.metaAccessToken || null,
-    }).subscribe({
-      next: () => {
-        this.savingMeta = false;
-        this.metaSuccess = 'Configuración de Meta guardada correctamente.';
-        setTimeout(() => this.metaSuccess = '', 3000);
-      },
-      error: (e: any) => {
-        this.savingMeta = false;
-        this.metaError = e.error?.message ?? 'Error al guardar la configuración de Meta.';
       },
     });
   }
