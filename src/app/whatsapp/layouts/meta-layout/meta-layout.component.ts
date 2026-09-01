@@ -25,6 +25,9 @@ import { RouterModule } from '@angular/router';
         <a routerLink="logs" routerLinkActive="bg-blue-600 text-white" class="px-3 py-1.5 text-sm rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition whitespace-nowrap text-gray-700 dark:text-gray-300">
           Logs
         </a>
+        <a routerLink="bot" routerLinkActive="bg-blue-600 text-white" class="px-3 py-1.5 text-sm rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition whitespace-nowrap text-gray-700 dark:text-gray-300">
+          Bot
+        </a>
         <a routerLink="panel" routerLinkActive="bg-blue-600 text-white" class="px-3 py-1.5 text-sm rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition whitespace-nowrap text-gray-700 dark:text-gray-300">
           Config.
         </a>

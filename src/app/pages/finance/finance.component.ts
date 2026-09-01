@@ -1,6 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { Component, HostListener, OnDestroy, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { ActivatedRoute } from '@angular/router';
 import { Subject } from 'rxjs';
 import { debounceTime, distinctUntilChanged, takeUntil } from 'rxjs/operators';
 import { FinanceService } from '../../services/finance.service';
@@ -34,6 +35,7 @@ export class FinanceComponent implements OnInit, OnDestroy {
   paymentLogs: any[] = [];
   drawerLoading = false;
   drawerTab: 'pending' | 'paid' = 'pending';
+  focusedInvoiceNumber = '';
 
   get drawerInvoices(): any[] {
     return this.drawerTab === 'pending'
@@ -120,7 +122,7 @@ export class FinanceComponent implements OnInit, OnDestroy {
     this.commitmentSelected.has(id) ? this.commitmentSelected.delete(id) : this.commitmentSelected.add(id);
   }
 
-  constructor(private financeService: FinanceService, private toast: ToastService) {}
+  constructor(private financeService: FinanceService, private toast: ToastService, private route: ActivatedRoute) {}
 
   ngOnInit(): void {
     this.searchSubject.pipe(
@@ -133,6 +135,21 @@ export class FinanceComponent implements OnInit, OnDestroy {
     });
     this.loadClients();
     this.loadActivePaymentMethods();
+    this.route.queryParamMap.pipe(takeUntil(this.destroy$)).subscribe(params => {
+      const cabId = Number(params.get('cab_id'));
+      if (!cabId) return;
+
+      this.focusedInvoiceNumber = params.get('focus_invoice') || '';
+
+      this.openDrawer({
+        cab_id: cabId,
+        user_id: Number(params.get('user_id')) || null,
+        names: params.get('names') || 'Cliente',
+        lastname: params.get('lastname') || '',
+        dni: params.get('dni') || '',
+        phone: params.get('phone') || '',
+      });
+    });
   }
 
   loadActivePaymentMethods(): void {
@@ -219,6 +236,11 @@ export class FinanceComponent implements OnInit, OnDestroy {
       next: (res) => {
         this.invoices    = res.data?.invoices || [];
         this.paymentLogs = res.data?.logs     || [];
+        const focusedInvoice = this.invoices.find(invoice => invoice.number_facture === this.focusedInvoiceNumber);
+        if (focusedInvoice) {
+          this.drawerTab = focusedInvoice.paid === 1 ? 'paid' : 'pending';
+          setTimeout(() => document.getElementById(`invoice-${focusedInvoice.id}`)?.scrollIntoView({ behavior: 'smooth', block: 'center' }));
+        }
         this.drawerLoading = false;
       },
       error: () => { this.drawerLoading = false; },

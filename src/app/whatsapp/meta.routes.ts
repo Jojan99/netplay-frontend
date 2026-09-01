@@ -13,6 +13,7 @@ export const META_ROUTES: Routes = [
       { path: 'enviar', loadComponent: () => import('./pages/meta/wa-meta-enviar/wa-meta-enviar.component').then(m => m.WaMetaEnviarComponent) },
       { path: 'logs', loadComponent: () => import('./pages/meta/wa-meta-logs/wa-meta-logs.component').then(m => m.WaMetaLogsComponent) },
       { path: 'panel', loadComponent: () => import('./pages/meta/wa-meta-panel/wa-meta-panel.component').then(m => m.WaMetaPanelComponent) },
+      { path: 'bot', loadComponent: () => import('./pages/meta/wa-meta-bot/wa-meta-bot.component').then(m => m.WaMetaBotComponent) },
     ]
   }
 ];

@@ -30,6 +30,7 @@ const MODULE_LABELS: Record<string, { label: string; group: string }> = {
   'finanzas':         { label: 'Ingresos',               group: 'Finanzas' },
   'egresos':          { label: 'Egresos',                group: 'Finanzas' },
   'report-paid':      { label: 'Reportes de pagos',      group: 'Finanzas' },
+  'payment-proof-audit': { label: 'Auditoría de pagos', group: 'Finanzas' },
   'history-facture':  { label: 'Historial Facturas',     group: 'Finanzas' },
   'resumen':          { label: 'Resumen Financiero',     group: 'Finanzas' },
   'created-ticket':   { label: 'Crear Ticket',           group: 'Soporte' },

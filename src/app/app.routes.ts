@@ -30,6 +30,8 @@ import { TransfersComponent } from './pages/transfers/transfers.component';
 import { TransferFormComponent } from './pages/transfers/transfer-form.component';
 import { TechnicianMapComponent } from './pages/technician-map/technician-map.component';
 import { SendLogsComponent } from './pages/send-logs/send-logs.component';
+import { PrivacyPolicyComponent } from './pages/privacy-policy/privacy-policy.component';
+import { PaymentProofAuditComponent } from './pages/payment-proof-audit/payment-proof-audit.component';
 
 export const routes: Routes = [
   {
@@ -86,6 +88,7 @@ export const routes: Routes = [
       { path: 'transfers/new', component: TransferFormComponent },
       { path: 'technician-map', component: TechnicianMapComponent, canActivate: [roleGuard], data: { module: 'technician-map' } },
       { path: 'send-logs', component: SendLogsComponent, canActivate: [roleGuard], data: { module: 'finanzas' } },
+      { path: 'payment-proof-audit', component: PaymentProofAuditComponent, canActivate: [roleGuard], data: { module: 'finanzas' } },
       {
         path: 'landing',
         loadComponent: () => import('./pages/landing-editor/landing-editor.component').then(m => m.LandingEditorComponent),
@@ -106,5 +109,6 @@ export const routes: Routes = [
   { path: 'inicio',        component: SignInComponent },
   { path: 'register',      component: RegisterCompanyComponent },
   { path: 'confirm-email', component: ConfirmEmailComponent },
+  { path: 'politica-de-privacidad', component: PrivacyPolicyComponent },
   { path: '',              redirectTo: 'inicio', pathMatch: 'full' },
 ];

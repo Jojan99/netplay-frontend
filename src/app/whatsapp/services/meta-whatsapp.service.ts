@@ -57,4 +57,13 @@ export class MetaWhatsappService {
   validatePhone(phone: string): Observable<any> {
     return this.http.post(`${this.base}/validate-phone`, JSON.stringify({ phone }), this.h());
   }
+
+  // ── Bot Config ───────────────────────────────────────────────────────────────
+  getBotConfig(): Observable<any> {
+    return this.http.get(`${environment.rootUrl}api/company/whatsapp/bot-config`, this.h());
+  }
+
+  updateBotConfig(data: any): Observable<any> {
+    return this.http.put(`${environment.rootUrl}api/company/whatsapp/bot-config`, JSON.stringify(data), this.h());
+  }
 }
