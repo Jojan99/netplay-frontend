@@ -1,0 +1,23 @@
+.sidebar-nav-item {
+  position: relative;
+  min-height: 42px;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  color: #58697d;
+  font-family: 'Manrope', ui-sans-serif, system-ui, sans-serif;
+  font-weight: 700;
+  transition: background .16s ease, border-color .16s ease, color .16s ease;
+}
+
+.sidebar-nav-item:hover { background: #f0f8f6; color: #0f766e; }
+.sidebar-nav-item-active { border-color: #c9e8e0; background: #e9f7f4; color: #0f766e; }
+.sidebar-nav-item-active::before { position: absolute; left: -9px; width: 3px; height: 22px; border-radius: 0 3px 3px 0; background: #0f766e; content: ''; }
+.sidebar-nav-icon { display: grid; width: 21px; height: 21px; place-items: center; color: currentColor; }
+.sidebar-nav-icon :is(svg, i) { width: 18px; height: 18px; }
+.sidebar-nav-label { margin-left: 10px; letter-spacing: 0; }
+.sidebar-nav-badge { background: #d9f0eb; color: #0f766e; }
+
+:host-context(.dark) .sidebar-nav-item { color: #a9bec6; }
+:host-context(.dark) .sidebar-nav-item:hover { background: #193638; color: #89e6d5; }
+:host-context(.dark) .sidebar-nav-item-active { border-color: #32756d; background: #1a413f; color: #9af0df; }
+:host-context(.dark) .sidebar-nav-badge { background: #204b47; color: #a4f0e1; }

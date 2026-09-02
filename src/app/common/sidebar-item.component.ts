@@ -9,7 +9,8 @@ import { BadgeComponent } from './badge.component';
   selector: 'flowbite-sidebar-item',
   standalone: true,
   imports: [CommonModule, RouterModule, SanitizeHtmlPipe, BadgeComponent],
-  templateUrl: './sidebar-item.component.html'
+  templateUrl: './sidebar-item.component.html',
+  styleUrls: ['./sidebar-item.component.scss'],
 })
 export class SidebarItemComponent {
 

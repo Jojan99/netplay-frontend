@@ -14,7 +14,7 @@ import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 
 export interface ChatMessage {
   id: number;
-  from: 'customer' | 'agent';
+  from: 'customer' | 'agent' | 'system';
   content: string | null;
   message_type: 'text' | 'image' | 'video' | 'audio' | 'document' | 'sticker' | 'location' | 'contact' | 'reaction';
   media_url?: string | null;

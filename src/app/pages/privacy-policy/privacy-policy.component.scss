@@ -1,0 +1,102 @@
+:host {
+  display: block;
+  background: #fafafa;
+  min-height: 100vh;
+}
+
+header {
+  background: linear-gradient(135deg, #3f51b5, #303f9f);
+  color: white;
+  padding: 3rem 1rem 2.5rem;
+  text-align: center;
+}
+
+header h1 {
+  font-size: 2rem;
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+}
+
+header p {
+  opacity: 0.9;
+  font-weight: 300;
+}
+
+.container {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 2rem 1.5rem 4rem;
+}
+
+.card {
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+  padding: 2rem;
+  margin-bottom: 1.5rem;
+}
+
+h2 {
+  color: #3f51b5;
+  font-size: 1.35rem;
+  margin-bottom: 1rem;
+  margin-top: 1.5rem;
+  font-weight: 600;
+}
+
+h2:first-child {
+  margin-top: 0;
+}
+
+p {
+  margin-bottom: 1rem;
+  line-height: 1.7;
+}
+
+ul {
+  margin-left: 1.5rem;
+  margin-bottom: 1rem;
+}
+
+li {
+  margin-bottom: 0.5rem;
+  line-height: 1.6;
+}
+
+a {
+  color: #3f51b5;
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
+.highlight {
+  background: #e8eaf6;
+  border-left: 4px solid #3f51b5;
+  padding: 1rem 1.25rem;
+  border-radius: 0 8px 8px 0;
+  margin: 1.5rem 0;
+}
+
+.highlight p {
+  margin-bottom: 0;
+}
+
+footer {
+  text-align: center;
+  padding: 2rem 1rem;
+  color: #666;
+  font-size: 0.9rem;
+  border-top: 1px solid #e0e0e0;
+}
+
+@media (max-width: 600px) {
+  header h1 {
+    font-size: 1.5rem;
+  }
+  .card {
+    padding: 1.25rem;
+  }
+}

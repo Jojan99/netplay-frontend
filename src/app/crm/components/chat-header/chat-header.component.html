@@ -54,6 +54,13 @@
       <i class="fa-solid fa-circle-info text-sm"></i>
     </button>
 
+    <button class="px-3 py-1.5 text-xs rounded-xl font-medium transition flex items-center gap-1.5 bg-slate-700 text-slate-300 border border-slate-600"
+          [ngClass]="botPaused ? 'bg-amber-900/30 text-amber-300 border-amber-500/40' : ''"
+            (click)="toggleBot.emit()">
+      <i class="fa-solid" [ngClass]="botPaused ? 'fa-play' : 'fa-pause'"></i>
+      {{ botPaused ? 'Reanudar bot' : 'Pausar bot' }}
+    </button>
+
     <!-- TRANSFERIR -->
     <button class="px-3 py-1.5 text-xs rounded-xl font-medium transition flex items-center gap-1.5 bg-slate-700 text-slate-400 border border-slate-600 hover:bg-slate-600 hover:text-slate-200"
             onmouseenter="this.style.background='#475569'; this.style.color='#e2e8f0'"

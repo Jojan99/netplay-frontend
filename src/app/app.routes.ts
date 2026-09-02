@@ -32,6 +32,7 @@ import { TechnicianMapComponent } from './pages/technician-map/technician-map.co
 import { SendLogsComponent } from './pages/send-logs/send-logs.component';
 import { PrivacyPolicyComponent } from './pages/privacy-policy/privacy-policy.component';
 import { PaymentProofAuditComponent } from './pages/payment-proof-audit/payment-proof-audit.component';
+import { FinanceDesignConceptsComponent } from './pages/finance-design-concepts/finance-design-concepts.component';
 
 export const routes: Routes = [
   {
@@ -89,6 +90,7 @@ export const routes: Routes = [
       { path: 'technician-map', component: TechnicianMapComponent, canActivate: [roleGuard], data: { module: 'technician-map' } },
       { path: 'send-logs', component: SendLogsComponent, canActivate: [roleGuard], data: { module: 'finanzas' } },
       { path: 'payment-proof-audit', component: PaymentProofAuditComponent, canActivate: [roleGuard], data: { module: 'finanzas' } },
+      { path: 'finance-design-concepts.html', component: FinanceDesignConceptsComponent, canActivate: [roleGuard], data: { module: 'finanzas' } },
       {
         path: 'landing',
         loadComponent: () => import('./pages/landing-editor/landing-editor.component').then(m => m.LandingEditorComponent),

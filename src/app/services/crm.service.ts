@@ -33,7 +33,7 @@ export class CrmService {
   /* =====================
      INBOX
   ====================== */
-  getInbox(filters?: { mine?: boolean; status?: string; search?: string }) {
+  getInbox(filters?: { mine?: boolean; status?: string; search?: string; provider?: 'meta' | 'netplay' }) {
     let params = new HttpParams();
     if (filters) {
       Object.entries(filters).forEach(([k, v]) => {
@@ -77,6 +77,10 @@ export class CrmService {
     return this.http.patch<any>(this.apiUrl(`conversations/${conversationId}/priority`), { priority }, {
       headers: this.getHeaders()
     });
+  }
+
+  setBotPaused(conversationId: number, paused: boolean) {
+    return this.http.patch<any>(this.apiUrl(`conversations/${conversationId}/bot-pause`), { paused }, { headers: this.getHeaders() });
   }
 
   getServiceStatus(conversationId: number) {

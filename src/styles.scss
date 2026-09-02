@@ -127,20 +127,20 @@
     width: 6px; /* Ancho de la barra de desplazamiento */
     height: 8px; /* Para barras horizontales */
   }
-  
+
   /* Fondo de la barra */
   ::-webkit-scrollbar-track {
     background: #f0f0f0; /* Color de fondo */
     border-radius: 15px;
   }
-  
+
   /* Barra de desplazamiento */
   ::-webkit-scrollbar-thumb {
     background: #888; /* Color del scroll */
     border-radius: 15px;
     transition: background 0.3s ease;
   }
-  
+
   /* Hover en la barra */
   ::-webkit-scrollbar-thumb:hover {
     background: #555; /* Cambio de color al pasar el mouse */
@@ -174,7 +174,7 @@
 
 /* etc… */
 
-  
+
 
 /* ─── Global minimal & natural aesthetics ─── */
 @tailwind base;
@@ -183,14 +183,14 @@
 
 @layer base {
   html {
-    font-family: 'DM Sans', 'Inter', ui-sans-serif, system-ui, sans-serif;
+    font-family: 'Manrope', ui-sans-serif, system-ui, sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     text-rendering: optimizeLegibility;
   }
 
   body {
-    letter-spacing: -0.01em;
+    letter-spacing: 0;
     line-height: 1.55;
     color: #1c1917; /* stone-900 */
   }
@@ -234,3 +234,87 @@
 ::-webkit-scrollbar-thumb:hover {
   background: #a8a29e;
 }
+
+/* ─── Netplay application foundation ───────────────────────────────────── */
+.app-platform {
+  --np-ink: #192b3f;
+  --np-muted: #6d7f91;
+  --np-line: #d9e4e8;
+  --np-surface: #ffffff;
+  --np-subtle: #f4f8f8;
+  --np-accent: #0f766e;
+  --np-accent-soft: #e8f5f2;
+  background: #f4f7f8;
+  color: var(--np-ink);
+  font-family: 'Manrope', ui-sans-serif, system-ui, sans-serif;
+}
+
+.app-platform :is(h1, h2, h3) { letter-spacing: 0; }
+.app-platform h1 { color: var(--np-ink); font-weight: 800; }
+.app-platform :is(input, select, textarea) {
+  border-color: #cbd8dd !important;
+  border-radius: 6px !important;
+  background-color: var(--np-surface) !important;
+  color: #293b4e !important;
+  box-shadow: none !important;
+}
+.app-platform :is(input, select, textarea):focus {
+  border-color: var(--np-accent) !important;
+  box-shadow: 0 0 0 3px rgb(15 118 110 / .13) !important;
+}
+.app-platform :is(button, a, input, select, textarea) { font-family: inherit; }
+.app-platform :is(table, .table) { border-color: var(--np-line); }
+.app-platform :is(thead, [class*='bg-gray-50'], [class*='bg-slate-50']) { color: #66798a; }
+.app-platform [class*='bg-white'][class*='border'] {
+  border-color: var(--np-line) !important;
+  box-shadow: 0 1px 2px rgb(15 23 42 / .025);
+}
+.app-platform [class*='rounded-xl'][class*='border'],
+.app-platform [class*='rounded-2xl'][class*='border'] { border-radius: 8px !important; }
+.app-platform [class*='hover:bg-indigo']:hover,
+.app-platform [class*='hover:text-indigo']:hover { color: var(--np-accent) !important; }
+.app-platform [class*='focus:ring-indigo']:focus { --tw-ring-color: rgb(15 118 110 / .35) !important; }
+.app-platform [class*='bg-gradient-to-r'][class*='bg-clip-text'] { background: none !important; -webkit-text-fill-color: currentColor; }
+.app-platform [class*='from-indigo'][class*='to-violet'],
+.app-platform [class*='from-violet'][class*='to-purple'],
+.app-platform [class*='bg-indigo-5'],
+.app-platform [class*='bg-indigo-6'],
+.app-platform [class*='bg-violet-5'],
+.app-platform [class*='bg-purple-6'] { background: var(--np-accent) !important; box-shadow: none !important; }
+.app-platform [class*='text-indigo-'],
+.app-platform [class*='text-violet-'],
+.app-platform [class*='text-purple-'] { color: var(--np-accent) !important; }
+.app-platform [class*='border-indigo-'],
+.app-platform [class*='border-violet-'],
+.app-platform [class*='border-purple-'] { border-color: color-mix(in srgb, var(--np-accent) 38%, transparent) !important; }
+.app-platform [class*='bg-indigo-50'],
+.app-platform [class*='bg-violet-50'],
+.app-platform [class*='bg-purple-50'] { background: var(--np-accent-soft) !important; }
+
+.dark .app-platform {
+  --np-ink: #e5f0f2;
+  --np-muted: #9cb1b9;
+  --np-line: #2c4650;
+  --np-surface: #142932;
+  --np-subtle: #19313a;
+  --np-accent: #62cdbb;
+  --np-accent-soft: #1d423f;
+  background: #0f1f26;
+}
+.dark .app-platform h1 { color: #edf7f8 !important; }
+.dark .app-platform :is(input, select, textarea) {
+  border-color: #38545d !important;
+  background-color: #12262e !important;
+  color: #e3eff1 !important;
+}
+.dark .app-platform :is(input, select, textarea):focus { border-color: #62cdbb !important; box-shadow: 0 0 0 3px rgb(98 205 187 / .16) !important; }
+.dark .app-platform [class*='bg-white'][class*='border'] { border-color: var(--np-line) !important; background-color: #142932 !important; }
+.dark .app-platform [class*='bg-slate-800'][class*='border'],
+.dark .app-platform [class*='bg-gray-800'][class*='border'] { border-color: var(--np-line) !important; background-color: #142932 !important; }
+.dark .app-platform :is(thead, [class*='bg-gray-50'], [class*='bg-slate-50']) { color: #a8bdc5; }
+.dark .app-platform [class*='from-indigo'][class*='to-violet'],
+.dark .app-platform [class*='from-violet'][class*='to-purple'],
+.dark .app-platform [class*='bg-indigo-5'],
+.dark .app-platform [class*='bg-indigo-6'],
+.dark .app-platform [class*='bg-violet-5'],
+.dark .app-platform [class*='bg-purple-6'] { background: #1d8375 !important; }

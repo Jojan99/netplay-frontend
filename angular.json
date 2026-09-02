@@ -33,6 +33,11 @@
               "src/favicon.ico",
               "src/assets",
               {
+                "glob": "finance-design-concepts.html",
+                "input": ".",
+                "output": "/"
+              },
+              {
                 "glob": "**/*",
                 "input": "public/ffmpeg",
                 "output": "/ffmpeg"

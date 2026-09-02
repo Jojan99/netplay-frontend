@@ -1,3 +1,18 @@
+.bot-message { box-shadow: 0 1px 4px rgb(15 118 110 / .24) !important; }
+
+.bot-message-label {
+  padding: 8px 14px 0;
+  color: #0f766e;
+  font: 800 10px/1 'Manrope', ui-sans-serif, system-ui, sans-serif;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+}
+
+.bot-message :is(div, span) { color: #062c28 !important; }
+
+:host-context(.dark) .bot-message { background: #18ad91 !important; }
+:host-context(.dark) .bot-message-label { color: #91ebdb; }
+:host-context(.dark) .bot-message :is(div, span) { color: #062c28 !important; }
 .bubble {
   max-width: 420px;
   padding: 6px 8px;

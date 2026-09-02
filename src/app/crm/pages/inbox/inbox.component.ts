@@ -21,6 +21,7 @@ import { ThemeService } from '../../../services/theme.service';
 
 type InboxStatus = 'all' | 'new' | 'in_progress' | 'closed';
 type MainView    = 'inbox' | 'dashboard';
+type InboxProvider = 'meta' | 'netplay';
 
 @Component({
   selector: 'app-inbox',
@@ -43,6 +44,7 @@ export class InboxComponent implements OnInit, OnDestroy {
 
   activeConversationId: number | null = null;
   inboxStatus: InboxStatus = 'all';
+  inboxProvider: InboxProvider = 'meta';
   mainView: MainView = 'inbox';
 
   mobileView: 'list' | 'chat' = 'list';
@@ -69,6 +71,8 @@ export class InboxComponent implements OnInit, OnDestroy {
 
       const saved = sessionStorage.getItem('crm_inbox_status') as InboxStatus;
       if (saved) this.inboxStatus = saved;
+      const savedProvider = sessionStorage.getItem('crm_inbox_provider') as InboxProvider;
+      if (savedProvider === 'meta' || savedProvider === 'netplay') this.inboxProvider = savedProvider;
     }
 
     this.loadInbox();
@@ -88,6 +92,7 @@ export class InboxComponent implements OnInit, OnDestroy {
 
         const filters: any = {};
         if (this.inboxStatus !== 'all') filters.status = this.inboxStatus;
+        filters.provider = this.inboxProvider;
 
         this.crmService.getInbox(filters).subscribe(res => {
           const freshInbox = res.data ?? [];
@@ -106,6 +111,7 @@ export class InboxComponent implements OnInit, OnDestroy {
   loadInbox(): void {
     const filters: any = {};
     if (this.inboxStatus !== 'all') filters.status = this.inboxStatus;
+    filters.provider = this.inboxProvider;
 
     this.crmService.getInbox(filters).subscribe(res => {
       const freshInbox = res.data ?? [];
@@ -121,6 +127,16 @@ export class InboxComponent implements OnInit, OnDestroy {
     sessionStorage.setItem('crm_inbox_status', status);
     this.activeConversationId = null;
     this.mobileView = 'list';
+    this.loadInbox();
+  }
+
+  setProvider(provider: InboxProvider): void {
+    if (this.inboxProvider === provider) return;
+    this.inboxProvider = provider;
+    this.activeConversationId = null;
+    this.mobileView = 'list';
+    this.unreadMap.clear();
+    if (isPlatformBrowser(this.platformId)) sessionStorage.setItem('crm_inbox_provider', provider);
     this.loadInbox();
   }
 

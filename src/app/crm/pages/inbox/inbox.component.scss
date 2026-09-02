@@ -1,3 +1,10 @@
+.crm-inbox-shell { font-family: 'Manrope', ui-sans-serif, system-ui, sans-serif !important; background: #f4f7f8; }
+.crm-provider-tabs { display: flex; gap: 4px; margin-left: 8px; padding: 3px; border: 1px solid #38515b; border-radius: 6px; background: #162c34; }
+.crm-provider-tabs button { border: 0; border-radius: 4px; padding: 6px 9px; background: transparent; color: #9db2bb; font: 800 10px/1 'Manrope', ui-sans-serif, sans-serif; white-space: nowrap; }
+.crm-provider-tabs button.active { background: #1d8375; color: #fff; }
+.crm-provider-tabs i { margin-right: 5px; }
+:host-context(.dark) .crm-inbox-shell { background: #0f1f26; }
+@media (max-width: 900px) { .crm-provider-tabs { order: 3; width: 100%; margin: 2px 0 0; }.crm-provider-tabs button { flex: 1; } }
 .crm-mobile-root {
   height: 100%;
 }

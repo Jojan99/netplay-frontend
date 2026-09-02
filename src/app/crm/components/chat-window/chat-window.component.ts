@@ -25,7 +25,7 @@ import { ChatMessage } from '../message-bubble/message-bubble.component';
 export interface NewMessageEventPayload {
   message: {
     id: number;
-    sender_type: 'customer' | 'agent';
+    sender_type: 'customer' | 'agent' | 'system';
     content: string | null;
     message_type: string;
     media_url: string | null;
@@ -92,6 +92,7 @@ export class ChatWindowComponent implements OnChanges, OnDestroy {
   // ── UI ─────────────────────────────────────────────────────────
   previewOpen    = false;
   showInfoPanel  = false;
+  botPaused = false;
 
   // ── Header data ───────────────────────────────────────────────
   headerData: {
@@ -253,12 +254,18 @@ export class ChatWindowComponent implements OnChanges, OnDestroy {
           online:        true,
           agentName:     payload?.conversation?.agent_name ?? null,
         };
+        this.botPaused = !!payload?.conversation?.bot_paused;
 
         this.loading = false;
         this.scrollToBottom();
       },
       error: () => this.loading = false
     });
+  }
+
+  toggleBotPause(): void {
+    if (!this.conversationId) return;
+    this.crmService.setBotPaused(this.conversationId, !this.botPaused).subscribe({ next: res => this.botPaused = !!res.paused });
   }
 
   /* ── ATTACH MENU ────────────────────────────────────────────── */

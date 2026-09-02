@@ -19,11 +19,13 @@ export interface ChatHeaderData {
 export class ChatHeaderComponent {
 
   @Input() data!: ChatHeaderData;
+  @Input() botPaused = false;
 
   @Output() openTransfer = new EventEmitter<void>();
   @Output() finish       = new EventEmitter<void>();
   @Output() back         = new EventEmitter<void>();
   @Output() toggleInfo   = new EventEmitter<void>();
+  @Output() toggleBot = new EventEmitter<void>();
 
   get initials(): string {
     return (this.data.customerName ?? '')

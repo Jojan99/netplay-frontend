@@ -8,10 +8,12 @@
       <app-chat-header
         *ngIf="headerData"
         [data]="headerData"
+        [botPaused]="botPaused"
         (openTransfer)="openTransfer.emit()"
         (back)="back.emit()"
         (finish)="finishConversation()"
         (toggleInfo)="toggleInfoPanel()"
+        (toggleBot)="toggleBotPause()"
       ></app-chat-header>
     </div>
 

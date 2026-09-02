@@ -24,6 +24,13 @@ interface TemplateComponent {
         </button>
       </div>
 
+      <div *ngIf="invoiceTemplate" class="mb-5 p-4 rounded-lg border border-teal-200 bg-teal-50 dark:bg-teal-950/30 dark:border-teal-800 flex flex-col sm:flex-row gap-3 sm:items-center sm:justify-between">
+        <div><p class="font-bold text-slate-800 dark:text-white">Plantilla base de facturación: envio_factura</p><p class="text-sm text-slate-600 dark:text-slate-300">Usa nombre, factura, valor, emisión, vencimiento y empresa. Estado local: {{ invoiceTemplate.status }}.</p></div>
+        <button *ngIf="invoiceTemplate.status === 'LOCAL'" (click)="publishInvoiceTemplate()" [disabled]="publishingInvoiceTemplate" class="px-4 py-2 bg-teal-700 text-white rounded-lg disabled:opacity-50">{{ publishingInvoiceTemplate ? 'Publicando...' : 'Publicar en Meta' }}</button>
+        <span *ngIf="invoiceTemplate.status === 'PENDING'" class="px-3 py-2 text-sm font-bold rounded-lg bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300">En revisión de Meta</span>
+        <span *ngIf="invoiceTemplate.status === 'APPROVED'" class="px-3 py-2 text-sm font-bold rounded-lg bg-emerald-600 text-white">Lista para facturación masiva</span>
+      </div>
+
       <!-- Loading -->
       <div *ngIf="loading" class="animate-pulse space-y-4">
         <div *ngFor="let i of [1,2,3]" class="h-16 bg-gray-200 dark:bg-gray-700 rounded-lg"></div>
@@ -221,6 +228,8 @@ export class WaMetaTemplatesComponent implements OnInit {
   isPreviewMode = false;
   submitting = false;
   submitResult: any = null;
+  publishingInvoiceTemplate = false;
+  invoiceTemplate: any = null;
 
   newTemplate: any = {
     name: '',
@@ -241,9 +250,32 @@ export class WaMetaTemplatesComponent implements OnInit {
   loadTemplates(): void {
     this.loading = true;
     this.meta.getTemplates().subscribe({
-      next: (r: any) => { this.templates = r.data || []; this.loading = false; },
+      next: (r: any) => {
+        this.templates = r.data || [];
+        this.invoiceTemplate = this.templates.find((template: any) => template.name === 'envio_factura' && template.language === 'es_CO')
+          ?? { ...this.defaultInvoiceTemplate(), status: 'LOCAL' };
+        this.loading = false;
+      },
       error: () => { this.loading = false; }
     });
+  }
+
+  publishInvoiceTemplate(): void {
+    this.publishingInvoiceTemplate = true;
+    this.meta.createTemplate(this.defaultInvoiceTemplate()).subscribe({
+      next: () => { this.publishingInvoiceTemplate = false; this.loadTemplates(); },
+      error: () => { this.publishingInvoiceTemplate = false; }
+    });
+  }
+
+  private defaultInvoiceTemplate(): any {
+    return {
+      name: 'envio_factura', parameter_format: 'POSITIONAL', category: 'UTILITY', language: 'es_CO',
+      components: [
+        { type: 'BODY', text: '¡Hola, {{1}}!\nUn gusto saludarte de parte de *{{6}}*.\n\nTu factura ya está disponible:\n\nFactura: {{2}}\nValor: ${{3}}\nFecha de emisión: {{4}}\nFecha de vencimiento: {{5}}\n\nConsulta tu factura o reporta tu pago usando los botones a continuación.', example: { body_text: [['PEDRO PEREZ', 'NT19991', '55.000', '2026-10-20', '2026-10-25', 'Netplay']] } },
+        { type: 'BUTTONS', buttons: [{ type: 'QUICK_REPLY', text: 'Consultar factura' }, { type: 'QUICK_REPLY', text: 'Reportar pago' }] }
+      ]
+    };
   }
 
   getStatusClass(status: string): string {

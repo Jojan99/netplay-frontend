@@ -4,10 +4,14 @@
     [class.sidebar-expanded]="(sidebarService.$collapsed | async) === false"
   >
     <div
-      class="flex h-full flex-col space-y-2 overflow-y-auto bg-white/80 backdrop-blur-xl py-5 px-2 dark:bg-slate-900/80"
+      class="sidebar-surface flex h-full flex-col overflow-y-auto py-4 px-2"
       [class.rounded]="rounded"
       [ngClass]="extraClass"
     >
+      <div class="sidebar-heading" *ngIf="(sidebarService.$collapsed | async) === false">
+        <span class="sidebar-heading-label">Navegación</span>
+        <span class="sidebar-heading-status"><i></i> En línea</span>
+      </div>
       <ng-content></ng-content>
     </div>
   </aside>

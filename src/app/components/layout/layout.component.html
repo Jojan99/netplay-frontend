@@ -1,68 +1,65 @@
 <!-- ═══ NAVBAR PREMIUM ════════════════════════════════════════════════════════════ -->
-<header class="antialiased relative z-50">
-  <nav class="bg-white/80 backdrop-blur-xl border-b border-slate-200/60 px-4 lg:px-6 py-3 dark:bg-slate-900/80 dark:border-slate-700/60 shadow-sm">
-    <div class="flex flex-wrap justify-between items-center">
+<header class="app-shell-header antialiased relative z-50">
+  <nav class="app-shell-nav">
+    <div class="app-shell-nav-inner">
 
-      <!-- Izquierda -->
-      <div class="flex items-center gap-3">
+      <div class="app-shell-brand-zone">
         <button (click)="sidebarService.toggleCollapsed()"
-                class="p-2.5 rounded-xl text-slate-500 hover:bg-indigo-50 hover:text-indigo-600 dark:text-slate-400 dark:hover:bg-indigo-900/30 dark:hover:text-indigo-400 transition-all duration-200">
+          class="app-shell-icon-button app-shell-menu-trigger" aria-label="Mostrar menú">
           <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5"/>
           </svg>
         </button>
 
-        <a routerLink="/dashboard/home" class="flex items-center gap-2.5 cursor-pointer group">
+        <a routerLink="/dashboard/home" class="app-shell-brand">
           <!-- Logo -->
           <img *ngIf="companyLogo; else initials"
                [src]="companyLogo"
-               class="h-9 w-9 rounded-xl object-cover border-2 border-white shadow-md dark:border-slate-700"
+            class="app-shell-logo"
                alt="logo">
 
           <!-- Inicial -->
           <ng-template #initials>
-            <div class="h-9 w-9 rounded-xl bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center text-white font-bold text-sm shadow-md">
+            <div class="app-shell-monogram">
               {{ companyName?.charAt(0)?.toUpperCase() || 'N' }}
             </div>
           </ng-template>
 
-          <div class="hidden sm:block">
-            <span class="text-lg font-bold bg-gradient-to-r from-slate-800 to-slate-600 bg-clip-text text-transparent dark:from-white dark:to-slate-300">
-              {{ companyName }}
-            </span>
+          <div class="app-shell-brand-copy">
+            <span class="app-shell-company">{{ companyName || 'Netplay' }}</span>
+            <span class="app-shell-product">Plataforma de operación</span>
           </div>
         </a>
       </div>
 
-      <!-- Derecha -->
-      <div class="flex items-center gap-2">
+      <div class="app-shell-context hidden lg:flex">
+        <span class="app-shell-context-dot"></span><span>Centro de control</span><span class="app-shell-context-divider"></span><span>Conexión segura</span>
+      </div>
+
+      <div class="app-shell-actions">
 
         <flowbite-dark-theme-toggle></flowbite-dark-theme-toggle>
 
         <!-- Notificaciones -->
-        <button class="p-2.5 rounded-xl text-slate-500 hover:bg-indigo-50 hover:text-indigo-600 dark:text-slate-400 dark:hover:bg-indigo-900/30 transition-all relative">
+        <button class="app-shell-icon-button app-shell-notification" aria-label="Notificaciones">
           <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" d="M14.857 17.082a23.848 23.848 0 005.454-1.31A8.967 8.967 0 0118 9.75v-.7V9A6 6 0 006 9v.75a8.967 8.967 0 01-2.312 6.022c1.733.64 3.56 1.085 5.454 1.31m5.714 0a24.255 24.255 0 01-5.714 0m5.714 0a3 3 0 11-5.714 0"/>
           </svg>
-          <span class="absolute top-1.5 right-1.5 w-2 h-2 bg-rose-500 rounded-full ring-2 ring-white dark:ring-slate-900"></span>
+          <span class="app-shell-notification-dot"></span>
         </button>
 
         <!-- Perfil -->
         <button #dropdownButton
                 (click)="toggleDropdown()"
-                class="flex items-center gap-2.5 pl-1.5 pr-3 py-1.5 rounded-2xl hover:bg-slate-50 dark:hover:bg-slate-800/80 transition-all duration-200 border border-transparent hover:border-slate-200 dark:hover:border-slate-700">
+              class="app-shell-profile">
 
-          <div class="w-8 h-8 rounded-xl bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center text-white font-bold text-sm shadow-md">
+            <div class="app-shell-user-monogram">
             {{ username?.charAt(0)?.toUpperCase() || 'U' }}
           </div>
 
-          <div class="hidden md:block text-left">
-            <span class="text-sm font-semibold text-slate-700 dark:text-slate-200 block leading-tight">
-              {{ username || 'Usuario' }}
-            </span>
-            <span class="text-[10px] text-slate-400 dark:text-slate-500 leading-tight uppercase tracking-wider font-medium">
-              {{ roleName || 'Sin rol' }}
-            </span>
+          <div class="app-shell-profile-copy hidden md:block">
+            <span class="app-shell-user">{{ username || 'Usuario' }}</span>
+            <span class="app-shell-user-role">{{ roleName || 'Sin rol' }}</span>
           </div>
 
           <svg class="w-4 h-4 text-slate-400 hidden md:block" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
@@ -75,18 +72,18 @@
              *ngIf="isDropdownVisible"
              [style.top.px]="dropdownPosition.top"
              [style.left.px]="dropdownPosition.left"
-             class="fixed z-50 w-64 bg-white/95 backdrop-blur-xl rounded-2xl shadow-2xl border border-slate-100 dark:bg-slate-800/95 dark:border-slate-700 overflow-hidden">
+             class="app-shell-dropdown fixed z-50 w-64 rounded-lg overflow-hidden">
 
-          <div class="px-5 py-4 bg-gradient-to-br from-indigo-50 to-violet-50 dark:from-indigo-900/20 dark:to-violet-900/20">
+          <div class="app-shell-dropdown-head px-5 py-4">
             <div class="flex items-center gap-3 mb-2">
-              <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center text-white font-bold text-lg shadow-md">
+              <div class="app-shell-monogram w-10 h-10 rounded-lg flex items-center justify-center text-white font-bold text-lg">
                 {{ username?.charAt(0)?.toUpperCase() || 'U' }}
               </div>
               <div>
-                <p class="text-sm font-bold text-slate-800 dark:text-white">
+                <p class="app-shell-dropdown-user text-sm font-bold">
                   {{ username || 'Usuario' }}
                 </p>
-                <p class="text-[10px] font-semibold text-indigo-600 dark:text-indigo-400 uppercase tracking-wider">
+                <p class="app-shell-role text-[10px] font-semibold uppercase tracking-wider">
                   {{ roleName || 'Sin rol' }}
                 </p>
               </div>
@@ -99,7 +96,7 @@
           <ul class="py-2">
             <li>
               <a routerLink="/dashboard/perfil" (click)="isDropdownVisible = false"
-                 class="w-full text-left px-4 py-2.5 text-sm text-slate-600 dark:text-slate-300 hover:bg-indigo-50 hover:text-indigo-700 dark:hover:bg-indigo-900/20 dark:hover:text-indigo-300 flex items-center gap-3 transition-colors">
+                  class="app-shell-menu-item w-full text-left px-4 py-2.5 text-sm flex items-center gap-3 transition-colors">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
                 </svg>
@@ -131,13 +128,13 @@
 <!-- Mobile backdrop -->
 <div *ngIf="!(sidebarService.$collapsed | async)"
      class="fixed inset-0 bg-slate-900/30 backdrop-blur-sm z-30 md:hidden"
-     style="top: 60px"
+  style="top: 66px"
      (click)="sidebarService.toggleCollapsed()">
 </div>
 
 <div class="flex h-full overflow-hidden bg-slate-50 dark:bg-slate-950">
 
-  <flowbite-sidebar extraClass="border-r border-slate-200/60 dark:border-slate-700/40 bg-white/80 dark:bg-slate-900/80">
+  <flowbite-sidebar extraClass="app-shell-sidebar">
 
     <flowbite-sidebar-item-group *ngFor="let item of filteredComponents">
 
@@ -192,7 +189,7 @@
   </flowbite-sidebar>
 
   <!-- CONTENIDO -->
-  <main class="flex-1 overflow-auto p-6">
+  <main class="app-platform flex-1 overflow-auto p-6">
     <router-outlet></router-outlet>
   </main>
 

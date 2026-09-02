@@ -8,49 +8,50 @@
 </div>
 
 <!-- ── User table card ──────────────────────────────────────────────────── -->
-<div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border dark:border-gray-700">
+<section class="client-registry">
 
   <!-- Header -->
-  <div class="border-b p-4 dark:border-gray-700 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
+  <div class="client-registry-header">
     <div>
-      <h2 class="text-xl font-semibold text-gray-900 dark:text-white">Clientes</h2>
-      <p class="text-sm text-gray-500 dark:text-gray-400">{{ totalEntries }} registros</p>
+      <span class="client-registry-kicker">Operación / Clientes</span>
+      <h2>Registro de clientes</h2>
+      <p>{{ totalEntries }} registros activos en la operación</p>
     </div>
-    <div class="flex flex-wrap gap-2">
+    <div class="client-registry-actions">
       <button (click)="openCreateUserModal()"
-        class="px-4 py-2 text-sm font-medium rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition">
-        + Nuevo cliente
+        class="client-registry-primary">
+        Nuevo cliente
       </button>
       <button (click)="downloadCsvAll()" [disabled]="exportingCsv"
-        class="px-4 py-2 text-sm font-medium rounded-lg bg-green-600 text-white hover:bg-green-700 disabled:opacity-50 transition">
-        {{ exportingCsv ? 'Exportando...' : '⬇ CSV Todos' }}
+        class="client-registry-secondary">
+        {{ exportingCsv ? 'Exportando...' : 'Exportar CSV' }}
       </button>
     </div>
   </div>
 
   <!-- Controls -->
-  <div class="p-4 flex flex-col sm:flex-row flex-wrap gap-3 items-center border-b dark:border-gray-700">
-    <div class="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
-      <span>Vista</span>
-      <select class="border rounded px-2 py-1 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+  <div class="client-registry-toolbar">
+    <div class="client-registry-page-size">
+      <span>Mostrar</span>
+      <select
               [value]="entriesPerPage" (change)="onEntriesPerPageChange($event)">
         <option value="12">12</option>
         <option value="25">25</option>
         <option value="50">50</option>
-      </select>
-      <span>por página</span>
+      </select><span>por página</span>
     </div>
 
-    <div class="flex items-center gap-2 w-full sm:w-auto">
+    <div class="client-registry-search">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-4-4"></path></svg>
       <input type="search" placeholder="Buscar cliente..." (input)="getSearchUser()" [(ngModel)]="search"
-        class="border rounded-lg px-3 py-2 w-full sm:w-64 text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400" />
+        aria-label="Buscar cliente" />
     </div>
   </div>
 
   <!-- Table -->
-  <div class="overflow-x-auto">
-    <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-      <thead class="bg-gray-50 dark:bg-gray-700">
+  <div class="client-registry-table-wrap">
+    <table class="client-registry-table">
+      <thead>
         <tr>
           <th class="w-8 p-3"></th>
           <th class="p-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Cliente</th>
@@ -61,7 +62,7 @@
           <th class="p-3 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Acciones</th>
         </tr>
       </thead>
-      <tbody class="divide-y divide-gray-200 dark:divide-gray-700 dark:bg-gray-800">
+      <tbody>
 
         <!-- Skeleton -->
         <ng-container *ngIf="skeletor">
@@ -75,10 +76,10 @@
         <!-- Data rows -->
         <ng-container *ngIf="!skeletor">
           <ng-container *ngFor="let user of UserInterfaces.slice(startIndex, endIndex)">
-            <tr class="hover:bg-gray-50 dark:hover:bg-gray-700 transition">
+            <tr class="client-registry-row">
               <!-- Expand -->
               <td class="p-2 text-center">
-                <button (click)="toggleDetails(user)" class="text-gray-400 hover:text-gray-600 dark:hover:text-white">
+                <button (click)="toggleDetails(user)" class="client-registry-expand" [attr.aria-label]="user.expanded ? 'Ocultar detalle' : 'Ver detalle'">
                   <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
                     <path *ngIf="!user.expanded" fill-rule="evenodd" d="M2 12C2 6.477 6.477 2 12 2s10 4.477 10 10-4.477 10-10 10S2 17.523 2 12Zm11-4.243a1 1 0 1 0-2 0V11H7.757a1 1 0 1 0 0 2H11v3.243a1 1 0 1 0 2 0V13h3.243a1 1 0 1 0 0-2H13V7.757Z" clip-rule="evenodd"/>
                     <path *ngIf="user.expanded" fill-rule="evenodd" d="M2 12C2 6.477 6.477 2 12 2s10 4.477 10 10-4.477 10-10 10S2 17.523 2 12Zm6-1a1 1 0 0 1 1-1h6a1 1 0 1 1 0 2H9a1 1 0 0 1-1-1Z" clip-rule="evenodd"/>
@@ -87,22 +88,22 @@
               </td>
               <!-- Name -->
               <td class="p-3">
-                <div class="font-medium text-gray-900 dark:text-white text-sm">{{ user.names }} {{ user.lastname }}</div>
-                <div class="text-xs text-gray-500 dark:text-gray-400">{{ user.plan_name }}</div>
+                <div class="client-registry-name">{{ user.names }} {{ user.lastname }}</div>
+                <div class="client-registry-plan">{{ user.plan_name }}</div>
               </td>
-              <td class="p-3 text-sm text-gray-700 dark:text-gray-300 hidden md:table-cell">{{ user.dni }}</td>
-              <td class="p-3 text-sm text-gray-700 dark:text-gray-300 hidden lg:table-cell">{{ user.phone }}</td>
+              <td class="p-3 client-registry-data hidden md:table-cell">{{ user.dni }}</td>
+              <td class="p-3 client-registry-data hidden lg:table-cell">{{ user.phone }}</td>
               <!-- Status -->
               <td class="p-3">
-                <span class="px-2 py-0.5 rounded-full text-xs font-semibold text-white"
+                <span class="client-registry-status"
                       [ngClass]="user.internet_status === 'ACTIVE' ? 'bg-green-500' : 'bg-red-500'">
                   {{ user.internet_status }}
                 </span>
               </td>
-              <td class="p-3 text-sm text-gray-700 dark:text-gray-300 hidden xl:table-cell truncate max-w-xs">{{ user.address }}</td>
+              <td class="p-3 client-registry-data hidden xl:table-cell truncate max-w-xs">{{ user.address }}</td>
               <!-- Actions -->
               <td class="p-2 sm:p-3">
-                <div class="flex items-center justify-center gap-1 sm:gap-2">
+                <div class="client-registry-row-actions">
                   <!-- Suspend -->
                   <button (click)="openSuspendModal(user.dni, user.id_user, user.internet_status)"
                     title="Suspender/Activar"
@@ -153,9 +154,9 @@
             </tr>
 
             <!-- Expanded row -->
-            <tr *ngIf="user.expanded">
-              <td colspan="7" class="bg-gray-50 dark:bg-gray-900 px-4 py-3">
-                <div class="flex flex-wrap gap-3 items-center text-sm text-gray-600 dark:text-gray-400">
+            <tr *ngIf="user.expanded" class="client-registry-detail-row">
+              <td colspan="7" class="px-4 py-3">
+                <div class="client-registry-detail">
                   <span class="text-xs sm:text-sm">📅 <strong class="text-gray-800 dark:text-white">{{ user.date_create | date:'dd/MM/yyyy' }}</strong></span>
                   <span class="text-xs sm:text-sm">📡 <strong class="text-gray-800 dark:text-white">{{ user.ip || 'Sin IP' }}</strong></span>
                   <span class="text-xs sm:text-sm">📦 <strong class="text-gray-800 dark:text-white">{{ user.plan_name }}</strong></span>
@@ -183,27 +184,27 @@
   </div>
 
   <!-- Pagination -->
-  <div class="p-4 flex flex-col sm:flex-row justify-between items-center gap-3 text-sm border-t dark:border-gray-700">
-    <span class="text-gray-500 dark:text-gray-400">
+  <div class="client-registry-pagination">
+    <span>
       Mostrando {{ startIndex + 1 }} – {{ endIndex }} de {{ totalEntries }}
     </span>
     <div class="flex items-center gap-1 overflow-x-auto max-w-full pb-0.5">
       <button (click)="prevPage()" [disabled]="currentPage === 1"
-        class="px-2 sm:px-3 py-1.5 rounded border text-gray-600 dark:text-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 disabled:opacity-40 transition whitespace-nowrap flex-shrink-0">
+        class="client-registry-page-button">
         ‹
       </button>
       <button *ngFor="let p of pageNumbers" (click)="goToPage(p)"
-        class="px-2.5 sm:px-3 py-1.5 rounded border transition flex-shrink-0"
-        [ngClass]="p === currentPage ? 'bg-blue-600 text-white border-blue-600' : 'text-gray-600 dark:text-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700'">
+        class="client-registry-page-button"
+        [class.client-registry-page-active]="p === currentPage">
         {{ p }}
       </button>
       <button (click)="nextPage()" [disabled]="isLastPage"
-        class="px-2 sm:px-3 py-1.5 rounded border text-gray-600 dark:text-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 disabled:opacity-40 transition whitespace-nowrap flex-shrink-0">
+        class="client-registry-page-button">
         ›
       </button>
     </div>
   </div>
-</div>
+</section>
 
 
 <!-- ══════════════════════════════════════════════════════════════════════════
