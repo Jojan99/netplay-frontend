@@ -7,6 +7,7 @@ import { FormsModule } from '@angular/forms';
   standalone: true,
   imports: [CommonModule, FormsModule],
   templateUrl: './conversation-list.component.html',
+  styleUrl: './conversation-list.component.scss'
 })
 export class ConversationListComponent implements OnChanges {
 

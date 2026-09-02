@@ -1,6 +1,47 @@
 :host {
   height: 100%;
+  display: block;
+  width: 100%;
+  min-width: 0;
 }
+
+.crm-chat-header-shell,
+.crm-composer {
+  border-color: #cbd8dd;
+  background: #ffffff;
+}
+
+.crm-message-surface {
+  background-color: #eef4f2 !important;
+  background-image: radial-gradient(circle at 1px 1px, #d6e5e1 1px, transparent 0) !important;
+  background-size: 28px 28px !important;
+}
+
+.crm-file-preview { border-color: #cbd8dd; background: #ffffff; }
+.crm-file-preview-card { border: 1px solid #dbe3e9; background: #f8fafb; }
+.crm-forward-backdrop { background: rgb(15 23 42 / .32); }
+.crm-forward-modal { border: 1px solid #dbe3e9; background: #ffffff; }
+.crm-chat-window { font-family: 'Manrope', ui-sans-serif, system-ui, sans-serif; }
+.crm-composer .bg-slate-900\/80 { background: #f8fafb; border-color: #cbd8dd; }
+.crm-composer textarea { color: #334155; }
+.crm-composer textarea::placeholder { color: #7a8999; }
+.crm-composer .bg-slate-700 { background: #edf3f5; color: #526176; }
+.crm-composer .bg-slate-800\/95 { background: #ffffff; border-color: #dbe3e9; }
+.crm-composer .from-violet-500 { --tw-gradient-from: #0f766e var(--tw-gradient-from-position); --tw-gradient-to: rgb(15 118 110 / 0) var(--tw-gradient-to-position); }
+.crm-forward-target:hover { background: #f1f8f7 !important; border-color: #9accc5 !important; }
+.crm-forward-target:focus-visible { outline: 2px solid #0f766e; outline-offset: 2px; }
+
+:host-context(.dark) .crm-chat-header-shell,
+:host-context(.dark) .crm-composer { border-color: #29414a; background: #11242b; }
+:host-context(.dark) .crm-message-surface { background-color: #10252a !important; }
+:host-context(.dark) .crm-file-preview { border-color: #29414a; background: #11242b; }
+:host-context(.dark) .crm-file-preview-card,
+:host-context(.dark) .crm-forward-modal { border-color: #38515b; background: #14232c; }
+:host-context(.dark) .crm-composer .bg-slate-900\/80 { background: #102029; border-color: #38515b; }
+:host-context(.dark) .crm-composer textarea { color: #e2eef0; }
+:host-context(.dark) .crm-composer textarea::placeholder { color: #8fa6af; }
+:host-context(.dark) .crm-composer .bg-slate-700 { background: #243d46; color: #b8cbd0; }
+:host-context(.dark) .crm-composer .bg-slate-800\/95 { background: #142a32; border-color: #38515b; }
 
 @media (max-width: 768px) {
   :host {

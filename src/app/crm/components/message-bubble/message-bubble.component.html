@@ -19,6 +19,8 @@
   <div *ngIf="!isNote"
       class="relative max-w-[78%] min-w-[80px] rounded-2xl overflow-visible"
       [class.bot-message]="message.from === 'system'"
+      [class.agent-message]="message.from === 'agent'"
+      [class.customer-message]="message.from === 'customer'"
       [style.background]="message.from === 'agent' || message.from === 'system' ? '#10b981' : '#1e293b'"
       [style.borderRadius]="message.from === 'agent' || message.from === 'system' ? '18px 4px 18px 18px' : '4px 18px 18px 18px'"
       [style.border]="message.from === 'customer' ? '1px solid #334155' : 'none'"
@@ -47,7 +49,19 @@
 
     <ng-container *ngIf="!isSticker">
 
-      <div *ngIf="message.from === 'system'" class="bot-message-label">Bot automático</div>
+      <div *ngIf="message.from === 'system'"
+           class="message-sender-icon message-sender-bot"
+           title="Bot automático"
+           aria-label="Bot automático">
+        <i class="fa-solid fa-robot" aria-hidden="true"></i>
+      </div>
+
+      <div *ngIf="message.from === 'agent'"
+           class="message-sender-icon message-sender-agent"
+           [title]="message.agent_signature || 'Agente'"
+           [attr.aria-label]="message.agent_signature || 'Agente'">
+        <i class="fa-solid fa-user" aria-hidden="true"></i>
+      </div>
 
       <!-- INDICADOR DE REENVÍO -->
       <div *ngIf="message.is_forwarded"

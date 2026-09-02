@@ -8,11 +8,73 @@
   text-transform: uppercase;
 }
 
-.bot-message :is(div, span) { color: #062c28 !important; }
-
 :host-context(.dark) .bot-message { background: #18ad91 !important; }
 :host-context(.dark) .bot-message-label { color: #91ebdb; }
-:host-context(.dark) .bot-message :is(div, span) { color: #062c28 !important; }
+.message-sender-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 24px;
+  width: 24px;
+  height: 24px;
+  margin: 8px 12px 0;
+  padding: 0;
+  border-radius: 6px;
+  border: 1px solid currentColor;
+  font-size: 12px;
+  line-height: 1;
+  box-sizing: border-box;
+}
+
+.message-sender-bot { background: #c7f2df; color: #047857 !important; }
+.message-sender-agent { background: #dbeafe; color: #2563eb !important; }
+
+.agent-message {
+  background: #c7ecdf !important;
+  border: 1px solid #9bd4c3 !important;
+  box-shadow: 0 2px 8px rgb(15 118 110 / .12) !important;
+}
+
+.bot-message {
+  background: #bcebd9 !important;
+  border: 1px solid #8ed1ba !important;
+}
+
+.customer-message {
+  background: #ffffff !important;
+  border: 1px solid #d7e2e8 !important;
+  box-shadow: 0 2px 8px rgb(15 23 42 / .08) !important;
+}
+
+.agent-message [style*="color"],
+.bot-message [style*="color"] { color: #14534d !important; }
+.customer-message [style*="color"] { color: #334155 !important; }
+
+:host-context(.dark) .agent-message,
+:host-context(.dark) .bot-message {
+  background: #18ad91 !important;
+  border-color: #30c3a5 !important;
+  box-shadow: 0 2px 8px rgb(0 0 0 / .18) !important;
+}
+
+:host-context(.dark) .customer-message {
+  background: #1d2b3f !important;
+  border-color: #34465e !important;
+  box-shadow: 0 2px 8px rgb(0 0 0 / .2) !important;
+}
+
+:host-context(.dark) .bot-message { background: #18ad91 !important; }
+:host-context(.dark) .agent-message { background: #109b7b !important; }
+:host-context(.dark) .message-sender-bot { background: #0f766e; color: #c7f9e7 !important; }
+:host-context(.dark) .message-sender-agent { background: #31527a; color: #dbeafe !important; }
+
+:host-context(.dark) .agent-message [style*="color"],
+:host-context(.dark) .bot-message [style*="color"] { color: #f0fdf9 !important; }
+:host-context(.dark) .customer-message [style*="color"] { color: #e2e8f0 !important; }
+:host-context(.dark) .agent-message :not(.message-sender-icon),
+:host-context(.dark) .bot-message :not(.message-sender-icon) { color: #f0fdf9 !important; }
+:host-context(.dark) .message-sender-icon i { color: currentColor !important; }
+
 .bubble {
   max-width: 420px;
   padding: 6px 8px;

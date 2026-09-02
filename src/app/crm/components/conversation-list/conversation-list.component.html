@@ -1,12 +1,12 @@
-<div class="h-full flex flex-col min-h-0 border-r bg-slate-800/80 backdrop-blur-xl border-slate-700/60">
+<div class="crm-conversation-list h-full flex flex-col min-h-0 border-r">
 
   <!-- HEADER -->
-  <div class="px-4 pt-4 pb-3 border-b shrink-0 border-slate-700/60">
+  <div class="crm-conversation-list-header px-4 pt-4 pb-3 border-b shrink-0">
 
     <!-- TITLE ROW -->
     <div class="flex items-center justify-between mb-3">
-      <span class="text-sm font-bold text-slate-200">Conversaciones</span>
-      <span class="text-xs px-2.5 py-1 rounded-full font-bold bg-teal-500/10 text-teal-400 border border-teal-500/20">
+      <span class="text-sm font-bold crm-conversation-title">Conversaciones</span>
+      <span class="text-xs px-2.5 py-1 rounded-full font-bold crm-conversation-count">
         {{ filtered.length }}
       </span>
     </div>
@@ -17,10 +17,8 @@
              [(ngModel)]="searchQuery"
              (ngModelChange)="applySearch()"
              placeholder="Buscar por nombre o teléfono…"
-             class="w-full pl-9 pr-3.5 py-2 text-sm bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl border border-slate-200/60 dark:border-slate-700/60 rounded-xl text-slate-700 dark:text-slate-300 focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-400 transition-all shadow-sm outline-none"
-             onfocus="this.style.borderColor='#10b981'"
-             onblur="this.style.borderColor='#334155'" />
-      <i class="fa-solid fa-magnifying-glass absolute left-3 top-2.5 text-xs text-slate-500"></i>
+                  class="crm-conversation-search w-full pl-9 pr-3.5 py-2 text-sm rounded-xl transition-all shadow-sm outline-none" />
+                <i class="fa-solid fa-magnifying-glass absolute left-3 top-2.5 text-xs crm-conversation-muted"></i>
     </div>
 
     <!-- FILTERS -->
@@ -32,9 +30,9 @@
         {id:'all',         label:'Todos',      color:'#a78bfa', bg:'#8b5cf620', border:'#8b5cf640'}
       ]"
         class="px-3 py-1 rounded-xl text-xs font-semibold transition-all duration-200"
-        [style.background]="activeStatus === tab.id ? tab.bg : '#0f172a'"
+        [style.background]="activeStatus === tab.id ? tab.bg : '#f1f5f9'"
         [style.color]="activeStatus === tab.id ? tab.color : '#64748b'"
-        [style.border]="'1px solid ' + (activeStatus === tab.id ? tab.border : '#334155')"
+        [style.border]="'1px solid ' + (activeStatus === tab.id ? tab.border : '#dbe3e9')"
         (click)="changeStatus($any(tab.id))">
         {{ tab.label }}
       </button>
@@ -46,11 +44,8 @@
   <div class="flex-1 min-h-0 overflow-y-auto">
 
     <button *ngFor="let c of filtered; trackBy: trackByConversationId"
-            class="w-full text-left px-4 py-3 transition-all duration-150 border-b relative border-slate-800"
-            [style.background]="activeConversationId === c.id ? '#0f172a' : 'transparent'"
-            [style.borderLeft]="activeConversationId === c.id ? '3px solid #10b981' : '3px solid transparent'"
-            onmouseenter="if(this.style.borderLeft === '3px solid transparent') this.style.background='#0f172a22'"
-            onmouseleave="if(this.style.borderLeft === '3px solid transparent') this.style.background='transparent'"
+            class="crm-conversation-row w-full text-left px-4 py-3 transition-all duration-150 border-b relative"
+            [class.crm-conversation-row-active]="activeConversationId === c.id"
             (click)="selectConversation(c)">
 
       <div class="flex gap-3 items-start">
@@ -72,40 +67,48 @@
         <div class="flex-1 min-w-0">
 
           <!-- NAME + META -->
-          <div class="flex justify-between items-center gap-2">
-            <span class="font-semibold text-sm truncate"
-                  [style.color]="activeConversationId === c.id ? '#f1f5f9' : '#cbd5e1'">
-              {{ c.customer?.name || 'Cliente' }}
-            </span>
+<div class="flex justify-between items-center gap-2">
 
-            <div class="flex items-center gap-1.5 flex-shrink-0">
-              <!-- UNREAD BADGE -->
-              <span *ngIf="c.unread_count && activeConversationId !== c.id"
-                    class="text-xs font-bold rounded-full min-w-[18px] h-[18px] px-1 flex items-center justify-center bg-teal-500 text-white">
-                {{ c.unread_count }}
-              </span>
-              <!-- HORA -->
-              <span *ngIf="c.last_message?.at" class="text-xs flex-shrink-0 text-slate-600">
-                {{ c.last_message.at | date:'HH:mm' }}
-              </span>
-            </div>
-          </div>
+  <span
+    class="font-semibold text-sm truncate crm-conversation-customer-name"
+    [class.crm-conversation-title-active]="activeConversationId === c.id">
+    {{ c.customer?.name || 'Cliente' }}
+  </span>
 
+  <div class="flex items-center gap-1.5 flex-shrink-0">
+
+    <!-- UNREAD BADGE -->
+    <span
+      *ngIf="c.unread_count && activeConversationId !== c.id"
+      class="text-xs font-bold rounded-full min-w-[18px] h-[18px] px-1 flex items-center justify-center bg-teal-500 text-white">
+      {{ c.unread_count }}
+    </span>
+
+    <!-- HORA -->
+    <span
+      *ngIf="c.last_message?.at"
+      class="text-xs flex-shrink-0 crm-conversation-muted">
+      {{ c.last_message.at | date:'HH:mm' }}
+    </span>
+
+  </div>
+</div>
           <!-- LAST MESSAGE -->
-          <div class="flex items-center gap-1.5 text-xs truncate mt-0.5 text-slate-500">
+          <div class="flex items-center gap-1.5 text-xs truncate mt-0.5 crm-conversation-muted">
             <span class="truncate">{{ lastMessagePreview(c.last_message) }}</span>
           </div>
 
           <!-- FOOTER: status + agente -->
           <div class="flex items-center gap-2 mt-1 flex-wrap">
-            <span class="text-xs font-medium px-1.5 py-0.5 rounded-md"
-                  [style.background]="c.status === 'new' ? '#10b98115' : c.status === 'in_progress' ? '#3b82f615' : '#64748b15'"
-                  [style.color]="c.status === 'new' ? '#10b981' : c.status === 'in_progress' ? '#60a5fa' : '#94a3b8'">
+            <span class="crm-conversation-status text-xs font-medium px-1.5 py-0.5 rounded-md"
+              [class.crm-status-new]="c.status === 'new'"
+              [class.crm-status-progress]="c.status === 'in_progress'"
+              [class.crm-status-closed]="c.status !== 'new' && c.status !== 'in_progress'">
               {{ getStatusLabel(c.status) }}
             </span>
 
             <span *ngIf="c.assigned_user"
-                  class="text-xs truncate max-w-[80px] text-slate-500">
+                  class="text-xs truncate max-w-[80px] crm-conversation-muted">
               <i class="fa-solid fa-user text-xs mr-0.5"></i>
               {{ c.assigned_user.names }}
             </span>

@@ -1,0 +1,24 @@
+.crm-chat-header {
+	border-color: #cbd8dd;
+	background: #ffffff;
+}
+
+.crm-chat-header h4 { color: #243247; }
+.crm-chat-header .text-slate-700 { color: #9aa8b5; }
+.crm-chat-header .text-slate-500 { color: #7a8999; }
+.crm-chat-header .bg-slate-700 { background: #edf3f5; color: #526176; }
+.crm-chat-header .border-slate-600 { border-color: #cbd8dd; }
+.crm-chat-header .bg-slate-700,
+.crm-chat-header button.bg-slate-700 { border: 1px solid #cbd8dd; border-radius: 8px; background: #f1f5f7; color: #526176; }
+.crm-chat-header button.bg-slate-700:hover { background: #e5f3f0; color: #0f766e; }
+.crm-chat-header .text-violet-400 { color: #2563eb; }
+.crm-chat-header .bg-pink-900\/30 { background: #fff1f2; color: #be123c; border-color: #fecdd3; }
+.crm-chat-header .bg-pink-900\/30:hover { background: #ffe4e6; border-color: #fda4af; }
+
+:host-context(.dark) .crm-chat-header { border-color: #29414a; background: #11242b; }
+:host-context(.dark) .crm-chat-header h4 { color: #eff7f8; }
+:host-context(.dark) .crm-chat-header .bg-slate-700,
+:host-context(.dark) .crm-chat-header button.bg-slate-700 { border-color: #38515b; background: #243d46; color: #b8cbd0; }
+:host-context(.dark) .crm-chat-header button.bg-slate-700:hover { background: #2b514e; color: #a8f0e2; }
+:host-context(.dark) .crm-chat-header .bg-pink-900\/30 { background: #482333; color: #fda4af; border-color: #854052; }
+:host-context(.dark) .crm-chat-header .bg-pink-900\/30:hover { background: #5b293c; border-color: #be6174; }

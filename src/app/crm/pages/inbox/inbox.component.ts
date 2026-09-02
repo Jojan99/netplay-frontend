@@ -17,7 +17,6 @@ import { CrmNewConversationModalComponent } from '../../components/crm-new-conve
 
 import { CrmService } from '../../../services/crm.service';
 import { EchoService } from '../../../services/echo.service';
-import { ThemeService } from '../../../services/theme.service';
 
 type InboxStatus = 'all' | 'new' | 'in_progress' | 'closed';
 type MainView    = 'inbox' | 'dashboard';
@@ -60,7 +59,6 @@ export class InboxComponent implements OnInit, OnDestroy {
     private crmService: CrmService,
     private echoService: EchoService,
     private zone: NgZone,
-    public themeService: ThemeService,
     @Inject(PLATFORM_ID) private platformId: Object
   ) {}
 

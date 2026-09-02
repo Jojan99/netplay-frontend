@@ -3,12 +3,202 @@
     opacity: 0;
     transform: translateX(-8px);
   }
+
   to {
     opacity: 1;
     transform: translateX(0);
   }
 }
 
+/* =========================
+   LIGHT MODE
+   ========================= */
+
+.crm-conversation-list {
+  border-color: #dbe3e9;
+  background: #ffffff;
+  color: #243247;
+}
+
+.crm-conversation-list-header {
+  border-color: #e1e8eb;
+}
+
+.crm-conversation-title {
+  color: #243247;
+}
+
+.crm-conversation-count {
+  border: 1px solid #bfe5dc;
+  background: #e9f7f4;
+  color: #0f766e;
+}
+
+.crm-conversation-search {
+  border: 1px solid #cbd8dd;
+  background: #ffffff;
+  color: #334155;
+}
+
+.crm-conversation-search:focus {
+  border-color: #0f766e;
+  box-shadow: 0 0 0 2px rgb(13 148 136 / .12);
+}
+
+.crm-conversation-muted {
+  color: #7a8999;
+}
+
+.crm-conversation-row {
+  border-left: 3px solid transparent;
+  border-color: #edf1f3;
+}
+
+.crm-conversation-row:hover {
+  background-color: #f1f8f7;
+}
+
+.crm-conversation-row-active {
+  background-color: #16443f !important;
+  border-left-color: #10b981 !important;
+  color: #e2f7f2;
+}
+
+.crm-conversation-row-active:hover {
+  background-color: #1a514a !important;
+}
+
+.crm-conversation-row-active .crm-conversation-title-active {
+  color: #ffffff !important;
+}
+
+.crm-conversation-row-active .crm-conversation-muted,
+.crm-conversation-row-active .text-xs.font-medium {
+  color: #ffffff !important;
+}
+
+.crm-conversation-status {
+  border: 1px solid transparent;
+}
+
+.crm-status-new {
+  border-color: #b8e6d6;
+  background: #e1f7ef;
+  color: #047857;
+}
+
+.crm-status-progress {
+  border-color: #bfdbfe;
+  background: #eff6ff;
+  color: #2563eb;
+}
+
+.crm-status-closed {
+  border-color: #dbe3e9;
+  background: #f1f5f7;
+  color: #64748b;
+}
+
+.crm-conversation-row .bg-gradient-to-br {
+  border-color: #b8d8d4;
+  box-shadow: 0 3px 8px rgb(15 118 110 / .14);
+}
+
 .animate-slide-right {
   animation: slideRight 0.18s ease-out;
+}
+
+
+/* =========================
+   DARK MODE
+   ========================= */
+
+:host-context(.dark) .crm-conversation-list {
+  border-color: #29414a;
+  background: #14232c;
+  color: #dbe7ef;
+}
+
+:host-context(.dark) .crm-conversation-list-header {
+  border-color: #29414a;
+}
+
+:host-context(.dark) .crm-conversation-title {
+  color: #eef5f7;
+}
+
+:host-context(.dark) .crm-conversation-customer-name {
+  color: #e7f0f3 !important;
+}
+
+:host-context(.dark) .crm-conversation-muted {
+  color: #8fa8b2;
+}
+
+:host-context(.dark) .crm-conversation-search {
+  border-color: #38515b;
+  background: #102029;
+  color: #e7f0f3;
+}
+
+:host-context(.dark) .crm-conversation-search::placeholder {
+  color: #718894;
+}
+
+:host-context(.dark) .crm-conversation-row {
+  border-color: #243b46;
+  color: #dbe7ef;
+}
+
+:host-context(.dark) .crm-conversation-row:hover {
+  background-color: #1b393b;
+}
+
+:host-context(.dark) .crm-conversation-row-active {
+  background-color: #16443f !important;
+  border-left-color: #10b981 !important;
+}
+
+:host-context(.dark) .crm-conversation-row-active:hover {
+  background-color: #1a514a !important;
+}
+
+:host-context(.dark) .crm-conversation-row-active .crm-conversation-customer-name {
+  color: #ffffff !important;
+}
+
+:host-context(.dark) .crm-conversation-row-active .crm-conversation-muted {
+  color: #ffffff !important;
+}
+
+:host-context(.dark) .crm-conversation-count {
+  border-color: #28665c;
+  background: #173f3b;
+  color: #8ee6d2;
+}
+
+:host-context(.dark) .crm-status-new {
+  border-color: #226b5d;
+  background: #145044;
+  color: #b7f7e4;
+}
+
+:host-context(.dark) .crm-status-progress {
+  border-color: #315a85;
+  background: #1d3857;
+  color: #bfdbfe;
+}
+
+:host-context(.dark) .crm-status-closed {
+  border-color: #38515b;
+  background: #243d46;
+  color: #c4d5d9;
+}
+
+:host-context(.dark) .crm-conversation-list .text-slate-600 {
+  color: #c4d5d9 !important;
+}
+
+:host-context(.dark) .crm-conversation-list .text-slate-700 {
+  color: #8fa8b2 !important;
 }

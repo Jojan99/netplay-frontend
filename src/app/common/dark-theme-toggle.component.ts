@@ -28,7 +28,7 @@ export class DarkThemeToggleComponent implements OnInit, OnDestroy {
         document.documentElement.classList.remove('dark');
       }
     }
-  
+
     this.themeSubscription = this.themeService.$theme
       .asObservable()
       .subscribe((theme) => {
