@@ -179,11 +179,11 @@
         </td>
 
         <td class="px-5 py-4 text-right text-xs">
-          <span *ngIf="inv.abone > 0 && !inv.paid"
+          <span *ngIf="amountPaid(inv) > 0 && !inv.paid"
                 class="text-emerald-600 dark:text-emerald-400 font-medium">
-            +{{ formatCurrency(inv.abone) }}
+            +{{ formatCurrency(amountPaid(inv)) }}
           </span>
-          <span *ngIf="!inv.abone || inv.paid" class="text-gray-300 dark:text-gray-600">—</span>
+          <span *ngIf="amountPaid(inv) <= 0 || inv.paid" class="text-gray-300 dark:text-gray-600">—</span>
         </td>
 
         <td class="px-5 py-4 text-center">
@@ -289,8 +289,8 @@
     <div class="flex items-center justify-between">
       <div>
         <p class="text-lg font-bold text-gray-900 dark:text-white">{{ formatCurrency(inv.price_total) }}</p>
-        <p *ngIf="inv.abone > 0 && !inv.paid" class="text-xs text-emerald-600 dark:text-emerald-400 font-medium">
-          Abonado: {{ formatCurrency(inv.abone) }}
+        <p *ngIf="amountPaid(inv) > 0 && !inv.paid" class="text-xs text-emerald-600 dark:text-emerald-400 font-medium">
+          Abonado: {{ formatCurrency(amountPaid(inv)) }}
         </p>
       </div>
       <div class="flex gap-2">

@@ -52,6 +52,22 @@ export class InvoiceListComponent implements OnInit {
   private readonly POLL_MAX      = 12;  // 12 × 3 s = 36 s máximo
   private readonly POLL_INTERVAL = 3000;
 
+  /**
+   * Saldo pendiente de una factura.
+   * Cuidado con la convención del backend: `price_abone` es el dinero abonado
+   * y `abone` es solo una bandera 0/1, no un monto.
+   */
+  outstanding(inv: any): number {
+    return Math.max(0,
+      (inv.price_total ?? 0) - (inv.price_discount ?? 0) - (inv.price_abone ?? 0)
+    );
+  }
+
+  /** Monto ya abonado a la factura. */
+  amountPaid(inv: any): number {
+    return inv.price_abone ?? 0;
+  }
+
   // Facturas sin pagar, ordenadas de más antigua a más nueva
   unpaidInvoices = computed(() =>
     this.invoices()
@@ -60,7 +76,7 @@ export class InvoiceListComponent implements OnInit {
   );
 
   totalDue = computed(() =>
-    this.unpaidInvoices().reduce((sum, inv) => sum + (inv.price_total - (inv.abone ?? 0)), 0)
+    this.unpaidInvoices().reduce((sum, inv) => sum + this.outstanding(inv), 0)
   );
 
   // Preview de cómo se distribuye el monto ingresado por el usuario
@@ -71,7 +87,7 @@ export class InvoiceListComponent implements OnInit {
     const result: any[] = [];
     for (const inv of this.unpaidInvoices()) {
       if (remaining <= 0) break;
-      const stillOwed = inv.price_total - (inv.abone ?? 0);
+      const stillOwed = this.outstanding(inv);
       const toPay     = Math.min(remaining, stillOwed);
       result.push({
         ...inv,
