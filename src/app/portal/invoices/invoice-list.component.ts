@@ -327,7 +327,16 @@ export class InvoiceListComponent implements OnInit {
   }
 
   gatewayLabel(g: string): string {
-    return { wompi: 'Wompi', epayco: 'ePayco', zonapago: 'ZonaPago' }[g] ?? g;
+    return { wompi: 'Wompi', epayco: 'ePayco', zonapago: 'ZonaPago', efipay: 'EfiPay' }[g] ?? g;
+  }
+
+  /** Medios de pago que ofrece cada pasarela en su checkout. */
+  paymentMethods(g: string): string[] {
+    return {
+      efipay:   ['Tarjeta débito/crédito', 'PSE', 'Bre-B', 'Efectivo'],
+      wompi:    ['Tarjeta débito/crédito', 'PSE', 'Nequi', 'Efectivo'],
+      epayco:   ['Tarjeta débito/crédito', 'PSE', 'Efectivo'],
+    }[g] ?? [];
   }
 
   formatCurrency(v: number): string {

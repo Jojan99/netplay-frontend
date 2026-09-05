@@ -584,6 +584,14 @@
         </div>
       </div>
 
+      <!-- Medios de pago disponibles en la pasarela -->
+      <div *ngIf="paymentMethods(payConfirm().gateway).length > 0" class="flex flex-wrap gap-2 mb-4">
+        <span *ngFor="let m of paymentMethods(payConfirm().gateway)"
+              class="px-2.5 py-1 rounded-lg text-[11px] font-medium bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-300">
+          {{ m }}
+        </span>
+      </div>
+
       <p class="text-xs text-gray-400 dark:text-gray-500 mb-5 leading-relaxed">
         Serás redirigido a <strong>{{ gatewayLabel(payConfirm().gateway) }}</strong> para completar el pago de forma segura.
         Guarda la referencia en caso de cualquier inconveniente.

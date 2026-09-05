@@ -528,7 +528,7 @@
       <div class="bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl rounded-2xl border border-slate-200/60 dark:border-slate-700/60 shadow-sm hover:shadow-md transition-all duration-300 p-5 space-y-4">
         <h3 class="font-semibold text-slate-800 dark:text-white">Pasarela activa</h3>
 
-        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
           <div *ngFor="let gw of gwAvailable"
                (click)="gwForm.gateway = gw.id"
                [class]="gwForm.gateway === gw.id
@@ -537,6 +537,7 @@
                class="rounded-xl p-4 transition-all cursor-pointer">
             <div class="font-semibold text-sm text-slate-800 dark:text-white">{{ gw.name }}</div>
             <div *ngIf="gw.id === 'zonapago'" class="text-xs text-amber-600 dark:text-amber-400 mt-1">Requiere contacto previo</div>
+            <div *ngIf="gw.id === 'efipay'" class="text-xs text-cyan-600 dark:text-cyan-400 mt-1">Tarjeta, PSE, Bre-B y efectivo</div>
           </div>
         </div>
 
@@ -800,6 +801,115 @@
             <p class="font-semibold mb-1">ZonaPago requiere registro comercial previo</p>
             <p>Contacta a Zona Virtual para obtener las credenciales de integración:</p>
             <p class="font-mono mt-1">infozonapagos&#64;zonavirtual.com.co</p>
+          </div>
+        </ng-container>
+
+        <!-- EfiPay -->
+        <ng-container *ngIf="gwForm.gateway === 'efipay'">
+          <div class="text-xs bg-cyan-50 dark:bg-cyan-900/20 border border-cyan-200 dark:border-cyan-700 rounded-lg p-3 text-cyan-800 dark:text-cyan-300">
+            Genera tus tokens en <strong>SAG EfiPay → Documentación → API Key</strong>
+            (<span class="font-mono">sag.efipay.co/documentacion/api-key</span>).
+            EfiPay decide el entorno según el token: usa el token
+            <span class="font-mono">api-access:test</span> en modo Prueba y
+            <span class="font-mono">api-access:production</span> en Producción.
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+            <!-- Token de acceso a la API -->
+            <div>
+              <label class="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">
+                Token de acceso API <span class="text-slate-400 font-normal">(Bearer — autoriza el cobro)</span>
+              </label>
+              <div *ngIf="gwConfig.private_key" class="flex items-center gap-1 mb-1 bg-slate-50/80 dark:bg-slate-700/80/50 border border-slate-200/60 dark:border-slate-600/60 rounded-lg px-3 py-1.5">
+                <span class="font-mono text-xs text-slate-700 dark:text-slate-300 flex-1 truncate">
+                  {{ gwShowKeys['efipay_private_key'] ? gwConfig.private_key : maskKey(gwConfig.private_key) }}
+                </span>
+                <button (click)="toggleKey('efipay_private_key')"
+                        class="p-1 rounded text-slate-400 hover:text-slate-600 transition-colors flex-shrink-0">
+                  <svg *ngIf="!gwShowKeys['efipay_private_key']" class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                  </svg>
+                  <svg *ngIf="gwShowKeys['efipay_private_key']" class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"/>
+                  </svg>
+                </button>
+              </div>
+              <input type="password" [(ngModel)]="gwForm.private_key"
+                     autocomplete="new-password"
+                     placeholder="{{ gwConfig.has_private_key ? 'Nuevo token (dejar vacío para conservar)' : 'Token de api-access' }}"
+                     class="w-full text-sm rounded-lg border border-slate-300/60 dark:border-slate-600/60 bg-white dark:bg-slate-700/80 text-slate-800 dark:text-white px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-400">
+            </div>
+
+            <!-- Token de webhook -->
+            <div>
+              <label class="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">
+                Token de webhook <span class="text-slate-400 font-normal">(firma HMAC-SHA256)</span>
+              </label>
+              <div *ngIf="gwConfig.events_secret" class="flex items-center gap-1 mb-1 bg-slate-50/80 dark:bg-slate-700/80/50 border border-slate-200/60 dark:border-slate-600/60 rounded-lg px-3 py-1.5">
+                <span class="font-mono text-xs text-slate-700 dark:text-slate-300 flex-1 truncate">
+                  {{ gwShowKeys['efipay_events_secret'] ? gwConfig.events_secret : maskKey(gwConfig.events_secret) }}
+                </span>
+                <button (click)="toggleKey('efipay_events_secret')"
+                        class="p-1 rounded text-slate-400 hover:text-slate-600 transition-colors flex-shrink-0">
+                  <svg *ngIf="!gwShowKeys['efipay_events_secret']" class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                  </svg>
+                  <svg *ngIf="gwShowKeys['efipay_events_secret']" class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"/>
+                  </svg>
+                </button>
+              </div>
+              <input type="password" [(ngModel)]="gwForm.events_secret"
+                     autocomplete="new-password"
+                     placeholder="{{ gwConfig.has_events_secret ? 'Nuevo token (dejar vacío para conservar)' : 'Token de webhook del comercio' }}"
+                     class="w-full text-sm rounded-lg border border-slate-300/60 dark:border-slate-600/60 bg-white dark:bg-slate-700/80 text-slate-800 dark:text-white px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-400">
+              <p class="text-[11px] text-slate-400 mt-1">Sin este token se rechazan todas las notificaciones de pago.</p>
+            </div>
+
+            <!-- Sucursal (office) -->
+            <div>
+              <label class="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">
+                ID de sucursal <span class="text-slate-400 font-normal">(parámetro <span class="font-mono">office</span>)</span>
+              </label>
+              <input type="text" inputmode="numeric" [(ngModel)]="gwForm.office_id"
+                     autocomplete="off"
+                     placeholder="Ej: 1"
+                     class="w-full text-sm rounded-lg border border-slate-300/60 dark:border-slate-600/60 bg-white dark:bg-slate-700/80 text-slate-800 dark:text-white px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-400">
+              <p class="text-[11px] text-slate-400 mt-1">Número de la sucursal del comercio en EfiPay. Obligatorio.</p>
+            </div>
+          </div>
+
+          <!-- Checklist de configuración -->
+          <div class="rounded-xl border border-slate-200/60 dark:border-slate-700/60 p-4 space-y-2">
+            <p class="text-xs font-semibold text-slate-600 dark:text-slate-300">Estado de la configuración</p>
+            <div class="flex items-center gap-2 text-xs">
+              <span [class]="gwConfig.has_private_key ? 'bg-emerald-500' : 'bg-slate-300 dark:bg-slate-600'" class="w-2 h-2 rounded-full"></span>
+              <span class="text-slate-600 dark:text-slate-400">Token de acceso API</span>
+            </div>
+            <div class="flex items-center gap-2 text-xs">
+              <span [class]="gwConfig.has_events_secret ? 'bg-emerald-500' : 'bg-slate-300 dark:bg-slate-600'" class="w-2 h-2 rounded-full"></span>
+              <span class="text-slate-600 dark:text-slate-400">Token de webhook</span>
+            </div>
+            <div class="flex items-center gap-2 text-xs">
+              <span [class]="gwConfig.has_office_id ? 'bg-emerald-500' : 'bg-slate-300 dark:bg-slate-600'" class="w-2 h-2 rounded-full"></span>
+              <span class="text-slate-600 dark:text-slate-400">ID de sucursal</span>
+            </div>
+          </div>
+
+          <!-- URL de webhook por empresa -->
+          <div *ngIf="gwWebhookUrl()" class="flex items-center gap-2 bg-cyan-50 dark:bg-cyan-900/20 border border-cyan-200 dark:border-cyan-700 rounded-lg p-3">
+            <div class="flex-1">
+              <p class="text-xs font-semibold text-cyan-700 dark:text-cyan-300 mb-0.5">URL de webhook EfiPay</p>
+              <p class="text-xs text-cyan-600 dark:text-cyan-400">Se envía automáticamente en cada cobro; regístrala también en el panel de EfiPay si tu comercio lo exige.</p>
+              <span class="font-mono text-xs font-semibold text-cyan-800 dark:text-cyan-200 break-all">{{ gwWebhookUrl() }}</span>
+            </div>
+            <button (click)="copyText(gwWebhookUrl())" title="Copiar URL"
+                    class="flex-shrink-0 p-2 rounded-lg bg-cyan-100 dark:bg-cyan-800/40 text-cyan-700 dark:text-cyan-300 hover:bg-cyan-200 transition-colors">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+              </svg>
+            </button>
           </div>
         </ng-container>
       </div>

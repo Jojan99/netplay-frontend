@@ -68,7 +68,7 @@ export class BillingConfigComponent implements OnInit {
   gwAvailable: any[] = [];
   gwForm: any = { gateway: 'wompi', sandbox: true, active: false,
                   public_key: '', private_key: '', events_secret: '',
-                  integrity_secret: '', client_id: '' };
+                  integrity_secret: '', client_id: '', office_id: '' };
   gwShowKeys: Record<string, boolean> = {};
   gwTxLoading   = false;
   gwTransactions: any[] = [];
@@ -495,6 +495,7 @@ export class BillingConfigComponent implements OnInit {
         this.gwForm.gateway  = res.data?.gateway ?? 'wompi';
         this.gwForm.sandbox  = res.data?.sandbox ?? true;
         this.gwForm.active   = res.data?.active  ?? false;
+        this.gwForm.office_id = res.data?.office_id ?? '';
         this.loadGatewayTransactions();
       },
       error: () => { this.gwLoading = false; },
@@ -521,14 +522,14 @@ export class BillingConfigComponent implements OnInit {
       active:  this.gwForm.active,
     };
     // Solo enviar claves que el usuario completó
-    for (const f of ['public_key', 'private_key', 'events_secret', 'integrity_secret', 'client_id']) {
-      if (this.gwForm[f]?.trim()) body[f] = this.gwForm[f].trim();
+    for (const f of ['public_key', 'private_key', 'events_secret', 'integrity_secret', 'client_id', 'office_id']) {
+      if (String(this.gwForm[f] ?? '').trim()) body[f] = String(this.gwForm[f]).trim();
     }
     this.http.put<any>(GW_API + 'config', JSON.stringify(body), { headers: this.getHeaders() }).subscribe({
       next: (res) => {
         this.gwSaving = false;
         this.gwMsg    = res.message ?? 'Configuración guardada.';
-        // Limpiar campos de contraseña
+        // Limpiar campos de contraseña (office_id no es secreto y se conserva a la vista)
         for (const f of ['public_key', 'private_key', 'events_secret', 'integrity_secret', 'client_id']) {
           this.gwForm[f] = '';
         }
@@ -576,11 +577,25 @@ export class BillingConfigComponent implements OnInit {
     return { wompi: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300',
              epayco: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300',
              zonapago: 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300',
+             efipay: 'bg-cyan-100 text-cyan-700 dark:bg-cyan-900/30 dark:text-cyan-300',
            }[g] ?? 'bg-gray-100 text-gray-700';
   }
 
   gatewayLabel(g: string): string {
-    return { wompi: 'Wompi', epayco: 'ePayco', zonapago: 'ZonaPago' }[g] ?? g;
+    return { wompi: 'Wompi', epayco: 'ePayco', zonapago: 'ZonaPago', efipay: 'EfiPay' }[g] ?? g;
+  }
+
+  /**
+   * URL de webhook de la pasarela seleccionada. Se calcula en el cliente para
+   * que el admin pueda copiarla antes de guardar la configuración.
+   */
+  gwWebhookUrl(): string {
+    const base = this.gwConfig?.webhook_base;
+    const slug = this.gwConfig?.company_slug;
+    if (base && slug && this.gwForm.gateway) {
+      return `${base}/${this.gwForm.gateway}/${slug}`;
+    }
+    return this.gwConfig?.webhook_url ?? '';
   }
 
   formatCurrency(v: number): string {
