@@ -73,6 +73,11 @@ export class BillingConfigComponent implements OnInit {
   gwTxLoading   = false;
   gwTransactions: any[] = [];
 
+  // ── EfiPay: sucursales del comercio ────────────────────────
+  efipayOffices: any[] = [];
+  efipayOfficesLoading = false;
+  efipayOfficesError   = '';
+
   // ── Detalle de transacción ─────────────────────────────────
   gwDetailTx: any = null;
   gwDetailLoading = false;
@@ -583,6 +588,30 @@ export class BillingConfigComponent implements OnInit {
 
   gatewayLabel(g: string): string {
     return { wompi: 'Wompi', epayco: 'ePayco', zonapago: 'ZonaPago', efipay: 'EfiPay' }[g] ?? g;
+  }
+
+  /**
+   * Trae las sucursales del comercio en EfiPay para que el admin elija un
+   * `office` válido: es el error de configuración más frecuente.
+   */
+  loadEfipayOffices(): void {
+    this.efipayOfficesLoading = true;
+    this.efipayOfficesError   = '';
+    this.efipayOffices        = [];
+
+    this.http.get<any>(GW_API + 'efipay/offices', { headers: this.getHeaders() }).subscribe({
+      next: (res) => {
+        this.efipayOfficesLoading = false;
+        this.efipayOffices = res.data ?? [];
+        if (this.efipayOffices.length === 0) {
+          this.efipayOfficesError = 'EfiPay no devolvió sucursales para este comercio.';
+        }
+      },
+      error: (err) => {
+        this.efipayOfficesLoading = false;
+        this.efipayOfficesError = err?.error?.message ?? 'No se pudieron cargar las sucursales.';
+      },
+    });
   }
 
   /**

@@ -869,14 +869,33 @@
 
             <!-- Sucursal (office) -->
             <div>
-              <label class="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">
-                ID de sucursal <span class="text-slate-400 font-normal">(parámetro <span class="font-mono">office</span>)</span>
-              </label>
+              <div class="flex items-center justify-between mb-1">
+                <label class="block text-xs font-medium text-slate-600 dark:text-slate-400">
+                  ID de sucursal <span class="text-slate-400 font-normal">(parámetro <span class="font-mono">office</span>)</span>
+                </label>
+                <button (click)="loadEfipayOffices()" [disabled]="efipayOfficesLoading"
+                        class="text-[11px] px-2 py-0.5 rounded-md bg-cyan-50 text-cyan-700 dark:bg-cyan-900/30 dark:text-cyan-300 hover:bg-cyan-100 disabled:opacity-50 transition-colors">
+                  {{ efipayOfficesLoading ? 'Consultando...' : 'Ver mis sucursales' }}
+                </button>
+              </div>
+
+              <!-- Sucursales devueltas por EfiPay -->
+              <select *ngIf="efipayOffices.length > 0" [(ngModel)]="gwForm.office_id"
+                      class="w-full text-sm rounded-lg border border-cyan-300 dark:border-cyan-600 bg-white dark:bg-slate-700/80 text-slate-800 dark:text-white px-3 py-2 mb-2 focus:outline-none focus:ring-2 focus:ring-indigo-500/50">
+                <option value="" disabled>Selecciona una sucursal...</option>
+                <option *ngFor="let o of efipayOffices" [value]="o.id">{{ o.id }} — {{ o.name }}</option>
+              </select>
+
               <input type="text" inputmode="numeric" [(ngModel)]="gwForm.office_id"
                      autocomplete="off"
                      placeholder="Ej: 1"
                      class="w-full text-sm rounded-lg border border-slate-300/60 dark:border-slate-600/60 bg-white dark:bg-slate-700/80 text-slate-800 dark:text-white px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-400">
-              <p class="text-[11px] text-slate-400 mt-1">Número de la sucursal del comercio en EfiPay. Obligatorio.</p>
+
+              <p *ngIf="efipayOfficesError" class="text-[11px] text-red-500 mt-1">{{ efipayOfficesError }}</p>
+              <p class="text-[11px] text-slate-400 mt-1">
+                Debe existir en tu comercio EfiPay. Guarda primero el token de acceso y pulsa
+                <strong>Ver mis sucursales</strong> para consultarlas.
+              </p>
             </div>
           </div>
 
