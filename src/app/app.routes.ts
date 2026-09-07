@@ -113,4 +113,22 @@ export const routes: Routes = [
   { path: 'confirm-email', component: ConfirmEmailComponent },
   { path: 'politica-de-privacidad', component: PrivacyPolicyComponent },
   { path: '',              redirectTo: 'inicio', pathMatch: 'full' },
+
+  /**
+   * Rescate de los links de pago que salieron sin la ruta.
+   *
+   * Una plantilla de WhatsApp quedó apuntando a netplay.com.co/{{token}} en vez
+   * de netplay.com.co/api/pay/{{token}}, y Meta no deja corregirla mientras
+   * está en revisión. Esto recoge esa dirección y la manda a donde iba.
+   *
+   * Va de último y con un filtro estrecho —un solo tramo de 20 a 64 letras y
+   * números— para no tragarse ninguna ruta de la aplicación.
+   */
+  {
+    matcher: (segments) => {
+      if (segments.length !== 1) return null;
+      return /^[A-Za-z0-9]{20,64}$/.test(segments[0].path) ? { consumed: segments } : null;
+    },
+    loadComponent: () => import('./pay-redirect/pay-redirect.component').then(m => m.PayRedirectComponent),
+  },
 ];
