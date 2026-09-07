@@ -91,7 +91,14 @@ export class MessageBubbleComponent implements OnChanges {
   /* ── URLs seguras ────────────────────────────────────────────── */
   get safePdfUrl(): SafeResourceUrl | null {
     if (!this.message?.media_url) return null;
-    return this.sanitizer.bypassSecurityTrustResourceUrl(this.message.media_url);
+    return this.sanitizer.bypassSecurityTrustResourceUrl(this.toEmbeddableUrl(this.message.media_url));
+  }
+
+  /** El backend de medios sirve por http; embeberlo en un iframe HTTPS lo bloquea (mixed content). */
+  private toEmbeddableUrl(url: string): string {
+    return url.startsWith('http://')
+      ? 'https://docs.google.com/gview?embedded=true&url=' + encodeURIComponent(url)
+      : url;
   }
 
   get safeOfficeUrl(): SafeResourceUrl | null {

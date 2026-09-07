@@ -29,6 +29,30 @@
 .message-sender-bot { background: #c7f2df; color: #047857 !important; }
 .message-sender-agent { background: #dbeafe; color: #2563eb !important; }
 
+.crm-pdf-card {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 256px;
+  min-height: 78px;
+  padding: 12px;
+  border: 1px solid #cbd8dd;
+  border-radius: 10px;
+  background: #f8fafb;
+  color: #243247;
+  cursor: pointer;
+  transition: border-color .16s ease, background .16s ease, transform .16s ease;
+}
+.crm-pdf-card:hover,
+.crm-pdf-card:focus-visible { border-color: #0f766e; background: #e9f7f4; outline: none; transform: translateY(-1px); }
+.crm-pdf-icon { display: flex; align-items: center; justify-content: center; width: 38px; height: 42px; border-radius: 8px; background: #fee2e2; color: #dc2626; font-size: 18px; }
+.crm-pdf-copy { min-width: 0; flex: 1; }
+.crm-pdf-title { color: #243247; font-size: 12px; font-weight: 800; }
+.crm-pdf-subtitle { margin-top: 3px; color: #7a8999; font-size: 10px; }
+.crm-pdf-open-icon { color: #0f766e; font-size: 12px; }
+.crm-pdf-view-button { display: inline-flex; align-items: center; gap: 6px; padding: 6px 9px; border: 1px solid #b8d9d4; border-radius: 6px; background: #edf8f6; color: #0f766e; font-size: 11px; font-weight: 800; }
+.crm-pdf-view-button:hover { background: #d9efeb; }
+
 .agent-message {
   background: #c7ecdf !important;
   border: 1px solid #9bd4c3 !important;
@@ -67,6 +91,15 @@
 :host-context(.dark) .agent-message { background: #109b7b !important; }
 :host-context(.dark) .message-sender-bot { background: #0f766e; color: #c7f9e7 !important; }
 :host-context(.dark) .message-sender-agent { background: #31527a; color: #dbeafe !important; }
+:host-context(.dark) .crm-pdf-card { border-color: #38515b; background: #1d2b3f; color: #e2eef0; }
+:host-context(.dark) .crm-pdf-card:hover,
+:host-context(.dark) .crm-pdf-card:focus-visible { border-color: #31c5a6; background: #16443f; }
+:host-context(.dark) .crm-pdf-icon { background: #4a2933; color: #fda4af; }
+:host-context(.dark) .crm-pdf-title { color: #f1f7f8; }
+:host-context(.dark) .crm-pdf-subtitle { color: #9ab0b9; }
+:host-context(.dark) .crm-pdf-open-icon { color: #8ee6d2; }
+:host-context(.dark) .crm-pdf-view-button { border-color: #367a70; background: #1a413f; color: #a8f0e2; }
+:host-context(.dark) .crm-pdf-view-button:hover { background: #24544f; }
 
 :host-context(.dark) .agent-message [style*="color"],
 :host-context(.dark) .bot-message [style*="color"] { color: #f0fdf9 !important; }

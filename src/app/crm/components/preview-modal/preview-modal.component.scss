@@ -1,0 +1,37 @@
+.crm-preview-backdrop { background: rgb(15 23 42 / .78); }
+.crm-preview-panel { display: flex; flex-direction: column; border: 1px solid #dbe3e9; background: #ffffff; box-shadow: 0 24px 80px rgb(15 23 42 / .3); }
+.crm-preview-toolbar { flex: 0 0 64px; min-height: 64px; border-bottom: 1px solid #dbe3e9; background: #f8fafb; }
+.crm-preview-file-icon { width: 34px; height: 34px; background: #fee2e2; color: #dc2626; }
+.crm-preview-title { color: #243247; font: 800 13px/1.2 'Manrope', ui-sans-serif, sans-serif; }
+.crm-preview-subtitle { margin-top: 3px; color: #7a8999; font: 600 10px/1 'Manrope', ui-sans-serif, sans-serif; }
+.crm-preview-download { border: 1px solid #0f766e; background: #0f766e; color: #ffffff; transition: background .16s ease; }
+.crm-preview-download:hover { background: #115e59; }
+.crm-preview-close { width: 34px; height: 34px; border: 1px solid #cbd8dd; background: #ffffff; color: #526176; }
+.crm-preview-close:hover { border-color: #0f766e; background: #e9f7f4; color: #0f766e; }
+.crm-preview-content {
+	position: relative;
+	flex: 1 1 auto;
+	height: calc(100% - 64px);
+	min-height: 0;
+	overflow: hidden;
+	background: #525659;
+}
+.crm-preview-frame {
+	display: block;
+	width: 100%;
+	height: 100%;
+	min-height: 0;
+	border: 0;
+	background: #525659;
+}
+.crm-preview-image { display: block; width: 100%; height: 100%; object-fit: contain; background: #111827; }
+
+:host-context(.dark) .crm-preview-panel { border-color: #38515b; background: #14232c; }
+:host-context(.dark) .crm-preview-toolbar { border-color: #38515b; background: #11242b; }
+:host-context(.dark) .crm-preview-title { color: #eff7f8; }
+:host-context(.dark) .crm-preview-subtitle { color: #9ab0b9; }
+:host-context(.dark) .crm-preview-file-icon { background: #4a2933; color: #fda4af; }
+:host-context(.dark) .crm-preview-close { border-color: #38515b; background: #243d46; color: #b8cbd0; }
+:host-context(.dark) .crm-preview-close:hover { background: #2b514e; color: #a8f0e2; }
+:host-context(.dark) .crm-preview-content,
+:host-context(.dark) .crm-preview-frame { background: #202b33; }
