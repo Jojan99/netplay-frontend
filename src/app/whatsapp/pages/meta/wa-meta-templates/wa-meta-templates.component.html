@@ -1,0 +1,347 @@
+<div class="mx-auto max-w-7xl px-4 py-8 sm:px-6">
+
+  <!-- ── Encabezado ─────────────────────────────────────────────────── -->
+  <header class="mb-7 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+    <div>
+      <p class="mb-1 text-xs font-semibold uppercase tracking-[0.14em] text-emerald-600 dark:text-emerald-400">
+        WhatsApp Business &middot; Meta
+      </p>
+      <h1 class="text-2xl font-bold tracking-tight text-slate-900 dark:text-white">Plantillas y avisos</h1>
+      <p class="mt-1 max-w-2xl text-sm text-slate-500 dark:text-slate-400">
+        Las plantillas son los mensajes que Meta aprueba para escribirle a un cliente que no
+        te ha escrito en las últimas 24 horas.
+      </p>
+    </div>
+    <button type="button" (click)="openModal()"
+            class="inline-flex shrink-0 items-center gap-2 rounded-lg bg-emerald-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-emerald-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-slate-900">
+      <span class="text-base leading-none">+</span> Crear plantilla
+    </button>
+  </header>
+
+  <!-- ── Pestañas ───────────────────────────────────────────────────── -->
+  <div class="mb-6 border-b border-slate-200 dark:border-slate-700">
+    <nav class="-mb-px flex gap-6" aria-label="Secciones">
+      <button type="button" (click)="tab = 'templates'"
+              [attr.aria-current]="tab === 'templates' ? 'page' : null"
+              class="border-b-2 px-1 pb-3 text-sm font-semibold transition"
+              [ngClass]="tab === 'templates'
+                ? 'border-emerald-600 text-emerald-700 dark:border-emerald-400 dark:text-emerald-300'
+                : 'border-transparent text-slate-500 hover:border-slate-300 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200'">
+        Mis plantillas
+        <span class="ml-1.5 rounded-full bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-600 dark:bg-slate-700 dark:text-slate-300">{{ templates.length }}</span>
+      </button>
+      <button type="button" (click)="tab = 'automations'"
+              [attr.aria-current]="tab === 'automations' ? 'page' : null"
+              class="border-b-2 px-1 pb-3 text-sm font-semibold transition"
+              [ngClass]="tab === 'automations'
+                ? 'border-emerald-600 text-emerald-700 dark:border-emerald-400 dark:text-emerald-300'
+                : 'border-transparent text-slate-500 hover:border-slate-300 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200'">
+        Avisos automáticos
+        <span *ngIf="activeBindings > 0" class="ml-1.5 rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-semibold text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300">{{ activeBindings }} activos</span>
+      </button>
+    </nav>
+  </div>
+
+  <!-- ═══ Pestaña: plantillas ════════════════════════════════════════ -->
+  <section *ngIf="tab === 'templates'">
+
+    <div *ngIf="loading" class="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+      <div *ngFor="let i of [1,2,3,4,5,6]" class="h-44 animate-pulse rounded-xl bg-slate-200 dark:bg-slate-700"></div>
+    </div>
+
+    <div *ngIf="!loading" class="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+      <article *ngFor="let t of templates"
+               class="group flex flex-col rounded-xl border border-slate-200 bg-white p-5 shadow-sm transition hover:border-slate-300 hover:shadow-md dark:border-slate-700 dark:bg-slate-800 dark:hover:border-slate-600">
+
+        <div class="mb-3 flex items-start justify-between gap-3">
+          <h2 class="font-mono text-sm font-semibold text-slate-900 dark:text-white">{{ t.name }}</h2>
+          <span class="shrink-0 rounded-full px-2.5 py-1 text-[11px] font-bold uppercase tracking-wide"
+                [ngClass]="statusChip(t.status)">{{ statusLabel(t.status) }}</span>
+        </div>
+
+        <p class="mb-4 line-clamp-4 whitespace-pre-line text-sm leading-relaxed text-slate-600 dark:text-slate-300">{{ bodyOf(t) }}</p>
+
+        <p *ngIf="t.rejection_reason" class="mb-3 rounded-lg bg-rose-50 px-3 py-2 text-xs text-rose-700 dark:bg-rose-950/40 dark:text-rose-300">
+          Meta la rechazó: {{ t.rejection_reason }}
+        </p>
+
+        <div class="mt-auto flex flex-wrap items-center gap-2 border-t border-slate-100 pt-3 text-xs text-slate-500 dark:border-slate-700 dark:text-slate-400">
+          <span class="rounded bg-slate-100 px-2 py-0.5 font-medium dark:bg-slate-700">{{ t.language }}</span>
+          <span class="rounded bg-slate-100 px-2 py-0.5 font-medium dark:bg-slate-700">{{ categoryLabel(t.category) }}</span>
+          <span *ngIf="slotsOf(t) > 0" class="rounded bg-slate-100 px-2 py-0.5 font-medium dark:bg-slate-700">
+            {{ slotsOf(t) }} {{ slotsOf(t) === 1 ? 'variable' : 'variables' }}
+          </span>
+          <span *ngIf="usedBy(t.name) as evento" class="rounded bg-emerald-100 px-2 py-0.5 font-semibold text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300">
+            {{ evento }}
+          </span>
+
+          <span class="ml-auto flex gap-1">
+            <button type="button" (click)="previewTemplate(t)"
+                    class="rounded-lg px-2.5 py-1 font-semibold text-slate-600 transition hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-700">Ver</button>
+            <button type="button" (click)="deleteTemplate(t.name)"
+                    class="rounded-lg px-2.5 py-1 font-semibold text-rose-600 transition hover:bg-rose-50 dark:hover:bg-rose-950/40">Eliminar</button>
+          </span>
+        </div>
+      </article>
+
+      <p *ngIf="templates.length === 0" class="col-span-full rounded-xl border border-dashed border-slate-300 py-14 text-center text-sm text-slate-500 dark:border-slate-600 dark:text-slate-400">
+        Todavía no tienes plantillas. Crea la primera con el botón de arriba.
+      </p>
+    </div>
+  </section>
+
+  <!-- ═══ Pestaña: avisos automáticos ════════════════════════════════ -->
+  <section *ngIf="tab === 'automations'" class="space-y-5">
+
+    <p class="rounded-xl border border-sky-200 bg-sky-50 px-4 py-3 text-sm text-sky-900 dark:border-sky-900 dark:bg-sky-950/40 dark:text-sky-200">
+      Cuando el cliente <strong>sí</strong> te ha escrito en las últimas 24 horas se le manda un mensaje
+      normal, más completo. Estas plantillas son el plan B para cuando esa ventana está cerrada,
+      por ejemplo si pagó desde el portal.
+    </p>
+
+    <div *ngIf="loadingBindings" class="space-y-4">
+      <div *ngFor="let i of [1,2,3]" class="h-40 animate-pulse rounded-xl bg-slate-200 dark:bg-slate-700"></div>
+    </div>
+
+    <article *ngFor="let b of bindings"
+             class="overflow-hidden rounded-xl border bg-white shadow-sm transition dark:bg-slate-800"
+             [ngClass]="b.enabled ? 'border-emerald-300 dark:border-emerald-800' : 'border-slate-200 dark:border-slate-700'">
+
+      <!-- cabecera del evento -->
+      <div class="flex flex-col gap-3 border-b border-slate-100 px-5 py-4 sm:flex-row sm:items-center sm:justify-between dark:border-slate-700">
+        <div>
+          <h2 class="font-semibold text-slate-900 dark:text-white">{{ b.label }}</h2>
+          <p class="mt-0.5 text-sm text-slate-500 dark:text-slate-400">{{ b.description }}</p>
+        </div>
+
+        <label class="inline-flex shrink-0 cursor-pointer items-center gap-3">
+          <span class="text-sm font-medium" [ngClass]="b.enabled ? 'text-emerald-700 dark:text-emerald-300' : 'text-slate-500 dark:text-slate-400'">
+            {{ b.enabled ? 'Activo' : 'Inactivo' }}
+          </span>
+          <input type="checkbox" class="peer sr-only" [(ngModel)]="b.enabled" (ngModelChange)="onToggle(b)">
+          <span class="relative h-6 w-11 rounded-full bg-slate-300 transition-colors after:absolute after:left-[2px] after:top-[2px] after:h-5 after:w-5 after:rounded-full after:bg-white after:shadow after:transition-transform peer-checked:bg-emerald-600 peer-checked:after:translate-x-5 peer-focus-visible:ring-2 peer-focus-visible:ring-emerald-500 peer-focus-visible:ring-offset-2 dark:bg-slate-600 dark:peer-focus-visible:ring-offset-slate-800"></span>
+        </label>
+      </div>
+
+      <div class="grid gap-6 px-5 py-5 lg:grid-cols-[minmax(0,1fr)_20rem]">
+
+        <!-- configuración -->
+        <div class="space-y-4">
+          <div>
+            <label class="mb-1.5 block text-sm font-medium text-slate-700 dark:text-slate-300" [attr.for]="'tpl-' + b.event">
+              Plantilla que se envía
+            </label>
+            <select [id]="'tpl-' + b.event" [(ngModel)]="b.template_name" (ngModelChange)="onTemplateChange(b)"
+                    class="w-full rounded-lg border border-slate-300 bg-white p-2.5 text-sm text-slate-900 focus:border-emerald-500 focus:ring-emerald-500 dark:border-slate-600 dark:bg-slate-700 dark:text-white">
+              <option [ngValue]="null">— Sin plantilla —</option>
+              <option *ngFor="let t of approvedTemplates" [ngValue]="t.name">{{ t.name }} ({{ t.language }})</option>
+            </select>
+            <p *ngIf="approvedTemplates.length === 0" class="mt-1.5 text-xs text-amber-600 dark:text-amber-400">
+              Todavía no tienes plantillas aprobadas por Meta. Mientras estén en revisión no se pueden usar.
+            </p>
+            <p *ngIf="b.suggested && !b.template_name && hasTemplate(b.suggested)" class="mt-1.5 text-xs text-slate-500 dark:text-slate-400">
+              Sugerida para este aviso: <button type="button" (click)="useSuggested(b)" class="font-semibold text-emerald-700 underline dark:text-emerald-400">{{ b.suggested }}</button>
+            </p>
+          </div>
+
+          <!-- mapeo de variables -->
+          <div *ngIf="b.slots > 0">
+            <p class="mb-2 text-sm font-medium text-slate-700 dark:text-slate-300">
+              Qué va en cada espacio de la plantilla
+            </p>
+            <div class="space-y-2">
+              <div *ngFor="let slot of slotRange(b.slots); let i = index" class="flex items-center gap-3">
+                <span class="w-14 shrink-0 rounded bg-slate-100 py-1.5 text-center font-mono text-xs font-semibold text-slate-600 dark:bg-slate-700 dark:text-slate-300">
+                  {{ slotLabel(i) }}
+                </span>
+                <select [(ngModel)]="b.params[i]" (ngModelChange)="markDirty(b)"
+                        class="w-full rounded-lg border border-slate-300 bg-white p-2 text-sm text-slate-900 focus:border-emerald-500 focus:ring-emerald-500 dark:border-slate-600 dark:bg-slate-700 dark:text-white">
+                  <option *ngFor="let v of variables" [ngValue]="v.key">{{ v.label }}</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <div class="flex flex-wrap items-center gap-3 pt-1">
+            <button type="button" (click)="saveBinding(b)" [disabled]="b.saving || !b.dirty"
+                    class="rounded-lg bg-slate-900 px-4 py-2 text-sm font-semibold text-white transition hover:bg-slate-700 disabled:cursor-not-allowed disabled:opacity-40 dark:bg-white dark:text-slate-900 dark:hover:bg-slate-200">
+              {{ b.saving ? 'Guardando…' : 'Guardar' }}
+            </button>
+            <span *ngIf="b.message" class="text-sm font-medium"
+                  [ngClass]="b.ok ? 'text-emerald-700 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'">{{ b.message }}</span>
+          </div>
+        </div>
+
+        <!-- vista previa -->
+        <div class="rounded-xl bg-[#e5ddd5] p-4 dark:bg-[#0b141a]">
+          <p class="mb-3 text-center text-[11px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+            Así lo recibe el cliente
+          </p>
+          <div class="rounded-lg rounded-tl-none bg-white p-3 shadow-sm dark:bg-[#202c33]">
+            <p class="whitespace-pre-line text-[13px] leading-relaxed text-slate-800 dark:text-slate-100">{{ previewOf(b) || 'Elige una plantilla para ver el mensaje.' }}</p>
+          </div>
+        </div>
+      </div>
+    </article>
+  </section>
+</div>
+
+<!-- ═══ Modal: crear / ver plantilla ═══════════════════════════════════ -->
+<div *ngIf="showModal" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 p-4 backdrop-blur-sm">
+  <div class="max-h-[90vh] w-full max-w-5xl overflow-y-auto rounded-2xl bg-white shadow-2xl dark:bg-slate-800">
+
+    <div class="sticky top-0 z-10 flex items-center justify-between border-b border-slate-200 bg-white px-6 py-4 dark:border-slate-700 dark:bg-slate-800">
+      <h2 class="text-lg font-bold text-slate-900 dark:text-white">{{ isPreviewMode ? 'Vista previa' : 'Nueva plantilla' }}</h2>
+      <button type="button" (click)="closeModal()" aria-label="Cerrar"
+              class="rounded-lg p-1.5 text-slate-400 transition hover:bg-slate-100 hover:text-slate-700 dark:hover:bg-slate-700 dark:hover:text-slate-200">
+        <span class="text-2xl leading-none">&times;</span>
+      </button>
+    </div>
+
+    <div class="grid gap-6 p-6" [ngClass]="isPreviewMode ? 'lg:grid-cols-1' : 'lg:grid-cols-2'">
+
+      <!-- editor -->
+      <div *ngIf="!isPreviewMode" class="space-y-4">
+        <div>
+          <label class="mb-1.5 block text-sm font-medium text-slate-700 dark:text-slate-300" for="tpl-nombre">Nombre</label>
+          <input id="tpl-nombre" type="text" [(ngModel)]="newTemplate.name" placeholder="pago_confirmado"
+                 class="w-full rounded-lg border border-slate-300 p-2.5 text-sm focus:border-emerald-500 focus:ring-emerald-500 dark:border-slate-600 dark:bg-slate-700 dark:text-white">
+          <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">Solo minúsculas, números y guiones bajos.</p>
+        </div>
+
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label class="mb-1.5 block text-sm font-medium text-slate-700 dark:text-slate-300" for="tpl-cat">Categoría</label>
+            <select id="tpl-cat" [(ngModel)]="newTemplate.category"
+                    class="w-full rounded-lg border border-slate-300 p-2.5 text-sm dark:border-slate-600 dark:bg-slate-700 dark:text-white">
+              <option value="UTILITY">Utilidad</option>
+              <option value="MARKETING">Marketing</option>
+              <option value="AUTHENTICATION">Autenticación</option>
+            </select>
+          </div>
+          <div>
+            <label class="mb-1.5 block text-sm font-medium text-slate-700 dark:text-slate-300" for="tpl-lang">Idioma</label>
+            <select id="tpl-lang" [(ngModel)]="newTemplate.language"
+                    class="w-full rounded-lg border border-slate-300 p-2.5 text-sm dark:border-slate-600 dark:bg-slate-700 dark:text-white">
+              <option value="es_CO">Español (Colombia)</option>
+              <option value="es">Español</option>
+              <option value="en">Inglés</option>
+              <option value="pt_BR">Portugués (Brasil)</option>
+            </select>
+          </div>
+        </div>
+
+        <div>
+          <div class="mb-2 flex items-center justify-between">
+            <span class="text-sm font-medium text-slate-700 dark:text-slate-300">Componentes</span>
+            <div class="flex gap-1.5">
+              <button type="button" *ngFor="let c of ['HEADER','BODY','FOOTER','BUTTONS']" (click)="addComponent(c)"
+                      class="rounded-md bg-slate-100 px-2 py-1 text-xs font-medium text-slate-700 transition hover:bg-slate-200 dark:bg-slate-700 dark:text-slate-200 dark:hover:bg-slate-600">
+                + {{ componentLabel(c) }}
+              </button>
+            </div>
+          </div>
+
+          <div *ngFor="let comp of newTemplate.components; let i = index"
+               class="mb-3 rounded-lg border border-slate-200 p-3 dark:border-slate-600">
+            <div class="mb-2 flex items-center justify-between">
+              <span class="text-xs font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400">{{ componentLabel(comp.type) }}</span>
+              <button type="button" (click)="removeComponent(i)" class="text-xs font-semibold text-rose-600 hover:underline">Quitar</button>
+            </div>
+
+            <div *ngIf="comp.type === 'HEADER'" class="space-y-2">
+              <select [(ngModel)]="comp.format" class="w-full rounded-md border border-slate-300 p-2 text-sm dark:border-slate-600 dark:bg-slate-700 dark:text-white">
+                <option value="TEXT">Texto</option>
+                <option value="IMAGE">Imagen</option>
+                <option value="VIDEO">Video</option>
+                <option value="DOCUMENT">Documento</option>
+              </select>
+              <textarea *ngIf="comp.format === 'TEXT'" [(ngModel)]="comp.text" rows="2" (ngModelChange)="updatePreview()"
+                        class="w-full rounded-md border border-slate-300 p-2 text-sm dark:border-slate-600 dark:bg-slate-700 dark:text-white"></textarea>
+              <input *ngIf="comp.format !== 'TEXT'" type="text" [ngModel]="comp.example?.header_handle?.[0]"
+                     (ngModelChange)="setHeaderHandle(comp, $event)" placeholder="URL del archivo"
+                     class="w-full rounded-md border border-slate-300 p-2 text-sm dark:border-slate-600 dark:bg-slate-700 dark:text-white">
+            </div>
+
+            <div *ngIf="comp.type === 'BODY'" class="space-y-2">
+              <textarea [(ngModel)]="comp.text" rows="5" (ngModelChange)="updatePreview()" placeholder="Hola, confirmamos tu pago…"
+                        class="w-full rounded-md border border-slate-300 p-2 text-sm dark:border-slate-600 dark:bg-slate-700 dark:text-white"></textarea>
+              <button type="button" (click)="addVariable()"
+                      class="rounded-md bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-700 transition hover:bg-emerald-100 dark:bg-emerald-900/30 dark:text-emerald-300">
+                + Insertar espacio {{ nextVarIndex }}
+              </button>
+              <div *ngIf="variableExamples.length > 0" class="rounded-md bg-slate-50 p-2 dark:bg-slate-700/50">
+                <p class="mb-1 text-xs font-medium text-slate-600 dark:text-slate-300">Ejemplos para la revisión de Meta:</p>
+                <div *ngFor="let v of variableExamples; let vi = index" class="mb-1 flex items-center gap-2">
+                  <span class="w-12 shrink-0 text-center font-mono text-xs text-slate-500">{{ slotLabel(vi) }}</span>
+                  <input type="text" [(ngModel)]="variableExamples[vi]" (ngModelChange)="updatePreview()"
+                         class="w-full rounded border border-slate-300 p-1 text-sm dark:border-slate-500 dark:bg-slate-600 dark:text-white">
+                </div>
+              </div>
+            </div>
+
+            <textarea *ngIf="comp.type === 'FOOTER'" [(ngModel)]="comp.text" rows="2" (ngModelChange)="updatePreview()"
+                      placeholder="Equipo Netplay" class="w-full rounded-md border border-slate-300 p-2 text-sm dark:border-slate-600 dark:bg-slate-700 dark:text-white"></textarea>
+
+            <div *ngIf="comp.type === 'BUTTONS'" class="space-y-2">
+              <div *ngFor="let btn of comp.buttons; let bi = index" class="flex flex-wrap items-center gap-2">
+                <select [(ngModel)]="btn.type" (ngModelChange)="updatePreview()" class="rounded-md border border-slate-300 p-1.5 text-sm dark:border-slate-600 dark:bg-slate-700 dark:text-white">
+                  <option value="QUICK_REPLY">Respuesta rápida</option>
+                  <option value="URL">Enlace</option>
+                  <option value="PHONE_NUMBER">Teléfono</option>
+                </select>
+                <input type="text" [(ngModel)]="btn.text" (ngModelChange)="updatePreview()" placeholder="Texto"
+                       class="min-w-0 flex-1 rounded-md border border-slate-300 p-1.5 text-sm dark:border-slate-600 dark:bg-slate-700 dark:text-white">
+                <input *ngIf="btn.type === 'URL'" type="text" [(ngModel)]="btn.url" placeholder="https://…"
+                       class="min-w-0 flex-1 rounded-md border border-slate-300 p-1.5 text-sm dark:border-slate-600 dark:bg-slate-700 dark:text-white">
+                <input *ngIf="btn.type === 'PHONE_NUMBER'" type="text" [(ngModel)]="btn.phone_number" placeholder="+57300…"
+                       class="min-w-0 flex-1 rounded-md border border-slate-300 p-1.5 text-sm dark:border-slate-600 dark:bg-slate-700 dark:text-white">
+                <button type="button" (click)="removeButton(comp, bi)" aria-label="Quitar botón" class="px-1 text-lg text-rose-500">&times;</button>
+              </div>
+              <button type="button" (click)="addButton(comp)"
+                      class="rounded-md bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-700 transition hover:bg-slate-200 dark:bg-slate-700 dark:text-slate-200">
+                + Agregar botón
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div class="flex items-center gap-3 border-t border-slate-200 pt-4 dark:border-slate-700">
+          <button type="button" (click)="submitTemplate()" [disabled]="submitting"
+                  class="rounded-lg bg-emerald-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-emerald-700 disabled:opacity-50">
+            {{ submitting ? 'Enviando a Meta…' : 'Enviar a revisión de Meta' }}
+          </button>
+        </div>
+
+        <p *ngIf="submitResult" class="rounded-lg px-3 py-2.5 text-sm"
+           [ngClass]="submitResult.ok ? 'bg-emerald-50 text-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-300' : 'bg-rose-50 text-rose-700 dark:bg-rose-950/40 dark:text-rose-300'">
+          {{ submitResult.message }}
+        </p>
+      </div>
+
+      <!-- previsualización -->
+      <div class="rounded-xl bg-[#e5ddd5] p-5 dark:bg-[#0b141a]">
+        <p class="mb-3 text-center text-[11px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">Vista previa</p>
+        <div class="mx-auto max-w-sm space-y-2 rounded-lg rounded-tl-none bg-white p-3 shadow-sm dark:bg-[#202c33]">
+          <ng-container *ngFor="let comp of previewComponents">
+            <p *ngIf="comp.type === 'HEADER' && comp.format === 'TEXT'"
+               class="border-b border-slate-100 pb-2 text-sm font-bold text-slate-900 dark:border-slate-700 dark:text-white">{{ replaceVars(comp.text) }}</p>
+            <div *ngIf="comp.type === 'HEADER' && comp.format !== 'TEXT'"
+                 class="flex h-28 items-center justify-center rounded-lg bg-slate-100 text-xs font-medium text-slate-400 dark:bg-slate-700">
+              {{ comp.format === 'IMAGE' ? 'Imagen' : comp.format === 'VIDEO' ? 'Video' : 'Documento' }}
+            </div>
+            <p *ngIf="comp.type === 'BODY'" class="whitespace-pre-line text-[13px] leading-relaxed text-slate-800 dark:text-slate-100">{{ replaceVars(comp.text) }}</p>
+            <p *ngIf="comp.type === 'FOOTER'" class="border-t border-slate-100 pt-1.5 text-[11px] text-slate-500 dark:border-slate-700 dark:text-slate-400">{{ comp.text }}</p>
+            <div *ngIf="comp.type === 'BUTTONS'" class="space-y-1 pt-1">
+              <p *ngFor="let btn of comp.buttons"
+                 class="border-t border-slate-100 pt-2 text-center text-sm font-semibold text-sky-600 dark:border-slate-700 dark:text-sky-400">
+                {{ btn.text }}{{ btn.type === 'URL' ? ' ↗' : btn.type === 'PHONE_NUMBER' ? ' ☎' : '' }}
+              </p>
+            </div>
+          </ng-container>
+        </div>
+        <p class="mt-4 text-center text-xs text-slate-500 dark:text-slate-400">Es un aproximado. Meta ajusta el formato final.</p>
+      </div>
+    </div>
+  </div>
+</div>

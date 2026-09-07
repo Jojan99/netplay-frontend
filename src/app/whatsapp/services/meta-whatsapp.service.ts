@@ -38,6 +38,15 @@ export class MetaWhatsappService {
     return this.http.delete(`${this.base}/templates/${name}`, this.h());
   }
 
+  // ── Automatizaciones (evento → plantilla) ────────────────────────────────────
+  getTemplateBindings(): Observable<any> {
+    return this.http.get(`${this.base}/template-bindings`, this.h());
+  }
+
+  saveTemplateBinding(data: any): Observable<any> {
+    return this.http.post(`${this.base}/template-bindings`, JSON.stringify(data), this.h());
+  }
+
   // ── Conversation Window ──────────────────────────────────────────────────────
   checkWindow(phone: string): Observable<any> {
     return this.http.get(`${this.base}/conversation-window/${phone}`, this.h());
