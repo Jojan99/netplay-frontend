@@ -51,7 +51,10 @@ export class WaMetaTemplatesComponent implements OnInit {
   submitResult: { ok: boolean; message: string } | null = null;
 
   newTemplate: any = { name: '', category: 'UTILITY', language: 'es_CO', components: [] };
+  /** Valores de ejemplo indexados por número de espacio menos uno. */
   variableExamples: string[] = [];
+  /** Espacios que el texto realmente usa hoy, ordenados. */
+  usedSlots: number[] = [];
   previewComponents: TemplateComponent[] = [];
 
   constructor(private meta: MetaWhatsappService) {}
@@ -257,6 +260,66 @@ export class WaMetaTemplatesComponent implements OnInit {
     });
   }
 
+  // ── Variables del editor ───────────────────────────────────────────────────
+
+  /**
+   * Lee el texto y deja abajo exactamente los espacios que el texto usa.
+   *
+   * Pegar una plantilla con {{1}} y {{2}} crea sus dos campos solo; borrar un
+   * {{2}} del texto le quita su campo. El valor que ya se había escrito se
+   * conserva por si vuelve a aparecer.
+   */
+  private syncVariables(): void {
+    const text: string = this.newTemplate.components
+      .filter((c: any) => c.type === 'BODY' || (c.type === 'HEADER' && c.format === 'TEXT'))
+      .map((c: any) => c.text || '')
+      .join('\n');
+
+    const found = Array.from(text.matchAll(/\{\{\s*(\d+)\s*\}\}/g))
+      .map(m => parseInt(m[1], 10))
+      .filter(n => n > 0);
+
+    this.usedSlots = Array.from(new Set(found)).sort((a, b) => a - b);
+
+    const max = this.usedSlots.length ? Math.max(...this.usedSlots) : 0;
+    while (this.variableExamples.length < max) this.variableExamples.push('');
+  }
+
+  /** Meta exige que las variables vayan seguidas desde 1, sin huecos. */
+  get slotsAreSequential(): boolean {
+    return this.usedSlots.every((n, i) => n === i + 1);
+  }
+
+  /** Renumera los espacios del texto para que queden 1, 2, 3… sin huecos. */
+  renumberVariables(): void {
+    const orden = new Map<number, number>();
+    this.usedSlots.forEach((slot, i) => orden.set(slot, i + 1));
+
+    const valores = this.usedSlots.map(slot => this.variableExamples[slot - 1] ?? '');
+
+    this.newTemplate.components.forEach((c: any) => {
+      if (typeof c.text !== 'string') return;
+      c.text = c.text.replace(/\{\{\s*(\d+)\s*\}\}/g, (m: string, d: string) => {
+        const nuevo = orden.get(parseInt(d, 10));
+        return nuevo ? `{{${nuevo}}}` : m;
+      });
+    });
+
+    this.variableExamples = valores;
+    this.onBodyChange();
+  }
+
+  /** Cualquier cambio de texto vuelve a sincronizar los campos de ejemplo. */
+  onBodyChange(): void {
+    this.syncVariables();
+    this.updatePreview();
+  }
+
+  /** Falta algún valor de ejemplo: Meta los pide todos para revisar. */
+  get missingExamples(): number[] {
+    return this.usedSlots.filter(n => !(this.variableExamples[n - 1] || '').trim());
+  }
+
   // ── Modal ──────────────────────────────────────────────────────────────────
 
   openModal(): void {
@@ -265,7 +328,8 @@ export class WaMetaTemplatesComponent implements OnInit {
     this.submitResult = null;
     this.newTemplate = { name: '', category: 'UTILITY', language: 'es_CO', components: [{ type: 'BODY', text: '' }] };
     this.variableExamples = [];
-    this.updatePreview();
+    this.usedSlots = [];
+    this.onBodyChange();
   }
 
   closeModal(): void {
@@ -279,6 +343,9 @@ export class WaMetaTemplatesComponent implements OnInit {
     this.previewComponents = t.components || [];
     this.variableExamples = (t.components || [])
       .find((c: any) => c.type === 'BODY')?.example?.body_text?.[0] || [];
+    this.usedSlots = Array.from(
+      new Set(Array.from(this.bodyOf(t).matchAll(/\{\{\s*(\d+)\s*\}\}/g)).map(m => parseInt(m[1], 10)))
+    ).sort((a, b) => a - b);
   }
 
   addComponent(type: string): void {
@@ -310,14 +377,13 @@ export class WaMetaTemplatesComponent implements OnInit {
   }
 
   get nextVarIndex(): number {
-    return this.variableExamples.length + 1;
+    return this.usedSlots.length ? Math.max(...this.usedSlots) + 1 : 1;
   }
 
   addVariable(): void {
-    this.variableExamples.push('');
     const body = this.newTemplate.components.find((c: any) => c.type === 'BODY');
-    if (body) body.text = (body.text || '') + `{{${this.variableExamples.length}}}`;
-    this.updatePreview();
+    if (body) body.text = (body.text || '') + `{{${this.nextVarIndex}}}`;
+    this.onBodyChange();
   }
 
   replaceVars(text: string = ''): string {
@@ -348,11 +414,8 @@ export class WaMetaTemplatesComponent implements OnInit {
 
       if (comp.type === 'BODY') {
         c.text = comp.text;
-        const found = (comp.text || '').match(/\{\{(\d+)\}\}/g);
-        if (found) {
-          const numbers: number[] = found.map((m: string) => parseInt(m.replace(/[^\d]/g, ''), 10));
-          const unique: number[] = Array.from(new Set<number>(numbers)).sort((a, b) => a - b);
-          c.example = { body_text: [unique.map((i: number) => this.variableExamples[i - 1] || `Valor ${i}`)] };
+        if (this.usedSlots.length) {
+          c.example = { body_text: [this.usedSlots.map(n => this.variableExamples[n - 1] || `Valor ${n}`)] };
         }
       }
 
