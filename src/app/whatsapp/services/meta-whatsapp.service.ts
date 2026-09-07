@@ -67,6 +67,56 @@ export class MetaWhatsappService {
     return this.http.post(`${this.base}/validate-phone`, JSON.stringify({ phone }), this.h());
   }
 
+  // ── Automatizaciones programadas ────────────────────────────────────────────
+  /** A cuántos clientes les saldría hoy este aviso. */
+  previewBinding(event: string): Observable<any> {
+    return this.http.get(`${this.base}/template-bindings/${event}/preview`, this.h());
+  }
+
+  /** Manda la plantilla del aviso a un número, con datos de ejemplo. */
+  testBinding(data: any): Observable<any> {
+    return this.http.post(`${this.base}/template-bindings/test`, JSON.stringify(data), this.h());
+  }
+
+  // ── Comunicados (envíos masivos) ────────────────────────────────────────────
+  campaignOptions(): Observable<any> {
+    return this.http.get(`${this.base}/campaigns/options`, this.h());
+  }
+
+  campaigns(): Observable<any> {
+    return this.http.get(`${this.base}/campaigns`, this.h());
+  }
+
+  campaign(id: number): Observable<any> {
+    return this.http.get(`${this.base}/campaigns/${id}`, this.h());
+  }
+
+  /** Cuántos recibirían con estos filtros, sin enviar nada. */
+  campaignAudience(params: string): Observable<any> {
+    return this.http.get(`${this.base}/campaigns/audience?${params}`, this.h());
+  }
+
+  /** Clientes que cumplen los filtros, para ir marcando exclusiones. */
+  campaignClients(params: string): Observable<any> {
+    return this.http.get(`${this.base}/campaigns/clients?${params}`, this.h());
+  }
+
+  saveCampaign(data: any): Observable<any> {
+    return this.http.post(`${this.base}/campaigns`, JSON.stringify(data), this.h());
+  }
+
+  testCampaign(id: number, phone: string): Observable<any> {
+    return this.http.post(`${this.base}/campaigns/${id}/test`, JSON.stringify({ phone }), this.h());
+  }
+
+  sendCampaign(id: number): Observable<any> {
+    return this.http.post(`${this.base}/campaigns/${id}/send`, '{}', this.h());
+  }
+
+  cancelCampaign(id: number): Observable<any> {
+    return this.http.post(`${this.base}/campaigns/${id}/cancel`, '{}', this.h());
+  }
+
   // ── Bot Config ───────────────────────────────────────────────────────────────
   getBotConfig(): Observable<any> {
     return this.http.get(`${environment.rootUrl}api/company/whatsapp/bot-config`, this.h());

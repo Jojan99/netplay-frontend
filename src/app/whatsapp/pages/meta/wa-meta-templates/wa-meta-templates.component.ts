@@ -17,15 +17,24 @@ interface Binding {
   label: string;
   description: string;
   suggested: string | null;
+  /** Los avisos programados salen a una hora; los demás reaccionan a un hecho. */
+  programado: boolean;
   template_name: string | null;
   language: string;
   enabled: boolean;
   params: string[];
+  /** Cuándo sale, para los programados: referencia y días. */
+  config: any;
   slots: number;
   dirty: boolean;
   saving: boolean;
   ok: boolean;
   message: string;
+  /** A cuántos les saldría hoy, para no activarlo a ciegas. */
+  previewTotal: number | null;
+  previewing: boolean;
+  testPhone: string;
+  testing: boolean;
 }
 
 interface Variable { key: string; label: string; example: string; }
@@ -44,6 +53,8 @@ export class WaMetaTemplatesComponent implements OnInit {
   templates: any[] = [];
   bindings: Binding[] = [];
   variables: Variable[] = [];
+  /** Contra qué fecha se cuentan los días de los avisos programados. */
+  referencias: { key: string; label: string; description: string }[] = [];
 
   showModal = false;
   isPreviewMode = false;
@@ -79,14 +90,20 @@ export class WaMetaTemplatesComponent implements OnInit {
     this.meta.getTemplateBindings().subscribe({
       next: (r: any) => {
         this.variables = r.variables || [];
+        this.referencias = r.referencias || [];
         this.bindings = (r.bindings || []).map((b: any) => ({
           ...b,
           params: b.params || [],
+          config: b.config || {},
           slots: 0,
           dirty: false,
           saving: false,
           ok: true,
           message: '',
+          previewTotal: null,
+          previewing: false,
+          testPhone: '',
+          testing: false,
         }));
         this.loadingBindings = false;
         this.syncSlots();
@@ -244,6 +261,7 @@ export class WaMetaTemplatesComponent implements OnInit {
       language: this.findTemplate(b.template_name)?.language || b.language || 'es_CO',
       enabled: b.enabled,
       params: b.params.slice(0, b.slots),
+      config: b.programado ? b.config : null,
     }).subscribe({
       next: () => {
         b.saving = false;
@@ -251,11 +269,50 @@ export class WaMetaTemplatesComponent implements OnInit {
         b.ok = true;
         b.message = 'Guardado';
         setTimeout(() => (b.message = ''), 3000);
+        if (b.programado) this.previewBinding(b);
       },
       error: (e: any) => {
         b.saving = false;
         b.ok = false;
         b.message = e.error?.error || 'No se pudo guardar';
+      },
+    });
+  }
+
+  // ── Avisos programados ─────────────────────────────────────────────────────
+
+  /** A cuántos clientes les saldría hoy este aviso con los días configurados. */
+  previewBinding(b: Binding): void {
+    b.previewing = true;
+
+    this.meta.previewBinding(b.event).subscribe({
+      next: (r: any) => { b.previewTotal = r?.total ?? 0; b.previewing = false; },
+      error: () => { b.previewTotal = null; b.previewing = false; },
+    });
+  }
+
+  /** Manda la plantilla del aviso a un número, con datos de ejemplo. */
+  testBinding(b: Binding): void {
+    if (!b.template_name || b.testPhone.replace(/\D/g, '').length < 10) return;
+
+    b.testing = true;
+    b.message = '';
+
+    this.meta.testBinding({
+      phone: b.testPhone,
+      template_name: b.template_name,
+      language: this.findTemplate(b.template_name)?.language || b.language || 'es_CO',
+      params: b.params.slice(0, b.slots),
+    }).subscribe({
+      next: () => {
+        b.testing = false;
+        b.ok = true;
+        b.message = 'Prueba enviada al ' + b.testPhone;
+      },
+      error: (e: any) => {
+        b.testing = false;
+        b.ok = false;
+        b.message = e.error?.error || 'No se pudo enviar la prueba';
       },
     });
   }

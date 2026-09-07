@@ -1,0 +1,367 @@
+<div class="mx-auto max-w-7xl px-4 py-8 sm:px-6">
+
+  <!-- ── Encabezado ─────────────────────────────────────────────────── -->
+  <header class="mb-7">
+    <p class="mb-1 text-xs font-semibold uppercase tracking-[0.14em] text-emerald-600 dark:text-emerald-400">
+      WhatsApp Business &middot; Meta
+    </p>
+    <h1 class="text-2xl font-bold tracking-tight text-slate-900 dark:text-white">Comunicados</h1>
+    <p class="mt-1 max-w-2xl text-sm text-slate-500 dark:text-slate-400">
+      Manda una plantilla aprobada a tus clientes. Cada mensaje tiene costo en Meta,
+      así que primero se prueba con un número y después se envía.
+    </p>
+  </header>
+
+  <!-- ── Pestañas ───────────────────────────────────────────────────── -->
+  <div class="mb-6 border-b border-slate-200 dark:border-slate-700">
+    <nav class="-mb-px flex gap-6">
+      <button type="button" (click)="vista = 'nuevo'"
+              class="border-b-2 px-1 pb-3 text-sm font-medium transition"
+              [ngClass]="vista === 'nuevo'
+                ? 'border-emerald-600 text-emerald-700 dark:border-emerald-400 dark:text-emerald-400'
+                : 'border-transparent text-slate-500 hover:border-slate-300 hover:text-slate-700 dark:text-slate-400'">
+        Nuevo comunicado
+      </button>
+      <button type="button" (click)="vista = 'historial'; recargarHistorial()"
+              class="border-b-2 px-1 pb-3 text-sm font-medium transition"
+              [ngClass]="vista === 'historial'
+                ? 'border-emerald-600 text-emerald-700 dark:border-emerald-400 dark:text-emerald-400'
+                : 'border-transparent text-slate-500 hover:border-slate-300 hover:text-slate-700 dark:text-slate-400'">
+        Enviados
+        <span *ngIf="campaigns.length"
+              class="ml-1.5 rounded-full bg-slate-200 px-2 py-0.5 text-xs text-slate-600 dark:bg-slate-700 dark:text-slate-300">
+          {{ campaigns.length }}
+        </span>
+      </button>
+    </nav>
+  </div>
+
+  <!-- ── Aviso ──────────────────────────────────────────────────────── -->
+  <div *ngIf="aviso" class="mb-6 rounded-lg border px-4 py-3 text-sm"
+       [ngClass]="aviso.ok
+         ? 'border-emerald-200 bg-emerald-50 text-emerald-800 dark:border-emerald-800 dark:bg-emerald-950 dark:text-emerald-200'
+         : 'border-red-200 bg-red-50 text-red-800 dark:border-red-800 dark:bg-red-950 dark:text-red-200'">
+    {{ aviso.texto }}
+  </div>
+
+  <!-- ═══════════════════ NUEVO COMUNICADO ═══════════════════════════ -->
+  <div *ngIf="vista === 'nuevo'" class="grid gap-6 lg:grid-cols-[1fr_20rem]">
+
+    <div class="space-y-6">
+
+      <!-- ── Paso 1: la plantilla ──────────────────────────────────── -->
+      <section class="rounded-xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-700 dark:bg-slate-800">
+        <div class="mb-4 flex items-center gap-3">
+          <span class="flex h-7 w-7 items-center justify-center rounded-full bg-emerald-600 text-sm font-bold text-white">1</span>
+          <h2 class="text-base font-semibold text-slate-900 dark:text-white">Qué vas a mandar</h2>
+        </div>
+
+        <label class="mb-1.5 block text-sm font-medium text-slate-700 dark:text-slate-300">Plantilla</label>
+        <select [ngModel]="plantilla" (ngModelChange)="elegirPlantilla($event)"
+                class="mb-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 dark:border-slate-600 dark:bg-slate-900 dark:text-white">
+          <option value="">Elige una plantilla aprobada…</option>
+          <option *ngFor="let t of templates" [value]="t.name">{{ t.name }} ({{ t.language }})</option>
+        </select>
+        <p *ngIf="!cargando && !templates.length" class="text-xs text-amber-600 dark:text-amber-400">
+          No hay plantillas aprobadas todavía. Meta debe aprobarlas antes de poder usarlas.
+        </p>
+
+        <div *ngIf="plantilla" class="mt-4">
+          <label class="mb-1.5 block text-sm font-medium text-slate-700 dark:text-slate-300">
+            Nombre para identificarlo <span class="font-normal text-slate-400">(opcional)</span>
+          </label>
+          <input type="text" [(ngModel)]="nombre" placeholder="Ej: Aviso de mantenimiento septiembre"
+                 class="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-900 dark:text-white">
+        </div>
+
+        <!-- Los espacios de la plantilla -->
+        <div *ngIf="slots.length" class="mt-5 border-t border-slate-100 pt-5 dark:border-slate-700">
+          <p class="mb-3 text-sm font-medium text-slate-700 dark:text-slate-300">
+            Qué va en cada espacio
+          </p>
+
+          <div class="space-y-3">
+            <div *ngFor="let s of slots; let i = index"
+                 class="rounded-lg border border-slate-200 p-3 dark:border-slate-700">
+              <div class="mb-2 flex items-center gap-2">
+                <span class="rounded bg-slate-100 px-1.5 py-0.5 font-mono text-xs text-slate-600 dark:bg-slate-700 dark:text-slate-300">
+                  {{ etiquetaSlot(i) }}
+                </span>
+
+                <select [(ngModel)]="s.tipo" (ngModelChange)="cambioContenido()"
+                        class="rounded-lg border border-slate-300 bg-white px-2 py-1 text-xs dark:border-slate-600 dark:bg-slate-900 dark:text-white">
+                  <option value="variable">Dato del cliente</option>
+                  <option value="fijo">Texto que yo escribo</option>
+                </select>
+              </div>
+
+              <select *ngIf="s.tipo === 'variable'" [(ngModel)]="s.variable" (ngModelChange)="cambioContenido()"
+                      class="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-900 dark:text-white">
+                <option *ngFor="let v of variables" [value]="v.key">{{ v.label }} — ej: {{ v.example }}</option>
+              </select>
+
+              <textarea *ngIf="s.tipo === 'fijo'" [(ngModel)]="s.valor" (ngModelChange)="cambioContenido()" rows="3"
+                        placeholder="Escribe aquí el mensaje que verán todos los clientes…"
+                        class="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-900 dark:text-white"></textarea>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ── Paso 2: a quién ───────────────────────────────────────── -->
+      <section *ngIf="plantilla" class="rounded-xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-700 dark:bg-slate-800">
+        <div class="mb-4 flex items-center gap-3">
+          <span class="flex h-7 w-7 items-center justify-center rounded-full bg-emerald-600 text-sm font-bold text-white">2</span>
+          <h2 class="text-base font-semibold text-slate-900 dark:text-white">A quién se lo mandas</h2>
+        </div>
+
+        <div class="grid gap-4 sm:grid-cols-3">
+          <label class="flex items-start gap-2 rounded-lg border border-slate-200 p-3 dark:border-slate-700">
+            <input type="checkbox" [(ngModel)]="filtros.solo_vigentes" (ngModelChange)="contar()"
+                   class="mt-0.5 h-4 w-4 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500">
+            <span>
+              <span class="block text-sm font-medium text-slate-700 dark:text-slate-300">Solo vigentes</span>
+              <span class="block text-xs text-slate-500 dark:text-slate-400">Deja fuera a los retirados</span>
+            </span>
+          </label>
+
+          <div>
+            <label class="mb-1.5 block text-sm font-medium text-slate-700 dark:text-slate-300">Servicio</label>
+            <select [(ngModel)]="filtros.servicio" (ngModelChange)="contar()"
+                    class="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-900 dark:text-white">
+              <option value="todos">Activos y suspendidos</option>
+              <option value="activo">Solo con servicio</option>
+              <option value="suspendido">Solo suspendidos</option>
+            </select>
+          </div>
+
+          <div>
+            <label class="mb-1.5 block text-sm font-medium text-slate-700 dark:text-slate-300">Facturas</label>
+            <select [(ngModel)]="filtros.deuda" (ngModelChange)="contar()"
+                    class="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-900 dark:text-white">
+              <option value="todos">Deban o no</option>
+              <option value="con">Solo los que deben</option>
+              <option value="sin">Solo los que están al día</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Conteo -->
+        <div class="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-lg bg-slate-50 px-4 py-3 dark:bg-slate-900">
+          <p class="text-sm text-slate-700 dark:text-slate-300">
+            <span *ngIf="contando" class="text-slate-400">Contando…</span>
+            <span *ngIf="!contando">
+              Le llegaría a
+              <strong class="text-lg font-bold text-emerald-700 dark:text-emerald-400">{{ totalDestinatarios }}</strong>
+              cliente(s)
+            </span>
+            <span *ngIf="excluidos.length" class="ml-1 text-slate-500 dark:text-slate-400">
+              &middot; {{ excluidos.length }} excluido(s)
+            </span>
+          </p>
+
+          <button type="button" (click)="abrirClientes()"
+                  class="rounded-lg border border-slate-300 px-3 py-1.5 text-sm font-medium text-slate-700 transition hover:bg-white dark:border-slate-600 dark:text-slate-300 dark:hover:bg-slate-800">
+            Excluir clientes
+          </button>
+        </div>
+
+        <!-- Excluidos -->
+        <div *ngIf="excluidos.length" class="mt-3 flex flex-wrap gap-2">
+          <span *ngFor="let id of excluidos"
+                class="inline-flex items-center gap-1.5 rounded-full bg-red-50 px-2.5 py-1 text-xs text-red-700 dark:bg-red-950 dark:text-red-300">
+            {{ nombreExcluido(id) }}
+            <button type="button" (click)="incluir(id)" class="font-bold hover:text-red-900">&times;</button>
+          </span>
+        </div>
+
+        <!-- Buscador de clientes -->
+        <div *ngIf="mostrarClientes" class="mt-4 rounded-lg border border-slate-200 dark:border-slate-700">
+          <div class="flex gap-2 border-b border-slate-200 p-3 dark:border-slate-700">
+            <input type="text" [(ngModel)]="buscador" (keyup.enter)="buscarClientes()"
+                   placeholder="Buscar por nombre, cédula o teléfono…"
+                   class="flex-1 rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-900 dark:text-white">
+            <button type="button" (click)="buscarClientes()"
+                    class="rounded-lg bg-slate-700 px-3 py-2 text-sm font-medium text-white hover:bg-slate-800">
+              Buscar
+            </button>
+            <button type="button" (click)="mostrarClientes = false"
+                    class="rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-600 dark:border-slate-600 dark:text-slate-300">
+              Cerrar
+            </button>
+          </div>
+
+          <div class="max-h-72 overflow-y-auto">
+            <p *ngIf="cargandoClientes" class="p-4 text-sm text-slate-400">Buscando…</p>
+            <p *ngIf="!cargandoClientes && !clientes.length" class="p-4 text-sm text-slate-400">
+              Ningún cliente coincide.
+            </p>
+            <div *ngFor="let c of clientes"
+                 class="flex items-center justify-between gap-3 border-b border-slate-100 px-4 py-2.5 last:border-0 dark:border-slate-700">
+              <div class="min-w-0">
+                <p class="truncate text-sm font-medium text-slate-800 dark:text-slate-200">{{ c.nombre }}</p>
+                <p class="truncate text-xs text-slate-500 dark:text-slate-400">
+                  {{ c.dni }} &middot; {{ c.phone }}<span *ngIf="c.plan"> &middot; {{ c.plan }}</span>
+                </p>
+              </div>
+              <button type="button" (click)="excluir(c)"
+                      [disabled]="excluidos.includes(c.user_id)"
+                      class="shrink-0 rounded-lg border border-red-200 px-2.5 py-1 text-xs font-medium text-red-700 transition hover:bg-red-50 disabled:opacity-40 dark:border-red-800 dark:text-red-300">
+                {{ excluidos.includes(c.user_id) ? 'Excluido' : 'Excluir' }}
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ── Paso 3: probar y enviar ───────────────────────────────── -->
+      <section *ngIf="plantilla" class="rounded-xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-700 dark:bg-slate-800">
+        <div class="mb-4 flex items-center gap-3">
+          <span class="flex h-7 w-7 items-center justify-center rounded-full bg-emerald-600 text-sm font-bold text-white">3</span>
+          <h2 class="text-base font-semibold text-slate-900 dark:text-white">Pruébalo antes</h2>
+        </div>
+
+        <p class="mb-3 text-sm text-slate-500 dark:text-slate-400">
+          Mándate el mensaje a ti primero. Hasta que no lo hagas, el envío queda bloqueado.
+        </p>
+
+        <div class="flex flex-wrap gap-2">
+          <input type="text" [(ngModel)]="telefonoPrueba" placeholder="3245127869"
+                 class="min-w-[12rem] flex-1 rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-900 dark:text-white">
+          <button type="button" (click)="probar()" [disabled]="!puedeProbar || probando"
+                  class="rounded-lg bg-slate-700 px-4 py-2 text-sm font-semibold text-white transition hover:bg-slate-800 disabled:opacity-40">
+            {{ probando ? 'Enviando…' : 'Enviar prueba' }}
+          </button>
+        </div>
+
+        <!-- Envío real, solo tras la prueba -->
+        <div *ngIf="probada" class="mt-5 border-t border-slate-100 pt-5 dark:border-slate-700">
+          <div *ngIf="!confirmando" class="flex flex-wrap items-center gap-3">
+            <p class="flex-1 text-sm text-emerald-700 dark:text-emerald-400">
+              Prueba enviada. Si se vio bien, ya puedes mandarlo.
+            </p>
+            <button type="button" (click)="confirmando = true" [disabled]="!totalDestinatarios"
+                    class="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-emerald-700 disabled:opacity-40">
+              Enviar a {{ totalDestinatarios }} cliente(s)
+            </button>
+          </div>
+
+          <div *ngIf="confirmando"
+               class="rounded-lg border border-amber-300 bg-amber-50 p-4 dark:border-amber-700 dark:bg-amber-950">
+            <p class="mb-1 text-sm font-semibold text-amber-900 dark:text-amber-200">
+              Vas a enviar «{{ plantilla }}» a {{ totalDestinatarios }} cliente(s).
+            </p>
+            <p class="mb-3 text-xs text-amber-800 dark:text-amber-300">
+              Meta te cobra cada mensaje. Una vez enviados no se pueden retirar.
+            </p>
+            <div class="flex gap-2">
+              <button type="button" (click)="confirmando = false"
+                      class="rounded-lg border border-amber-400 px-3 py-1.5 text-sm font-medium text-amber-900 dark:text-amber-200">
+                Cancelar
+              </button>
+              <button type="button" (click)="enviar()" [disabled]="enviando"
+                      class="rounded-lg bg-amber-600 px-4 py-1.5 text-sm font-semibold text-white hover:bg-amber-700 disabled:opacity-40">
+                {{ enviando ? 'Iniciando…' : 'Sí, enviar' }}
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <!-- ── Vista previa en teléfono ─────────────────────────────────── -->
+    <aside *ngIf="plantilla" class="lg:sticky lg:top-6 lg:self-start">
+      <p class="mb-3 text-sm font-medium text-slate-700 dark:text-slate-300">Así lo verá el cliente</p>
+
+      <div class="mx-auto w-full max-w-[20rem] rounded-[2rem] bg-slate-300 p-2 shadow-xl dark:bg-slate-600">
+        <div class="overflow-hidden rounded-[1.55rem] bg-[#e5ddd5] dark:bg-[#0b141a]">
+          <div class="flex items-center gap-2 bg-[#075e54] px-3 py-2.5 text-white">
+            <div class="flex h-7 w-7 items-center justify-center rounded-full bg-white/20 text-xs font-bold">N</div>
+            <div class="min-w-0">
+              <p class="truncate text-sm font-semibold">Netplay</p>
+              <p class="text-[10px] opacity-80">en línea</p>
+            </div>
+          </div>
+
+          <div class="min-h-[16rem] p-3">
+            <div class="ml-auto max-w-[92%] rounded-lg rounded-tr-none bg-[#dcf8c6] px-3 py-2 shadow-sm dark:bg-[#005c4b]">
+              <p class="whitespace-pre-wrap break-words text-[13px] leading-snug text-slate-800 dark:text-slate-100">{{ vistaPrevia }}</p>
+              <p class="mt-1 text-right text-[10px] text-slate-500 dark:text-slate-300">12:00 &#10003;&#10003;</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </aside>
+  </div>
+
+  <!-- ═══════════════════ HISTORIAL ══════════════════════════════════ -->
+  <div *ngIf="vista === 'historial'" class="grid gap-6 lg:grid-cols-[1fr_22rem]">
+
+    <div class="rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-800">
+      <p *ngIf="!campaigns.length" class="p-6 text-sm text-slate-400">
+        Todavía no has enviado ningún comunicado.
+      </p>
+
+      <div *ngFor="let c of campaigns"
+           (click)="verDetalle(c.id)"
+           class="cursor-pointer border-b border-slate-100 px-5 py-4 transition last:border-0 hover:bg-slate-50 dark:border-slate-700 dark:hover:bg-slate-700/40">
+        <div class="flex flex-wrap items-center justify-between gap-2">
+          <p class="font-medium text-slate-800 dark:text-slate-100">
+            {{ c.name || c.template_name }}
+          </p>
+          <span class="rounded-full px-2.5 py-0.5 text-xs font-medium" [ngClass]="colorEstado(c.status)">
+            {{ etiquetaEstado(c.status) }}
+          </span>
+        </div>
+        <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">
+          {{ c.template_name }} &middot; {{ c.recipients_count }} destinatario(s)
+          <span *ngIf="c.sent_count"> &middot; {{ c.sent_count }} enviado(s)</span>
+          <span *ngIf="c.failed_count" class="text-red-600 dark:text-red-400"> &middot; {{ c.failed_count }} con error</span>
+        </p>
+      </div>
+    </div>
+
+    <!-- Detalle -->
+    <aside *ngIf="detalle" class="rounded-xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-700 dark:bg-slate-800 lg:sticky lg:top-6 lg:self-start">
+      <h3 class="mb-3 text-base font-semibold text-slate-900 dark:text-white">
+        {{ detalle.campaign?.name || detalle.campaign?.template_name }}
+      </h3>
+
+      <div class="mb-4">
+        <div class="mb-1 flex justify-between text-xs text-slate-500 dark:text-slate-400">
+          <span>Avance</span>
+          <span>{{ progreso(detalle) }}%</span>
+        </div>
+        <div class="h-2 overflow-hidden rounded-full bg-slate-200 dark:bg-slate-700">
+          <div class="h-full rounded-full bg-emerald-600 transition-all" [style.width.%]="progreso(detalle)"></div>
+        </div>
+      </div>
+
+      <dl class="mb-4 grid grid-cols-2 gap-3 text-sm">
+        <div><dt class="text-xs text-slate-500 dark:text-slate-400">Enviados</dt>
+             <dd class="font-semibold text-emerald-700 dark:text-emerald-400">{{ detalle.progreso?.enviados }}</dd></div>
+        <div><dt class="text-xs text-slate-500 dark:text-slate-400">Pendientes</dt>
+             <dd class="font-semibold text-slate-700 dark:text-slate-300">{{ detalle.progreso?.pendientes }}</dd></div>
+        <div><dt class="text-xs text-slate-500 dark:text-slate-400">Con error</dt>
+             <dd class="font-semibold text-red-600 dark:text-red-400">{{ detalle.progreso?.fallidos }}</dd></div>
+        <div><dt class="text-xs text-slate-500 dark:text-slate-400">Total</dt>
+             <dd class="font-semibold text-slate-700 dark:text-slate-300">{{ detalle.progreso?.total }}</dd></div>
+      </dl>
+
+      <button *ngIf="detalle.campaign?.status === 'sending'" type="button" (click)="cancelar(detalle.campaign.id)"
+              class="mb-4 w-full rounded-lg border border-red-300 px-3 py-2 text-sm font-medium text-red-700 transition hover:bg-red-50 dark:border-red-800 dark:text-red-300">
+        Detener envío
+      </button>
+
+      <div *ngIf="detalle.fallidos?.length">
+        <p class="mb-2 text-sm font-medium text-slate-700 dark:text-slate-300">Los que fallaron</p>
+        <div class="max-h-56 space-y-2 overflow-y-auto">
+          <div *ngFor="let f of detalle.fallidos" class="rounded-lg bg-red-50 p-2 text-xs dark:bg-red-950">
+            <p class="font-medium text-red-800 dark:text-red-300">{{ f.name }} &middot; {{ f.phone }}</p>
+            <p class="text-red-600 dark:text-red-400">{{ f.error }}</p>
+          </div>
+        </div>
+      </div>
+    </aside>
+  </div>
+</div>

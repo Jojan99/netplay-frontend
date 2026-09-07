@@ -19,6 +19,9 @@ import { RouterModule } from '@angular/router';
         <a routerLink="templates" routerLinkActive="bg-blue-600 text-white" class="px-3 py-1.5 text-sm rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition whitespace-nowrap text-gray-700 dark:text-gray-300">
           Plantillas
         </a>
+        <a routerLink="comunicados" routerLinkActive="bg-blue-600 text-white" class="px-3 py-1.5 text-sm rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition whitespace-nowrap text-gray-700 dark:text-gray-300">
+          Comunicados
+        </a>
         <a routerLink="enviar" routerLinkActive="bg-blue-600 text-white" class="px-3 py-1.5 text-sm rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition whitespace-nowrap text-gray-700 dark:text-gray-300">
           Enviar
         </a>
