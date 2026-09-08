@@ -1,0 +1,27 @@
+<ng-container *ngIf="enabled && visible">
+  <!-- Lanzador -->
+  <button type="button" class="wg-launch" *ngIf="!open" (click)="toggle()" title="Abrir bandeja de WhatsApp">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 20l1.3-3.8A8 8 0 1 1 8 19.2L4 20z"/></svg>
+    <span class="wg-badge" *ngIf="unread">{{ unread }}</span>
+  </button>
+
+  <!-- Ventana -->
+  <div #panel class="wg-panel" *ngIf="open" [class.is-min]="minimized" [class.is-mobile]="isMobile" [style.left.px]="isMobile ? null : pos.x" [style.top.px]="isMobile ? null : pos.y" [style.width.px]="isMobile || minimized ? null : size.w" [style.height.px]="isMobile || minimized ? null : size.h" (mouseup)="onResized()">
+    <div class="wg-head" (mousedown)="startDrag($event)">
+      <span class="wg-mark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 20l1.3-3.8A8 8 0 1 1 8 19.2L4 20z"/></svg></span>
+      <span class="wg-title"><b>WhatsApp</b><small>{{ provider === 'meta' ? 'API Meta' : 'WhatsApp Web' }}<ng-container *ngIf="unread"> · {{ unread }} sin leer</ng-container></small></span>
+      <span class="np-spacer"></span>
+      <button type="button" class="wg-ibtn" (click)="goFull()" title="Abrir el CRM completo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 4h6v6M20 4l-9 9M19 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1h5"/></svg></button>
+      <button type="button" class="wg-ibtn" (click)="minimized = !minimized" [title]="minimized ? 'Restaurar' : 'Minimizar'"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path *ngIf="!minimized" d="M5 12h14"/><path *ngIf="minimized" d="M5 12h14M12 5v14"/></svg></button>
+      <button type="button" class="wg-ibtn" (click)="open = false" title="Cerrar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
+    </div>
+
+    <div class="wg-body" *ngIf="!minimized">
+      <div class="wg-list" *ngIf="!activeConversationId">
+        <div class="wg-prov"><button type="button" class="np-chip" [attr.aria-pressed]="provider === 'meta'" (click)="setProvider('meta')">API Meta</button><button type="button" class="np-chip" [attr.aria-pressed]="provider === 'netplay'" (click)="setProvider('netplay')">WhatsApp Web</button><span class="np-spacer"></span><button type="button" class="np-link" (click)="hide()" title="Ocultar el widget en este navegador">Ocultar</button></div>
+        <app-conversation-list class="wg-list-host" [conversations]="inbox" [activeConversationId]="activeConversationId" activeStatus="all" [labels]="labels" (openChat)="openChat($event)" (refresh)="loadInbox()" (markUnread)="markUnread($event)"></app-conversation-list>
+      </div>
+      <app-chat-window class="wg-chat" *ngIf="activeConversationId" [conversationId]="activeConversationId" [compact]="true" (back)="back()" (conversationClosed)="back(); loadInbox()" (openConversation)="openChat($event)"></app-chat-window>
+    </div>
+  </div>
+</ng-container>

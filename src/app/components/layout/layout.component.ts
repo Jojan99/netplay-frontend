@@ -10,6 +10,7 @@ import {
 } from '@angular/core';
 import { isPlatformBrowser, CommonModule } from '@angular/common';
 import { RouterModule, RouterOutlet, Router, NavigationEnd } from '@angular/router';
+import { CrmWidgetComponent } from '../../crm/components/crm-widget/crm-widget.component';
 import { filter } from 'rxjs/operators';
 
 import { FooterComponent }           from '../footer/footer.component';
@@ -30,7 +31,7 @@ import { ToastService }             from '../../services/toast.service';
   imports: [
     CommonModule, RouterOutlet, RouterModule,
     SidebarComponent, SidebarItemGroupComponent, SidebarItemComponent,
-    DarkThemeToggleComponent, NavbarComponent, FooterComponent,
+    DarkThemeToggleComponent, NavbarComponent, FooterComponent, CrmWidgetComponent,
   ],
   templateUrl: './layout.component.html',
   styleUrl: './layout.component.scss',
@@ -52,6 +53,8 @@ export class LayoutComponent implements OnInit {
   username    = '';
   roleName    = '';
   filteredComponents: RouteProps[] = [];
+  /** El widget flotante de WhatsApp sólo para quienes tienen el módulo CRM en el menú. */
+  get hasCrm(): boolean { return this.filteredComponents.some((c: any) => JSON.stringify(c).includes('crm')); }
   currentGroup = '';
   currentSection = '';
   now = new Date();

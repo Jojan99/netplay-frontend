@@ -26,6 +26,7 @@ export interface ChatMessage {
   status?: 'pending' | 'sent' | 'delivered' | 'read' | 'failed' | null;
   quoted?: { id: number; sender_type: string; content: string | null; message_type: string; media_url?: string | null } | null;
   reactions?: { emoji: string; from: string }[];
+  poll_votes?: { voter_key: string; voter_type: string; voter_name?: string | null; options: string[] }[] | null;
   is_forwarded?: boolean;
   agent_signature?: string | null;
   is_note?: boolean;
@@ -64,6 +65,13 @@ export class MessageBubbleComponent implements OnChanges {
     switch (q.message_type) { case 'image': return '📷 Foto'; case 'video': return '🎥 Video'; case 'audio': return '🎤 Nota de voz'; case 'document': return '📄 Documento'; case 'sticker': return 'Sticker'; case 'location': return '📍 Ubicación'; default: return 'Mensaje'; }
   }
   reply(): void { this.replyTo.emit(this.message); this.showContextMenu = false; }
+  /** Doble clic sobre la burbuja = responder (como WhatsApp Web). No aplica sobre controles ni selección de texto. */
+  onDblClick(ev: MouseEvent): void {
+    const t = ev.target as HTMLElement;
+    if (this.isNote || this.message.pending || t.closest('button, a, input, audio, video')) return;
+    window.getSelection()?.removeAllRanges();
+    this.reply();
+  }
   @Input() highlight = '';
 
   showContextMenu = false;
@@ -248,7 +256,24 @@ export class MessageBubbleComponent implements OnChanges {
 
   /* ── Encuesta / evento ───────────────────────────────────────── */
   get pollQuestion(): string { return ((this.message?.content || '').split('\n')[0] || '').replace('📊 Encuesta: ', ''); }
-  get pollOptions(): string[] { return (this.message?.content || '').split('\n').slice(1).map(l => l.replace(/^• /, '')).filter(Boolean); }
+  get pollMulti(): boolean { return /\(varias opciones\)\s*$/.test(this.message?.content || ''); }
+  get pollOptions(): string[] { return (this.message?.content || '').split('\n').slice(1).filter(l => l.startsWith('• ')).map(l => l.replace(/^• /, '')).filter(Boolean); }
+  @Input() canVote = false;   // sólo WhatsApp Web (Meta no soporta encuestas)
+  @Output() vote = new EventEmitter<{ message: ChatMessage; options: string[] }>();
+  get myVote(): string[] { return (this.message?.poll_votes || []).find(v => v.voter_type === 'agent')?.options || []; }
+  pollVoters(opt: string): string[] {
+    return (this.message?.poll_votes || []).filter(v => (v.options || []).includes(opt)).map(v => v.voter_type === 'agent' ? 'Vos' : (v.voter_name || v.voter_key.split('@')[0] || 'Cliente'));
+  }
+  pollCount(opt: string): number { return this.pollVoters(opt).length; }
+  get pollTotal(): number { return (this.message?.poll_votes || []).filter(v => (v.options || []).length).length; }
+  toggleVote(opt: string): void {
+    if (!this.canVote || this.message.pending) return;
+    const mine = this.myVote;
+    let next: string[];
+    if (this.pollMulti) next = mine.includes(opt) ? mine.filter(o => o !== opt) : [...mine, opt];
+    else next = mine.includes(opt) ? [] : [opt];
+    this.vote.emit({ message: this.message, options: next });
+  }
   get eventTitle(): string { return ((this.message?.content || '').split('\n')[0] || '').replace('📅 Evento: ', ''); }
   get eventLines(): string[] { return (this.message?.content || '').split('\n').slice(1).filter(Boolean); }
   isLink(t: string): boolean { return /^🔗 https?:\/\//.test(t); }

@@ -1,4 +1,4 @@
-<div class="wa-msg" [class.is-out]="isOut" [class.is-in]="!isOut" [class.is-sticker]="isSticker" [class.is-failed]="message.failed" [attr.id]="'msg-' + message.id">
+<div class="wa-msg" [class.is-out]="isOut" [class.is-in]="!isOut" [class.is-sticker]="isSticker" [class.is-failed]="message.failed" [attr.id]="'msg-' + message.id" (dblclick)="onDblClick($event)">
 
   <!-- Nota interna -->
   <div class="wa-note" *ngIf="isNote">
@@ -79,8 +79,12 @@
 
       <div *ngSwitchCase="'poll'" class="wa-poll">
         <div class="wa-poll-h"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 20V10M10 20V4M16 20v-8M22 20H2"/></svg><b>{{ pollQuestion }}</b></div>
-        <div class="wa-poll-opt" *ngFor="let o of pollOptions"><i></i>{{ o }}</div>
-        <small class="wa-poll-note">Encuesta de WhatsApp · los votos se ven en el teléfono</small>
+        <small class="wa-poll-note">{{ pollMulti ? 'Elegí una o más opciones' : 'Elegí una opción' }}<ng-container *ngIf="!canVote"> · sólo lectura en esta bandeja</ng-container></small>
+        <button type="button" class="wa-poll-opt" *ngFor="let o of pollOptions" [class.is-mine]="myVote.includes(o)" [class.is-static]="!canVote" (click)="toggleVote(o); $event.stopPropagation()">
+          <i [class.is-check]="myVote.includes(o)"></i>
+          <span class="wa-poll-opt-body"><span class="wa-poll-opt-top"><span>{{ o }}</span><b>{{ pollCount(o) }}</b></span><span class="wa-poll-bar"><em [style.width]="(pollTotal ? pollCount(o) / pollTotal * 100 : 0) + '%'"></em></span><small *ngIf="pollVoters(o).length">{{ pollVoters(o).join(', ') }}</small></span>
+        </button>
+        <small class="wa-poll-note">{{ pollTotal }} {{ pollTotal === 1 ? 'voto' : 'votos' }}</small>
       </div>
 
       <div *ngSwitchCase="'event'" class="wa-event">

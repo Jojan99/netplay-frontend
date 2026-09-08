@@ -19,3 +19,9 @@
 :host-context(.dark) .wa-pill.is-on { background: #3a3416; color: #f5d565; }
 @media (max-width: 767px) { .wa-back { display: inline-grid; } .wa-pill span, .wa-status { display: none; } .wa-pill { padding: 0 8px; } }
 @media (max-width: 900px) { .wa-pill { font-size: 0; gap: 0; } }
+
+/* Dentro del widget flotante (chat-window.is-compact) */
+:host-context(.is-compact) .wa-back { display: inline-grid; }
+:host-context(.is-compact) .wa-pill span, :host-context(.is-compact) .wa-status { display: none; }
+:host-context(.is-compact) .wa-pill { padding: 0 8px; }
+:host-context(.is-compact) .wa-head-sub { max-width: 160px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }

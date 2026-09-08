@@ -111,3 +111,16 @@
 .wa-emoji-tabs { display: flex; gap: 4px; button { padding: 5px 9px; border: 0; border-radius: 999px; background: none; color: var(--wa-text-2); font: 700 12px var(--font-body); cursor: pointer; &[aria-pressed='true'] { background: var(--wa-accent-soft); color: var(--wa-accent); } } }
 .wa-emoji-grid { display: grid; grid-template-columns: repeat(8, 1fr); gap: 2px; max-height: 220px; overflow-y: auto; button { height: 38px; border: 0; border-radius: 8px; background: none; font-size: 22px; cursor: pointer; &:hover { background: var(--wa-hover); transform: scale(1.15); } } }
 .wa-emoji-wrap .wa-ibtn.is-active { background: rgba(134,150,160,.2); color: var(--wa-accent); }
+
+.wa-attach-ico.is-poll { background: #f5a623; }
+.wa-attach-side { flex: 1; min-width: 0; display: grid; gap: 8px; }
+.wa-caption-input { width: 100%; padding: 8px 10px; border-radius: 8px; border: 1px solid var(--wa-line-strong); background: var(--wa-input); color: var(--wa-text); font: 14px/1.4 var(--font-body); resize: none; outline: none; &:focus { border-color: var(--wa-accent); } }
+.wa-attach-card .wa-attach-actions { margin-left: 0; justify-content: flex-end; }
+.wa-poll-form-opt { display: flex; gap: 6px; align-items: center; margin-bottom: 6px; .np-input { flex: 1; } }
+
+/* Modo compacto (widget flotante) */
+:host.is-compact .wa-chat.has-info { grid-template-columns: minmax(0, 1fr); }
+:host.is-compact .wa-info-host { position: absolute; inset: 0; z-index: 4; border-left: 0; }
+:host.is-compact .wa-messages { padding: 10px 10px 8px; }
+:host.is-compact .wa-attach-preview { padding: 8px 10px; }
+:host.is-compact .wa-emoji { left: 6px; width: calc(100% - 12px); }

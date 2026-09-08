@@ -7,7 +7,8 @@ import {
   OnDestroy,
   NgZone,
   ViewChild,
-  ElementRef
+  ElementRef,
+  HostBinding
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -57,6 +58,8 @@ export interface QuickReply { id: number; shortcut: string; title?: string | nul
 export class ChatWindowComponent implements OnChanges, OnDestroy {
 
   @Input() conversationId: number | null = null;
+  /** Modo compacto (widget flotante): el panel de info se superpone en vez de abrir una columna. */
+  @Input() @HostBinding('class.is-compact') compact = false;
   @Output() openTransfer        = new EventEmitter<void>();
   @Output() back                = new EventEmitter<void>();
   @Output() conversationClosed  = new EventEmitter<void>();
@@ -129,6 +132,7 @@ export class ChatWindowComponent implements OnChanges, OnDestroy {
 
   dragging         = false;
   showAttachMenu   = false;
+  mediaCaption     = '';   // texto que acompaña a la foto/video (se ve debajo, como en WhatsApp)
   isProcessingAudio = false;
 
   // ── Audio ─────────────────────────────────────────────────────
@@ -319,7 +323,7 @@ export class ChatWindowComponent implements OnChanges, OnDestroy {
   }
 
   // ── Reintento de envíos fallidos ──────────────────────────────
-  private pendingPayloads = new Map<number, { kind: 'text' | 'media' | 'audio' | 'sticker'; text?: string; file?: File; type?: string; sticker?: any; quotedId?: number }>();
+  private pendingPayloads = new Map<number, { kind: 'text' | 'media' | 'audio' | 'sticker'; text?: string; file?: File; type?: string; sticker?: any; quotedId?: number; caption?: string }>();
 
   private markFailed(tempId: number): void {
     const idx = this.messages.findIndex(x => x.pending && x.id === tempId);
@@ -336,7 +340,7 @@ export class ChatWindowComponent implements OnChanges, OnDestroy {
     if (!payload) return;
     switch (payload.kind) {
       case 'text':    if (payload.quotedId) this.replyTarget = this.messages.find(x => x.id === payload.quotedId) || null; this.sendMessage(payload.text || ''); break;
-      case 'media':   this.fileToSend = payload.file!; this.sendMedia(); break;
+      case 'media':   this.fileToSend = payload.file!; this.mediaCaption = payload.caption || ''; this.sendMedia(); break;
       case 'audio':   this.recordedAudioFile = payload.file!; this.sendRecordedAudio(); break;
       case 'sticker': this.sendSticker(payload.sticker); break;
     }
@@ -412,6 +416,54 @@ export class ChatWindowComponent implements OnChanges, OnDestroy {
       })
       .listen('.message.status', (e: { messageId: number; status: string }) => {
         this.zone.run(() => this.applyStatus(e.messageId, e.status));
+      })
+      .listen('.poll.vote', (e: { messageId: number; votes: any[] }) => {
+        this.zone.run(() => this.applyPollVotes(e.messageId, e.votes || []));
+      });
+  }
+
+  // ── Encuestas ────────────────────────────────────────────────
+  get canVote(): boolean { return (this.headerData?.provider || 'netplay') !== 'meta'; }
+  private applyPollVotes(messageId: number, votes: any[]): void {
+    const idx = this.messages.findIndex(m => m.id === messageId);
+    if (idx === -1) return;
+    const copy = [...this.messages];
+    copy[idx] = { ...copy[idx], poll_votes: votes, _renderKey: Date.now() };
+    this.messages = copy;
+  }
+  votePoll(ev: { message: ChatMessage; options: string[] }): void {
+    if (!this.conversationId) return;
+    // Aplicar al instante; el evento en tiempo real confirma con los votos reales
+    const cur = (ev.message.poll_votes || []).filter(v => v.voter_type !== 'agent');
+    this.applyPollVotes(ev.message.id, ev.options.length ? [...cur, { voter_key: 'agent', voter_type: 'agent', voter_name: null, options: ev.options }] : cur);
+    this.crmService.sendMessage(this.conversationId, { message: '', type: 'poll_vote', target_message_id: ev.message.id, options: ev.options } as any)
+      .subscribe({
+        next: (r: any) => { if (r?.status === 'error') { alert(r.message || 'No se pudo votar.'); this.applyPollVotes(ev.message.id, ev.message.poll_votes || []); } },
+        error: () => { alert('No se pudo enviar el voto.'); this.applyPollVotes(ev.message.id, ev.message.poll_votes || []); }
+      });
+  }
+  showPollModal = false;
+  pollForm = { question: '', options: ['', ''], multi: false };
+  openPollModal(): void { this.showAttachMenu = false; this.pollForm = { question: '', options: ['', ''], multi: false }; this.showPollModal = true; }
+  addPollOption(): void { if (this.pollForm.options.length < 12) this.pollForm.options.push(''); }
+  removePollOption(i: number): void { if (this.pollForm.options.length > 2) this.pollForm.options.splice(i, 1); }
+  trackIdx(i: number): number { return i; }
+  get pollFormValid(): boolean {
+    const opts = this.pollForm.options.map(o => o.trim()).filter(Boolean);
+    return !!this.pollForm.question.trim() && opts.length >= 2 && new Set(opts).size === opts.length;
+  }
+  sendPoll(): void {
+    if (!this.pollFormValid || !this.conversationId || this.sending) return;
+    const question = this.pollForm.question.trim();
+    const options = this.pollForm.options.map(o => o.trim()).filter(Boolean);
+    this.showPollModal = false; this.sending = true;
+    const tempId = Date.now();
+    this.messages.push({ id: tempId, from: 'agent', content: `📊 Encuesta: ${question}\n` + options.map(o => '• ' + o).join('\n') + (this.pollForm.multi ? '\n(varias opciones)' : ''), message_type: 'poll', media_url: null, poll_votes: [], at: new Date().toISOString(), pending: true });
+    this.scrollToBottom();
+    this.crmService.sendMessage(this.conversationId, { message: question, type: 'poll', question, options, selectable: this.pollForm.multi ? options.length : 1 } as any)
+      .subscribe({
+        next: (r: any) => { this.sending = false; if (r?.status === 'error') { this.dropPending(tempId); alert(r.message || 'No se pudo enviar la encuesta.'); } },
+        error: () => { this.sending = false; this.markFailed(tempId); }
       });
   }
 
@@ -478,6 +530,7 @@ export class ChatWindowComponent implements OnChanges, OnDestroy {
       status:          m.status ?? 'sent',
       quoted:          m.quoted ?? prev?.quoted ?? null,
       reactions:       m.reactions ?? prev?.reactions ?? [],
+      poll_votes:      m.poll_votes ?? prev?.poll_votes ?? (m.message_type === 'poll' ? [] : null),
       pending:         false,
       _renderKey:      Date.now()
     };
@@ -593,6 +646,7 @@ export class ChatWindowComponent implements OnChanges, OnDestroy {
           status:         m.status ?? 'sent',
           quoted:         m.quoted ?? null,
           reactions:      m.reactions ?? [],
+          poll_votes:     m.poll_votes ?? null,
         })).map((x: ChatMessage) => this.normalizeLegacy(x));
 
         this.headerData = {
@@ -660,6 +714,7 @@ export class ChatWindowComponent implements OnChanges, OnDestroy {
   }
 
   clearFile(): void {
+    this.mediaCaption = '';
     this.fileToSend  = null;
     this.filePreview = null;
     this.previewType = null;
@@ -710,10 +765,11 @@ export class ChatWindowComponent implements OnChanges, OnDestroy {
     const type = this.detectMediaType(this.fileToSend);
     const file = type === 'image' ? await this.compressImage(this.fileToSend) : this.fileToSend;
 
+    const caption = (type === 'image' || type === 'video') ? this.mediaCaption.trim() : '';
     const tempId = Date.now();
-    this.pendingPayloads.set(tempId, { kind: 'media', file, type });
+    this.pendingPayloads.set(tempId, { kind: 'media', file, type, caption });
     this.messages.push({
-      id: tempId, from: 'agent', content: type === 'document' ? file.name : null,
+      id: tempId, from: 'agent', content: type === 'document' ? file.name : (caption || null),
       message_type: type, media_url: type === 'document' ? null : URL.createObjectURL(file),
       mime_type: file.type || null,
       at: new Date().toISOString(), pending: true
@@ -725,10 +781,12 @@ export class ChatWindowComponent implements OnChanges, OnDestroy {
     const formData = new FormData();
     formData.append('file', file);
     formData.append('type', type);
+    if (caption) formData.append('caption', caption);
+    this.mediaCaption = '';
 
     this.crmService.sendMedia(this.conversationId, formData)
       .subscribe({
-        next:  (res: any) => { this.sending = false; this.pendingPayloads.delete(tempId); this.upsertIncoming(res?.data, tempId); this.scrollToBottom(); },
+        next:  (res: any) => { this.sending = false; this.pendingPayloads.delete(tempId); this.upsertIncoming(res?.data, tempId); this.scrollToBottom(); this.focusComposer(0); },
         error: () => { this.sending = false; this.markFailed(tempId); }
       });
   }
