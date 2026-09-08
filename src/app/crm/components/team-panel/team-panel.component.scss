@@ -1,0 +1,53 @@
+:host { display: contents; }
+
+/* Botón de la barra */
+.tp-launch { position: relative; }
+.tp-online { position: absolute; right: -4px; bottom: -4px; min-width: 16px; height: 16px; padding: 0 4px; border-radius: 999px; background: var(--ok); color: #fff; font: 700 9.5px/16px var(--font-mono); border: 2px solid var(--surface); }
+.tp-badge { position: absolute; top: -5px; right: -6px; min-width: 18px; height: 18px; padding: 0 5px; border-radius: 999px; background: var(--danger); color: #fff; font: 700 10.5px/18px var(--font-mono); border: 2px solid var(--surface); }
+
+/* Panel */
+.tp-backdrop { position: fixed; inset: 0; z-index: 80; background: var(--overlay); }
+.tp-panel { position: fixed; top: 0; right: 0; bottom: 0; z-index: 81; width: min(400px, 100vw); display: flex; flex-direction: column; background: var(--surface); border-left: 1px solid var(--line); box-shadow: var(--shadow-lg); animation: tp-in .2s ease; }
+@keyframes tp-in { from { transform: translateX(20px); opacity: 0; } to { transform: none; opacity: 1; } }
+.tp-head { display: flex; align-items: center; gap: 8px; min-height: 60px; padding: 8px 10px 8px 14px; border-bottom: 1px solid var(--line); background: var(--surface-2); }
+.tp-head-copy { min-width: 0; .np-kicker { display: flex; align-items: center; gap: 6px; margin: 0; } h3 { margin: 0; font-family: var(--font-display); font-weight: 600; font-size: 16px; color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; } }
+.tp-call { color: var(--ok); &:disabled { color: var(--text-3); } }
+.tp-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--text-3); &.is-on { background: var(--ok); box-shadow: 0 0 0 3px var(--ok-soft); } }
+.tp-dot--avatar { position: absolute; right: -1px; bottom: -1px; width: 11px; height: 11px; border: 2px solid var(--surface); box-shadow: none; }
+
+/* Lista */
+.tp-list { flex: 1; min-height: 0; overflow-y: auto; padding: 8px; }
+.tp-sect { margin: 12px 6px 6px; }
+.tp-empty { padding: 12px 6px; }
+.tp-row { display: flex; align-items: center; gap: 10px; width: 100%; padding: 8px; border: 0; border-radius: var(--radius); background: none; color: var(--text); text-align: left; cursor: pointer; outline: none; &:hover, &:focus-visible { background: var(--surface-2); } &:hover .tp-row-call { opacity: 1; } }
+.tp-row--general { margin-bottom: 4px; }
+.tp-avatar { position: relative; display: grid; place-items: center; width: 40px; height: 40px; border-radius: 50%; background: var(--accent-soft); color: var(--accent); font: 700 13px var(--font-display); flex-shrink: 0; }
+.tp-avatar--general { background: var(--info-soft); color: var(--info); svg { width: 20px; height: 20px; } }
+.tp-avatar--lg { width: 46px; height: 46px; font-size: 15px; background: rgba(255,255,255,.18); color: #fff; }
+.tp-row-copy { flex: 1; min-width: 0; display: grid; b { font-size: 13.5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; } small { font-size: 11.5px; color: var(--text-3); } }
+.tp-unread { min-width: 20px; height: 20px; padding: 0 6px; border-radius: 999px; background: var(--accent); color: var(--accent-ink, #fff); font: 700 11px/20px var(--font-mono); text-align: center; }
+.tp-row-call { opacity: 0; color: var(--ok); transition: opacity .12s; &:disabled { opacity: 0 !important; } }
+@media (hover: none) { .tp-row-call { opacity: 1; } }
+
+/* Hilo */
+.tp-thread { flex: 1; min-height: 0; overflow-y: auto; padding: 12px; display: flex; flex-direction: column; gap: 4px; background: var(--bg); }
+.tp-day { display: flex; justify-content: center; margin: 8px 0 4px; span { padding: 4px 10px; border-radius: 999px; background: var(--surface-2); color: var(--text-3); font: 600 11px var(--font-body); text-transform: capitalize; } }
+.tp-msg { display: grid; justify-items: start; max-width: 85%; &.is-mine { justify-self: end; justify-items: end; } }
+.tp-msg-from { font: 700 11px var(--font-body); color: var(--accent); margin: 0 0 2px 6px; }
+.tp-bubble { position: relative; padding: 7px 10px 16px; border-radius: 12px; background: var(--surface); border: 1px solid var(--line); color: var(--text); font-size: 13.5px; line-height: 1.4; white-space: pre-wrap; overflow-wrap: anywhere;
+  .is-mine & { background: var(--accent-soft); border-color: transparent; } }
+.tp-msg-time { position: absolute; right: 8px; bottom: 3px; font: 10.5px var(--font-mono); color: var(--text-3); }
+.tp-composer { display: flex; align-items: flex-end; gap: 6px; padding: 8px 10px; border-top: 1px solid var(--line); background: var(--surface-2);
+  textarea { flex: 1; min-height: 38px; max-height: 120px; padding: 9px 12px; border-radius: 10px; border: 1px solid var(--line-strong); background: var(--surface); color: var(--text); font: 14px/1.4 var(--font-body); resize: none; outline: none; &:focus { border-color: var(--accent); } } }
+.tp-send { display: grid; place-items: center; width: 38px; height: 38px; border: 0; border-radius: 50%; background: var(--accent); color: var(--accent-ink, #fff); cursor: pointer; svg { width: 18px; height: 18px; } &:disabled { opacity: .5; cursor: not-allowed; } }
+
+/* Llamada */
+.tp-callbox { position: fixed; left: 50%; top: 14px; transform: translateX(-50%); z-index: 210; display: flex; align-items: center; gap: 12px; min-width: 300px; padding: 10px 14px; border-radius: 14px; background: #1f2a30; color: #fff; box-shadow: 0 14px 40px rgba(0,0,0,.4); animation: tp-in .2s ease;
+  &.is-in { background: #0b5c4b; animation: tp-pulse 1.4s ease-in-out infinite; } }
+@keyframes tp-pulse { 0%, 100% { box-shadow: 0 14px 40px rgba(0,0,0,.4); } 50% { box-shadow: 0 14px 40px rgba(0,0,0,.4), 0 0 0 8px rgba(0,168,132,.25); } }
+.tp-call-copy { display: grid; min-width: 0; b { font-size: 14px; } small { font-size: 12px; opacity: .85; } }
+.tp-call-acts { display: flex; gap: 8px; margin-left: auto; }
+.tp-cbtn { display: grid; place-items: center; width: 42px; height: 42px; border: 0; border-radius: 50%; background: rgba(255,255,255,.14); color: #fff; cursor: pointer; svg { width: 20px; height: 20px; } &:hover { background: rgba(255,255,255,.24); } &.is-on { background: #fff; color: #1f2a30; } }
+.tp-cbtn--ok { background: #25d366; animation: tp-pulse 1.4s infinite; }
+.tp-cbtn--end { background: #e0483e; }
+@media (max-width: 767px) { .tp-callbox { left: 8px; right: 8px; transform: none; min-width: 0; } }

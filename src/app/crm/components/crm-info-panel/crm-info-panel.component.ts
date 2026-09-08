@@ -1,11 +1,12 @@
+import { DialogService } from '../../../services/dialog.service';
+import { ToastService } from '../../../services/toast.service';
 import {
   Component,
   Input,
   OnChanges,
   SimpleChanges,
   Output,
-  EventEmitter
-} from '@angular/core';
+  EventEmitter, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
@@ -19,6 +20,8 @@ import { CrmService } from '../../../services/crm.service';
   styleUrl: './crm-info-panel.component.scss'
 })
 export class CrmInfoPanelComponent implements OnChanges {
+  private toast = inject(ToastService);
+  private dialog = inject(DialogService);
 
   @Input() conversationId!: number;
   @Input() customerPhone = '';
@@ -47,24 +50,24 @@ export class CrmInfoPanelComponent implements OnChanges {
   private flash(msg: string): void { this.actionMsg = msg; setTimeout(() => { if (this.actionMsg === msg) this.actionMsg = ''; }, 3500); }
   money(v: number): string { return '$' + Math.round(v || 0).toLocaleString('es-CO'); }
 
-  sendInvoice(inv: any): void {
+  async sendInvoice(inv: any) {
     if (this.sendingInvoiceId) return;
-    if (!confirm(`¿Enviar la factura ${inv.number} por WhatsApp al cliente?`)) return;
+    if (!await this.dialog.confirm(`¿Enviar la factura ${inv.number} por WhatsApp al cliente?`)) return;
     this.sendingInvoiceId = inv.id;
     this.crmService.sendInvoiceFromChat(this.conversationId, inv.id).subscribe({
       next: () => { this.sendingInvoiceId = null; this.flash(`Factura ${inv.number} enviada`); },
-      error: err => { this.sendingInvoiceId = null; alert(err?.error?.error || 'No se pudo enviar la factura.'); }
+      error: err => { this.sendingInvoiceId = null; this.toast.error(err?.error?.error || 'No se pudo enviar la factura.'); }
     });
   }
   copyInvoiceLink(inv: any): void { navigator.clipboard?.writeText(inv.link).then(() => this.flash('Link de la factura copiado')).catch(() => {}); }
-  sendPayLink(inv?: any): void {
+  async sendPayLink(inv?: any) {
     if (this.creatingPayLink) return;
     const what = inv ? `la factura ${inv.number}` : 'todo lo pendiente';
-    if (!confirm(`¿Generar y enviar un link de pago por ${what}?`)) return;
+    if (!await this.dialog.confirm(`¿Generar y enviar un link de pago por ${what}?`)) return;
     this.creatingPayLink = true;
     this.crmService.createPayLink(this.conversationId, inv?.id ?? null, true).subscribe({
       next: () => { this.creatingPayLink = false; this.flash('Link de pago enviado al chat'); },
-      error: err => { this.creatingPayLink = false; alert(err?.error?.error || 'No se pudo generar el link de pago.'); }
+      error: err => { this.creatingPayLink = false; this.toast.error(err?.error?.error || 'No se pudo generar el link de pago.'); }
     });
   }
   saveTechNote(): void {
@@ -72,7 +75,7 @@ export class CrmInfoPanelComponent implements OnChanges {
     this.savingTechNote = true;
     this.crmService.saveTechNote(this.conversationId).subscribe({
       next: () => { this.savingTechNote = false; this.loadNotes(); this.flash('Estado técnico guardado como nota'); },
-      error: err => { this.savingTechNote = false; alert(err?.error?.error || 'No se pudo guardar la nota.'); }
+      error: err => { this.savingTechNote = false; this.toast.error(err?.error?.error || 'No se pudo guardar la nota.'); }
     });
   }
 
@@ -130,7 +133,7 @@ export class CrmInfoPanelComponent implements OnChanges {
     this.savingLabel = true;
     this.crmService.createLabel(name, this.newLabelColor).subscribe({
       next: res => { this.allLabels = [...this.allLabels, res.data ?? res]; this.newLabelName = ''; this.savingLabel = false; },
-      error: () => { this.savingLabel = false; alert('No se pudo crear la etiqueta.'); }
+      error: () => { this.savingLabel = false; this.toast.error('No se pudo crear la etiqueta.'); }
     });
   }
 
@@ -342,7 +345,7 @@ export class CrmInfoPanelComponent implements OnChanges {
         this.ticketAddress  = '';
         this.ticketCedula   = '';
         this.savingTicket   = false;
-        alert(`✅ Ticket #${res.ticket_id} creado`);
+        this.toast.success(`Ticket #${res.ticket_id} creado`);
       },
       error: () => this.savingTicket = false
     });

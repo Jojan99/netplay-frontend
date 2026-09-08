@@ -1,4 +1,5 @@
-import { Component, OnInit } from '@angular/core';
+import { DialogService } from '../../services/dialog.service';
+import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
@@ -13,6 +14,7 @@ import { InstallationService, InstallationOrder, InstallationLog } from '../../s
   host: { class: 'np-console' },
 })
 export class InstallationsComponent implements OnInit {
+  private dialog = inject(DialogService);
   installations: InstallationOrder[] = [];
   allInstallations: InstallationOrder[] = [];
   isLoading = false;
@@ -287,14 +289,14 @@ export class InstallationsComponent implements OnInit {
     });
   }
 
-  closeCancelModal(): void {
+  async closeCancelModal() {
     this.showCancelModal = false;
     this.cancelReason = '';
     if (!this.showDetail) this.selected = null;
   }
 
   /* cancel(id: number): void {
-    if (confirm('¿Cancelar esta instalación?')) {
+    if (await this.dialog.confirm('¿Cancelar esta instalación?')) {
       this.svc.cancel(id).subscribe({ next: r => { this.toast(r.message); this.load(); } });
     }
   } */

@@ -27,6 +27,7 @@
 
       <div class="app-shell-actions">
         <flowbite-dark-theme-toggle></flowbite-dark-theme-toggle>
+        <app-team-panel></app-team-panel>
         <button type="button" class="np-icobtn app-shell-notification" aria-label="Notificaciones">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 16V11a6 6 0 1 1 12 0v5l1.5 2h-15L6 16zM10 20a2 2 0 0 0 4 0"/></svg>
           <span class="app-shell-notification-dot"></span>
@@ -122,6 +123,7 @@
 
 <app-footer></app-footer>
 <app-crm-widget *ngIf="hasCrm"></app-crm-widget>
+<app-dialog-host></app-dialog-host>
 
 <!-- ═══ TOASTS ═══════════════════════════════════════════════════════════════ -->
 <div class="app-shell-toasts" aria-live="polite">

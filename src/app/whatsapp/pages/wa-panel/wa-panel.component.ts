@@ -1,4 +1,5 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { ToastService } from '../../../services/toast.service';
+import { Component, OnInit, OnDestroy, inject } from '@angular/core';
 import { CommonModule }  from '@angular/common';
 import { FormsModule }   from '@angular/forms';
 import { RouterModule }  from '@angular/router';
@@ -15,6 +16,7 @@ import { CompanyWhatsappService } from '../../../services/company-whatsapp.servi
   host: { class: 'np-console' },
 })
 export class WaPanelComponent implements OnInit, OnDestroy {
+  private toast = inject(ToastService);
 
   loading          = true;
   hasCredentials   = true;
@@ -114,7 +116,7 @@ export class WaPanelComponent implements OnInit, OnDestroy {
     this.cwaSvc.updateConfig({ whatsapp_enabled: this.whatsappEnabled }).subscribe({
       error: () => {
         this.whatsappEnabled = !this.whatsappEnabled;
-        alert('Error al actualizar la configuración.');
+        this.toast.error('Error al actualizar la configuración.');
       },
     });
   }
@@ -242,7 +244,7 @@ export class WaPanelComponent implements OnInit, OnDestroy {
     const id = inst.id ?? inst.instanceId;
     this.cwaSvc.updateConfig({ wa_instance_id: id }).subscribe({
       next: () => { this.activeInstanceId = id; },
-      error: () => { alert('Error al establecer la instancia activa.'); },
+      error: () => { this.toast.error('Error al establecer la instancia activa.'); },
     });
   }
 
@@ -279,7 +281,7 @@ export class WaPanelComponent implements OnInit, OnDestroy {
       },
       error: (e: any) => {
         this.deleting = false;
-        alert(e.error?.message ?? 'Error al eliminar la instancia.');
+        this.toast.error(e.error?.message ?? 'Error al eliminar la instancia.');
       },
     });
   }
@@ -313,7 +315,7 @@ export class WaPanelComponent implements OnInit, OnDestroy {
       },
       error: (e: any) => {
         this.resolvingReqId = null;
-        alert(e.error?.message ?? 'Error al procesar la solicitud.');
+        this.toast.error(e.error?.message ?? 'Error al procesar la solicitud.');
       },
     });
   }

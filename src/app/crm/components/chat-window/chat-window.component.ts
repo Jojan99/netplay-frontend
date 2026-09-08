@@ -1,3 +1,5 @@
+import { DialogService } from '../../../services/dialog.service';
+import { ToastService } from '../../../services/toast.service';
 import {
   Component,
   EventEmitter,
@@ -8,8 +10,7 @@ import {
   NgZone,
   ViewChild,
   ElementRef,
-  HostBinding
-} from '@angular/core';
+  HostBinding, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 
@@ -56,6 +57,8 @@ export interface QuickReply { id: number; shortcut: string; title?: string | nul
   styleUrl: './chat-window.component.scss'
 })
 export class ChatWindowComponent implements OnChanges, OnDestroy {
+  private toast = inject(ToastService);
+  private dialog = inject(DialogService);
 
   @Input() conversationId: number | null = null;
   /** Modo compacto (widget flotante): el panel de info se superpone en vez de abrir una columna. */
@@ -265,7 +268,7 @@ export class ChatWindowComponent implements OnChanges, OnDestroy {
     if (!this.conversationId || ev.message.pending) return;
     this.applyReaction(ev.message.id, ev.emoji, 'agent');
     this.crmService.sendMessage(this.conversationId, { message: ev.emoji, type: 'reaction', target_message_id: ev.message.id } as any)
-      .subscribe({ error: () => alert('No se pudo enviar la reacción.') });
+      .subscribe({ error: () => this.toast.error('No se pudo enviar la reacción.') });
   }
   private applyReaction(targetId: number, emoji: string, from: string): void {
     const idx = this.messages.findIndex(m => m.id === targetId);
@@ -438,8 +441,8 @@ export class ChatWindowComponent implements OnChanges, OnDestroy {
     this.applyPollVotes(ev.message.id, ev.options.length ? [...cur, { voter_key: 'agent', voter_type: 'agent', voter_name: null, options: ev.options }] : cur);
     this.crmService.sendMessage(this.conversationId, { message: '', type: 'poll_vote', target_message_id: ev.message.id, options: ev.options } as any)
       .subscribe({
-        next: (r: any) => { if (r?.status === 'error') { alert(r.message || 'No se pudo votar.'); this.applyPollVotes(ev.message.id, ev.message.poll_votes || []); } },
-        error: () => { alert('No se pudo enviar el voto.'); this.applyPollVotes(ev.message.id, ev.message.poll_votes || []); }
+        next: (r: any) => { if (r?.status === 'error') { this.toast.error(r.message || 'No se pudo votar.'); this.applyPollVotes(ev.message.id, ev.message.poll_votes || []); } },
+        error: () => { this.toast.error('No se pudo enviar el voto.'); this.applyPollVotes(ev.message.id, ev.message.poll_votes || []); }
       });
   }
   showPollModal = false;
@@ -462,7 +465,7 @@ export class ChatWindowComponent implements OnChanges, OnDestroy {
     this.scrollToBottom();
     this.crmService.sendMessage(this.conversationId, { message: question, type: 'poll', question, options, selectable: this.pollForm.multi ? options.length : 1 } as any)
       .subscribe({
-        next: (r: any) => { this.sending = false; if (r?.status === 'error') { this.dropPending(tempId); alert(r.message || 'No se pudo enviar la encuesta.'); } },
+        next: (r: any) => { this.sending = false; if (r?.status === 'error') { this.dropPending(tempId); this.toast.error(r.message || 'No se pudo enviar la encuesta.'); } },
         error: () => { this.sending = false; this.markFailed(tempId); }
       });
   }
@@ -835,7 +838,7 @@ export class ChatWindowComponent implements OnChanges, OnDestroy {
     this.crmService.saveSticker(mediaUrl, 'Sticker guardado').subscribe({
       next: res => {
         this.stickers.push(res.data);
-        alert('✅ Sticker guardado en tu colección');
+        this.toast.success('Sticker guardado en tu colección');
       }
     });
   }
@@ -926,7 +929,7 @@ export class ChatWindowComponent implements OnChanges, OnDestroy {
 
     } catch (error: any) {
       this.zone.run(() => {
-        alert(error.name === 'NotAllowedError'
+        this.toast.error(error.name === 'NotAllowedError'
           ? 'Permiso de micrófono denegado.'
           : 'No se pudo acceder al micrófono.');
         this.mediaStream?.getTracks().forEach(t => t.stop());
@@ -1081,18 +1084,18 @@ export class ChatWindowComponent implements OnChanges, OnDestroy {
     });
   }
 
-  deleteQuickReply(r: QuickReply): void {
-    if (!confirm(`¿Eliminar la respuesta /${r.shortcut}?`)) return;
+  async deleteQuickReply(r: QuickReply) {
+    if (!await this.dialog.confirm(`¿Eliminar la respuesta /${r.shortcut}?`)) return;
     this.crmService.deleteQuickReply(r.id).subscribe({
       next: () => { this.quickReplies = this.quickReplies.filter(x => x.id !== r.id); if (this.quickForm.id === r.id) this.resetQuickForm(); },
-      error: () => alert('No se pudo eliminar la respuesta.')
+      error: () => this.toast.error('No se pudo eliminar la respuesta.')
     });
   }
 
   /* ── CERRAR CONVERSACIÓN ────────────────────────────────────── */
-  finishConversation(): void {
+  async finishConversation() {
     if (!this.conversationId) return;
-    if (!confirm('¿Finalizar conversación?')) return;
+    if (!await this.dialog.confirm('¿Finalizar conversación?')) return;
 
     this.crmService.closeConversation(this.conversationId).subscribe(() => {
       this.messages = [];

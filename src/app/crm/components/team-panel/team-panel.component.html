@@ -1,0 +1,74 @@
+<!-- Botón en la barra superior -->
+<button type="button" class="np-icobtn tp-launch" (click)="toggle()" [attr.aria-pressed]="open" title="Equipo: chat interno y llamadas">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0M16 4.5a3.5 3.5 0 0 1 0 7M21.5 20a6.5 6.5 0 0 0-5-6.3"/></svg>
+  <span class="tp-online" *ngIf="presenceReady" [title]="onlineCount + ' en línea'">{{ onlineCount }}</span>
+  <span class="tp-badge" *ngIf="totalUnread">{{ totalUnread }}</span>
+</button>
+
+<!-- Panel lateral -->
+<div class="tp-backdrop" *ngIf="open" (click)="open = false"></div>
+<aside class="tp-panel" *ngIf="open">
+  <header class="tp-head">
+    <button type="button" class="np-icobtn" *ngIf="active !== null" (click)="backToList()" aria-label="Volver"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="m15 6-6 6 6 6"/></svg></button>
+    <div class="tp-head-copy" *ngIf="active === null"><p class="np-kicker">Equipo</p><h3>{{ onlineCount }} en línea · {{ members.length + 1 }} en el equipo</h3></div>
+    <div class="tp-head-copy" *ngIf="active === 'general'"><p class="np-kicker">Canal</p><h3>General</h3></div>
+    <div class="tp-head-copy" *ngIf="activeMember as m"><p class="np-kicker"><i class="tp-dot" [class.is-on]="online.has(m.id)"></i>{{ online.has(m.id) ? 'En línea' : 'Desconectado' }}<ng-container *ngIf="m.profile"> · {{ m.profile }}</ng-container></p><h3>{{ m.name }}</h3></div>
+    <span class="np-spacer"></span>
+    <button type="button" class="np-icobtn tp-call" *ngIf="activeMember as m" [disabled]="!online.has(m.id) || call.state !== 'idle'" (click)="callMember(m)" title="Llamar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2"/></svg></button>
+    <button type="button" class="np-icobtn" (click)="open = false" aria-label="Cerrar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
+  </header>
+
+  <!-- Lista -->
+  <div class="tp-list" *ngIf="active === null">
+    <button type="button" class="tp-row tp-row--general" (click)="openThread('general')">
+      <span class="tp-avatar tp-avatar--general"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 20l1.3-3.8A8 8 0 1 1 8 19.2L4 20z"/></svg></span>
+      <span class="tp-row-copy"><b>General</b><small>Todo el equipo de la empresa</small></span>
+      <span class="tp-unread" *ngIf="generalUnread">{{ generalUnread }}</span>
+    </button>
+    <p class="np-sect tp-sect">Compañeros</p>
+    <p class="np-muted tp-empty" *ngIf="members.length === 0">No hay otros usuarios del equipo en esta empresa.</p>
+    <div class="tp-row" *ngFor="let m of sortedMembers" role="button" tabindex="0" (click)="openThread(m.id)" (keydown.enter)="openThread(m.id)">
+      <span class="tp-avatar">{{ initials(m.name) }}<i class="tp-dot tp-dot--avatar" [class.is-on]="online.has(m.id)"></i></span>
+      <span class="tp-row-copy"><b>{{ m.name }}</b><small>{{ online.has(m.id) ? 'En línea' : 'Desconectado' }}<ng-container *ngIf="m.profile"> · {{ m.profile }}</ng-container></small></span>
+      <span class="tp-unread" *ngIf="m.unread">{{ m.unread }}</span>
+      <button type="button" class="np-icobtn tp-row-call" [disabled]="!online.has(m.id) || call.state !== 'idle'" (click)="callMember(m); $event.stopPropagation()" title="Llamar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2"/></svg></button>
+    </div>
+  </div>
+
+  <!-- Hilo -->
+  <ng-container *ngIf="active !== null">
+    <div class="tp-thread" #thread>
+      <div class="np-loading" *ngIf="loadingThread"><span class="np-spinner"></span> Cargando…</div>
+      <p class="np-muted tp-empty" *ngIf="!loadingThread && messages.length === 0">Todavía no hay mensajes. Escribí el primero.</p>
+      <ng-container *ngFor="let m of messages; let i = index">
+        <div class="tp-day" *ngIf="showDay(i)"><span>{{ dayLabel(m.created_at) }}</span></div>
+        <div class="tp-msg" [class.is-mine]="m.mine">
+          <span class="tp-msg-from" *ngIf="!m.mine && active === 'general'">{{ m.from_name }}</span>
+          <div class="tp-bubble">{{ m.content }}<span class="tp-msg-time">{{ fmtTime(m.created_at) }}</span></div>
+        </div>
+      </ng-container>
+    </div>
+    <div class="tp-composer">
+      <textarea rows="1" [(ngModel)]="draft" (keydown)="onKey($event)" placeholder="Escribí un mensaje al equipo…"></textarea>
+      <button type="button" class="tp-send" [disabled]="!draft.trim()" (click)="send()" title="Enviar"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M3 20.5 22 12 3 3.5V10l13 2-13 2z"/></svg></button>
+    </div>
+  </ng-container>
+</aside>
+
+<!-- Llamada (siempre visible, aunque el panel esté cerrado) -->
+<audio #remoteAudio autoplay playsinline hidden></audio>
+<div class="tp-callbox" *ngIf="call.state !== 'idle'" [class.is-in]="call.state === 'ringing-in'">
+  <span class="tp-avatar tp-avatar--lg">{{ initials(call.peer?.name || '') }}</span>
+  <div class="tp-call-copy">
+    <b>{{ call.peer?.name }}</b>
+    <small *ngIf="call.state === 'ringing-in'">Llamada entrante…</small>
+    <small *ngIf="call.state === 'ringing-out'">Llamando…</small>
+    <small *ngIf="call.state === 'connecting'">Conectando…</small>
+    <small *ngIf="call.state === 'active'" class="np-mono">{{ fmtSecs(callSeconds) }}<ng-container *ngIf="call.muted"> · silenciado</ng-container></small>
+  </div>
+  <div class="tp-call-acts">
+    <button type="button" class="tp-cbtn tp-cbtn--ok" *ngIf="call.state === 'ringing-in'" (click)="accept()" title="Contestar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2"/></svg></button>
+    <button type="button" class="tp-cbtn" *ngIf="call.state === 'active'" [class.is-on]="call.muted" (click)="toggleMute()" [title]="call.muted ? 'Activar micrófono' : 'Silenciar'"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/><path *ngIf="call.muted" d="M4 4l16 16"/></svg></button>
+    <button type="button" class="tp-cbtn tp-cbtn--end" (click)="call.state === 'ringing-in' ? reject() : hangup(true)" [title]="call.state === 'ringing-in' ? 'Rechazar' : 'Colgar'"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M4 12a16 16 0 0 1 16 0l1 2-4 2-2-3a11 11 0 0 0-6 0l-2 3-4-2z"/></svg></button>
+  </div>
+</div>

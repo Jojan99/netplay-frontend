@@ -1,4 +1,6 @@
-import { Component, OnInit } from '@angular/core';
+import { DialogService } from '../../../../services/dialog.service';
+import { ToastService } from '../../../../services/toast.service';
+import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MetaWhatsappService } from '../../../services/meta-whatsapp.service';
@@ -48,6 +50,8 @@ interface Variable { key: string; label: string; example: string; }
   host: { class: 'np-console' },
 })
 export class WaMetaTemplatesComponent implements OnInit {
+  private toast = inject(ToastService);
+  private dialog = inject(DialogService);
   tab: 'templates' | 'automations' = 'templates';
 
   loading = true;
@@ -518,16 +522,16 @@ export class WaMetaTemplatesComponent implements OnInit {
     });
   }
 
-  deleteTemplate(name: string): void {
+  async deleteTemplate(name: string) {
     if (this.bindings.some(b => b.enabled && b.template_name === name)) {
-      alert(`No puedes eliminar "${name}": la está usando un aviso automático activo.`);
+      this.toast.error(`No puedes eliminar "${name}": la está usando un aviso automático activo.`);
       return;
     }
-    if (!confirm(`¿Eliminar la plantilla "${name}"?`)) return;
+    if (!await this.dialog.confirm(`¿Eliminar la plantilla "${name}"?`)) return;
 
     this.meta.deleteTemplate(name).subscribe({
       next: () => this.loadTemplates(),
-      error: () => alert('No se pudo eliminar la plantilla.'),
+      error: () => this.toast.error('No se pudo eliminar la plantilla.'),
     });
   }
 }

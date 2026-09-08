@@ -1,4 +1,5 @@
-import { Component, OnInit } from '@angular/core';
+import { DialogService } from '../../../services/dialog.service';
+import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { WhatsappService } from '../../services/whatsapp.service';
@@ -15,6 +16,7 @@ type ScheduleType = 'once' | 'daily' | 'weekly';
   host: { class: 'np-console' },
 })
 export class WaProgramadosComponent implements OnInit {
+  private dialog = inject(DialogService);
 
   // Instancias
   instances: any[]   = [];
@@ -150,8 +152,8 @@ export class WaProgramadosComponent implements OnInit {
     });
   }
 
-  delete(id: number): void {
-    if (!confirm('¿Eliminar este mensaje programado?')) return;
+  async delete(id: number) {
+    if (!await this.dialog.confirm('¿Eliminar este mensaje programado?')) return;
     this.wa.deleteScheduled(id).subscribe({
       next: () => this.loadScheduled()
     });

@@ -11,6 +11,8 @@ import {
 import { isPlatformBrowser, CommonModule } from '@angular/common';
 import { RouterModule, RouterOutlet, Router, NavigationEnd } from '@angular/router';
 import { CrmWidgetComponent } from '../../crm/components/crm-widget/crm-widget.component';
+import { DialogHostComponent } from '../dialog-host/dialog-host.component';
+import { TeamPanelComponent } from '../../crm/components/team-panel/team-panel.component';
 import { filter } from 'rxjs/operators';
 
 import { FooterComponent }           from '../footer/footer.component';
@@ -31,7 +33,7 @@ import { ToastService }             from '../../services/toast.service';
   imports: [
     CommonModule, RouterOutlet, RouterModule,
     SidebarComponent, SidebarItemGroupComponent, SidebarItemComponent,
-    DarkThemeToggleComponent, NavbarComponent, FooterComponent, CrmWidgetComponent,
+    DarkThemeToggleComponent, NavbarComponent, FooterComponent, CrmWidgetComponent, DialogHostComponent, TeamPanelComponent,
   ],
   templateUrl: './layout.component.html',
   styleUrl: './layout.component.scss',

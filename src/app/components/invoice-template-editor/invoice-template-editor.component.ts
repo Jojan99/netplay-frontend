@@ -1,4 +1,5 @@
-import { Component, EventEmitter, OnInit, Output } from '@angular/core';
+import { DialogService } from '../../services/dialog.service';
+import { Component, EventEmitter, OnInit, Output, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
@@ -12,6 +13,7 @@ import { environment } from '../../../environments/environment';
   templateUrl: './invoice-template-editor.component.html',
 })
 export class InvoiceTemplateEditorComponent implements OnInit {
+  private dialog = inject(DialogService);
   @Output() templateChanged = new EventEmitter<InvoiceTemplate | null>();
 
   templates: InvoiceTemplate[] = [];
@@ -144,9 +146,9 @@ export class InvoiceTemplateEditorComponent implements OnInit {
     });
   }
 
-  deleteTemplate(t: InvoiceTemplate, event: Event): void {
+  async deleteTemplate(t: InvoiceTemplate, event: Event) {
     event.stopPropagation();
-    if (!confirm(`¿Eliminar "${t.name}"?`)) return;
+    if (!await this.dialog.confirm(`¿Eliminar "${t.name}"?`)) return;
     this.templateService.delete(t.id!).subscribe({
       next: () => {
         this.templates = this.templates.filter(x => x.id !== t.id);

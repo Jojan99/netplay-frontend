@@ -1,4 +1,5 @@
-import { Component, OnInit } from '@angular/core';
+import { DialogService } from '../../services/dialog.service';
+import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
@@ -13,6 +14,7 @@ import { TransferService, TransferOrder } from '../../services/transfer.service'
   host: { class: 'np-console' },
 })
 export class TransfersComponent implements OnInit {
+  private dialog = inject(DialogService);
   transfers: TransferOrder[] = [];
   isLoading = false;
   successMsg = '';
@@ -123,11 +125,11 @@ export class TransfersComponent implements OnInit {
     this.svc.start(id).subscribe({ next: r => { this.toast(r.message); this.load(); } });
   }
 
-  complete(id: number): void {
+  async complete(id: number) {
     const t = this.transfers.find(x => x.id === id);
     const newIp = prompt('Nueva IP (opcional):', t?.new_ip || '');
     const notes = prompt('Notas técnicas (opcional):');
-    const updateClient = confirm('¿Actualizar datos del cliente con la nueva dirección?');
+    const updateClient = await this.dialog.confirm('¿Actualizar datos del cliente con la nueva dirección?');
 
     this.svc.complete(id, { 
       new_ip: newIp || undefined, 
@@ -136,8 +138,8 @@ export class TransfersComponent implements OnInit {
     }).subscribe({ next: r => { this.toast(r.message); this.load(); } });
   }
 
-  cancel(id: number): void {
-    if (confirm('¿Cancelar este traslado?')) {
+  async cancel(id: number) {
+    if (await this.dialog.confirm('¿Cancelar este traslado?')) {
       this.svc.cancel(id).subscribe({ next: r => { this.toast(r.message); this.load(); } });
     }
   }

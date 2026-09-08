@@ -1,10 +1,11 @@
+import { DialogService } from '../../../services/dialog.service';
+import { ToastService } from '../../../services/toast.service';
 import {
   Component,
   NgZone,
   OnDestroy,
   OnInit,
-  Inject
-} from '@angular/core';
+  Inject, inject } from '@angular/core';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { PLATFORM_ID } from '@angular/core';
@@ -41,6 +42,8 @@ type InboxProvider = 'meta' | 'netplay';
   host: { class: 'np-console' },
 })
 export class InboxComponent implements OnInit, OnDestroy {
+  private toast = inject(ToastService);
+  private dialog = inject(DialogService);
 
   inbox: any[] = [];
 
@@ -62,15 +65,15 @@ export class InboxComponent implements OnInit, OnDestroy {
   providerUnread: Record<string, number> = { meta: 0, netplay: 0 };
 
   /* ── Escribirle a un contacto compartido en el chat ──────────── */
-  startChatWith(c: { phone: string; name: string }): void {
+  async startChatWith(c: { phone: string; name: string }) {
     const phone = (c.phone || '').replace(/[^\d+]/g, '');
     if (!phone) return;
     const existing = this.inbox.find(x => (x.customer?.phone || '').replace(/\D/g, '').endsWith(phone.replace(/\D/g, '').slice(-10)));
     if (existing) { this.openChat(existing.id); return; }
-    if (!confirm(`¿Iniciar un chat nuevo con ${c.name || phone} (${phone})?`)) return;
+    if (!await this.dialog.confirm(`¿Iniciar un chat nuevo con ${c.name || phone} (${phone})?`)) return;
     this.crmService.createConversation(phone, c.name || phone, this.inboxProvider).subscribe({
       next: res => { const id = res?.conversation_id ?? res?.data?.id; if (id) { this.loadInbox(); this.openChat(id); } },
-      error: err => alert(err?.error?.message || err?.error?.error || 'No se pudo crear la conversación.')
+      error: err => this.toast.error(err?.error?.message || err?.error?.error || 'No se pudo crear la conversación.')
     });
   }
 
@@ -90,7 +93,7 @@ export class InboxComponent implements OnInit, OnDestroy {
     this.settingsError = '';
     this.crmService.getSettings().subscribe({
       next: r => { this.settings = r.data; this.settingsForm = { ...r.data, business_days: [...(r.data.business_days || [])] }; this.showSettings = true; },
-      error: () => alert('No se pudo cargar la configuración.')
+      error: () => this.toast.error('No se pudo cargar la configuración.')
     });
   }
   toggleDay(n: number): void {

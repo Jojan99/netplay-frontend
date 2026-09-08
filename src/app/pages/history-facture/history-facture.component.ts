@@ -1,4 +1,6 @@
-import { Component, forwardRef,OnInit } from '@angular/core';
+import { DialogService } from '../../services/dialog.service';
+import { ToastService } from '../../services/toast.service';
+import { Component, forwardRef,OnInit, inject } from '@angular/core';
 import { UserService } from '../../services/user.service';
 import { UserInterface } from '../../models/user-interface';
 import { CommonModule } from '@angular/common';
@@ -12,6 +14,8 @@ import { HttpClient, HttpHeaders } from '@angular/common/http';
   host: { class: 'np-console' }
 })
 export class HistoryFactureComponent  implements OnInit{
+  private toast = inject(ToastService);
+  private dialog = inject(DialogService);
   constructor(
     private userService: UserService,
     private http: HttpClient
@@ -43,33 +47,33 @@ export class HistoryFactureComponent  implements OnInit{
   }
 
 
-  ejecutarComando() {
-    if (!confirm("¿Estás seguro de que deseas ejecutar este proceso?")) {
+  async ejecutarComando() {
+    if (!await this.dialog.confirm("¿Estás seguro de que deseas ejecutar este proceso?")) {
       return; // Si cancela, no hace nada
     }
 
     let password = prompt("Ingrese la contraseña para continuar:");
 
     if (password !== "n3t4dm1n") {
-      alert("Contraseña incorrecta. No se ejecutará el proceso.");
+      this.toast.error("Contraseña incorrecta. No se ejecutará el proceso.");
       return;
     }
 
     this.procesando = true; // Desactivar botón
-    alert("iniciando proceso")
+    this.toast.error("iniciando proceso")
 
     this.http.get("http://localhost:8000/api/facturation/ejecutar-comando", {})
       .subscribe({
         next: (response: any) => {
-          alert(response.message);
+          this.toast.error(response.message);
         },
         error: (error) => {
           console.error("Error:", error);
-          alert("Ocurrió un error al ejecutar el comando.");
+          this.toast.error("Ocurrió un error al ejecutar el comando.");
         },
         complete: () => {
           this.procesando = false; // Habilitar botón nuevamente
-    alert("proceso terminado")
+    this.toast.error("proceso terminado")
 
         }
       });

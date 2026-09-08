@@ -1,4 +1,5 @@
-import { Component, HostListener, OnInit } from '@angular/core';
+import { DialogService } from '../../../services/dialog.service';
+import { Component, HostListener, OnInit, inject } from '@angular/core';
 import { CommonModule }  from '@angular/common';
 import { FormsModule }   from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
@@ -17,6 +18,7 @@ import { BarcodeScannerComponent }    from '../../../components/barcode-scanner/
   host: { class: 'np-console' },
 })
 export class InventoryItemsComponent implements OnInit {
+  private dialog = inject(DialogService);
   isDesktop = true;
   get lowStockCount(): number { return this.filteredItems.filter(i => this.isLowStock(i)).length; }
   get pageNumbers(): number[] {
@@ -180,8 +182,8 @@ export class InventoryItemsComponent implements OnInit {
     }
   }
 
-  deleteItem(item: InventoryItemInterface) {
-    if (!confirm(`¿Eliminar el ítem "${item.name}"? Esta acción no se puede deshacer.`)) return;
+  async deleteItem(item: InventoryItemInterface) {
+    if (!await this.dialog.confirm(`¿Eliminar el ítem "${item.name}"? Esta acción no se puede deshacer.`)) return;
     this.inventoryService.deleteItem(item.id!).subscribe(data => {
       if (data.error) { this.toast.error(data.message); }
       else { this.toast.success(data.message); this.loadItems(this.currentPage); }

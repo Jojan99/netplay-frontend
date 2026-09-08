@@ -1,4 +1,5 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { ToastService } from '../../../services/toast.service';
+import { Component, OnInit, OnDestroy, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { WhatsappService } from '../../services/whatsapp.service';
@@ -13,6 +14,7 @@ import { interval, Subscription } from 'rxjs';
   host: { class: 'np-console' },
 })
 export class WaInstanciasComponent implements OnInit, OnDestroy {
+  private toast = inject(ToastService);
 
   instances: any[]    = [];
   loading             = false;
@@ -148,7 +150,7 @@ export class WaInstanciasComponent implements OnInit, OnDestroy {
       },
       error: (e: any) => {
         this.deleting = false;
-        alert(e.error?.message || 'Error al eliminar');
+        this.toast.error(e.error?.message || 'Error al eliminar');
       }
     });
   }

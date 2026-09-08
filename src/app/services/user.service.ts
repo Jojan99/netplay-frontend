@@ -1,4 +1,5 @@
-import { Injectable } from '@angular/core';
+import { ToastService } from './toast.service';
+import { Injectable, inject } from '@angular/core';
 import { Observable, catchError, of } from 'rxjs';
 
 import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
@@ -12,6 +13,7 @@ import { error } from 'node:console';
   providedIn: 'root'
 })
 export class UserService {
+  private toast = inject(ToastService);
   env = environment
 
   constructor(private http: HttpClient) { }
@@ -294,7 +296,7 @@ getIpzonebyZone(vlan: string, segment: string, routerId?: number | null) {
     const url = this.env.rootUrl + 'api/generatePdf/generatePdfbyId/' + id;
     return this.http.get(url, { responseType: 'blob', headers: this.getHeaders() }).pipe(
       catchError(error => {
-        alert("No tienes permiso para realizar esta accion");
+        this.toast.error("No tienes permiso para realizar esta accion");
         return of(null);
       })
     );
@@ -304,7 +306,7 @@ getIpzonebyZone(vlan: string, segment: string, routerId?: number | null) {
     const url = this.env.rootUrl + 'api/generatePdf/generatePdfTicketbyId/' + id;
     return this.http.get(url, { responseType: 'blob', headers: this.getHeaders() }).pipe(
       catchError(error => {
-        alert("No tienes permiso para realizar esta accion");
+        this.toast.error("No tienes permiso para realizar esta accion");
         return of(null);
       })
     );
@@ -317,7 +319,7 @@ getIpzonebyZone(vlan: string, segment: string, routerId?: number | null) {
     const url = `${this.env.rootUrl}api/generatePdf/generatePaidPdfbyId/${id}?extraParam=${value}`;
     return this.http.get(url, { responseType: 'blob', headers: this.getHeaders() }).pipe(
       catchError(error => {
-        alert("No tienes permiso para realizar esta accion");
+        this.toast.error("No tienes permiso para realizar esta accion");
         return of(null);
       })
     );

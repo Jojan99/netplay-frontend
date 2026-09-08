@@ -1,4 +1,5 @@
-import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
+import { ToastService } from '../../../services/toast.service';
+import { Component, OnInit, ChangeDetectorRef, inject } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { UserService } from '../../../services/user.service';
 import { CommonModule } from '@angular/common';
@@ -16,6 +17,7 @@ import { Subscription } from 'rxjs';
   host: { class: 'np-console' }
 })
 export class MaintenanceTicketComponent implements OnInit {
+  private toast = inject(ToastService);
 
   ticketForm: FormGroup;
   isLoading = false;
@@ -136,7 +138,7 @@ export class MaintenanceTicketComponent implements OnInit {
   submit() {
     if (this.ticketForm.invalid || !this.selectedUser) {
       this.ticketForm.markAllAsTouched();
-      if (!this.selectedUser) alert('Debe seleccionar un cliente');
+      if (!this.selectedUser) this.toast.error('Debe seleccionar un cliente');
       return;
     }
 

@@ -1,4 +1,5 @@
-import { Component, HostListener, OnInit, OnDestroy } from '@angular/core';
+import { ToastService } from '../../../services/toast.service';
+import { Component, HostListener, OnInit, OnDestroy, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { UserService } from '../../../services/user.service';
@@ -14,6 +15,7 @@ import { TicketInterface, TicketNote, TicketStats } from '../../../models/ticket
   host: { class: 'np-console' },
 })
 export class TaskTicketComponent implements OnInit, OnDestroy {
+  private toast = inject(ToastService);
 
   // ── Role ─────────────────────────────────────────────────────────────────
   isAdmin   = false;
@@ -441,7 +443,7 @@ export class TaskTicketComponent implements OnInit, OnDestroy {
       this.recordTimer     = setInterval(() => this.recordingSeconds++, 1000);
 
     } catch {
-      alert('No se pudo acceder al micrófono. Verifica los permisos.');
+      this.toast.error('No se pudo acceder al micrófono. Verifica los permisos.');
     }
   }
 

@@ -1,4 +1,5 @@
-import { Component, OnInit } from '@angular/core';
+import { DialogService } from '../../../services/dialog.service';
+import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule }  from '@angular/forms';
 import { RouterLink }   from '@angular/router';
@@ -15,6 +16,7 @@ import { InventoryCategoryInterface } from '../../../models/inventory-category.i
   host: { class: 'np-console' },
 })
 export class CategoriesComponent implements OnInit {
+  private dialog = inject(DialogService);
   skeletor   = true;
   showForm   = false;
   isEditing  = false;
@@ -79,8 +81,8 @@ export class CategoriesComponent implements OnInit {
     }
   }
 
-  deleteCategory(category: InventoryCategoryInterface) {
-    if (!confirm(`¿Eliminar la categoría "${category.name}"? Los ítems asociados quedarán sin categoría.`)) return;
+  async deleteCategory(category: InventoryCategoryInterface) {
+    if (!await this.dialog.confirm(`¿Eliminar la categoría "${category.name}"? Los ítems asociados quedarán sin categoría.`)) return;
     this.inventoryService.deleteCategory(category.id!).subscribe(data => {
       if (data.error) { this.toast.error(data.message); }
       else { this.toast.success(data.message); this.loadCategories(); }

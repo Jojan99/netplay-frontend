@@ -1,4 +1,5 @@
-import { Component, OnInit } from '@angular/core';
+import { DialogService } from '../../../services/dialog.service';
+import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { WhatsappService } from '../../services/whatsapp.service';
@@ -12,6 +13,7 @@ import { WhatsappService } from '../../services/whatsapp.service';
   host: { class: 'np-console' },
 })
 export class WaWebhookComponent implements OnInit {
+  private dialog = inject(DialogService);
 
   // Instancias
   instances: any[]    = [];
@@ -94,8 +96,8 @@ export class WaWebhookComponent implements OnInit {
     });
   }
 
-  remove(): void {
-    if (!confirm('¿Eliminar el webhook de esta instancia?')) return;
+  async remove() {
+    if (!await this.dialog.confirm('¿Eliminar el webhook de esta instancia?')) return;
     this.wa.deleteWebhook(this.selectedInstance).subscribe({
       next: () => {
         this.currentWebhook = { url: '', secret: '' };

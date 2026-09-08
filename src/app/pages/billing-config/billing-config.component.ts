@@ -1,4 +1,5 @@
-import { Component, OnInit } from '@angular/core';
+import { DialogService } from '../../services/dialog.service';
+import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
@@ -29,6 +30,7 @@ interface Schedule {
   host: { class: 'np-console' },
 })
 export class BillingConfigComponent implements OnInit {
+  private dialog = inject(DialogService);
   schedules:   Schedule[] = [];
   isLoading    = false;
   isSaving     = false;
@@ -474,8 +476,8 @@ export class BillingConfigComponent implements OnInit {
     this.editPmName = '';
   }
 
-  deletePaymentMethod(pm: any): void {
-    if (!confirm(`¿Eliminar "${pm.name}"?`)) return;
+  async deletePaymentMethod(pm: any) {
+    if (!await this.dialog.confirm(`¿Eliminar "${pm.name}"?`)) return;
     this.financeService.deletePaymentMethod(pm.id).subscribe({
       next: () => { this.paymentMethods = this.paymentMethods.filter(p => p.id !== pm.id); },
     });

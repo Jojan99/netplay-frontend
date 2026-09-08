@@ -1,4 +1,5 @@
-import { Component, OnInit } from '@angular/core';
+import { ToastService } from '../../services/toast.service';
+import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule }  from '@angular/common';
 import { FormsModule }   from '@angular/forms';
 import { Chart }         from 'chart.js/auto';
@@ -15,6 +16,7 @@ import { EgressesInterface }       from '../../models/egresses-interface';
   host: { class: 'np-console' },
 })
 export class ResumenComponent implements OnInit {
+  private toast = inject(ToastService);
   skeletorResumen  = true;
   skeletorIngresos = true;
   skeletorEgresos  = true;
@@ -144,11 +146,11 @@ export class ResumenComponent implements OnInit {
 
   saveEgreso() {
     if (!this.nuevoEgreso.concept.trim() || this.nuevoEgreso.value <= 0) {
-      alert('Concepto y valor son obligatorios.');
+      this.toast.error('Concepto y valor son obligatorios.');
       return;
     }
     this.financeService.createEgresoManual(this.nuevoEgreso).subscribe(data => {
-      alert(data.message);
+      this.toast.error(data.message);
       if (!data.error) { this.closeEgresoModal(); this.loadEgresos(); }
     });
   }

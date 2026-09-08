@@ -1,4 +1,5 @@
-import { Component, OnInit } from '@angular/core';
+import { DialogService } from '../../services/dialog.service';
+import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MikrotikService } from '../../services/mikrotik.service';
@@ -12,6 +13,7 @@ import { MikrotikService } from '../../services/mikrotik.service';
   host: { class: 'np-console' },
 })
 export class MikrotikComponent implements OnInit {
+  private dialog = inject(DialogService);
   activeTab: 'info' | 'clients' | 'queues' | 'config' = 'info';
 
   tabs: { key: 'info' | 'clients' | 'queues' | 'config'; label: string }[] = [
@@ -247,8 +249,8 @@ export class MikrotikComponent implements OnInit {
     });
   }
 
-  deleteQueue(id: string) {
-    if (!confirm('¿Eliminar esta cola de ancho de banda?')) return;
+  async deleteQueue(id: string) {
+    if (!await this.dialog.confirm('¿Eliminar esta cola de ancho de banda?')) return;
     this.svc.deleteQueue(id, this.selectedRouterId).subscribe({ next: () => this.loadQueues() });
   }
 
@@ -297,8 +299,8 @@ export class MikrotikComponent implements OnInit {
     });
   }
 
-  confirmDeleteRouter(id: number) {
-    if (!confirm('¿Eliminar este Mikrotik? Esta acción no se puede deshacer.')) return;
+  async confirmDeleteRouter(id: number) {
+    if (!await this.dialog.confirm('¿Eliminar este Mikrotik? Esta acción no se puede deshacer.')) return;
     this.deletingRouterId = id;
     this.svc.removeRouter(id).subscribe({
       next: () => { this.deletingRouterId = null; this.loadRouters(); },
