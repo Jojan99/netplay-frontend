@@ -1,4 +1,4 @@
-:host { display: contents; }
+:host, :host.np-console { display: contents !important; height: auto !important; }
 
 /* Botón de la barra */
 .tp-launch { position: relative; }

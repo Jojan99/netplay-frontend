@@ -1,5 +1,5 @@
 @use '../../crm-theme' as wa;
-:host { display: contents; }
+:host, :host.np-console { display: contents !important; height: auto !important; }
 .wg-launch { position: fixed; right: 20px; bottom: 20px; z-index: 70; display: grid; place-items: center; width: 56px; height: 56px; border: 0; border-radius: 50%; background: #25d366; color: #fff; box-shadow: 0 8px 24px rgba(0,0,0,.28); cursor: pointer; transition: transform .15s; svg { width: 28px; height: 28px; } &:hover { transform: scale(1.06); } }
 .wg-badge { position: absolute; top: -4px; right: -4px; min-width: 22px; height: 22px; padding: 0 6px; border-radius: 999px; background: var(--danger, #e0483e); color: #fff; font: 700 11.5px/22px var(--font-mono); border: 2px solid var(--bg, #fff); }
 

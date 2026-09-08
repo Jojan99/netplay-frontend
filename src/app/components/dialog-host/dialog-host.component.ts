@@ -25,6 +25,7 @@ import { DialogService } from '../../services/dialog.service';
     </div>
   `,
   styles: [`
+    :host, :host.np-console { display: contents !important; height: auto !important; }
     .np-overlay--top { z-index: 200; }
     .np-confirm-ico { display: grid; place-items: center; width: 52px; height: 52px; margin: 0 auto 12px; border-radius: 50%; background: var(--info-soft); color: var(--info); }
     .np-confirm-ico svg { width: 26px; height: 26px; }
