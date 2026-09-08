@@ -24,9 +24,12 @@ export class PortalHomeComponent implements OnInit {
   openTickets      = signal(0);
   profile          = signal<any>(null);
 
+  /** Saldo real: total menos descuento y abonos (price_abone es el monto abonado). */
   totalDue = computed(() =>
-    this.unpaidInvoices().reduce((sum, inv) => sum + (inv.price_total - (inv.abone ?? 0)), 0)
+    this.unpaidInvoices().reduce((sum, inv) => sum + Math.max(0, (inv.price_total ?? 0) - (inv.price_discount ?? 0) - (inv.price_abone ?? 0)), 0)
   );
+  get greeting(): string { const h = new Date().getHours(); return h < 12 ? 'Buenos días' : h < 18 ? 'Buenas tardes' : 'Buenas noches'; }
+  get nextDue(): string { return this.unpaidInvoices()[0]?.date_facturation || ''; }
 
   ngOnInit(): void {
     this.fullName.set(this.auth.getFullName());

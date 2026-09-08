@@ -9,7 +9,7 @@ import { ToastService } from '../../../services/toast.service';
 interface Member { id: number; name: string; profile?: string; unread: number; }
 interface TeamMsg { id: number; from_user_id: number; to_user_id: number | null; from_name: string; content: string; created_at: string; mine: boolean; attachment_url?: string | null; attachment_type?: string | null; attachment_name?: string | null; attachment_size?: number | null; }
 type PeerState = 'ringing' | 'connecting' | 'active' | 'left';
-interface Peer { member: Member; pc: RTCPeerConnection | null; state: PeerState; pendingIce: RTCIceCandidateInit[]; audio?: HTMLAudioElement; timer?: any; }
+interface Peer { member: Member; pc: RTCPeerConnection | null; state: PeerState; pendingIce: RTCIceCandidateInit[]; audio?: HTMLAudioElement; timer?: any; diag?: string; }
 type CallState = 'idle' | 'ringing-in' | 'in-call';
 
 /**
@@ -211,7 +211,9 @@ export class TeamPanelComponent implements OnInit, OnDestroy {
     return p;
   }
   private newPc(peerId: number): RTCPeerConnection {
-    const pc = new RTCPeerConnection({ iceServers: this.iceServers });
+    let pc: RTCPeerConnection;
+    try { pc = new RTCPeerConnection({ iceServers: this.iceServers }); }
+    catch (e) { console.warn('[Equipo llamada] ICE config rechazada, uso STUN', e); pc = new RTCPeerConnection({ iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] }); }
     this.localStream?.getTracks().forEach(t => pc.addTrack(t, this.localStream!));
     pc.onicecandidate = e => { if (e.candidate) this.signal(peerId, 'ice', e.candidate.toJSON()); };
     pc.ontrack = e => {
@@ -221,6 +223,8 @@ export class TeamPanelComponent implements OnInit, OnDestroy {
     };
     const onState = () => this.zone.run(() => {
       const st: string = pc.connectionState || pc.iceConnectionState;
+      const p = this.peers.get(peerId); if (p) { p.diag = `ice ${pc.iceConnectionState} · ${pc.signalingState}`; this.peers = new Map(this.peers); }
+      console.log('[Equipo llamada]', peerId, 'conn', pc.connectionState, 'ice', pc.iceConnectionState, 'sig', pc.signalingState);
       if (st === 'connected' || st === 'completed') this.peerActive(peerId);
       if (st === 'failed') this.dropPeer(peerId, 'no se pudo conectar el audio');
       if (st === 'disconnected') setTimeout(() => { const cur: string = pc.connectionState || pc.iceConnectionState; if (cur === 'disconnected') this.dropPeer(peerId, 'se perdió la conexión'); }, 6000);
@@ -283,6 +287,16 @@ export class TeamPanelComponent implements OnInit, OnDestroy {
   }
 
   private async onSignal(s: any): Promise<void> {
+    try { await this.handleSignal(s); }
+    catch (e: any) {
+      const msg = `${s.type}: ${e?.name || ''} ${e?.message || e}`.slice(0, 400);
+      console.error('[Equipo llamada] error procesando señal', s.type, e);
+      this.team.signal(Number(s.from?.id) || 0, 'diag', { error: msg, ua: navigator.userAgent.slice(0, 120), state: this.call.state }, this.call.id).subscribe({ error: () => {} });
+      this.toast.error(`Error en la llamada (${s.type}): ${e?.message || e}`);
+    }
+  }
+  private async handleSignal(s: any): Promise<void> {
+    console.log('[Equipo señal]', s.type, 'de', s.from?.id, 'call', s.call_id, 'estado', this.call.state);
     const fromId = Number(s.from?.id); const fromName = s.from?.name || 'Agente';
     const from: Member = this.members.find(m => m.id === fromId) || { id: fromId, name: fromName, unread: 0 };
     switch (s.type) {

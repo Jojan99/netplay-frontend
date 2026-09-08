@@ -86,7 +86,7 @@ export class TechnicianMapComponent implements OnInit, AfterViewInit, OnDestroy 
     if (this.tiles) this.tiles.remove();
     this.tiles = this.mapStyle === 'satellite'
       ? this.L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', { attribution: 'Esri, Maxar, Earthstar Geographics', maxZoom: 19 })
-      : this.L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', { attribution: '© OpenStreetMap · © CARTO', maxZoom: 20 });
+      : this.L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '© OpenStreetMap contributors', maxZoom: 19 });
     this.tiles.addTo(this.map);
   }
   toggleStyle(): void { this.mapStyle = this.mapStyle === 'streets' ? 'satellite' : 'streets'; this.applyTiles(); }

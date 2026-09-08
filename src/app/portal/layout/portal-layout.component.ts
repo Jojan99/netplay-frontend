@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { Router, RouterModule, RouterOutlet } from '@angular/router';
 import { ClientAuthService } from '../services/client-auth.service';
 import { ClientApiService }  from '../services/client-api.service';
+import { ThemeService } from '../../services/theme.service';
 
 @Component({
   selector: 'app-portal-layout',
@@ -14,6 +15,8 @@ export class PortalLayoutComponent implements OnInit {
   private auth   = inject(ClientAuthService);
   private api    = inject(ClientApiService);
   private router = inject(Router);
+  readonly theme = inject(ThemeService);
+  initials(): string { return (this.fullName() || 'C').split(' ').filter(Boolean).slice(0, 2).map(x => x[0]).join('').toUpperCase(); }
 
   fullName    = signal('');
   companyName = signal('');

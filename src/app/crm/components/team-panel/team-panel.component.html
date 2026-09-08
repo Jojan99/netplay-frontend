@@ -105,7 +105,8 @@
       <button type="button" class="tp-cbtn tp-cbtn--end" (click)="call.state === 'ringing-in' ? reject() : hangup()" [title]="call.state === 'ringing-in' ? 'Rechazar' : 'Colgar'"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M4 12a16 16 0 0 1 16 0l1 2-4 2-2-3a11 11 0 0 0-6 0l-2 3-4-2z"/></svg></button>
     </div>
   </div>
+  <p class="tp-call-diag" *ngIf="call.state === 'in-call' && !activePeers.length && peerList[0]?.diag">{{ peerList[0].diag }}</p>
   <div class="tp-call-peers" *ngIf="call.state === 'in-call' && (call.group || peerList.length > 1)">
-    <span class="tp-call-peer" *ngFor="let p of peerList; trackBy: trackPeer" [class.is-active]="p.state === 'active'"><i></i>{{ p.member.name.split(' ')[0] }}<small>{{ p.state === 'active' ? 'en línea' : p.state === 'ringing' ? 'llamando…' : 'conectando…' }}</small></span>
+    <span class="tp-call-peer" *ngFor="let p of peerList; trackBy: trackPeer" [class.is-active]="p.state === 'active'" [title]="p.diag || ''"><i></i>{{ p.member.name.split(' ')[0] }}<small>{{ p.state === 'active' ? 'en línea' : p.state === 'ringing' ? 'llamando…' : 'conectando…' }}</small></span>
   </div>
 </div>

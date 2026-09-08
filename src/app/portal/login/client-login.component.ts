@@ -19,6 +19,7 @@ export class ClientLoginComponent {
   username  = '';
   password  = '';
   loading   = signal(false);
+  showPw    = false;
   errorMsg  = signal('');
 
   login(): void {
