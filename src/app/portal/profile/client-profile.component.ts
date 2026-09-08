@@ -31,8 +31,10 @@ export class ClientProfileComponent implements OnInit {
   pwLoading       = signal(false);
   pwSuccess       = signal('');
   pwError         = signal('');
+  contracts       = signal<any[]>([]);
 
   ngOnInit(): void {
+    this.api.getContracts().subscribe({ next: (r: any) => this.contracts.set(r.data ?? []), error: () => {} });
     this.api.getProfile().subscribe({
       next: (res) => {
         this.profile.set(res.data);

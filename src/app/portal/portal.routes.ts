@@ -8,6 +8,7 @@ import { TicketListComponent }   from './tickets/ticket-list.component';
 import { TicketFormComponent }   from './tickets/ticket-form.component';
 import { TicketDetailComponent } from './tickets/ticket-detail.component';
 import { ClientProfileComponent } from './profile/client-profile.component';
+import { PaymentHistoryComponent } from './payments/payment-history.component';
 
 export const PORTAL_ROUTES: Routes = [
   {
@@ -21,6 +22,7 @@ export const PORTAL_ROUTES: Routes = [
     children: [
       { path: 'home',            component: PortalHomeComponent },
       { path: 'facturas',        component: InvoiceListComponent },
+      { path: 'pagos',           component: PaymentHistoryComponent },
       { path: 'reportes',        component: TicketListComponent },
       { path: 'reportes/nuevo',  component: TicketFormComponent },
       { path: 'reportes/:id',    component: TicketDetailComponent },

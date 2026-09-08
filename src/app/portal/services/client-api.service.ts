@@ -87,6 +87,23 @@ export class ClientApiService {
   }
 
   // ── Perfil ───────────────────────────────────────────────────────────────
+  // ── Cuenta: estado, pagos, contratos, actividad ──
+  getStatus(): Observable<any> {
+    return this.http.get(`${this.baseUrl}/status`, this.headers());
+  }
+  getPayments(): Observable<any> {
+    return this.http.get(`${this.baseUrl}/payments`, this.headers());
+  }
+  getReceiptUrl(invoiceId: number): Observable<any> {
+    return this.http.get(`${this.baseUrl}/payments/${invoiceId}/receipt`, this.headers());
+  }
+  getContracts(): Observable<any> {
+    return this.http.get(`${this.baseUrl}/contracts`, this.headers());
+  }
+  getActivity(): Observable<any> {
+    return this.http.get(`${this.baseUrl}/activity`, this.headers());
+  }
+
   getProfile(): Observable<any> {
     return this.http.get(`${this.baseUrl}/profile`, this.headers());
   }

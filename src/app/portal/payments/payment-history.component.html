@@ -1,0 +1,39 @@
+<div class="pt-head">
+  <div><p class="pt-kicker">Facturación</p><h1>Mis pagos</h1><p>Todo lo que ya pagaste, con su comprobante.</p></div>
+  <button type="button" class="pt-btn pt-btn--ghost pt-btn--sm" (click)="load()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 12a8 8 0 1 1-2.3-5.7M20 4v5h-5"/></svg>Actualizar</button>
+</div>
+
+<section class="pt-kpis" *ngIf="!loading() && payments().length">
+  <div class="pt-kpi is-ok" style="grid-column:span 2"><b>{{ formatCurrency(totalPaid()) }}</b><small>Total pagado</small></div>
+  <div class="pt-kpi"><b>{{ approved().length }}</b><small>Pagos aprobados</small></div>
+  <div class="pt-kpi"><b>{{ payments().length }}</b><small>Movimientos</small></div>
+</section>
+
+<div class="pt-alert pt-alert--danger" *ngIf="errorMsg()">{{ errorMsg() }}</div>
+<div class="pt-skel" *ngIf="loading()"><span></span><span></span><span></span></div>
+
+<div class="pt-card pt-empty" *ngIf="!loading() && payments().length === 0">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="6" width="18" height="12" rx="2"/><path d="M3 10h18M7 15h3"/></svg>
+  <b>Todavía no registramos pagos</b><span>Cuando pagues una factura, el movimiento y su comprobante aparecen acá.</span>
+  <a routerLink="/portal/facturas" class="pt-btn pt-btn--soft pt-btn--sm">Ver mis facturas</a>
+</div>
+
+<section class="pt-list" *ngIf="!loading() && payments().length > 0">
+  <div class="pt-row" *ngFor="let p of payments()">
+    <span class="pt-row-ico" [ngClass]="statusClass(p.status) || 'is-info'">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="6" width="18" height="12" rx="2"/><path d="M3 10h18M7 15h3"/></svg>
+    </span>
+    <span class="pt-row-copy">
+      <b>{{ gatewayLabel(p.gateway) }}</b>
+      <small><span class="np-mono">{{ p.reference }}</span> · {{ p.date | date:'dd/MM/yyyy HH:mm' }}</small>
+    </span>
+    <span class="pt-row-end">
+      <b>{{ formatCurrency(p.amount) }}</b>
+      <span class="pt-pill" [ngClass]="statusClass(p.status)">{{ statusLabel(p.status) }}</span>
+    </span>
+    <button type="button" class="pt-icobtn" *ngIf="p.status === 'approved'" (click)="openReceipt(p)" [disabled]="openingId() === p.id" title="Ver comprobante">
+      <span class="pt-spinner" *ngIf="openingId() === p.id"></span>
+      <svg *ngIf="openingId() !== p.id" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 4v11m0 0 4-4m-4 4-4-4M5 20h14"/></svg>
+    </button>
+  </div>
+</section>

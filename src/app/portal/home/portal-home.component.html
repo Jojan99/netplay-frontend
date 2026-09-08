@@ -2,6 +2,12 @@
   <div><p class="pt-kicker">{{ greeting }}</p><h1>{{ fullName() || 'Cliente' }}</h1><p>Así está tu cuenta hoy.</p></div>
 </div>
 
+<!-- Servicio suspendido -->
+<div class="pt-alert pt-alert--danger" *ngIf="suspended" role="alert">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 9v4M12 17h.01M10.3 3.9 2.3 18a2 2 0 0 0 1.7 3h16a2 2 0 0 0 1.7-3l-8-14.1a2 2 0 0 0-3.4 0z"/></svg>
+  <span><b>Tu servicio está suspendido.</b> Ponete al día para reactivarlo; la reconexión es automática apenas se acredita el pago.<ng-container *ngIf="status()?.company?.phone"> Dudas: <span class="np-mono">{{ status().company.phone }}</span>.</ng-container></span>
+</div>
+
 <!-- Estado de cuenta -->
 <section class="pt-hero" *ngIf="!loading() || invoiceSummary()">
   <div class="pt-hero-grid">
@@ -38,6 +44,7 @@
     <button type="button" *ngIf="paymentAvailable() && unpaidInvoices().length" (click)="goToPay()"><span class="pt-quick-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="6" width="18" height="12" rx="2"/><path d="M3 10h18M7 15h3"/></svg></span><b>Pagar</b><small>Tarjeta, PSE o Bre-B</small></button>
     <a routerLink="/portal/facturas"><span class="pt-quick-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/></svg></span><b>Facturas</b><small>PDF y envío por WhatsApp</small></a>
     <a routerLink="/portal/reportes/nuevo"><span class="pt-quick-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.7 6.3a4 4 0 0 0-5.4 5.4L3 18v3h3l6.3-6.3a4 4 0 0 0 5.4-5.4l-2.4 2.4-2-2z"/></svg></span><b>Reportar falla</b><small>Sin internet, lentitud, WiFi</small></a>
+    <a routerLink="/portal/pagos"><span class="pt-quick-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></span><b>Mis pagos</b><small>Historial y comprobantes</small></a>
     <a routerLink="/portal/perfil"><span class="pt-quick-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg></span><b>Mi perfil</b><small>Datos y contraseña</small></a>
   </div>
 </section>
@@ -50,6 +57,21 @@
       <span class="pt-row-ico" [ngClass]="inv.invoice_status === 'overdue' ? 'is-danger' : 'is-warn'"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/></svg></span>
       <span class="pt-row-copy"><b class="np-mono">{{ inv.number_facture }}</b><small>Vence {{ inv.date_facturation }}</small></span>
       <span class="pt-row-end"><b>{{ formatCurrency(inv.price_total) }}</b><span class="pt-pill" [ngClass]="inv.invoice_status === 'overdue' ? 'is-danger' : 'is-warn'">{{ getStatusLabel(inv.invoice_status) }}</span></span>
+    </div>
+  </div>
+</section>
+
+<!-- Actividad reciente -->
+<section class="pt-card" *ngIf="activity().length">
+  <div class="pt-card-h"><h2>Actividad reciente</h2></div>
+  <div class="pt-list">
+    <div class="pt-row" *ngFor="let a of activity().slice(0, 6)">
+      <span class="pt-row-ico" [ngClass]="'is-' + activityIcon(a.type)">
+        <svg *ngIf="a.type === 'payment'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="m5 12 5 5L20 7"/></svg>
+        <svg *ngIf="a.type === 'invoice'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/></svg>
+        <svg *ngIf="a.type === 'ticket' || a.type === 'ticket_done'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.7 6.3a4 4 0 0 0-5.4 5.4L3 18v3h3l6.3-6.3a4 4 0 0 0 5.4-5.4l-2.4 2.4-2-2z"/></svg>
+      </span>
+      <span class="pt-row-copy"><b>{{ a.title }}</b><small>{{ a.date | date:'dd/MM/yyyy HH:mm' }}</small></span>
     </div>
   </div>
 </section>

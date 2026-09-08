@@ -58,10 +58,14 @@
       </div>
       <div *ngIf="isLoadingModules" class="np-loading"><span class="np-spinner"></span> Cargando módulos…</div>
       <div class="np-insp-body" *ngIf="!isLoadingModules">
+        <div class="np-btnrow np-btnrow--end" style="margin-bottom:8px">
+          <button type="button" class="np-btn np-btn--ghost np-btn--sm" (click)="selectAllModules(true)">Marcar todo</button>
+          <button type="button" class="np-btn np-btn--ghost np-btn--sm" (click)="selectAllModules(false)">Quitar todo</button>
+        </div>
         <section *ngFor="let group of moduleGroups">
-          <p class="np-sect">{{ group }}</p>
+          <p class="np-sect">{{ group }}<span class="np-spacer"></span><button type="button" class="np-link" (click)="toggleGroup(group, !groupAllOn(group))">{{ groupAllOn(group) ? 'Quitar grupo' : 'Marcar grupo' }}</button></p>
           <div class="np-checklist">
-            <label class="np-check" *ngFor="let m of groupModules(group)"><input type="checkbox" [(ngModel)]="m.active" /><span [class.np-strong]="m.active">{{ m.label }}</span><span class="np-spacer"></span><span class="np-fine np-mono">{{ m.module }}</span></label>
+            <label class="np-check np-check--stack" *ngFor="let m of groupModules(group)" [title]="m.description || ''"><input type="checkbox" [(ngModel)]="m.active" /><span class="np-check-copy"><span [class.np-strong]="m.active">{{ m.label }}</span><small class="np-fine" *ngIf="m.description">{{ m.description }}</small></span><span class="np-spacer"></span><span class="np-fine np-mono">{{ m.module }}</span></label>
           </div>
         </section>
       </div>

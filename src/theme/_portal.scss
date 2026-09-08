@@ -39,7 +39,7 @@
 .pt-nav-user { display: none; align-items: center; gap: 10px; margin-left: auto; .pt-avatar { width: 34px; height: 34px; font-size: 13px; } span { font-size: 13px; color: var(--text-2); max-width: 180px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; } }
 .pt-icobtn { display: inline-grid; place-items: center; width: 32px; height: 32px; border-radius: var(--radius); color: var(--text-2); &:hover { background: var(--surface-2); color: var(--text); } }
 .pt-avatar { display: grid; place-items: center; border-radius: var(--radius); background: var(--accent-soft); color: var(--accent); font: 700 13px var(--font-display); flex-shrink: 0; }
-.pt-tabs { position: fixed; left: 0; right: 0; bottom: 0; z-index: 30; display: grid; grid-template-columns: repeat(4, 1fr); background: var(--surface); border-top: 1px solid var(--line); padding-bottom: env(safe-area-inset-bottom);
+.pt-tabs { position: fixed; left: 0; right: 0; bottom: 0; z-index: 30; display: grid; grid-template-columns: repeat(5, 1fr); background: var(--surface); border-top: 1px solid var(--line); padding-bottom: env(safe-area-inset-bottom);
   a { display: grid; justify-items: center; gap: 3px; padding: 8px 4px 9px; color: var(--text-3); font: 600 10.5px var(--font-mono); text-transform: uppercase; letter-spacing: .04em; svg { width: 20px; height: 20px; } &.is-active { color: var(--accent); } } }
 @media (min-width: 768px) { .pt-links, .pt-nav-user { display: flex; } .pt-tabs { display: none; } .pt-nav-menu { display: none; } }
 .pt-main { max-width: var(--pt-max); margin: 0 auto; padding: 18px 16px 90px; display: grid; gap: 16px; }

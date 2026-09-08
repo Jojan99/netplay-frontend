@@ -30,6 +30,18 @@
       </form>
     </section>
 
+    <!-- Contratos -->
+    <section class="pt-card" *ngIf="contracts().length">
+      <div class="pt-card-h"><h2>Mis contratos</h2></div>
+      <div class="pt-list">
+        <a class="pt-row" *ngFor="let c of contracts()" [href]="c.pdf_url" target="_blank" rel="noopener">
+          <span class="pt-row-ico" [ngClass]="c.signed_at ? 'is-ok' : 'is-warn'"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/></svg></span>
+          <span class="pt-row-copy"><b>{{ c.name }}</b><small>{{ c.signed_at ? 'Firmado el ' + (c.signed_at | date:'dd/MM/yyyy') : 'Pendiente de firma' }}</small></span>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color:var(--text-3)"><path d="M12 4v11m0 0 4-4m-4 4-4-4M5 20h14"/></svg>
+        </a>
+      </div>
+    </section>
+
     <!-- Seguridad -->
     <section class="pt-card">
       <div class="pt-card-h"><h2>Seguridad</h2></div>

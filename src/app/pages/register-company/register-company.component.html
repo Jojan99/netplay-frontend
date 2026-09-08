@@ -1,5 +1,6 @@
 <div class="np-console np-login np-register">
   <div class="np-login-theme"><flowbite-dark-theme-toggle></flowbite-dark-theme-toggle></div>
+
   <aside class="np-login-side" aria-hidden="true">
     <div class="np-login-side-inner">
       <p class="np-kicker">Netplay <b>/</b> Plataforma de operación</p>
@@ -12,28 +13,77 @@
       <p class="np-login-foot np-mono">netplay.com.co · registro de empresa</p>
     </div>
   </aside>
+
   <main class="np-login-main">
-    <form class="np-login-card np-register-card" (ngSubmit)="register()" #f="ngForm" novalidate>
+    <form class="np-login-card np-register-card" (ngSubmit)="register()" novalidate>
       <p class="np-kicker">Alta <b>/</b> Empresa</p>
       <h1 class="np-title np-login-title">Registrá tu empresa</h1>
-      <p class="np-login-help">Datos de la empresa y de la cuenta administradora.</p>
+      <p class="np-login-help">Tres pasos. Al terminar recibís un correo para activar la cuenta.</p>
+
+      <!-- Pasos -->
+      <ol class="np-steps">
+        <li *ngFor="let s of steps" [class.is-active]="step === s.n" [class.is-done]="step > s.n">
+          <button type="button" (click)="goTo(s.n)">
+            <span class="np-steps-n"><svg *ngIf="step > s.n" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="m5 12 5 5L20 7"/></svg><ng-container *ngIf="step <= s.n">{{ s.n }}</ng-container></span>
+            <span class="np-steps-copy"><b>{{ s.label }}</b><small>{{ s.hint }}</small></span>
+          </button>
+        </li>
+      </ol>
+
       <p *ngIf="errorMsg" class="np-notice np-notice--danger" role="alert">{{ errorMsg }}</p>
       <p *ngIf="successMsg" class="np-notice np-notice--ok">{{ successMsg }}</p>
-      <p class="np-sect">Empresa</p>
-      <div class="np-form">
-        <label class="np-field np-field-full"><span>Nombre de la empresa</span><input type="text" class="np-input" [(ngModel)]="form.name" name="name" required placeholder="Netplay S.A.S." /></label>
-        <label class="np-field"><span>NIT</span><input type="text" class="np-input np-mono" [(ngModel)]="form.nit" name="nit" required placeholder="900123456-1" /></label>
-        <label class="np-field"><span>Teléfono</span><input type="tel" class="np-input np-mono" [(ngModel)]="form.phone" name="phone" required placeholder="+57 300 000 0000" /></label>
-        <label class="np-field np-field-full"><span>Correo corporativo</span><input type="email" class="np-input" [(ngModel)]="form.email" name="email" required placeholder="empresa@correo.com" /></label>
-        <label class="np-field np-field-full"><span>Dirección</span><input type="text" class="np-input" [(ngModel)]="form.address" name="address" required placeholder="Calle 10 # 5-30, ciudad" /></label>
+
+      <!-- Paso 1: empresa -->
+      <ng-container *ngIf="step === 1">
+        <div class="np-form">
+          <label class="np-field np-field-full"><span>Nombre de la empresa <em>*</em></span><input type="text" class="np-input" [(ngModel)]="form.name" name="name" placeholder="Netplay S.A.S." autofocus /></label>
+          <label class="np-field"><span>NIT <em>*</em></span><input type="text" class="np-input np-mono" [(ngModel)]="form.nit" name="nit" placeholder="900123456-1" /></label>
+          <label class="np-field"><span>Teléfono <em>*</em></span><input type="tel" class="np-input np-mono" [(ngModel)]="form.phone" name="phone" placeholder="+57 300 000 0000" /><small class="np-fine" *ngIf="form.phone && !phoneOk">Escribí un teléfono válido.</small></label>
+          <label class="np-field np-field-full"><span>Correo corporativo <em>*</em></span><input type="email" class="np-input" [(ngModel)]="form.email" name="email" placeholder="empresa@correo.com" /><small class="np-fine" *ngIf="form.email && !emailOk">Ese correo no parece válido.</small><small class="np-fine" *ngIf="!form.email || emailOk">Acá llega el enlace para activar la cuenta.</small></label>
+          <label class="np-field np-field-full"><span>Dirección <em>*</em></span><input type="text" class="np-input" [(ngModel)]="form.address" name="address" placeholder="Calle 10 # 5-30" /></label>
+          <label class="np-field"><span>Ciudad</span><input type="text" class="np-input" [(ngModel)]="form.city" name="city" placeholder="Barranquilla" /></label>
+          <label class="np-field"><span>País</span><input type="text" class="np-input" [(ngModel)]="form.country" name="country" placeholder="Colombia" /></label>
+        </div>
+      </ng-container>
+
+      <!-- Paso 2: facturación -->
+      <ng-container *ngIf="step === 2">
+        <div class="np-form">
+          <label class="np-field np-field-full"><span>Prefijo de facturación</span><input type="text" class="np-input np-mono" [(ngModel)]="form.invoice_prefix" name="invoice_prefix" maxlength="10" placeholder="FAC" (input)="form.invoice_prefix = form.invoice_prefix.toUpperCase()" /><small class="np-fine">Tus facturas se numerarán <b class="np-mono">{{ prefixPreview }}0001</b>. Se puede cambiar después.</small></label>
+        </div>
+        <p class="np-notice np-notice--info">Los datos fiscales de la factura (razón social, NIT, dirección) se copian de la empresa. Después podés ajustarlos y subir el logo desde <b>Configuración de facturación</b>.</p>
+        <ul class="np-register-list">
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="m5 12 5 5L20 7"/></svg>Se crean los perfiles Administrador, Técnico y Contador con sus permisos.</li>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="m5 12 5 5L20 7"/></svg>Podés cambiar qué módulo ve cada perfil desde Staff.</li>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="m5 12 5 5L20 7"/></svg>Tu instancia de WhatsApp queda lista para conectar.</li>
+        </ul>
+      </ng-container>
+
+      <!-- Paso 3: administrador -->
+      <ng-container *ngIf="step === 3">
+        <div class="np-form">
+          <label class="np-field"><span>Nombre <em>*</em></span><input type="text" class="np-input" [(ngModel)]="form.admin_name" name="admin_name" placeholder="Juan" /></label>
+          <label class="np-field"><span>Apellido <em>*</em></span><input type="text" class="np-input" [(ngModel)]="form.admin_lastname" name="admin_lastname" placeholder="Pérez" /></label>
+          <label class="np-field"><span>Cédula</span><input type="text" class="np-input np-mono" [(ngModel)]="form.admin_dni" name="admin_dni" placeholder="1000000000" /></label>
+          <label class="np-field"><span>Celular</span><input type="tel" class="np-input np-mono" [(ngModel)]="form.admin_phone" name="admin_phone" placeholder="300 000 0000" /></label>
+          <label class="np-field np-field-full"><span>Usuario para entrar</span><input type="text" class="np-input np-mono" [(ngModel)]="form.admin_username" name="admin_username" placeholder="Dejalo vacío para usar el NIT" /><small class="np-fine" *ngIf="usernameOk">Vas a entrar con <b class="np-mono">{{ usernamePreview }}</b></small><small class="np-fine" *ngIf="!usernameOk" style="color:var(--danger)">Sólo letras, números, punto, guion y guion bajo.</small></label>
+          <label class="np-field np-field-full"><span>Contraseña <em>*</em></span>
+            <span class="np-input-wrap"><input [type]="showPw ? 'text' : 'password'" class="np-input" [(ngModel)]="form.admin_password" name="admin_password" placeholder="Mínimo 6 caracteres" autocomplete="new-password" /><button type="button" class="np-eye" (click)="showPw = !showPw" [attr.aria-label]="showPw ? 'Ocultar' : 'Mostrar'"><svg *ngIf="!showPw" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg><svg *ngIf="showPw" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3l18 18M10.6 10.6a3 3 0 0 0 4.2 4.2M9.9 5.1A10.4 10.4 0 0 1 12 5c6.5 0 10 7 10 7a17 17 0 0 1-3 3.6M6.2 6.2A17 17 0 0 0 2 12s3.5 7 10 7a10 10 0 0 0 4-.8"/></svg></button></span>
+            <span class="np-pwbar" *ngIf="form.admin_password" [ngClass]="passwordStrength.cls"><i [style.width.%]="passwordStrength.score * 20"></i></span>
+            <small class="np-fine" *ngIf="form.admin_password">Seguridad: {{ passwordStrength.label }}</small>
+          </label>
+          <label class="np-field np-field-full"><span>Repetir contraseña <em>*</em></span><input type="password" class="np-input" [(ngModel)]="passwordConfirm" name="passwordConfirm" autocomplete="new-password" /><small class="np-fine" *ngIf="!passwordsMatch" style="color:var(--danger)">Las contraseñas no coinciden.</small></label>
+        </div>
+      </ng-container>
+
+      <!-- Navegación -->
+      <div class="np-btnrow np-register-nav">
+        <button type="button" class="np-btn np-btn--ghost" *ngIf="step > 1" (click)="back()">Atrás</button>
+        <span class="np-spacer"></span>
+        <button type="button" class="np-btn np-btn--primary" *ngIf="step < 3" (click)="next()" [disabled]="!stepOk(step)">Continuar</button>
+        <button type="submit" class="np-btn np-btn--primary" *ngIf="step === 3" [disabled]="isLoading || !step3Ok()"><span *ngIf="isLoading" class="np-spinner np-spinner--sm"></span>{{ isLoading ? 'Registrando…' : 'Crear empresa' }}</button>
       </div>
-      <p class="np-sect">Cuenta del administrador</p>
-      <div class="np-form">
-        <label class="np-field"><span>Nombre</span><input type="text" class="np-input" [(ngModel)]="form.admin_name" name="admin_name" required placeholder="Juan" /></label>
-        <label class="np-field"><span>Apellido</span><input type="text" class="np-input" [(ngModel)]="form.admin_lastname" name="admin_lastname" required placeholder="Pérez" /></label>
-        <label class="np-field np-field-full"><span>Contraseña</span><input type="password" class="np-input" [(ngModel)]="form.admin_password" name="admin_password" required placeholder="Mínimo 6 caracteres" autocomplete="new-password" /></label>
-      </div>
-      <button type="submit" class="np-btn np-btn--primary np-login-submit" [disabled]="isLoading || f.invalid"><span *ngIf="isLoading" class="np-spinner np-spinner--sm"></span>{{ isLoading ? 'Procesando…' : 'Registrar empresa' }}</button>
+
       <p class="np-login-alt">¿Ya tenés cuenta? <a routerLink="/login">Iniciá sesión</a></p>
     </form>
   </main>

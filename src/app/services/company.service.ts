@@ -16,16 +16,7 @@ export class CompanyService {
     });
   }
 
-  register(data: {
-    name: string;
-    nit: string;
-    email: string;
-    phone: string;
-    address: string;
-    admin_name: string;
-    admin_lastname: string;
-    admin_password: string;
-  }): Observable<any> {
+  register(data: Record<string, string>): Observable<any> {
     return this.http.post(this.base + 'register', data);
   }
 

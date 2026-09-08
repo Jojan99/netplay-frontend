@@ -23,6 +23,8 @@ export class PortalHomeComponent implements OnInit {
   paymentAvailable = signal(false);
   openTickets      = signal(0);
   profile          = signal<any>(null);
+  status           = signal<any>(null);
+  activity         = signal<any[]>([]);
 
   /** Saldo real: total menos descuento y abonos (price_abone es el monto abonado). */
   totalDue = computed(() =>
@@ -30,6 +32,8 @@ export class PortalHomeComponent implements OnInit {
   );
   get greeting(): string { const h = new Date().getHours(); return h < 12 ? 'Buenos días' : h < 18 ? 'Buenas tardes' : 'Buenas noches'; }
   get nextDue(): string { return this.unpaidInvoices()[0]?.date_facturation || ''; }
+  get suspended(): boolean { const s = this.status(); return !!s && s.service_active === false; }
+  activityIcon(t: string): string { return t === 'payment' ? 'ok' : t === 'invoice' ? 'warn' : t === 'ticket_done' ? 'ok' : 'info'; }
 
   ngOnInit(): void {
     this.fullName.set(this.auth.getFullName());
@@ -68,6 +72,9 @@ export class PortalHomeComponent implements OnInit {
       next: (res) => { this.profile.set(res.data); },
       error: () => {},
     });
+
+    this.api.getStatus().subscribe({ next: (res) => this.status.set(res.data), error: () => {} });
+    this.api.getActivity().subscribe({ next: (res) => this.activity.set(res.data ?? []), error: () => {} });
   }
 
   goToPay(): void {

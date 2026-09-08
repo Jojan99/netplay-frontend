@@ -1,0 +1,19 @@
+/* ─── Registro de empresa: sólo lo propio del asistente ─────────────── */
+.np-steps { list-style: none; display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin: 4px 0 10px; padding: 0;
+  li button { display: flex; align-items: center; gap: 8px; width: 100%; padding: 8px 10px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--surface); text-align: left; cursor: pointer; }
+  li.is-active button { border-color: var(--accent); background: var(--accent-soft); }
+  li.is-done button { border-color: var(--ok); }
+}
+.np-steps-n { display: grid; place-items: center; width: 24px; height: 24px; border-radius: 50%; background: var(--surface-3); color: var(--text-2); font: 700 12px var(--font-mono); flex-shrink: 0;
+  .is-active & { background: var(--accent); color: var(--accent-ink); }
+  .is-done & { background: var(--ok); color: #fff; svg { width: 13px; height: 13px; } } }
+.np-steps-copy { display: grid; min-width: 0; b { font-size: 12.5px; color: var(--text); } small { font-size: 10.5px; color: var(--text-3); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; } }
+@media (max-width: 560px) { .np-steps-copy small { display: none; } }
+
+.np-register-list { list-style: none; margin: 10px 0 0; padding: 0; display: grid; gap: 7px;
+  li { display: flex; align-items: flex-start; gap: 8px; font-size: 12.5px; color: var(--text-2); svg { width: 14px; height: 14px; color: var(--ok); margin-top: 2px; flex-shrink: 0; } } }
+.np-register-nav { margin-top: 6px; align-items: center; }
+.np-pwbar { display: block; height: 4px; margin-top: 6px; border-radius: 2px; background: var(--surface-3); overflow: hidden;
+  i { display: block; height: 100%; transition: width .2s; }
+  &.is-weak i { background: var(--danger); } &.is-mid i { background: var(--warn); } &.is-strong i { background: var(--ok); } }
+.np-field em { color: var(--danger); font-style: normal; }

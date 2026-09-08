@@ -19,6 +19,8 @@ interface Profile {
 }
 
 interface ModuleItem {
+  description?: string;
+  adminOnly?: boolean;
   module: string;
   label: string;
   group: string;
@@ -135,17 +137,18 @@ export class StaffComponent implements OnInit {
         this.isLoadingModules = false;
         const raw: { module: string; active: boolean }[] = res.data ?? [];
 
-        this.moduleItems = raw.map(r => ({
-          module: r.module,
-          label:  MODULE_LABELS[r.module]?.label  ?? r.module,
-          group:  MODULE_LABELS[r.module]?.group  ?? 'Otros',
-          active: r.active,
+        // El catálogo viene del backend (grupo, nombre y explicación); el mapa local
+        // queda sólo como respaldo para instalaciones que aún no lo devuelven.
+        this.moduleItems = raw.map((r: any) => ({
+          module:      r.module,
+          label:       r.label       ?? MODULE_LABELS[r.module]?.label ?? r.module,
+          group:       r.group       ?? MODULE_LABELS[r.module]?.group ?? 'Otros',
+          description: r.description ?? '',
+          adminOnly:   !!r.admin_only,
+          active:      r.active,
         }));
 
-        // Orden de grupos
-        const order = ['Clientes','Finanzas','Soporte','Inventario','Red','Configuración','Otros'];
-        const found = [...new Set(this.moduleItems.map(m => m.group))];
-        this.moduleGroups = order.filter(g => found.includes(g));
+        this.moduleGroups = [...new Set(this.moduleItems.map(m => m.group))];
       },
       error: () => { this.isLoadingModules = false; },
     });
@@ -154,6 +157,16 @@ export class StaffComponent implements OnInit {
   groupModules(group: string): ModuleItem[] {
     return this.moduleItems.filter(m => m.group === group);
   }
+
+  /** Marca o desmarca de un golpe todos los módulos de un grupo. */
+  toggleGroup(group: string, on: boolean): void {
+    this.moduleItems.filter(m => m.group === group).forEach(m => m.active = on);
+  }
+  groupAllOn(group: string): boolean {
+    const list = this.groupModules(group);
+    return list.length > 0 && list.every(m => m.active);
+  }
+  selectAllModules(on: boolean): void { this.moduleItems.forEach(m => m.active = on); }
 
   saveModules(): void {
     if (!this.selectedProfile) return;
