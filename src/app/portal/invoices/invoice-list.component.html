@@ -13,7 +13,7 @@
     </div>
     <div class="pt-hero-acts">
       <button type="button" class="pt-btn pt-btn--light" *ngIf="paymentAvailable()" (click)="openPaySetup()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="6" width="18" height="12" rx="2"/><path d="M3 10h18M7 15h3"/></svg>Pagar ahora</button>
-      <span class="pt-fine" style="color:rgba(255,255,255,.8)" *ngIf="!paymentAvailable()">El pago en línea no está habilitado. Podés pagar en puntos autorizados.</span>
+      <span class="pt-fine" *ngIf="!paymentAvailable()">El pago en línea no está habilitado. Podés pagar en puntos autorizados.</span>
     </div>
   </div>
 </section>
