@@ -12,6 +12,7 @@
       <button type="button" [attr.aria-pressed]="activeTab === 'invoice'" (click)="activeTab = 'invoice'">Plantilla de factura</button>
       <button type="button" [attr.aria-pressed]="activeTab === 'payment-methods'" (click)="activeTab = 'payment-methods'">Métodos de pago</button>
       <button type="button" [attr.aria-pressed]="activeTab === 'gateway'" (click)="activeTab = 'gateway'; loadGatewayConfig()">Pasarela online</button>
+      <button type="button" [attr.aria-pressed]="activeTab === 'cortes'" (click)="activeTab = 'cortes'">Cortes por mora</button>
     </div>
   </div>
   <div class="np-scroll np-legacy">
@@ -507,18 +508,19 @@
 
   <!-- ═══════════════ PASARELA DE PAGO ONLINE ═══════════════ -->
   <ng-container *ngIf="activeTab === 'gateway'">
-    <div class="mb-6">
-      <h1 class="text-2xl font-bold bg-gradient-to-r from-slate-800 to-slate-600 bg-clip-text text-transparent dark:from-white dark:to-slate-300">Pasarela de pago online</h1>
-      <p class="text-sm text-slate-500 dark:text-slate-400">
-        Permite que tus clientes paguen sus facturas en línea desde el portal.
-      </p>
-    </div>
+    <div class="np-gw-intro"><h2>Pasarela de pago online</h2><p class="np-fine">Elegí la pasarela, cargá las credenciales y activá el pago en línea. Tus clientes verán el botón de pago en el portal y en los links que envía el CRM.</p></div>
 
     <div *ngIf="gwMsg" class="flex items-center gap-2 p-4 mb-4 text-sm text-emerald-800 bg-white border border-emerald-200 rounded-2xl backdrop-blur-xl shadow-emerald-500/10 dark:bg-slate-800/80 dark:border-emerald-800/60 dark:text-emerald-300">{{ gwMsg }}</div>
     <div *ngIf="gwError" class="flex items-center gap-2 p-4 mb-4 text-sm text-red-800 bg-white border border-red-200 rounded-2xl backdrop-blur-xl shadow-red-500/10 dark:bg-slate-800/80 dark:border-red-800/60 dark:text-red-300">{{ gwError }}</div>
     <div *ngIf="gwLoading" class="text-center py-10 text-slate-400">Cargando...</div>
 
     <div *ngIf="!gwLoading" class="space-y-6">
+      <div class="np-seg np-gw-seg" role="tablist">
+        <button type="button" [attr.aria-pressed]="gwView === 'config'" (click)="gwView = 'config'">Configuración</button>
+        <button type="button" [attr.aria-pressed]="gwView === 'test'" (click)="gwView = 'test'">Probar un pago</button>
+        <button type="button" [attr.aria-pressed]="gwView === 'transactions'" (click)="gwView = 'transactions'">Transacciones online</button>
+      </div>
+      <ng-container *ngIf="gwView === 'config'">
 
       <!-- Selector de pasarela -->
       <div class="bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl rounded-2xl border border-slate-200/60 dark:border-slate-700/60 shadow-sm hover:shadow-md transition-all duration-300 p-5 space-y-4">
@@ -937,6 +939,8 @@
         </button>
       </div>
 
+      </ng-container>
+      <ng-container *ngIf="gwView === 'test'">
       <!-- Factura de prueba -->
       <div class="bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl rounded-2xl border border-slate-200/60 dark:border-slate-700/60 shadow-sm hover:shadow-md transition-all duration-300 overflow-hidden">
         <div class="flex items-center justify-between px-5 py-4 border-b border-slate-100/80 dark:border-slate-700/60">
@@ -1023,6 +1027,8 @@
         </div>
       </div>
 
+      </ng-container>
+      <ng-container *ngIf="gwView === 'transactions'">
       <!-- Historial de transacciones online -->
       <div class="bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl rounded-2xl border border-slate-200/60 dark:border-slate-700/60 shadow-sm hover:shadow-md transition-all duration-300 overflow-hidden">
         <div class="flex items-center justify-between px-5 py-4 border-b border-slate-100/80 dark:border-slate-700/60">
@@ -1082,8 +1088,36 @@
         </div>
       </div>
 
+      </ng-container>
     </div>
   </ng-container><!-- end gateway tab -->
+  <!-- ═══════════════ CORTES AUTOMÁTICOS POR MORA ═══════════════ -->
+  <ng-container *ngIf="activeTab === 'cortes'">
+    <div class="np-cut">
+      <section class="np-card np-cut-main">
+        <div class="np-card-h">
+          <div><h2>Cortes automáticos por mora</h2><p class="np-fine">Suspende a los clientes con facturas vencidas y los reactiva solos al pagar.</p></div>
+          <label class="np-switch"><input type="checkbox" [(ngModel)]="autoSuspendEnabled" /><span class="np-switch-track"></span><b>{{ autoSuspendEnabled ? 'Activo' : 'Inactivo' }}</b></label>
+        </div>
+        <div class="np-cut-form">
+          <label class="np-field"><span>Facturas sin pagar para suspender</span><div class="np-cut-inline"><input type="number" class="np-input np-mono" [(ngModel)]="autoSuspendDays" min="1" max="12" /><em>factura(s) vencidas</em></div></label>
+          <label class="np-field"><span>Día del mes en que corre el proceso</span><div class="np-cut-inline"><select class="np-input" [(ngModel)]="autoSuspendDay"><option *ngFor="let d of days" [value]="d">Día {{ d }}</option></select><em>a las 7:00 a. m.</em></div></label>
+        </div>
+        <p class="np-notice np-notice--info">Ese día se suspende a todo cliente con {{ autoSuspendDays }} o más facturas sin pagar y se reactiva a los que ya saldaron. Además, cada 4 minutos se revisa si algún suspendido pagó para reactivarlo de inmediato.</p>
+        <div class="np-btnrow np-btnrow--end">
+          <span class="np-fine np-cut-msg" *ngIf="autoSuspendMsg">{{ autoSuspendMsg }}</span>
+          <button type="button" class="np-btn np-btn--ghost" (click)="runAutoSuspendNow()" [disabled]="autoSuspendRunning"><span *ngIf="autoSuspendRunning" class="np-spinner np-spinner--sm"></span>{{ autoSuspendRunning ? 'Ejecutando…' : 'Ejecutar ahora' }}</button>
+          <button type="button" class="np-btn np-btn--primary" (click)="saveAutoSuspend()" [disabled]="autoSuspendSaving">{{ autoSuspendSaving ? 'Guardando…' : 'Guardar' }}</button>
+        </div>
+      </section>
+      <section class="np-kpis np-cut-kpis">
+        <div class="np-kpi"><span class="np-kpi-l">Suspendidos</span><span class="np-kpi-v np-kpi-v--danger">{{ autoSuspendStats.currently_suspended }}</span><span class="np-kpi-s">actualmente</span></div>
+        <div class="np-kpi"><span class="np-kpi-l">Hoy</span><span class="np-kpi-v np-kpi-v--warn">{{ autoSuspendStats.suspended_today }}</span><span class="np-kpi-s">suspendidos</span></div>
+        <div class="np-kpi"><span class="np-kpi-l">Hoy</span><span class="np-kpi-v np-kpi-v--ok">{{ autoSuspendStats.reactivated_today }}</span><span class="np-kpi-s">reactivados</span></div>
+      </section>
+    </div>
+  </ng-container>
+
 
   <!-- ── Modal detalle de transacción ───────────────────────────────────── -->
   <div *ngIf="gwDetailTx"
@@ -1191,120 +1225,6 @@
       </div>
     </div>
   </div>
-</div>
-
-<!-- ═══ SECCIÓN: Cortes automáticos por mora ════════════════════════════════ -->
-<div class="mt-6 bg-white dark:bg-slate-800/80 rounded-2xl border border-slate-100/80 dark:border-slate-700/60 shadow-sm p-6">
-
-  <div class="flex items-start justify-between mb-5">
-    <div>
-      <h2 class="text-base font-semibold text-slate-800 dark:text-white">Cortes automáticos por mora</h2>
-      <p class="text-sm text-slate-500 dark:text-slate-400 mt-0.5">
-        Suspende clientes con facturas vencidas más de N días. Se reactivan automáticamente al pagar.
-      </p>
-    </div>
-    <!-- Toggle -->
-    <button (click)="autoSuspendEnabled = !autoSuspendEnabled" type="button"
-            class="relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 focus:outline-none"
-            [ngClass]="autoSuspendEnabled ? 'bg-blue-600' : 'bg-slate-200/60 dark:bg-slate-600/60'">
-      <span class="pointer-events-none inline-block h-5 w-5 rounded-full bg-white shadow transform transition duration-200"
-            [ngClass]="autoSuspendEnabled ? 'translate-x-5' : 'translate-x-0'">
-      </span>
-    </button>
-  </div>
-
-  <!-- Stats cards -->
-  <div class="grid grid-cols-3 gap-3 mb-5">
-    <div class="bg-rose-50 dark:bg-rose-900/20 rounded-xl p-3 text-center border border-rose-100 dark:border-rose-800">
-      <p class="text-2xl font-bold text-rose-600 dark:text-rose-400">{{ autoSuspendStats.currently_suspended }}</p>
-      <p class="text-xs text-rose-500 dark:text-rose-400 mt-0.5">Suspendidos actualmente</p>
-    </div>
-    <div class="bg-amber-50 dark:bg-amber-900/20 rounded-xl p-3 text-center border border-amber-100 dark:border-amber-800">
-      <p class="text-2xl font-bold text-amber-600 dark:text-amber-400">{{ autoSuspendStats.suspended_today }}</p>
-      <p class="text-xs text-amber-500 dark:text-amber-400 mt-0.5">Suspendidos hoy</p>
-    </div>
-    <div class="bg-emerald-50 dark:bg-emerald-900/20 rounded-xl p-3 text-center border border-emerald-100 dark:border-emerald-800">
-      <p class="text-2xl font-bold text-emerald-600 dark:text-emerald-400">{{ autoSuspendStats.reactivated_today }}</p>
-      <p class="text-xs text-emerald-500 dark:text-emerald-400 mt-0.5">Reactivados hoy</p>
-    </div>
-  </div>
-
-  <!-- Config row -->
-  <div class="flex flex-col sm:flex-row sm:items-end gap-4">
-    <div class="flex-1 grid grid-cols-1 sm:grid-cols-2 gap-4">
-
-      <!-- Mínimo de facturas vencidas -->
-      <div>
-        <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">
-          Facturas pendientes para suspender
-        </label>
-        <div class="flex items-center gap-2">
-          <input type="number" [(ngModel)]="autoSuspendDays" min="1" max="12"
-                 class="w-24 px-3 py-2 text-sm border border-slate-300/60 dark:border-slate-600/60 rounded-lg bg-slate-50/80 dark:bg-slate-700/80 dark:text-white focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-400">
-          <span class="text-sm text-slate-500 dark:text-slate-400">
-            factura(s) sin pagar
-          </span>
-        </div>
-      </div>
-
-      <!-- Día del mes para ejecutar -->
-      <div>
-        <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">
-          Día del mes para ejecutar cortes
-        </label>
-        <div class="flex items-center gap-2">
-          <select [(ngModel)]="autoSuspendDay"
-                  class="w-28 px-3 py-2 text-sm border border-slate-300/60 dark:border-slate-600/60 rounded-lg bg-slate-50/80 dark:bg-slate-700/80 dark:text-white focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-400">
-            <option *ngFor="let d of days" [value]="d">Día {{ d }}</option>
-          </select>
-          <span class="text-sm text-slate-500 dark:text-slate-400">del mes</span>
-        </div>
-      </div>
-
-    </div>
-
-    <div class="flex items-center gap-3">
-      <!-- Mensaje de éxito -->
-      <span *ngIf="autoSuspendMsg" class="text-sm font-medium text-emerald-600 dark:text-emerald-400">
-        {{ autoSuspendMsg }}
-      </span>
-
-      <!-- Ejecutar ahora -->
-      <button (click)="runAutoSuspendNow()" [disabled]="autoSuspendRunning"
-              class="flex items-center gap-2 px-4 py-2 text-sm font-medium text-slate-700 dark:text-slate-300 bg-slate-100/80 dark:bg-slate-700/80 rounded-lg hover:bg-slate-200/60 dark:hover:bg-gray-600 disabled:opacity-50 transition">
-        <svg *ngIf="autoSuspendRunning" class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
-          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
-          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"/>
-        </svg>
-        <svg *ngIf="!autoSuspendRunning" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M5.25 5.653c0-.856.917-1.398 1.667-.986l11.54 6.347a1.125 1.125 0 0 1 0 1.972l-11.54 6.347a1.125 1.125 0 0 1-1.667-.986V5.653Z"/>
-        </svg>
-        {{ autoSuspendRunning ? 'Ejecutando...' : 'Ejecutar ahora' }}
-      </button>
-
-      <!-- Guardar -->
-      <button (click)="saveAutoSuspend()" [disabled]="autoSuspendSaving"
-              class="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-gradient-to-br from-indigo-500 to-violet-600 shadow-md shadow-indigo-500/20 hover:shadow-lg transition-all disabled:opacity-50 rounded-lg">
-        <svg *ngIf="autoSuspendSaving" class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
-          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
-          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"/>
-        </svg>
-        {{ autoSuspendSaving ? 'Guardando...' : 'Guardar' }}
-      </button>
-    </div>
-  </div>
-
-  <!-- Info box -->
-  <div class="mt-4 flex items-start gap-2 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-xl border border-blue-100 dark:border-blue-800">
-    <svg class="w-4 h-4 text-blue-500 shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-      <path stroke-linecap="round" stroke-linejoin="round" d="m11.25 11.25.041-.02a.75.75 0 0 1 1.063.852l-.708 2.836a.75.75 0 0 0 1.063.853l.041-.021M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9-3.75h.008v.008H12V8.25Z"/>
-    </svg>
-    <p class="text-xs text-blue-700 dark:text-blue-300">
-      El proceso corre el día del mes configurado a las 7:00 AM. Se suspende todo cliente con N o más facturas mensuales sin pagar,
-      y en el mismo proceso se reactivan los que ya saldaron su deuda. Cada 4 minutos también se revisa si algún cliente suspendido ya pagó y se reactiva de inmediato.
-    </p>
-  </div>
-
 </div>
 
 <!-- ═══ MODAL: Ejecutar proceso ════════════════════════════════════════════ -->

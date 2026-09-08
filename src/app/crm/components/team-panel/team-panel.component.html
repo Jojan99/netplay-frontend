@@ -14,7 +14,8 @@
     <div class="tp-head-copy" *ngIf="active === 'general'"><p class="np-kicker">Canal</p><h3>General</h3></div>
     <div class="tp-head-copy" *ngIf="activeMember as m"><p class="np-kicker"><i class="tp-dot" [class.is-on]="online.has(m.id)"></i>{{ online.has(m.id) ? 'En línea' : 'Desconectado' }}<ng-container *ngIf="m.profile"> · {{ m.profile }}</ng-container></p><h3>{{ m.name }}</h3></div>
     <span class="np-spacer"></span>
-    <button type="button" class="np-icobtn tp-call" *ngIf="activeMember as m" [disabled]="!online.has(m.id) || call.state !== 'idle'" (click)="callMember(m)" title="Llamar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2"/></svg></button>
+    <button type="button" class="np-icobtn tp-call" *ngIf="active === null" [disabled]="onlineCount === 0" (click)="openGroupPicker()" title="Llamada grupal"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0M16 4.5a3.5 3.5 0 0 1 0 7M21.5 20a6.5 6.5 0 0 0-5-6.3"/></svg></button>
+    <button type="button" class="np-icobtn tp-call" *ngIf="activeMember as m" [disabled]="!online.has(m.id) || call.state === 'ringing-in'" (click)="callMember(m)" [title]="call.state === 'in-call' ? 'Agregar a la llamada' : 'Llamar'"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2"/></svg></button>
     <button type="button" class="np-icobtn" (click)="open = false" aria-label="Cerrar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
   </header>
 
@@ -31,7 +32,7 @@
       <span class="tp-avatar">{{ initials(m.name) }}<i class="tp-dot tp-dot--avatar" [class.is-on]="online.has(m.id)"></i></span>
       <span class="tp-row-copy"><b>{{ m.name }}</b><small>{{ online.has(m.id) ? 'En línea' : 'Desconectado' }}<ng-container *ngIf="m.profile"> · {{ m.profile }}</ng-container></small></span>
       <span class="tp-unread" *ngIf="m.unread">{{ m.unread }}</span>
-      <button type="button" class="np-icobtn tp-row-call" [disabled]="!online.has(m.id) || call.state !== 'idle'" (click)="callMember(m); $event.stopPropagation()" title="Llamar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2"/></svg></button>
+      <button type="button" class="np-icobtn tp-row-call" [disabled]="!online.has(m.id) || call.state === 'ringing-in'" (click)="callMember(m); $event.stopPropagation()" [title]="call.state === 'in-call' ? 'Agregar a la llamada' : 'Llamar'"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2"/></svg></button>
     </div>
   </div>
 
@@ -44,31 +45,67 @@
         <div class="tp-day" *ngIf="showDay(i)"><span>{{ dayLabel(m.created_at) }}</span></div>
         <div class="tp-msg" [class.is-mine]="m.mine">
           <span class="tp-msg-from" *ngIf="!m.mine && active === 'general'">{{ m.from_name }}</span>
-          <div class="tp-bubble">{{ m.content }}<span class="tp-msg-time">{{ fmtTime(m.created_at) }}</span></div>
+          <div class="tp-bubble" [class.is-media]="m.attachment_type === 'image'">
+            <a *ngIf="m.attachment_type === 'image'" class="tp-img" [href]="m.attachment_url" target="_blank" rel="noopener"><img [src]="m.attachment_url" [alt]="m.attachment_name || 'Imagen'" loading="lazy" /></a>
+            <audio *ngIf="m.attachment_type === 'audio'" class="tp-audio" [src]="m.attachment_url" controls preload="metadata"></audio>
+            <video *ngIf="m.attachment_type === 'video'" class="tp-video" [src]="m.attachment_url" controls preload="metadata"></video>
+            <a *ngIf="m.attachment_type === 'file'" class="tp-file" [href]="m.attachment_url" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/></svg><span><b>{{ m.attachment_name }}</b><small>{{ fmtSize(m.attachment_size) }} · descargar</small></span></a>
+            <span class="tp-text" *ngIf="m.content">{{ m.content }}</span>
+            <span class="tp-msg-time">{{ fmtTime(m.created_at) }}</span>
+          </div>
         </div>
       </ng-container>
     </div>
-    <div class="tp-composer">
+    <div class="tp-composer" *ngIf="!recording">
+      <button type="button" class="np-icobtn" (click)="pickFile()" [disabled]="sendingFile" title="Adjuntar imagen o archivo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m21 12-8.5 8.5a5 5 0 0 1-7-7L14 5a3.5 3.5 0 0 1 5 5l-8.5 8.5a2 2 0 0 1-3-3L15 8"/></svg></button>
       <textarea rows="1" [(ngModel)]="draft" (keydown)="onKey($event)" placeholder="Escribí un mensaje al equipo…"></textarea>
-      <button type="button" class="tp-send" [disabled]="!draft.trim()" (click)="send()" title="Enviar"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M3 20.5 22 12 3 3.5V10l13 2-13 2z"/></svg></button>
+      <button type="button" class="np-icobtn" *ngIf="!draft.trim()" (click)="startRecording()" [disabled]="sendingFile" title="Grabar nota de voz"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg></button>
+      <button type="button" class="tp-send" *ngIf="draft.trim()" [disabled]="!draft.trim()" (click)="send()" title="Enviar"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M3 20.5 22 12 3 3.5V10l13 2-13 2z"/></svg></button>
     </div>
+    <div class="tp-composer tp-composer--rec" *ngIf="recording">
+      <button type="button" class="np-icobtn tp-rec-cancel" (click)="cancelRecording()" title="Descartar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/></svg></button>
+      <span class="tp-rec-dot"></span><span class="np-mono">{{ fmtSecs(recSeconds) }}</span><span class="np-fine">Grabando…</span>
+      <span class="np-spacer"></span>
+      <button type="button" class="tp-send" (click)="stopRecording()" title="Enviar nota de voz"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M3 20.5 22 12 3 3.5V10l13 2-13 2z"/></svg></button>
+    </div>
+    <p class="tp-sending" *ngIf="sendingFile"><span class="np-spinner np-spinner--sm"></span> Enviando adjunto…</p>
+    <input #fileInput type="file" hidden accept="image/*,audio/*,video/*,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.zip,.rar,.txt,.csv" (change)="onFile($event)" />
   </ng-container>
 </aside>
 
-<!-- Llamada (siempre visible, aunque el panel esté cerrado) -->
-<audio #remoteAudio autoplay playsinline hidden></audio>
-<div class="tp-callbox" *ngIf="call.state !== 'idle'" [class.is-in]="call.state === 'ringing-in'">
-  <span class="tp-avatar tp-avatar--lg">{{ initials(call.peer?.name || '') }}</span>
-  <div class="tp-call-copy">
-    <b>{{ call.peer?.name }}</b>
-    <small *ngIf="call.state === 'ringing-in'">Llamada entrante…</small>
-    <small *ngIf="call.state === 'ringing-out'">Llamando…</small>
-    <small *ngIf="call.state === 'connecting'">Conectando…</small>
-    <small *ngIf="call.state === 'active'" class="np-mono">{{ fmtSecs(callSeconds) }}<ng-container *ngIf="call.muted"> · silenciado</ng-container></small>
+<!-- Selector de llamada grupal -->
+<div class="np-overlay np-overlay--top" *ngIf="showGroupPicker" (click)="showGroupPicker = false">
+  <div class="np-modal" role="dialog" aria-modal="true" (click)="$event.stopPropagation()">
+    <div class="np-modal-head"><div><p class="np-kicker">Equipo <b>/</b> Llamada</p><h3>{{ call.state === 'in-call' ? 'Agregar a la llamada' : 'Llamada grupal' }}</h3></div><button type="button" class="np-icobtn" (click)="showGroupPicker = false" aria-label="Cerrar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div>
+    <div class="np-modal-body">
+      <p class="np-muted" *ngIf="inviteCandidates.length === 0">No hay compañeros en línea para llamar.</p>
+      <div class="np-checklist" *ngIf="inviteCandidates.length">
+        <label class="np-check" *ngFor="let m of inviteCandidates"><input type="checkbox" [checked]="groupPick.has(m.id)" (change)="togglePick(m.id)" /><span class="np-strong">{{ m.name }}</span><span class="np-spacer"></span><span class="np-fine">{{ m.profile }}</span></label>
+      </div>
+      <p class="np-fine">Hasta 6 personas por llamada para mantener buena calidad de audio.</p>
+      <div class="np-btnrow np-btnrow--end"><button type="button" class="np-btn np-btn--ghost" (click)="showGroupPicker = false">Cancelar</button><button type="button" class="np-btn np-btn--primary" [disabled]="!groupPick.size || groupPick.size > 6" (click)="startGroupCall()">{{ call.state === 'in-call' ? 'Agregar' : 'Llamar' }} ({{ groupPick.size }})</button></div>
+    </div>
   </div>
-  <div class="tp-call-acts">
-    <button type="button" class="tp-cbtn tp-cbtn--ok" *ngIf="call.state === 'ringing-in'" (click)="accept()" title="Contestar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2"/></svg></button>
-    <button type="button" class="tp-cbtn" *ngIf="call.state === 'active'" [class.is-on]="call.muted" (click)="toggleMute()" [title]="call.muted ? 'Activar micrófono' : 'Silenciar'"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/><path *ngIf="call.muted" d="M4 4l16 16"/></svg></button>
-    <button type="button" class="tp-cbtn tp-cbtn--end" (click)="call.state === 'ringing-in' ? reject() : hangup(true)" [title]="call.state === 'ringing-in' ? 'Rechazar' : 'Colgar'"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M4 12a16 16 0 0 1 16 0l1 2-4 2-2-3a11 11 0 0 0-6 0l-2 3-4-2z"/></svg></button>
+</div>
+
+<!-- Llamada (siempre visible, aunque el panel esté cerrado) -->
+<div #audioHost hidden></div>
+<div class="tp-callbox" *ngIf="call.state !== 'idle'" [class.is-in]="call.state === 'ringing-in'">
+  <div class="tp-call-main">
+    <span class="tp-avatar tp-avatar--lg"><ng-container *ngIf="call.state === 'ringing-in'">{{ initials(call.incomingFrom?.name || '') }}</ng-container><ng-container *ngIf="call.state !== 'ringing-in'">{{ call.group ? peerList.length + 1 : initials(peerList[0]?.member?.name || '') }}</ng-container></span>
+    <div class="tp-call-copy">
+      <b>{{ callTitle }}</b>
+      <small>{{ callStatus }}</small>
+      <small *ngIf="call.state === 'ringing-in' && call.incomingParticipants.length > 1" class="tp-call-with">con <ng-container *ngFor="let id of call.incomingParticipants; let last = last"><ng-container *ngIf="id !== call.incomingFrom?.id">{{ memberName(id) }}<ng-container *ngIf="!last">, </ng-container></ng-container></ng-container></small>
+    </div>
+    <div class="tp-call-acts">
+      <button type="button" class="tp-cbtn tp-cbtn--ok" *ngIf="call.state === 'ringing-in'" (click)="accept()" title="Contestar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2"/></svg></button>
+      <button type="button" class="tp-cbtn" *ngIf="call.state === 'in-call'" [class.is-on]="call.muted" (click)="toggleMute()" [title]="call.muted ? 'Activar micrófono' : 'Silenciar micrófono'"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/><path *ngIf="call.muted" d="M4 4l16 16"/></svg></button>
+      <button type="button" class="tp-cbtn" *ngIf="call.state === 'in-call'" (click)="openGroupPicker()" [disabled]="inviteCandidates.length === 0" title="Agregar personas"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0M19 8v6M16 11h6"/></svg></button>
+      <button type="button" class="tp-cbtn tp-cbtn--end" (click)="call.state === 'ringing-in' ? reject() : hangup()" [title]="call.state === 'ringing-in' ? 'Rechazar' : 'Colgar'"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M4 12a16 16 0 0 1 16 0l1 2-4 2-2-3a11 11 0 0 0-6 0l-2 3-4-2z"/></svg></button>
+    </div>
+  </div>
+  <div class="tp-call-peers" *ngIf="call.state === 'in-call' && (call.group || peerList.length > 1)">
+    <span class="tp-call-peer" *ngFor="let p of peerList; trackBy: trackPeer" [class.is-active]="p.state === 'active'"><i></i>{{ p.member.name.split(' ')[0] }}<small>{{ p.state === 'active' ? 'en línea' : p.state === 'ringing' ? 'llamando…' : 'conectando…' }}</small></span>
   </div>
 </div>

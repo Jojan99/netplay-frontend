@@ -60,7 +60,8 @@ export class BillingConfigComponent implements OnInit {
   readonly years = Array.from({ length: 5 }, (_, i) => new Date().getFullYear() - 2 + i);
 
   // ── Tabs ──────────────────────────────────────────────────
-  activeTab: 'billing' | 'invoice' | 'payment-methods' | 'gateway' = 'billing';
+  activeTab: 'billing' | 'invoice' | 'payment-methods' | 'gateway' | 'cortes' = 'billing';
+  gwView: 'config' | 'test' | 'transactions' = 'config';
 
   // ── Pasarela de pago online ────────────────────────────────
   readonly baseUrl = environment.rootUrl;

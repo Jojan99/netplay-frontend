@@ -13,6 +13,7 @@ import { RouterModule, RouterOutlet, Router, NavigationEnd } from '@angular/rout
 import { CrmWidgetComponent } from '../../crm/components/crm-widget/crm-widget.component';
 import { DialogHostComponent } from '../dialog-host/dialog-host.component';
 import { TeamPanelComponent } from '../../crm/components/team-panel/team-panel.component';
+import { LocationTrackerService } from '../../services/location-tracker.service';
 import { filter } from 'rxjs/operators';
 
 import { FooterComponent }           from '../footer/footer.component';
@@ -82,12 +83,15 @@ export class LayoutComponent implements OnInit {
     private authService:     AuthService,
     private companyService:  CompanyService,
     readonly toastService:   ToastService,
+    private locationTracker: LocationTrackerService,
   ) {}
 
   ngOnInit(): void {
     this.router.events.pipe(filter(e => e instanceof NavigationEnd)).subscribe((e: any) => this.updateSection(e.urlAfterRedirects || e.url));
     if (isPlatformBrowser(this.platformId)) this.clockTimer = setInterval(() => { this.now = new Date(); }, 30000);
     if (!isPlatformBrowser(this.platformId)) return;
+    // Los técnicos comparten ubicación mientras tengan el panel abierto (también al recargar, no sólo al iniciar sesión)
+    this.locationTracker.startTrackingIfTechnician();
 
     if (window.innerWidth < 768) {
       this.sidebarService.setCollapsed(true);

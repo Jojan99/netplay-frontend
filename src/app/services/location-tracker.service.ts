@@ -93,8 +93,27 @@ export class LocationTrackerService implements OnDestroy {
 
   // ─── Común ───────────────────────────────────────────────────────────────
 
-  private sendLocation(lat: number, lng: number): void {
+  private lastSent: { lat: number; lng: number; at: number } | null = null;
+  private heartbeat: any = null;
+
+  /** Envía como máximo cada 10 s y sólo si se movió ≥ 12 m; además un latido cada 2 min para seguir "en vivo" aunque esté quieto. */
+  private sendLocation(lat: number, lng: number, force = false): void {
+    const now = Date.now();
+    if (!force && this.lastSent) {
+      const moved = this.distanceM(this.lastSent.lat, this.lastSent.lng, lat, lng);
+      if (now - this.lastSent.at < 10000 || (moved < 12 && now - this.lastSent.at < 120000)) return;
+    }
+    this.lastSent = { lat, lng, at: now };
     this.employeeService.updateMyLocation(lat, lng).subscribe({ error: () => {} });
+    if (!this.heartbeat) {
+      this.heartbeat = setInterval(() => { if (this.lastSent) this.sendLocation(this.lastSent.lat, this.lastSent.lng, true); }, 120000);
+    }
+  }
+  private distanceM(a: number, b: number, c: number, d: number): number {
+    const R = 6371000, toR = (x: number) => x * Math.PI / 180;
+    const dLat = toR(c - a), dLng = toR(d - b);
+    const h = Math.sin(dLat / 2) ** 2 + Math.cos(toR(a)) * Math.cos(toR(c)) * Math.sin(dLng / 2) ** 2;
+    return 2 * R * Math.asin(Math.sqrt(h));
   }
 
   stopTracking(): void {
@@ -112,6 +131,7 @@ export class LocationTrackerService implements OnDestroy {
       document.removeEventListener('visibilitychange', this.visibilityHandler);
       this.visibilityHandler = null;
     }
+    if (this.heartbeat) { clearInterval(this.heartbeat); this.heartbeat = null; }
 
     this.isTracking = false;
   }

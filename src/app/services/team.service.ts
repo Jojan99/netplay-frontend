@@ -15,7 +15,12 @@ export class TeamService {
   }
   send(to: number | null, content: string) { return this.http.post<any>(this.url('team/messages'), { to, content }, { headers: this.headers() }); }
   read(withId: string | number) { return this.http.post<any>(this.url('team/read'), { with: String(withId) }, { headers: this.headers() }); }
-  signal(to: number, type: string, payload: any = null, callId = '') {
-    return this.http.post<any>(this.url('team/call/signal'), { to, type, payload, call_id: callId }, { headers: this.headers() });
+  sendFile(to: number | null, file: File, content = '') {
+    const fd = new FormData(); fd.append('file', file); if (to != null) fd.append('to', String(to)); if (content) fd.append('content', content);
+    return this.http.post<any>(this.url('team/messages'), fd, { headers: this.headers() });
   }
+  signal(to: number, type: string, payload: any = null, callId = '', extra: { participants?: number[]; group?: boolean } = {}) {
+    return this.http.post<any>(this.url('team/call/signal'), { to, type, payload, call_id: callId, ...extra }, { headers: this.headers() });
+  }
+  ice() { return this.http.get<any>(this.url('team/ice'), { headers: this.headers() }); }
 }

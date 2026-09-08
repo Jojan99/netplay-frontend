@@ -86,8 +86,8 @@ export class EmployeeService {
     return this.http.put(`${this.base}/my-location`, { latitude, longitude }, { headers: this.getHeaders() });
   }
 
-  getTechnicianLocations(): Observable<any> {
-    return this.http.get(`${this.base}/technician-locations`, { headers: this.getHeaders() });
+  getTechnicianLocations(lastUpdateMinutes = 30): Observable<any> {
+    return this.http.get(`${this.base}/technician-locations`, { headers: this.getHeaders(), params: { last_update_minutes: String(lastUpdateMinutes) } });
   }
 
   // ── Nómina ────────────────────────────────────────────────────────────────

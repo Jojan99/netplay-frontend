@@ -4,30 +4,55 @@
       <p class="np-kicker">Operación <b>/</b> Técnicos en campo</p>
       <h1 class="np-title">Mapa de técnicos</h1>
       <div class="np-ribbon">
-        <span><i class="np-dot" style="background:var(--ok)"></i><span class="np-n">{{ technicians.length }}</span>técnicos activos en los últimos 30 min</span>
-        <span class="np-mono np-fine">actualiza cada 30 s<ng-container *ngIf="lastUpdate"> · {{ lastUpdate | date:'HH:mm:ss' }}</ng-container></span>
+        <span><i class="np-dot" style="background:var(--ok)"></i><span class="np-n">{{ liveCount }}</span>en vivo</span>
+        <span><i class="np-dot" style="background:var(--warn)"></i><span class="np-n">{{ recentCount }}</span>recientes</span>
+        <span><i class="np-dot" style="background:var(--text-3)"></i><span class="np-n">{{ technicians.length - liveCount - recentCount }}</span>sin señal</span>
+        <span class="np-mono np-fine">tiempo real<ng-container *ngIf="lastUpdate"> · {{ lastUpdate | date:'HH:mm:ss' }}</ng-container></span>
       </div>
     </div>
-    <div class="np-actions"><button type="button" class="np-btn np-btn--ghost" (click)="loadLocations()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 12a8 8 0 1 1-2.3-5.7M20 4v5h-5"/></svg>Actualizar</button></div>
+    <div class="np-actions">
+      <button type="button" class="np-btn np-btn--ghost" (click)="toggleStyle()" [title]="mapStyle === 'streets' ? 'Ver satélite' : 'Ver calles'"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6l6-3 6 3 6-3v15l-6 3-6-3-6 3zM9 3v15M15 6v15"/></svg>{{ mapStyle === 'streets' ? 'Satélite' : 'Calles' }}</button>
+      <button type="button" class="np-btn np-btn--ghost" (click)="fitAll()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg>Ver todos</button>
+      <button type="button" class="np-btn np-btn--ghost" (click)="loadLocations()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 12a8 8 0 1 1-2.3-5.7M20 4v5h-5"/></svg>Actualizar</button>
+    </div>
   </header>
 
   <div class="np-workspace np-techmap-ws">
     <section class="np-map-wrap">
       <div id="technician-map"></div>
-      <div class="np-map-empty" *ngIf="!isLoading && technicians.length === 0"><strong>Sin técnicos activos.</strong><span>El mapa se actualiza solo cuando alguien inicia sesión en la app.</span></div>
+      <div class="np-map-legend"><span><i class="is-live"></i>En vivo (≤ 5 min)</span><span><i class="is-recent"></i>Reciente (≤ 30 min)</span><span><i class="is-stale"></i>Sin señal</span></div>
+      <div class="np-map-follow" *ngIf="followId"><i class="np-dot" style="background:var(--ok)"></i>Siguiendo a <b>{{ selected?.first_name }}</b><button type="button" class="np-link" (click)="followId = null">Dejar de seguir</button></div>
+      <div class="np-map-empty" *ngIf="!isLoading && technicians.length === 0"><strong>Sin técnicos con ubicación.</strong><span>Un técnico aparece acá cuando abre el panel o la app con el GPS permitido.</span></div>
     </section>
+
     <aside class="np-inspector" aria-label="Técnicos">
-      <div class="np-insp-head"><div class="np-insp-id"><h2>Ubicaciones recientes</h2><div class="np-meta">Tocá un técnico para centrar el mapa</div></div></div>
+      <div class="np-insp-head"><div class="np-insp-id"><h2>Técnicos</h2><div class="np-meta">Tocá uno para centrar el mapa; la estrella lo sigue en vivo</div></div></div>
       <div class="np-insp-body">
+        <label class="np-search np-map-search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg><input type="search" [(ngModel)]="search" placeholder="Buscar técnico" /></label>
+        <div class="np-chips np-map-chips"><button type="button" class="np-chip" [attr.aria-pressed]="filter === 'all'" (click)="filter = 'all'">Todos <span class="np-c">{{ technicians.length }}</span></button><button type="button" class="np-chip" [attr.aria-pressed]="filter === 'live'" (click)="filter = 'live'">Activos <span class="np-c">{{ liveCount + recentCount }}</span></button><button type="button" class="np-chip" [attr.aria-pressed]="filter === 'stale'" (click)="filter = 'stale'">Sin señal</button></div>
+
         <div *ngIf="isLoading" class="np-loading"><span class="np-spinner"></span> Cargando…</div>
         <p class="np-notice np-notice--danger" *ngIf="!isLoading && errorMsg">{{ errorMsg }}</p>
-        <p class="np-muted" *ngIf="!isLoading && !errorMsg && technicians.length === 0">Ningún técnico activo. Aparecen al iniciar sesión.</p>
-        <div class="np-checklist" *ngIf="!isLoading && technicians.length > 0">
-          <button type="button" class="np-check np-check--btn" *ngFor="let tech of technicians" (click)="centerOnTech(tech)">
-            <span class="np-avatar np-avatar--sm">{{ (tech.first_name || 'T')[0].toUpperCase() }}</span>
-            <span><span class="np-strong">{{ tech.first_name }} {{ tech.last_name }}</span><span class="np-fine">{{ tech.job_title || 'Técnico' }}</span></span>
-            <span class="np-spacer"></span><span class="np-fine np-mono">{{ getMinutesAgo(tech.last_location_update) }}</span>
-          </button>
+        <p class="np-muted" *ngIf="!isLoading && !errorMsg && filtered.length === 0">Nada que mostrar con este filtro.</p>
+
+        <div class="np-tech-list" *ngIf="!isLoading && filtered.length > 0">
+          <div class="np-tech" *ngFor="let tech of filtered; trackBy: trackTech" [class.is-selected]="selected?.id === tech.id" role="button" tabindex="0" (click)="centerOnTech(tech)" (keydown.enter)="centerOnTech(tech)">
+            <span class="np-tech-avatar" [ngClass]="'is-' + freshness(tech)">{{ (tech.first_name || 'T')[0].toUpperCase() }}{{ (tech.last_name || '')[0] || '' }}</span>
+            <span class="np-tech-copy"><b>{{ tech.first_name }} {{ tech.last_name }}</b><small>{{ tech.job_title || 'Técnico' }} · {{ getMinutesAgo(tech.last_location_update) }}</small></span>
+            <span class="np-pill" [ngClass]="freshness(tech) === 'live' ? 'np-pill--active' : freshness(tech) === 'recent' ? 'np-pill--noip' : 'np-pill--neutral'">{{ freshness(tech) === 'live' ? 'En vivo' : freshness(tech) === 'recent' ? 'Reciente' : 'Sin señal' }}</span>
+            <button type="button" class="np-icobtn np-tech-follow" [class.is-on]="followId === tech.id" (click)="toggleFollow(tech); $event.stopPropagation()" [title]="followId === tech.id ? 'Dejar de seguir' : 'Seguir en vivo'"><svg viewBox="0 0 24 24" [attr.fill]="followId === tech.id ? 'currentColor' : 'none'" stroke="currentColor" stroke-width="2"><path d="m12 3 2.7 5.6 6.1.9-4.4 4.3 1 6.1-5.4-2.9-5.4 2.9 1-6.1L3.2 9.5l6.1-.9z"/></svg></button>
+          </div>
+        </div>
+
+        <div class="np-tech-detail" *ngIf="selected">
+          <p class="np-sect">Detalle</p>
+          <dl class="np-dl">
+            <dt>Técnico</dt><dd>{{ selected.first_name }} {{ selected.last_name }}</dd>
+            <dt>Cargo</dt><dd>{{ selected.job_title || 'Técnico' }}</dd>
+            <dt>Estado</dt><dd>{{ freshness(selected) === 'live' ? 'En vivo' : freshness(selected) === 'recent' ? 'Reciente' : 'Sin señal' }} · {{ getMinutesAgo(selected.last_location_update) }}</dd>
+            <dt>Coordenadas</dt><dd class="np-mono">{{ selected.latitude }}, {{ selected.longitude }}</dd>
+          </dl>
+          <div class="np-btnrow"><a class="np-btn np-btn--ghost np-btn--sm" [href]="mapsUrl(selected)" target="_blank" rel="noopener">Abrir en Google Maps</a><button type="button" class="np-btn np-btn--primary np-btn--sm" (click)="toggleFollow(selected)">{{ followId === selected.id ? 'Dejar de seguir' : 'Seguir en vivo' }}</button></div>
         </div>
       </div>
     </aside>

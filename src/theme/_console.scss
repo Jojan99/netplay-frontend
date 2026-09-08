@@ -333,3 +333,5 @@ button.np-kpi:hover { background: var(--surface-2); }
 :where(.np-shell) button { font: inherit; cursor: pointer; color: inherit; background: none; border: 0; padding: 0; }
 .np-shell svg { width: 16px; height: 16px; flex-shrink: 0; }
 .np-shell :is(button, a):focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+.np-notice--info { background: var(--info-soft); color: var(--info); }
