@@ -1,168 +1,21 @@
-<div class="fixed inset-0 z-50 flex items-center justify-center">
-
-  <!-- BACKDROP -->
-  <div
-    class="absolute inset-0 bg-slate-900/50 backdrop-blur-sm"
-    (click)="cancel()"
-  ></div>
-
-  <!-- MODAL -->
-  <div
-    class="relative w-full max-w-lg mx-4
-           bg-white/95 dark:bg-slate-800/95 backdrop-blur-xl
-           rounded-2xl shadow-2xl border border-slate-100 dark:border-slate-700
-           p-6 animate-fadeIn"
-  >
-
-    <!-- HEADER -->
-    <div class="flex items-center justify-between mb-4">
-      <h3 class="text-lg font-semibold text-slate-900 dark:text-white">
-        Transferir conversación
-      </h3>
-
-      <button
-        class="text-slate-400 hover:text-slate-600 text-xl"
-        (click)="cancel()"
-      >
-        ✕
-      </button>
-    </div>
-
-    <!-- AGENTS LIST -->
-    <div class="max-h-64 overflow-y-auto space-y-2 mb-4">
-
-    <div
-  *ngFor="let a of agents"
-  class="rounded-xl border transition-all
-         dark:border-slate-700/60"
-  [ngClass]="[
-    a.user_id === selectedAgent?.user_id
-      ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
-      : 'border-slate-200/60',
-    a.status === 'saturado' ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'
-  ]"
-  (click)="a.status !== 'saturado' && select(a)"
->
-
-  <!-- HEADER -->
-  <div class="p-3 hover:bg-slate-50 dark:hover:bg-slate-700/80 rounded-xl">
-
-    <div class="flex items-center justify-between">
-
-      <div class="flex-1">
-
-        <!-- NAME -->
-        <div class="font-medium text-slate-900 dark:text-white">
-          {{ a.name }}
+<div class="np-overlay" (click)="cancel()">
+  <div class="np-modal" role="dialog" aria-modal="true" (click)="$event.stopPropagation()">
+    <div class="np-modal-head"><div><p class="np-kicker">CRM <b>/</b> Transferir</p><h3>Transferir conversación</h3></div><button type="button" class="np-icobtn" (click)="cancel()" aria-label="Cerrar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div>
+    <div class="np-modal-body">
+      <p class="np-sect">Agente destino</p>
+      <div class="np-checklist">
+        <div class="np-check np-check--agent" *ngFor="let a of agents" [class.is-selected]="a.user_id === selectedAgent?.user_id" [class.is-off]="a.status === 'saturado'" (click)="a.status !== 'saturado' && select(a)">
+          <i class="wa-agent-dot" [ngClass]="'is-' + a.status"></i>
+          <span class="np-strong">{{ a.name }}</span>
+          <span class="np-spacer"></span>
+          <button type="button" class="np-link np-link--muted" (click)="toggleExpand(a, $event)">{{ a.active_chats }}/{{ a.max_chats }} chats {{ expandedAgentId === a.user_id ? '▴' : '▾' }}</button>
+          <span class="np-meter"><i [style.width.%]="(a.active_chats / a.max_chats) * 100" [style.background]="a.status === 'saturado' ? 'var(--danger)' : a.status === 'ocupado' ? 'var(--warn)' : 'var(--ok)'"></i></span>
+          <div class="wa-agent-convs" *ngIf="expandedAgentId === a.user_id"><span *ngFor="let c of a.conversations" class="np-fine">#{{ c.conversation_id }} · {{ c.customer_name }}</span><span class="np-fine" *ngIf="!a.conversations?.length">Sin conversaciones activas</span></div>
         </div>
-
-        <!-- LOAD -->
-        <div
-          class="text-xs text-slate-500 flex items-center gap-2 cursor-pointer"
-          (click)="toggleExpand(a, $event)"
-        >
-          {{ a.active_chats }}/{{ a.max_chats }} chats activos
-          <span class="text-blue-500">
-            {{ expandedAgentId === a.user_id ? '▲' : '▼' }}
-          </span>
-        </div>
-
-        <!-- PROGRESS BAR -->
-        <div class="w-full h-1 bg-slate-200/60 rounded-full mt-1">
-          <div
-            class="h-1 rounded-full"
-            [ngClass]="
-              a.status === 'saturado'
-                ? 'bg-red-500'
-                : a.status === 'ocupado'
-                ? 'bg-yellow-500'
-                : 'bg-green-500'
-            "
-            [style.width.%]="(a.active_chats / a.max_chats) * 100">
-          </div>
-        </div>
-
+        <p class="np-muted np-check" *ngIf="agents.length === 0">No hay agentes disponibles.</p>
       </div>
-
-      <!-- STATUS DOT -->
-      <span
-        class="h-3 w-3 rounded-full ml-3"
-        [ngClass]="
-          a.status === 'libre'
-            ? 'bg-green-500'
-            : a.status === 'ocupado'
-            ? 'bg-yellow-500'
-            : 'bg-red-500'
-        "
-      ></span>
-
+      <label class="np-field"><span>Motivo (opcional)</span><textarea class="np-input np-textarea" rows="2" [(ngModel)]="reason" placeholder="Por qué se transfiere…"></textarea></label>
+      <div class="np-btnrow np-btnrow--end"><button type="button" class="np-btn np-btn--ghost" (click)="cancel()">Cancelar</button><button type="button" class="np-btn np-btn--primary" [disabled]="!selectedAgent || loading" (click)="confirm()">{{ loading ? 'Transfiriendo…' : 'Transferir' }}</button></div>
     </div>
-
-  </div>
-
-  <!-- 🔥 CONVERSACIONES DESPLEGABLES -->
-  <div
-    *ngIf="expandedAgentId === a.user_id && a.conversations?.length"
-    class="px-4 pb-3 space-y-1 text-xs text-slate-600 dark:text-slate-300"
-  >
-    <div
-      *ngFor="let c of a.conversations"
-      class="px-2 py-1 rounded-md bg-slate-100/80 dark:bg-slate-700/80 truncate"
-    >
-      #{{ c.conversation_id }} – {{ c.customer_name }}
-    </div>
-  </div>
-
-  <!-- SI NO TIENE CHATS -->
-  <div
-    *ngIf="expandedAgentId === a.user_id && !a.conversations?.length"
-    class="px-4 pb-3 text-xs text-slate-400 italic"
-  >
-    Sin conversaciones activas
-  </div>
-
-</div>
-
-    </div>
-
-    <!-- REASON -->
-    <div class="mb-4">
-      <label class="block text-xs font-medium text-slate-500 mb-1">
-        Motivo (opcional)
-      </label>
-
-      <textarea
-        [(ngModel)]="reason"
-        rows="3"
-class="w-full px-3.5 py-2 text-sm bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl border border-slate-200/60 dark:border-slate-700/60 rounded-xl text-slate-700 dark:text-slate-300 focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-400 transition-all shadow-sm outline-none"
-        placeholder="Escribe un motivo si deseas..."
-      ></textarea>
-    </div>
-
-    <!-- ACTIONS -->
-    <div class="flex justify-end gap-2">
-
-      <button
-        class="px-4 py-2 text-sm rounded-full
-               bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200
-               transition-all"
-        (click)="cancel()"
-      >
-        Cancelar
-      </button>
-
-      <button
-        class="px-4 py-2 text-sm rounded-full
-               bg-gradient-to-br from-indigo-500 to-violet-600 text-white shadow-md shadow-indigo-500/20 hover:shadow-lg
-               disabled:opacity-50 disabled:cursor-not-allowed
-               transition-all"
-        [disabled]="!selectedAgent || loading"
-        (click)="confirm()"
-      >
-        {{ loading ? 'Transfiriendo...' : 'Transferir' }}
-      </button>
-
-    </div>
-
   </div>
 </div>

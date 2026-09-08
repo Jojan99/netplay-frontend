@@ -1,0 +1,10 @@
+/* ─── WhatsApp Web · configuración: sólo lo propio ──────────────────── */
+.hidden { display: none !important; }
+.np-wa-panel { --np-inspector-w: 400px; }
+.np-kpi-v--text { font-family: var(--font-display); font-size: 17px; }
+.np-switch-line { display: flex; align-items: center; gap: 10px; }
+.np-row--static { cursor: default; }
+.np-list { display: grid; gap: 6px; }
+.np-list-item { display: flex; gap: 10px; padding: 9px 10px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--surface); }
+.np-list-main { flex: 1; min-width: 0; display: grid; gap: 6px; .np-name { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; } }
+.np-qr-frame { display: grid; place-items: center; min-height: 240px; border: 1px dashed var(--line-strong); border-radius: var(--radius); background: var(--surface-2); padding: 12px; img { max-width: 260px; width: 100%; border-radius: 4px; background: #fff; padding: 8px; } }

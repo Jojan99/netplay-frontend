@@ -13,6 +13,7 @@ const CATEGORIES = ['General', 'Servicios', 'Nómina', 'Arriendo', 'Mantenimient
   imports: [CommonModule, FormsModule],
   templateUrl: './egresos.component.html',
   styleUrl: './egresos.component.scss',
+  host: { class: 'np-console' },
 })
 export class EgresosComponent implements OnInit, OnDestroy {
   private destroy$      = new Subject<void>();

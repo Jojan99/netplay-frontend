@@ -1,24 +1,29 @@
-
-<button (click)="ejecutarComando()">Ejecutar Comando</button>
-<div class="max-w-8xl mx-auto mt-8 bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl rounded-2xl border border-slate-200/60 dark:border-slate-700/60 shadow-sm hover:shadow-md transition-all duration-300 p-6"> 
-<div class="flex flex-col">
-    <div class="overflow-x-auto">
-        <div class="inline-block min-w-full align-middle">
-            <div class="overflow-hidden shadow">
-                <ul class="divide-y divide-slate-200/60 dark:divide-slate-700/60">
-                    <li *ngFor="let file of UserInterface" class="flex justify-between items-center p-4 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors">
-                        <div class="flex items-center">
-                            <span class="ml-2 text-slate-500 uppercase dark:text-slate-400">{{ file.names }}</span>
-                        </div>
-                        <button (click)="downloadFiles(file.names)" class="relative inline-flex items-center justify-center p-0.5 mb-2 me-2 overflow-hidden text-sm font-medium text-slate-900 rounded-lg group bg-gradient-to-br from-red-200 via-red-300 to-yellow-200 group-hover:from-red-200 group-hover:via-red-300 group-hover:to-yellow-200 dark:text-white dark:hover:text-slate-900 focus:ring-4 focus:outline-none focus:ring-red-100 dark:focus:ring-red-400">
-                            <span class="relative px-5 py-1 transition-all ease-in duration-75 bg-white dark:bg-slate-900/80 rounded-md group-hover:bg-opacity-0">
-                                Descargar
-                            </span>
-                            </button>
-                    </li>
-                </ul>
-            </div>
-        </div>
+<div class="np-page np-hist">
+  <header class="np-head">
+    <div>
+      <p class="np-kicker">Operación <b>/</b> Finanzas <b>/</b> Archivos de facturación</p>
+      <h1 class="np-title">Archivos de facturación</h1>
+      <div class="np-ribbon"><span><span class="np-n">{{ UserInterface.length }}</span>archivos generados</span></div>
     </div>
+    <div class="np-actions">
+      <button type="button" class="np-btn np-btn--primary" (click)="ejecutarComando()" [disabled]="procesando"><span *ngIf="procesando" class="np-spinner np-spinner--sm"></span>{{ procesando ? 'Procesando…' : 'Ejecutar facturación' }}</button>
+    </div>
+  </header>
+  <div class="np-workspace">
+    <section class="np-registry">
+      <div class="np-registry-wrap">
+        <table class="np-table np-table--registry">
+          <thead><tr><th class="np-th-stripe"></th><th>Archivo</th><th class="np-th-right">Acción</th></tr></thead>
+          <tbody>
+            <tr *ngIf="UserInterface.length === 0" class="np-empty"><td colspan="3"><strong>No hay archivos generados.</strong></td></tr>
+            <tr *ngFor="let file of UserInterface" class="np-row np-row--static">
+              <td class="np-stripe"><i style="background:var(--accent)"></i></td>
+              <td class="np-data np-strong">{{ file.names }}</td>
+              <td class="np-td-right"><button type="button" class="np-btn np-btn--ghost np-btn--sm" (click)="downloadFiles(file.names)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12m0 0 4-4m-4 4-4-4M4 17v3h16v-3"/></svg>Descargar</button></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </div>
 </div>
-

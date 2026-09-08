@@ -6,24 +6,21 @@ import { MetaWhatsappService } from '../../../services/meta-whatsapp.service';
   selector: 'app-wa-meta-dashboard',
   standalone: true,
   imports: [CommonModule],
+  host: { class: 'np-console' },
   template: `
-    <div class="max-w-7xl mx-auto mt-8 p-6">
-      <h1 class="text-2xl font-bold text-gray-900 dark:text-white mb-6">Dashboard Meta WhatsApp</h1>
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6 border border-gray-200 dark:border-gray-700">
-          <p class="text-sm text-gray-500 dark:text-gray-400">Proveedor</p>
-          <p class="text-lg font-semibold text-blue-600 dark:text-blue-400">API Oficial de Meta</p>
-        </div>
-        <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6 border border-gray-200 dark:border-gray-700">
-          <p class="text-sm text-gray-500 dark:text-gray-400">Estado</p>
-          <p class="text-lg font-semibold text-green-600 dark:text-green-400">Activo</p>
-        </div>
-        <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6 border border-gray-200 dark:border-gray-700">
-          <p class="text-sm text-gray-500 dark:text-gray-400">Webhook</p>
-          <p class="text-lg font-semibold text-gray-900 dark:text-white">Configurado</p>
-        </div>
+    <div class="np-page">
+      <header class="np-head">
+        <div><p class="np-kicker">WhatsApp <b>/</b> API de Meta</p><h1 class="np-title">Resumen</h1><div class="np-ribbon"><span>Estado de la integración oficial de WhatsApp Business.</span></div></div>
+      </header>
+      <div class="np-scroll">
+        <section class="np-kpis np-kpis--3">
+          <div class="np-kpi np-kpi--accent"><span class="np-kpi-l">Proveedor</span><span class="np-kpi-v np-kpi-v--text">API oficial de Meta</span><span class="np-kpi-s">WhatsApp Business Platform</span></div>
+          <div class="np-kpi"><span class="np-kpi-l">Estado</span><span class="np-kpi-v np-kpi-v--ok np-kpi-v--text">Activo</span><span class="np-kpi-s">integración operativa</span></div>
+          <div class="np-kpi"><span class="np-kpi-l">Webhook</span><span class="np-kpi-v np-kpi-v--text">Configurado</span><span class="np-kpi-s np-mono">/api/webhooks/whatsapp-meta</span></div>
+        </section>
       </div>
     </div>
+    <style>.np-kpi-v--text { font-family: var(--font-display); font-size: 17px; }</style>
   `
 })
 export class WaMetaDashboardComponent {}

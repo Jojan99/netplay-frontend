@@ -1,559 +1,148 @@
-<div class="min-h-full bg-slate-50 dark:bg-slate-950 p-5 space-y-6">
+<div class="np-page np-dash">
 
-  <!-- ══ Header Premium ════════════════════════════════════════════════ -->
-  <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+  <header class="np-head">
     <div>
-      <p class="text-xs font-semibold uppercase tracking-widest text-slate-400 dark:text-slate-500">{{ today }}</p>
-      <h1 class="mt-1 text-2xl font-bold bg-gradient-to-r from-slate-800 to-slate-600 bg-clip-text text-transparent dark:from-white dark:to-slate-300">
-        Bienvenido<ng-container *ngIf="companyName">,
-          <span class="text-indigo-600 dark:text-indigo-400 font-medium">{{ companyName }}</span>
-        </ng-container>
-      </h1>
+      <p class="np-kicker">Operación <b>/</b> Centro de control</p>
+      <h1 class="np-title">Hola, {{ username || 'operador' }}</h1>
+      <div class="np-ribbon">
+        <span class="np-mono">{{ today }}</span>
+        <span><i class="np-dot" style="background:var(--accent)"></i>{{ companyName || 'Netplay' }}</span>
+        <span><span class="np-pill np-pill--neutral">{{ isAdmin ? 'Administrador' : isContador ? 'Contador' : isTecnico ? 'Técnico' : role }}</span></span>
+      </div>
     </div>
-    <div class="flex items-center gap-3 flex-wrap">
-      <!-- Role badge premium -->
-      <span class="px-3.5 py-1.5 rounded-xl text-xs font-bold border shadow-sm"
-            [ngClass]="{
-              'bg-white/80 text-indigo-700 border-indigo-200 dark:bg-indigo-900/20 dark:text-indigo-300 dark:border-indigo-800/60 backdrop-blur-xl': isAdmin,
-              'bg-white/80 text-amber-700 border-amber-200 dark:bg-amber-900/20 dark:text-amber-300 dark:border-amber-800/60 backdrop-blur-xl': isContador,
-              'bg-white/80 text-emerald-700 border-emerald-200 dark:bg-emerald-900/20 dark:text-emerald-300 dark:border-emerald-800/60 backdrop-blur-xl': isTecnico
-            }">
-        <span *ngIf="isAdmin">Administrador</span>
-        <span *ngIf="isContador">Contador</span>
-        <span *ngIf="isTecnico">Técnico</span>
-      </span>
-
-      <!-- Year selector premium -->
-      <ng-container *ngIf="isAdmin || isContador">
-        <select [(ngModel)]="selectedYear" (ngModelChange)="onYearChange()"
-                class="px-3.5 py-1.5 text-sm bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl border border-slate-200/60 dark:border-slate-700/60 rounded-xl text-slate-700 dark:text-slate-300 focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-400 transition-all shadow-sm">
-          <option *ngFor="let y of availableYears" [value]="y">{{ y }}</option>
+    <div class="np-actions" *ngIf="isAdmin || isContador">
+      <label class="np-pagesize">Año
+        <select [(ngModel)]="selectedYear" (ngModelChange)="onYearChange()" aria-label="Año de los gráficos">
+          <option *ngFor="let y of availableYears" [ngValue]="y">{{ y }}</option>
         </select>
-      </ng-container>
+      </label>
     </div>
-  </div>
+  </header>
 
-  <!-- ══════════════════════════════════════════════════════════════════ -->
-  <!-- ADMIN / CONTADOR VIEW                                            -->
-  <!-- ══════════════════════════════════════════════════════════════════ -->
-  <ng-container *ngIf="isAdmin || isContador">
+  <div class="np-scroll">
 
-    <!-- ── Finance KPIs ─────────────────────────────────────────────── -->
-    <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
-
-      <!-- Caja total -->
-      <div class="group bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl rounded-2xl p-5 border border-slate-200/60 dark:border-slate-700/60 shadow-sm hover:shadow-lg hover:border-indigo-200/60 dark:hover:border-indigo-800/40 transition-all duration-300">
-        <div class="flex items-start justify-between mb-3">
-          <p class="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Total en caja</p>
-          <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center shrink-0 shadow-md shadow-emerald-500/20">
-            <svg class="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 18.75a60.07 60.07 0 0 1 15.797 2.101c.727.198 1.453-.342 1.453-1.096V18.75M3.75 4.5v.75A.75.75 0 0 1 3 6h-.75m0 0v-.375c0-.621.504-1.125 1.125-1.125H20.25M2.25 6v9m18-10.5v.75c0 .414.336.75.75.75h.75m-1.5-1.5h.375c.621 0 1.125.504 1.125 1.125v9.75c0 .621-.504 1.125-1.125 1.125h-.375m1.5-1.5H21a.75.75 0 0 0-.75.75v.75m0 0H3.75m0 0h-.375a1.125 1.125 0 0 1-1.125-1.125V15m1.5 1.5v-.75A.75.75 0 0 0 3 15h-.75"/>
-            </svg>
-          </div>
-        </div>
-        <p class="text-2xl font-bold text-slate-900 dark:text-white">$ {{ valorCaja | number:'1.0-0' }}</p>
-        <div class="h-1 w-10 bg-gradient-to-r from-emerald-500 to-teal-400 rounded-full mt-3 group-hover:w-20 transition-all duration-500"></div>
-      </div>
-
-      <!-- Ingresos del mes -->
-      <div class="group bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl rounded-2xl p-5 border border-slate-200/60 dark:border-slate-700/60 shadow-sm hover:shadow-lg hover:border-indigo-200/60 dark:hover:border-indigo-800/40 transition-all duration-300">
-        <div class="flex items-start justify-between mb-3">
-          <p class="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Ingresos del mes</p>
-          <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center shrink-0 shadow-md shadow-indigo-500/20">
-            <svg class="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 18 9 11.25l4.306 4.306a11.95 11.95 0 0 1 5.814-5.518l2.74-1.22m0 0-5.94-2.281m5.94 2.28-2.28 5.941"/>
-            </svg>
-          </div>
-        </div>
-        <p class="text-2xl font-bold text-slate-900 dark:text-white">$ {{ valorIngreso | number:'1.0-0' }}</p>
-        <div class="h-1 w-10 bg-gradient-to-r from-indigo-500 to-violet-500 rounded-full mt-3 group-hover:w-20 transition-all duration-500"></div>
-      </div>
-
-      <!-- Facturas pendientes -->
-      <div class="group bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl rounded-2xl p-5 border border-slate-200/60 dark:border-slate-700/60 shadow-sm hover:shadow-lg hover:border-indigo-200/60 dark:hover:border-indigo-800/40 transition-all duration-300">
-        <div class="flex items-start justify-between mb-3">
-          <p class="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Pendiente cobro</p>
-          <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center shrink-0 shadow-md shadow-amber-500/20">
-            <svg class="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/>
-            </svg>
-          </div>
-        </div>
-        <p class="text-2xl font-bold text-slate-900 dark:text-white">$ {{ valorPendiente | number:'1.0-0' }}</p>
-        <div class="h-1 w-10 bg-gradient-to-r from-amber-500 to-orange-400 rounded-full mt-3 group-hover:w-20 transition-all duration-500"></div>
-      </div>
-
-      <!-- Egresos -->
-      <div class="group bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl rounded-2xl p-5 border border-slate-200/60 dark:border-slate-700/60 shadow-sm hover:shadow-lg hover:border-indigo-200/60 dark:hover:border-indigo-800/40 transition-all duration-300">
-        <div class="flex items-start justify-between mb-3">
-          <p class="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Total egresos</p>
-          <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-rose-500 to-pink-600 flex items-center justify-center shrink-0 shadow-md shadow-rose-500/20">
-            <svg class="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 6 9 12.75l4.286-4.286a11.948 11.948 0 0 1 4.306 6.43l.776 2.898m0 0 3.182-5.511m-3.182 5.51-5.511-3.181"/>
-            </svg>
-          </div>
-        </div>
-        <p class="text-2xl font-bold text-slate-900 dark:text-white">$ {{ valorEgresos | number:'1.0-0' }}</p>
-        <div class="h-1 w-10 bg-gradient-to-r from-rose-500 to-pink-500 rounded-full mt-3 group-hover:w-20 transition-all duration-500"></div>
-      </div>
-
-      <!-- Facturas pagadas -->
-      <div class="group bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl rounded-2xl p-5 border border-slate-200/60 dark:border-slate-700/60 shadow-sm hover:shadow-lg hover:border-indigo-200/60 dark:hover:border-indigo-800/40 transition-all duration-300">
-        <div class="flex items-start justify-between mb-3">
-          <p class="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Facturas pagadas</p>
-          <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-sky-500 to-blue-600 flex items-center justify-center shrink-0 shadow-md shadow-sky-500/20">
-            <svg class="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/>
-            </svg>
-          </div>
-        </div>
-        <p class="text-2xl font-bold text-slate-900 dark:text-white">{{ countPaid }}</p>
-        <div class="h-1 w-10 bg-gradient-to-r from-sky-500 to-blue-400 rounded-full mt-3 group-hover:w-20 transition-all duration-500"></div>
-      </div>
-
-      <!-- Clientes instalados -->
-      <div class="group bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl rounded-2xl p-5 border border-slate-200/60 dark:border-slate-700/60 shadow-sm hover:shadow-lg hover:border-indigo-200/60 dark:hover:border-indigo-800/40 transition-all duration-300">
-        <div class="flex items-start justify-between mb-3">
-          <p class="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Clientes totales</p>
-          <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center shrink-0 shadow-md shadow-violet-500/20">
-            <svg class="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M15 19.128a9.38 9.38 0 0 0 2.625.372 9.337 9.337 0 0 0 4.121-.952 4.125 4.125 0 0 0-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 0 1 8.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0 1 11.964-3.07M12 6.375a3.375 3.375 0 1 1-6.75 0 3.375 3.375 0 0 1 6.75 0Zm8.25 2.25a2.625 2.625 0 1 1-5.25 0 2.625 2.625 0 0 1 5.25 0Z"/>
-            </svg>
-          </div>
-        </div>
-        <p class="text-2xl font-bold text-slate-900 dark:text-white">{{ totalUsers }}</p>
-        <p class="text-xs text-slate-400 dark:text-slate-500 mt-1">
-          <span class="text-emerald-600 dark:text-emerald-400 font-semibold">{{ active }} activos</span>
-          &nbsp;·&nbsp;
-          <span class="text-rose-500 dark:text-rose-400 font-semibold">{{ inactive }} inactivos</span>
-        </p>
-        <div class="h-1 w-10 bg-gradient-to-r from-violet-500 to-purple-500 rounded-full mt-2 group-hover:w-20 transition-all duration-500"></div>
-      </div>
-
-      <!-- Contratos activos -->
-      <div class="group bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl rounded-2xl p-5 border border-slate-200/60 dark:border-slate-700/60 shadow-sm hover:shadow-lg hover:border-indigo-200/60 dark:hover:border-indigo-800/40 transition-all duration-300">
-        <div class="flex items-start justify-between mb-3">
-          <p class="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Contratos activos</p>
-          <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center shrink-0 shadow-md shadow-emerald-500/20">
-            <svg class="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M18 18.72a9.094 9.094 0 0 0 3.741-.479 3 3 0 0 0-4.682-2.72m.94 3.198.001.031c0 .225-.012.447-.037.666A11.944 11.944 0 0 1 12 21c-2.17 0-4.207-.576-5.963-1.584A6.062 6.062 0 0 1 6 18.719m12 0a5.971 5.971 0 0 0-.941-3.197m0 0A5.995 5.995 0 0 0 12 12.75a5.995 5.995 0 0 0-5.058 2.772m0 0a3 3 0 0 0-4.681 2.72 8.986 8.986 0 0 0 3.74.477m.94-3.197a5.971 5.971 0 0 0-.94 3.197M15 6.75a3 3 0 1 1-6 0 3 3 0 0 1 6 0Zm6 3a2.25 2.25 0 1 1-4.5 0 2.25 2.25 0 0 1 4.5 0Zm-13.5 0a2.25 2.25 0 1 1-4.5 0 2.25 2.25 0 0 1 4.5 0Z"/>
-            </svg>
-          </div>
-        </div>
-        <p class="text-2xl font-bold text-slate-900 dark:text-white">{{ active }}</p>
-        <div class="h-1 w-10 bg-gradient-to-r from-emerald-500 to-teal-400 rounded-full mt-3 group-hover:w-20 transition-all duration-500"></div>
-      </div>
-
-      <!-- Contratos inactivos -->
-      <div class="group bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl rounded-2xl p-5 border border-slate-200/60 dark:border-slate-700/60 shadow-sm hover:shadow-lg hover:border-indigo-200/60 dark:hover:border-indigo-800/40 transition-all duration-300">
-        <div class="flex items-start justify-between mb-3">
-          <p class="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Contratos inactivos</p>
-          <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-rose-500 to-pink-600 flex items-center justify-center shrink-0 shadow-md shadow-rose-500/20">
-            <svg class="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M22 10.5h-6m-2.25-4.125a3.375 3.375 0 1 1-6.75 0 3.375 3.375 0 0 1 6.75 0ZM4 19.235v-.11a6.375 6.375 0 0 1 12.75 0v.109A12.318 12.318 0 0 1 10.374 21c-2.331 0-4.512-.645-6.374-1.766Z"/>
-            </svg>
-          </div>
-        </div>
-        <p class="text-2xl font-bold text-slate-900 dark:text-white">{{ inactive }}</p>
-        <div class="h-1 w-10 bg-gradient-to-r from-rose-500 to-pink-500 rounded-full mt-3 group-hover:w-20 transition-all duration-500"></div>
-      </div>
-
-    </div>
-
-    <!-- ── Payment method summary ─────────────────────────────────── -->
+    <!-- ══ ADMIN / CONTADOR ══════════════════════════════════════════════ -->
     <ng-container *ngIf="isAdmin || isContador">
-      <div class="bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl rounded-2xl p-6 border border-slate-200/60 dark:border-slate-700/60 shadow-sm hover:shadow-md transition-all duration-300">
-        <div class="flex items-center justify-between mb-5 flex-wrap gap-2">
-          <div class="flex items-center gap-2">
-            <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center shadow-md shadow-indigo-500/20">
-              <svg class="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 8.25h19.5M2.25 9h19.5m-16.5 5.25h6m-6 2.25h3m-3.75 3h15a2.25 2.25 0 0 0 2.25-2.25V6.75A2.25 2.25 0 0 0 19.5 4.5h-15a2.25 2.25 0 0 0-2.25 2.25v10.5A2.25 2.25 0 0 0 4.5 19.5Z"/>
-              </svg>
-            </div>
-            <h2 class="text-sm font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
-              Recaudo por método de pago
-            </h2>
+
+      <section class="np-kpis np-kpis--5" aria-label="Indicadores financieros">
+        <div class="np-kpi np-kpi--accent">
+          <span class="np-kpi-l">Caja</span>
+          <span class="np-kpi-v">$ {{ valorCaja | number:'1.0-0' }}</span>
+          <span class="np-kpi-s">ingresos menos egresos</span>
+        </div>
+        <div class="np-kpi">
+          <span class="np-kpi-l">Ingresos</span>
+          <span class="np-kpi-v np-kpi-v--ok">$ {{ valorIngreso | number:'1.0-0' }}</span>
+          <span class="np-kpi-s">{{ countPaid | number }} facturas pagadas</span>
+        </div>
+        <div class="np-kpi">
+          <span class="np-kpi-l">Pendiente</span>
+          <span class="np-kpi-v np-kpi-v--warn">$ {{ valorPendiente | number:'1.0-0' }}</span>
+          <span class="np-kpi-s">cartera por cobrar</span>
+        </div>
+        <div class="np-kpi">
+          <span class="np-kpi-l">Egresos</span>
+          <span class="np-kpi-v np-kpi-v--danger">$ {{ valorEgresos | number:'1.0-0' }}</span>
+          <span class="np-kpi-s">gastos registrados</span>
+        </div>
+        <div class="np-kpi">
+          <span class="np-kpi-l">Clientes</span>
+          <span class="np-kpi-v">{{ totalUsers | number }}</span>
+          <span class="np-kpi-s"><i class="np-dot" style="background:var(--ok)"></i>{{ active | number }} activos · <i class="np-dot" style="background:var(--danger)"></i>{{ inactive | number }} inactivos</span>
+        </div>
+      </section>
+
+      <section class="np-scroll-row" [class.np-grid-3]="isAdmin">
+        <div class="np-card np-card--wide">
+          <div class="np-card-h"><h2>Ingresos y egresos {{ selectedYear }}</h2><span class="np-legend"><i style="background:var(--ok)"></i>Ingresos <i style="background:var(--danger)"></i>Egresos</span></div>
+          <div class="np-chart np-chart--tall"><canvas id="incomeChart"></canvas></div>
+        </div>
+        <div class="np-card" *ngIf="isAdmin">
+          <div class="np-card-h"><h2>Estado de contratos</h2></div>
+          <div class="np-chart"><canvas id="contractsChart"></canvas></div>
+        </div>
+      </section>
+
+      <section class="np-scroll-row" [class.np-grid-2]="isAdmin">
+        <div class="np-card">
+          <div class="np-card-h"><h2>Clientes por mes {{ selectedYear }}</h2><span class="np-legend"><i style="background:var(--accent)"></i>Registrados <i style="background:var(--danger)"></i>Eliminados</span></div>
+          <div class="np-chart"><canvas id="clientsChart"></canvas></div>
+        </div>
+        <div class="np-card" *ngIf="isAdmin">
+          <div class="np-card-h"><h2>Estado de tickets</h2>
+            <span class="np-card-meta"><b>{{ ticketTotal }}</b> en total · <b>{{ ticketClosedToday }}</b> cerrados hoy</span>
           </div>
-          <input type="month" [(ngModel)]="pmPeriod" (ngModelChange)="onPmPeriodChange()"
-                 class="px-3.5 py-1.5 text-sm bg-slate-50/80 dark:bg-slate-700/80 backdrop-blur-xl border border-slate-200/60 dark:border-slate-600/60 rounded-xl text-slate-700 dark:text-slate-300 focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-400 transition-all shadow-sm">
+          <div class="np-chart"><canvas id="ticketBarChart"></canvas></div>
         </div>
+      </section>
 
-        <div *ngIf="pmSummary.length === 0" class="text-sm text-slate-400 dark:text-slate-500 text-center py-10">
-          No hay pagos registrados en este período.
-        </div>
-        <div *ngIf="pmSummary.length > 0" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
-          <div *ngFor="let pm of pmSummary" class="group bg-slate-50/80 dark:bg-slate-700/80 backdrop-blur-sm rounded-xl p-4 text-center border border-slate-100/60 dark:border-slate-600/40 hover:border-indigo-200/60 dark:hover:border-indigo-800/40 hover:shadow-sm transition-all duration-300">
-            <p class="text-xs font-bold text-slate-500 dark:text-slate-400 mb-1 uppercase tracking-wider">{{ pm.name }}</p>
-            <p class="text-lg font-bold text-slate-900 dark:text-white">$ {{ pm.total | number:'1.0-0' }}</p>
-            <p class="text-xs text-slate-400 mt-0.5">{{ pm.count }} pago(s)</p>
+      <section class="np-grid-2">
+        <div class="np-card">
+          <div class="np-card-h"><h2>Recaudo por método de pago</h2>
+            <input type="month" class="np-input np-input--sm" [(ngModel)]="pmPeriod" (ngModelChange)="onPmPeriodChange()" aria-label="Período" />
+          </div>
+          <p class="np-muted" *ngIf="pmSummary.length === 0">No hay pagos registrados en este período.</p>
+          <div class="np-tablewrap" *ngIf="pmSummary.length > 0">
+            <table class="np-table np-table--compact">
+              <thead><tr><th>Método</th><th class="np-th-right">Pagos</th><th class="np-th-right">Total</th></tr></thead>
+              <tbody>
+                <tr *ngFor="let pm of pmSummary">
+                  <td class="np-strong">{{ pm.name }}</td>
+                  <td class="np-data np-td-right">{{ pm.count }}</td>
+                  <td class="np-money">$ {{ pm.total | number:'1.0-0' }}</td>
+                </tr>
+              </tbody>
+            </table>
           </div>
         </div>
-      </div>
-    </ng-container>
 
-    <!-- ── Admin: Ticket KPIs ─────────────────────────────────────── -->
-    <ng-container *ngIf="isAdmin">
-      <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
-
-        <div class="group bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl rounded-2xl p-5 border border-slate-200/60 dark:border-slate-700/60 shadow-sm hover:shadow-lg hover:border-indigo-200/60 dark:hover:border-indigo-800/40 transition-all duration-300">
-          <div class="flex items-start justify-between mb-3">
-            <p class="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Total tickets</p>
-            <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center shrink-0 shadow-md shadow-violet-500/20">
-              <svg class="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 6v.75m0 3v.75m0 3v.75m0 3V18m-9-5.25h5.25M7.5 15h3M3.375 5.25c-.621 0-1.125.504-1.125 1.125v3.026a2.999 2.999 0 0 1 0 5.198v3.026c0 .621.504 1.125 1.125 1.125h17.25c.621 0 1.125-.504 1.125-1.125v-3.026a2.999 2.999 0 0 1 0-5.198V6.375c0-.621-.504-1.125-1.125-1.125H3.375Z"/>
-              </svg>
-            </div>
-          </div>
-          <p class="text-2xl font-bold text-slate-900 dark:text-white">{{ ticketTotal }}</p>
-          <div class="h-1 w-10 bg-gradient-to-r from-violet-500 to-purple-500 rounded-full mt-3 group-hover:w-20 transition-all duration-500"></div>
-        </div>
-
-        <div class="group bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl rounded-2xl p-5 border border-slate-200/60 dark:border-slate-700/60 shadow-sm hover:shadow-lg hover:border-indigo-200/60 dark:hover:border-indigo-800/40 transition-all duration-300">
-          <div class="flex items-start justify-between mb-3">
-            <p class="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Pendientes</p>
-            <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center shrink-0 shadow-md shadow-indigo-500/20">
-              <svg class="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/>
-              </svg>
-            </div>
-          </div>
-          <p class="text-2xl font-bold text-slate-900 dark:text-white">{{ ticketPending }}</p>
-          <div class="h-1 w-10 bg-gradient-to-r from-indigo-500 to-violet-500 rounded-full mt-3 group-hover:w-20 transition-all duration-500"></div>
-        </div>
-
-        <div class="group bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl rounded-2xl p-5 border border-slate-200/60 dark:border-slate-700/60 shadow-sm hover:shadow-lg hover:border-indigo-200/60 dark:hover:border-indigo-800/40 transition-all duration-300">
-          <div class="flex items-start justify-between mb-3">
-            <p class="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">En progreso</p>
-            <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center shrink-0 shadow-md shadow-amber-500/20">
-              <svg class="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M11.42 15.17 17.25 21A2.652 2.652 0 0 0 21 17.25l-5.877-5.877M11.42 15.17l2.496-3.03c.317-.384.74-.626 1.208-.766M11.42 15.17l-4.655 5.653a2.548 2.548 0 1 1-3.586-3.586l5.654-4.654m5.65-4.65 3.029-2.498a2.652 2.652 0 0 1 3.584 3.584L20.07 12.9"/>
-              </svg>
-            </div>
-          </div>
-          <p class="text-2xl font-bold text-slate-900 dark:text-white">{{ ticketInProgress }}</p>
-          <div class="h-1 w-10 bg-gradient-to-r from-amber-500 to-orange-400 rounded-full mt-3 group-hover:w-20 transition-all duration-500"></div>
-        </div>
-
-        <div class="group bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl rounded-2xl p-5 border border-slate-200/60 dark:border-slate-700/60 shadow-sm hover:shadow-lg hover:border-indigo-200/60 dark:hover:border-indigo-800/40 transition-all duration-300">
-          <div class="flex items-start justify-between mb-3">
-            <p class="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Cerrados hoy</p>
-            <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center shrink-0 shadow-md shadow-emerald-500/20">
-              <svg class="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/>
-              </svg>
-            </div>
-          </div>
-          <p class="text-2xl font-bold text-slate-900 dark:text-white">{{ ticketClosedToday }}</p>
-          <div class="h-1 w-10 bg-gradient-to-r from-emerald-500 to-teal-400 rounded-full mt-3 group-hover:w-20 transition-all duration-500"></div>
-        </div>
-
-      </div>
-    </ng-container>
-
-    <!-- ── Charts: Income + Donut ─────────────────────────────────── -->
-    <div [ngClass]="isAdmin ? 'grid grid-cols-1 lg:grid-cols-3 gap-4' : 'grid grid-cols-1 gap-4'">
-
-      <!-- Income vs Egresses -->
-      <div [ngClass]="isAdmin ? 'lg:col-span-2' : ''"
-           class="bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl rounded-2xl p-6 border border-slate-200/60 dark:border-slate-700/60 shadow-sm hover:shadow-md transition-all duration-300">
-        <div class="flex items-center justify-between mb-4">
-          <div class="flex items-center gap-2">
-            <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center shadow-md shadow-emerald-500/20">
-              <svg class="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 3v11.25A2.25 2.25 0 0 0 6 16.5h2.25M3.75 3h-1.5m1.5 0H16.5m0 0h1.5m-1.5 0v11.25A2.25 2.25 0 0 1 18 16.5h-2.25m-7.5 0h7.5m-7.5 0-1 3m8.25-3 1 3m0 0 .5 1.5m-.5-1.5h-9m0 0-.5 1.5m.75-9 3-3 2.148 2.147A11.948 11.948 0 0 0 19.5 7.999"/>
-              </svg>
+        <div class="np-card" *ngIf="isAdmin">
+          <div class="np-card-h"><h2>Tickets activos</h2><span class="np-card-meta">por técnico y por cliente</span></div>
+          <div *ngIf="isLoadingTickets" class="np-loading np-loading--inline"><span class="np-spinner"></span> Cargando…</div>
+          <div class="np-rank-grid" *ngIf="!isLoadingTickets">
+            <div>
+              <p class="np-sect">Técnicos</p>
+              <ol class="np-rank" *ngIf="topTechnicians.length; else noTech">
+                <li *ngFor="let t of topTechnicians"><span class="np-rank-n">{{ t.names }} {{ t.lastname }}</span><span class="np-rank-c">{{ t.count }}</span></li>
+              </ol>
+              <ng-template #noTech><p class="np-muted">Sin tickets activos.</p></ng-template>
             </div>
             <div>
-              <h2 class="text-sm font-bold text-slate-700 dark:text-slate-200">Reporte financiero {{ selectedYear }}</h2>
-              <span class="text-xs text-slate-400 dark:text-slate-500">Ingresos vs Egresos por mes</span>
+              <p class="np-sect">Clientes</p>
+              <ol class="np-rank" *ngIf="topClients.length; else noCli">
+                <li *ngFor="let c of topClients"><span class="np-rank-n">{{ c.names }} {{ c.lastname }}</span><span class="np-rank-c">{{ c.count }}</span></li>
+              </ol>
+              <ng-template #noCli><p class="np-muted">Sin tickets activos.</p></ng-template>
             </div>
           </div>
         </div>
-        <div class="relative h-64">
-          <canvas id="incomeChart"></canvas>
-        </div>
-      </div>
-
-      <!-- Contracts donut (admin only) -->
-      <div *ngIf="isAdmin"
-           class="bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl rounded-2xl p-6 border border-slate-200/60 dark:border-slate-700/60 shadow-sm hover:shadow-md transition-all duration-300 flex flex-col">
-        <div class="flex items-center gap-2 mb-1">
-          <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center shadow-md shadow-violet-500/20">
-            <svg class="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M15 19.128a9.38 9.38 0 0 0 2.625.372 9.337 9.337 0 0 0 4.121-.952 4.125 4.125 0 0 0-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 0 1 8.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0 1 11.964-3.07M12 6.375a3.375 3.375 0 1 1-6.75 0 3.375 3.375 0 0 1 6.75 0Z"/>
-            </svg>
-          </div>
-          <div>
-            <h2 class="text-sm font-bold text-slate-700 dark:text-slate-200">Estado de contratos</h2>
-            <p class="text-xs text-slate-400 dark:text-slate-500">Activos vs Inactivos</p>
-          </div>
-        </div>
-        <div class="relative flex-1 min-h-[220px]">
-          <canvas id="contractsChart"></canvas>
-        </div>
-      </div>
-
-    </div>
-
-    <!-- ── Charts: Clients + Tickets bar ─────────────────────────── -->
-    <div [ngClass]="isAdmin ? 'grid grid-cols-1 lg:grid-cols-3 gap-4' : 'grid grid-cols-1 gap-4'">
-
-      <!-- Clients per month -->
-      <div [ngClass]="isAdmin ? 'lg:col-span-2' : ''"
-           class="bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl rounded-2xl p-6 border border-slate-200/60 dark:border-slate-700/60 shadow-sm hover:shadow-md transition-all duration-300">
-        <div class="flex items-center justify-between mb-4">
-          <div class="flex items-center gap-2">
-            <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-sky-500 to-blue-600 flex items-center justify-center shadow-md shadow-sky-500/20">
-              <svg class="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M18 18.72a9.094 9.094 0 0 0 3.741-.479 3 3 0 0 0-4.682-2.72m.94 3.198.001.031c0 .225-.012.447-.037.666A11.944 11.944 0 0 1 12 21c-2.17 0-4.207-.576-5.963-1.584A6.062 6.062 0 0 1 6 18.719m12 0a5.971 5.971 0 0 0-.941-3.197m0 0A5.995 5.995 0 0 0 12 12.75a5.995 5.995 0 0 0-5.058 2.772m0 0a3 3 0 0 0-4.681 2.72 8.986 8.986 0 0 0 3.74.477m.94-3.197a5.971 5.971 0 0 0-.94 3.197"/>
-              </svg>
-            </div>
-            <div>
-              <h2 class="text-sm font-bold text-slate-700 dark:text-slate-200">Clientes por mes {{ selectedYear }}</h2>
-              <span class="text-xs text-slate-400 dark:text-slate-500">Registrados vs Eliminados</span>
-            </div>
-          </div>
-        </div>
-        <div class="relative h-56">
-          <canvas id="clientsChart"></canvas>
-        </div>
-      </div>
-
-      <!-- Tickets bar (admin only) -->
-      <ng-container *ngIf="isAdmin">
-        <div class="bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl rounded-2xl p-6 border border-slate-200/60 dark:border-slate-700/60 shadow-sm hover:shadow-md transition-all duration-300 flex flex-col">
-          <div class="flex items-center gap-2 mb-1">
-            <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center shadow-md shadow-amber-500/20">
-              <svg class="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 6v.75m0 3v.75m0 3v.75m0 3V18m-9-5.25h5.25M7.5 15h3M3.375 5.25c-.621 0-1.125.504-1.125 1.125v3.026a2.999 2.999 0 0 1 0 5.198v3.026c0 .621.504 1.125 1.125 1.125h17.25c.621 0 1.125-.504 1.125-1.125v-3.026a2.999 2.999 0 0 1 0-5.198V6.375c0-.621-.504-1.125-1.125-1.125H3.375Z"/>
-              </svg>
-            </div>
-            <div>
-              <h2 class="text-sm font-bold text-slate-700 dark:text-slate-200">Estado de tickets</h2>
-              <p class="text-xs text-slate-400 dark:text-slate-500">Distribución por estado</p>
-            </div>
-          </div>
-          <div class="relative flex-1 min-h-[200px]">
-            <canvas id="ticketBarChart"></canvas>
-          </div>
-        </div>
-      </ng-container>
-
-    </div>
-
-    <!-- ── Top Technicians + Top Clients (admin only) ─────────────── -->
-    <ng-container *ngIf="isAdmin && (topTechnicians.length > 0 || topClients.length > 0)">
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-
-        <!-- Top técnicos en progreso -->
-        <div *ngIf="topTechnicians.length > 0"
-             class="bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl rounded-2xl p-6 border border-slate-200/60 dark:border-slate-700/60 shadow-sm hover:shadow-md transition-all duration-300">
-          <div class="flex items-center gap-2 mb-5">
-            <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center shadow-md shadow-amber-500/20">
-              <svg class="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M11.42 15.17 17.25 21A2.652 2.652 0 0 0 21 17.25l-5.877-5.877M11.42 15.17l2.496-3.03c.317-.384.74-.626 1.208-.766M11.42 15.17l-4.655 5.653a2.548 2.548 0 1 1-3.586-3.586l5.654-4.654m5.65-4.65 3.029-2.498a2.652 2.652 0 0 1 3.584 3.584L20.07 12.9"/>
-              </svg>
-            </div>
-            <h2 class="text-sm font-bold text-slate-700 dark:text-slate-200">Técnicos con más tickets activos</h2>
-          </div>
-          <div class="space-y-3">
-            <div *ngFor="let t of topTechnicians; let i = index"
-                 class="flex items-center gap-3 p-2.5 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors">
-              <span class="w-7 h-7 rounded-lg bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center text-xs font-bold text-white shadow-sm shrink-0">
-                {{ i + 1 }}
-              </span>
-              <div class="flex-1 min-w-0">
-                <p class="text-sm font-semibold text-slate-800 dark:text-white truncate">{{ t.names }} {{ t.lastname }}</p>
-              </div>
-              <span class="px-2.5 py-1 rounded-lg text-xs font-bold bg-amber-50 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300 border border-amber-100 dark:border-amber-800/50">
-                {{ t.count }}
-              </span>
-            </div>
-          </div>
-        </div>
-
-        <!-- Top clientes con tickets -->
-        <div *ngIf="topClients.length > 0"
-             class="bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl rounded-2xl p-6 border border-slate-200/60 dark:border-slate-700/60 shadow-sm hover:shadow-md transition-all duration-300">
-          <div class="flex items-center gap-2 mb-5">
-            <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-rose-500 to-pink-600 flex items-center justify-center shadow-md shadow-rose-500/20">
-              <svg class="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M15 19.128a9.38 9.38 0 0 0 2.625.372 9.337 9.337 0 0 0 4.121-.952 4.125 4.125 0 0 0-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 0 1 8.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0 1 11.964-3.07M12 6.375a3.375 3.375 0 1 1-6.75 0 3.375 3.375 0 0 1 6.75 0Z"/>
-              </svg>
-            </div>
-            <h2 class="text-sm font-bold text-slate-700 dark:text-slate-200">Clientes con más tickets</h2>
-          </div>
-          <div class="space-y-3">
-            <div *ngFor="let c of topClients; let i = index"
-                 class="flex items-center gap-3 p-2.5 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors">
-              <span class="w-7 h-7 rounded-lg bg-gradient-to-br from-rose-500 to-pink-600 flex items-center justify-center text-xs font-bold text-white shadow-sm shrink-0">
-                {{ i + 1 }}
-              </span>
-              <div class="flex-1 min-w-0">
-                <p class="text-sm font-semibold text-slate-800 dark:text-white truncate">{{ c.names }} {{ c.lastname }}</p>
-              </div>
-              <span class="px-2.5 py-1 rounded-lg text-xs font-bold bg-rose-50 text-rose-700 dark:bg-rose-900/30 dark:text-rose-300 border border-rose-100 dark:border-rose-800/50">
-                {{ c.count }}
-              </span>
-            </div>
-          </div>
-        </div>
-
-      </div>
+      </section>
     </ng-container>
 
-  </ng-container>
+    <!-- ══ TÉCNICO ═══════════════════════════════════════════════════════ -->
+    <ng-container *ngIf="isTecnico">
+      <section class="np-kpis" aria-label="Indicadores de tickets">
+        <div class="np-kpi np-kpi--accent"><span class="np-kpi-l">Total</span><span class="np-kpi-v">{{ ticketTotal }}</span><span class="np-kpi-s">tickets</span></div>
+        <div class="np-kpi"><span class="np-kpi-l">Pendientes</span><span class="np-kpi-v np-kpi-v--warn">{{ ticketPending }}</span><span class="np-kpi-s">sin asignar o sin iniciar</span></div>
+        <div class="np-kpi"><span class="np-kpi-l">En progreso</span><span class="np-kpi-v np-kpi-v--info">{{ ticketInProgress }}</span><span class="np-kpi-s">en atención</span></div>
+        <div class="np-kpi"><span class="np-kpi-l">Cerrados</span><span class="np-kpi-v np-kpi-v--ok">{{ ticketClosed }}</span><span class="np-kpi-s">{{ ticketClosedToday }} hoy · {{ ticketReopenPct }}% reabiertos</span></div>
+      </section>
 
-  <!-- ══════════════════════════════════════════════════════════════════ -->
-  <!-- TECNICO VIEW                                                      -->
-  <!-- ══════════════════════════════════════════════════════════════════ -->
-  <ng-container *ngIf="isTecnico">
-
-    <!-- Ticket KPIs -->
-    <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
-
-      <div class="group bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl rounded-2xl p-5 border border-slate-200/60 dark:border-slate-700/60 shadow-sm hover:shadow-lg hover:border-indigo-200/60 dark:hover:border-indigo-800/40 transition-all duration-300">
-        <div class="flex items-start justify-between mb-3">
-          <p class="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Total tickets</p>
-          <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center shrink-0 shadow-md shadow-violet-500/20">
-            <svg class="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 6v.75m0 3v.75m0 3v.75m0 3V18m-9-5.25h5.25M7.5 15h3M3.375 5.25c-.621 0-1.125.504-1.125 1.125v3.026a2.999 2.999 0 0 1 0 5.198v3.026c0 .621.504 1.125 1.125 1.125h17.25c.621 0 1.125-.504 1.125-1.125v-3.026a2.999 2.999 0 0 1 0-5.198V6.375c0-.621-.504-1.125-1.125-1.125H3.375Z"/>
-            </svg>
-          </div>
+      <section class="np-grid-2">
+        <div class="np-card">
+          <div class="np-card-h"><h2>Distribución de tickets</h2></div>
+          <div *ngIf="isLoadingTickets" class="np-loading"><span class="np-spinner"></span> Cargando…</div>
+          <div class="np-chart" [hidden]="isLoadingTickets"><canvas id="ticketDonutChart"></canvas></div>
         </div>
-        <p class="text-2xl font-bold text-slate-900 dark:text-white">{{ ticketTotal }}</p>
-        <div class="h-1 w-10 bg-gradient-to-r from-violet-500 to-purple-500 rounded-full mt-3 group-hover:w-20 transition-all duration-500"></div>
-      </div>
+        <div class="np-card">
+          <div class="np-card-h"><h2>Técnicos con tickets activos</h2></div>
+          <ol class="np-rank" *ngIf="topTechnicians.length; else noTech2">
+            <li *ngFor="let t of topTechnicians"><span class="np-rank-n">{{ t.names }} {{ t.lastname }}</span><span class="np-rank-c">{{ t.count }}</span></li>
+          </ol>
+          <ng-template #noTech2><p class="np-muted">Sin tickets activos.</p></ng-template>
+        </div>
+      </section>
+    </ng-container>
 
-      <div class="group bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl rounded-2xl p-5 border border-slate-200/60 dark:border-slate-700/60 shadow-sm hover:shadow-lg hover:border-indigo-200/60 dark:hover:border-indigo-800/40 transition-all duration-300">
-        <div class="flex items-start justify-between mb-3">
-          <p class="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Pendientes</p>
-          <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center shrink-0 shadow-md shadow-indigo-500/20">
-            <svg class="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/>
-            </svg>
-          </div>
-        </div>
-        <p class="text-2xl font-bold text-slate-900 dark:text-white">{{ ticketPending }}</p>
-        <div class="h-1 w-10 bg-gradient-to-r from-indigo-500 to-violet-500 rounded-full mt-3 group-hover:w-20 transition-all duration-500"></div>
-      </div>
-
-      <div class="group bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl rounded-2xl p-5 border border-slate-200/60 dark:border-slate-700/60 shadow-sm hover:shadow-lg hover:border-indigo-200/60 dark:hover:border-indigo-800/40 transition-all duration-300">
-        <div class="flex items-start justify-between mb-3">
-          <p class="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">En progreso</p>
-          <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center shrink-0 shadow-md shadow-amber-500/20">
-            <svg class="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M11.42 15.17 17.25 21A2.652 2.652 0 0 0 21 17.25l-5.877-5.877M11.42 15.17l2.496-3.03c.317-.384.74-.626 1.208-.766M11.42 15.17l-4.655 5.653a2.548 2.548 0 1 1-3.586-3.586l5.654-4.654m5.65-4.65 3.029-2.498a2.652 2.652 0 0 1 3.584 3.584L20.07 12.9"/>
-            </svg>
-          </div>
-        </div>
-        <p class="text-2xl font-bold text-slate-900 dark:text-white">{{ ticketInProgress }}</p>
-        <div class="h-1 w-10 bg-gradient-to-r from-amber-500 to-orange-400 rounded-full mt-3 group-hover:w-20 transition-all duration-500"></div>
-      </div>
-
-      <div class="group bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl rounded-2xl p-5 border border-slate-200/60 dark:border-slate-700/60 shadow-sm hover:shadow-lg hover:border-indigo-200/60 dark:hover:border-indigo-800/40 transition-all duration-300">
-        <div class="flex items-start justify-between mb-3">
-          <p class="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Cerrados</p>
-          <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center shrink-0 shadow-md shadow-emerald-500/20">
-            <svg class="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/>
-            </svg>
-          </div>
-        </div>
-        <p class="text-2xl font-bold text-slate-900 dark:text-white">{{ ticketClosed }}</p>
-        <p class="text-xs text-slate-400 dark:text-slate-500 mt-1 font-medium">{{ ticketClosedToday }} hoy</p>
-        <div class="h-1 w-10 bg-gradient-to-r from-emerald-500 to-teal-400 rounded-full mt-2 group-hover:w-20 transition-all duration-500"></div>
-      </div>
-
-    </div>
-
-    <!-- Ticket charts + tables -->
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
-
-      <!-- Donut -->
-      <div class="bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl rounded-2xl p-6 border border-slate-200/60 dark:border-slate-700/60 shadow-sm hover:shadow-md transition-all duration-300 flex flex-col">
-        <div class="flex items-center gap-2 mb-1">
-          <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center shadow-md shadow-violet-500/20">
-            <svg class="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 6a7.5 7.5 0 1 0 7.5 7.5h-7.5V6Z"/>
-              <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 10.5H21A7.5 7.5 0 0 0 13.5 3v7.5Z"/>
-            </svg>
-          </div>
-          <div>
-            <h2 class="text-sm font-bold text-slate-700 dark:text-slate-200">Distribución de tickets</h2>
-            <p class="text-xs text-slate-400 dark:text-slate-500">Por estado actual</p>
-          </div>
-        </div>
-        <div *ngIf="isLoadingTickets" class="flex-1 flex items-center justify-center py-12">
-          <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center animate-pulse shadow-lg shadow-indigo-500/30">
-            <svg class="w-5 h-5 text-white animate-spin" fill="none" viewBox="0 0 24 24">
-              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
-              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"/>
-            </svg>
-          </div>
-        </div>
-        <div *ngIf="!isLoadingTickets" class="relative flex-1 min-h-[240px]">
-          <canvas id="ticketDonutChart"></canvas>
-        </div>
-        <!-- Reopen rate badge premium -->
-        <div *ngIf="!isLoadingTickets && ticketReopenPct > 0"
-             class="mt-4 flex items-center gap-3 p-3.5 bg-amber-50/80 dark:bg-amber-900/20 backdrop-blur-sm rounded-xl border border-amber-200/60 dark:border-amber-800/50">
-          <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center shadow-sm shrink-0">
-            <svg class="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z"/>
-            </svg>
-          </div>
-          <span class="text-sm text-amber-700 dark:text-amber-300 font-semibold">
-            Tasa de reapertura: {{ ticketReopenPct }}%
-          </span>
-        </div>
-      </div>
-
-      <!-- Top technicians -->
-      <div class="bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl rounded-2xl p-6 border border-slate-200/60 dark:border-slate-700/60 shadow-sm hover:shadow-md transition-all duration-300">
-        <div class="flex items-center gap-2 mb-5">
-          <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center shadow-md shadow-amber-500/20">
-            <svg class="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M11.42 15.17 17.25 21A2.652 2.652 0 0 0 21 17.25l-5.877-5.877M11.42 15.17l2.496-3.03c.317-.384.74-.626 1.208-.766M11.42 15.17l-4.655 5.653a2.548 2.548 0 1 1-3.586-3.586l5.654-4.654m5.65-4.65 3.029-2.498a2.652 2.652 0 0 1 3.584 3.584L20.07 12.9"/>
-            </svg>
-          </div>
-          <h2 class="text-sm font-bold text-slate-700 dark:text-slate-200">Técnicos con tickets activos</h2>
-        </div>
-        <div *ngIf="isLoadingTickets" class="flex justify-center py-12">
-          <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center animate-pulse shadow-lg shadow-indigo-500/30">
-            <svg class="w-5 h-5 text-white animate-spin" fill="none" viewBox="0 0 24 24">
-              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
-              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"/>
-            </svg>
-          </div>
-        </div>
-        <div *ngIf="!isLoadingTickets && topTechnicians.length === 0"
-             class="text-sm text-slate-400 dark:text-slate-500 text-center py-10">
-          Sin técnicos con tickets activos.
-        </div>
-        <div *ngIf="!isLoadingTickets && topTechnicians.length > 0" class="space-y-2">
-          <div *ngFor="let t of topTechnicians; let i = index"
-               class="flex items-center gap-3 p-2.5 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors">
-            <span class="w-7 h-7 rounded-lg bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center text-xs font-bold text-white shadow-sm shrink-0">
-              {{ i + 1 }}
-            </span>
-            <div class="flex-1 min-w-0">
-              <p class="text-sm font-semibold text-slate-800 dark:text-white truncate">{{ t.names }} {{ t.lastname }}</p>
-            </div>
-            <div class="flex items-center gap-3">
-              <div class="w-24 h-2 rounded-full bg-slate-100/80 dark:bg-slate-700/80 overflow-hidden">
-                <div class="h-full bg-gradient-to-r from-amber-400 to-orange-400 rounded-full transition-all duration-500"
-                     [style.width.%]="topTechnicians[0].count > 0 ? (t.count / topTechnicians[0].count) * 100 : 0">
-                </div>
-              </div>
-              <span class="text-xs font-bold text-slate-600 dark:text-slate-300 w-4 text-right">{{ t.count }}</span>
-            </div>
-          </div>
-        </div>
-      </div>
-
-    </div>
-
-  </ng-container>
-
+  </div>
 </div>

@@ -7,51 +7,29 @@ import { MetaWhatsappService } from '../../../services/meta-whatsapp.service';
   selector: 'app-wa-meta-enviar',
   standalone: true,
   imports: [CommonModule, FormsModule],
+  host: { class: 'np-console' },
   template: `
-    <div class="max-w-3xl mx-auto mt-8 p-6">
-      <h1 class="text-2xl font-bold text-gray-900 dark:text-white mb-6">Enviar Mensaje (Meta)</h1>
-
-      <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6 border border-gray-200 dark:border-gray-700 space-y-4">
-        <div>
-          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Número destino</label>
-          <input type="text" [(ngModel)]="to" class="w-full p-2.5 border rounded-lg dark:bg-gray-700 dark:border-gray-600" placeholder="573001234567" />
-        </div>
-
-        <div>
-          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Tipo</label>
-          <select [(ngModel)]="type" class="w-full p-2.5 border rounded-lg dark:bg-gray-700 dark:border-gray-600">
-            <option value="text">Texto</option>
-            <option value="template">Plantilla</option>
-          </select>
-        </div>
-
-        <div *ngIf="type === 'text'">
-          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Mensaje</label>
-          <textarea [(ngModel)]="message" rows="4" class="w-full p-2.5 border rounded-lg dark:bg-gray-700 dark:border-gray-600"></textarea>
-        </div>
-
-        <div *ngIf="type === 'template'">
-          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Nombre plantilla</label>
-          <input type="text" [(ngModel)]="templateName" class="w-full p-2.5 border rounded-lg dark:bg-gray-700 dark:border-gray-600" />
-        </div>
-
-        <div class="flex items-center gap-3">
-          <button (click)="send()" [disabled]="sending" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50">
-            {{ sending ? 'Enviando...' : 'Enviar' }}
-          </button>
-          <button (click)="checkWindow()" class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300">
-            Verificar ventana 24h
-          </button>
-        </div>
-
-        <div *ngIf="result" class="p-3 rounded-lg" [ngClass]="result.ok ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'">
-          {{ result.message }}
-        </div>
-
-        <div *ngIf="windowInfo" class="p-3 rounded-lg bg-blue-50 text-blue-700">
-          Ventana 24h: {{ windowInfo.has_window ? 'Activa hasta ' + windowInfo.expires_at : 'Inactiva — necesitas enviar una plantilla primero' }}
-        </div>
-      </div>
+    <div class="np-page">
+      <header class="np-head">
+        <div><p class="np-kicker">WhatsApp <b>/</b> API de Meta <b>/</b> Enviar</p><h1 class="np-title">Enviar mensaje de prueba</h1><div class="np-ribbon"><span *ngIf="windowInfo"><i class="np-dot" [style.background]="windowInfo.has_window ? 'var(--ok)' : 'var(--warn)'"></i>ventana 24 h {{ windowInfo.has_window ? 'activa hasta ' + windowInfo.expires_at : 'inactiva: enviá una plantilla primero' }}</span><span *ngIf="!windowInfo">Texto libre sólo dentro de la ventana de 24 h; fuera de ella, plantilla.</span></div></div>
+      </header>
+      <div class="np-scroll"><div class="np-grid-3">
+        <section class="np-card">
+          <div class="np-card-h"><h2>Mensaje</h2></div>
+          <div class="np-form">
+            <label class="np-field"><span>Número destino</span><input type="text" class="np-input np-mono" [(ngModel)]="to" placeholder="573001234567" /></label>
+            <label class="np-field"><span>Tipo</span><select class="np-input" [(ngModel)]="type"><option value="text">Texto</option><option value="template">Plantilla</option></select></label>
+            <label class="np-field np-field-full" *ngIf="type === 'text'"><span>Mensaje</span><textarea class="np-input np-textarea" [(ngModel)]="message" rows="4"></textarea></label>
+            <label class="np-field np-field-full" *ngIf="type === 'template'"><span>Nombre de la plantilla</span><input type="text" class="np-input np-mono" [(ngModel)]="templateName" /></label>
+            <div class="np-field-full np-btnrow np-btnrow--end"><button type="button" class="np-btn np-btn--ghost" (click)="checkWindow()" [disabled]="!to">Verificar ventana 24 h</button><button type="button" class="np-btn np-btn--primary" (click)="send()" [disabled]="sending">{{ sending ? 'Enviando…' : 'Enviar' }}</button></div>
+          </div>
+        </section>
+        <section class="np-card">
+          <div class="np-card-h"><h2>Resultado</h2></div>
+          <p class="np-muted" *ngIf="!result">Todavía no enviaste nada.</p>
+          <p class="np-notice" *ngIf="result" [ngClass]="result.ok ? 'np-notice--ok' : 'np-notice--danger'">{{ result.message }}</p>
+        </section>
+      </div></div>
     </div>
   `
 })

@@ -25,6 +25,8 @@ interface Schedule {
   standalone: true,
   imports: [CommonModule, FormsModule, InvoiceTemplateEditorComponent],
   templateUrl: './billing-config.component.html',
+  styleUrl: './billing-config.component.scss',
+  host: { class: 'np-console' },
 })
 export class BillingConfigComponent implements OnInit {
   schedules:   Schedule[] = [];

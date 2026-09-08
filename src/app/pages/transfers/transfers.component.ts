@@ -9,6 +9,8 @@ import { TransferService, TransferOrder } from '../../services/transfer.service'
   standalone: true,
   imports: [CommonModule, FormsModule, RouterModule],
   templateUrl: './transfers.component.html',
+  styleUrl: './transfers.component.scss',
+  host: { class: 'np-console' },
 })
 export class TransfersComponent implements OnInit {
   transfers: TransferOrder[] = [];

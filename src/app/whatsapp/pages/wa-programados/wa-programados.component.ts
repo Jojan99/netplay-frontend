@@ -10,7 +10,9 @@ type ScheduleType = 'once' | 'daily' | 'weekly';
   selector: 'app-wa-programados',
   standalone: true,
   imports: [CommonModule, FormsModule],
-  templateUrl: './wa-programados.component.html'
+  templateUrl: './wa-programados.component.html',
+  styleUrl: './wa-programados.component.scss',
+  host: { class: 'np-console' },
 })
 export class WaProgramadosComponent implements OnInit {
 

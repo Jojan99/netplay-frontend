@@ -6,40 +6,35 @@ import { RouterModule } from '@angular/router';
   selector: 'app-meta-layout',
   standalone: true,
   imports: [CommonModule, RouterModule],
+  host: { class: 'np-console' },
   template: `
-    <div class="max-w-7xl mx-auto mt-4">
-      <!-- Sub-nav -->
-      <div class="flex items-center gap-1 mb-4 overflow-x-auto pb-2 border-b border-gray-200 dark:border-gray-700">
-        <a routerLink="dashboard" routerLinkActive="bg-blue-600 text-white" class="px-3 py-1.5 text-sm rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition whitespace-nowrap text-gray-700 dark:text-gray-300">
-          Dashboard
-        </a>
-        <a routerLink="phone" routerLinkActive="bg-blue-600 text-white" class="px-3 py-1.5 text-sm rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition whitespace-nowrap text-gray-700 dark:text-gray-300">
-          Número
-        </a>
-        <a routerLink="templates" routerLinkActive="bg-blue-600 text-white" class="px-3 py-1.5 text-sm rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition whitespace-nowrap text-gray-700 dark:text-gray-300">
-          Plantillas
-        </a>
-        <a routerLink="comunicados" routerLinkActive="bg-blue-600 text-white" class="px-3 py-1.5 text-sm rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition whitespace-nowrap text-gray-700 dark:text-gray-300">
-          Comunicados
-        </a>
-        <a routerLink="enviar" routerLinkActive="bg-blue-600 text-white" class="px-3 py-1.5 text-sm rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition whitespace-nowrap text-gray-700 dark:text-gray-300">
-          Enviar
-        </a>
-        <a routerLink="logs" routerLinkActive="bg-blue-600 text-white" class="px-3 py-1.5 text-sm rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition whitespace-nowrap text-gray-700 dark:text-gray-300">
-          Logs
-        </a>
-        <a routerLink="bot" routerLinkActive="bg-blue-600 text-white" class="px-3 py-1.5 text-sm rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition whitespace-nowrap text-gray-700 dark:text-gray-300">
-          Bot
-        </a>
-        <a routerLink="panel" routerLinkActive="bg-blue-600 text-white" class="px-3 py-1.5 text-sm rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition whitespace-nowrap text-gray-700 dark:text-gray-300">
-          Config.
-        </a>
-        <a routerLink="/dashboard/whatsapp" class="ml-auto px-3 py-1.5 text-sm rounded-lg bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 hover:bg-gray-200 transition">
-          ← Volver
-        </a>
+    <div class="np-page np-wa-shell">
+      <div class="np-toolbar np-wa-nav">
+        <a routerLink="/dashboard/whatsapp" class="np-btn np-btn--ghost np-btn--sm" title="Volver a proveedores">‹ WhatsApp</a>
+        <nav class="np-seg" aria-label="API de Meta">
+          <a *ngFor="let l of links" [routerLink]="l.path" routerLinkActive="is-active">{{ l.label }}</a>
+        </nav>
+        <span class="np-spacer"></span>
+        <span class="np-tag">API oficial de Meta</span>
       </div>
-      <router-outlet></router-outlet>
+      <div class="np-wa-outlet"><router-outlet></router-outlet></div>
     </div>
-  `
+  `,
+  styles: [`
+    .np-wa-nav { border-top: 0; padding-top: 0; }
+    .np-seg { overflow-x: auto; scrollbar-width: none; }
+    .np-seg::-webkit-scrollbar { display: none; }
+    .np-seg a { display: inline-flex; align-items: center; height: 32px; padding: 0 11px; font-size: 12px; font-weight: 700; color: var(--text-2); border-right: 1px solid var(--line-strong); text-decoration: none; white-space: nowrap; }
+    .np-seg a:last-child { border-right: 0; }
+    .np-seg a:hover { background: var(--surface-3); }
+    .np-seg a.is-active { background: var(--text); color: var(--bg); }
+    .np-wa-outlet { flex: 1; min-height: 0; display: flex; flex-direction: column; }
+    .np-wa-outlet > * { flex: 1; min-height: 0; display: flex; flex-direction: column; }
+  `],
 })
-export class MetaLayoutComponent {}
+export class MetaLayoutComponent {
+  readonly links = [
+    { path: 'dashboard', label: 'Resumen' }, { path: 'phone', label: 'Número' }, { path: 'templates', label: 'Plantillas' }, { path: 'comunicados', label: 'Comunicados' },
+    { path: 'enviar', label: 'Enviar' }, { path: 'logs', label: 'Logs' }, { path: 'bot', label: 'Bot' }, { path: 'panel', label: 'Configuración' },
+  ];
+}

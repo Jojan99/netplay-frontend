@@ -46,6 +46,8 @@ interface Campaign {
   standalone: true,
   imports: [CommonModule, FormsModule],
   templateUrl: './wa-meta-comunicados.component.html',
+  styleUrl: './wa-meta-comunicados.component.scss',
+  host: { class: 'np-console' },
 })
 export class WaMetaComunicadosComponent implements OnInit {
   vista: 'nuevo' | 'historial' = 'nuevo';

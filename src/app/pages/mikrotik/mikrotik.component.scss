@@ -1,0 +1,11 @@
+/* ─── MikroTik: sólo lo propio ──────────────────────────────────────── */
+.np-kpi-v--text { font-family: var(--font-display); font-size: 18px; }
+.np-meter { display: inline-block; width: 80px; height: 6px; border-radius: 3px; background: var(--surface-3); overflow: hidden; margin-right: 6px; vertical-align: middle; i { display: block; height: 100%; } }
+.np-row--on .np-stripe i  { background: var(--ok); }
+.np-row--off .np-stripe i { background: var(--danger); }
+.np-row.is-static { cursor: default; }
+.np-th-check { width: 32px; input { accent-color: var(--accent); } }
+.np-registry { flex-shrink: 0; }
+.np-input-wrap { position: relative; display: block; .np-input { padding-right: 64px; } }
+.np-eye { position: absolute; right: 6px; top: 50%; transform: translateY(-50%); font-size: 11px; font-weight: 700; color: var(--accent); padding: 4px 6px; border-radius: 4px; &:hover { background: var(--accent-soft); } }
+.np-name .np-tag { margin-left: 8px; }

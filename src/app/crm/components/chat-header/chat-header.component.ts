@@ -14,7 +14,8 @@ export interface ChatHeaderData {
   selector: 'app-chat-header',
   standalone: true,
   imports: [CommonModule],
-  templateUrl: './chat-header.component.html'
+  templateUrl: './chat-header.component.html',
+  styleUrl: './chat-header.component.scss'
 })
 export class ChatHeaderComponent {
 
@@ -26,6 +27,7 @@ export class ChatHeaderComponent {
   @Output() back         = new EventEmitter<void>();
   @Output() toggleInfo   = new EventEmitter<void>();
   @Output() toggleBot = new EventEmitter<void>();
+  @Output() search    = new EventEmitter<void>();
 
   get initials(): string {
     return (this.data.customerName ?? '')

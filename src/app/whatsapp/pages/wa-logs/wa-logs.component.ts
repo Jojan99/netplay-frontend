@@ -9,7 +9,9 @@ type ActiveTab = 'logs' | 'queue';
   selector: 'app-wa-logs',
   standalone: true,
   imports: [CommonModule, FormsModule],
-  templateUrl: './wa-logs.component.html'
+  templateUrl: './wa-logs.component.html',
+  styleUrl: './wa-logs.component.scss',
+  host: { class: 'np-console' },
 })
 export class WaLogsComponent implements OnInit {
 

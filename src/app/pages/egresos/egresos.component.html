@@ -1,251 +1,87 @@
-<div class="p-4 max-w-7xl mx-auto">
-
-    <!-- Header -->
-    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6">
-      <div>
-        <h1 class="text-2xl font-bold bg-gradient-to-r from-slate-800 to-slate-600 bg-clip-text text-transparent dark:from-white dark:to-slate-300">Gestionar Egresos</h1>
-        <p class="text-sm text-slate-500 dark:text-slate-400">Control de gastos operativos</p>
-      </div>
-      <div class="flex gap-2">
-        <button (click)="exportCSV()"
-          class="flex items-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg text-sm font-medium transition-colors">
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-              d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-          </svg>
-          CSV
-        </button>
-        <button (click)="openCreate()"
-          class="flex items-center gap-2 px-4 py-2 bg-gradient-to-br from-indigo-500 to-violet-600 text-white shadow-md shadow-indigo-500/20 hover:shadow-lg transition-all rounded-lg text-sm font-medium transition-colors">
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
-          </svg>
-          Nuevo egreso
-        </button>
+<div class="np-page np-egresos">
+  <header class="np-head">
+    <div>
+      <p class="np-kicker">Operación <b>/</b> Finanzas <b>/</b> Egresos</p>
+      <h1 class="np-title">Egresos</h1>
+      <div class="np-ribbon">
+        <span><span class="np-n">{{ formatCurrency(totalPeriod) }}</span>en el período</span>
+        <span><span class="np-n">{{ total | number }}</span>registros</span>
+        <span>promedio <span class="np-n">{{ total > 0 ? formatCurrency(totalPeriod / total) : '$ 0' }}</span></span>
       </div>
     </div>
-
-    <!-- Stats card -->
-    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-5">
-      <div class="bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl rounded-2xl border border-slate-200/60 dark:border-slate-700/60 shadow-sm hover:shadow-md transition-all duration-300 p-4">
-        <div class="text-xs text-slate-400 uppercase tracking-wide">Total período</div>
-        <div class="text-2xl font-bold text-red-600 mt-1">{{ formatCurrency(totalPeriod) }}</div>
-      </div>
-      <div class="bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl rounded-2xl border border-slate-200/60 dark:border-slate-700/60 shadow-sm hover:shadow-md transition-all duration-300 p-4">
-        <div class="text-xs text-slate-400 uppercase tracking-wide">Registros</div>
-        <div class="text-2xl font-bold text-slate-800 dark:text-white mt-1">{{ total }}</div>
-      </div>
-      <div class="bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl rounded-2xl border border-slate-200/60 dark:border-slate-700/60 shadow-sm hover:shadow-md transition-all duration-300 p-4">
-        <div class="text-xs text-slate-400 uppercase tracking-wide">Promedio</div>
-        <div class="text-2xl font-bold text-slate-800 dark:text-white mt-1">
-          {{ total > 0 ? formatCurrency(totalPeriod / total) : '$0' }}
-        </div>
-      </div>
+    <div class="np-actions">
+      <button type="button" class="np-btn np-btn--ghost" (click)="exportCSV()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12m0 0 4-4m-4 4-4-4M4 17v3h16v-3"/></svg>Exportar CSV</button>
+      <button type="button" class="np-btn np-btn--primary" (click)="openCreate()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M12 5v14M5 12h14"/></svg>Nuevo egreso</button>
     </div>
+  </header>
 
-    <!-- Filters -->
-    <div class="flex flex-col sm:flex-row gap-3 mb-4">
-      <div class="relative flex-1">
-        <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0" />
-        </svg>
-        <input type="text" [(ngModel)]="searchTerm" (ngModelChange)="onSearchChange()"
-          placeholder="Buscar por concepto..."
-          class="w-full pl-9 pr-4 px-3.5 py-2 text-sm bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl border border-slate-200/60 dark:border-slate-700/60 rounded-xl text-slate-700 dark:text-slate-300 focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-400 transition-all shadow-sm" />
-      </div>
-      <input type="date" [(ngModel)]="filterFrom" (ngModelChange)="onFilterChange()"
-        class="px-3 px-3.5 py-2 text-sm bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl border border-slate-200/60 dark:border-slate-700/60 rounded-xl text-slate-700 dark:text-slate-300 focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-400 transition-all shadow-sm" />
-      <input type="date" [(ngModel)]="filterTo" (ngModelChange)="onFilterChange()"
-        class="px-3 px-3.5 py-2 text-sm bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl border border-slate-200/60 dark:border-slate-700/60 rounded-xl text-slate-700 dark:text-slate-300 focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-400 transition-all shadow-sm" />
-      <select [(ngModel)]="filterCategory" (ngModelChange)="onFilterChange()"
-        class="px-3 px-3.5 py-2 text-sm bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl border border-slate-200/60 dark:border-slate-700/60 rounded-xl text-slate-700 dark:text-slate-300 focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-400 transition-all shadow-sm">
-        <option value="">Todas las categorías</option>
-        <option *ngFor="let cat of categories" [value]="cat">{{ cat }}</option>
-      </select>
-      <select [(ngModel)]="perPage" (ngModelChange)="changePerPage()"
-        class="px-3 px-3.5 py-2 text-sm bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl border border-slate-200/60 dark:border-slate-700/60 rounded-xl text-slate-700 dark:text-slate-300 focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-400 transition-all shadow-sm">
-        <option *ngFor="let n of perPageOptions" [value]="n">{{ n }} / pág.</option>
-      </select>
-    </div>
+  <div class="np-toolbar">
+    <label class="np-search">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg>
+      <input type="search" [(ngModel)]="searchTerm" (ngModelChange)="onSearchChange()" placeholder="Concepto…" aria-label="Buscar egreso" />
+    </label>
+    <label class="np-field np-field--inline"><span>Desde</span><input type="date" class="np-input np-input--sm" [(ngModel)]="filterFrom" (ngModelChange)="onFilterChange()" /></label>
+    <label class="np-field np-field--inline"><span>Hasta</span><input type="date" class="np-input np-input--sm" [(ngModel)]="filterTo" (ngModelChange)="onFilterChange()" /></label>
+    <label class="np-pagesize">Categoría<select [(ngModel)]="filterCategory" (ngModelChange)="onFilterChange()"><option value="">Todas</option><option *ngFor="let cat of categories" [value]="cat">{{ cat }}</option></select></label>
+    <span class="np-spacer"></span>
+    <label class="np-pagesize">Mostrar<select [(ngModel)]="perPage" (ngModelChange)="changePerPage()"><option *ngFor="let n of perPageOptions" [ngValue]="n">{{ n }}</option></select>por página</label>
+  </div>
 
-    <!-- Table -->
-    <div class="bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl rounded-2xl border border-slate-200/60 dark:border-slate-700/60 shadow-sm hover:shadow-md transition-all duration-300 overflow-hidden">
-      <div class="overflow-x-auto">
-        <table class="w-full text-sm text-left">
-          <thead class="text-xs text-slate-500 dark:text-slate-400 bg-slate-50/80 dark:bg-slate-700/80  uppercase tracking-wider text-xs font-bold">
-            <tr>
-              <th class="px-4 py-3">Concepto</th>
-              <th class="px-4 py-3">Categoría</th>
-              <th class="px-4 py-3 text-right">Valor</th>
-              <th class="px-4 py-3 hidden sm:table-cell">Método pago</th>
-              <th class="px-4 py-3 hidden sm:table-cell">Fecha</th>
-              <th class="px-4 py-3 text-center">Acciones</th>
+  <div class="np-workspace">
+    <section class="np-registry" aria-label="Egresos">
+      <div class="np-registry-wrap">
+        <table class="np-table np-table--registry">
+          <thead><tr><th class="np-th-stripe"></th><th>Concepto</th><th>Categoría</th><th class="np-th-right">Valor</th><th>Método</th><th>Fecha</th><th class="np-th-right">Acciones</th></tr></thead>
+          <tbody>
+            <ng-container *ngIf="loading"><tr class="np-skel" *ngFor="let i of [1,2,3,4,5,6]"><td class="np-stripe"><i></i></td><td><span class="np-skel-bar" style="width:60%"></span></td><td><span class="np-skel-bar" style="width:70px"></span></td><td><span class="np-skel-bar" style="width:70px;margin-left:auto"></span></td><td></td><td></td><td></td></tr></ng-container>
+            <tr *ngIf="!loading && egresos.length === 0" class="np-empty"><td colspan="7"><strong>No hay egresos en este período.</strong></td></tr>
+            <tr *ngFor="let e of egresos" class="np-row" (click)="openEdit(e)" tabindex="0" (keydown.enter)="openEdit(e)">
+              <td class="np-stripe"><i style="background:var(--danger)"></i></td>
+              <td><div class="np-name">{{ e.concept }}</div></td>
+              <td><span class="np-tag np-tag--neutral">{{ e.category || 'General' }}</span></td>
+              <td class="np-money np-neg">{{ formatCurrency(e.value) }}</td>
+              <td>{{ e.payment_method_name || '—' }}</td>
+              <td class="np-data">{{ e.created_at | date:'dd/MM/yy' }}</td>
+              <td class="np-td-right"><div class="np-rowacts" (click)="$event.stopPropagation()">
+                <button type="button" class="np-icobtn" (click)="openEdit(e)" title="Editar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 20h4L18 10l-4-4L4 16v4zM13 7l4 4"/></svg></button>
+                <button type="button" class="np-icobtn" (click)="openDelete(e)" title="Eliminar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/></svg></button>
+              </div></td>
             </tr>
-          </thead>
-          <tbody class="divide-y divide-slate-100 dark:divide-slate-700">
-
-            <!-- Skeleton -->
-            <ng-container *ngIf="loading">
-              <tr *ngFor="let i of [1,2,3,4,5,6]" class="animate-pulse">
-                <td class="px-4 py-3"><div class="h-4 bg-slate-200/60 dark:bg-slate-600 rounded w-48"></div></td>
-                <td class="px-4 py-3"><div class="h-5 bg-slate-200/60 dark:bg-slate-600 rounded-full w-24"></div></td>
-                <td class="px-4 py-3 text-right"><div class="h-4 bg-slate-200/60 dark:bg-slate-600 rounded w-20 ml-auto"></div></td>
-                <td class="px-4 py-3 hidden sm:table-cell"><div class="h-4 bg-slate-200/60 dark:bg-slate-600 rounded w-24"></div></td>
-                <td class="px-4 py-3 text-center"><div class="h-7 bg-slate-200/60 dark:bg-slate-600 rounded w-20 mx-auto"></div></td>
-              </tr>
-            </ng-container>
-
-            <!-- Empty -->
-            <tr *ngIf="!loading && egresos.length === 0">
-              <td colspan="5" class="px-4 py-10 text-center text-slate-400 dark:text-slate-500">
-                No hay egresos registrados para este período
-              </td>
-            </tr>
-
-            <!-- Data -->
-            <tr *ngFor="let e of egresos" class="hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors">
-              <td class="px-4 py-3 text-slate-800 dark:text-slate-200 font-medium">{{ e.concept }}</td>
-              <td class="px-4 py-3">
-                <span [class]="'px-2.5 py-0.5 text-xs font-medium rounded-full ' + categoryClass(e.category)">
-                  {{ e.category || 'General' }}
-                </span>
-              </td>
-              <td class="px-4 py-3 text-right font-semibold text-red-600 dark:text-red-400">
-                {{ formatCurrency(e.value) }}
-              </td>
-              <td class="px-4 py-3 hidden sm:table-cell">
-                <span *ngIf="e.payment_method_name"
-                      class="px-2 py-0.5 text-xs rounded-full bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300">
-                  {{ e.payment_method_name }}
-                </span>
-                <span *ngIf="!e.payment_method_name" class="text-xs text-slate-400">—</span>
-              </td>
-              <td class="px-4 py-3 text-slate-500 dark:text-slate-400 hidden sm:table-cell">
-                {{ e.created_at | date:'dd/MM/yyyy' }}
-              </td>
-              <td class="px-4 py-3 text-center">
-                <div class="flex items-center justify-center gap-1">
-                  <button (click)="openEdit(e)"
-                    class="p-1.5 rounded-lg text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/30 transition-colors"
-                    title="Editar">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                        d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                    </svg>
-                  </button>
-                  <button (click)="openDelete(e)"
-                    class="p-1.5 rounded-lg text-red-500 hover:bg-red-50 dark:hover:bg-red-900/30 transition-colors"
-                    title="Eliminar">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                        d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                    </svg>
-                  </button>
-                </div>
-              </td>
-            </tr>
-
           </tbody>
         </table>
       </div>
-
-      <!-- Pagination -->
-      <div *ngIf="!loading && total > 0"
-        class="flex flex-col sm:flex-row items-center justify-between gap-3 px-4 py-3 border-t border-slate-100/60 dark:border-slate-700/60">
-        <span class="text-sm text-slate-500 dark:text-slate-400">
-          Mostrando {{ (page - 1) * perPage + 1 }}–{{ page * perPage > total ? total : page * perPage }} de {{ total }} registros
-        </span>
-        <div class="flex items-center gap-1">
-          <button (click)="prevPage()" [disabled]="page === 1"
-            class="px-2 py-1 rounded text-sm border border-slate-300/60 dark:border-slate-600/60 disabled:opacity-40 hover:bg-slate-50 dark:hover:bg-slate-700/50">
-            ←
-          </button>
-          <button *ngFor="let p of pages" (click)="goToPage(p)"
-            [class]="p === page
-              ? 'px-3 py-1 rounded text-sm bg-gradient-to-br from-indigo-500 to-violet-600 text-white shadow-md shadow-indigo-500/20 hover:shadow-lg transition-all font-medium'
-              : 'px-3 py-1 rounded text-sm border border-slate-300/60 dark:border-slate-600/60 hover:bg-slate-50 dark:hover:bg-slate-700/50'">
-            {{ p }}
-          </button>
-          <button (click)="nextPage()" [disabled]="page === lastPage"
-            class="px-2 py-1 rounded text-sm border border-slate-300/60 dark:border-slate-600/60 disabled:opacity-40 hover:bg-slate-50 dark:hover:bg-slate-700/50">
-            →
-          </button>
+      <div class="np-pager" *ngIf="!loading && total > 0">
+        <span class="np-range">{{ (page - 1) * perPage + 1 }}–{{ page * perPage > total ? total : page * perPage }} de {{ total | number }}</span>
+        <div class="np-pages">
+          <button type="button" (click)="prevPage()" [disabled]="page === 1">‹</button>
+          <button type="button" *ngFor="let p of pages" (click)="goToPage(p)" [attr.aria-current]="p === page ? 'page' : null">{{ p }}</button>
+          <button type="button" (click)="nextPage()" [disabled]="page === lastPage">›</button>
         </div>
       </div>
-    </div>
-
+    </section>
   </div>
+</div>
 
-<!-- ═══════════════════ MODAL: ADD / EDIT ═══════════════════ -->
-<div *ngIf="modal" class="fixed inset-0 z-50 flex items-center justify-center p-4">
-  <div class="absolute inset-0 bg-slate-900/50 " (click)="modal = false"></div>
-  <div class="relative bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl rounded-2xl border border-slate-200/60 dark:border-slate-700/60 shadow-sm hover:shadow-md transition-all duration-300-2xl w-full max-w-md p-6">
-    <h3 class="text-lg font-bold text-slate-900 dark:text-white mb-5">
-      {{ modalMode === 'create' ? 'Nuevo egreso' : 'Editar egreso' }}
-    </h3>
-
-    <div class="space-y-4">
-      <div>
-        <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Concepto *</label>
-        <input type="text" [(ngModel)]="form.concept" placeholder="Descripción del gasto"
-          class="w-full px-3 px-3.5 py-2 text-sm bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl border border-slate-200/60 dark:border-slate-700/60 rounded-xl text-slate-700 dark:text-slate-300 focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-400 transition-all shadow-sm" />
+<!-- ══ Crear / editar ══════════════════════════════════════════════════════ -->
+<div *ngIf="modal" class="np-overlay" (click)="modal = false">
+  <div class="np-modal" role="dialog" aria-modal="true" (click)="$event.stopPropagation()">
+    <div class="np-modal-head"><div><p class="np-kicker">Egresos <b>/</b> {{ modalMode === 'create' ? 'Nuevo' : 'Editar' }}</p><h3>{{ modalMode === 'create' ? 'Nuevo egreso' : 'Editar egreso' }}</h3></div></div>
+    <div class="np-modal-body">
+      <div class="np-form">
+        <label class="np-field np-field-full"><span>Concepto <em>*</em></span><input type="text" class="np-input" [(ngModel)]="form.concept" placeholder="Descripción del gasto" /></label>
+        <label class="np-field"><span>Categoría</span><select class="np-input" [(ngModel)]="form.category"><option *ngFor="let cat of categories" [value]="cat">{{ cat }}</option></select></label>
+        <label class="np-field"><span>Valor <em>*</em></span><input type="number" class="np-input np-mono" [(ngModel)]="form.value" min="1" /></label>
+        <label class="np-field np-field-full" *ngIf="activePaymentMethods.length > 0"><span>Método de pago</span><select class="np-input" [(ngModel)]="form.payment_method_id"><option [ngValue]="null">Sin especificar</option><option *ngFor="let pm of activePaymentMethods" [ngValue]="pm.id">{{ pm.name }}</option></select></label>
       </div>
-      <div>
-        <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Categoría</label>
-        <select [(ngModel)]="form.category"
-          class="w-full px-3 px-3.5 py-2 text-sm bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl border border-slate-200/60 dark:border-slate-700/60 rounded-xl text-slate-700 dark:text-slate-300 focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-400 transition-all shadow-sm">
-          <option *ngFor="let cat of categories" [value]="cat">{{ cat }}</option>
-        </select>
-      </div>
-      <div>
-        <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Valor *</label>
-        <input type="number" [(ngModel)]="form.value" min="1" placeholder="0"
-          class="w-full px-3 px-3.5 py-2 text-sm bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl border border-slate-200/60 dark:border-slate-700/60 rounded-xl text-slate-700 dark:text-slate-300 focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-400 transition-all shadow-sm" />
-      </div>
-      <div *ngIf="activePaymentMethods.length > 0">
-        <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Método de pago</label>
-        <select [(ngModel)]="form.payment_method_id"
-          class="w-full px-3 px-3.5 py-2 text-sm bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl border border-slate-200/60 dark:border-slate-700/60 rounded-xl text-slate-700 dark:text-slate-300 focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-400 transition-all shadow-sm">
-          <option [ngValue]="null">Sin especificar</option>
-          <option *ngFor="let pm of activePaymentMethods" [ngValue]="pm.id">{{ pm.name }}</option>
-        </select>
-      </div>
-    </div>
-
-    <div class="flex gap-3 mt-6">
-      <button (click)="modal = false"
-        class="flex-1 py-2 border border-slate-300/60 dark:border-slate-600/60 rounded-lg text-sm text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors">
-        Cancelar
-      </button>
-      <button (click)="saveForm()" [disabled]="!form.concept.trim() || form.value <= 0"
-        class="flex-1 py-2 bg-gradient-to-br from-indigo-500 to-violet-600 text-white shadow-md shadow-indigo-500/20 hover:shadow-lg transition-all disabled:opacity-50 rounded-lg text-sm font-semibold">
-        {{ modalMode === 'create' ? 'Guardar' : 'Actualizar' }}
-      </button>
+      <div class="np-btnrow np-btnrow--end"><button type="button" class="np-btn np-btn--ghost" (click)="modal = false">Cancelar</button><button type="button" class="np-btn np-btn--primary" (click)="saveForm()" [disabled]="!form.concept.trim() || form.value <= 0">{{ modalMode === 'create' ? 'Guardar' : 'Actualizar' }}</button></div>
     </div>
   </div>
 </div>
 
-<!-- ═══════════════════ MODAL: DELETE CONFIRM ═══════════════════ -->
-<div *ngIf="deleteModal" class="fixed inset-0 z-50 flex items-center justify-center p-4">
-  <div class="absolute inset-0 bg-slate-900/50 " (click)="deleteModal = false"></div>
-  <div class="relative bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl rounded-2xl border border-slate-200/60 dark:border-slate-700/60 shadow-sm hover:shadow-md transition-all duration-300-2xl w-full max-w-sm p-6 text-center">
-    <div class="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
-      <svg class="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-          d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
-      </svg>
-    </div>
-    <h3 class="text-lg font-bold text-slate-900 dark:text-white mb-2">¿Eliminar egreso?</h3>
-    <p class="text-sm text-slate-500 dark:text-slate-400 mb-6">Esta acción no se puede deshacer.</p>
-    <div class="flex gap-3">
-      <button (click)="deleteModal = false"
-        class="flex-1 py-2 border border-slate-300/60 dark:border-slate-600/60 rounded-lg text-sm text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors">
-        Cancelar
-      </button>
-      <button (click)="confirmDelete()"
-        class="flex-1 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg text-sm font-semibold transition-colors">
-        Eliminar
-      </button>
-    </div>
+<div *ngIf="deleteModal" class="np-overlay" (click)="deleteModal = false">
+  <div class="np-modal np-modal--confirm" role="alertdialog" aria-modal="true" (click)="$event.stopPropagation()">
+    <span class="np-confirm-icon is-danger"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/></svg></span>
+    <h3>¿Eliminar el egreso?</h3><p>Esta acción no se puede deshacer.</p>
+    <div class="np-btnrow np-btnrow--center"><button type="button" class="np-btn np-btn--ghost" (click)="deleteModal = false">Cancelar</button><button type="button" class="np-btn np-btn--danger-solid" (click)="confirmDelete()">Eliminar</button></div>
   </div>
 </div>

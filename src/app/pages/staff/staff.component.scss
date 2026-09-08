@@ -1,0 +1,5 @@
+/* ─── Cuentas del sistema: sólo lo propio ───────────────────────────── */
+.np-staff { --np-inspector-w: 460px; }
+.np-row--static { cursor: default; }
+.np-chips-label { align-self: center; margin-right: 4px; }
+@media (max-width: 900px) { .np-col-mail { display: none; } .np-table--registry { min-width: 0; } }

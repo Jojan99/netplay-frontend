@@ -1,0 +1,24 @@
+/* ─── OLT: estilos propios compartidos por las pantallas del módulo ──── */
+.np-empty-block { margin: 40px auto; text-align: center; color: var(--text-3); strong { display: block; color: var(--text-2); margin-bottom: 4px; } }
+.np-meter { display: inline-block; width: 80px; height: 6px; border-radius: 3px; background: var(--surface-3); overflow: hidden; margin-right: 6px; vertical-align: middle; i { display: block; height: 100%; } }
+.np-meter--wide { width: 160px; }
+.np-sect--btn { width: 100%; cursor: pointer; margin: 0; }
+.np-registry { flex-shrink: 0; }
+.np-row--on .np-stripe i  { background: var(--ok); }
+.np-row--off .np-stripe i { background: var(--danger); }
+.np-stat-v.is-ok { color: var(--ok); } .np-stat-v.is-warn { color: var(--warn); } .np-stat-v.is-danger { color: var(--danger); }
+.np-olt-auth { --np-inspector-w: 420px; }
+@media (max-width: 1400px) { .np-olt-auth.is-open .np-col-sp { display: none; } }
+@media (max-width: 760px) { .np-col-sp { display: none; } .np-table--registry { min-width: 0; } }
+.np-row--static { cursor: default; }
+.np-form-col { display: grid; gap: 16px; }
+.np-term { flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 8px; }
+.np-term-out { flex: 1; min-height: 240px; overflow: auto; background: var(--text); color: var(--bg); border-radius: var(--radius-lg); padding: 14px 16px; font-family: var(--font-mono); font-size: 12.5px; line-height: 1.5; }
+.np-term-welcome { color: color-mix(in srgb, var(--bg) 60%, transparent); p { margin: 0 0 4px; } code { color: var(--accent); } }
+.np-term-cmd { display: flex; gap: 10px; align-items: baseline; margin-top: 8px; }
+.np-term-ts { color: color-mix(in srgb, var(--bg) 40%, transparent); font-size: 11px; }
+.np-term-prompt { color: var(--accent); font-weight: 600; }
+.np-term-pre { margin: 4px 0 0 0; white-space: pre-wrap; overflow-wrap: anywhere; color: color-mix(in srgb, var(--bg) 88%, transparent); }
+.np-term-err { margin-top: 4px; color: var(--danger); }
+.np-term-in { display: flex; align-items: center; gap: 10px; padding: 6px 10px 6px 14px; background: var(--surface); border: 1px solid var(--line-strong); border-radius: var(--radius);
+  input { flex: 1; border: 0 !important; background: transparent !important; box-shadow: none !important; outline: none; font-family: var(--font-mono); font-size: 13px; color: var(--text) !important; height: 30px; padding: 0 !important; } }

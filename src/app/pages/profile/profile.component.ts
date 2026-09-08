@@ -10,6 +10,8 @@ import { AuthService }       from '../../services/auth.service';
   standalone: true,
   imports: [CommonModule, FormsModule],
   templateUrl: './profile.component.html',
+  styleUrl: './profile.component.scss',
+  host: { class: 'np-console' },
 })
 export class ProfileComponent implements OnInit {
 

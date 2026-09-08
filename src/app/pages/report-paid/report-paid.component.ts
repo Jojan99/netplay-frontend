@@ -15,6 +15,7 @@ import { saveAs } from 'file-saver';
   imports: [CommonModule, FormsModule],
   templateUrl: './report-paid.component.html',
   styleUrls: ['./report-paid.component.scss'],
+  host: { class: 'np-console' },
 })
 export class ReportPaidComponent implements OnInit, OnDestroy {
   private destroy$      = new Subject<void>();

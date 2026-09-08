@@ -1,5 +1,6 @@
 import { Component, HostListener, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { OltNavComponent } from '../../shared/olt-nav.component';
 import { FormsModule } from '@angular/forms';
 import { OltService } from '../../../../services/olt.service';
 import { ToastService } from '../../../../services/toast.service';
@@ -7,8 +8,10 @@ import { ToastService } from '../../../../services/toast.service';
 @Component({
   selector: 'app-olt-list',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, OltNavComponent],
   templateUrl: './olt-list.component.html',
+  styleUrl: '../../shared/olt.scss',
+  host: { class: 'np-console' },
 })
 export class OltListComponent implements OnInit {
 

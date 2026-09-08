@@ -1,117 +1,40 @@
-<div class="min-h-screen flex flex-col items-center justify-center px-4 py-10 bg-slate-50/80 dark:bg-slate-900/80">
-
-  <!-- Logo / marca -->
-  <div class="mb-6 text-center">
-    <span class="text-3xl font-bold text-blue-600 dark:text-blue-400">WispSmart</span>
-    <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">Registro de empresa</p>
-  </div>
-
-  <div class="w-full max-w-2xl bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl rounded-2xl border border-slate-200/60 dark:border-slate-700/60 shadow-sm hover:shadow-md transition-all duration-300 p-8">
-
-    <!-- Error -->
-    <div *ngIf="errorMsg"
-         class="flex items-center gap-2 p-4 mb-6 text-sm text-red-700 bg-red-50 rounded-lg dark:bg-red-900/20 dark:text-red-400">
-      <svg class="w-4 h-4 shrink-0" fill="currentColor" viewBox="0 0 20 20">
-        <path d="M10 .5a9.5 9.5 0 1 0 9.5 9.5A9.51 9.51 0 0 0 10 .5ZM9.5 4a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3ZM12 15H8a1 1 0 0 1 0-2h1v-3H8a1 1 0 0 1 0-2h2a1 1 0 0 1 1 1v4h1a1 1 0 0 1 0 2Z"/>
-      </svg>
-      {{ errorMsg }}
+<div class="np-console np-login np-register">
+  <div class="np-login-theme"><flowbite-dark-theme-toggle></flowbite-dark-theme-toggle></div>
+  <aside class="np-login-side" aria-hidden="true">
+    <div class="np-login-side-inner">
+      <p class="np-kicker">Netplay <b>/</b> Plataforma de operación</p>
+      <h2 class="np-login-claim">Tu ISP, operado desde una sola consola.</h2>
+      <dl class="np-login-facts">
+        <div><dt>Clientes</dt><dd>Registro, servicios, facturación y soporte por cliente.</dd></div>
+        <div><dt>Recaudo</dt><dd>Cartera, pagos, abonos y pasarela online.</dd></div>
+        <div><dt>Red</dt><dd>OLT, ONT, MikroTik y WhatsApp integrados.</dd></div>
+      </dl>
+      <p class="np-login-foot np-mono">netplay.com.co · registro de empresa</p>
     </div>
-
-    <form (ngSubmit)="register()" #f="ngForm" novalidate>
-
-      <!-- ── Datos de empresa ── -->
-      <h3 class="text-base font-semibold text-slate-700 dark:text-slate-200 mb-4">Datos de la empresa</h3>
-      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
-
-        <div>
-          <label class="block mb-1.5 text-sm font-medium text-slate-700 dark:text-slate-300">Nombre de la empresa</label>
-          <input type="text" [(ngModel)]="form.name" name="name" required
-                 placeholder="Netplay S.A.S"
-                 class="input-field">
-        </div>
-
-        <div>
-          <label class="block mb-1.5 text-sm font-medium text-slate-700 dark:text-slate-300">NIT</label>
-          <input type="text" [(ngModel)]="form.nit" name="nit" required
-                 placeholder="900123456-1"
-                 class="input-field">
-        </div>
-
-        <div>
-          <label class="block mb-1.5 text-sm font-medium text-slate-700 dark:text-slate-300">Correo corporativo</label>
-          <input type="email" [(ngModel)]="form.email" name="email" required
-                 placeholder="empresa@correo.com"
-                 class="input-field">
-        </div>
-
-        <div>
-          <label class="block mb-1.5 text-sm font-medium text-slate-700 dark:text-slate-300">Teléfono</label>
-          <input type="text" [(ngModel)]="form.phone" name="phone" required
-                 placeholder="+57 300 000 0000"
-                 class="input-field">
-        </div>
-
-        <div class="sm:col-span-2">
-          <label class="block mb-1.5 text-sm font-medium text-slate-700 dark:text-slate-300">Dirección</label>
-          <input type="text" [(ngModel)]="form.address" name="address" required
-                 placeholder="Calle 10 # 5-30, Ciudad"
-                 class="input-field">
-        </div>
+  </aside>
+  <main class="np-login-main">
+    <form class="np-login-card np-register-card" (ngSubmit)="register()" #f="ngForm" novalidate>
+      <p class="np-kicker">Alta <b>/</b> Empresa</p>
+      <h1 class="np-title np-login-title">Registrá tu empresa</h1>
+      <p class="np-login-help">Datos de la empresa y de la cuenta administradora.</p>
+      <p *ngIf="errorMsg" class="np-notice np-notice--danger" role="alert">{{ errorMsg }}</p>
+      <p *ngIf="successMsg" class="np-notice np-notice--ok">{{ successMsg }}</p>
+      <p class="np-sect">Empresa</p>
+      <div class="np-form">
+        <label class="np-field np-field-full"><span>Nombre de la empresa</span><input type="text" class="np-input" [(ngModel)]="form.name" name="name" required placeholder="Netplay S.A.S." /></label>
+        <label class="np-field"><span>NIT</span><input type="text" class="np-input np-mono" [(ngModel)]="form.nit" name="nit" required placeholder="900123456-1" /></label>
+        <label class="np-field"><span>Teléfono</span><input type="tel" class="np-input np-mono" [(ngModel)]="form.phone" name="phone" required placeholder="+57 300 000 0000" /></label>
+        <label class="np-field np-field-full"><span>Correo corporativo</span><input type="email" class="np-input" [(ngModel)]="form.email" name="email" required placeholder="empresa@correo.com" /></label>
+        <label class="np-field np-field-full"><span>Dirección</span><input type="text" class="np-input" [(ngModel)]="form.address" name="address" required placeholder="Calle 10 # 5-30, ciudad" /></label>
       </div>
-
-      <!-- ── Cuenta del administrador ── -->
-      <h3 class="text-base font-semibold text-slate-700 dark:text-slate-200 mb-4">Cuenta del administrador</h3>
-      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
-
-        <div>
-          <label class="block mb-1.5 text-sm font-medium text-slate-700 dark:text-slate-300">Nombre</label>
-          <input type="text" [(ngModel)]="form.admin_name" name="admin_name" required
-                 placeholder="Juan"
-                 class="input-field">
-        </div>
-
-        <div>
-          <label class="block mb-1.5 text-sm font-medium text-slate-700 dark:text-slate-300">Apellido</label>
-          <input type="text" [(ngModel)]="form.admin_lastname" name="admin_lastname" required
-                 placeholder="Pérez"
-                 class="input-field">
-        </div>
-
-        <div class="sm:col-span-2">
-          <label class="block mb-1.5 text-sm font-medium text-slate-700 dark:text-slate-300">Contraseña</label>
-          <input type="password" [(ngModel)]="form.admin_password" name="admin_password" required
-                 placeholder="Mínimo 6 caracteres"
-                 class="input-field">
-        </div>
+      <p class="np-sect">Cuenta del administrador</p>
+      <div class="np-form">
+        <label class="np-field"><span>Nombre</span><input type="text" class="np-input" [(ngModel)]="form.admin_name" name="admin_name" required placeholder="Juan" /></label>
+        <label class="np-field"><span>Apellido</span><input type="text" class="np-input" [(ngModel)]="form.admin_lastname" name="admin_lastname" required placeholder="Pérez" /></label>
+        <label class="np-field np-field-full"><span>Contraseña</span><input type="password" class="np-input" [(ngModel)]="form.admin_password" name="admin_password" required placeholder="Mínimo 6 caracteres" autocomplete="new-password" /></label>
       </div>
-
-      <!-- Botones -->
-      <div class="flex flex-col sm:flex-row items-center justify-between gap-4">
-        <a routerLink="/login"
-           class="text-sm text-blue-600 hover:underline dark:text-blue-400">
-          ¿Ya tienes cuenta? Inicia sesión
-        </a>
-        <button type="submit" [disabled]="isLoading || f.invalid"
-                class="px-6 py-2.5 text-sm font-medium bg-gradient-to-br from-indigo-500 to-violet-600 text-white shadow-md shadow-indigo-500/20 hover:shadow-lg transition-all rounded-xl disabled:opacity-50 disabled:cursor-not-allowed transition">
-          <span *ngIf="!isLoading">Registrar empresa</span>
-          <span *ngIf="isLoading" class="flex items-center gap-2">
-            <svg class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
-              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
-              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"/>
-            </svg>
-            Procesando...
-          </span>
-        </button>
-      </div>
-
+      <button type="submit" class="np-btn np-btn--primary np-login-submit" [disabled]="isLoading || f.invalid"><span *ngIf="isLoading" class="np-spinner np-spinner--sm"></span>{{ isLoading ? 'Procesando…' : 'Registrar empresa' }}</button>
+      <p class="np-login-alt">¿Ya tenés cuenta? <a routerLink="/login">Iniciá sesión</a></p>
     </form>
-  </div>
+  </main>
 </div>
-
-<!-- Estilos inline para input-field (tailwind no soporta @apply en templates, se hace inline) -->
-<style>
-  .input-field {
-    @apply w-full px-3.5 py-2 text-sm bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl border border-slate-200/60 dark:border-slate-700/60 rounded-xl text-slate-700 dark:text-slate-300 focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-400 transition-all shadow-sm
-           dark:focus:ring-indigo-500 dark:focus:border-indigo-400;
-  }
-</style>

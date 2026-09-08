@@ -57,6 +57,8 @@ const MODULE_LABELS: Record<string, { label: string; group: string }> = {
   standalone: true,
   imports: [CommonModule, FormsModule],
   templateUrl: './staff.component.html',
+  styleUrl: './staff.component.scss',
+  host: { class: 'np-console' },
 })
 export class StaffComponent implements OnInit {
   staff: StaffUser[]   = [];
@@ -78,6 +80,22 @@ export class StaffComponent implements OnInit {
   form = {
     names: '', lastname: '', email: '', username: '', password: '', profile_id: 0,
   };
+
+  get activeModulesCount(): number { return this.moduleItems.filter(m => m.active).length; }
+  rolePill(name: string): string {
+    const n = (name || '').toUpperCase();
+    if (n.includes('ADMIN')) return 'np-pill--suspended';
+    if (n.includes('TECNI')) return 'np-pill--info';
+    if (n.includes('CONTA')) return 'np-pill--active';
+    return 'np-pill--neutral';
+  }
+  roleColor(name: string): string {
+    const n = (name || '').toUpperCase();
+    if (n.includes('ADMIN')) return 'var(--danger)';
+    if (n.includes('TECNI')) return 'var(--info)';
+    if (n.includes('CONTA')) return 'var(--ok)';
+    return 'var(--line-strong)';
+  }
 
   constructor(private companyService: CompanyService) {}
 

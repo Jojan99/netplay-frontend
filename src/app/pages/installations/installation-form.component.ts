@@ -10,6 +10,8 @@ import { UserService } from '../../services/user.service';
   standalone: true,
   imports: [CommonModule, FormsModule, RouterModule],
   templateUrl: './installation-form.component.html',
+  styleUrl: './installation-form.component.scss',
+  host: { class: 'np-console' },
 })
 export class InstallationFormComponent implements OnInit {
   isLoading = false;

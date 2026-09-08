@@ -44,6 +44,8 @@ interface Variable { key: string; label: string; example: string; }
   standalone: true,
   imports: [CommonModule, FormsModule],
   templateUrl: './wa-meta-templates.component.html',
+  styleUrl: './wa-meta-templates.component.scss',
+  host: { class: 'np-console' },
 })
 export class WaMetaTemplatesComponent implements OnInit {
   tab: 'templates' | 'automations' = 'templates';

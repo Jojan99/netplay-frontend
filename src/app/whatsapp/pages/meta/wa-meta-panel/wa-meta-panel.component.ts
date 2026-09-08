@@ -7,37 +7,31 @@ import { CompanyWhatsappService } from '../../../../services/company-whatsapp.se
   selector: 'app-wa-meta-panel',
   standalone: true,
   imports: [CommonModule, FormsModule],
+  host: { class: 'np-console' },
   template: `
-    <div class="max-w-3xl mx-auto mt-8 p-6">
-      <h1 class="text-2xl font-bold text-gray-900 dark:text-white mb-6">Panel de Configuración Meta</h1>
-
-      <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6 border border-gray-200 dark:border-gray-700 space-y-4">
-        <div>
-          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Phone Number ID</label>
-          <input type="text" [(ngModel)]="phoneNumberId" class="w-full p-2.5 border rounded-lg dark:bg-gray-700 dark:border-gray-600" />
-        </div>
-        <div>
-          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">WhatsApp Business Account ID (WABA ID)</label>
-          <input type="text" [(ngModel)]="businessId" class="w-full p-2.5 border rounded-lg dark:bg-gray-700 dark:border-gray-600" />
-          <p class="text-xs text-gray-500 mt-1">Necesario para gestionar plantillas. Lo encuentras en Facebook Developers → WhatsApp → API Setup.</p>
-        </div>
-        <div>
-          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Access Token</label>
-          <input type="password" [(ngModel)]="accessToken" class="w-full p-2.5 border rounded-lg dark:bg-gray-700 dark:border-gray-600" />
-        </div>
-        <div class="flex items-center gap-3">
-          <button (click)="save()" [disabled]="saving" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50">
-            {{ saving ? 'Guardando...' : 'Guardar' }}
-          </button>
-          <p *ngIf="msg" class="text-sm" [ngClass]="error ? 'text-red-600' : 'text-green-600'">{{ msg }}</p>
-        </div>
-      </div>
-
-      <div class="mt-6 p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
-        <p class="text-sm font-medium text-blue-800 dark:text-blue-300">Webhook URL:</p>
-        <code class="text-xs text-blue-700 dark:text-blue-400">https://netplay.com.co/api/webhooks/whatsapp-meta</code>
-      </div>
+    <div class="np-page">
+      <header class="np-head">
+        <div><p class="np-kicker">WhatsApp <b>/</b> API de Meta <b>/</b> Configuración</p><h1 class="np-title">Credenciales de Meta</h1><div class="np-ribbon"><span>Phone Number ID, WABA ID y token de acceso.</span></div></div>
+        <div class="np-actions"><button type="button" class="np-btn np-btn--primary" (click)="save()" [disabled]="saving">{{ saving ? 'Guardando…' : 'Guardar' }}</button></div>
+      </header>
+      <div class="np-scroll"><div class="np-grid-2">
+        <section class="np-card">
+          <div class="np-card-h"><h2>Credenciales</h2></div>
+          <div class="np-form np-form--single">
+            <label class="np-field"><span>Phone Number ID</span><input type="text" class="np-input np-mono" [(ngModel)]="phoneNumberId" /></label>
+            <label class="np-field"><span>WhatsApp Business Account ID (WABA)</span><input type="text" class="np-input np-mono" [(ngModel)]="businessId" /><small class="np-fine">Necesario para gestionar plantillas. Está en Facebook Developers → WhatsApp → API Setup.</small></label>
+            <label class="np-field"><span>Access token</span><input type="password" class="np-input np-mono" [(ngModel)]="accessToken" placeholder="vacío = no cambiar" /></label>
+            <p *ngIf="msg" class="np-notice" [ngClass]="error ? 'np-notice--danger' : 'np-notice--ok'">{{ msg }}</p>
+          </div>
+        </section>
+        <section class="np-card">
+          <div class="np-card-h"><h2>Webhook</h2></div>
+          <p class="np-notice np-notice--code np-mono">https://netplay.com.co/api/webhooks/whatsapp-meta</p>
+          <p class="np-fine">Registrá esta URL en la configuración de webhooks de tu app de Meta.</p>
+        </section>
+      </div></div>
     </div>
+    <style>.np-form--single { grid-template-columns: 1fr; }</style>
   `
 })
 export class WaMetaPanelComponent implements OnInit {

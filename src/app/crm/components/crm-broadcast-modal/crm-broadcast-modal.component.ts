@@ -7,7 +7,8 @@ import { CrmService } from '../../../services/crm.service';
   selector: 'app-crm-broadcast-modal',
   standalone: true,
   imports: [CommonModule, FormsModule],
-  templateUrl: './crm-broadcast-modal.component.html'
+  templateUrl: './crm-broadcast-modal.component.html',
+  styleUrl: './crm-broadcast-modal.component.scss'
 })
 export class CrmBroadcastModalComponent implements OnInit {
 
@@ -33,11 +34,20 @@ export class CrmBroadcastModalComponent implements OnInit {
     });
   }
 
+  readonly quickFilters = [{ id: 'all', label: 'Todos' }, { id: 'linked', label: 'Clientes vinculados' }, { id: 'active', label: 'Activos' }, { id: 'inactive', label: 'Suspendidos / inactivos' }];
+  quickFilter = 'all';
+  setQuickFilter(id: string): void { this.quickFilter = id; this.filterCustomers(); }
+
   filterCustomers(): void {
     const q = this.search.toLowerCase();
-    this.filtered = !q
-      ? this.customers
-      : this.customers.filter(c => c.name?.toLowerCase().includes(q) || c.phone?.includes(q));
+    const pool = this.customers.filter(c => {
+      const st = (c.status || '').toUpperCase();
+      if (this.quickFilter === 'linked') return !!c.linked;
+      if (this.quickFilter === 'active') return st.startsWith('ACT');
+      if (this.quickFilter === 'inactive') return !!c.linked && !st.startsWith('ACT');
+      return true;
+    });
+    this.filtered = !q ? pool : pool.filter(c => c.name?.toLowerCase().includes(q) || c.phone?.includes(q) || c.plan?.toLowerCase().includes(q));
   }
 
   toggleAll(): void {

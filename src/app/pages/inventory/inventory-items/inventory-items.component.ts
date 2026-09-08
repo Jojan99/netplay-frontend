@@ -14,9 +14,16 @@ import { BarcodeScannerComponent }    from '../../../components/barcode-scanner/
   imports: [CommonModule, FormsModule, RouterLink, BarcodeScannerComponent],
   templateUrl: './inventory-items.component.html',
   styleUrl: './inventory-items.component.scss',
+  host: { class: 'np-console' },
 })
 export class InventoryItemsComponent implements OnInit {
   isDesktop = true;
+  get lowStockCount(): number { return this.filteredItems.filter(i => this.isLowStock(i)).length; }
+  get pageNumbers(): number[] {
+    const out: number[] = [];
+    for (let i = Math.max(1, this.currentPage - 2); i <= Math.min(this.lastPage, this.currentPage + 2); i++) out.push(i);
+    return out;
+  }
   skeletor  = true;
 
   items:         InventoryItemInterface[]     = [];

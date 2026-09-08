@@ -1,0 +1,4 @@
+/* ─── Categorías de inventario: sólo lo propio ──────────────────────── */
+.np-inv-cat { --np-inspector-w: 380px; }
+.np-crumb { color: inherit; text-decoration: none; &:hover { color: var(--accent); } }
+.np-form--single { grid-template-columns: 1fr; }

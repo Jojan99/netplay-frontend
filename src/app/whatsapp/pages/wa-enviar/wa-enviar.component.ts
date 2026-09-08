@@ -16,7 +16,9 @@ interface HistoryItem {
   selector: 'app-wa-enviar',
   standalone: true,
   imports: [CommonModule, FormsModule],
-  templateUrl: './wa-enviar.component.html'
+  templateUrl: './wa-enviar.component.html',
+  styleUrl: './wa-enviar.component.scss',
+  host: { class: 'np-console' },
 })
 export class WaEnviarComponent implements OnInit {
 

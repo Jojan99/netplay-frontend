@@ -54,8 +54,13 @@ type Tab = 'templates' | 'assigned';
   standalone: true,
   imports: [CommonModule, FormsModule],
   templateUrl: './contracts.component.html',
+  styleUrl: './contracts.component.scss',
+  host: { class: 'np-console' },
 })
 export class ContractsComponent implements OnInit {
+
+  get signedCount():  number { return this.assignedContracts.filter(c => c.status === 'signed').length; }
+  get pendingCount(): number { return this.assignedContracts.filter(c => c.status !== 'signed').length; }
 
   activeTab: Tab = 'templates';
 

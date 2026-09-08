@@ -1,274 +1,81 @@
-<div class="max-w-8xl mx-auto mt-8 bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl rounded-2xl border border-slate-200/60 dark:border-slate-700/60 shadow-sm hover:shadow-md transition-all duration-300 p-6">
-  <div class="w-full mb-1">
-
-    <!-- Breadcrumb -->
-    <div class="mb-4">
-      <nav class="flex mb-5" aria-label="Breadcrumb">
-        <ol class="inline-flex items-center space-x-1 text-sm font-medium md:space-x-2">
-          <li class="inline-flex items-center">
-            <a class="inline-flex items-center text-slate-700 hover:text-primary-600 dark:text-slate-300 dark:hover:text-white">
-              <svg class="w-5 h-5 mr-2.5" fill="currentColor" viewBox="0 0 20 20"><path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z"></path></svg>
-              Home
-            </a>
-          </li>
-          <li>
-            <div class="flex items-center">
-              <svg class="w-6 h-6 text-slate-400" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"></path></svg>
-              <a [routerLink]="['/dashboard/inventory']" class="ml-1 text-slate-700 hover:text-primary-600 md:ml-2 dark:text-slate-300 dark:hover:text-white cursor-pointer">Inventario</a>
-            </div>
-          </li>
-          <li>
-            <div class="flex items-center">
-              <svg class="w-6 h-6 text-slate-400" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"></path></svg>
-              <span class="ml-1 text-slate-400 md:ml-2 dark:text-slate-500" aria-current="page">Detalle</span>
-            </div>
-          </li>
-        </ol>
-      </nav>
-      <div class="flex items-center justify-between">
-        <h1 class="text-2xl font-bold bg-gradient-to-r from-slate-800 to-slate-600 bg-clip-text text-transparent dark:from-white dark:to-slate-300">DETALLE DE ÍTEM</h1>
-        <button (click)="openMovementModal()"
-          class="flex items-center px-4 py-2 text-sm font-medium text-white bg-green-600 rounded-lg hover:bg-green-700 focus:ring-4 focus:ring-green-300">
-          <svg class="w-4 h-4 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
-          </svg>
-          Registrar Movimiento
-        </button>
+<div class="np-page np-inv-item">
+  <header class="np-head">
+    <div>
+      <p class="np-kicker"><a [routerLink]="['/dashboard/inventory']" class="np-crumb">Inventario</a> <b>/</b> Ítem</p>
+      <h1 class="np-title">{{ item?.name || 'Detalle de ítem' }}</h1>
+      <div class="np-ribbon" *ngIf="item">
+        <span class="np-mono">{{ item.sku || item.code || 'sin código' }}</span>
+        <span><span class="np-tag np-tag--neutral">{{ item.category?.name || 'Sin categoría' }}</span></span>
+        <span *ngIf="item.location">en {{ item.location }}</span>
       </div>
     </div>
-
-    <!-- Item info card -->
-    <div *ngIf="!skeletor && item" class="p-5 mb-6 bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl rounded-2xl border border-slate-200/60 dark:border-slate-700/60 shadow-sm hover:shadow-md transition-all duration-300">
-      <div class="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
-        <div>
-          <p class="text-xs text-slate-500 dark:text-slate-400 uppercase mb-1">Nombre</p>
-          <p class="text-sm font-semibold text-slate-900 dark:text-white">{{ item.name }}</p>
-        </div>
-        <div>
-          <p class="text-xs text-slate-500 dark:text-slate-400 uppercase mb-1">SKU / Código</p>
-          <p class="text-sm text-slate-700 dark:text-slate-300">{{ item.sku || item.code || '-' }}</p>
-        </div>
-        <div>
-          <p class="text-xs text-slate-500 dark:text-slate-400 uppercase mb-1">Categoría</p>
-          <p class="text-sm text-slate-700 dark:text-slate-300">{{ item.category?.name || '-' }}</p>
-        </div>
-        <div>
-          <p class="text-xs text-slate-500 dark:text-slate-400 uppercase mb-1">Stock actual</p>
-          <p class="text-sm font-bold"
-            [ngClass]="isLowStock(item) ? 'text-red-600 dark:text-red-400' : ((item.quantity || 0) > 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400')">
-            {{ item.quantity || 0 }} {{ item.unit || '' }}
-            <span *ngIf="isLowStock(item)" class="ml-1 text-[10px] bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300 px-1.5 py-0.5 rounded">Bajo</span>
-          </p>
-        </div>
-        <div>
-          <p class="text-xs text-slate-500 dark:text-slate-400 uppercase mb-1">Costo Promedio</p>
-          <p class="text-sm text-slate-700 dark:text-slate-300">${{ (item.average_cost || 0) | number:'1.0-0' }}</p>
-        </div>
-        <div>
-          <p class="text-xs text-slate-500 dark:text-slate-400 uppercase mb-1">Precio Unitario</p>
-          <p class="text-sm text-slate-700 dark:text-slate-300">${{ (item.unit_price || 0) | number:'1.0-0' }}</p>
-        </div>
-        <div>
-          <p class="text-xs text-slate-500 dark:text-slate-400 uppercase mb-1">Stock Mín / Máx</p>
-          <p class="text-sm text-slate-700 dark:text-slate-300">
-            {{ item.stock_min || 0 }} / {{ item.stock_max || '∞' }}
-          </p>
-        </div>
-        <div>
-          <p class="text-xs text-slate-500 dark:text-slate-400 uppercase mb-1">Ubicación</p>
-          <p class="text-sm text-slate-700 dark:text-slate-300">{{ item.location || '-' }}</p>
-        </div>
-        <div class="col-span-2 sm:col-span-3 lg:col-span-2">
-          <p class="text-xs text-slate-500 dark:text-slate-400 uppercase mb-1">Descripción</p>
-          <p class="text-sm text-slate-700 dark:text-slate-300">{{ item.description || '-' }}</p>
-        </div>
-      </div>
+    <div class="np-actions">
+      <button type="button" class="np-btn np-btn--primary" (click)="openMovementModal()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 12h16m0 0-5-5m5 5-5 5"/></svg>Registrar movimiento</button>
     </div>
+  </header>
 
-    <!-- Skeleton info -->
-    <div *ngIf="skeletor" class="p-5 mb-6 bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl rounded-2xl border border-slate-200/60 dark:border-slate-700/60 shadow-sm hover:shadow-md transition-all duration-300 animate-pulse">
-      <div class="grid grid-cols-5 gap-4">
-        <div *ngFor="let i of [1,2,3,4,5]">
-          <div class="h-3 bg-slate-200/60 rounded-lg dark:bg-slate-700/60 w-16 mb-2"></div>
-          <div class="h-4 bg-slate-200/60 rounded-lg dark:bg-slate-700/60 w-24"></div>
-        </div>
-      </div>
-    </div>
+  <div class="np-scroll">
+    <div *ngIf="skeletor" class="np-loading"><span class="np-spinner"></span> Cargando ítem…</div>
 
-    <!-- Movements table -->
-    <h2 class="text-xl font-bold bg-gradient-to-r from-slate-800 to-slate-600 bg-clip-text text-transparent dark:from-white dark:to-slate-300 mb-3">Historial de Movimientos</h2>
-    <div class="overflow-x-auto rounded-lg">
-      <div class="inline-block min-w-full align-middle">
-        <div class="overflow-hidden shadow sm:rounded-lg">
+    <ng-container *ngIf="!skeletor && item">
+      <section class="np-kpis">
+        <div class="np-kpi np-kpi--accent"><span class="np-kpi-l">Stock actual</span><span class="np-kpi-v" [class.np-kpi-v--danger]="isLowStock(item) || !(item.quantity || 0)" [class.np-kpi-v--ok]="!isLowStock(item) && (item.quantity || 0) > 0">{{ item.quantity || 0 }} <small>{{ item.unit || '' }}</small></span><span class="np-kpi-s">{{ isLowStock(item) ? 'por debajo del mínimo' : 'mín. ' + (item.stock_min || 0) + ' · máx. ' + (item.stock_max || '∞') }}</span></div>
+        <div class="np-kpi"><span class="np-kpi-l">Costo promedio</span><span class="np-kpi-v">$ {{ (item.average_cost || 0) | number:'1.0-0' }}</span><span class="np-kpi-s">calculado por entradas</span></div>
+        <div class="np-kpi"><span class="np-kpi-l">Precio unitario</span><span class="np-kpi-v">$ {{ (item.unit_price || 0) | number:'1.0-0' }}</span><span class="np-kpi-s">de referencia</span></div>
+        <div class="np-kpi"><span class="np-kpi-l">Movimientos</span><span class="np-kpi-v">{{ movementTotal }}</span><span class="np-kpi-s">{{ item.description || 'sin descripción' }}</span></div>
+      </section>
 
-          <table *ngIf="!skeletor; else skeletonMov" class="min-w-full divide-y divide-slate-200/60 dark:divide-slate-600/60">
-            <thead class="bg-slate-50/80 dark:bg-slate-700/80 ">
-              <tr>
-                <th class="p-4 text-xs font-medium text-left text-slate-500 uppercase dark:text-slate-400">Fecha</th>
-                <th class="p-4 text-xs font-medium text-left text-slate-500 uppercase dark:text-slate-400">Tipo</th>
-                <th class="p-4 text-xs font-medium text-left text-slate-500 uppercase dark:text-slate-400">Cantidad</th>
-                <th class="p-4 text-xs font-medium text-left text-slate-500 uppercase dark:text-slate-400">Saldo</th>
-                <th class="p-4 text-xs font-medium text-left text-slate-500 uppercase dark:text-slate-400">Precio Unit.</th>
-                <th class="p-4 text-xs font-medium text-left text-slate-500 uppercase dark:text-slate-400 hidden md:table-cell">Lote</th>
-                <th class="p-4 text-xs font-medium text-left text-slate-500 uppercase dark:text-slate-400 hidden md:table-cell">Vence</th>
-                <th class="p-4 text-xs font-medium text-left text-slate-500 uppercase dark:text-slate-400">Descripción</th>
-                <th class="p-4 text-xs font-medium text-left text-slate-500 uppercase dark:text-slate-400">Referencia</th>
+      <section class="np-card">
+        <div class="np-card-h"><h2>Historial de movimientos</h2><span class="np-card-meta">página <b>{{ movementPage }}</b> de <b>{{ movementLastPage }}</b></span></div>
+        <div class="np-tablewrap">
+          <table class="np-table np-table--compact">
+            <thead><tr><th>Fecha</th><th>Tipo</th><th class="np-th-right">Cantidad</th><th class="np-th-right">Saldo</th><th class="np-th-right">Precio unit.</th><th>Lote</th><th>Vence</th><th>Descripción</th><th>Referencia</th></tr></thead>
+            <tbody>
+              <tr *ngFor="let m of movements">
+                <td class="np-data np-nowrap">{{ m.created_at | date:'dd/MM/yy HH:mm' }}</td>
+                <td><span class="np-pill" [ngClass]="m.type === 'entrada' ? 'np-pill--active' : m.type === 'salida' ? 'np-pill--suspended' : 'np-pill--info'">{{ getTypeLabel(m.type) }}</span></td>
+                <td class="np-data np-td-right np-strong">{{ m.quantity }}</td>
+                <td class="np-data np-td-right">{{ m.balance_after !== undefined ? m.balance_after : '—' }}</td>
+                <td class="np-money">{{ m.unit_price ? ('$ ' + (m.unit_price | number:'1.0-0')) : '—' }}</td>
+                <td class="np-data">{{ m.batch_number || '—' }}</td>
+                <td class="np-data">{{ m.expiry_date ? (m.expiry_date | date:'dd/MM/yy') : '—' }}</td>
+                <td>{{ m.description || '—' }}</td>
+                <td class="np-data">{{ m.reference || '—' }}</td>
               </tr>
-            </thead>
-            <tbody class="bg-white divide-y divide-slate-200/60 dark:bg-slate-800/80 dark:divide-slate-700/60">
-              <tr *ngFor="let m of movements" class="hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors/50">
-                <td class="p-4 text-sm text-slate-500 whitespace-nowrap dark:text-slate-400">
-                  {{ m.created_at | date:'dd/MM/yyyy HH:mm' }}
-                </td>
-                <td class="p-4 whitespace-nowrap">
-                  <span class="px-2 py-0.5 text-xs font-medium rounded-full" [ngClass]="getTypeBadgeClass(m.type)">
-                    {{ getTypeLabel(m.type) }}
-                  </span>
-                </td>
-                <td class="p-4 text-sm font-semibold text-slate-900 whitespace-nowrap dark:text-white">
-                  {{ m.quantity }}
-                </td>
-                <td class="p-4 text-sm text-slate-500 whitespace-nowrap dark:text-slate-400">
-                  {{ m.balance_after !== undefined ? m.balance_after : '-' }}
-                </td>
-                <td class="p-4 text-sm text-slate-500 whitespace-nowrap dark:text-slate-400">
-                  {{ m.unit_price ? '$' + (m.unit_price | number:'1.0-0') : '-' }}
-                </td>
-                <td class="p-4 text-sm text-slate-500 whitespace-nowrap dark:text-slate-400 hidden md:table-cell">
-                  {{ m.batch_number || '-' }}
-                </td>
-                <td class="p-4 text-sm text-slate-500 whitespace-nowrap dark:text-slate-400 hidden md:table-cell">
-                  {{ m.expiry_date ? (m.expiry_date | date:'dd/MM/yyyy') : '-' }}
-                </td>
-                <td class="p-4 text-sm text-slate-500 dark:text-slate-400">{{ m.description || '-' }}</td>
-                <td class="p-4 text-sm text-slate-500 whitespace-nowrap dark:text-slate-400">{{ m.reference || '-' }}</td>
-              </tr>
-              <tr *ngIf="movements.length === 0">
-                <td colspan="9" class="p-6 text-sm text-center text-slate-500 dark:text-slate-400">
-                  No hay movimientos registrados para este ítem.
-                </td>
-              </tr>
+              <tr *ngIf="movements.length === 0" class="np-empty"><td colspan="9">No hay movimientos registrados para este ítem.</td></tr>
             </tbody>
           </table>
-
-          <ng-template #skeletonMov>
-            <table class="min-w-full divide-y divide-slate-200/60 dark:divide-slate-600/60">
-              <thead class="bg-slate-50/80 dark:bg-slate-700/80 ">
-                <tr>
-                  <th class="p-4 text-xs font-medium text-left text-slate-500 uppercase dark:text-slate-400" *ngFor="let h of ['Fecha','Tipo','Cantidad','Saldo','Precio','Lote','Vence','Descripción','Referencia']">{{ h }}</th>
-                </tr>
-              </thead>
-              <tbody class="bg-white divide-y divide-slate-200/60 dark:bg-slate-800/80 dark:divide-slate-700/60">
-                <tr *ngFor="let i of [1,2,3]" class="animate-pulse">
-                  <td class="p-4" *ngFor="let j of [1,2,3,4,5,6,7,8,9]"><div class="h-4 bg-slate-200/60 rounded-lg dark:bg-slate-700/60 w-24"></div></td>
-                </tr>
-              </tbody>
-            </table>
-          </ng-template>
-
         </div>
-      </div>
-    </div>
-
-    <!-- Pagination -->
-    <div *ngIf="movementLastPage > 1" class="flex items-center justify-between mt-4">
-      <span class="text-sm text-slate-700 dark:text-slate-400">
-        Página {{ movementPage }} de {{ movementLastPage }} ({{ movementTotal }} total)
-      </span>
-      <div class="inline-flex -space-x-px text-sm">
-        <button (click)="goToMovementPage(movementPage - 1)" [disabled]="movementPage === 1"
-          class="flex items-center justify-center px-3 h-8 ml-0 leading-tight text-slate-500 bg-white border border-slate-300/60 rounded-l-lg hover:bg-slate-50 hover:text-slate-700 dark:bg-slate-800/80 dark:border-slate-700/60 dark:text-slate-400 dark:hover:bg-slate-700/50 dark:hover:text-white disabled:opacity-50">
-          Anterior
-        </button>
-        <button *ngFor="let p of [].constructor(movementLastPage); let i = index" (click)="goToMovementPage(i + 1)"
-          [ngClass]="movementPage === i + 1
-            ? 'z-10 flex items-center justify-center px-3 h-8 leading-tight text-blue-600 border border-blue-300 bg-blue-50 hover:bg-blue-100 hover:text-blue-700 dark:border-slate-700/60 dark:bg-slate-700/80 dark:text-white'
-            : 'flex items-center justify-center px-3 h-8 leading-tight text-slate-500 bg-white border border-slate-300/60 hover:bg-slate-50 hover:text-slate-700 dark:bg-slate-800/80 dark:border-slate-700/60 dark:text-slate-400 dark:hover:bg-slate-700/50 dark:hover:text-white'">
-          {{ i + 1 }}
-        </button>
-        <button (click)="goToMovementPage(movementPage + 1)" [disabled]="movementPage === movementLastPage"
-          class="flex items-center justify-center px-3 h-8 leading-tight text-slate-500 bg-white border border-slate-300/60 rounded-r-lg hover:bg-slate-50 hover:text-slate-700 dark:bg-slate-800/80 dark:border-slate-700/60 dark:text-slate-400 dark:hover:bg-slate-700/50 dark:hover:text-white disabled:opacity-50">
-          Siguiente
-        </button>
-      </div>
-    </div>
-
+        <div class="np-pager np-pager--flat" *ngIf="movementLastPage > 1">
+          <span class="np-range">{{ movementTotal }} movimientos</span>
+          <div class="np-pages">
+            <button type="button" (click)="goToMovementPage(movementPage - 1)" [disabled]="movementPage === 1">‹</button>
+            <button type="button" *ngFor="let p of movementPages" (click)="goToMovementPage(p)" [attr.aria-current]="movementPage === p ? 'page' : null">{{ p }}</button>
+            <button type="button" (click)="goToMovementPage(movementPage + 1)" [disabled]="movementPage === movementLastPage">›</button>
+          </div>
+        </div>
+      </section>
+    </ng-container>
   </div>
 </div>
 
-<!-- ── Modal: Registrar Movimiento ────────────────────────────────────────── -->
-<div id="movement-modal-detail" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 ">
-  <div class="bg-white/95 dark:bg-slate-800/95 backdrop-blur-xl rounded-2xl shadow-2xl border border-slate-100 dark:border-slate-700 w-full max-w-lg mx-4 max-h-[90vh] overflow-y-auto">
-    <div class="flex items-center justify-between p-4 border-b dark:border-slate-700/60">
-      <h3 class="text-lg font-semibold text-slate-900 dark:text-white">Registrar Movimiento</h3>
-      <button (click)="closeMovementModal()" class="text-slate-400 hover:text-slate-900 dark:hover:text-white">
-        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-          <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"></path>
-        </svg>
-      </button>
-    </div>
-    <div class="p-6 space-y-4">
-      <div *ngIf="item" class="p-3 text-sm text-blue-800 bg-blue-50 rounded-lg dark:bg-blue-900 dark:text-blue-300">
-        Ítem: <strong>{{ item.name }}</strong> — Stock actual: <strong>{{ item.quantity || 0 }}</strong> {{ item.unit || '' }}
+<!-- ══ Movimiento ══════════════════════════════════════════════════════════ -->
+<div id="movement-modal-detail" class="np-overlay hidden" (click)="closeMovementModal()">
+  <div class="np-modal" role="dialog" aria-modal="true" (click)="$event.stopPropagation()">
+    <div class="np-modal-head"><div><p class="np-kicker">Inventario <b>/</b> {{ item?.name }}</p><h3>Registrar movimiento</h3></div>
+      <button type="button" class="np-icobtn" (click)="closeMovementModal()" aria-label="Cerrar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div>
+    <div class="np-modal-body">
+      <p class="np-notice np-notice--code" *ngIf="item">Stock actual <strong class="np-mono">{{ item.quantity || 0 }}</strong> {{ item.unit || '' }}</p>
+      <div class="np-form">
+        <label class="np-field"><span>Tipo <em>*</em></span><select class="np-input" [(ngModel)]="movementForm.type"><option value="entrada">Entrada</option><option value="salida">Salida</option><option value="ajuste">Ajuste</option></select></label>
+        <label class="np-field"><span>Cantidad <em>*</em></span><input type="number" class="np-input np-mono" [(ngModel)]="movementForm.quantity" min="1" /></label>
+        <label class="np-field"><span>Precio unitario</span><input type="number" class="np-input np-mono" [(ngModel)]="movementForm.unit_price" min="0" /></label>
+        <label class="np-field"><span>N° de lote</span><input type="text" class="np-input np-mono" [(ngModel)]="movementForm.batch_number" /></label>
+        <label class="np-field"><span>Vencimiento</span><input type="date" class="np-input" [(ngModel)]="movementForm.expiry_date" /></label>
+        <label class="np-field"><span>Referencia</span><input type="text" class="np-input np-mono" [(ngModel)]="movementForm.reference" /></label>
+        <label class="np-field np-field-full"><span>Descripción</span><input type="text" class="np-input" [(ngModel)]="movementForm.description" /></label>
       </div>
-      <div>
-        <label class="block mb-1 text-sm font-medium text-slate-700 dark:text-slate-300">Tipo *</label>
-        <select [(ngModel)]="movementForm.type"
-          class="px-3.5 py-2 text-sm bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl border border-slate-200/60 dark:border-slate-700/60 rounded-xl text-slate-700 dark:text-slate-300 focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-400 transition-all shadow-sm block w-full">
-          <option value="entrada">Entrada</option>
-          <option value="salida">Salida</option>
-          <option value="ajuste">Ajuste</option>
-        </select>
-      </div>
-      <div class="grid grid-cols-2 gap-4">
-        <div>
-          <label class="block mb-1 text-sm font-medium text-slate-700 dark:text-slate-300">Cantidad *</label>
-          <input type="number" [(ngModel)]="movementForm.quantity" min="1"
-            class="px-3.5 py-2 text-sm bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl border border-slate-200/60 dark:border-slate-700/60 rounded-xl text-slate-700 dark:text-slate-300 focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-400 transition-all shadow-sm block w-full"
-            placeholder="0" />
-        </div>
-        <div>
-          <label class="block mb-1 text-sm font-medium text-slate-700 dark:text-slate-300">Precio Unitario</label>
-          <input type="number" [(ngModel)]="movementForm.unit_price" min="0"
-            class="px-3.5 py-2 text-sm bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl border border-slate-200/60 dark:border-slate-700/60 rounded-xl text-slate-700 dark:text-slate-300 focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-400 transition-all shadow-sm block w-full"
-            placeholder="0" />
-        </div>
-      </div>
-      <div class="grid grid-cols-2 gap-4">
-        <div>
-          <label class="block mb-1 text-sm font-medium text-slate-700 dark:text-slate-300">N° de Lote</label>
-          <input type="text" [(ngModel)]="movementForm.batch_number"
-            class="px-3.5 py-2 text-sm bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl border border-slate-200/60 dark:border-slate-700/60 rounded-xl text-slate-700 dark:text-slate-300 focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-400 transition-all shadow-sm block w-full"
-            placeholder="Lote opcional" />
-        </div>
-        <div>
-          <label class="block mb-1 text-sm font-medium text-slate-700 dark:text-slate-300">Fecha de vencimiento</label>
-          <input type="date" [(ngModel)]="movementForm.expiry_date"
-            class="px-3.5 py-2 text-sm bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl border border-slate-200/60 dark:border-slate-700/60 rounded-xl text-slate-700 dark:text-slate-300 focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-400 transition-all shadow-sm block w-full" />
-        </div>
-      </div>
-      <div>
-        <label class="block mb-1 text-sm font-medium text-slate-700 dark:text-slate-300">Descripción</label>
-        <input type="text" [(ngModel)]="movementForm.description"
-          class="px-3.5 py-2 text-sm bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl border border-slate-200/60 dark:border-slate-700/60 rounded-xl text-slate-700 dark:text-slate-300 focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-400 transition-all shadow-sm block w-full"
-          placeholder="Descripción del movimiento" />
-      </div>
-      <div>
-        <label class="block mb-1 text-sm font-medium text-slate-700 dark:text-slate-300">Referencia</label>
-        <input type="text" [(ngModel)]="movementForm.reference"
-          class="px-3.5 py-2 text-sm bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl border border-slate-200/60 dark:border-slate-700/60 rounded-xl text-slate-700 dark:text-slate-300 focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-400 transition-all shadow-sm block w-full"
-          placeholder="N° de referencia" />
-      </div>
-    </div>
-    <div class="flex justify-end p-4 space-x-3 border-t dark:border-slate-700/60">
-      <button (click)="closeMovementModal()"
-        class="px-4 py-2 text-sm font-medium text-slate-500 bg-white border border-slate-300/60 rounded-lg hover:bg-slate-50 dark:bg-slate-800/80 dark:text-slate-400 dark:border-slate-600/60 dark:hover:bg-slate-700/50">
-        Cancelar
-      </button>
-      <button (click)="saveMovement()"
-        class="px-4 py-2 text-sm font-medium text-white bg-green-600 rounded-lg hover:bg-green-700 focus:ring-4 focus:ring-green-300">
-        Registrar
-      </button>
+      <div class="np-btnrow np-btnrow--end"><button type="button" class="np-btn np-btn--ghost" (click)="closeMovementModal()">Cancelar</button><button type="button" class="np-btn np-btn--primary" (click)="saveMovement()">Registrar</button></div>
     </div>
   </div>
 </div>

@@ -1,0 +1,19 @@
+/* ─── Traslados: sólo lo propio ─────────────────────────────────────── */
+.np-transfers { --np-inspector-w: 440px; }
+.np-row--pending .np-stripe i     { background: var(--warn); }
+.np-row--confirmed .np-stripe i   { background: var(--accent); }
+.np-row--in_progress .np-stripe i { background: var(--info); }
+.np-row--completed .np-stripe i   { background: var(--ok); }
+.np-row--cancelled .np-stripe i   { background: var(--danger); }
+.np-pill--pending     { background: var(--warn-soft); color: var(--warn); }
+.np-pill--confirmed   { background: var(--accent-soft); color: var(--accent); }
+.np-pill--in_progress { background: var(--info-soft); color: var(--info); }
+.np-pill--completed   { background: var(--ok-soft); color: var(--ok); }
+.np-pill--cancelled   { background: var(--danger-soft); color: var(--danger); }
+.np-route { display: grid; gap: 0; border-left: 2px dashed var(--line-strong); margin-left: 6px; padding-left: 14px; }
+.np-route-stop { position: relative; display: grid; gap: 2px; padding: 2px 0 14px; font-size: 12.5px; b { color: var(--text); }
+  &::before { content: ""; position: absolute; left: -21px; top: 6px; width: 8px; height: 8px; border-radius: 50%; background: var(--text-3); box-shadow: 0 0 0 2px var(--surface); }
+  &.is-new { padding-bottom: 2px; &::before { background: var(--accent); } } }
+@media (max-width: 1400px) { .np-transfers.is-open .np-col-tech { display: none; } }
+@media (max-width: 1200px) { .np-transfers.is-open .np-col-addr { display: none; } }
+@media (max-width: 760px) { .np-col-addr, .np-col-tech { display: none; } .np-table--registry { min-width: 0; } }

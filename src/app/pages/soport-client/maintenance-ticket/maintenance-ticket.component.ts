@@ -12,7 +12,8 @@ import { Subscription } from 'rxjs';
   standalone: true,
   imports: [CommonModule, ReactiveFormsModule, FormsModule],
   templateUrl: './maintenance-ticket.component.html',
-  styleUrls: ['./maintenance-ticket.component.scss']
+  styleUrls: ['./maintenance-ticket.component.scss'],
+  host: { class: 'np-console' }
 })
 export class MaintenanceTicketComponent implements OnInit {
 

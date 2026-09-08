@@ -22,10 +22,12 @@ export class DarkThemeToggleComponent implements OnInit, OnDestroy {
     )) {
       this.themeService.setTheme('dark');
       document.documentElement.classList.add('dark');
+      document.documentElement.setAttribute('data-theme', 'dark');
     } else {
       this.themeService.setTheme('light');
       if (typeof document !== 'undefined') {
         document.documentElement.classList.remove('dark');
+        document.documentElement.setAttribute('data-theme', 'light');
       }
     }
 
@@ -36,6 +38,7 @@ export class DarkThemeToggleComponent implements OnInit, OnDestroy {
           localStorage.setItem('color-theme', theme);
         }
         if (typeof document !== 'undefined') {
+          document.documentElement.setAttribute('data-theme', theme);
           if (theme === 'dark') {
             document.documentElement.classList.add('dark');
           } else {

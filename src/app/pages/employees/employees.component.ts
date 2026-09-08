@@ -10,6 +10,8 @@ type Tab = 'profile' | 'contract' | 'affiliations' | 'bank' | 'equipment' | 'dis
   standalone: true,
   imports: [CommonModule, FormsModule],
   templateUrl: './employees.component.html',
+  styleUrl: './employees.component.scss',
+  host: { class: 'np-console' },
 })
 export class EmployeesComponent implements OnInit {
 
@@ -61,6 +63,16 @@ export class EmployeesComponent implements OnInit {
   showPayModal          = false;
   isEditingPay          = false;
   deletePayId: number | null = null;
+
+  inspectorWide = false;
+  readonly tabs: { id: Tab; label: string }[] = [
+    { id: 'profile', label: 'Perfil' }, { id: 'contract', label: 'Contrato' }, { id: 'affiliations', label: 'Afiliaciones' },
+    { id: 'bank', label: 'Banco' }, { id: 'equipment', label: 'Dotaciones' }, { id: 'disciplinary', label: 'Descargos' }, { id: 'payroll', label: 'Nómina' },
+  ];
+  get activeCount(): number { return this.employees.filter(e => e.active).length; }
+  conditionPill(c: string): string {
+    return ({ nuevo: 'np-pill--info', bueno: 'np-pill--active', regular: 'np-pill--noip', malo: 'np-pill--suspended' } as Record<string, string>)[c] ?? 'np-pill--neutral';
+  }
 
   constructor(private empService: EmployeeService) {}
 

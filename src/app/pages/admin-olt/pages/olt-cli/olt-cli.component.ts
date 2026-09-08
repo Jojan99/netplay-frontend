@@ -1,5 +1,6 @@
 import { Component, ElementRef, HostListener, OnInit, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { OltNavComponent } from '../../shared/olt-nav.component';
 import { FormsModule } from '@angular/forms';
 import { OltService } from '../../../../services/olt.service';
 import { ToastService } from '../../../../services/toast.service';
@@ -13,8 +14,10 @@ interface CliEntry {
 @Component({
   selector: 'app-olt-cli',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, OltNavComponent],
   templateUrl: './olt-cli.component.html',
+  styleUrl: '../../shared/olt.scss',
+  host: { class: 'np-console' },
 })
 export class OltCliComponent implements OnInit {
 

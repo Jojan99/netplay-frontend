@@ -1,31 +1,34 @@
+/* ─── Login: sólo lo propio de esta pantalla ─────────────────────────── */
+:host { display: block; min-height: 100vh; background: var(--bg); }
+.np-login { min-height: 100vh; height: auto; display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 6fr); background: var(--bg); position: relative; }
+.np-login-theme { position: absolute; top: 14px; right: 16px; z-index: 2; }
 
+.np-login-side { background: var(--text); color: var(--bg); display: flex; align-items: flex-end; padding: 48px 44px; position: relative; overflow: hidden; }
+.np-login-side::before { content: ""; position: absolute; inset: 0; background:
+  repeating-linear-gradient(0deg, transparent 0 39px, color-mix(in srgb, var(--bg) 8%, transparent) 39px 40px),
+  repeating-linear-gradient(90deg, transparent 0 39px, color-mix(in srgb, var(--bg) 8%, transparent) 39px 40px); opacity: .6; }
+.np-login-side-inner { position: relative; max-width: 460px; display: grid; gap: 22px; }
+.np-login-side .np-kicker { color: color-mix(in srgb, var(--bg) 65%, transparent); b { color: var(--accent); } }
+.np-login-claim { font-family: var(--font-display); font-weight: 600; font-size: clamp(26px, 3vw, 38px); line-height: 1.08; letter-spacing: -0.02em; margin: 0; text-wrap: balance; }
+.np-login-facts { margin: 0; display: grid; gap: 12px; border-top: 1px solid color-mix(in srgb, var(--bg) 20%, transparent); padding-top: 18px;
+  > div { display: grid; grid-template-columns: 84px 1fr; gap: 12px; font-size: 13px; }
+  dt { font-family: var(--font-mono); font-size: 11px; text-transform: uppercase; letter-spacing: .05em; color: var(--accent); padding-top: 2px; }
+  dd { margin: 0; color: color-mix(in srgb, var(--bg) 78%, transparent); line-height: 1.45; } }
+.np-login-foot { font-size: 11px; color: color-mix(in srgb, var(--bg) 45%, transparent); margin: 0; }
 
-.overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100vw;
-    height: 100vh;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background-color: rgba(0, 0, 0, 0.5);
-  }
+.np-login-main { display: grid; place-items: center; padding: 48px 24px; }
+.np-login-card { width: min(100%, 400px); display: grid; gap: 14px; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-lg); padding: 28px 28px 24px; box-shadow: var(--shadow); }
+.np-login-title { font-size: 28px; }
+.np-login-help { margin: -6px 0 6px; color: var(--text-2); font-size: 13px; }
+.np-login-submit { height: 40px; margin-top: 6px; font-size: 13.5px; }
+.np-login-alt { margin: 6px 0 0; font-size: 12.5px; color: var(--text-3); text-align: center; a { color: var(--accent); font-weight: 700; text-decoration: none; } a:hover { text-decoration: underline; } }
 
-  .main-container {
-    height: 100vh;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-  
-  .spinner {
-    position: relative;
-  }
-  
-  .blur-background {
-    filter: blur(5px); /* Desenfoca el contenido */
-  }
-  
-  /* Puedes agregar una clase al body o al contenido que deseas difuminar */
-  
+@media (max-width: 900px) {
+  .np-login { grid-template-columns: 1fr; }
+  .np-login-side { display: none; }
+  .np-login-main { padding: 72px 16px 32px; align-items: start; }
+}
+.np-register-card { width: min(100%, 560px); }
+.np-register .np-sect { margin-top: 6px; }
+.np-confirm { grid-template-columns: 1fr; }
+.np-confirm-card { justify-items: start; .np-confirm-icon { margin-bottom: 4px; } }

@@ -1,0 +1,26 @@
+/* ─── Tickets: sólo lo propio ───────────────────────────────────────── */
+.np-tickets { --np-inspector-w: 460px; }
+.np-row--s1 .np-stripe i { background: var(--warn); }
+.np-row--s2 .np-stripe i { background: var(--info); }
+.np-row--s3 .np-stripe i { background: var(--ok); }
+.np-pill--s1 { background: var(--warn-soft); color: var(--warn); }
+.np-pill--s2 { background: var(--info-soft); color: var(--info); }
+.np-pill--s3 { background: var(--ok-soft); color: var(--ok); }
+.np-live { display: inline-flex; align-items: center; gap: 6px; color: var(--text-3); font-family: var(--font-mono); font-size: 11px;
+  i { width: 7px; height: 7px; border-radius: 50%; background: var(--ok); box-shadow: 0 0 0 3px var(--ok-soft); animation: np-pulse 2s infinite; } }
+@keyframes np-pulse { 50% { opacity: .4; } }
+.np-stats-panel { margin-bottom: 12px; flex-shrink: 0; }
+.np-switchrow { gap: 8px; flex-wrap: wrap; }
+.np-notes { display: grid; gap: 8px; }
+.np-note-item { border: 1px solid var(--line); border-left-width: 3px; border-radius: var(--radius); padding: 8px 10px; background: var(--surface); display: grid; gap: 6px; font-size: 12.5px;
+  header { display: flex; justify-content: space-between; gap: 10px; b { color: var(--text); } }
+  p { margin: 0; color: var(--text-2); white-space: pre-wrap; }
+  audio { width: 100%; height: 32px; }
+  &.is-close { border-left-color: var(--ok); }
+  &.is-reopen { border-left-color: var(--warn); } }
+.np-note-photos { display: flex; gap: 6px; flex-wrap: wrap; img { width: 64px; height: 64px; object-fit: cover; border-radius: 4px; border: 1px solid var(--line); } }
+.np-note-tools { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
+.np-rec { width: 8px; height: 8px; border-radius: 50%; background: currentColor; margin-right: 6px; animation: np-pulse 1s infinite; }
+.np-audio-preview { display: grid; gap: 6px; audio { width: 100%; height: 32px; } }
+@media (max-width: 1400px) { .np-tickets.is-open .np-col-tech { display: none; } }
+@media (max-width: 760px) { .np-col-tech { display: none; } .np-table--registry { min-width: 0; } }

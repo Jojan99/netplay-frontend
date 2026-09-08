@@ -1,298 +1,172 @@
-<div class="flex flex-col h-full min-h-0" style="background: #1e293b; border-left: 1px solid #334155; width: 300px; font-family: 'Inter', sans-serif;">
-
-  <!-- HEADER -->
-  <div class="flex items-center justify-between px-4 py-3 border-b shrink-0"
-       style="border-color: #334155;">
-    <h3 class="text-sm font-bold" style="color: #e2e8f0;">Información</h3>
-    <button class="w-7 h-7 rounded-full flex items-center justify-center transition"
-            style="background: #334155; color: #94a3b8;"
-            onmouseenter="this.style.background='#475569'"
-            onmouseleave="this.style.background='#334155'"
-            (click)="closePanel.emit()">
-      <i class="fa-solid fa-xmark text-xs"></i>
-    </button>
-  </div>
-
-  <!-- CLIENTE INFO -->
-  <div class="px-4 py-3 border-b shrink-0" style="border-color: #334155;">
-    <div class="flex items-center gap-3">
-      <div class="w-11 h-11 rounded-full flex items-center justify-center font-bold text-base flex-shrink-0"
-           style="background: linear-gradient(135deg,#1e3a5f,#0f2f1f); color: #10b981; border: 1.5px solid #334155;">
-        {{ (editingName ? editNameValue : customerName).charAt(0).toUpperCase() || '?' }}
-      </div>
-      <div class="flex-1 min-w-0">
-        <!-- Nombre editable -->
-        <div *ngIf="!editingName" class="flex items-center gap-1.5">
-          <div class="font-semibold text-sm truncate" style="color: #e2e8f0;">{{ customerName || 'Cliente' }}</div>
-          <button class="opacity-50 hover:opacity-100 transition flex-shrink-0"
-                  style="color: #94a3b8;"
-                  title="Editar nombre"
-                  (click)="startEditName()">
-            <i class="fa-solid fa-pen text-xs"></i>
-          </button>
-        </div>
-        <div *ngIf="editingName" class="flex items-center gap-1">
-          <input type="text"
-                 [(ngModel)]="editNameValue"
-                 (keydown.enter)="saveName()"
-                 (keydown.escape)="cancelEditName()"
-                 class="flex-1 min-w-0 px-2 py-1 rounded-lg text-xs outline-none"
-                 style="background: #0f172a; border: 1px solid #10b981; color: #e2e8f0;" />
-          <button class="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0"
-                  style="background: #10b981; color: #000;"
-                  [disabled]="savingName"
-                  (click)="saveName()">
-            <i class="fa-solid fa-check text-xs"></i>
-          </button>
-          <button class="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0"
-                  style="background: #334155; color: #94a3b8;"
-                  (click)="cancelEditName()">
-            <i class="fa-solid fa-xmark text-xs"></i>
-          </button>
-        </div>
-        <div class="text-xs mt-0.5" style="color: #64748b;">{{ customerPhone }}</div>
-      </div>
+<div class="wa-info">
+  <div class="wa-info-head"><button type="button" class="wa-ibtn" (click)="closePanel.emit()" aria-label="Cerrar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M6 6l12 12M18 6 6 18"/></svg></button><span>Info. del contacto</span></div>
+  <div class="wa-info-body">
+    <div class="wa-info-card">
+      <span class="wa-avatar wa-avatar--xl">{{ (editingName ? editNameValue : customerName).charAt(0).toUpperCase() || '?' }}</span>
+      <div class="wa-info-name" *ngIf="!editingName"><b>{{ customerName || 'Cliente' }}</b><button type="button" class="wa-ibtn wa-ibtn--sm" (click)="startEditName()" title="Editar nombre"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 20h4L18 10l-4-4L4 16v4zM13 7l4 4"/></svg></button></div>
+      <div class="wa-info-edit" *ngIf="editingName"><input type="text" class="np-input" [(ngModel)]="editNameValue" (keydown.enter)="saveName()" (keydown.escape)="cancelEditName()" /><button type="button" class="np-btn np-btn--primary np-btn--sm" [disabled]="savingName" (click)="saveName()">Guardar</button><button type="button" class="np-btn np-btn--ghost np-btn--sm" (click)="cancelEditName()">Cancelar</button></div>
+      <span class="wa-info-phone np-mono">{{ customerPhone }}</span>
     </div>
-  </div>
 
-  <!-- TABS -->
-  <div class="flex border-b shrink-0" style="border-color: #334155;">
-    <button *ngFor="let tab of [
-      {id:'info', icon:'fa-circle-info', label:'Info'},
-      {id:'notes', icon:'fa-note-sticky', label:'Notas'},
-      {id:'labels', icon:'fa-tags', label:'Etiquetas'}
-    ]"
-      class="flex-1 flex flex-col items-center py-2 text-xs font-medium gap-1 transition"
-      [style.color]="activeTab === tab.id ? '#10b981' : '#64748b'"
-      [style.borderBottom]="activeTab === tab.id ? '2px solid #10b981' : '2px solid transparent'"
-      (click)="activeTab = $any(tab.id); tab.id === 'info' && loadServiceStatus()">
-      <i class="fa-solid text-sm" [class]="tab.icon"></i>
-      {{ tab.label }}
-    </button>
-  </div>
+    <div class="wa-info-tabs" role="tablist">
+      <button type="button" role="tab" *ngFor="let tab of [{id:'info',label:'Cliente'},{id:'notes',label:'Notas'},{id:'labels',label:'Etiquetas'},{id:'history',label:'Historial'}]" [attr.aria-selected]="activeTab === tab.id" (click)="activeTab = $any(tab.id); tab.id === 'history' && loadHistory()">{{ tab.label }}<span class="np-c" *ngIf="tab.id === 'notes' && notes.length">{{ notes.length }}</span><span class="np-c" *ngIf="tab.id === 'labels' && conversationLabels.length">{{ conversationLabels.length }}</span><span class="np-c" *ngIf="tab.id === 'history' && summary?.previous_conversations">{{ summary.previous_conversations }}</span></button>
+    </div>
+    <p class="wa-info-flash" *ngIf="actionMsg">{{ actionMsg }}</p>
 
-  <!-- SCROLL AREA -->
-  <div class="flex-1 min-h-0 overflow-y-auto">
-
-    <!-- ── TAB INFO ──────────────────────────────────────────────── -->
-    <div *ngIf="activeTab === 'info'" class="px-4 py-3 flex flex-col gap-4">
-
-      <!-- PRIORIDAD -->
-      <div>
-        <div class="text-xs font-semibold mb-2 uppercase tracking-wide" style="color: #64748b;">Prioridad</div>
-        <div class="flex gap-2">
-          <button *ngFor="let p of ['low','normal','high']"
-                  class="flex-1 py-1.5 rounded-xl text-xs font-semibold transition"
-                  [style.background]="currentPriority === p ? priorityColor(p) + '25' : '#0f172a'"
-                  [style.color]="currentPriority === p ? priorityColor(p) : '#64748b'"
-                  [style.border]="'1px solid ' + (currentPriority === p ? priorityColor(p) + '60' : '#334155')"
-                  (click)="setPriority($any(p))">
-            {{ priorityLabel(p) }}
-          </button>
+    <ng-container *ngIf="activeTab === 'info'">
+      <section class="wa-info-sec">
+        <p class="wa-info-k">Prioridad</p>
+        <div class="np-seg"><button type="button" *ngFor="let p of ['low','normal','high']" [attr.aria-pressed]="currentPriority === p" (click)="setPriority($any(p))">{{ p === 'low' ? 'Baja' : p === 'normal' ? 'Normal' : 'Alta' }}</button></div>
+      </section>
+      <section class="wa-info-sec">
+        <p class="wa-info-k">Cliente en Netplay</p>
+        <div *ngIf="summaryLoading" class="np-loading np-loading--inline"><span class="np-spinner"></span> Buscando cliente…</div>
+        <p class="np-muted" *ngIf="!summaryLoading && summary && !summary.linked">Este número no coincide con ningún cliente registrado.</p>
+        <ng-container *ngIf="summary?.linked">
+          <div class="wa-cust">
+            <div class="wa-cust-top"><b>{{ summary.name }}</b><span class="np-pill" [ngClass]="(summary.service_status || '').toUpperCase().startsWith('ACT') ? 'np-pill--active' : 'np-pill--suspended'">{{ summary.service_status }}</span></div>
+            <dl class="np-dl">
+              <dt>Plan</dt><dd>{{ summary.plan }} <small class="np-fine" *ngIf="summary.plan_price">· {{ money(summary.plan_price) }}/mes</small></dd>
+              <ng-container *ngIf="summary.dni"><dt>Cédula</dt><dd class="np-mono">{{ summary.dni }}</dd></ng-container>
+              <ng-container *ngIf="summary.ip"><dt>IP</dt><dd class="np-mono">{{ summary.ip }}</dd></ng-container>
+              <ng-container *ngIf="summary.address"><dt>Dirección</dt><dd>{{ summary.address }}</dd></ng-container>
+            </dl>
+            <div class="np-btnrow"><button type="button" class="np-btn np-btn--ghost np-btn--sm" [disabled]="savingTechNote" (click)="saveTechNote()">{{ savingTechNote ? 'Guardando…' : 'Guardar estado como nota' }}</button><button type="button" class="np-btn np-btn--ghost np-btn--sm" (click)="showFullCard = true">Ver ficha completa</button></div>
+          </div>
+        </ng-container>
+      </section>
+      <section class="wa-info-sec" *ngIf="summary?.linked">
+        <p class="wa-info-k">Cartera</p>
+        <div class="wa-debt" [class.is-ok]="!summary.debt?.total" [class.is-due]="summary.debt?.total">
+          <b>{{ summary.debt?.total ? money(summary.debt.total) : 'Al día' }}</b>
+          <small *ngIf="summary.debt?.total">{{ summary.debt.count }} {{ summary.debt.count === 1 ? 'factura pendiente' : 'facturas pendientes' }} · vence {{ summary.debt.oldest_due }}</small>
+          <small *ngIf="!summary.debt?.total">Sin facturas pendientes</small>
         </div>
-      </div>
-
-      <!-- ESTADO DE SERVICIO -->
-      <div>
-        <div class="text-xs font-semibold mb-2 uppercase tracking-wide" style="color: #64748b;">Estado del Servicio</div>
-        <div *ngIf="loadingService" class="flex items-center gap-2 text-xs" style="color: #64748b;">
-          <div class="w-3 h-3 border-2 border-slate-400/60 border-t-indigo-500 rounded-full animate-spin"></div>
-          Cargando…
+        <div class="np-btnrow" *ngIf="summary.debt?.total">
+          <button type="button" class="np-btn np-btn--primary np-btn--sm" *ngIf="summary.pay_link_available" [disabled]="creatingPayLink" (click)="sendPayLink()">{{ creatingPayLink ? 'Generando…' : 'Enviar link de pago' }}</button>
+          <button type="button" class="np-btn np-btn--ghost np-btn--sm" *ngIf="summary.last_unpaid" [disabled]="sendingInvoiceId" (click)="sendInvoice(summary.last_unpaid)">{{ sendingInvoiceId === summary.last_unpaid.id ? 'Enviando…' : 'Enviar última factura' }}</button>
         </div>
-        <div *ngIf="!loadingService && !serviceStatus && serviceLoaded"
-             class="text-xs" style="color: #64748b;">Sin datos de servicio.</div>
-        <div *ngIf="serviceStatus" class="rounded-xl p-3" style="background: #0f172a; border: 1px solid #334155;">
-          <div class="flex items-center gap-2 mb-2">
-            <span class="w-2 h-2 rounded-full"
-                  [style.background]="serviceStatus.service_status === 'Activo' ? '#10b981' : '#ef4444'"></span>
-            <span class="text-xs font-semibold"
-                  [style.color]="serviceStatus.service_status === 'Activo' ? '#10b981' : '#ef4444'">
-              {{ serviceStatus.service_status }}
+        <p class="np-fine" *ngIf="summary.debt?.total && !summary.pay_link_available">La empresa no tiene pasarela de pago activa: sólo se puede enviar la factura.</p>
+        <div class="wa-invoices" *ngIf="summary.invoices?.length">
+          <div class="wa-inv" *ngFor="let inv of (showAllInvoices ? summary.invoices : summary.invoices.slice(0, 3))" [class.is-paid]="inv.paid">
+            <span class="wa-inv-main"><b class="np-mono">{{ inv.number }}</b><small>{{ inv.paid ? 'Pagada' : 'Vence ' + inv.due_date }} · {{ money(inv.total) }}</small></span>
+            <span class="wa-inv-acts">
+              <button type="button" class="wa-ibtn wa-ibtn--sm" [disabled]="sendingInvoiceId" (click)="sendInvoice(inv)" title="Enviar PDF por WhatsApp"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 20.5 22 12 3 3.5V10l13 2-13 2z"/></svg></button>
+              <button type="button" class="wa-ibtn wa-ibtn--sm" (click)="copyInvoiceLink(inv)" title="Copiar link de la factura"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/></svg></button>
+              <button type="button" class="wa-ibtn wa-ibtn--sm" *ngIf="!inv.paid && summary.pay_link_available" [disabled]="creatingPayLink" (click)="sendPayLink(inv)" title="Link de pago de esta factura"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="6" width="18" height="12" rx="2"/><path d="M3 10h18M7 15h3"/></svg></button>
             </span>
           </div>
-          <div class="grid grid-cols-2 gap-1">
-            <div *ngIf="serviceStatus.plan" class="text-xs">
-              <span style="color: #64748b;">Plan:</span>
-              <span class="ml-1 font-medium" style="color: #e2e8f0;">{{ serviceStatus.plan }}</span>
-            </div>
-            <div *ngIf="serviceStatus.ip" class="text-xs">
-              <span style="color: #64748b;">IP:</span>
-              <span class="ml-1 font-medium" style="color: #e2e8f0;">{{ serviceStatus.ip }}</span>
-            </div>
-            <div *ngIf="serviceStatus.address" class="text-xs col-span-2">
-              <span style="color: #64748b;">Dirección:</span>
-              <span class="ml-1 font-medium" style="color: #e2e8f0;">{{ serviceStatus.address }}</span>
-            </div>
-          </div>
+          <button type="button" class="np-link" *ngIf="summary.invoices.length > 3" (click)="showAllInvoices = !showAllInvoices">{{ showAllInvoices ? 'Ver menos' : 'Ver las últimas ' + summary.invoices.length }}</button>
         </div>
-      </div>
+      </section>
+      <section class="wa-info-sec" *ngIf="summary?.open_ticket">
+        <p class="wa-info-k">Ticket abierto</p>
+        <div class="wa-ticket-open"><b>#{{ summary.open_ticket.id }} · {{ summary.open_ticket.status }}</b><small>{{ summary.open_ticket.service }} · {{ summary.open_ticket.created_at | date:'dd/MM HH:mm' }}</small><p>{{ summary.open_ticket.observation }}</p></div>
+      </section>
+      <section class="wa-info-sec">
+        <p class="wa-info-k">Soporte</p>
+        <button type="button" class="np-btn np-btn--primary" *ngIf="!showTicketForm" (click)="openTicketForm()">Crear ticket desde el chat</button>
+        <div class="np-form np-form--single" *ngIf="showTicketForm">
+          <label class="np-field"><span>Tipo de servicio <em>*</em></span><select class="np-input" [(ngModel)]="ticketServiceId"><option [value]="0" disabled>Seleccionar…</option><option *ngFor="let s of ticketServices" [value]="s.id">{{ s.name }}</option></select></label>
+          <label class="np-field"><span>Prioridad <em>*</em></span><select class="np-input" [(ngModel)]="ticketPriorityId"><option [value]="0" disabled>Seleccionar…</option><option *ngFor="let p of ticketPriorities" [value]="p.id">{{ p.name }}</option></select></label>
+          <label class="np-field"><span>Técnico <em>*</em></span><select class="np-input" [(ngModel)]="ticketTechId"><option [value]="0" disabled>Seleccionar…</option><option *ngFor="let t of ticketTechs" [value]="t.id">{{ t.names }} {{ t.lastname }}</option></select></label>
+          <label class="np-field"><span>Observación <em>*</em></span><textarea class="np-input np-textarea" rows="3" [(ngModel)]="ticketObs" placeholder="Describí el problema…"></textarea></label>
+          <label class="np-field"><span>Dirección</span><input type="text" class="np-input" [(ngModel)]="ticketAddress" placeholder="Opcional" /></label>
+          <label class="np-field"><span>Cédula</span><input type="text" class="np-input np-mono" [(ngModel)]="ticketCedula" placeholder="Opcional" /></label>
+          <div class="np-btnrow np-btnrow--end"><button type="button" class="np-btn np-btn--ghost np-btn--sm" (click)="showTicketForm = false">Cancelar</button><button type="button" class="np-btn np-btn--primary np-btn--sm" [disabled]="savingTicket || !ticketFormValid" (click)="submitTicket()">{{ savingTicket ? 'Creando…' : 'Crear ticket' }}</button></div>
+        </div>
+      </section>
+    </ng-container>
 
-      <!-- CREAR TICKET -->
-      <div>
-        <div class="text-xs font-semibold mb-2 uppercase tracking-wide" style="color: #64748b;">Soporte</div>
-        <button *ngIf="!showTicketForm"
-                class="w-full py-2 rounded-xl text-xs font-semibold transition flex items-center justify-center gap-2"
-                style="background: #1e3a5f; color: #60a5fa; border: 1px solid #1e3a5f;"
-                onmouseenter="this.style.background='#1d4ed820'"
-                onmouseleave="this.style.background='#1e3a5f'"
-                (click)="openTicketForm()">
-          <i class="fa-solid fa-ticket"></i> Crear Ticket
+    <ng-container *ngIf="activeTab === 'notes'">
+      <section class="wa-info-sec">
+        <div class="wa-note-input">
+          <textarea #noteTa class="np-input np-textarea" rows="3" [(ngModel)]="newNoteText" (input)="onNoteInput($event)" (keydown)="onNoteKeydown($event, noteTa)" placeholder="Nota interna, sólo la ve el equipo… Escribí @ para mencionar a un agente"></textarea>
+          <div class="wa-mentions" *ngIf="mentionQuery !== null && mentionMatches.length"><button type="button" *ngFor="let a of mentionMatches; let i = index" [class.is-active]="i === mentionIndex" (mousedown)="$event.preventDefault()" (click)="applyMention(a, noteTa)">{{ "@" + agentName(a) }}</button></div>
+        </div>
+        <div class="np-btnrow np-btnrow--end"><button type="button" class="np-btn np-btn--primary np-btn--sm" [disabled]="savingNote || !newNoteText.trim()" (click)="addNote()">{{ savingNote ? 'Guardando…' : 'Agregar nota' }}</button></div>
+      </section>
+      <section class="wa-info-sec">
+        <p class="np-muted" *ngIf="notes.length === 0">Sin notas todavía.</p>
+        <article class="wa-note-card" *ngFor="let note of notes"><header><b>{{ note.agent_name }}</b><span class="np-data">{{ note.created_at | date:'dd/MM HH:mm' }}</span><button type="button" class="wa-ibtn wa-ibtn--sm" (click)="deleteNote(note.id)" title="Eliminar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 6l12 12M18 6 6 18"/></svg></button></header><p><ng-container *ngFor="let part of noteParts(note.content)"><mark class="wa-mention" *ngIf="part.mention">{{ part.text }}</mark><ng-container *ngIf="!part.mention">{{ part.text }}</ng-container></ng-container></p></article>
+      </section>
+    </ng-container>
+
+    <ng-container *ngIf="activeTab === 'labels'">
+      <section class="wa-info-sec">
+        <p class="wa-info-k">Etiquetas del chat</p>
+        <p class="np-muted" *ngIf="conversationLabels.length === 0">Sin etiquetas.</p>
+        <div class="np-tags"><button type="button" class="wa-label" *ngFor="let label of conversationLabels" [style.--lc]="label.color" (click)="toggleLabel(label.id)">{{ label.name }} ×</button></div>
+      </section>
+      <section class="wa-info-sec">
+        <p class="wa-info-k">Agregar</p>
+        <div class="wa-newlabel"><input type="color" [(ngModel)]="newLabelColor" title="Color" /><input type="text" class="np-input" [(ngModel)]="newLabelName" placeholder="Nueva etiqueta (cobro, soporte, ventas…)" maxlength="80" (keydown.enter)="createLabel()" /><button type="button" class="np-btn np-btn--primary np-btn--sm" [disabled]="savingLabel || !newLabelName.trim()" (click)="createLabel()">Crear</button></div>
+        <p class="np-muted" *ngIf="allLabels.length === 0">No hay etiquetas creadas.</p>
+        <div class="np-checklist"><button type="button" class="np-check np-check--btn" *ngFor="let label of allLabels" (click)="toggleLabel(label.id)"><i class="wa-label-dot" [style.background]="label.color"></i><span [class.np-strong]="hasLabel(label.id)">{{ label.name }}</span><span class="np-spacer"></span><span class="np-fine" *ngIf="hasLabel(label.id)">✓</span></button></div>
+      </section>
+    </ng-container>
+
+    <ng-container *ngIf="activeTab === 'history'">
+      <section class="wa-info-sec">
+        <p class="wa-info-k">Conversaciones anteriores</p>
+        <p class="np-muted" *ngIf="historyLoaded && history.length === 0">Es la primera conversación con este cliente.</p>
+        <button type="button" class="wa-hist" *ngFor="let h of history" (click)="openConversation.emit(h.id)">
+          <span class="wa-hist-top"><b>#{{ h.id }}</b><span class="np-pill" [ngClass]="h.status === 'closed' ? 'np-pill--neutral' : 'np-pill--active'">{{ statusLabel(h.status) }}</span><span class="np-spacer"></span><span class="np-data">{{ h.created_at | date:'dd/MM/yy' }}</span></span>
+          <span class="wa-hist-sub">{{ h.messages }} mensajes<ng-container *ngIf="h.agent"> · {{ h.agent }}</ng-container><ng-container *ngIf="h.provider === 'meta'"> · Meta</ng-container></span>
+          <span class="wa-hist-last" *ngIf="h.last_message">{{ h.last_message }}</span>
         </button>
+      </section>
+    </ng-container>
+  </div>
+</div>
 
-        <div *ngIf="showTicketForm" class="flex flex-col gap-2">
-          <!-- Tipo de servicio -->
-          <div>
-            <label class="text-xs mb-1 block" style="color: #64748b;">Tipo de servicio *</label>
-            <select [(ngModel)]="ticketServiceId"
-                    class="w-full px-3 py-2 rounded-xl text-xs outline-none"
-                    style="background: #0f172a; border: 1px solid #334155; color: #e2e8f0;">
-              <option [value]="0" disabled>Seleccionar…</option>
-              <option *ngFor="let s of ticketServices" [value]="s.id">{{ s.name }}</option>
-            </select>
-          </div>
-
-          <!-- Prioridad -->
-          <div>
-            <label class="text-xs mb-1 block" style="color: #64748b;">Prioridad *</label>
-            <select [(ngModel)]="ticketPriorityId"
-                    class="w-full px-3 py-2 rounded-xl text-xs outline-none"
-                    style="background: #0f172a; border: 1px solid #334155; color: #e2e8f0;">
-              <option [value]="0" disabled>Seleccionar…</option>
-              <option *ngFor="let p of ticketPriorities" [value]="p.id">{{ p.name }}</option>
-            </select>
-          </div>
-
-          <!-- Técnico -->
-          <div>
-            <label class="text-xs mb-1 block" style="color: #64748b;">Técnico *</label>
-            <select [(ngModel)]="ticketTechId"
-                    class="w-full px-3 py-2 rounded-xl text-xs outline-none"
-                    style="background: #0f172a; border: 1px solid #334155; color: #e2e8f0;">
-              <option [value]="0" disabled>Seleccionar…</option>
-              <option *ngFor="let t of ticketTechs" [value]="t.id">{{ t.names }} {{ t.lastname }}</option>
-            </select>
-          </div>
-
-          <!-- Observación -->
-          <div>
-            <label class="text-xs mb-1 block" style="color: #64748b;">Observación *</label>
-            <textarea placeholder="Describe el problema…"
-                      [(ngModel)]="ticketObs"
-                      rows="3"
-                      class="w-full px-3 py-2 rounded-xl text-xs outline-none resize-none"
-                      style="background: #0f172a; border: 1px solid #334155; color: #e2e8f0;"></textarea>
-          </div>
-
-          <!-- Dirección (opcional) -->
-          <input type="text" placeholder="Dirección (opcional)"
-                 [(ngModel)]="ticketAddress"
-                 class="w-full px-3 py-2 rounded-xl text-xs outline-none"
-                 style="background: #0f172a; border: 1px solid #334155; color: #e2e8f0;" />
-
-          <!-- Cédula (opcional) -->
-          <input type="text" placeholder="Cédula (opcional)"
-                 [(ngModel)]="ticketCedula"
-                 class="w-full px-3 py-2 rounded-xl text-xs outline-none"
-                 style="background: #0f172a; border: 1px solid #334155; color: #e2e8f0;" />
-
-          <div class="flex gap-2">
-            <button class="flex-1 py-1.5 rounded-xl text-xs font-medium transition"
-                    style="background: #334155; color: #94a3b8;"
-                    (click)="showTicketForm = false">Cancelar</button>
-            <button class="flex-1 py-1.5 rounded-xl text-xs font-semibold transition"
-                    style="background: #10b981; color: #000;"
-                    [disabled]="savingTicket || !ticketFormValid"
-                    (click)="submitTicket()">
-              {{ savingTicket ? '…' : 'Crear' }}
-            </button>
-          </div>
-        </div>
-      </div>
-
+<!-- Ficha completa del cliente -->
+<div class="np-overlay" *ngIf="showFullCard && summary?.linked" (click)="showFullCard = false">
+  <div class="np-modal np-modal--editor wa-card-modal" role="dialog" aria-modal="true" (click)="$event.stopPropagation()">
+    <div class="np-modal-head">
+      <div><p class="np-kicker">Cliente <b>/</b> Ficha</p><h3>{{ summary.name }}</h3><p class="np-fine">Cédula <span class="np-mono">{{ summary.dni || '—' }}</span> · Usuario #{{ summary.user_id }}</p></div>
+      <div class="wa-card-head-acts"><span class="np-pill" [ngClass]="(summary.service_status || '').toUpperCase().startsWith('ACT') ? 'np-pill--active' : 'np-pill--suspended'">{{ summary.service_status }}</span><button type="button" class="np-icobtn" (click)="showFullCard = false" aria-label="Cerrar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div>
     </div>
-
-    <!-- ── TAB NOTAS ──────────────────────────────────────────────── -->
-    <div *ngIf="activeTab === 'notes'" class="flex flex-col h-full">
-
-      <!-- Input nueva nota -->
-      <div class="px-4 py-3 border-b" style="border-color: #334155;">
-        <textarea [(ngModel)]="newNoteText"
-                  placeholder="Escribe una nota interna…"
-                  rows="3"
-                  class="w-full px-3 py-2 rounded-xl text-xs outline-none resize-none"
-                  style="background: #0f172a; border: 1px solid #334155; color: #e2e8f0;"></textarea>
-        <button class="mt-2 w-full py-2 rounded-xl text-xs font-semibold transition"
-                style="background: #10b981; color: #000;"
-                [disabled]="savingNote || !newNoteText.trim()"
-                (click)="addNote()">
-          {{ savingNote ? 'Guardando…' : '+ Agregar nota' }}
-        </button>
+    <div class="np-modal-body np-modal-body--scroll">
+      <div class="wa-card-grid">
+        <section class="wa-card-sec">
+          <p class="np-sect">Datos de contacto</p>
+          <dl class="np-dl">
+            <dt>Teléfono</dt><dd class="np-mono">{{ summary.phone }}</dd>
+            <dt>Email</dt><dd>{{ summary.email || '—' }}</dd>
+            <dt>Dirección</dt><dd>{{ summary.address || '—' }}</dd>
+            <dt>Chats previos</dt><dd>{{ summary.previous_conversations || 0 }}</dd>
+          </dl>
+        </section>
+        <section class="wa-card-sec">
+          <p class="np-sect">Servicio</p>
+          <dl class="np-dl">
+            <dt>Plan</dt><dd>{{ summary.plan }}</dd>
+            <dt>Mensualidad</dt><dd class="np-mono">{{ money(summary.plan_price) }}</dd>
+            <dt>IP</dt><dd class="np-mono">{{ summary.ip || '—' }}</dd>
+            <dt>MAC</dt><dd class="np-mono">{{ summary.mac || '—' }}</dd>
+            <dt>Estado</dt><dd>{{ summary.service_status }}</dd>
+          </dl>
+        </section>
+        <section class="wa-card-sec">
+          <p class="np-sect">Cartera</p>
+          <div class="wa-debt" [class.is-ok]="!summary.debt?.total" [class.is-due]="summary.debt?.total"><b>{{ summary.debt?.total ? money(summary.debt.total) : 'Al día' }}</b><small *ngIf="summary.debt?.total">{{ summary.debt.count }} pendiente(s) · vence {{ summary.debt.oldest_due }}</small><small *ngIf="!summary.debt?.total">Sin facturas pendientes</small></div>
+          <div class="np-btnrow" *ngIf="summary.debt?.total"><button type="button" class="np-btn np-btn--primary np-btn--sm" *ngIf="summary.pay_link_available" [disabled]="creatingPayLink" (click)="sendPayLink()">Enviar link de pago</button><button type="button" class="np-btn np-btn--ghost np-btn--sm" *ngIf="summary.last_unpaid" [disabled]="sendingInvoiceId" (click)="sendInvoice(summary.last_unpaid)">Enviar última factura</button></div>
+        </section>
+        <section class="wa-card-sec" *ngIf="summary.open_ticket">
+          <p class="np-sect">Ticket abierto</p>
+          <div class="wa-ticket-open"><b>#{{ summary.open_ticket.id }} · {{ summary.open_ticket.status }}</b><small>{{ summary.open_ticket.service }} · {{ summary.open_ticket.created_at | date:'dd/MM HH:mm' }}</small><p>{{ summary.open_ticket.observation }}</p></div>
+        </section>
       </div>
-
-      <!-- Lista de notas -->
-      <div class="flex-1 overflow-y-auto px-4 py-3 flex flex-col gap-3">
-        <div *ngIf="notes.length === 0" class="text-xs text-center py-8" style="color: #475569;">
-          Sin notas aún
-        </div>
-
-        <div *ngFor="let note of notes"
-             class="rounded-xl p-3 relative group"
-             style="background: #2d2600; border: 1px solid #f59e0b20;">
-          <div class="text-xs font-semibold mb-1" style="color: #fbbf24;">
-            {{ note.agent_name }}
-            <span class="font-normal ml-1 opacity-60">{{ note.created_at | date:'dd/MM HH:mm' }}</span>
-          </div>
-          <div class="text-xs leading-relaxed" style="color: #e2e8f0; white-space: pre-wrap;">{{ note.content }}</div>
-          <button class="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition
-                         w-6 h-6 rounded-full flex items-center justify-center"
-                  style="background: #2f0f0f; color: #ef4444;"
-                  (click)="deleteNote(note.id)">
-            <i class="fa-solid fa-trash text-xs"></i>
-          </button>
-        </div>
-      </div>
+      <section class="wa-card-sec" *ngIf="summary.invoices?.length">
+        <p class="np-sect">Últimas facturas</p>
+        <div class="np-tablewrap"><table class="np-table wa-card-table"><thead><tr><th>Número</th><th>Vence</th><th>Total</th><th>Saldo</th><th>Estado</th><th></th></tr></thead><tbody>
+          <tr *ngFor="let inv of summary.invoices"><td class="np-mono">{{ inv.number }}</td><td>{{ inv.due_date }}</td><td class="np-mono">{{ money(inv.total) }}</td><td class="np-mono">{{ inv.paid ? '—' : money(inv.outstanding) }}</td><td><span class="np-pill" [ngClass]="inv.paid ? 'np-pill--active' : 'np-pill--noip'">{{ inv.paid ? 'Pagada' : 'Pendiente' }}</span></td>
+            <td class="wa-inv-acts"><button type="button" class="wa-ibtn wa-ibtn--sm" [disabled]="sendingInvoiceId" (click)="sendInvoice(inv)" title="Enviar PDF"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 20.5 22 12 3 3.5V10l13 2-13 2z"/></svg></button><a class="wa-ibtn wa-ibtn--sm" [href]="inv.link" target="_blank" rel="noopener" title="Ver PDF"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 4h6v6M20 4l-9 9M19 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1h5"/></svg></a><button type="button" class="wa-ibtn wa-ibtn--sm" *ngIf="!inv.paid && summary.pay_link_available" [disabled]="creatingPayLink" (click)="sendPayLink(inv)" title="Link de pago"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="6" width="18" height="12" rx="2"/><path d="M3 10h18M7 15h3"/></svg></button></td></tr>
+        </tbody></table></div>
+      </section>
+      <p class="wa-info-flash" *ngIf="actionMsg">{{ actionMsg }}</p>
     </div>
-
-    <!-- ── TAB ETIQUETAS ──────────────────────────────────────────── -->
-    <div *ngIf="activeTab === 'labels'" class="px-4 py-3">
-
-      <!-- Etiquetas de la conversación -->
-      <div class="mb-4">
-        <div class="text-xs font-semibold mb-2 uppercase tracking-wide" style="color: #64748b;">Etiquetas activas</div>
-        <div *ngIf="conversationLabels.length === 0" class="text-xs" style="color: #475569;">Sin etiquetas</div>
-        <div class="flex flex-wrap gap-1.5">
-          <span *ngFor="let label of conversationLabels"
-                class="flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium cursor-pointer"
-                [style.background]="label.color + '20'"
-                [style.color]="label.color"
-                [style.border]="'1px solid ' + label.color + '40'"
-                (click)="toggleLabel(label.id)">
-            {{ label.name }}
-            <i class="fa-solid fa-xmark text-xs opacity-60"></i>
-          </span>
-        </div>
-      </div>
-
-      <!-- Todas las etiquetas -->
-      <div>
-        <div class="text-xs font-semibold mb-2 uppercase tracking-wide" style="color: #64748b;">Agregar etiqueta</div>
-        <div class="flex flex-col gap-1.5">
-          <button *ngFor="let label of allLabels"
-                  class="flex items-center gap-2 px-3 py-2 rounded-xl text-xs transition text-left"
-                  [style.background]="hasLabel(label.id) ? label.color + '15' : '#0f172a'"
-                  [style.border]="'1px solid ' + (hasLabel(label.id) ? label.color + '40' : '#334155')"
-                  (click)="toggleLabel(label.id)">
-            <span class="w-3 h-3 rounded-full flex-shrink-0" [style.background]="label.color"></span>
-            <span [style.color]="hasLabel(label.id) ? label.color : '#e2e8f0'">{{ label.name }}</span>
-            <i *ngIf="hasLabel(label.id)" class="fa-solid fa-check ml-auto text-xs" [style.color]="label.color"></i>
-          </button>
-          <div *ngIf="allLabels.length === 0" class="text-xs" style="color: #475569;">
-            No hay etiquetas creadas. Créalas desde el panel de admin.
-          </div>
-        </div>
-      </div>
-
-    </div>
-
+    <div class="np-modal-foot"><a class="np-btn np-btn--ghost" [routerLink]="['/dashboard/usuario']" [queryParams]="{ q: summary.dni || summary.phone }" target="_blank">Abrir en el módulo Clientes</a><button type="button" class="np-btn np-btn--primary" (click)="showFullCard = false">Cerrar</button></div>
   </div>
 </div>

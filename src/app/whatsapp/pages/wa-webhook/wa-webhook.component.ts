@@ -7,7 +7,9 @@ import { WhatsappService } from '../../services/whatsapp.service';
   selector: 'app-wa-webhook',
   standalone: true,
   imports: [CommonModule, FormsModule],
-  templateUrl: './wa-webhook.component.html'
+  templateUrl: './wa-webhook.component.html',
+  styleUrl: './wa-webhook.component.scss',
+  host: { class: 'np-console' },
 })
 export class WaWebhookComponent implements OnInit {
 

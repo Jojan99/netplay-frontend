@@ -12,6 +12,7 @@ import { ToastService } from '../../services/toast.service';
   imports: [CommonModule, FormsModule],
   templateUrl: './send-logs.component.html',
   styleUrl: './send-logs.component.scss',
+  host: { class: 'np-console' },
 })
 export class SendLogsComponent implements OnInit, OnDestroy {
   private destroy$ = new Subject<void>();

@@ -1,433 +1,64 @@
-<div class="min-h-screen bg-slate-50 dark:bg-gray-900 p-4 md:p-6">
-
-<div class="mx-auto max-w-7xl space-y-6">
-
-<!-- HEADER -->
-
-<div class="rounded-3xl bg-gradient-to-r from-slate-900 via-slate-800 to-blue-900 p-6 text-white shadow-xl">
-
-<div class="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
-
-<div class="flex items-start gap-4">
-
-<div class="flex h-14 w-14 items-center justify-center rounded-2xl bg-white/10">
-
-<svg class="h-7 w-7" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-
-<path stroke-linecap="round" stroke-linejoin="round" d="M3 10a15.3 15.3 0 0 1 18 0"></path>
-
-<path stroke-linecap="round" stroke-linejoin="round" d="M6 13.5a10.5 10.5 0 0 1 12 0"></path>
-
-<path stroke-linecap="round" stroke-linejoin="round" d="M9.5 17a5.5 5.5 0 0 1 5 0"></path>
-
-<circle cx="12" cy="20" r="1"></circle>
-
-</svg>
-
-</div>
-
-<div>
-
-<p class="text-sm uppercase tracking-widest text-blue-200">
-
-Netplay · Gestión ONT
-
-</p>
-
-<h1 class="mt-1 text-2xl font-bold">
-
-Panel del router del cliente
-
-</h1>
-
-<p class="mt-2 text-sm text-slate-300">
-
-Gestión remota vía TR-069
-
-</p>
-
-</div>
-
-</div>
-
-<div class="flex gap-3">
-
-<span class="px-4 py-2 rounded-full text-sm font-semibold"
-
-[ngClass]="ont.status
-
-? 'bg-emerald-400/20 text-emerald-300'
-
-: 'bg-red-400/20 text-red-300'">
-
-{{ ont.status ? 'Online' : 'Offline' }}
-
-</span>
-
-<button
-
-(click)="refreshOnt()"
-
-class="bg-white/10 hover:bg-white/20 px-4 py-2 rounded-xl">
-
-Sincronizar
-
-</button>
-
-<button
-
-(click)="rebootOnt()"
-
-class="bg-red-500 hover:bg-red-600 px-4 py-2 rounded-xl">
-
-Reiniciar
-
-</button>
-
-</div>
-
-</div>
-
-</div>
-
-<!-- RESUMEN -->
-
-<div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
-
-<div class="card">
-
-<p class="label">IP WAN</p>
-
-<p class="value">{{ ont.wanIp }}</p>
-
-</div>
-
-<div class="card">
-
-<p class="label">Uptime</p>
-
-<p class="value">{{ ont.uptime }}</p>
-
-</div>
-
-<div class="card">
-
-<p class="label">Último Inform</p>
-
-<p class="value">{{ ont.lastInform }}</p>
-
-</div>
-
-<div class="card">
-
-<p class="label">Tráfico total</p>
-
-<p class="value">{{ ont.traffic }} GB</p>
-
-</div>
-
-</div>
-
-<!-- GRID -->
-
-<div class="grid grid-cols-1 xl:grid-cols-12 gap-6">
-
-<!-- IZQUIERDA -->
-
-<div class="xl:col-span-8 space-y-6">
-
-<!-- INFO ONT -->
-
-<div class="box">
-
-<h2 class="title">
-
-Información del equipo
-
-</h2>
-
-<div class="grid md:grid-cols-2 xl:grid-cols-3 gap-4">
-
-<div class="info">Serial {{ ont.serial }}</div>
-
-<div class="info">Modelo {{ ont.model }}</div>
-
-<div class="info">Fabricante {{ ont.manufacturer }}</div>
-
-<div class="info">Firmware {{ ont.firmware }}</div>
-
-<div class="info">CPU {{ ont.cpu }}</div>
-
-<div class="info">Memoria {{ ont.memory }}</div>
-
-</div>
-
-</div>
-
-<!-- WIFI -->
-
-<div class="grid lg:grid-cols-2 gap-6">
-
-<div class="box">
-
-<h3 class="title">
-
-WiFi 2.4 GHz
-
-</h3>
-
-<div class="info">
-
-SSID
-
-{{ ont.wifi24.ssid }}
-
-</div>
-
-<div class="info">
-
-Contraseña
-
-{{ showPass24 ? ont.wifi24.password : '********' }}
-
-</div>
-
-<div class="flex gap-2 mt-4">
-
-<button
-
-(click)="toggle24()"
-
-class="btn">
-
-Mostrar
-
-</button>
-
-<button
-
-(click)="editWifi('2.4')"
-
-class="btn-blue">
-
-Cambiar
-
-</button>
-
-</div>
-
-</div>
-
-<div class="box">
-
-<h3 class="title">
-
-WiFi 5 GHz
-
-</h3>
-
-<div class="info">
-
-SSID
-
-{{ ont.wifi5.ssid }}
-
-</div>
-
-<div class="info">
-
-Contraseña
-
-{{ showPass5 ? ont.wifi5.password : '********' }}
-
-</div>
-
-<div class="flex gap-2 mt-4">
-
-<button
-
-(click)="toggle5()"
-
-class="btn">
-
-Mostrar
-
-</button>
-
-<button
-
-(click)="editWifi('5')"
-
-class="btn-blue">
-
-Cambiar
-
-</button>
-
-</div>
-
-</div>
-
-</div>
-
-<!-- DISPOSITIVOS -->
-
-<div class="box">
-
-<h2 class="title">
-
-Dispositivos conectados
-
-</h2>
-
-<table class="w-full text-sm">
-
-<thead>
-
-<tr>
-
-<th>Nombre</th>
-
-<th>IP</th>
-
-<th>MAC</th>
-
-<th>Estado</th>
-
-</tr>
-
-</thead>
-
-<tbody>
-
-<tr *ngFor="let device of devices">
-
-<td>{{ device.name }}</td>
-
-<td>{{ device.ip }}</td>
-
-<td>{{ device.mac }}</td>
-
-<td>
-
-<span
-
-class="px-2 py-1 rounded"
-
-[ngClass]="device.status=='Conectado'
-
-? 'bg-green-100 text-green-700'
-
-: 'bg-gray-200 text-gray-700'">
-
-{{ device.status }}
-
-</span>
-
-</td>
-
-</tr>
-
-</tbody>
-
-</table>
-
-</div>
-
-</div>
-
-<!-- DERECHA -->
-
-<div class="xl:col-span-4 space-y-6">
-
-<!-- POTENCIA -->
-
-<div class="box">
-
-<h2 class="title">
-
-Señal óptica
-
-</h2>
-
-<div class="info">
-
-RX Power
-
-<span class="text-green-600">
-
-{{ ont.rxPower }}
-
-</span>
-
-</div>
-
-<div class="info">
-
-TX Power
-
-<span class="text-blue-600">
-
-{{ ont.txPower }}
-
-</span>
-
-</div>
-
-<div class="info">
-
-Temperatura
-
-<span class="text-orange-600">
-
-{{ ont.temperature }}
-
-</span>
-
-</div>
-
-</div>
-
-<!-- ESTADO -->
-
-<div class="box">
-
-<h2 class="title">
-
-Resumen técnico
-
-</h2>
-
-<div class="flex justify-between">
-
-<span>ONT</span>
-
-<span>{{ ont.status ? 'Operativa' : 'Offline' }}</span>
-
-</div>
-
-<div class="flex justify-between">
-
-<span>Dispositivos</span>
-
-<span>{{ getConnectedCount() }}</span>
-
-</div>
-
-<div class="flex justify-between">
-
-<span>Tráfico</span>
-
-<span>{{ ont.traffic }} GB</span>
-
-</div>
-
-</div>
-
-</div>
-
-</div>
-
-</div>
-
+<div class="np-page np-ontdev">
+  <header class="np-head">
+    <div>
+      <p class="np-kicker">Red <b>/</b> Router del cliente <b>/</b> TR-069</p>
+      <h1 class="np-title">{{ ont.model || 'Router del cliente' }}</h1>
+      <div class="np-ribbon">
+        <span><i class="np-dot" [style.background]="ont.status ? 'var(--ok)' : 'var(--danger)'"></i>{{ ont.status ? 'Online' : 'Offline' }}</span>
+        <span class="np-mono">SN {{ ont.serial || '—' }}</span>
+        <span>WAN <span class="np-mono">{{ ont.wanIp || '—' }}</span></span>
+        <span>uptime <span class="np-mono">{{ ont.uptime || '—' }}</span></span>
+        <span class="np-fine">último inform {{ ont.lastInform || '—' }}</span>
+      </div>
+    </div>
+    <div class="np-actions">
+      <button type="button" class="np-btn np-btn--ghost" (click)="refreshOnt()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 12a8 8 0 1 1-2.3-5.7M20 4v5h-5"/></svg>Sincronizar</button>
+      <button type="button" class="np-btn np-btn--danger" (click)="rebootOnt()">Reiniciar</button>
+    </div>
+  </header>
+
+  <div class="np-scroll">
+    <section class="np-kpis">
+      <div class="np-kpi"><span class="np-kpi-l">Rx power</span><span class="np-kpi-v" [class.np-kpi-v--danger]="rxBad()">{{ ont.rxPower }}</span><span class="np-kpi-s">dBm recibido en la ONT</span></div>
+      <div class="np-kpi"><span class="np-kpi-l">Tx power</span><span class="np-kpi-v">{{ ont.txPower }}</span><span class="np-kpi-s">dBm transmitido</span></div>
+      <div class="np-kpi"><span class="np-kpi-l">Temperatura</span><span class="np-kpi-v">{{ ont.temperature }}</span><span class="np-kpi-s">°C del equipo</span></div>
+      <div class="np-kpi np-kpi--accent"><span class="np-kpi-l">Tráfico</span><span class="np-kpi-v">{{ ont.traffic }} <small>GB</small></span><span class="np-kpi-s">{{ getConnectedCount() }} dispositivos conectados</span></div>
+    </section>
+
+    <div class="np-grid-3">
+      <div class="np-form-col">
+        <section class="np-card">
+          <div class="np-card-h"><h2>Dispositivos conectados</h2><span class="np-card-meta"><b>{{ getConnectedCount() }}</b> activos de {{ devices.length }}</span></div>
+          <div class="np-tablewrap"><table class="np-table np-table--compact">
+            <thead><tr><th>Nombre</th><th>IP</th><th>MAC</th><th>Estado</th></tr></thead>
+            <tbody>
+              <tr *ngFor="let device of devices"><td class="np-strong">{{ device.name }}</td><td class="np-data">{{ device.ip }}</td><td class="np-data">{{ device.mac }}</td><td><span class="np-pill" [ngClass]="device.status === 'Conectado' ? 'np-pill--active' : 'np-pill--neutral'">{{ device.status }}</span></td></tr>
+              <tr *ngIf="devices.length === 0" class="np-empty"><td colspan="4">Sin dispositivos reportados.</td></tr>
+            </tbody>
+          </table></div>
+        </section>
+        <section class="np-card">
+          <div class="np-card-h"><h2>Información del equipo</h2></div>
+          <dl class="np-dl np-dl--2col">
+            <dt>Serial</dt><dd class="np-mono">{{ ont.serial || '—' }}</dd>
+            <dt>Modelo</dt><dd>{{ ont.model || '—' }}</dd>
+            <dt>Fabricante</dt><dd>{{ ont.manufacturer || '—' }}</dd>
+            <dt>Firmware</dt><dd class="np-mono">{{ ont.firmware || '—' }}</dd>
+            <dt>CPU</dt><dd class="np-mono">{{ ont.cpu || '—' }}</dd>
+            <dt>Memoria</dt><dd class="np-mono">{{ ont.memory || '—' }}</dd>
+          </dl>
+        </section>
+      </div>
+      <div class="np-form-col">
+        <section class="np-card">
+          <div class="np-card-h"><h2>WiFi 2.4 GHz</h2><button type="button" class="np-link" (click)="editWifi('2.4')">Cambiar</button></div>
+          <dl class="np-dl"><dt>SSID</dt><dd class="np-strong">{{ ont.wifi24.ssid || '—' }}</dd><dt>Contraseña</dt><dd class="np-mono">{{ showPass24 ? ont.wifi24.password : '••••••••' }} <button type="button" class="np-link" (click)="toggle24()">{{ showPass24 ? 'ocultar' : 'ver' }}</button></dd></dl>
+        </section>
+        <section class="np-card">
+          <div class="np-card-h"><h2>WiFi 5 GHz</h2><button type="button" class="np-link" (click)="editWifi('5')">Cambiar</button></div>
+          <dl class="np-dl"><dt>SSID</dt><dd class="np-strong">{{ ont.wifi5.ssid || '—' }}</dd><dt>Contraseña</dt><dd class="np-mono">{{ showPass5 ? ont.wifi5.password : '••••••••' }} <button type="button" class="np-link" (click)="toggle5()">{{ showPass5 ? 'ocultar' : 'ver' }}</button></dd></dl>
+        </section>
+      </div>
+    </div>
+  </div>
 </div>

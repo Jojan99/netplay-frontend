@@ -1,1 +1,12 @@
-/* Styles handled via Tailwind utility classes */
+/* ─── Nuevo ticket: sólo lo propio ──────────────────────────────────── */
+.np-ticket-grid { align-items: start; grid-template-columns: minmax(0, 1fr) minmax(0, 1.3fr); }
+.np-step { display: inline-flex; align-items: center; gap: 7px; color: var(--text-3);
+  i { display: inline-grid; place-items: center; width: 20px; height: 20px; border-radius: 50%; border: 1px solid var(--line-strong); font-family: var(--font-mono); font-style: normal; font-size: 11px; } }
+.np-step--active { color: var(--text); i { border-color: var(--accent); color: var(--accent); } }
+.np-step--done { color: var(--ok); i { background: var(--ok); border-color: var(--ok); color: #fff; } }
+.np-client-card { display: flex; align-items: flex-start; gap: 12px; padding: 12px; border: 1px solid var(--accent-line); background: var(--accent-soft); border-radius: var(--radius); }
+.np-field--search { position: relative; }
+.np-checklist--float { position: absolute; top: 100%; left: 0; right: 0; z-index: 5; background: var(--surface); box-shadow: var(--shadow-lg); margin-top: 4px; }
+.np-card.is-disabled { opacity: .55; }
+.np-input.is-invalid { border-color: var(--danger) !important; }
+@media (max-width: 1000px) { .np-ticket-grid { grid-template-columns: 1fr; } }

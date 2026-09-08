@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, HostListener, OnDestroy, OnInit } from '@angular/core';
+import { Component, ElementRef, HostListener, OnDestroy, OnInit, ViewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
 import { Subject } from 'rxjs';
@@ -13,6 +13,7 @@ import { ToastService }   from '../../services/toast.service';
   imports: [CommonModule, FormsModule],
   templateUrl: './finance.component.html',
   styleUrl: './finance.component.scss',
+  host: { class: 'np-console' },
 })
 export class FinanceComponent implements OnInit, OnDestroy {
   private destroy$ = new Subject<void>();
@@ -27,6 +28,27 @@ export class FinanceComponent implements OnInit, OnDestroy {
   perPage = 15;
   perPageOptions = [15, 25, 50, 100];
   searchTerm = '';
+  summary: { m1: number; m2: number; m3: number; total_debt: number } | null = null;
+  @ViewChild('searchInput') searchInput?: ElementRef<HTMLInputElement>;
+
+  // Mora: severidad por meses pendientes (1 → ámbar, 2 → naranja, 3+ → rojo)
+  readonly moraSlots = [1, 2, 3, 4, 5, 6];
+  severity(months: number): 1 | 2 | 3 { return months >= 3 ? 3 : months === 2 ? 2 : 1; }
+  moraLabel(months: number): string { return months === 1 ? '1 mes' : `${months} meses`; }
+  initialOf(name: string | null | undefined): string { return (name ?? 'C').trim().charAt(0).toUpperCase() || 'C'; }
+
+  // Ficha lateral
+  inspectorWide = false;
+  toggleInspectorWide(): void { this.inspectorWide = !this.inspectorWide; }
+  isSelected(c: any): boolean { return this.drawerOpen && this.selectedClient?.cab_id === c.cab_id; }
+  get anyModalOpen(): boolean {
+    return this.payModal || this.abonarModal || this.editModal || this.commitmentModal || this.liquidateModal || this.sendModal || this.sendBulkModal || this.sendHistoryModal;
+  }
+  get lastPayment(): any | null { return this.paymentLogs.length ? this.paymentLogs[0] : null; }
+  get drawerPendingTotal(): number {
+    return this.invoices.filter(i => i.paid !== 1).reduce((s, i) => s + Math.max(0, this.invoiceBalance(i)), 0);
+  }
+  get pastCommitments(): any[] { return this.commitments.filter(c => c.status !== 'pending'); }
 
   // Selected client drawer
   drawerOpen = false;
@@ -163,14 +185,20 @@ export class FinanceComponent implements OnInit, OnDestroy {
     this.destroy$.complete();
   }
 
-  @HostListener('document:keydown.escape')
-  onEsc(): void {
-    this.closeDrawer();
-    this.payModal        = false;
-    this.abonarModal     = false;
-    this.editModal       = false;
-    this.commitmentModal = false;
-    this.liquidateModal  = false;
+  @HostListener('document:keydown', ['$event'])
+  onKeydown(ev: KeyboardEvent): void {
+    const target = ev.target as HTMLElement | null;
+    const typing = !!target && ['INPUT', 'SELECT', 'TEXTAREA'].includes(target.tagName);
+    if (ev.key === 'Escape') {
+      if (this.anyModalOpen) {
+        this.payModal = this.abonarModal = this.editModal = this.commitmentModal = this.liquidateModal = false;
+        this.closeSendModal(); this.closeSendBulkModal(); this.closeSendHistoryModal();
+        return;
+      }
+      if (this.drawerOpen) this.closeDrawer();
+      return;
+    }
+    if (ev.key === '/' && !typing) { ev.preventDefault(); this.searchInput?.nativeElement.focus(); }
   }
 
   // ── Data ────────────────────────────────────────────────────────────────
@@ -185,6 +213,7 @@ export class FinanceComponent implements OnInit, OnDestroy {
           this.clients    = d.items || [];
           this.totalClients = d.total || 0;
           this.lastPage   = d.last_page || 1;
+          this.summary    = d.summary ?? null;
           this.loading    = false;
         },
         error: () => { this.loading = false; },
@@ -225,6 +254,7 @@ export class FinanceComponent implements OnInit, OnDestroy {
   // ── Client drawer ────────────────────────────────────────────────────────
 
   openDrawer(client: any): void {
+    if (!this.drawerOpen) this.inspectorWide = false;
     this.selectedClient = client;
     this.drawerOpen     = true;
     this.drawerTab      = 'pending';

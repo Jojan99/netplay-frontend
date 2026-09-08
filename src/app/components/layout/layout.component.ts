@@ -9,7 +9,8 @@ import {
   PLATFORM_ID
 } from '@angular/core';
 import { isPlatformBrowser, CommonModule } from '@angular/common';
-import { RouterModule, RouterOutlet, Router } from '@angular/router';
+import { RouterModule, RouterOutlet, Router, NavigationEnd } from '@angular/router';
+import { filter } from 'rxjs/operators';
 
 import { FooterComponent }           from '../footer/footer.component';
 import { SidebarComponent }          from '../../common/sidebar.component';
@@ -51,6 +52,23 @@ export class LayoutComponent implements OnInit {
   username    = '';
   roleName    = '';
   filteredComponents: RouteProps[] = [];
+  currentGroup = '';
+  currentSection = '';
+  now = new Date();
+  private clockTimer: any;
+
+  private updateSection(url: string): void {
+    const clean = url.split('?')[0];
+    let group = '', section = '';
+    for (const item of this.filteredComponents) {
+      if (item.group && item.children) {
+        const child = item.children.find(c => c.href && clean.startsWith(c.href));
+        if (child) { group = item.title; section = child.title; break; }
+      } else if (item.href && clean.startsWith(item.href)) { group = 'Operación'; section = item.title; break; }
+    }
+    this.currentGroup = group;
+    this.currentSection = section;
+  }
 
   constructor(
     readonly sidebarService: SidebarService,
@@ -62,6 +80,8 @@ export class LayoutComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
+    this.router.events.pipe(filter(e => e instanceof NavigationEnd)).subscribe((e: any) => this.updateSection(e.urlAfterRedirects || e.url));
+    if (isPlatformBrowser(this.platformId)) this.clockTimer = setInterval(() => { this.now = new Date(); }, 30000);
     if (!isPlatformBrowser(this.platformId)) return;
 
     if (window.innerWidth < 768) {
@@ -126,6 +146,7 @@ export class LayoutComponent implements OnInit {
       .filter((item): item is RouteProps => item !== null);
 
     this.filteredComponents = filtered;
+    this.updateSection(this.router.url);
 
     // Auto-expandir el grupo de la ruta activa
     const currentUrl = this.router.url;

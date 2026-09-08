@@ -1,480 +1,146 @@
-<div class="max-w-8xl mx-auto mt-4 sm:mt-8 bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl rounded-2xl border border-slate-200/60 dark:border-slate-700/60 shadow-sm hover:shadow-md transition-all duration-300 p-3 sm:p-6">
-  <div class="w-full mb-1">
-
-    <!-- Breadcrumb -->
-    <div class="mb-4">
-      <nav class="flex mb-5" aria-label="Breadcrumb">
-        <ol class="inline-flex items-center space-x-1 text-sm font-medium md:space-x-2">
-          <li class="inline-flex items-center">
-            <a class="inline-flex items-center text-slate-700 hover:text-primary-600 dark:text-slate-300 dark:hover:text-white">
-              <svg class="w-5 h-5 mr-2.5" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
-                <path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z"></path>
-              </svg>
-              Home
-            </a>
-          </li>
-          <li>
-            <div class="flex items-center">
-              <svg class="w-6 h-6 text-slate-400" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
-                <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"></path>
-              </svg>
-              <span class="ml-1 text-slate-400 md:ml-2 dark:text-slate-500" aria-current="page">Inventario</span>
-            </div>
-          </li>
-          <li>
-            <div class="flex items-center">
-              <svg class="w-6 h-6 text-slate-400" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
-                <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"></path>
-              </svg>
-              <span class="ml-1 text-slate-400 md:ml-2 dark:text-slate-500" aria-current="page">Ítems</span>
-            </div>
-          </li>
-        </ol>
-      </nav>
-      <h1 class="text-2xl font-bold bg-gradient-to-r from-slate-800 to-slate-600 bg-clip-text text-transparent dark:from-white dark:to-slate-300">INVENTARIO DE ÍTEMS</h1>
-    </div>
-
-    <!-- Filters & Toolbar -->
-    <div class="flex flex-wrap gap-2 items-center justify-between mb-4">
-      <div class="flex flex-wrap items-center gap-2">
-        <input type="text" [(ngModel)]="searchQuery" (keyup.enter)="applyFilters()"
-          placeholder="Buscar nombre, SKU, código..."
-          class="px-3.5 py-2 text-sm bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl border border-slate-200/60 dark:border-slate-700/60 rounded-xl text-slate-700 dark:text-slate-300 focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-400 transition-all shadow-sm block w-48 sm:w-64" />
-        <select [(ngModel)]="selectedCategoryId" (change)="applyFilters()"
-          class="px-3.5 py-2 text-sm bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl border border-slate-200/60 dark:border-slate-700/60 rounded-xl text-slate-700 dark:text-slate-300 focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-400 transition-all shadow-sm block">
-          <option value="">Todas las categorías</option>
-          <option *ngFor="let cat of categories" [value]="cat.id">{{ cat.name }}</option>
-        </select>
-        <select [(ngModel)]="selectedLocation" (change)="applyFilters()"
-          class="px-3.5 py-2 text-sm bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl border border-slate-200/60 dark:border-slate-700/60 rounded-xl text-slate-700 dark:text-slate-300 focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-400 transition-all shadow-sm block">
-          <option value="">Todas las ubicaciones</option>
-          <option *ngFor="let loc of locations" [value]="loc">{{ loc }}</option>
-        </select>
-        <label class="flex items-center space-x-2 text-sm text-slate-700 dark:text-slate-300 cursor-pointer select-none">
-          <input type="checkbox" [(ngModel)]="showLowStockOnly" (change)="applyFilters()" class="w-4 h-4 text-blue-600 bg-slate-100/80 border-slate-300/60 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 dark:bg-slate-700/80 dark:border-slate-600/60">
-          <span>Stock bajo</span>
-        </label>
-      </div>
-      <div class="flex flex-wrap items-center gap-2">
-        <button (click)="openMovementModalFromList()"
-          class="flex items-center px-3 py-2 text-sm font-medium text-white bg-green-600 rounded-lg hover:bg-green-700 focus:ring-4 focus:ring-green-300 dark:bg-green-600 dark:hover:bg-green-700">
-          <svg class="w-4 h-4 mr-1.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M7.5 21 3 16.5m0 0L7.5 12M3 16.5h13.5m0-13.5L21 7.5m0 0L16.5 3M21 7.5H7.5" />
-          </svg>
-          Movimiento
-        </button>
-        <a [routerLink]="['../inventory/categories']"
-          class="flex items-center px-3 py-2 text-sm font-medium text-slate-500 bg-white border border-slate-300/60 rounded-lg hover:bg-slate-50 dark:bg-slate-800/80 dark:border-slate-700/60 dark:text-slate-400 dark:hover:bg-slate-700/50">
-          <svg class="w-4 h-4 mr-1.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M9.568 3H5.25A2.25 2.25 0 0 0 3 5.25v4.318c0 .597.237 1.17.659 1.591l9.581 9.581c.699.699 1.78.872 2.607.33a18.095 18.095 0 0 0 5.223-5.223c.542-.827.369-1.908-.33-2.607L11.16 3.66A2.25 2.25 0 0 0 9.568 3Z" />
-          </svg>
-          Categorías
-        </a>
-        <button (click)="openCreateModal()"
-          class="flex items-center px-3 py-2 text-sm font-medium bg-gradient-to-br from-indigo-500 to-violet-600 text-white shadow-md shadow-indigo-500/20 hover:shadow-lg transition-all rounded-xl">
-          <svg class="w-4 h-4 mr-1.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
-          </svg>
-          Agregar
-        </button>
+<div class="np-page np-inv">
+  <header class="np-head">
+    <div>
+      <p class="np-kicker">Operación <b>/</b> Inventario</p>
+      <h1 class="np-title">Inventario</h1>
+      <div class="np-ribbon">
+        <span><span class="np-n">{{ totalItems | number }}</span>ítems</span>
+        <span><i class="np-dot" style="background:var(--danger)"></i><span class="np-n">{{ lowStockCount }}</span>con stock bajo en esta página</span>
+        <span><span class="np-n">{{ categories.length }}</span>categorías</span>
       </div>
     </div>
+    <div class="np-actions">
+      <a [routerLink]="['../inventory/categories']" class="np-btn np-btn--ghost">Categorías</a>
+      <button type="button" class="np-btn np-btn--ghost" (click)="openMovementModalFromList()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 12h16m0 0-5-5m5 5-5 5"/></svg>Movimiento</button>
+      <button type="button" class="np-btn np-btn--primary" (click)="openCreateModal()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M12 5v14M5 12h14"/></svg>Agregar ítem</button>
+    </div>
+  </header>
 
-    <!-- Table -->
-    <div class="flex flex-col mt-6">
-      <div class="overflow-x-auto rounded-lg">
-        <div class="inline-block min-w-full align-middle">
-          <div class="overflow-hidden shadow sm:rounded-lg">
+  <div class="np-toolbar">
+    <label class="np-search">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg>
+      <input type="search" [(ngModel)]="searchQuery" (keyup.enter)="applyFilters()" placeholder="Nombre, SKU o código… (Enter)" aria-label="Buscar ítem" />
+    </label>
+    <label class="np-pagesize">Categoría
+      <select [(ngModel)]="selectedCategoryId" (change)="applyFilters()"><option value="">Todas</option><option *ngFor="let cat of categories" [value]="cat.id">{{ cat.name }}</option></select>
+    </label>
+    <label class="np-pagesize">Ubicación
+      <select [(ngModel)]="selectedLocation" (change)="applyFilters()"><option value="">Todas</option><option *ngFor="let loc of locations" [value]="loc">{{ loc }}</option></select>
+    </label>
+    <button type="button" class="np-chip" [attr.aria-pressed]="showLowStockOnly" (click)="showLowStockOnly = !showLowStockOnly; applyFilters()">Sólo stock bajo</button>
+  </div>
 
-            <table *ngIf="!skeletor; else skeletonTable" class="min-w-[640px] w-full divide-y divide-slate-200/60 dark:divide-slate-600/60">
-              <thead class="bg-slate-50/80 dark:bg-slate-700/80 ">
-                <tr>
-                  <th class="p-3 text-xs font-bold text-left text-slate-500 uppercase tracking-wider dark:text-slate-400">Nombre</th>
-                  <th class="p-3 text-xs font-bold text-left text-slate-500 uppercase tracking-wider dark:text-slate-400 hidden sm:table-cell">SKU / Código</th>
-                  <th class="p-3 text-xs font-bold text-left text-slate-500 uppercase tracking-wider dark:text-slate-400 hidden md:table-cell">Categoría</th>
-                  <th class="p-3 text-xs font-bold text-left text-slate-500 uppercase tracking-wider dark:text-slate-400">Stock</th>
-                  <th class="p-3 text-xs font-bold text-left text-slate-500 uppercase tracking-wider dark:text-slate-400 hidden lg:table-cell">Costo Prom.</th>
-                  <th class="p-3 text-xs font-bold text-left text-slate-500 uppercase tracking-wider dark:text-slate-400 hidden sm:table-cell">Ubicación</th>
-                  <th class="p-3 text-xs font-bold text-left text-slate-500 uppercase tracking-wider dark:text-slate-400">Acciones</th>
-                </tr>
-              </thead>
-              <tbody class="bg-white divide-y divide-slate-200/60 dark:bg-slate-800/80 dark:divide-slate-700/60">
-                <tr *ngFor="let item of filteredItems" class="hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors">
-                  <td class="p-3 text-sm font-medium text-slate-900 dark:text-white max-w-[140px] truncate">
-                    {{ item.name }}
-                    <span *ngIf="isLowStock(item)" class="ml-1 inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300">
-                      Bajo
-                    </span>
-                  </td>
-                  <td class="p-3 text-sm text-slate-500 dark:text-slate-400 hidden sm:table-cell">
-                    {{ item.sku || item.code || '-' }}
-                  </td>
-                  <td class="p-3 text-sm text-slate-500 dark:text-slate-400 hidden md:table-cell">
-                    {{ item.category?.name || getCategoryName(item.category_id) }}
-                  </td>
-                  <td class="p-3 text-sm font-semibold whitespace-nowrap"
-                    [ngClass]="isLowStock(item) ? 'text-red-600 dark:text-red-400' : ((item.quantity || 0) > 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400')">
-                    {{ item.quantity || 0 }} {{ item.unit || '' }}
-                  </td>
-                  <td class="p-3 text-sm text-slate-500 whitespace-nowrap dark:text-slate-400 hidden lg:table-cell">
-                    ${{ (item.average_cost || 0) | number:'1.0-0' }}
-                  </td>
-                  <td class="p-3 text-sm text-slate-500 dark:text-slate-400 hidden sm:table-cell">{{ item.location || '-' }}</td>
-                  <td class="p-3">
-                    <div class="flex flex-wrap items-center gap-1">
-                      <button (click)="viewDetail(item)"
-                        class="px-2 py-1 text-xs font-medium bg-gradient-to-br from-indigo-500 to-violet-600 text-white shadow-md shadow-indigo-500/20 hover:shadow-lg transition-all rounded-xl">
-                        Ver
-                      </button>
-                      <button (click)="openEditModal(item)"
-                        class="px-2 py-1 text-xs font-medium text-white bg-yellow-500 rounded hover:bg-yellow-600">
-                        Editar
-                      </button>
-                      <button (click)="openMovementModal(item)"
-                        class="px-2 py-1 text-xs font-medium text-white bg-green-600 rounded hover:bg-green-700">
-                        Mov.
-                      </button>
-                      <button (click)="deleteItem(item)"
-                        class="px-2 py-1 text-xs font-medium text-white bg-red-600 rounded hover:bg-red-700">
-                        ✕
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-                <tr *ngIf="filteredItems.length === 0">
-                  <td colspan="7" class="p-6 text-sm text-center text-slate-500 dark:text-slate-400">
-                    No hay ítems registrados.
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-
-            <ng-template #skeletonTable>
-              <table class="min-w-full divide-y divide-slate-200/60 dark:divide-slate-600/60">
-                <thead class="bg-slate-50/80 dark:bg-slate-700/80 ">
-                  <tr>
-                    <th class="p-4 text-xs font-bold text-left text-slate-500 uppercase tracking-wider dark:text-slate-400">Nombre</th>
-                    <th class="p-4 text-xs font-bold text-left text-slate-500 uppercase tracking-wider dark:text-slate-400">SKU</th>
-                    <th class="p-4 text-xs font-bold text-left text-slate-500 uppercase tracking-wider dark:text-slate-400">Categoría</th>
-                    <th class="p-4 text-xs font-bold text-left text-slate-500 uppercase tracking-wider dark:text-slate-400">Stock</th>
-                    <th class="p-4 text-xs font-bold text-left text-slate-500 uppercase tracking-wider dark:text-slate-400">Costo Prom.</th>
-                    <th class="p-4 text-xs font-bold text-left text-slate-500 uppercase tracking-wider dark:text-slate-400">Ubicación</th>
-                    <th class="p-4 text-xs font-bold text-left text-slate-500 uppercase tracking-wider dark:text-slate-400">Acciones</th>
-                  </tr>
-                </thead>
-                <tbody class="bg-white divide-y divide-slate-200/60 dark:bg-slate-800/80 dark:divide-slate-700/60">
-                  <tr *ngFor="let i of [1,2,3,4,5]" class="animate-pulse">
-                    <td class="p-4"><div class="h-4 bg-slate-200/60 rounded-lg dark:bg-slate-700/60 w-36"></div></td>
-                    <td class="p-4"><div class="h-4 bg-slate-200/60 rounded-lg dark:bg-slate-700/60 w-20"></div></td>
-                    <td class="p-4"><div class="h-4 bg-slate-200/60 rounded-lg dark:bg-slate-700/60 w-24"></div></td>
-                    <td class="p-4"><div class="h-4 bg-slate-200/60 rounded-lg dark:bg-slate-700/60 w-12"></div></td>
-                    <td class="p-4"><div class="h-4 bg-slate-200/60 rounded-lg dark:bg-slate-700/60 w-20"></div></td>
-                    <td class="p-4"><div class="h-4 bg-slate-200/60 rounded-lg dark:bg-slate-700/60 w-24"></div></td>
-                    <td class="p-4"><div class="h-4 bg-slate-200/60 rounded-lg dark:bg-slate-700/60 w-40"></div></td>
-                  </tr>
-                </tbody>
-              </table>
-            </ng-template>
-
-          </div>
+  <div class="np-workspace">
+    <section class="np-registry" aria-label="Ítems de inventario">
+      <div class="np-registry-wrap">
+        <table class="np-table np-table--registry">
+          <thead><tr><th class="np-th-stripe"></th><th>Ítem</th><th>SKU / código</th><th class="np-col-cat">Categoría</th><th class="np-th-right">Stock</th><th class="np-th-right np-col-cost">Costo prom.</th><th class="np-col-loc">Ubicación</th><th class="np-th-right">Acciones</th></tr></thead>
+          <tbody>
+            <ng-container *ngIf="skeletor"><tr class="np-skel" *ngFor="let i of [1,2,3,4,5,6]"><td class="np-stripe"><i></i></td><td><span class="np-skel-bar" style="width:60%"></span></td><td><span class="np-skel-bar" style="width:50%"></span></td><td class="np-col-cat"><span class="np-skel-bar" style="width:50%"></span></td><td><span class="np-skel-bar" style="width:40px;margin-left:auto"></span></td><td class="np-col-cost"></td><td class="np-col-loc"></td><td></td></tr></ng-container>
+            <tr *ngIf="!skeletor && filteredItems.length === 0" class="np-empty"><td colspan="8"><strong>No hay ítems con estos filtros.</strong></td></tr>
+            <tr *ngFor="let item of filteredItems" class="np-row" [ngClass]="isLowStock(item) ? 'np-row--low' : ((item.quantity || 0) > 0 ? 'np-row--ok' : 'np-row--zero')" (click)="viewDetail(item)" tabindex="0" (keydown.enter)="viewDetail(item)">
+              <td class="np-stripe"><i></i></td>
+              <td><div class="np-name">{{ item.name }}</div><div class="np-plan" *ngIf="item.description">{{ item.description }}</div></td>
+              <td class="np-data">{{ item.sku || item.code || '—' }}</td>
+              <td class="np-col-cat"><span class="np-tag np-tag--neutral">{{ item.category?.name || getCategoryName(item.category_id) }}</span></td>
+              <td class="np-td-right"><span class="np-stock" [class.np-neg]="isLowStock(item) || !(item.quantity || 0)" [class.np-pos]="!isLowStock(item) && (item.quantity || 0) > 0">{{ item.quantity || 0 }} <small>{{ item.unit || '' }}</small></span><div class="np-fine" *ngIf="isLowStock(item)">mín. {{ item.stock_min }}</div></td>
+              <td class="np-money np-col-cost">$ {{ (item.average_cost || 0) | number:'1.0-0' }}</td>
+              <td class="np-col-loc">{{ item.location || '—' }}</td>
+              <td class="np-td-right"><div class="np-rowacts" (click)="$event.stopPropagation()">
+                <button type="button" class="np-icobtn" (click)="openMovementModal(item)" title="Registrar movimiento"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 12h16m0 0-5-5m5 5-5 5"/></svg></button>
+                <button type="button" class="np-icobtn" (click)="openEditModal(item)" title="Editar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 20h4L18 10l-4-4L4 16v4zM13 7l4 4"/></svg></button>
+                <button type="button" class="np-icobtn" (click)="deleteItem(item)" title="Eliminar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/></svg></button>
+                <button type="button" class="np-icobtn" (click)="viewDetail(item)" title="Ver detalle"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 6 6 6-6 6"/></svg></button>
+              </div></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="np-pager" *ngIf="lastPage > 1">
+        <span class="np-range">Página {{ currentPage }} de {{ lastPage }} · {{ totalItems }} ítems</span>
+        <div class="np-pages">
+          <button type="button" (click)="goToPage(currentPage - 1)" [disabled]="currentPage === 1">‹</button>
+          <button type="button" *ngFor="let p of pageNumbers" (click)="goToPage(p)" [attr.aria-current]="currentPage === p ? 'page' : null">{{ p }}</button>
+          <button type="button" (click)="goToPage(currentPage + 1)" [disabled]="currentPage === lastPage">›</button>
         </div>
       </div>
-    </div>
-
-    <!-- Pagination -->
-    <div *ngIf="lastPage > 1" class="flex items-center justify-between mt-4">
-      <span class="text-sm text-slate-700 dark:text-slate-400">
-        Mostrando página {{ currentPage }} de {{ lastPage }} ({{ totalItems }} total)
-      </span>
-      <div class="inline-flex -space-x-px text-sm">
-        <button (click)="goToPage(currentPage - 1)" [disabled]="currentPage === 1"
-          class="flex items-center justify-center px-3 h-8 ml-0 leading-tight text-slate-500 bg-white border border-slate-300/60 rounded-l-lg hover:bg-slate-50 hover:text-slate-700 dark:bg-slate-800/80 dark:border-slate-700/60 dark:text-slate-400 dark:hover:bg-slate-700/50 dark:hover:text-white disabled:opacity-50">
-          Anterior
-        </button>
-        <button *ngFor="let p of [].constructor(lastPage); let i = index" (click)="goToPage(i + 1)"
-          [ngClass]="currentPage === i + 1
-            ? 'z-10 flex items-center justify-center px-3 h-8 leading-tight text-blue-600 border border-blue-300 bg-blue-50 hover:bg-blue-100 hover:text-blue-700 dark:border-slate-700/60 dark:bg-slate-700/80 dark:text-white'
-            : 'flex items-center justify-center px-3 h-8 leading-tight text-slate-500 bg-white border border-slate-300/60 hover:bg-slate-50 hover:text-slate-700 dark:bg-slate-800/80 dark:border-slate-700/60 dark:text-slate-400 dark:hover:bg-slate-700/50 dark:hover:text-white'">
-          {{ i + 1 }}
-        </button>
-        <button (click)="goToPage(currentPage + 1)" [disabled]="currentPage === lastPage"
-          class="flex items-center justify-center px-3 h-8 leading-tight text-slate-500 bg-white border border-slate-300/60 rounded-r-lg hover:bg-slate-50 hover:text-slate-700 dark:bg-slate-800/80 dark:border-slate-700/60 dark:text-slate-400 dark:hover:bg-slate-700/50 dark:hover:text-white disabled:opacity-50">
-          Siguiente
-        </button>
-      </div>
-    </div>
-
+    </section>
   </div>
 </div>
 
-<!-- ── Modal: Crear / Editar Ítem ─────────────────────────────────────────── -->
-<div id="item-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 ">
-  <div class="bg-white/95 dark:bg-slate-800/95 backdrop-blur-xl rounded-2xl shadow-2xl border border-slate-100 dark:border-slate-700 w-full max-w-lg mx-4 max-h-[90vh] overflow-y-auto">
-    <div class="flex items-center justify-between p-4 border-b dark:border-slate-700/60">
-      <h3 class="text-lg font-semibold text-slate-900 dark:text-white">
-        {{ isEditing ? 'Editar Ítem' : 'Agregar Ítem' }}
-      </h3>
-      <button (click)="closeItemModal()" class="text-slate-400 hover:text-slate-900 dark:hover:text-white">
-        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-          <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"></path>
-        </svg>
-      </button>
-    </div>
-    <div class="p-6 space-y-4">
-
-      <!-- Escáner SKU al crear -->
-      <div *ngIf="!isEditing" class="rounded-lg border border-blue-200 bg-blue-50 p-3 space-y-2 dark:border-blue-800 dark:bg-blue-900/20">
-        <div class="flex items-center justify-between">
-          <p class="text-xs font-semibold text-blue-700 dark:text-blue-300 flex items-center gap-1">
-            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 4.875c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5A1.125 1.125 0 0 1 3.75 9.375v-4.5ZM3.75 14.625c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5a1.125 1.125 0 0 1-1.125-1.125v-4.5ZM13.5 4.875c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5A1.125 1.125 0 0 1 13.5 9.375v-4.5Z" />
-            </svg>
-            Escanea el código del equipo para rellenar el SKU
-          </p>
-          <button type="button" (click)="itemScannerOpen = !itemScannerOpen"
-            class="text-xs font-medium px-2 py-1 rounded"
-            [ngClass]="itemScannerOpen
-              ? 'bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300'
-              : 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300'">
-            {{ itemScannerOpen ? 'Cerrar' : 'Abrir escáner' }}
-          </button>
-        </div>
-        <app-barcode-scanner *ngIf="itemScannerOpen" mode="ref"
-          (scanned)="onItemSkuScanned($event)">
-        </app-barcode-scanner>
-        <p *ngIf="itemForm.sku" class="text-xs text-blue-600 dark:text-blue-400">
-          SKU capturado: <span class="font-mono font-semibold">{{ itemForm.sku }}</span>
-        </p>
+<!-- ══ Crear / editar ítem ═════════════════════════════════════════════════ -->
+<div id="item-modal" class="np-overlay hidden" (click)="closeItemModal()">
+  <div class="np-modal np-modal--lg" role="dialog" aria-modal="true" (click)="$event.stopPropagation()">
+    <div class="np-modal-head"><div><p class="np-kicker">Inventario <b>/</b> Ítem</p><h3>{{ isEditing ? 'Editar ítem' : 'Agregar ítem' }}</h3></div>
+      <button type="button" class="np-icobtn" (click)="closeItemModal()" aria-label="Cerrar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div>
+    <div class="np-modal-body">
+      <div class="np-panel" *ngIf="!isEditing">
+        <div class="np-subbar"><span class="np-fine">Escaneá el código del equipo para completar el SKU.</span><span class="np-spacer"></span><button type="button" class="np-btn np-btn--sm" [ngClass]="itemScannerOpen ? 'np-btn--danger' : 'np-btn--ghost'" (click)="itemScannerOpen = !itemScannerOpen">{{ itemScannerOpen ? 'Cerrar escáner' : 'Abrir escáner' }}</button></div>
+        <app-barcode-scanner *ngIf="itemScannerOpen" mode="ref" (scanned)="onItemSkuScanned($event)"></app-barcode-scanner>
+        <p class="np-fine" *ngIf="itemForm.sku">SKU capturado: <span class="np-mono np-strong">{{ itemForm.sku }}</span></p>
       </div>
-
-      <div>
-        <label class="block mb-1 text-sm font-medium text-slate-700 dark:text-slate-300">Nombre *</label>
-        <input type="text" [(ngModel)]="itemForm.name"
-          class="px-3.5 py-2 text-sm bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl border border-slate-200/60 dark:border-slate-700/60 rounded-xl text-slate-700 dark:text-slate-300 focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-400 transition-all shadow-sm block w-full"
-          placeholder="Nombre del ítem" />
+      <div class="np-form">
+        <label class="np-field np-field-full"><span>Nombre <em>*</em></span><input type="text" class="np-input" [(ngModel)]="itemForm.name" placeholder="Nombre del ítem" /></label>
+        <label class="np-field"><span>SKU</span><input type="text" class="np-input np-mono" [(ngModel)]="itemForm.sku" /></label>
+        <label class="np-field"><span>Código interno</span><input type="text" class="np-input np-mono" [(ngModel)]="itemForm.code" /></label>
+        <label class="np-field np-field-full"><span>Descripción</span><textarea class="np-input np-textarea" [(ngModel)]="itemForm.description" rows="2"></textarea></label>
+        <label class="np-field"><span>Categoría</span><select class="np-input" [(ngModel)]="itemForm.category_id"><option [ngValue]="undefined">Sin categoría</option><option *ngFor="let cat of categories" [value]="cat.id">{{ cat.name }}</option></select></label>
+        <label class="np-field" *ngIf="!isEditing"><span>Stock inicial</span><input type="number" class="np-input np-mono" [(ngModel)]="itemForm.quantity" min="0" /></label>
+        <label class="np-field"><span>Unidad</span><input type="text" class="np-input" [(ngModel)]="itemForm.unit" placeholder="unidad, kg, m" /></label>
+        <label class="np-field"><span>Stock mínimo</span><input type="number" class="np-input np-mono" [(ngModel)]="itemForm.stock_min" min="0" /></label>
+        <label class="np-field"><span>Stock máximo</span><input type="number" class="np-input np-mono" [(ngModel)]="itemForm.stock_max" min="0" placeholder="Opcional" /></label>
+        <label class="np-field"><span>Precio unitario</span><input type="number" class="np-input np-mono" [(ngModel)]="itemForm.unit_price" min="0" /></label>
+        <label class="np-field np-field-full"><span>Ubicación</span><input type="text" class="np-input" [(ngModel)]="itemForm.location" placeholder="Bodega A, estante 3" /></label>
       </div>
-      <div class="grid grid-cols-2 gap-4">
-        <div>
-          <label class="block mb-1 text-sm font-medium text-slate-700 dark:text-slate-300">SKU</label>
-          <input type="text" [(ngModel)]="itemForm.sku"
-            class="px-3.5 py-2 text-sm bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl border border-slate-200/60 dark:border-slate-700/60 rounded-xl text-slate-700 dark:text-slate-300 focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-400 transition-all shadow-sm block w-full"
-            placeholder="Código SKU" />
-        </div>
-        <div>
-          <label class="block mb-1 text-sm font-medium text-slate-700 dark:text-slate-300">Código interno</label>
-          <input type="text" [(ngModel)]="itemForm.code"
-            class="px-3.5 py-2 text-sm bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl border border-slate-200/60 dark:border-slate-700/60 rounded-xl text-slate-700 dark:text-slate-300 focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-400 transition-all shadow-sm block w-full"
-            placeholder="Código interno" />
-        </div>
-      </div>
-      <div>
-        <label class="block mb-1 text-sm font-medium text-slate-700 dark:text-slate-300">Descripción</label>
-        <textarea [(ngModel)]="itemForm.description" rows="2"
-          class="px-3.5 py-2 text-sm bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl border border-slate-200/60 dark:border-slate-700/60 rounded-xl text-slate-700 dark:text-slate-300 focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-400 transition-all shadow-sm block w-full"
-          placeholder="Descripción opcional"></textarea>
-      </div>
-      <div>
-        <label class="block mb-1 text-sm font-medium text-slate-700 dark:text-slate-300">Categoría</label>
-        <select [(ngModel)]="itemForm.category_id"
-          class="px-3.5 py-2 text-sm bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl border border-slate-200/60 dark:border-slate-700/60 rounded-xl text-slate-700 dark:text-slate-300 focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-400 transition-all shadow-sm block w-full">
-          <option [ngValue]="undefined">Sin categoría</option>
-          <option *ngFor="let cat of categories" [value]="cat.id">{{ cat.name }}</option>
-        </select>
-      </div>
-      <div class="grid grid-cols-2 gap-4">
-        <div *ngIf="!isEditing">
-          <label class="block mb-1 text-sm font-medium text-slate-700 dark:text-slate-300">Stock inicial</label>
-          <input type="number" [(ngModel)]="itemForm.quantity" min="0"
-            class="px-3.5 py-2 text-sm bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl border border-slate-200/60 dark:border-slate-700/60 rounded-xl text-slate-700 dark:text-slate-300 focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-400 transition-all shadow-sm block w-full"
-            placeholder="0" />
-        </div>
-        <div>
-          <label class="block mb-1 text-sm font-medium text-slate-700 dark:text-slate-300">Unidad</label>
-          <input type="text" [(ngModel)]="itemForm.unit"
-            class="px-3.5 py-2 text-sm bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl border border-slate-200/60 dark:border-slate-700/60 rounded-xl text-slate-700 dark:text-slate-300 focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-400 transition-all shadow-sm block w-full"
-            placeholder="ej: unidad, kg, m" />
-        </div>
-        <div>
-          <label class="block mb-1 text-sm font-medium text-slate-700 dark:text-slate-300">Stock mínimo</label>
-          <input type="number" [(ngModel)]="itemForm.stock_min" min="0"
-            class="px-3.5 py-2 text-sm bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl border border-slate-200/60 dark:border-slate-700/60 rounded-xl text-slate-700 dark:text-slate-300 focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-400 transition-all shadow-sm block w-full"
-            placeholder="0" />
-        </div>
-        <div>
-          <label class="block mb-1 text-sm font-medium text-slate-700 dark:text-slate-300">Stock máximo</label>
-          <input type="number" [(ngModel)]="itemForm.stock_max" min="0"
-            class="px-3.5 py-2 text-sm bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl border border-slate-200/60 dark:border-slate-700/60 rounded-xl text-slate-700 dark:text-slate-300 focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-400 transition-all shadow-sm block w-full"
-            placeholder="Opcional" />
-        </div>
-        <div>
-          <label class="block mb-1 text-sm font-medium text-slate-700 dark:text-slate-300">Precio Unitario</label>
-          <input type="number" [(ngModel)]="itemForm.unit_price" min="0"
-            class="px-3.5 py-2 text-sm bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl border border-slate-200/60 dark:border-slate-700/60 rounded-xl text-slate-700 dark:text-slate-300 focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-400 transition-all shadow-sm block w-full"
-            placeholder="0" />
-        </div>
-        <div>
-          <label class="block mb-1 text-sm font-medium text-slate-700 dark:text-slate-300">Ubicación</label>
-          <input type="text" [(ngModel)]="itemForm.location"
-            class="px-3.5 py-2 text-sm bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl border border-slate-200/60 dark:border-slate-700/60 rounded-xl text-slate-700 dark:text-slate-300 focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-400 transition-all shadow-sm block w-full"
-            placeholder="ej: Bodega A, Estante 3" />
-        </div>
-      </div>
-    </div>
-    <div class="flex justify-end p-4 space-x-3 border-t dark:border-slate-700/60">
-      <button (click)="closeItemModal()"
-        class="px-4 py-2 text-sm font-medium text-slate-500 bg-white border border-slate-300/60 rounded-lg hover:bg-slate-50 dark:bg-slate-800/80 dark:text-slate-400 dark:border-slate-600/60 dark:hover:bg-slate-700/50">
-        Cancelar
-      </button>
-      <button (click)="saveItem()"
-        class="px-4 py-2 text-sm font-medium bg-gradient-to-br from-indigo-500 to-violet-600 text-white shadow-md shadow-indigo-500/20 hover:shadow-lg transition-all rounded-xl">
-        {{ isEditing ? 'Guardar cambios' : 'Crear ítem' }}
-      </button>
+      <div class="np-btnrow np-btnrow--end"><button type="button" class="np-btn np-btn--ghost" (click)="closeItemModal()">Cancelar</button><button type="button" class="np-btn np-btn--primary" (click)="saveItem()">{{ isEditing ? 'Guardar cambios' : 'Crear ítem' }}</button></div>
     </div>
   </div>
 </div>
 
-<!-- ── Modal: Registrar Movimiento ────────────────────────────────────────── -->
-<div id="movement-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 ">
-  <div class="bg-white/95 dark:bg-slate-800/95 backdrop-blur-xl rounded-2xl shadow-2xl border border-slate-100 dark:border-slate-700 w-full max-w-lg mx-4 max-h-screen overflow-y-auto">
-    <div class="flex items-center justify-between p-4 border-b dark:border-slate-700/60">
-      <h3 class="text-lg font-semibold text-slate-900 dark:text-white">Registrar Movimiento</h3>
-      <button (click)="closeMovementModalFull()" class="text-slate-400 hover:text-slate-900 dark:hover:text-white">
-        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-          <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"></path>
-        </svg>
-      </button>
-    </div>
-    <div class="p-6 space-y-4">
-
-      <!-- ── Equipo ──────────────────────────────────────────────────────────── -->
-      <!-- Cuando el ítem ya viene seleccionado (desde botón "Mov.") -->
-      <div *ngIf="selectedItemForMovement"
-        class="flex items-center gap-2 rounded-lg border border-blue-200 bg-blue-50 px-3 py-2 text-sm dark:border-blue-800 dark:bg-blue-900/20">
-        <svg class="h-4 w-4 text-blue-600 dark:text-blue-400 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M21 7.5l-9-5.25L3 7.5m18 0l-9 5.25m9-5.25v9l-9 5.25M3 7.5l9 5.25M3 7.5v9l9 5.25m0-9v9" />
-        </svg>
-        <span class="font-medium text-blue-800 dark:text-blue-200">{{ selectedItemForMovement.name }}</span>
-        <span *ngIf="selectedItemForMovement.sku" class="font-mono text-xs text-blue-500 dark:text-blue-400">{{ selectedItemForMovement.sku }}</span>
-        <button type="button" (click)="scanStep='item'; selectedItemForMovement=null; movementForm.inventory_id=0"
-          class="ml-auto text-xs text-blue-500 hover:underline dark:text-blue-400">Cambiar</button>
-      </div>
-
-      <!-- Cuando no hay ítem seleccionado: escanear REF o elegir manualmente -->
-      <div *ngIf="!selectedItemForMovement" class="rounded-lg border border-blue-200 bg-blue-50 p-3 space-y-2 dark:border-blue-800 dark:bg-blue-900/20">
-        <p class="text-xs font-semibold text-blue-700 dark:text-blue-300">
-          Paso 1 — Escanea la referencia del equipo (REF / SKU)
-        </p>
-        <app-barcode-scanner mode="ref" (scanned)="onRefScanned($event)"></app-barcode-scanner>
-        <div>
-          <label class="block mb-1 text-xs font-medium text-slate-600 dark:text-slate-400">O selecciona manualmente:</label>
-          <select [(ngModel)]="movementForm.inventory_id" (change)="onMovementItemChange()"
-            class="bg-white border border-slate-300/60 text-slate-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2 dark:bg-slate-700/80 dark:border-slate-600/60 dark:text-white">
-            <option [value]="0">— Selecciona un ítem —</option>
-            <option *ngFor="let item of items" [value]="item.id">
-              {{ item.name }}{{ item.sku ? ' · ' + item.sku : '' }} (stock: {{ item.quantity || 0 }})
-            </option>
+<!-- ══ Movimiento ══════════════════════════════════════════════════════════ -->
+<div id="movement-modal" class="np-overlay hidden" (click)="closeMovementModalFull()">
+  <div class="np-modal np-modal--lg" role="dialog" aria-modal="true" (click)="$event.stopPropagation()">
+    <div class="np-modal-head"><div><p class="np-kicker">Inventario <b>/</b> Movimiento</p><h3>Registrar movimiento</h3></div>
+      <button type="button" class="np-icobtn" (click)="closeMovementModalFull()" aria-label="Cerrar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div>
+    <div class="np-modal-body">
+      <section>
+        <p class="np-sect">1 · Equipo</p>
+        <p class="np-notice np-notice--ok" *ngIf="selectedItemForMovement"><strong>{{ selectedItemForMovement.name }}</strong><span class="np-mono" *ngIf="selectedItemForMovement.sku"> · {{ selectedItemForMovement.sku }}</span> · stock {{ selectedItemForMovement.quantity || 0 }} {{ selectedItemForMovement.unit || '' }}
+          <button type="button" class="np-link" (click)="scanStep='item'; selectedItemForMovement=null; movementForm.inventory_id=0">Cambiar</button></p>
+        <div class="np-panel" *ngIf="!selectedItemForMovement">
+          <span class="np-fine">Escaneá la referencia (REF / SKU) o elegilo a mano.</span>
+          <app-barcode-scanner mode="ref" (scanned)="onRefScanned($event)"></app-barcode-scanner>
+          <select class="np-input" [(ngModel)]="movementForm.inventory_id" (change)="onMovementItemChange()">
+            <option [value]="0">Seleccionar un ítem…</option>
+            <option *ngFor="let item of items" [value]="item.id">{{ item.name }}{{ item.sku ? ' · ' + item.sku : '' }} (stock {{ item.quantity || 0 }})</option>
           </select>
+          <p class="np-notice np-notice--danger" *ngIf="barcodeError">{{ barcodeError }}</p>
         </div>
-        <p *ngIf="barcodeError" class="text-xs text-red-600 dark:text-red-400">{{ barcodeError }}</p>
-      </div>
+      </section>
 
-      <!-- ── Serial del equipo — siempre visible cuando hay ítem ─────────────── -->
-      <div *ngIf="selectedItemForMovement" class="rounded-lg border border-green-300 bg-green-50 p-3 space-y-2 dark:border-green-700 dark:bg-green-900/20">
-        <p class="text-xs font-semibold text-green-700 dark:text-green-300 flex items-center gap-1">
-          <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 4.875c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5A1.125 1.125 0 0 1 3.75 9.375v-4.5ZM3.75 14.625c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5a1.125 1.125 0 0 1-1.125-1.125v-4.5ZM13.5 4.875c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5A1.125 1.125 0 0 1 13.5 9.375v-4.5Z" />
-          </svg>
-          Número de Serie del equipo (SN)
-        </p>
-
-        <!-- SN ya capturado -->
-        <div *ngIf="movementForm.serial_number"
-          class="flex items-center gap-2 rounded-lg border border-green-400 bg-white px-3 py-2 text-sm dark:border-green-600 dark:bg-slate-800/80">
-          <svg class="h-4 w-4 text-green-500 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
-          </svg>
-          <span class="font-mono font-semibold text-slate-900 dark:text-white tracking-wider">{{ movementForm.serial_number }}</span>
-          <button type="button" (click)="movementForm.serial_number=''"
-            class="ml-auto text-xs text-red-500 hover:text-red-700 hover:underline">Borrar</button>
-        </div>
-
-        <!-- Scanner serial (siempre visible si no hay SN aún) -->
-        <ng-container *ngIf="!movementForm.serial_number">
+      <section *ngIf="selectedItemForMovement">
+        <p class="np-sect">2 · Número de serie</p>
+        <p class="np-notice np-notice--ok" *ngIf="movementForm.serial_number"><span class="np-mono np-strong">{{ movementForm.serial_number }}</span> <button type="button" class="np-link" (click)="movementForm.serial_number=''">Borrar</button></p>
+        <div class="np-panel" *ngIf="!movementForm.serial_number">
           <app-barcode-scanner mode="serial" (scanned)="onSerialScanned($event)"></app-barcode-scanner>
-          <div class="flex items-center gap-2">
-            <div class="flex-1 h-px bg-slate-200/60 dark:bg-slate-700/60"></div>
-            <span class="text-xs text-slate-400">o escríbelo</span>
-            <div class="flex-1 h-px bg-slate-200/60 dark:bg-slate-700/60"></div>
-          </div>
-          <input type="text" [(ngModel)]="movementForm.serial_number"
-            placeholder="SN del equipo (ej: HWTC1234ABCD)"
-            class="px-3.5 py-2 text-sm bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl border border-slate-200/60 dark:border-slate-700/60 rounded-xl text-slate-700 dark:text-slate-300 focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-400 transition-all shadow-sm block w-full font-mono dark:bg-slate-800/80 dark:border-slate-600/60 dark:text-white" />
-        </ng-container>
+          <input type="text" class="np-input np-mono" [(ngModel)]="movementForm.serial_number" placeholder="o escribí el SN, ej. HWTC1234ABCD" />
+        </div>
+        <p class="np-notice np-notice--danger" *ngIf="barcodeError">{{ barcodeError }}</p>
+      </section>
 
-        <p *ngIf="barcodeError" class="text-xs text-red-600 dark:text-red-400">{{ barcodeError }}</p>
-      </div>
-
-      <div>
-        <label class="block mb-1 text-sm font-medium text-slate-700 dark:text-slate-300">Tipo *</label>
-        <select [(ngModel)]="movementForm.type"
-          class="px-3.5 py-2 text-sm bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl border border-slate-200/60 dark:border-slate-700/60 rounded-xl text-slate-700 dark:text-slate-300 focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-400 transition-all shadow-sm block w-full">
-          <option value="entrada">Entrada</option>
-          <option value="salida">Salida</option>
-          <option value="ajuste">Ajuste</option>
-        </select>
-      </div>
-      <div *ngIf="movementForm.type === 'salida' && selectedItemForMovement" class="p-3 text-sm text-yellow-800 bg-yellow-50 rounded-lg dark:bg-yellow-900 dark:text-yellow-300">
-        Stock disponible: <strong>{{ selectedItemForMovement.quantity || 0 }}</strong> {{ selectedItemForMovement.unit || '' }}
-      </div>
-      <div class="grid grid-cols-2 gap-4">
-        <div>
-          <label class="block mb-1 text-sm font-medium text-slate-700 dark:text-slate-300">Cantidad *</label>
-          <input type="number" [(ngModel)]="movementForm.quantity" min="1"
-            class="px-3.5 py-2 text-sm bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl border border-slate-200/60 dark:border-slate-700/60 rounded-xl text-slate-700 dark:text-slate-300 focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-400 transition-all shadow-sm block w-full"
-            placeholder="0" />
+      <section>
+        <p class="np-sect">3 · Detalle</p>
+        <div class="np-form">
+          <label class="np-field"><span>Tipo <em>*</em></span><select class="np-input" [(ngModel)]="movementForm.type"><option value="entrada">Entrada</option><option value="salida">Salida</option><option value="ajuste">Ajuste</option></select></label>
+          <label class="np-field"><span>Cantidad <em>*</em></span><input type="number" class="np-input np-mono" [(ngModel)]="movementForm.quantity" min="1" /><small class="np-fine" *ngIf="movementForm.type === 'salida' && selectedItemForMovement">Disponible: {{ selectedItemForMovement.quantity || 0 }} {{ selectedItemForMovement.unit || '' }}</small></label>
+          <label class="np-field"><span>Precio unitario</span><input type="number" class="np-input np-mono" [(ngModel)]="movementForm.unit_price" min="0" /></label>
+          <label class="np-field"><span>N° de lote</span><input type="text" class="np-input np-mono" [(ngModel)]="movementForm.batch_number" /></label>
+          <label class="np-field"><span>Vencimiento</span><input type="date" class="np-input" [(ngModel)]="movementForm.expiry_date" /></label>
+          <label class="np-field"><span>Referencia</span><input type="text" class="np-input np-mono" [(ngModel)]="movementForm.reference" /></label>
+          <label class="np-field np-field-full"><span>Descripción</span><input type="text" class="np-input" [(ngModel)]="movementForm.description" /></label>
         </div>
-        <div>
-          <label class="block mb-1 text-sm font-medium text-slate-700 dark:text-slate-300">Precio Unitario</label>
-          <input type="number" [(ngModel)]="movementForm.unit_price" min="0"
-            class="px-3.5 py-2 text-sm bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl border border-slate-200/60 dark:border-slate-700/60 rounded-xl text-slate-700 dark:text-slate-300 focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-400 transition-all shadow-sm block w-full"
-            placeholder="0" />
-        </div>
-      </div>
-      <div class="grid grid-cols-2 gap-4">
-        <div>
-          <label class="block mb-1 text-sm font-medium text-slate-700 dark:text-slate-300">N° de Lote</label>
-          <input type="text" [(ngModel)]="movementForm.batch_number"
-            class="px-3.5 py-2 text-sm bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl border border-slate-200/60 dark:border-slate-700/60 rounded-xl text-slate-700 dark:text-slate-300 focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-400 transition-all shadow-sm block w-full"
-            placeholder="Lote opcional" />
-        </div>
-        <div>
-          <label class="block mb-1 text-sm font-medium text-slate-700 dark:text-slate-300">Fecha de vencimiento</label>
-          <input type="date" [(ngModel)]="movementForm.expiry_date"
-            class="px-3.5 py-2 text-sm bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl border border-slate-200/60 dark:border-slate-700/60 rounded-xl text-slate-700 dark:text-slate-300 focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-400 transition-all shadow-sm block w-full" />
-        </div>
-      </div>
-      <div>
-        <label class="block mb-1 text-sm font-medium text-slate-700 dark:text-slate-300">Descripción</label>
-        <input type="text" [(ngModel)]="movementForm.description"
-          class="px-3.5 py-2 text-sm bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl border border-slate-200/60 dark:border-slate-700/60 rounded-xl text-slate-700 dark:text-slate-300 focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-400 transition-all shadow-sm block w-full"
-          placeholder="Descripción del movimiento" />
-      </div>
-      <div>
-        <label class="block mb-1 text-sm font-medium text-slate-700 dark:text-slate-300">Referencia</label>
-        <input type="text" [(ngModel)]="movementForm.reference"
-          class="px-3.5 py-2 text-sm bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl border border-slate-200/60 dark:border-slate-700/60 rounded-xl text-slate-700 dark:text-slate-300 focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-400 transition-all shadow-sm block w-full"
-          placeholder="N° de referencia" />
-      </div>
-    </div>
-    <div class="flex justify-end p-4 space-x-3 border-t dark:border-slate-700/60">
-      <button (click)="closeMovementModalFull()"
-        class="px-4 py-2 text-sm font-medium text-slate-500 bg-white border border-slate-300/60 rounded-lg hover:bg-slate-50 dark:bg-slate-800/80 dark:text-slate-400 dark:border-slate-600/60 dark:hover:bg-slate-700/50">
-        Cancelar
-      </button>
-      <button (click)="saveMovement()"
-        class="px-4 py-2 text-sm font-medium text-white bg-green-600 rounded-lg hover:bg-green-700 focus:ring-4 focus:ring-green-300">
-        Registrar
-      </button>
+      </section>
+      <div class="np-btnrow np-btnrow--end"><button type="button" class="np-btn np-btn--ghost" (click)="closeMovementModalFull()">Cancelar</button><button type="button" class="np-btn np-btn--primary" (click)="saveMovement()">Registrar</button></div>
     </div>
   </div>
 </div>

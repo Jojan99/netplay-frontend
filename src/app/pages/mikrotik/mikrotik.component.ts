@@ -8,6 +8,8 @@ import { MikrotikService } from '../../services/mikrotik.service';
   standalone: true,
   imports: [CommonModule, FormsModule],
   templateUrl: './mikrotik.component.html',
+  styleUrl: './mikrotik.component.scss',
+  host: { class: 'np-console' },
 })
 export class MikrotikComponent implements OnInit {
   activeTab: 'info' | 'clients' | 'queues' | 'config' = 'info';

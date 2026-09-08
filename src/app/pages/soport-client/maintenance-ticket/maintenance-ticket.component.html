@@ -1,245 +1,99 @@
-<div class="p-3 sm:p-6 max-w-2xl mx-auto">
-
-  <!-- ═══ HEADER ════════════════════════════════════════════════════════════ -->
-  <div class="flex items-center justify-between mb-5">
+<div class="np-page np-ticket-new">
+  <header class="np-head">
     <div>
-      <h1 class="text-2xl font-bold bg-gradient-to-r from-slate-800 to-slate-600 bg-clip-text text-transparent dark:from-white dark:to-slate-300">Crear Ticket</h1>
-      <p class="text-sm text-slate-400 dark:text-slate-500">Orden de servicio técnico</p>
+      <p class="np-kicker">Soporte <b>/</b> Nuevo ticket</p>
+      <h1 class="np-title">Crear ticket</h1>
+      <div class="np-ribbon">
+        <span [class.np-step--done]="!!selectedUser" class="np-step"><i>1</i> Elegir cliente</span>
+        <span class="np-step" [class.np-step--active]="!!selectedUser"><i>2</i> Datos del ticket</span>
+      </div>
     </div>
-    <button (click)="cancel()"
-            class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-500 dark:text-gray-400">
-      <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
-      </svg>
-    </button>
+    <div class="np-actions">
+      <button type="button" class="np-btn np-btn--ghost" (click)="cancel()">Cancelar</button>
+    </div>
+  </header>
+
+  <div class="np-scroll">
+    <div class="np-grid-2 np-ticket-grid">
+      <!-- Paso 1: cliente -->
+      <section class="np-card">
+        <div class="np-card-h"><h2>Cliente</h2><span class="np-card-meta" *ngIf="selectedUser"><button type="button" class="np-link np-link--muted" (click)="clearUser()">cambiar</button></span></div>
+
+        <div class="np-client-card" *ngIf="selectedUser">
+          <div class="np-avatar">{{ selectedUser.names?.charAt(0)?.toUpperCase() }}</div>
+          <div class="np-insp-id">
+            <h2>{{ selectedUser.names }} {{ selectedUser.lastname }}</h2>
+            <div class="np-meta">CC <b>{{ selectedUser.dni }}</b> · Tel <b>{{ selectedUser.phone }}</b></div>
+            <div class="np-meta np-meta--addr">{{ selectedUser.address }}</div>
+          </div>
+          <button type="button" class="np-btn np-btn--ghost np-btn--sm" (click)="openPingModal(selectedUser.names, selectedUser.lastname, selectedUser.dni)">Ping</button>
+        </div>
+
+        <label class="np-field np-field--search" *ngIf="!selectedUser"><span>Buscar cliente</span>
+          <input type="search" class="np-input" [(ngModel)]="searchText" (input)="onSearch($event)" (focus)="showList = true" placeholder="Nombre, apellido o cédula…" />
+          <div class="np-checklist np-checklist--float" *ngIf="showList && searchText">
+            <button type="button" class="np-check np-check--btn" *ngFor="let user of filteredUsers | slice:0:30" (click)="selectUser(user)"><span class="np-strong">{{ user.names }} {{ user.lastname }}</span><span class="np-spacer"></span><span class="np-data">{{ user.dni }}</span></button>
+            <p class="np-muted np-check" *ngIf="filteredUsers.length === 0">No se encontraron clientes.</p>
+          </div>
+        </label>
+        <p class="np-muted" *ngIf="!selectedUser && isLoading">Cargando clientes…</p>
+      </section>
+
+      <!-- Paso 2: ticket -->
+      <section class="np-card" [class.is-disabled]="!selectedUser">
+        <div class="np-card-h"><h2>Datos del ticket</h2><span class="np-card-meta" *ngIf="!selectedUser">elegí un cliente primero</span></div>
+        <form *ngIf="selectedUser" [formGroup]="ticketForm" (ngSubmit)="submit()" class="np-form">
+          <label class="np-field"><span>Fecha</span><input formControlName="date" type="date" class="np-input" [class.is-invalid]="isInvalid('date')" /></label>
+          <label class="np-field"><span>Tipo de servicio <em>*</em></span>
+            <select formControlName="type_service" class="np-input" [class.is-invalid]="isInvalid('type_service')">
+              <option [value]="0" disabled>Seleccionar…</option>
+              <option *ngFor="let s of ServiceTicket" [value]="s.id">{{ s.names }}</option>
+            </select>
+            <small class="np-fine np-neg" *ngIf="isInvalid('type_service')">Campo requerido</small>
+          </label>
+          <label class="np-field"><span>Prioridad <em>*</em></span>
+            <select formControlName="priority" class="np-input" [class.is-invalid]="isInvalid('priority')">
+              <option [value]="0" disabled>Seleccionar…</option>
+              <option *ngFor="let p of PriorityTicket" [value]="p.id">{{ p.names }}</option>
+            </select>
+            <small class="np-fine np-neg" *ngIf="isInvalid('priority')">Campo requerido</small>
+          </label>
+          <label class="np-field"><span>Técnico responsable <em>*</em></span>
+            <select formControlName="tecnichal" class="np-input" [class.is-invalid]="isInvalid('tecnichal')">
+              <option [value]="0" disabled>Seleccionar…</option>
+              <option *ngFor="let t of UserInterfacesTecni" [value]="t.id_user">{{ t.names }} {{ t.lastname }}</option>
+            </select>
+            <small class="np-fine np-neg" *ngIf="isInvalid('tecnichal')">Campo requerido</small>
+          </label>
+          <label class="np-field np-field-full"><span>Observaciones <em>*</em></span>
+            <textarea formControlName="observation" rows="4" class="np-input np-textarea" [class.is-invalid]="isInvalid('observation')" placeholder="Describí el problema o requerimiento…"></textarea>
+            <small class="np-fine np-neg" *ngIf="isInvalid('observation')">Campo requerido</small>
+          </label>
+          <div class="np-field-full np-btnrow np-btnrow--end">
+            <button type="button" class="np-btn np-btn--ghost" (click)="cancel()">Cancelar</button>
+            <button type="submit" class="np-btn np-btn--primary" [disabled]="isLoading"><span *ngIf="isLoading" class="np-spinner np-spinner--sm"></span>{{ isLoading ? 'Guardando…' : 'Crear ticket' }}</button>
+          </div>
+        </form>
+      </section>
+    </div>
   </div>
-
-  <!-- ═══ STEPS INDICATOR ═══════════════════════════════════════════════════ -->
-  <div class="flex items-center gap-2 mb-6">
-    <div class="flex items-center gap-2">
-      <div class="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold"
-           [class.bg-blue-600]="currentStep >= 1"
-           [class.text-white]="currentStep >= 1"
-           [class.bg-gray-200]="currentStep < 1"
-           [class.text-gray-500]="currentStep < 1">1</div>
-      <span class="text-sm font-medium text-gray-700 dark:text-gray-300 hidden sm:block">Seleccionar cliente</span>
-    </div>
-    <div class="flex-1 h-px bg-gray-300 dark:bg-gray-600 mx-1"></div>
-    <div class="flex items-center gap-2">
-      <div class="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold"
-           [class.bg-blue-600]="currentStep >= 2"
-           [class.text-white]="currentStep >= 2"
-           [class.bg-gray-200]="currentStep < 2"
-           [class.text-gray-500]="currentStep < 2">2</div>
-      <span class="text-sm font-medium text-gray-700 dark:text-gray-300 hidden sm:block">Datos del ticket</span>
-    </div>
-  </div>
-
-  <!-- ═══ STEP 1: BUSCAR CLIENTE ════════════════════════════════════════════ -->
-  <div class="bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl rounded-2xl border border-slate-200/60 dark:border-slate-700/60 shadow-sm hover:shadow-md transition-all duration-300 p-5">
-
-    <!-- Selected user card -->
-    <div *ngIf="selectedUser"
-         class="flex items-center justify-between p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-700 mb-5">
-      <div class="flex items-center gap-3">
-        <div class="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center text-white font-bold text-sm">
-          {{ selectedUser.names?.charAt(0)?.toUpperCase() }}
-        </div>
-        <div>
-          <p class="text-sm font-semibold text-gray-900 dark:text-white">{{ selectedUser.names }} {{ selectedUser.lastname }}</p>
-          <p class="text-xs text-gray-500 dark:text-gray-400">{{ selectedUser.dni }} · {{ selectedUser.phone }}</p>
-          <p class="text-xs text-gray-500 dark:text-gray-400 truncate max-w-[200px]">{{ selectedUser.address }}</p>
-        </div>
-      </div>
-      <div class="flex items-center gap-2">
-        <button (click)="openPingModal(selectedUser.names, selectedUser.lastname, selectedUser.dni)"
-                class="px-3 py-1.5 text-xs rounded-lg bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-white hover:bg-gray-300 dark:hover:bg-gray-600 transition flex items-center gap-1">
-          <i class="fa-solid fa-paper-plane text-xs"></i> Ping
-        </button>
-        <button (click)="clearUser()"
-                class="text-xs text-red-500 hover:text-red-700 font-medium">
-          Cambiar
-        </button>
-      </div>
-    </div>
-
-    <!-- Search box (only if no user selected) -->
-    <div *ngIf="!selectedUser" class="mb-1">
-      <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-        Buscar cliente
-      </label>
-      <div class="relative">
-        <input type="text"
-               [(ngModel)]="searchText"
-               (input)="onSearch($event)"
-               (focus)="showList = true"
-               placeholder="Nombre, apellido o cédula..."
-               class="w-full text-sm rounded-lg border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-white p-2.5 pr-8">
-        <svg class="absolute right-2.5 top-3 w-4 h-4 text-gray-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
-        </svg>
-      </div>
-
-      <!-- Dropdown list -->
-      <div *ngIf="showList && filteredUsers.length > 0"
-           class="mt-1 max-h-52 overflow-y-auto rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 shadow-lg z-20 relative">
-        <ul>
-          <li *ngFor="let user of filteredUsers | slice:0:30"
-              (click)="selectUser(user)"
-              class="flex items-center gap-3 px-3 py-2.5 cursor-pointer hover:bg-blue-50 dark:hover:bg-blue-900/20 border-b dark:border-gray-700 last:border-0">
-            <div class="w-8 h-8 rounded-full bg-gray-200 dark:bg-gray-600 flex items-center justify-center text-xs font-bold text-gray-600 dark:text-gray-300 flex-shrink-0">
-              {{ user.names?.charAt(0)?.toUpperCase() }}
-            </div>
-            <div class="min-w-0">
-              <p class="text-sm font-medium text-gray-900 dark:text-white truncate">{{ user.names }} {{ user.lastname }}</p>
-              <p class="text-xs text-gray-500 dark:text-gray-400">{{ user.dni }}</p>
-            </div>
-          </li>
-        </ul>
-      </div>
-
-      <div *ngIf="showList && filteredUsers.length === 0 && searchText"
-           class="mt-1 p-3 text-sm text-gray-400 text-center border dark:border-gray-700 rounded-lg">
-        No se encontraron clientes
-      </div>
-    </div>
-
-    <!-- ── STEP 2: FORM (visible once user selected) ─────────────────────── -->
-    <form *ngIf="selectedUser" [formGroup]="ticketForm" (ngSubmit)="submit()" class="space-y-4">
-
-      <!-- Date -->
-      <div>
-        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Fecha</label>
-        <input formControlName="date" type="date"
-               class="w-full text-sm rounded-lg border p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-               [class.border-red-500]="isInvalid('date')"
-               [class.border-gray-300]="!isInvalid('date')">
-      </div>
-
-      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-
-        <!-- Service -->
-        <div>
-          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Tipo de servicio</label>
-          <select formControlName="type_service"
-                  class="w-full text-sm rounded-lg border p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                  [class.border-red-500]="isInvalid('type_service')"
-                  [class.border-gray-300]="!isInvalid('type_service')">
-            <option [value]="0" disabled>Seleccionar...</option>
-            <option *ngFor="let s of ServiceTicket" [value]="s.id">{{ s.names }}</option>
-          </select>
-          <p *ngIf="isInvalid('type_service')" class="text-xs text-red-500 mt-0.5">Campo requerido</p>
-        </div>
-
-        <!-- Priority -->
-        <div>
-          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Prioridad</label>
-          <select formControlName="priority"
-                  class="w-full text-sm rounded-lg border p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                  [class.border-red-500]="isInvalid('priority')"
-                  [class.border-gray-300]="!isInvalid('priority')">
-            <option [value]="0" disabled>Seleccionar...</option>
-            <option *ngFor="let p of PriorityTicket" [value]="p.id">{{ p.names }}</option>
-          </select>
-          <p *ngIf="isInvalid('priority')" class="text-xs text-red-500 mt-0.5">Campo requerido</p>
-        </div>
-
-        <!-- Technician -->
-        <div class="sm:col-span-2">
-          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Técnico responsable</label>
-          <select formControlName="tecnichal"
-                  class="w-full text-sm rounded-lg border p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                  [class.border-red-500]="isInvalid('tecnichal')"
-                  [class.border-gray-300]="!isInvalid('tecnichal')">
-            <option [value]="0" disabled>Seleccionar...</option>
-            <option *ngFor="let t of UserInterfacesTecni" [value]="t.id_user">{{ t.names }} {{ t.lastname }}</option>
-          </select>
-          <p *ngIf="isInvalid('tecnichal')" class="text-xs text-red-500 mt-0.5">Campo requerido</p>
-        </div>
-
-      </div>
-
-      <!-- Observation -->
-      <div>
-        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Observaciones</label>
-        <textarea formControlName="observation" rows="4"
-                  placeholder="Describe el problema o requerimiento..."
-                  class="w-full text-sm rounded-lg border p-2.5 resize-none dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                  [class.border-red-500]="isInvalid('observation')"
-                  [class.border-gray-300]="!isInvalid('observation')"></textarea>
-        <p *ngIf="isInvalid('observation')" class="text-xs text-red-500 mt-0.5">Campo requerido</p>
-      </div>
-
-      <!-- Buttons -->
-      <div class="flex gap-3 pt-2">
-        <button type="button" (click)="cancel()"
-                class="flex-1 sm:flex-none px-5 py-2.5 rounded-lg text-sm font-medium border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700">
-          Cancelar
-        </button>
-        <button type="submit"
-                [disabled]="isLoading"
-                class="flex-1 sm:flex-none px-5 py-2.5 rounded-lg text-sm font-medium bg-blue-600 hover:bg-blue-700 text-white disabled:opacity-50 flex items-center justify-center gap-2">
-          <svg *ngIf="isLoading" class="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
-            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"></path>
-          </svg>
-          {{ isLoading ? 'Guardando...' : 'Crear Ticket' }}
-        </button>
-      </div>
-
-    </form>
-
-  </div>
-
 </div>
 
-<!-- ══════════════════════════════════════════════════════════════════════════
-     PING MODAL
-   ══════════════════════════════════════════════════════════════════════════ -->
-<div *ngIf="showPingModal"
-     class="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/60 sm:p-4">
-  <div class="bg-white/95 dark:bg-slate-800/95 backdrop-blur-xl rounded-t-2xl sm:rounded-xl shadow-2xl border border-slate-100 dark:border-slate-700 w-full sm:max-w-lg">
-    <div class="flex items-center justify-between px-5 py-4 border-b border-slate-200/60 dark:border-slate-700/60">
-      <div>
-        <h3 class="font-semibold text-slate-900 dark:text-white">Diagnóstico Ping</h3>
-        <p class="text-sm text-slate-400 dark:text-slate-500">{{ pingName }}</p>
-      </div>
-      <button (click)="closePingModal()" class="text-gray-400 hover:text-red-500 transition">
-        <i class="fa-solid fa-xmark text-lg"></i>
-      </button>
+<!-- Ping -->
+<div *ngIf="showPingModal" class="np-overlay" (click)="closePingModal()">
+  <div class="np-modal" role="dialog" aria-modal="true" aria-label="Diagnóstico ping" (click)="$event.stopPropagation()">
+    <div class="np-modal-head"><div><h3>Diagnóstico ping</h3><p class="np-meta">{{ pingName }}</p></div>
+      <button type="button" class="np-icobtn" (click)="closePingModal()" aria-label="Cerrar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
     </div>
-    <div class="p-5 space-y-4">
-      <div class="flex items-center gap-3">
-        <div class="flex-1">
-          <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Cantidad de pings</label>
-          <input type="number" [(ngModel)]="pingCount" min="1" max="20"
-            class="w-full px-3 py-2 rounded-lg border dark:bg-gray-700 dark:border-gray-600 dark:text-white text-sm"/>
-        </div>
-        <button (click)="startPing()" [disabled]="isPinging"
-          class="mt-5 px-4 py-2 rounded-lg bg-blue-600 text-white text-sm hover:bg-blue-700 disabled:opacity-50 transition">
-          {{ isPinging ? 'Pinging...' : 'Enviar' }}
-        </button>
+    <div class="np-modal-body">
+      <div class="np-form np-form--row">
+        <label class="np-field"><span>Cantidad de pings</span><input type="number" class="np-input np-mono" [(ngModel)]="pingCount" min="1" max="20" /></label>
+        <button type="button" class="np-btn np-btn--primary" (click)="startPing()" [disabled]="isPinging">{{ isPinging ? 'Enviando…' : 'Enviar' }}</button>
       </div>
-
-      <div *ngIf="pingResults.length > 0"
-           class="rounded-lg border dark:border-gray-700 overflow-hidden max-h-64 overflow-y-auto">
-        <table class="w-full text-xs">
-          <thead class="bg-slate-50/80 dark:bg-slate-700/80 ">
-            <tr>
-              <th class="px-3 py-2 text-left text-slate-500 dark:text-slate-400 uppercase tracking-wider text-xs font-bold">#</th>
-              <th class="px-3 py-2 text-left text-slate-500 dark:text-slate-400 uppercase tracking-wider text-xs font-bold">Host</th>
-              <th class="px-3 py-2 text-left text-slate-500 dark:text-slate-400 uppercase tracking-wider text-xs font-bold">Tiempo</th>
-              <th class="px-3 py-2 text-left text-slate-500 dark:text-slate-400 uppercase tracking-wider text-xs font-bold">Estado</th>
-            </tr>
-          </thead>
-          <tbody class="divide-y divide-slate-200/60 dark:divide-slate-700/60 dark:bg-slate-800/80">
-            <tr *ngFor="let r of pingResults; let i = index" class="hover:bg-gray-50 dark:hover:bg-gray-700">
-              <td class="px-3 py-2 text-gray-500">{{ i + 1 }}</td>
-              <td class="px-3 py-2">{{ r.host }}</td>
-              <td class="px-3 py-2">{{ convertToSeconds(r.time) }}</td>
-              <td class="px-3 py-2">{{ r.status }}</td>
-            </tr>
-          </tbody>
+      <div *ngIf="pingResults.length > 0" class="np-tablewrap np-tablewrap--scroll">
+        <table class="np-table np-table--compact">
+          <thead><tr><th>#</th><th>Host</th><th>Tiempo</th><th>Estado</th></tr></thead>
+          <tbody><tr *ngFor="let r of pingResults; let i = index"><td class="np-data np-data--dim">{{ i + 1 }}</td><td class="np-data">{{ r.host }}</td><td class="np-data">{{ convertToSeconds(r.time) }}</td><td>{{ r.status }}</td></tr></tbody>
         </table>
       </div>
     </div>

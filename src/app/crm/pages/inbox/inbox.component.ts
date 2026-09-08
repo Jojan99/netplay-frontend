@@ -6,6 +6,7 @@ import {
   Inject
 } from '@angular/core';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { PLATFORM_ID } from '@angular/core';
 
 import { ConversationListComponent } from '../../components/conversation-list/conversation-list.component';
@@ -27,6 +28,7 @@ type InboxProvider = 'meta' | 'netplay';
   standalone: true,
   imports: [
     CommonModule,
+    FormsModule,
     ConversationListComponent,
     ChatWindowComponent,
     TransferConversationModalComponent,
@@ -35,7 +37,8 @@ type InboxProvider = 'meta' | 'netplay';
     CrmNewConversationModalComponent
   ],
   templateUrl: './inbox.component.html',
-  styleUrl: './inbox.component.scss'
+  styleUrl: './inbox.component.scss',
+  host: { class: 'np-console' },
 })
 export class InboxComponent implements OnInit, OnDestroy {
 
@@ -55,6 +58,110 @@ export class InboxComponent implements OnInit, OnDestroy {
 
   private unreadMap = new Map<number, number>();
 
+  /* ── Mensajes nuevos en la otra bandeja (Meta ↔ WhatsApp Web) ── */
+  providerUnread: Record<string, number> = { meta: 0, netplay: 0 };
+
+  /* ── Escribirle a un contacto compartido en el chat ──────────── */
+  startChatWith(c: { phone: string; name: string }): void {
+    const phone = (c.phone || '').replace(/[^\d+]/g, '');
+    if (!phone) return;
+    const existing = this.inbox.find(x => (x.customer?.phone || '').replace(/\D/g, '').endsWith(phone.replace(/\D/g, '').slice(-10)));
+    if (existing) { this.openChat(existing.id); return; }
+    if (!confirm(`¿Iniciar un chat nuevo con ${c.name || phone} (${phone})?`)) return;
+    this.crmService.createConversation(phone, c.name || phone, this.inboxProvider).subscribe({
+      next: res => { const id = res?.conversation_id ?? res?.data?.id; if (id) { this.loadInbox(); this.openChat(id); } },
+      error: err => alert(err?.error?.message || err?.error?.error || 'No se pudo crear la conversación.')
+    });
+  }
+
+  /* ── Etiquetas (para filtrar la lista) ───────────────────────── */
+  labels: any[] = [];
+  loadLabels(): void { this.crmService.getLabels().subscribe({ next: r => this.labels = r.data ?? [], error: () => {} }); }
+
+  /* ── Configuración del CRM ───────────────────────────────────── */
+  settings: any = null;
+  settingsForm: any = null;
+  showSettings = false;
+  savingSettings = false;
+  settingsError = '';
+  readonly days = [{ n: 1, l: 'L' }, { n: 2, l: 'M' }, { n: 3, l: 'X' }, { n: 4, l: 'J' }, { n: 5, l: 'V' }, { n: 6, l: 'S' }, { n: 7, l: 'D' }];
+  loadSettings(): void { this.crmService.getSettings().subscribe({ next: r => this.settings = r.data ?? null, error: () => {} }); }
+  openSettings(): void {
+    this.settingsError = '';
+    this.crmService.getSettings().subscribe({
+      next: r => { this.settings = r.data; this.settingsForm = { ...r.data, business_days: [...(r.data.business_days || [])] }; this.showSettings = true; },
+      error: () => alert('No se pudo cargar la configuración.')
+    });
+  }
+  toggleDay(n: number): void {
+    const i = this.settingsForm.business_days.indexOf(n);
+    i === -1 ? this.settingsForm.business_days.push(n) : this.settingsForm.business_days.splice(i, 1);
+  }
+  saveSettings(): void {
+    if (this.savingSettings) return;
+    this.savingSettings = true; this.settingsError = '';
+    const f = this.settingsForm;
+    this.crmService.saveSettings({
+      auto_assign: !!f.auto_assign, off_hours_enabled: !!f.off_hours_enabled, business_days: f.business_days,
+      open_time: f.open_time, close_time: f.close_time, off_hours_message: f.off_hours_message || null,
+      welcome_message: f.welcome_message || null, wait_alert_minutes: Number(f.wait_alert_minutes) || 15,
+    }).subscribe({
+      next: r => { this.settings = r.data; this.savingSettings = false; this.showSettings = false; },
+      error: err => { this.savingSettings = false; this.settingsError = err?.error?.message || 'No se pudo guardar.'; }
+    });
+  }
+
+  /* ── Sonido de notificación (sintetizado, sin archivos) ──────── */
+  soundEnabled = true;
+  private audioCtx: AudioContext | null = null;
+
+  toggleSound(): void {
+    this.soundEnabled = !this.soundEnabled;
+    try { localStorage.setItem('crm_sound', this.soundEnabled ? '1' : '0'); } catch {}
+    if (this.soundEnabled) { this.playNotification(); this.askNotificationPermission(); }
+  }
+
+  /* ── Notificaciones del navegador (pestaña en segundo plano) ─── */
+  private askNotificationPermission(): void {
+    if (!isPlatformBrowser(this.platformId) || !('Notification' in window)) return;
+    if (Notification.permission === 'default') Notification.requestPermission().catch(() => {});
+  }
+
+  private notifyBrowser(conv: any): void {
+    if (!this.soundEnabled || !isPlatformBrowser(this.platformId) || !('Notification' in window)) return;
+    if (Notification.permission !== 'granted' || document.visibilityState === 'visible') return;
+    try {
+      const name = conv?.customer?.name || conv?.customer_name || conv?.customer?.phone || 'Cliente';
+      const body = this.previewText(conv).slice(0, 120);
+      const n = new Notification(`WhatsApp · ${name}`, { body, tag: `crm-${conv?.id}`, icon: '/favicon.ico', silent: true });
+      n.onclick = () => { window.focus(); this.zone.run(() => this.openChat(conv.id)); n.close(); };
+    } catch {}
+  }
+
+  /** Dos notas cortas tipo "pop" de WhatsApp Web. */
+  private playNotification(): void {
+    if (!this.soundEnabled || !isPlatformBrowser(this.platformId)) return;
+    try {
+      const Ctx = (window as any).AudioContext || (window as any).webkitAudioContext;
+      if (!Ctx) return;
+      this.audioCtx ??= new Ctx();
+      const ctx = this.audioCtx!;
+      if (ctx.state === 'suspended') ctx.resume().catch(() => {});
+      const play = (freq: number, at: number, dur: number) => {
+        const osc = ctx.createOscillator(); const gain = ctx.createGain();
+        osc.type = 'sine'; osc.frequency.value = freq;
+        gain.gain.setValueAtTime(0.0001, at);
+        gain.gain.exponentialRampToValueAtTime(0.35, at + 0.012);
+        gain.gain.exponentialRampToValueAtTime(0.0001, at + dur);
+        osc.connect(gain).connect(ctx.destination);
+        osc.start(at); osc.stop(at + dur + 0.02);
+      };
+      const t = ctx.currentTime + 0.01;
+      play(880, t, 0.16);
+      play(1174.7, t + 0.13, 0.22);
+    } catch {}
+  }
+
   constructor(
     private crmService: CrmService,
     private echoService: EchoService,
@@ -69,12 +176,17 @@ export class InboxComponent implements OnInit, OnDestroy {
 
       const saved = sessionStorage.getItem('crm_inbox_status') as InboxStatus;
       if (saved) this.inboxStatus = saved;
+      try { this.soundEnabled = localStorage.getItem('crm_sound') !== '0'; } catch {}
       const savedProvider = sessionStorage.getItem('crm_inbox_provider') as InboxProvider;
       if (savedProvider === 'meta' || savedProvider === 'netplay') this.inboxProvider = savedProvider;
     }
 
     this.loadInbox();
+    this.loadLabels();
+    this.loadSettings();
     this.listenInboxRealtime();
+    // El permiso se pide tras el primer clic del agente (el navegador lo exige)
+    if (isPlatformBrowser(this.platformId)) document.addEventListener('click', () => this.askNotificationPermission(), { once: true });
   }
 
   /* ── REALTIME ───────────────────────────────────────────────── */
@@ -82,28 +194,79 @@ export class InboxComponent implements OnInit, OnDestroy {
     this.echoService.inboxUpdated$.subscribe((payload: any) => {
       this.zone.run(() => {
         const conversationId = payload.conversationId;
+        const fromCustomer = payload.sender !== 'agent';
+        const provider: string = payload.provider || this.inboxProvider;
 
-        if (this.activeConversationId !== conversationId) {
-          const current = this.unreadMap.get(conversationId) || 0;
-          this.unreadMap.set(conversationId, current + 1);
+        // No leídos: se cuentan por conversación, sin importar en qué bandeja esté el agente
+        if (fromCustomer && this.activeConversationId !== conversationId) {
+          this.unreadMap.set(conversationId, (this.unreadMap.get(conversationId) || 0) + 1);
         }
 
-        const filters: any = {};
-        if (this.inboxStatus !== 'all') filters.status = this.inboxStatus;
-        filters.provider = this.inboxProvider;
+        const filters: any = { provider };
+        if (provider === this.inboxProvider && this.inboxStatus !== 'all') filters.status = this.inboxStatus;
 
         this.crmService.getInbox(filters).subscribe(res => {
           const freshInbox = res.data ?? [];
           freshInbox.forEach((c: any) => { c.unread_count = this.unreadMap.get(c.id) || 0; });
-
           const updatedConv = freshInbox.find((c: any) => c.id === conversationId);
-          if (!updatedConv) { this.inbox = freshInbox; return; }
 
+          if (provider !== this.inboxProvider) {
+            // Llegó a la otra bandeja: contador en el chip + lista para previsualizar al pasar el mouse
+            if (fromCustomer && updatedConv) {
+              this.rememberArrival(provider, updatedConv);
+              this.playNotification();
+              this.showToast(updatedConv, provider);
+              this.notifyBrowser(updatedConv);
+            }
+            return;
+          }
+
+          if (!updatedConv) { this.inbox = freshInbox; return; }
           this.inbox = [updatedConv, ...freshInbox.filter((c: any) => c.id !== conversationId)];
+
+          // Sonido y aviso sólo cuando hay un mensaje real del cliente en un chat que no está abierto
+          if (fromCustomer && this.activeConversationId !== conversationId) {
+            this.playNotification();
+            this.showToast(updatedConv, provider);
+            this.notifyBrowser(updatedConv);
+          }
         });
       });
     });
   }
+
+  /* ── Llegadas en la otra bandeja (previsualización al pasar el mouse) ── */
+  providerRecent: Record<string, any[]> = { meta: [], netplay: [] };
+  hoverProvider: string | null = null;
+  private rememberArrival(provider: string, conv: any): void {
+    const list = (this.providerRecent[provider] || []).filter(c => c.id !== conv.id);
+    this.providerRecent = { ...this.providerRecent, [provider]: [conv, ...list].slice(0, 8) };
+    this.providerUnread = { ...this.providerUnread, [provider]: this.providerRecent[provider].length };
+  }
+  openFromPreview(provider: 'meta' | 'netplay', id: number): void {
+    this.hoverProvider = null;
+    if (this.inboxProvider !== provider) this.setProvider(provider);
+    this.openChat(id);
+  }
+  previewText(c: any): string {
+    const lm = c?.last_message; if (!lm) return '';
+    const t: Record<string, string> = { image: '📷 Foto', audio: '🎤 Nota de voz', video: '🎥 Video', document: '📄 Documento', sticker: 'Sticker', location: '📍 Ubicación', contact: '👤 Contacto', poll: '📊 Encuesta', event: '📅 Evento' };
+    return t[lm.type] || lm.content || 'Mensaje';
+  }
+  timeAgo(iso: string): string {
+    const m = Math.max(0, Math.floor((Date.now() - new Date(iso).getTime()) / 60000));
+    return m < 1 ? 'ahora' : m < 60 ? `hace ${m} min` : m < 1440 ? `hace ${Math.floor(m / 60)} h` : `hace ${Math.floor(m / 1440)} d`;
+  }
+
+  /* ── Avisos en pantalla ─────────────────────────────────────── */
+  toasts: { id: number; conv: any; provider: string }[] = [];
+  private showToast(conv: any, provider: string): void {
+    const id = Date.now() + Math.random();
+    this.toasts = [...this.toasts.filter(t => t.conv.id !== conv.id), { id, conv, provider }].slice(-4);
+    setTimeout(() => this.zone.run(() => this.toasts = this.toasts.filter(t => t.id !== id)), 7000);
+  }
+  dismissToast(id: number): void { this.toasts = this.toasts.filter(t => t.id !== id); }
+  openToast(t: { conv: any; provider: string }): void { this.dismissToast((t as any).id); this.openFromPreview(t.provider as any, t.conv.id); }
 
   /* ── INBOX ──────────────────────────────────────────────────── */
   loadInbox(): void {
@@ -131,9 +294,10 @@ export class InboxComponent implements OnInit, OnDestroy {
   setProvider(provider: InboxProvider): void {
     if (this.inboxProvider === provider) return;
     this.inboxProvider = provider;
+    this.providerUnread = { ...this.providerUnread, [provider]: 0 };
+    this.providerRecent = { ...this.providerRecent, [provider]: [] };
     this.activeConversationId = null;
     this.mobileView = 'list';
-    this.unreadMap.clear();
     if (isPlatformBrowser(this.platformId)) sessionStorage.setItem('crm_inbox_provider', provider);
     this.loadInbox();
   }
@@ -156,6 +320,12 @@ export class InboxComponent implements OnInit, OnDestroy {
   }
 
   backToList(): void { this.mobileView = 'list'; }
+
+  markUnread(conversationId: number): void {
+    this.unreadMap.set(conversationId, Math.max(1, this.unreadMap.get(conversationId) || 0));
+    if (this.activeConversationId === conversationId) { this.activeConversationId = null; this.mobileView = 'list'; }
+    this.inbox = this.inbox.map(c => c.id === conversationId ? { ...c, unread_count: this.unreadMap.get(conversationId) } : c);
+  }
 
   onConversationClosed(): void {
     this.activeConversationId = null;

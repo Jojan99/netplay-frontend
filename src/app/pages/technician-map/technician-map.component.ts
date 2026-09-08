@@ -12,6 +12,7 @@ import { EchoService } from '../../services/echo.service';
   imports: [CommonModule],
   templateUrl: './technician-map.component.html',
   styleUrl: './technician-map.component.scss',
+  host: { class: 'np-console' },
 })
 export class TechnicianMapComponent implements OnInit, AfterViewInit, OnDestroy {
 

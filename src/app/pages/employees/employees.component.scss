@@ -1,0 +1,9 @@
+/* ─── Empleados: sólo lo propio ─────────────────────────────────────── */
+.np-emp { --np-inspector-w: 460px; }
+.np-row--active .np-stripe i { background: var(--ok); }
+.np-row--off .np-stripe i    { background: var(--line-strong); }
+.np-insp-tags { margin-top: 6px; }
+.np-list { display: grid; gap: 6px; }
+.np-list-item { display: flex; align-items: flex-start; gap: 10px; padding: 9px 10px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--surface); }
+.np-list-main { flex: 1; min-width: 0; .np-name { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; } }
+@media (max-width: 760px) { .np-col-doc { display: none; } .np-table--registry { min-width: 0; } }

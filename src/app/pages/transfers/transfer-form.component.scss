@@ -1,0 +1,9 @@
+/* ─── Nuevo traslado: sólo lo propio ────────────────────────────────── */
+.np-form-grid { align-items: start; }
+.np-form-col { display: grid; gap: 16px; }
+.np-crumb { color: inherit; text-decoration: none; &:hover { color: var(--accent); } }
+.np-req { color: var(--warn); font-style: normal; }
+.np-route { display: grid; border-left: 2px dashed var(--line-strong); margin-left: 6px; padding-left: 14px; }
+.np-route-stop { position: relative; display: grid; gap: 2px; padding: 2px 0 14px; font-size: 12.5px; b { color: var(--text); }
+  &::before { content: ""; position: absolute; left: -21px; top: 6px; width: 8px; height: 8px; border-radius: 50%; background: var(--text-3); box-shadow: 0 0 0 2px var(--surface); }
+  &.is-new { padding-bottom: 2px; &::before { background: var(--accent); } } }

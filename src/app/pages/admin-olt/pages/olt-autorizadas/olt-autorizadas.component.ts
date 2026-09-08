@@ -1,5 +1,6 @@
 import { Component, HostListener, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { OltNavComponent } from '../../shared/olt-nav.component';
 import { FormsModule } from '@angular/forms';
 import { OltService } from '../../../../services/olt.service';
 import { UserService } from '../../../../services/user.service';
@@ -10,8 +11,10 @@ import { debounceTime, distinctUntilChanged, switchMap } from 'rxjs/operators';
 @Component({
   selector: 'app-olt-autorizadas',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, OltNavComponent],
   templateUrl: './olt-autorizadas.component.html',
+  styleUrl: '../../shared/olt.scss',
+  host: { class: 'np-console' },
 })
 export class OltAutorizadasComponent implements OnInit {
 
@@ -281,6 +284,13 @@ export class OltAutorizadasComponent implements OnInit {
     return status === 'online'
       ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
       : 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400';
+  }
+
+  rxTone(v: number | null | undefined): string {
+    if (v == null) return '';
+    if (v >= -20) return 'is-ok';
+    if (v >= -27) return 'is-warn';
+    return 'is-danger';
   }
 
   rxClass(v: number | null | undefined): string {

@@ -1,6 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { HttpClientModule } from '@angular/common/http';
-import { Component, HostListener, ChangeDetectorRef, OnInit } from '@angular/core';
+import { Component, HostListener, ChangeDetectorRef, OnInit, ViewChild, ElementRef } from '@angular/core';
+import { ActivatedRoute } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { LayoutComponent } from '../../components/layout/layout.component';
 import { UserService } from '../../services/user.service';
@@ -19,12 +20,17 @@ interface Toast {
   type: 'success' | 'error' | 'info';
 }
 
+export type ClientStatusFilter = 'all' | 'active' | 'suspended' | 'noip' | 'nowa';
+export type ClientRowStatus = 'active' | 'suspended' | 'noip';
+export type ClientTab = 'resumen' | 'servicios' | 'facturacion' | 'tickets' | 'historial';
+
 @Component({
   selector: 'app-user',
   templateUrl: './user.component.html',
   standalone: true,
   imports: [CommonModule, FormsModule, HttpClientModule, LayoutComponent, FooterComponent],
-  styleUrls: ['./user.component.scss']
+  styleUrls: ['./user.component.scss'],
+  host: { class: 'np-console' }
 })
 export class UserComponent implements OnInit {
 
@@ -34,6 +40,7 @@ export class UserComponent implements OnInit {
     private cdr: ChangeDetectorRef,
     private companyWaSvc: CompanyWhatsappService,
     private oltService: OltService,
+    private route: ActivatedRoute,
   ) {}
 
   // ── Toast ─────────────────────────────────────────────────────────────────
@@ -53,10 +60,49 @@ export class UserComponent implements OnInit {
   timer: any;
   isDesktop = true;
 
+  // ── Status filter / counts (client-side over the loaded list) ─────────────
+  statusFilter: ClientStatusFilter = 'all';
+  @ViewChild('searchInput') searchInput?: ElementRef<HTMLInputElement>;
+
+  rowStatus(u: UserInterface): ClientRowStatus {
+    if (u.internet_status !== 'ACTIVE') return 'suspended';
+    if (!u.ip) return 'noip';
+    return 'active';
+  }
+
+  rowStatusLabel(u: UserInterface): string {
+    const s = this.rowStatus(u);
+    return s === 'active' ? 'Activo' : s === 'suspended' ? 'Suspendido' : 'Sin IP';
+  }
+
+  get countActive()    { return this.UserInterfaces.filter(u => u.internet_status === 'ACTIVE').length; }
+  get countSuspended() { return this.UserInterfaces.filter(u => u.internet_status !== 'ACTIVE').length; }
+  get countNoIp()      { return this.UserInterfaces.filter(u => !u.ip).length; }
+  get countNoWa()      { return this.UserInterfaces.filter(u => !u.whatsapp_enabled).length; }
+
+  get filteredUsers(): UserInterface[] {
+    switch (this.statusFilter) {
+      case 'active':    return this.UserInterfaces.filter(u => u.internet_status === 'ACTIVE');
+      case 'suspended': return this.UserInterfaces.filter(u => u.internet_status !== 'ACTIVE');
+      case 'noip':      return this.UserInterfaces.filter(u => !u.ip);
+      case 'nowa':      return this.UserInterfaces.filter(u => !u.whatsapp_enabled);
+      default:          return this.UserInterfaces;
+    }
+  }
+
+  setStatusFilter(f: ClientStatusFilter) {
+    this.statusFilter = f;
+    this.currentPage = 1;
+  }
+
+  get pagedUsers(): UserInterface[] {
+    return this.filteredUsers.slice(this.startIndex, this.endIndex);
+  }
+
   // Pagination
   currentPage = 1;
   entriesPerPage = 12;
-  totalEntries = 0;
+  get totalEntries() { return this.filteredUsers.length; }
 
   get totalPages() { return Math.max(1, Math.ceil(this.totalEntries / this.entriesPerPage)); }
   get startIndex() { return (this.currentPage - 1) * this.entriesPerPage; }
@@ -75,13 +121,56 @@ export class UserComponent implements OnInit {
     if (typeof window !== 'undefined') this.isDesktop = window.innerWidth > 768;
   }
 
+  @HostListener('document:keydown', ['$event'])
+  onKeydown(ev: KeyboardEvent) {
+    const target = ev.target as HTMLElement | null;
+    const typing = !!target && ['INPUT', 'SELECT', 'TEXTAREA'].includes(target.tagName);
+    if (ev.key === 'Escape') {
+      if (this.showPingModal)        { this.closePingModal(); return; }
+      if (this.showDeleteModal)      { this.showDeleteModal = false; return; }
+      if (this.showSuspendModal)     { this.showSuspendModal = false; return; }
+      if (this.showCreateUser)       { this.showCreateUser = false; return; }
+      if (this.showClienteModal)     { this.closeClienteModal(); return; }
+    }
+    if (ev.key === '/' && !typing) {
+      ev.preventDefault();
+      this.searchInput?.nativeElement.focus();
+    }
+  }
+
+  // ── Ficha lateral (inspector) ─────────────────────────────────────────────
+  inspectorWide = false;
+  private readonly wideTabs: ClientTab[] = ['facturacion', 'tickets', 'historial'];
+
+  get inspectorAutoWide() { return this.wideTabs.includes(this.modalTab); }
+  get inspectorIsWide()   { return this.inspectorWide || this.inspectorAutoWide; }
+  toggleInspectorWide()   { this.inspectorWide = !this.inspectorWide; }
+
+  isSelected(u: UserInterface) { return this.showClienteModal && String(this.selectedUserId) === String(u.id_user); }
+
+  setTab(tab: ClientTab) {
+    if (tab === 'servicios') { this.openServiciosTab(); return; }
+    this.modalTab = tab;
+  }
+
+  openRow(u: UserInterface) {
+    if (this.isSelected(u)) return;
+    this.openClienteModal(u.alias, u.id_user, u.id_cab);
+  }
+
+  initialOf(name: string | undefined | null): string {
+    return (name ?? 'C').trim().charAt(0).toUpperCase() || 'C';
+  }
+
   // ── WhatsApp company status ───────────────────────────────────────────────
   companyHasWA = false;
 
   ngOnInit() {
     this.onResize(null);
     this.loadCatalogs();
-    this.getAllUser();
+    // ?q=… abre el módulo ya filtrado (lo usa la ficha del cliente del CRM)
+    const q = (this.route.snapshot.queryParamMap.get('q') || '').trim();
+    if (q) { this.search = q; this.getSearchUser(); } else { this.getAllUser(); }
     this.companyWaSvc.getConfig().subscribe({
       next: (res) => {
         const d = res?.data ?? res;
@@ -161,7 +250,7 @@ export class UserComponent implements OnInit {
           whatsapp_enabled: e.whatsapp_enabled ?? false,
           router_id: e.router_id ?? null,
         }));
-        this.totalEntries = this.UserInterfaces.length;
+        if (this.currentPage > this.totalPages) this.currentPage = 1;
         this.skeletor = false;
       },
       error: () => { this.skeletor = false; }
@@ -169,19 +258,21 @@ export class UserComponent implements OnInit {
   }
 
   getSearchUser() {
-    if (!this.search.trim()) { this.getAllUser(); return; }
     clearTimeout(this.timer);
+    if (!this.search.trim()) { this.getAllUser(); return; }
     this.timer = setTimeout(() => {
+      const term = this.search.trim();
+      if (!term) { this.getAllUser(); return; }
       this.skeletor = true;
-      this.userSvc.getSearchUser(this.search).subscribe({
+      this.userSvc.getSearchUser(term).subscribe({
         next: r => {
-          this.UserInterfaces = r.data.map((e: any) => ({
+          if (this.search.trim() !== term) return;
+          this.UserInterfaces = (r.data ?? []).map((e: any) => ({
             id_user: e.id, names: e.names, lastname: e.lastname, address: e.address,
             dni: e.dni, phone: e.phone, email: e.email, internet_status: e.internet_status,
             plan_name: e.plan_name, ip: e.ip, id_cab: e.id_cab, date_create: e.date_create, alias: e.alias,
             router_id: e.router_id ?? null,
           }));
-          this.totalEntries = this.UserInterfaces.length;
           this.currentPage = 1;
           this.skeletor = false;
         },
@@ -320,6 +411,9 @@ export class UserComponent implements OnInit {
     this.selectedUserCab = cabId;
     this.modalTab        = 'resumen';
     this.isEditing       = false;
+    this.inspectorWide   = false;
+    this.showCreateFactureForm = false;
+    this.showNewTicketForm = false;
     this.showClienteModal = true;
     this.loadModalUser(userId);
     this.loadFacturas(cabId);
@@ -674,6 +768,10 @@ export class UserComponent implements OnInit {
         this.toast(r.message ?? 'Estado actualizado', r.error ? 'error' : 'success');
         this.showSuspendModal = false;
         this.getAllUser();
+        if (this.showClienteModal && this.selectedUserId === this.pendingSuspendId) {
+          this.loadModalUser(this.selectedUserId);
+          this.loadAuditLog(this.selectedUserId);
+        }
       },
       error: () => { this.toast('Error al actualizar estado', 'error'); this.showSuspendModal = false; }
     });
@@ -694,6 +792,7 @@ export class UserComponent implements OnInit {
         }
         this.toast(r.message ?? 'Eliminado', r.error ? 'error' : 'success');
         this.showDeleteModal = false;
+        if (!r.error && this.showClienteModal && this.selectedUserId === this.pendingDeleteId) this.closeClienteModal();
         this.getAllUser();
       },
       error: () => { this.toast('Error al eliminar', 'error'); this.showDeleteModal = false; }

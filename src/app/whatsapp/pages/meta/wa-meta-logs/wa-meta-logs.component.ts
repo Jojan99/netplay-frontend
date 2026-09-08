@@ -6,42 +6,29 @@ import { MetaWhatsappService } from '../../../services/meta-whatsapp.service';
   selector: 'app-wa-meta-logs',
   standalone: true,
   imports: [CommonModule],
+  host: { class: 'np-console' },
   template: `
-    <div class="max-w-7xl mx-auto mt-8 p-6">
-      <h1 class="text-2xl font-bold text-gray-900 dark:text-white mb-6">Logs Meta WhatsApp</h1>
-      <div *ngIf="loading" class="animate-pulse space-y-4">
-        <div *ngFor="let i of [1,2,3]" class="h-16 bg-gray-200 dark:bg-gray-700 rounded-lg"></div>
-      </div>
-      <div *ngIf="!loading" class="overflow-x-auto rounded-lg">
-        <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-          <thead class="bg-gray-50 dark:bg-gray-700">
-            <tr>
-              <th class="p-3 text-xs font-medium text-left text-gray-500 uppercase">Fecha</th>
-              <th class="p-3 text-xs font-medium text-left text-gray-500 uppercase">Teléfono</th>
-              <th class="p-3 text-xs font-medium text-left text-gray-500 uppercase">Tipo</th>
-              <th class="p-3 text-xs font-medium text-left text-gray-500 uppercase">Dirección</th>
-              <th class="p-3 text-xs font-medium text-left text-gray-500 uppercase">Estado</th>
-            </tr>
-          </thead>
-          <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-            <tr *ngFor="let log of logs">
-              <td class="p-3 text-sm text-gray-900 dark:text-white">{{ log.created_at | date:'dd/MM/yyyy HH:mm' }}</td>
-              <td class="p-3 text-sm text-gray-500 dark:text-gray-400">{{ log.phone }}</td>
-              <td class="p-3 text-sm text-gray-500 dark:text-gray-400">{{ log.type }}</td>
-              <td class="p-3 text-sm">
-                <span class="px-2 py-0.5 text-xs rounded-full" [ngClass]="log.direction === 'outbound' ? 'bg-blue-100 text-blue-700' : 'bg-green-100 text-green-700'">{{ log.direction === 'outbound' ? 'Enviado' : 'Recibido' }}</span>
-              </td>
-              <td class="p-3 text-sm">
-                <span class="px-2 py-0.5 text-xs rounded-full" [ngClass]="log.status === 'sent' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'">{{ log.status }}</span>
-              </td>
-            </tr>
-            <tr *ngIf="logs.length === 0">
-              <td colspan="5" class="p-8 text-center text-gray-500">No hay logs registrados.</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
+    <div class="np-page">
+      <header class="np-head">
+        <div><p class="np-kicker">WhatsApp <b>/</b> API de Meta <b>/</b> Logs</p><h1 class="np-title">Logs de mensajes</h1><div class="np-ribbon"><span><span class="np-n">{{ logs.length }}</span>registros</span></div></div>
+      </header>
+      <div class="np-workspace"><section class="np-registry"><div class="np-registry-wrap"><table class="np-table np-table--registry">
+        <thead><tr><th class="np-th-stripe"></th><th>Fecha</th><th>Teléfono</th><th>Tipo</th><th>Dirección</th><th>Estado</th></tr></thead>
+        <tbody>
+          <tr *ngIf="loading" class="np-empty"><td colspan="6"><span class="np-spinner"></span></td></tr>
+          <tr *ngIf="!loading && logs.length === 0" class="np-empty"><td colspan="6"><strong>No hay logs registrados.</strong></td></tr>
+          <tr *ngFor="let log of logs" class="np-row np-row--static">
+            <td class="np-stripe"><i [style.background]="log.status === 'sent' || log.status === 'delivered' || log.status === 'read' ? 'var(--ok)' : 'var(--danger)'"></i></td>
+            <td class="np-data np-nowrap">{{ log.created_at | date:'dd/MM/yy HH:mm' }}</td>
+            <td class="np-data np-strong">{{ log.phone }}</td>
+            <td><span class="np-tag np-tag--neutral">{{ log.type }}</span></td>
+            <td><span class="np-pill" [ngClass]="log.direction === 'outbound' ? 'np-pill--info' : 'np-pill--active'">{{ log.direction === 'outbound' ? 'Enviado' : 'Recibido' }}</span></td>
+            <td><span class="np-pill" [ngClass]="log.status === 'sent' || log.status === 'delivered' || log.status === 'read' ? 'np-pill--active' : 'np-pill--suspended'">{{ log.status }}</span></td>
+          </tr>
+        </tbody>
+      </table></div></section></div>
     </div>
+    <style>.np-row--static { cursor: default; }</style>
   `
 })
 export class WaMetaLogsComponent implements OnInit {

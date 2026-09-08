@@ -8,7 +8,9 @@ import { interval, Subscription } from 'rxjs';
   selector: 'app-wa-instancias',
   standalone: true,
   imports: [CommonModule, FormsModule],
-  templateUrl: './wa-instancias.component.html'
+  templateUrl: './wa-instancias.component.html',
+  styleUrl: './wa-instancias.component.scss',
+  host: { class: 'np-console' },
 })
 export class WaInstanciasComponent implements OnInit, OnDestroy {
 

@@ -1,0 +1,22 @@
+/* ─── Instalaciones: sólo lo propio ─────────────────────────────────── */
+.np-inst { --np-inspector-w: 440px; }
+.np-ribbon-sub { color: var(--text-3); font-size: 11px; margin-left: 4px; }
+.np-row--pending .np-stripe i     { background: var(--warn); }
+.np-row--confirmed .np-stripe i   { background: var(--accent); }
+.np-row--in_progress .np-stripe i { background: var(--info); }
+.np-row--completed .np-stripe i   { background: var(--ok); }
+.np-row--cancelled .np-stripe i   { background: var(--danger); }
+.np-pill--pending, .np-pill--pay-pending  { background: var(--warn-soft); color: var(--warn); }
+.np-pill--confirmed                       { background: var(--accent-soft); color: var(--accent); }
+.np-pill--in_progress, .np-pill--pay-paid { background: var(--info-soft); color: var(--info); }
+.np-pill--completed, .np-pill--pay-verified { background: var(--ok-soft); color: var(--ok); }
+.np-pill--cancelled, .np-pill--pay-rejected { background: var(--danger-soft); color: var(--danger); }
+.np-tech-summary { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 0; border: 1px solid var(--line); border-radius: var(--radius-lg); background: var(--surface); overflow: hidden; margin-bottom: 12px; flex-shrink: 0;
+  .np-kpi { border-bottom: 1px solid var(--line); } }
+.np-note { margin: 0 0 6px; font-size: 12.5px; color: var(--text-2); b { color: var(--text); } }
+.np-textarea { height: auto; padding: 8px 10px; resize: vertical; }
+.np-plan-mobile { display: none; }
+.np-switchrow { gap: 8px; flex-wrap: wrap; }
+@media (max-width: 1500px) { .np-inst.is-open .np-col-tech { display: none; } }
+@media (max-width: 1300px) { .np-inst.is-open .np-col-addr { display: none; } }
+@media (max-width: 760px) { .np-col-addr, .np-col-tech { display: none; } .np-plan-mobile { display: inline; } .np-table--registry { min-width: 0; } }

@@ -1,161 +1,67 @@
-<div class="min-h-full bg-slate-50/80 dark:bg-slate-900/80 p-5 space-y-4">
-
-  <!-- Header -->
-  <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+<div class="np-page np-paymethods" [class.is-open]="!!selectedMethod" [class.is-wide]="!!selectedMethod">
+  <header class="np-head">
     <div>
-      <h1 class="text-2xl font-bold bg-gradient-to-r from-slate-800 to-slate-600 bg-clip-text text-transparent dark:from-white dark:to-slate-300">
-        Métodos de Pago
-      </h1>
-      <p class="text-sm text-slate-500 dark:text-slate-400">
-        Recaudo por método de pago
-      </p>
-    </div>
-    <input type="month" [(ngModel)]="period" (ngModelChange)="onPeriodChange()"
-           class="px-3.5 py-2 text-sm bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl border border-slate-200/60 dark:border-slate-700/60 rounded-xl text-slate-700 dark:text-slate-300 focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-400 transition-all shadow-sm">
-  </div>
-
-  <!-- Method Selection (when no method selected) -->
-  <ng-container *ngIf="!selectedMethod">
-    <div *ngIf="loading" class="flex justify-center py-12">
-      <svg class="w-8 h-8 animate-spin text-indigo-500" fill="none" viewBox="0 0 24 24">
-        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
-        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"/>
-      </svg>
-    </div>
-
-    <div *ngIf="!loading && methods.length === 0"
-         class="bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl rounded-2xl border border-slate-200/60 dark:border-slate-700/60 shadow-sm hover:shadow-md transition-all duration-300 p-8 text-center">
-      <p class="text-slate-500 dark:text-slate-400">No hay pagos registrados en este período.</p>
-    </div>
-
-    <div *ngIf="!loading && methods.length > 0" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-      <div *ngFor="let m of methods"
-           (click)="selectMethod(m)"
-           class="bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl rounded-2xl border border-slate-200/60 dark:border-slate-700/60 shadow-sm hover:shadow-md transition-all duration-300 p-5 hover:border-blue-300 dark:hover:border-blue-500 cursor-pointer transition-all">
-        <p class="text-sm font-medium text-slate-500 dark:text-slate-400 mb-1 truncate">{{ m.name }}</p>
-        <p class="text-xl font-bold text-slate-900 dark:text-white">$ {{ m.total | number:'1.0-0' }}</p>
-        <p class="text-xs text-slate-400 mt-1">{{ m.count }} pago(s)</p>
+      <p class="np-kicker">Operación <b>/</b> Finanzas <b>/</b> Métodos de pago</p>
+      <h1 class="np-title">Recaudo por método de pago</h1>
+      <div class="np-ribbon">
+        <span>Período <span class="np-mono">{{ period }}</span></span>
+        <span><span class="np-n">{{ methods.length }}</span>métodos con pagos</span>
+        <span><span class="np-n">$ {{ grandTotal | number:'1.0-0' }}</span>recaudado</span>
       </div>
     </div>
-  </ng-container>
+    <div class="np-actions"><label class="np-field np-field--inline"><span>Período</span><input type="month" class="np-input np-input--sm" [(ngModel)]="period" (ngModelChange)="onPeriodChange()" /></label></div>
+  </header>
 
-  <!-- Payment Detail (when method selected) -->
-  <ng-container *ngIf="selectedMethod">
-    <!-- Back button + Header -->
-    <div class="flex items-center gap-4 mb-4">
-      <button (click)="goBack()"
-              class="flex items-center gap-2 px-3 py-2 text-sm text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700/50 rounded-lg transition-colors">
-        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/>
-        </svg>
-        Volver
-      </button>
-      <div>
-        <h2 class="text-lg font-semibold text-slate-800 dark:text-white">{{ selectedMethod }}</h2>
-        <p class="text-sm text-slate-500 dark:text-slate-400">{{ period }}</p>
+  <div class="np-workspace">
+    <section class="np-registry" aria-label="Métodos de pago">
+      <div class="np-registry-wrap">
+        <table class="np-table np-table--registry">
+          <thead><tr><th class="np-th-stripe"></th><th>Método</th><th class="np-th-right">Pagos</th><th class="np-th-right">Total</th><th class="np-th-right">Participación</th><th class="np-th-right"></th></tr></thead>
+          <tbody>
+            <tr *ngIf="loading" class="np-empty"><td colspan="6"><span class="np-spinner"></span></td></tr>
+            <tr *ngIf="!loading && methods.length === 0" class="np-empty"><td colspan="6"><strong>No hay pagos registrados en este período.</strong></td></tr>
+            <tr *ngFor="let m of methods" class="np-row" [attr.aria-selected]="selectedMethod === m.name" (click)="selectMethod(m)" tabindex="0" (keydown.enter)="selectMethod(m)">
+              <td class="np-stripe"><i style="background:var(--accent)"></i></td>
+              <td><div class="np-name">{{ m.name }}</div></td>
+              <td class="np-data np-td-right">{{ m.count }}</td>
+              <td class="np-money">$ {{ m.total | number:'1.0-0' }}</td>
+              <td class="np-td-right"><span class="np-share"><i [style.width.%]="grandTotal ? (m.total / grandTotal) * 100 : 0"></i></span><span class="np-data">{{ grandTotal ? ((m.total / grandTotal) * 100 | number:'1.0-0') : 0 }}%</span></td>
+              <td class="np-td-right"><div class="np-rowacts"><button type="button" class="np-icobtn" title="Ver pagos"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 6 6 6-6 6"/></svg></button></div></td>
+            </tr>
+          </tbody>
+        </table>
       </div>
-    </div>
+    </section>
 
-    <!-- Summary cards -->
-    <div class="grid grid-cols-2 md:grid-cols-3 gap-4 mb-4">
-      <div class="bg-white dark:bg-slate-800/80 rounded-xl p-4 border border-slate-100/60 dark:border-slate-700/60">
-        <p class="text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider text-xs font-bold">Total recaudo</p>
-        <div *ngIf="paymentsLoading" class="h-8 bg-slate-200/60 dark:bg-slate-600 rounded animate-pulse"></div>
-        <p *ngIf="!paymentsLoading" class="text-xl font-bold text-slate-900 dark:text-white">$ {{ displayTotal | number:'1.0-0' }}</p>
+    <aside class="np-inspector" *ngIf="selectedMethod" aria-label="Pagos del método">
+      <div class="np-insp-head">
+        <div class="np-avatar">{{ selectedMethod.charAt(0).toUpperCase() }}</div>
+        <div class="np-insp-id"><h2>{{ selectedMethod }}</h2><div class="np-meta">Pagos del período <b>{{ period }}</b></div></div>
+        <div class="np-insp-tools"><button type="button" class="np-icobtn" (click)="goBack()" aria-label="Cerrar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div>
       </div>
-      <div class="bg-white dark:bg-slate-800/80 rounded-xl p-4 border border-slate-100/60 dark:border-slate-700/60">
-        <p class="text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider text-xs font-bold">Cantidad pagos</p>
-        <div *ngIf="paymentsLoading" class="h-8 bg-slate-200/60 dark:bg-slate-600 rounded animate-pulse"></div>
-        <p *ngIf="!paymentsLoading" class="text-xl font-bold text-slate-900 dark:text-white">{{ total }}</p>
+      <div class="np-stats np-stats--bar">
+        <div class="np-stat"><span class="np-stat-l">Recaudo</span><span class="np-stat-v">{{ paymentsLoading ? '…' : ('$ ' + (displayTotal | number:'1.0-0')) }}</span></div>
+        <div class="np-stat"><span class="np-stat-l">Pagos</span><span class="np-stat-v">{{ paymentsLoading ? '…' : total }}</span></div>
+        <div class="np-stat"><span class="np-stat-l">Promedio</span><span class="np-stat-v">{{ paymentsLoading ? '…' : ('$ ' + (displayAverage | number:'1.0-0')) }}</span></div>
       </div>
-      <div class="bg-white dark:bg-slate-800/80 rounded-xl p-4 border border-slate-100/60 dark:border-slate-700/60">
-        <p class="text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider text-xs font-bold">Promedio</p>
-        <div *ngIf="paymentsLoading" class="h-8 bg-slate-200/60 dark:bg-slate-600 rounded animate-pulse"></div>
-        <p *ngIf="!paymentsLoading" class="text-xl font-bold text-slate-900 dark:text-white">$ {{ displayAverage | number:'1.0-0' }}</p>
-      </div>
-    </div>
-
-    <!-- Filters -->
-    <div class="flex flex-wrap gap-2 items-center">
-      <div class="relative">
-        <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0"/>
-        </svg>
-        <input type="text" [(ngModel)]="searchTerm" (input)="onSearchInput($event)"
-          placeholder="Buscar cliente..."
-          class="pl-9 pr-3 py-2 w-64 px-3.5 py-2 text-sm bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl border border-slate-200/60 dark:border-slate-700/60 rounded-xl text-slate-700 dark:text-slate-300 focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-400 transition-all shadow-sm">
-      </div>
-      <select [(ngModel)]="perPage" (ngModelChange)="changePerPage()"
-              class="px-3 px-3.5 py-2 text-sm bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl border border-slate-200/60 dark:border-slate-700/60 rounded-xl text-slate-700 dark:text-slate-300 focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-400 transition-all shadow-sm">
-        <option *ngFor="let n of perPageOptions" [value]="n">{{ n }} / pág.</option>
-      </select>
-    </div>
-
-    <!-- Payments table -->
-    <div class="bg-white dark:bg-slate-800/80 rounded-2xl border border-slate-100/60 dark:border-slate-700/60 overflow-hidden">
-      <div *ngIf="paymentsLoading" class="flex justify-center py-12">
-        <svg class="w-8 h-8 animate-spin text-indigo-500" fill="none" viewBox="0 0 24 24">
-          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
-          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"/>
-        </svg>
-      </div>
-
-      <div *ngIf="!paymentsLoading && payments.length === 0"
-           class="text-center py-12 text-slate-500 dark:text-slate-400">
-        No hay pagos registrados.
-      </div>
-
-      <table *ngIf="!paymentsLoading && payments.length > 0"
-             class="w-full text-sm">
-        <thead class="text-xs text-slate-500 dark:text-slate-400 bg-slate-50/80 dark:bg-slate-700/80  uppercase tracking-wider text-xs font-bold">
-          <tr>
-            <th class="px-4 py-3 text-left font-medium">Fecha</th>
-            <th class="px-4 py-3 text-left font-medium">Cliente</th>
-            <th class="px-4 py-3 text-right font-medium">Monto</th>
-            <th class="px-4 py-3 text-center font-medium">Factura</th>
-          </tr>
-        </thead>
-        <tbody class="divide-y divide-slate-100 dark:divide-slate-700">
-          <tr *ngFor="let p of payments" class="hover:bg-slate-50 dark:hover:bg-slate-700/50/50">
-            <td class="px-4 py-3 text-slate-600 dark:text-slate-300">
-              {{ p.payment_date | date:'dd/MM/yyyy HH:mm' }}
-            </td>
-            <td class="px-4 py-3 text-slate-800 dark:text-slate-200">
-              {{ p.client_name }}
-            </td>
-            <td class="px-4 py-3 text-right font-medium text-slate-900 dark:text-white">
-              $ {{ p.amount | number:'1.0-0' }}
-            </td>
-            <td class="px-4 py-3 text-center">
-              <span *ngIf="p.invoice_id" class="px-2 py-1 rounded-full text-xs bg-green-50 text-green-700 dark:bg-green-900/30 dark:text-green-400">
-                #{{ p.invoice_id }}
-              </span>
-              <span *ngIf="!p.invoice_id" class="text-slate-400">-</span>
-            </td>
-          </tr>
-        </tbody>
-      </table>
-
-      <!-- Pagination -->
-      <div *ngIf="!paymentsLoading && displayFiltered > perPage"
-           class="flex flex-wrap items-center justify-between gap-2 px-4 py-3 border-t border-slate-100/60 dark:border-slate-700/60">
-        <p class="text-xs text-slate-500 dark:text-slate-400">
-          Mostrando {{ (page - 1) * perPage + 1 }}–{{ page * perPage > displayFiltered ? displayFiltered : page * perPage }} de {{ displayFiltered }} registros
-        </p>
-        <div class="flex gap-1">
-          <button (click)="prevPage()" [disabled]="page === 1"
-                  [class]="'px-3 py-1.5 text-sm rounded-lg border transition-colors ' +
-                    (page === 1 ? 'bg-slate-100/80 dark:bg-slate-700/80 text-slate-400 cursor-not-allowed' : 'bg-white dark:bg-slate-700/80 border-slate-300/60 dark:border-slate-600/60 hover:bg-slate-50 dark:hover:bg-slate-600/60')">
-            Anterior
-          </button>
-          <button (click)="nextPage()" [disabled]="page === lastPage"
-                  [class]="'px-3 py-1.5 text-sm rounded-lg border transition-colors ' +
-                    (page === lastPage ? 'bg-slate-100/80 dark:bg-slate-700/80 text-slate-400 cursor-not-allowed' : 'bg-white dark:bg-slate-700/80 border-slate-300/60 dark:border-slate-600/60 hover:bg-slate-50 dark:hover:bg-slate-600/60')">
-            Siguiente
-          </button>
+      <div class="np-insp-body">
+        <div class="np-subbar">
+          <label class="np-search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg><input type="search" [(ngModel)]="searchTerm" (input)="onSearchInput($event)" placeholder="Cliente…" aria-label="Buscar cliente" /></label>
+          <label class="np-pagesize">Mostrar<select [(ngModel)]="perPage" (ngModelChange)="changePerPage()"><option *ngFor="let n of perPageOptions" [ngValue]="n">{{ n }}</option></select></label>
+        </div>
+        <div *ngIf="paymentsLoading" class="np-loading"><span class="np-spinner"></span> Cargando pagos…</div>
+        <p class="np-muted" *ngIf="!paymentsLoading && payments.length === 0">No hay pagos registrados.</p>
+        <div class="np-tablewrap" *ngIf="!paymentsLoading && payments.length > 0">
+          <table class="np-table np-table--compact">
+            <thead><tr><th>Fecha</th><th>Cliente</th><th class="np-th-right">Monto</th><th>Factura</th></tr></thead>
+            <tbody><tr *ngFor="let p of payments"><td class="np-data np-nowrap">{{ p.payment_date | date:'dd/MM/yy HH:mm' }}</td><td class="np-strong">{{ p.client_name }}</td><td class="np-money">$ {{ p.amount | number:'1.0-0' }}</td><td class="np-data">{{ p.invoice_id ? '#' + p.invoice_id : '—' }}</td></tr></tbody>
+          </table>
+        </div>
+        <div class="np-pager np-pager--flat" *ngIf="!paymentsLoading && displayFiltered > perPage">
+          <span class="np-range">{{ (page - 1) * perPage + 1 }}–{{ page * perPage > displayFiltered ? displayFiltered : page * perPage }} de {{ displayFiltered }}</span>
+          <div class="np-pages"><button type="button" (click)="prevPage()" [disabled]="page === 1">‹</button><button type="button" aria-current="page">{{ page }}</button><button type="button" (click)="nextPage()" [disabled]="page === lastPage">›</button></div>
         </div>
       </div>
-    </div>
-  </ng-container>
-
+    </aside>
+  </div>
 </div>

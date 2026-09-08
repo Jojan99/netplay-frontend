@@ -1,112 +1,39 @@
-<div class="p-6 max-w-5xl mx-auto space-y-6">
-
-  <!-- Header -->
-  <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+<div class="np-page np-olt">
+  <header class="np-head">
     <div>
-      <h1 class="text-xl font-bold text-gray-800 dark:text-white">Dashboard OLT</h1>
-      <p class="text-sm text-gray-500 dark:text-gray-400 mt-0.5">Resumen de estado de ONTs registradas.</p>
+      <p class="np-kicker">Red <b>/</b> OLT <b>/</b> Estado</p>
+      <h1 class="np-title">{{ selectedOltId ? selectedOltName() : 'Estado de ONTs' }}</h1>
+      <div class="np-ribbon" *ngIf="lastFetched && selectedOltId">
+        <span><span class="np-n">{{ totalOnts }}</span>ONTs</span>
+        <span><i class="np-dot" style="background:var(--ok)"></i><span class="np-n">{{ onlineCount }}</span>en línea</span>
+        <span><i class="np-dot" style="background:var(--danger)"></i><span class="np-n">{{ offlineCount }}</span>fuera de línea</span>
+        <span class="np-mono np-fine">consultado {{ lastFetched | date:'HH:mm:ss' }}</span>
+      </div>
     </div>
-    <div class="flex items-center gap-2">
-      <select [(ngModel)]="selectedOltId" (ngModelChange)="onOltChange()"
-              [disabled]="loadingOlts"
-              class="text-sm px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500">
-        <option [ngValue]="null">{{ loadingOlts ? 'Cargando...' : 'Seleccionar OLT' }}</option>
-        <option *ngFor="let olt of olts" [ngValue]="olt.id">{{ olt.name }}</option>
-      </select>
-      <button (click)="loadOnts()" [disabled]="!selectedOltId || loadingOnts"
-              class="flex items-center gap-1.5 px-3 py-2 text-sm bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white rounded-lg transition-colors">
-        <svg *ngIf="!loadingOnts" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182m0-4.991v4.99"/>
-        </svg>
-        <svg *ngIf="loadingOnts" class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
-          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
-          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/>
-        </svg>
-        Actualizar
-      </button>
+    <div class="np-actions">
+      <label class="np-pagesize">OLT<select [(ngModel)]="selectedOltId" (ngModelChange)="onOltChange()" [disabled]="loadingOlts"><option [ngValue]="null">{{ loadingOlts ? 'Cargando…' : 'Seleccionar' }}</option><option *ngFor="let olt of olts" [ngValue]="olt.id">{{ olt.name }}</option></select></label>
+      <button type="button" class="np-btn np-btn--ghost" (click)="loadOnts()" [disabled]="!selectedOltId || loadingOnts"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 12a8 8 0 1 1-2.3-5.7M20 4v5h-5"/></svg>Actualizar</button>
     </div>
+  </header>
+  <div class="np-toolbar"><app-olt-nav></app-olt-nav></div>
+
+  <div class="np-scroll">
+    <p class="np-empty-block" *ngIf="!selectedOltId && !loadingOlts"><strong>Elegí una OLT para ver su estado.</strong></p>
+    <div *ngIf="loadingOnts" class="np-loading"><span class="np-spinner"></span> Consultando ONTs…</div>
+    <ng-container *ngIf="!loadingOnts && selectedOltId && lastFetched">
+      <section class="np-kpis">
+        <div class="np-kpi np-kpi--accent"><span class="np-kpi-l">Disponibilidad</span><span class="np-kpi-v" [class.np-kpi-v--ok]="onlinePct >= 80" [class.np-kpi-v--warn]="onlinePct >= 50 && onlinePct < 80" [class.np-kpi-v--danger]="onlinePct < 50">{{ onlinePct }}%</span><span class="np-kpi-s"><span class="np-meter"><i [style.width.%]="onlinePct" [style.background]="onlinePct >= 80 ? 'var(--ok)' : onlinePct >= 50 ? 'var(--warn)' : 'var(--danger)'"></i></span>{{ onlineCount }} de {{ totalOnts }}</span></div>
+        <div class="np-kpi"><span class="np-kpi-l">En línea</span><span class="np-kpi-v np-kpi-v--ok">{{ onlineCount }}</span><span class="np-kpi-s">{{ onlinePct }}% del total</span></div>
+        <div class="np-kpi"><span class="np-kpi-l">Fuera de línea</span><span class="np-kpi-v np-kpi-v--danger">{{ offlineCount }}</span><span class="np-kpi-s">{{ 100 - onlinePct }}% del total</span></div>
+        <div class="np-kpi"><span class="np-kpi-l">Puertos PON</span><span class="np-kpi-v">{{ byPort.length }}</span><span class="np-kpi-s">con ONTs registradas</span></div>
+      </section>
+      <section class="np-card" *ngIf="byPort.length > 0">
+        <div class="np-card-h"><h2>Distribución por puerto PON</h2></div>
+        <div class="np-tablewrap"><table class="np-table np-table--compact">
+          <thead><tr><th>Puerto</th><th>Disponibilidad</th><th class="np-th-right">En línea</th><th class="np-th-right">Total</th></tr></thead>
+          <tbody><tr *ngFor="let p of byPort"><td class="np-data np-strong">{{ p.fsp }}</td><td><span class="np-meter np-meter--wide"><i [style.width.%]="p.total ? (p.online / p.total * 100) : 0" [style.background]="p.total && p.online / p.total >= .8 ? 'var(--ok)' : p.total && p.online / p.total >= .5 ? 'var(--warn)' : 'var(--danger)'"></i></span></td><td class="np-data np-td-right np-pos">{{ p.online }}</td><td class="np-data np-td-right">{{ p.total }}</td></tr></tbody>
+        </table></div>
+      </section>
+    </ng-container>
   </div>
-
-  <!-- No OLT -->
-  <div *ngIf="!selectedOltId && !loadingOlts"
-       class="flex flex-col items-center justify-center py-20 text-gray-400">
-    <svg class="w-14 h-14 mb-3 opacity-40" fill="none" viewBox="0 0 24 24" stroke-width="1" stroke="currentColor">
-      <path stroke-linecap="round" stroke-linejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 0 1 3 19.875v-6.75ZM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 0 1-1.125-1.125V8.625ZM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 0 1-1.125-1.125V4.125Z"/>
-    </svg>
-    <p class="text-sm">Selecciona una OLT para ver el dashboard.</p>
-  </div>
-
-  <!-- Loading -->
-  <div *ngIf="loadingOnts" class="space-y-3 animate-pulse">
-    <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
-      <div *ngFor="let i of [1,2,3,4]" class="h-24 bg-gray-200 dark:bg-gray-700 rounded-xl"></div>
-    </div>
-  </div>
-
-  <!-- KPIs -->
-  <div *ngIf="!loadingOnts && selectedOltId && lastFetched">
-
-    <!-- Stats cards -->
-    <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
-
-      <div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-5">
-        <p class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1">Total ONTs</p>
-        <p class="text-3xl font-bold text-gray-800 dark:text-white">{{ totalOnts }}</p>
-        <p class="text-xs text-gray-400 mt-1">{{ selectedOltName() }}</p>
-      </div>
-
-      <div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-5">
-        <p class="text-xs font-medium text-green-600 dark:text-green-400 uppercase tracking-wide mb-1">En línea</p>
-        <p class="text-3xl font-bold text-green-600 dark:text-green-400">{{ onlineCount }}</p>
-        <p class="text-xs text-gray-400 mt-1">{{ onlinePct }}% del total</p>
-      </div>
-
-      <div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-5">
-        <p class="text-xs font-medium text-red-500 dark:text-red-400 uppercase tracking-wide mb-1">Fuera de línea</p>
-        <p class="text-3xl font-bold text-red-500 dark:text-red-400">{{ offlineCount }}</p>
-        <p class="text-xs text-gray-400 mt-1">{{ 100 - onlinePct }}% del total</p>
-      </div>
-
-      <div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-5">
-        <p class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1">Puertos activos</p>
-        <p class="text-3xl font-bold text-gray-800 dark:text-white">{{ byPort.length }}</p>
-        <p class="text-xs text-gray-400 mt-1">con ONTs registradas</p>
-      </div>
-    </div>
-
-    <!-- Progress bar -->
-    <div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-5 mb-6">
-      <div class="flex justify-between text-sm mb-2">
-        <span class="font-medium text-gray-700 dark:text-gray-300">Disponibilidad</span>
-        <span class="text-gray-500 dark:text-gray-400">{{ onlinePct }}%</span>
-      </div>
-      <div class="w-full h-3 bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden">
-        <div class="h-full rounded-full transition-all duration-500"
-             [style.width.%]="onlinePct"
-             [ngClass]="onlinePct >= 80 ? 'bg-green-500' : onlinePct >= 50 ? 'bg-yellow-500' : 'bg-red-500'">
-        </div>
-      </div>
-      <p class="text-xs text-gray-400 mt-2">{{ onlineCount }} de {{ totalOnts }} ONTs en línea · consultado {{ lastFetched | date:'HH:mm:ss' }}</p>
-    </div>
-
-    <!-- Por puerto -->
-    <div *ngIf="byPort.length > 0" class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-5">
-      <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-4">Distribución por puerto PON</h3>
-      <div class="space-y-3">
-        <div *ngFor="let p of byPort" class="flex items-center gap-3">
-          <span class="font-mono text-xs bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 px-2 py-1 rounded w-28 flex-shrink-0">
-            {{ p.fsp }}
-          </span>
-          <div class="flex-1 h-2 bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden">
-            <div class="h-full bg-green-500 rounded-full"
-                 [style.width.%]="p.total ? (p.online / p.total * 100) : 0"></div>
-          </div>
-          <span class="text-xs text-gray-500 dark:text-gray-400 w-16 text-right flex-shrink-0">
-            {{ p.online }}/{{ p.total }}
-          </span>
-        </div>
-      </div>
-    </div>
-  </div>
-
 </div>

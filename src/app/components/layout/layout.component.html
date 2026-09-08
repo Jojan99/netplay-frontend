@@ -1,30 +1,15 @@
-<!-- ═══ NAVBAR PREMIUM ════════════════════════════════════════════════════════════ -->
-<header class="app-shell-header antialiased relative z-50">
+<!-- ═══ NAVBAR ══════════════════════════════════════════════════════════════ -->
+<header class="app-shell-header np-shell">
   <nav class="app-shell-nav">
     <div class="app-shell-nav-inner">
 
       <div class="app-shell-brand-zone">
-        <button (click)="sidebarService.toggleCollapsed()"
-          class="app-shell-icon-button app-shell-menu-trigger" aria-label="Mostrar menú">
-          <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5"/>
-          </svg>
+        <button type="button" (click)="sidebarService.toggleCollapsed()" class="np-icobtn app-shell-menu-trigger" aria-label="Mostrar u ocultar menú">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
         </button>
-
         <a routerLink="/dashboard/home" class="app-shell-brand">
-          <!-- Logo -->
-          <img *ngIf="companyLogo; else initials"
-               [src]="companyLogo"
-            class="app-shell-logo"
-               alt="logo">
-
-          <!-- Inicial -->
-          <ng-template #initials>
-            <div class="app-shell-monogram">
-              {{ companyName?.charAt(0)?.toUpperCase() || 'N' }}
-            </div>
-          </ng-template>
-
+          <img *ngIf="companyLogo; else initials" [src]="companyLogo" class="app-shell-logo" alt="Logo">
+          <ng-template #initials><div class="app-shell-monogram">{{ companyName?.charAt(0)?.toUpperCase() || 'N' }}</div></ng-template>
           <div class="app-shell-brand-copy">
             <span class="app-shell-company">{{ companyName || 'Netplay' }}</span>
             <span class="app-shell-product">Plataforma de operación</span>
@@ -32,92 +17,42 @@
         </a>
       </div>
 
-      <div class="app-shell-context hidden lg:flex">
-        <span class="app-shell-context-dot"></span><span>Centro de control</span><span class="app-shell-context-divider"></span><span>Conexión segura</span>
+      <div class="app-shell-context">
+        <span class="app-shell-crumb"><b>{{ currentGroup || 'Operación' }}</b><i>/</i><span>{{ currentSection || 'Centro de control' }}</span></span>
+        <span class="app-shell-context-divider"></span>
+        <span class="app-shell-live"><i></i>en línea</span>
+        <span class="app-shell-context-divider"></span>
+        <span class="app-shell-clock">{{ now | date:'EEE d MMM · HH:mm' }}</span>
       </div>
 
       <div class="app-shell-actions">
-
         <flowbite-dark-theme-toggle></flowbite-dark-theme-toggle>
-
-        <!-- Notificaciones -->
-        <button class="app-shell-icon-button app-shell-notification" aria-label="Notificaciones">
-          <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M14.857 17.082a23.848 23.848 0 005.454-1.31A8.967 8.967 0 0118 9.75v-.7V9A6 6 0 006 9v.75a8.967 8.967 0 01-2.312 6.022c1.733.64 3.56 1.085 5.454 1.31m5.714 0a24.255 24.255 0 01-5.714 0m5.714 0a3 3 0 11-5.714 0"/>
-          </svg>
+        <button type="button" class="np-icobtn app-shell-notification" aria-label="Notificaciones">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 16V11a6 6 0 1 1 12 0v5l1.5 2h-15L6 16zM10 20a2 2 0 0 0 4 0"/></svg>
           <span class="app-shell-notification-dot"></span>
         </button>
-
-        <!-- Perfil -->
-        <button #dropdownButton
-                (click)="toggleDropdown()"
-              class="app-shell-profile">
-
-            <div class="app-shell-user-monogram">
-            {{ username?.charAt(0)?.toUpperCase() || 'U' }}
-          </div>
-
-          <div class="app-shell-profile-copy hidden md:block">
+        <button #dropdownButton type="button" (click)="toggleDropdown()" class="app-shell-profile" [attr.aria-expanded]="isDropdownVisible">
+          <div class="app-shell-user-monogram">{{ username?.charAt(0)?.toUpperCase() || 'U' }}</div>
+          <div class="app-shell-profile-copy">
             <span class="app-shell-user">{{ username || 'Usuario' }}</span>
             <span class="app-shell-user-role">{{ roleName || 'Sin rol' }}</span>
           </div>
-
-          <svg class="w-4 h-4 text-slate-400 hidden md:block" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5"/>
-          </svg>
+          <svg class="app-shell-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
         </button>
 
-        <!-- Dropdown Premium -->
-        <div #dropdownMenu
-             *ngIf="isDropdownVisible"
-             [style.top.px]="dropdownPosition.top"
-             [style.left.px]="dropdownPosition.left"
-             class="app-shell-dropdown fixed z-50 w-64 rounded-lg overflow-hidden">
-
-          <div class="app-shell-dropdown-head px-5 py-4">
-            <div class="flex items-center gap-3 mb-2">
-              <div class="app-shell-monogram w-10 h-10 rounded-lg flex items-center justify-center text-white font-bold text-lg">
-                {{ username?.charAt(0)?.toUpperCase() || 'U' }}
-              </div>
-              <div>
-                <p class="app-shell-dropdown-user text-sm font-bold">
-                  {{ username || 'Usuario' }}
-                </p>
-                <p class="app-shell-role text-[10px] font-semibold uppercase tracking-wider">
-                  {{ roleName || 'Sin rol' }}
-                </p>
-              </div>
+        <div #dropdownMenu *ngIf="isDropdownVisible" [style.top.px]="dropdownPosition.top" [style.left.px]="dropdownPosition.left" class="app-shell-dropdown">
+          <div class="app-shell-dropdown-head">
+            <div class="app-shell-user-monogram app-shell-user-monogram--lg">{{ username?.charAt(0)?.toUpperCase() || 'U' }}</div>
+            <div class="app-shell-dropdown-copy">
+              <p class="app-shell-dropdown-user">{{ username || 'Usuario' }}</p>
+              <p class="app-shell-role">{{ roleName || 'Sin rol' }} · {{ companyName }}</p>
             </div>
-            <p class="text-xs text-slate-500 dark:text-slate-400 truncate pl-0.5">
-              {{ companyName }}
-            </p>
           </div>
-
-          <ul class="py-2">
-            <li>
-              <a routerLink="/dashboard/perfil" (click)="isDropdownVisible = false"
-                  class="app-shell-menu-item w-full text-left px-4 py-2.5 text-sm flex items-center gap-3 transition-colors">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
-                </svg>
-                Mi perfil
-              </a>
-            </li>
-            <li class="px-4 py-1">
-              <div class="h-px bg-slate-100 dark:bg-slate-700"></div>
-            </li>
-            <li>
-              <button (click)="signOut()"
-                      class="w-full text-left px-4 py-2.5 text-sm text-rose-600 hover:bg-rose-50 dark:text-rose-400 dark:hover:bg-rose-900/20 flex items-center gap-3 transition-colors">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15m3 0l3-3m0 0l-3-3m3 3H9"/>
-                </svg>
-                Cerrar sesión
-              </button>
-            </li>
+          <ul class="app-shell-menu">
+            <li><a routerLink="/dashboard/perfil" (click)="isDropdownVisible = false" class="app-shell-menu-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>Mi perfil</a></li>
+            <li><button type="button" (click)="signOut()" class="app-shell-menu-item app-shell-menu-item--danger"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 17l5-5-5-5M15 12H3M21 4v16"/></svg>Cerrar sesión</button></li>
           </ul>
         </div>
-
       </div>
     </div>
   </nav>
@@ -126,13 +61,9 @@
 <!-- ═══ SIDEBAR + CONTENIDO ═══════════════════════════════════════════════ -->
 
 <!-- Mobile backdrop -->
-<div *ngIf="!(sidebarService.$collapsed | async)"
-     class="fixed inset-0 bg-slate-900/30 backdrop-blur-sm z-30 md:hidden"
-  style="top: 66px"
-     (click)="sidebarService.toggleCollapsed()">
-</div>
+<div *ngIf="!(sidebarService.$collapsed | async)" class="app-shell-backdrop" (click)="sidebarService.toggleCollapsed()"></div>
 
-<div class="flex h-full overflow-hidden bg-slate-50 dark:bg-slate-950">
+<div class="app-shell-body flex h-full overflow-hidden">
 
   <flowbite-sidebar extraClass="app-shell-sidebar">
 
@@ -156,15 +87,9 @@
           [icon]="item.icon"
           [link]="item.href">
 
-          <span class="flex items-center justify-between w-full">
-            <span class="font-semibold">{{ item.title }}</span>
-
-            <svg class="h-3.5 w-3.5 ml-2 transform transition-transform duration-300 text-slate-400"
-                 [class.rotate-90]="selectedItem === item"
-                 viewBox="0 0 20 20"
-                 fill="currentColor">
-              <path d="M7 6l5 4-5 4V6z"/>
-            </svg>
+          <span class="sidebar-group-label">
+            <span>{{ item.title }}</span>
+            <svg class="sidebar-chevron" [class.is-open]="selectedItem === item" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 6 6 6-6 6"/></svg>
           </span>
 
         </flowbite-sidebar-item>
@@ -197,47 +122,13 @@
 
 <app-footer></app-footer>
 
-<!-- ═══ TOAST NOTIFICATIONS PREMIUM ═══════════════════════════════════════════════ -->
-<div class="fixed bottom-6 right-6 z-[9999] flex flex-col gap-3 w-80 pointer-events-none">
+<!-- ═══ TOASTS ═══════════════════════════════════════════════════════════════ -->
+<div class="app-shell-toasts" aria-live="polite">
   @for (toast of toastService.toasts(); track toast.id) {
-    <div class="pointer-events-auto flex items-start gap-3 rounded-2xl shadow-2xl px-4 py-3.5 text-sm font-medium transition-all duration-300 border"
-         [ngClass]="{
-           'bg-white border-emerald-200 text-emerald-800 shadow-emerald-500/10': toast.type === 'success',
-           'bg-white border-rose-200 text-rose-800 shadow-rose-500/10':       toast.type === 'error',
-           'bg-white border-sky-200 text-sky-800 shadow-sky-500/10':    toast.type === 'info',
-           'bg-white border-amber-200 text-amber-800 shadow-amber-500/10': toast.type === 'warning'
-         }">
-      <!-- icon -->
-      <span class="mt-0.5 shrink-0 w-7 h-7 rounded-lg flex items-center justify-center"
-            [ngClass]="{
-              'bg-emerald-100 text-emerald-600': toast.type === 'success',
-              'bg-rose-100 text-rose-600':       toast.type === 'error',
-              'bg-sky-100 text-sky-600':    toast.type === 'info',
-              'bg-amber-100 text-amber-600': toast.type === 'warning'
-            }">
-        @if (toast.type === 'success') {
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
-          </svg>
-        } @else if (toast.type === 'error') {
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
-          </svg>
-        } @else if (toast.type === 'warning') {
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v4m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
-          </svg>
-        } @else {
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M12 2a10 10 0 100 20A10 10 0 0012 2z"/>
-          </svg>
-        }
-      </span>
-      <span class="flex-1 pt-0.5">{{ toast.message }}</span>
-      <button class="shrink-0 opacity-40 hover:opacity-100 transition-opacity pt-0.5" (click)="toastService.dismiss(toast.id)">
-        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
-        </svg>
+    <div class="app-shell-toast" [ngClass]="'app-shell-toast--' + toast.type">
+      <span class="flex-1">{{ toast.message }}</span>
+      <button class="app-shell-toast-close" (click)="toastService.dismiss(toast.id)" aria-label="Cerrar">
+        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
       </button>
     </div>
   }

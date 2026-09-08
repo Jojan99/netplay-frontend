@@ -1,308 +1,108 @@
-<div class="max-w-8xl mx-auto mt-4 sm:mt-8 rounded-lg shadow p-3 sm:p-6">
-  <div class="w-full mb-1">
-
-    <!-- Breadcrumb -->
-    <div class="mb-4">
-      <nav class="flex mb-5" aria-label="Breadcrumb">
-        <ol class="inline-flex items-center space-x-1 text-sm font-medium md:space-x-2">
-          <li class="inline-flex items-center">
-            <a class="inline-flex items-center text-slate-700 hover:text-primary-600 dark:text-slate-300 dark:hover:text-white">
-              <svg class="w-5 h-5 mr-2.5" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
-                <path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z"></path>
-              </svg>
-              Home
-            </a>
-          </li>
-          <li>
-            <div class="flex items-center">
-              <svg class="w-6 h-6 text-slate-400" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"></path></svg>
-              <span class="ml-1 text-slate-400 md:ml-2 dark:text-slate-500" aria-current="page">Resumen Financiero</span>
-            </div>
-          </li>
-        </ol>
-      </nav>
-      <h1 class="text-2xl font-bold bg-gradient-to-r from-slate-800 to-slate-600 bg-clip-text text-transparent dark:from-white dark:to-slate-300">RESUMEN FINANCIERO</h1>
+<div class="np-page np-resumen">
+  <header class="np-head">
+    <div>
+      <p class="np-kicker">Operación <b>/</b> Finanzas <b>/</b> Resumen</p>
+      <h1 class="np-title">Resumen financiero</h1>
+      <div class="np-ribbon">
+        <span>Período <span class="np-mono">{{ from | date:'dd/MM/yy' }}</span> a <span class="np-mono">{{ to | date:'dd/MM/yy' }}</span></span>
+        <span *ngIf="!skeletorResumen"><i class="np-dot" [style.background]="(resumen.net_value || 0) >= 0 ? 'var(--ok)' : 'var(--danger)'"></i>Neto <span class="np-n">$ {{ (resumen.net_value || 0) | number:'1.0-0' }}</span></span>
+      </div>
     </div>
-
-    <!-- Date range selector -->
-    <div class="flex flex-wrap items-end gap-3 mb-6 p-3 sm:p-4 bg-white border border-slate-200/60 rounded-lg dark:bg-slate-800/80 dark:border-slate-700/60">
-      <div class="flex-1 min-w-[140px]">
-        <label class="block mb-1 text-sm font-medium text-slate-700 dark:text-slate-300">Desde</label>
-        <input type="date" [(ngModel)]="from"
-          class="px-3.5 py-2.5 text-sm bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl border border-slate-200/60 dark:border-slate-700/60 rounded-xl text-slate-700 dark:text-slate-300 focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-400 transition-all shadow-sm block w-full" />
-      </div>
-      <div class="flex-1 min-w-[140px]">
-        <label class="block mb-1 text-sm font-medium text-slate-700 dark:text-slate-300">Hasta</label>
-        <input type="date" [(ngModel)]="to"
-          class="px-3.5 py-2.5 text-sm bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl border border-slate-200/60 dark:border-slate-700/60 rounded-xl text-slate-700 dark:text-slate-300 focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-400 transition-all shadow-sm block w-full" />
-      </div>
-      <button (click)="consultar()"
-        class="flex items-center px-5 py-2.5 text-sm font-medium text-white bg-gradient-to-br from-indigo-500 to-violet-600 text-white shadow-md shadow-indigo-500/20 hover:shadow-lg transition-all rounded-xl">
-        <svg class="w-4 h-4 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
-        </svg>
-        Consultar
-      </button>
+    <div class="np-actions np-resumen-range">
+      <label class="np-field np-field--inline"><span>Desde</span><input type="date" class="np-input np-input--sm" [(ngModel)]="from" /></label>
+      <label class="np-field np-field--inline"><span>Hasta</span><input type="date" class="np-input np-input--sm" [(ngModel)]="to" /></label>
+      <button type="button" class="np-btn np-btn--primary" (click)="consultar()">Consultar</button>
     </div>
+  </header>
 
-    <!-- Summary cards -->
-    <div class="grid grid-cols-2 gap-3 mb-6 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-7">
-
-      <div *ngIf="!skeletorResumen; else skeletonCard" class="p-4 bg-white border border-slate-200/60 rounded-lg shadow dark:bg-slate-800/80 dark:border-slate-700/60">
-        <p class="text-xs text-slate-500 dark:text-slate-400 mb-1">Ingresos</p>
-        <p class="text-lg font-bold text-green-600 dark:text-green-400">${{ (resumen.valor_ingreso || 0) | number:'1.0-0' }}</p>
+  <div class="np-scroll">
+    <section class="np-resumen-grid">
+      <!-- Estado de resultados -->
+      <div class="np-card">
+        <div class="np-card-h"><h2>Estado de resultados</h2><span class="np-card-meta">{{ skeletorResumen ? 'Calculando…' : 'del período seleccionado' }}</span></div>
+        <dl class="np-ledger-dl" [class.is-loading]="skeletorResumen">
+          <dt>Ingresos por facturas</dt><dd class="np-money">$ {{ (resumen.valor_ingreso || 0) | number:'1.0-0' }}</dd>
+          <dt>Abonos</dt><dd class="np-money">$ {{ (resumen.valor_abone || 0) | number:'1.0-0' }}</dd>
+          <dt class="np-ledger-sub">Total ingresos</dt><dd class="np-money np-pos np-ledger-sub">$ {{ (resumen.total_sum || 0) | number:'1.0-0' }}</dd>
+          <dt>Egresos</dt><dd class="np-money">$ {{ (resumen.total_egresses || 0) | number:'1.0-0' }}</dd>
+          <dt>Compras de inventario</dt><dd class="np-money">$ {{ (resumen.total_inventory_egresses || 0) | number:'1.0-0' }}</dd>
+          <dt class="np-ledger-sub">Total gastos</dt><dd class="np-money np-neg np-ledger-sub">$ {{ (resumen.total_gastos || 0) | number:'1.0-0' }}</dd>
+          <dt class="np-ledger-net">Neto</dt><dd class="np-money np-ledger-net" [class.np-pos]="(resumen.net_value || 0) >= 0" [class.np-neg]="(resumen.net_value || 0) < 0">$ {{ (resumen.net_value || 0) | number:'1.0-0' }}</dd>
+        </dl>
       </div>
-      <ng-template #skeletonCard>
-        <div class="p-4 bg-white border border-slate-200/60 rounded-lg shadow dark:bg-slate-800/80 dark:border-slate-700/60 animate-pulse">
-          <div class="h-3 bg-slate-200/60 rounded dark:bg-slate-700/80 w-16 mb-2"></div>
-          <div class="h-5 bg-slate-200/60 rounded dark:bg-slate-700/80 w-24"></div>
+      <div class="np-card">
+        <div class="np-card-h"><h2>Distribución</h2></div>
+        <div class="np-chart"><canvas id="resumenChart"></canvas></div>
+      </div>
+    </section>
+
+    <section class="np-card">
+      <div class="np-subbar">
+        <div class="np-seg" role="group" aria-label="Detalle">
+          <button type="button" [attr.aria-pressed]="activeTab === 'ingresos'" (click)="activeTab = 'ingresos'">Ingresos<span class="np-c">{{ ingresos.length }}</span></button>
+          <button type="button" [attr.aria-pressed]="activeTab === 'egresos'" (click)="activeTab = 'egresos'">Egresos<span class="np-c">{{ egresos.length }}</span></button>
         </div>
-      </ng-template>
-
-      <div class="p-4 bg-white border border-slate-200/60 rounded-lg shadow dark:bg-slate-800/80 dark:border-slate-700/60" [class.animate-pulse]="skeletorResumen">
-        <p class="text-xs text-slate-500 dark:text-slate-400 mb-1">Abonos</p>
-        <p *ngIf="!skeletorResumen" class="text-lg font-bold text-blue-600 dark:text-blue-400">${{ (resumen.valor_abone || 0) | number:'1.0-0' }}</p>
-        <div *ngIf="skeletorResumen" class="h-5 bg-slate-200/60 rounded dark:bg-slate-700/80 w-24"></div>
+        <span class="np-spacer"></span>
+        <button type="button" class="np-btn np-btn--primary np-btn--sm" *ngIf="activeTab === 'egresos'" (click)="openEgresoModal()">+ Registrar egreso</button>
       </div>
 
-      <div class="p-4 bg-white border border-slate-200/60 rounded-lg shadow dark:bg-slate-800/80 dark:border-slate-700/60" [class.animate-pulse]="skeletorResumen">
-        <p class="text-xs text-slate-500 dark:text-slate-400 mb-1">Total ingresos</p>
-        <p *ngIf="!skeletorResumen" class="text-lg font-bold text-emerald-600 dark:text-emerald-400">${{ (resumen.total_sum || 0) | number:'1.0-0' }}</p>
-        <div *ngIf="skeletorResumen" class="h-5 bg-slate-200/60 rounded dark:bg-slate-700/80 w-24"></div>
-      </div>
-
-      <div class="p-4 bg-white border border-slate-200/60 rounded-lg shadow dark:bg-slate-800/80 dark:border-slate-700/60" [class.animate-pulse]="skeletorResumen">
-        <p class="text-xs text-slate-500 dark:text-slate-400 mb-1">Egresos</p>
-        <p *ngIf="!skeletorResumen" class="text-lg font-bold text-red-600 dark:text-red-400">${{ (resumen.total_egresses || 0) | number:'1.0-0' }}</p>
-        <div *ngIf="skeletorResumen" class="h-5 bg-slate-200/60 rounded dark:bg-slate-700/80 w-24"></div>
-      </div>
-
-      <div class="p-4 bg-white border border-slate-200/60 rounded-lg shadow dark:bg-slate-800/80 dark:border-slate-700/60" [class.animate-pulse]="skeletorResumen">
-        <p class="text-xs text-slate-500 dark:text-slate-400 mb-1">Compras inv.</p>
-        <p *ngIf="!skeletorResumen" class="text-lg font-bold text-orange-500 dark:text-orange-400">${{ (resumen.total_inventory_egresses || 0) | number:'1.0-0' }}</p>
-        <div *ngIf="skeletorResumen" class="h-5 bg-slate-200/60 rounded dark:bg-slate-700/80 w-24"></div>
-      </div>
-
-      <div class="p-4 bg-white border border-slate-200/60 rounded-lg shadow dark:bg-slate-800/80 dark:border-slate-700/60" [class.animate-pulse]="skeletorResumen">
-        <p class="text-xs text-slate-500 dark:text-slate-400 mb-1">Total gastos</p>
-        <p *ngIf="!skeletorResumen" class="text-lg font-bold text-red-700 dark:text-red-500">${{ (resumen.total_gastos || 0) | number:'1.0-0' }}</p>
-        <div *ngIf="skeletorResumen" class="h-5 bg-slate-200/60 rounded dark:bg-slate-700/80 w-24"></div>
-      </div>
-
-      <div class="p-4 border-2 rounded-lg shadow"
-        [ngClass]="(resumen.net_value || 0) >= 0
-          ? 'bg-indigo-50 border-indigo-300 dark:bg-indigo-900 dark:border-indigo-700'
-          : 'bg-red-50 border-red-300 dark:bg-red-900 dark:border-red-700'"
-        [class.animate-pulse]="skeletorResumen">
-        <p class="text-xs text-slate-500 dark:text-slate-400 mb-1">Neto</p>
-        <p *ngIf="!skeletorResumen" class="text-lg font-bold"
-          [ngClass]="(resumen.net_value || 0) >= 0 ? 'text-indigo-700 dark:text-indigo-300' : 'text-red-700 dark:text-red-300'">
-          ${{ (resumen.net_value || 0) | number:'1.0-0' }}
-        </p>
-        <div *ngIf="skeletorResumen" class="h-5 bg-slate-200/60 rounded dark:bg-slate-700/80 w-24"></div>
-      </div>
-    </div>
-
-    <!-- Chart -->
-    <div class="p-4 mb-6 bg-white border border-slate-200/60 rounded-lg shadow dark:bg-slate-800/80 dark:border-slate-700/60">
-      <h2 class="text-base font-semibold text-slate-900 dark:text-white mb-4">Distribución financiera</h2>
-      <canvas id="resumenChart" class="max-h-64"></canvas>
-    </div>
-
-    <!-- Tabs -->
-    <div class="mb-4 border-b border-slate-200/60 dark:border-slate-700/60">
-      <ul class="flex flex-wrap -mb-px text-sm font-medium text-center">
-        <li class="mr-2">
-          <button (click)="activeTab = 'ingresos'"
-            class="inline-block p-4 border-b-2 rounded-t-lg"
-            [ngClass]="activeTab === 'ingresos'
-              ? 'border-blue-600 text-blue-600 dark:border-blue-500 dark:text-blue-500'
-              : 'border-transparent text-slate-500 hover:text-slate-600 dark:text-slate-400 dark:hover:text-slate-300'">
-            Ingresos detallados
-          </button>
-        </li>
-        <li>
-          <button (click)="activeTab = 'egresos'"
-            class="inline-block p-4 border-b-2 rounded-t-lg"
-            [ngClass]="activeTab === 'egresos'
-              ? 'border-blue-600 text-blue-600 dark:border-blue-500 dark:text-blue-500'
-              : 'border-transparent text-slate-500 hover:text-slate-600 dark:text-slate-400 dark:hover:text-slate-300'">
-            Egresos
-          </button>
-        </li>
-      </ul>
-    </div>
-
-    <!-- ── Tab: Ingresos ──────────────────────────────────────────────────────── -->
-    <div *ngIf="activeTab === 'ingresos'">
-      <div class="overflow-x-auto rounded-lg">
-        <div class="inline-block min-w-full align-middle">
-          <div class="overflow-hidden shadow sm:rounded-lg">
-
-            <table *ngIf="!skeletorIngresos; else skeletonIngresos" class="min-w-[520px] w-full divide-y divide-slate-200 dark:divide-slate-600">
-              <thead class="bg-slate-50/80 dark:bg-slate-700/80">
-                <tr>
-                  <th class="p-3 text-xs font-medium text-left text-slate-500 uppercase dark:text-slate-400">N° Fact.</th>
-                  <th class="p-3 text-xs font-medium text-left text-slate-500 uppercase dark:text-slate-400">Fecha</th>
-                  <th class="p-3 text-xs font-medium text-left text-slate-500 uppercase dark:text-slate-400">Cliente</th>
-                  <th class="p-3 text-xs font-medium text-left text-slate-500 uppercase dark:text-slate-400">Total</th>
-                  <th class="p-3 text-xs font-medium text-left text-slate-500 uppercase dark:text-slate-400 hidden sm:table-cell">Descuento</th>
-                  <th class="p-3 text-xs font-medium text-left text-slate-500 uppercase dark:text-slate-400 hidden sm:table-cell">Abono</th>
-                  <th class="p-3 text-xs font-medium text-left text-slate-500 uppercase dark:text-slate-400 hidden md:table-cell">Tipo</th>
-                  <th class="p-3 text-xs font-medium text-left text-slate-500 uppercase dark:text-slate-400">Estado</th>
-                </tr>
-              </thead>
-              <tbody class="bg-white divide-y divide-slate-200 dark:bg-slate-800/80 dark:divide-slate-700">
-                <tr *ngFor="let ing of ingresos" class="hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors">
-                  <td class="p-3 text-sm font-medium text-slate-900 whitespace-nowrap dark:text-white">{{ ing.number_facture }}</td>
-                  <td class="p-3 text-sm text-slate-500 whitespace-nowrap dark:text-slate-400">
-                    {{ ing.date_facturation | date:'dd/MM/yy' }}
-                  </td>
-                  <td class="p-3 text-sm text-slate-500 whitespace-nowrap dark:text-slate-400 max-w-[120px] truncate">{{ ing.cliente || '-' }}</td>
-                  <td class="p-3 text-sm font-semibold text-slate-900 whitespace-nowrap dark:text-white">
-                    ${{ (ing.price_total || 0) | number:'1.0-0' }}
-                  </td>
-                  <td class="p-3 text-sm text-slate-500 whitespace-nowrap dark:text-slate-400 hidden sm:table-cell">
-                    ${{ (ing.price_discount || 0) | number:'1.0-0' }}
-                  </td>
-                  <td class="p-3 text-sm text-slate-500 whitespace-nowrap dark:text-slate-400 hidden sm:table-cell">
-                    ${{ (ing.price_abone || 0) | number:'1.0-0' }}
-                  </td>
-                  <td class="p-3 text-sm text-slate-500 whitespace-nowrap dark:text-slate-400 hidden md:table-cell">{{ getTypeLabel(ing) }}</td>
-                  <td class="p-3 whitespace-nowrap">
-                    <span class="px-2 py-0.5 text-xs font-medium rounded-full" [ngClass]="getStatusClass(ing)">
-                      {{ getStatusLabel(ing) }}
-                    </span>
-                  </td>
-                </tr>
-                <tr *ngIf="ingresos.length === 0">
-                  <td colspan="8" class="p-6 text-sm text-center text-slate-500 dark:text-slate-400">
-                    No hay ingresos para el período seleccionado.
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-
-            <ng-template #skeletonIngresos>
-              <table class="min-w-full divide-y divide-slate-200 dark:divide-slate-600">
-                <thead class="bg-slate-50/80 dark:bg-slate-700/80">
-                  <tr>
-                    <th class="p-4 text-xs font-medium text-left text-slate-500 uppercase dark:text-slate-400" *ngFor="let h of ['N° Factura','Fecha','Cliente','Total','Descuento','Abono','Tipo','Estado']">{{ h }}</th>
-                  </tr>
-                </thead>
-                <tbody class="bg-white divide-y divide-slate-200 dark:bg-slate-800/80 dark:divide-slate-700">
-                  <tr *ngFor="let i of [1,2,3,4,5]" class="animate-pulse">
-                    <td class="p-4" *ngFor="let j of [1,2,3,4,5,6,7,8]"><div class="h-4 bg-slate-200/60 rounded dark:bg-slate-700/80 w-20"></div></td>
-                  </tr>
-                </tbody>
-              </table>
-            </ng-template>
-
-          </div>
+      <ng-container *ngIf="activeTab === 'ingresos'">
+        <div *ngIf="skeletorIngresos" class="np-loading"><span class="np-spinner"></span> Cargando ingresos…</div>
+        <div *ngIf="!skeletorIngresos" class="np-tablewrap">
+          <table class="np-table np-table--compact">
+            <thead><tr><th>N° factura</th><th>Fecha</th><th>Cliente</th><th class="np-th-right">Total</th><th class="np-th-right">Descuento</th><th class="np-th-right">Abono</th><th>Tipo</th><th>Estado</th></tr></thead>
+            <tbody>
+              <tr *ngFor="let ing of ingresos">
+                <td class="np-data np-strong">{{ ing.number_facture }}</td>
+                <td class="np-data">{{ ing.date_facturation | date:'dd/MM/yy' }}</td>
+                <td>{{ ing.cliente || '—' }}</td>
+                <td class="np-money">$ {{ (ing.price_total || 0) | number:'1.0-0' }}</td>
+                <td class="np-data np-td-right">$ {{ (ing.price_discount || 0) | number:'1.0-0' }}</td>
+                <td class="np-data np-td-right" [class.np-pos-info]="(ing.price_abone || 0) > 0">$ {{ (ing.price_abone || 0) | number:'1.0-0' }}</td>
+                <td><span class="np-tag np-tag--neutral">{{ getTypeLabel(ing) }}</span></td>
+                <td><span class="np-pill" [ngClass]="ing.paid === 1 ? 'np-pill--active' : ing.abone === 1 ? 'np-pill--info' : 'np-pill--noip'">{{ getStatusLabel(ing) }}</span></td>
+              </tr>
+              <tr *ngIf="ingresos.length === 0" class="np-empty"><td colspan="8">No hay ingresos en el período.</td></tr>
+            </tbody>
+          </table>
         </div>
-      </div>
-    </div>
+      </ng-container>
 
-    <!-- ── Tab: Egresos ───────────────────────────────────────────────────────── -->
-    <div *ngIf="activeTab === 'egresos'">
-      <div class="flex justify-end mb-3">
-        <button (click)="openEgresoModal()"
-          class="flex items-center px-4 py-2 text-sm font-medium text-white bg-gradient-to-br from-indigo-500 to-violet-600 text-white shadow-md shadow-indigo-500/20 hover:shadow-lg transition-all rounded-xl">
-          <svg class="w-4 h-4 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
-          </svg>
-          Agregar Egreso
-        </button>
-      </div>
-      <div class="overflow-x-auto rounded-lg">
-        <div class="inline-block min-w-full align-middle">
-          <div class="overflow-hidden shadow sm:rounded-lg">
-
-            <table *ngIf="!skeletorEgresos; else skeletonEgresos" class="min-w-full divide-y divide-slate-200 dark:divide-slate-600">
-              <thead class="bg-slate-50/80 dark:bg-slate-700/80">
-                <tr>
-                  <th class="p-4 text-xs font-medium text-left text-slate-500 uppercase dark:text-slate-400">Concepto</th>
-                  <th class="p-4 text-xs font-medium text-left text-slate-500 uppercase dark:text-slate-400">Valor</th>
-                  <th class="p-4 text-xs font-medium text-left text-slate-500 uppercase dark:text-slate-400">Fecha</th>
-                </tr>
-              </thead>
-              <tbody class="bg-white divide-y divide-slate-200 dark:bg-slate-800/80 dark:divide-slate-700">
-                <tr *ngFor="let egr of egresos" class="hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors">
-                  <td class="p-4 text-sm font-medium text-slate-900 dark:text-white">{{ egr.concept }}</td>
-                  <td class="p-4 text-sm font-semibold text-red-600 dark:text-red-400 whitespace-nowrap">
-                    ${{ (egr.value || 0) | number:'1.0-0' }}
-                  </td>
-                  <td class="p-4 text-sm text-slate-500 whitespace-nowrap dark:text-slate-400">
-                    {{ egr.created_at | date:'dd/MM/yyyy' }}
-                  </td>
-                </tr>
-                <tr *ngIf="egresos.length === 0">
-                  <td colspan="3" class="p-6 text-sm text-center text-slate-500 dark:text-slate-400">
-                    No hay egresos registrados.
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-
-            <ng-template #skeletonEgresos>
-              <table class="min-w-full divide-y divide-slate-200 dark:divide-slate-600">
-                <thead class="bg-slate-50/80 dark:bg-slate-700/80">
-                  <tr>
-                    <th class="p-4 text-xs font-medium text-left text-slate-500 uppercase dark:text-slate-400" *ngFor="let h of ['Concepto','Valor','Fecha']">{{ h }}</th>
-                  </tr>
-                </thead>
-                <tbody class="bg-white divide-y divide-slate-200 dark:bg-slate-800/80 dark:divide-slate-700">
-                  <tr *ngFor="let i of [1,2,3,4]" class="animate-pulse">
-                    <td class="p-4"><div class="h-4 bg-slate-200/60 rounded dark:bg-slate-700/80 w-48"></div></td>
-                    <td class="p-4"><div class="h-4 bg-slate-200/60 rounded dark:bg-slate-700/80 w-24"></div></td>
-                    <td class="p-4"><div class="h-4 bg-slate-200/60 rounded dark:bg-slate-700/80 w-24"></div></td>
-                  </tr>
-                </tbody>
-              </table>
-            </ng-template>
-
-          </div>
+      <ng-container *ngIf="activeTab === 'egresos'">
+        <div *ngIf="skeletorEgresos" class="np-loading"><span class="np-spinner"></span> Cargando egresos…</div>
+        <div *ngIf="!skeletorEgresos" class="np-tablewrap">
+          <table class="np-table np-table--compact">
+            <thead><tr><th>Concepto</th><th class="np-th-right">Valor</th><th>Fecha</th></tr></thead>
+            <tbody>
+              <tr *ngFor="let egr of egresos">
+                <td class="np-strong">{{ egr.concept }}</td>
+                <td class="np-money np-neg">$ {{ (egr.value || 0) | number:'1.0-0' }}</td>
+                <td class="np-data">{{ egr.created_at | date:'dd/MM/yy' }}</td>
+              </tr>
+              <tr *ngIf="egresos.length === 0" class="np-empty"><td colspan="3">No hay egresos registrados.</td></tr>
+            </tbody>
+          </table>
         </div>
-      </div>
-    </div>
-
+      </ng-container>
+    </section>
   </div>
 </div>
 
-<!-- ── Modal: Agregar Egreso ──────────────────────────────────────────────── -->
-<div id="egreso-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 ">
-  <div class="bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl rounded-2xl border border-slate-200/60 dark:border-slate-700/60 shadow-sm hover:shadow-md transition-all duration-300-xl w-full max-w-md mx-4">
-    <div class="flex items-center justify-between p-4 border-b dark:border-slate-700/60">
-      <h3 class="text-lg font-semibold text-slate-900 dark:text-white">Registrar Egreso</h3>
-      <button (click)="closeEgresoModal()" class="text-slate-400 hover:text-slate-900 dark:hover:text-white">
-        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-          <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"></path>
-        </svg>
-      </button>
+<!-- Registrar egreso -->
+<div id="egreso-modal" class="np-overlay hidden" (click)="closeEgresoModal()">
+  <div class="np-modal" role="dialog" aria-modal="true" aria-label="Registrar egreso" (click)="$event.stopPropagation()">
+    <div class="np-modal-head"><div><p class="np-kicker">Finanzas <b>/</b> Egresos</p><h3>Registrar egreso</h3></div>
+      <button type="button" class="np-icobtn" (click)="closeEgresoModal()" aria-label="Cerrar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
     </div>
-    <div class="p-6 space-y-4">
-      <div>
-        <label class="block mb-1 text-sm font-medium text-slate-700 dark:text-slate-300">Concepto *</label>
-        <input type="text" [(ngModel)]="nuevoEgreso.concept"
-          class="px-3.5 py-2.5 text-sm bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl border border-slate-200/60 dark:border-slate-700/60 rounded-xl text-slate-700 dark:text-slate-300 focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-400 transition-all shadow-sm block w-full"
-          placeholder="Concepto del egreso" />
+    <div class="np-modal-body">
+      <div class="np-form">
+        <label class="np-field np-field-full"><span>Concepto</span><input type="text" class="np-input" [(ngModel)]="nuevoEgreso.concept" placeholder="Ej: pago de energía" /></label>
+        <label class="np-field np-field-full"><span>Valor</span><input type="number" class="np-input np-mono" [(ngModel)]="nuevoEgreso.value" min="1" /></label>
       </div>
-      <div>
-        <label class="block mb-1 text-sm font-medium text-slate-700 dark:text-slate-300">Valor *</label>
-        <input type="number" [(ngModel)]="nuevoEgreso.value" min="1"
-          class="px-3.5 py-2.5 text-sm bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl border border-slate-200/60 dark:border-slate-700/60 rounded-xl text-slate-700 dark:text-slate-300 focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-400 transition-all shadow-sm block w-full"
-          placeholder="0" />
+      <div class="np-btnrow np-btnrow--end">
+        <button type="button" class="np-btn np-btn--ghost" (click)="closeEgresoModal()">Cancelar</button>
+        <button type="button" class="np-btn np-btn--primary" (click)="saveEgreso()">Guardar egreso</button>
       </div>
-    </div>
-    <div class="flex justify-end p-4 space-x-3 border-t dark:border-slate-700/60">
-      <button (click)="closeEgresoModal()"
-        class="px-4 py-2 text-sm font-medium text-slate-500 bg-white border border-slate-300/60 rounded-lg hover:bg-slate-100/80 dark:bg-slate-800/80 dark:text-slate-400 dark:border-slate-600/60 dark:hover:bg-slate-700/50">
-        Cancelar
-      </button>
-      <button (click)="saveEgreso()"
-        class="px-4 py-2 text-sm font-medium text-white bg-gradient-to-br from-indigo-500 to-violet-600 text-white shadow-md shadow-indigo-500/20 hover:shadow-lg transition-all rounded-xl">
-        Guardar
-      </button>
     </div>
   </div>
 </div>

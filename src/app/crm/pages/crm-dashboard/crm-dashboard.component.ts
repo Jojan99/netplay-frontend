@@ -1,4 +1,4 @@
-import { Component, OnInit, AfterViewInit, ViewChild, ElementRef } from '@angular/core';
+import { Component, Output, EventEmitter, OnInit, AfterViewInit, ViewChild, ElementRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { CrmService } from '../../../services/crm.service';
 import { Chart, registerables } from 'chart.js';
@@ -9,7 +9,9 @@ Chart.register(...registerables);
   selector: 'app-crm-dashboard',
   standalone: true,
   imports: [CommonModule],
-  templateUrl: './crm-dashboard.component.html'
+  templateUrl: './crm-dashboard.component.html',
+  styleUrl: './crm-dashboard.component.scss',
+  host: { class: 'np-console' },
 })
 export class CrmDashboardComponent implements OnInit, AfterViewInit {
 
@@ -18,6 +20,9 @@ export class CrmDashboardComponent implements OnInit, AfterViewInit {
   @ViewChild('chartAgents')  chartAgentsRef!: ElementRef<HTMLCanvasElement>;
 
   metrics: any = null;
+  @Output() openChat = new EventEmitter<number>();
+  get maxAgentMinutes(): number { return Math.max(1, ...((this.metrics?.response_by_agent || []).map((a: any) => a.avg_minutes || 0))); }
+  waitLabel(min: number): string { return min < 60 ? `${min} min` : min < 1440 ? `${Math.floor(min / 60)} h` : `${Math.floor(min / 1440)} d`; }
   loading = true;
 
   private chartStatus?: Chart;

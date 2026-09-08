@@ -1,0 +1,65 @@
+/* ─── Netplay design tokens ─────────────────────────────────────────────
+   Tema claro en :root. Tema oscuro cuando <html> lleva data-theme="dark"
+   o la clase .dark (la que usa Tailwind y el ThemeService actual).
+   Los componentes consumen SOLO estas variables; cambiar de tema es
+   cambiar valores, no reescribir estilos.
+──────────────────────────────────────────────────────────────────────── */
+:root {
+  --bg: #eef2f3;
+  --surface: #ffffff;
+  --surface-2: #f5f8f8;
+  --surface-3: #e9efef;
+  --text: #17293a;
+  --text-2: #4b6072;
+  --text-3: #7f92a2;
+  --line: #d5e0e4;
+  --line-strong: #b9c9cf;
+  --accent: #0f766e;
+  --accent-ink: #ffffff;
+  --accent-soft: #e2f3f0;
+  --accent-line: #9dd3ca;
+  --ok: #1f8a4c;
+  --ok-soft: #e3f4ea;
+  --warn: #b7791f;
+  --warn-soft: #fbf0d9;
+  --danger: #c0392b;
+  --danger-soft: #fae3e0;
+  --info: #2563eb;
+  --info-soft: #e3ebfb;
+  --overlay: rgb(10 22 28 / .55);
+  --shadow: 0 1px 2px rgb(23 41 58 / .06), 0 8px 24px -12px rgb(23 41 58 / .18);
+  --shadow-lg: 0 24px 60px -20px rgb(23 41 58 / .35);
+  --radius: 6px;
+  --radius-lg: 8px;
+  --font-display: 'Bricolage Grotesque', 'Manrope', system-ui, sans-serif;
+  --font-body: 'Manrope', ui-sans-serif, system-ui, sans-serif;
+  --font-mono: 'IBM Plex Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+}
+
+:root[data-theme='dark'],
+:root.dark {
+  --bg: #0e171c;
+  --surface: #142229;
+  --surface-2: #182a32;
+  --surface-3: #1f343d;
+  --text: #e6eef0;
+  --text-2: #a9bcc5;
+  --text-3: #728a96;
+  --line: #25383f;
+  --line-strong: #35505a;
+  --accent: #2fb5a5;
+  --accent-ink: #06201d;
+  --accent-soft: #163a39;
+  --accent-line: #2a6f68;
+  --ok: #4ccb7f;
+  --ok-soft: #153426;
+  --warn: #e0a84a;
+  --warn-soft: #3a2c12;
+  --danger: #f0716a;
+  --danger-soft: #3f1f1c;
+  --info: #7aa2f7;
+  --info-soft: #1c2b4a;
+  --overlay: rgb(0 0 0 / .65);
+  --shadow: 0 1px 2px rgb(0 0 0 / .4), 0 12px 32px -12px rgb(0 0 0 / .6);
+  --shadow-lg: 0 24px 60px -20px rgb(0 0 0 / .7);
+}

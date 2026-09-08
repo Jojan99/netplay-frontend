@@ -1,0 +1,70 @@
+/* ─── CRM · tokens de WhatsApp sobre el sistema Netplay ─────────────────
+   Se importa desde cada componente del CRM. Misma tipografía del panel,
+   colores de WhatsApp Web (claro y oscuro) para que el operador se sienta
+   en la app nativa.
+──────────────────────────────────────────────────────────────────────── */
+@mixin wa-light {
+  --wa-app: #f0f2f5;         /* fondo general */
+  --wa-panel: #ffffff;       /* lista y panel de info */
+  --wa-header: #f0f2f5;      /* cabeceras */
+  --wa-line: #e9edef;
+  --wa-line-strong: #d1d7db;
+  --wa-chat: #efeae2;        /* fondo del chat */
+  --wa-chat-pattern: rgba(0, 0, 0, .04);
+  --wa-in: #ffffff;          /* burbuja entrante */
+  --wa-out: #d9fdd3;         /* burbuja saliente */
+  --wa-note: #fff5c4;        /* nota interna */
+  --wa-text: #111b21;
+  --wa-text-2: #54656f;
+  --wa-text-3: #8696a0;
+  --wa-meta: #667781;        /* hora dentro de la burbuja */
+  --wa-accent: #00a884;      /* verde WhatsApp */
+  --wa-accent-ink: #ffffff;
+  --wa-accent-soft: #d9fdd3;
+  --wa-tick: #53bdeb;        /* doble check azul */
+  --wa-danger: #ea0038;
+  --wa-hover: #f5f6f6;
+  --wa-active: #f0f2f5;
+  --wa-composer: #f0f2f5;
+  --wa-input: #ffffff;
+  --wa-shadow: 0 1px .5px rgba(11, 20, 26, .13);
+  --wa-unread: #25d366;
+}
+@mixin wa-dark {
+  --wa-app: #0b141a;
+  --wa-panel: #111b21;
+  --wa-header: #202c33;
+  --wa-line: #222d34;
+  --wa-line-strong: #2f3b43;
+  --wa-chat: #0b141a;
+  --wa-chat-pattern: rgba(255, 255, 255, .035);
+  --wa-in: #202c33;
+  --wa-out: #005c4b;
+  --wa-note: #3a3416;
+  --wa-text: #e9edef;
+  --wa-text-2: #aebac1;
+  --wa-text-3: #8696a0;
+  --wa-meta: rgba(233, 237, 239, .6);
+  --wa-accent: #00a884;
+  --wa-accent-ink: #ffffff;
+  --wa-accent-soft: #0e3d34;
+  --wa-tick: #53bdeb;
+  --wa-danger: #f15c6d;
+  --wa-hover: #202c33;
+  --wa-active: #2a3942;
+  --wa-composer: #202c33;
+  --wa-input: #2a3942;
+  --wa-shadow: 0 1px .5px rgba(11, 20, 26, .4);
+  --wa-unread: #00a884;
+}
+
+/* Botones de icono redondos al estilo WhatsApp */
+@mixin wa-iconbtn {
+  display: inline-grid; place-items: center; width: 36px; height: 36px; border-radius: 50%; color: var(--wa-text-2); background: none; border: 0; cursor: pointer; transition: background .15s;
+  svg { width: 20px; height: 20px; }
+  &:hover:not(:disabled) { background: rgba(134, 150, 160, .15); }
+  &:disabled { opacity: .45; cursor: not-allowed; }
+}
+@mixin wa-avatar {
+  display: grid; place-items: center; border-radius: 50%; background: #dfe5e7; color: #54656f; font-family: var(--font-display); font-weight: 600; flex-shrink: 0; overflow: hidden;
+}

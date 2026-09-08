@@ -8,7 +8,8 @@ import { HttpClient, HttpHeaders } from '@angular/common/http';
   standalone: true,
   imports: [CommonModule],
   templateUrl: './history-facture.component.html',
-  styleUrl: './history-facture.component.scss'
+  styleUrl: './history-facture.component.scss',
+  host: { class: 'np-console' }
 })
 export class HistoryFactureComponent  implements OnInit{
   constructor(

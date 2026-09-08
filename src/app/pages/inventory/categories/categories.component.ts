@@ -12,6 +12,7 @@ import { InventoryCategoryInterface } from '../../../models/inventory-category.i
   imports: [CommonModule, FormsModule, RouterLink],
   templateUrl: './categories.component.html',
   styleUrl: './categories.component.scss',
+  host: { class: 'np-console' },
 })
 export class CategoriesComponent implements OnInit {
   skeletor   = true;

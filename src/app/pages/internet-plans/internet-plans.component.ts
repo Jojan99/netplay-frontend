@@ -8,6 +8,8 @@ import { InternetPlanService } from '../../services/internet-plan.service';
   standalone: true,
   imports: [CommonModule, FormsModule],
   templateUrl: './internet-plans.component.html',
+  styleUrl: './internet-plans.component.scss',
+  host: { class: 'np-console' },
 })
 export class InternetPlansComponent implements OnInit {
 

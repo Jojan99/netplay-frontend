@@ -10,6 +10,8 @@ import { UserService } from '../../services/user.service';
   standalone: true,
   imports: [CommonModule, FormsModule, RouterModule],
   templateUrl: './transfer-form.component.html',
+  styleUrl: './transfer-form.component.scss',
+  host: { class: 'np-console' },
 })
 export class TransferFormComponent implements OnInit {
   isLoading = false;

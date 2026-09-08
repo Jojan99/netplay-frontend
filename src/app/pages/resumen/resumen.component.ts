@@ -12,6 +12,7 @@ import { EgressesInterface }       from '../../models/egresses-interface';
   imports: [CommonModule, FormsModule],
   templateUrl: './resumen.component.html',
   styleUrl: './resumen.component.scss',
+  host: { class: 'np-console' },
 })
 export class ResumenComponent implements OnInit {
   skeletorResumen  = true;
@@ -84,6 +85,11 @@ export class ResumenComponent implements OnInit {
     );
   }
 
+  private tok(name: string): string {
+    if (typeof getComputedStyle === 'undefined') return '#0f766e';
+    return getComputedStyle(document.documentElement).getPropertyValue(name).trim() || '#0f766e';
+  }
+
   renderChart() {
     const canvas = document.getElementById('resumenChart') as HTMLCanvasElement;
     if (!canvas) return;
@@ -106,22 +112,21 @@ export class ResumenComponent implements OnInit {
             neto,
           ],
           backgroundColor: [
-            'rgba(34,  197,  94, 0.7)',
-            'rgba(59,  130, 246, 0.7)',
-            'rgba(16,  185, 129, 0.7)',
-            'rgba(239,  68,  68, 0.7)',
-            'rgba(245, 158,  11, 0.7)',
-            'rgba(220,  38,  38, 0.7)',
-            neto >= 0 ? 'rgba(99, 102, 241, 0.7)' : 'rgba(239, 68, 68, 0.7)',
+            this.tok('--ok'), this.tok('--info'), this.tok('--ok'),
+            this.tok('--danger'), this.tok('--warn'), this.tok('--danger'),
+            neto >= 0 ? this.tok('--accent') : this.tok('--danger'),
           ],
-          borderWidth: 1,
+          borderRadius: 3,
+          borderWidth: 0,
         }],
       },
       options: {
         responsive: true,
+        maintainAspectRatio: false,
         plugins: { legend: { display: false } },
         scales: {
-          y: { ticks: { callback: (v: any) => '$' + Number(v).toLocaleString('es-CO') } },
+          y: { grid: { color: this.tok('--line') }, ticks: { color: this.tok('--text-3'), font: { family: "'IBM Plex Mono', monospace", size: 11 }, callback: (v: any) => '$' + Number(v).toLocaleString('es-CO') } },
+          x: { grid: { display: false }, ticks: { color: this.tok('--text-3'), font: { family: "'IBM Plex Mono', monospace", size: 11 } } },
         },
       },
     });

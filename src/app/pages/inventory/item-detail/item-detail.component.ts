@@ -13,9 +13,15 @@ import { InventoryMovementInterface } from '../../../models/inventory-movement.i
   imports: [CommonModule, FormsModule, RouterLink],
   templateUrl: './item-detail.component.html',
   styleUrl: './item-detail.component.scss',
+  host: { class: 'np-console' },
 })
 export class ItemDetailComponent implements OnInit {
   skeletor  = true;
+  get movementPages(): number[] {
+    const out: number[] = [];
+    for (let i = Math.max(1, this.movementPage - 2); i <= Math.min(this.movementLastPage, this.movementPage + 2); i++) out.push(i);
+    return out;
+  }
   item: InventoryItemInterface | null = null;
   movements: InventoryMovementInterface[] = [];
 

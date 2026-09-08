@@ -1,0 +1,9 @@
+/* ─── Contratos: sólo lo propio ─────────────────────────────────────── */
+.np-row--active .np-stripe i { background: var(--ok); }
+.np-row--noip .np-stripe i   { background: var(--warn); }
+.np-row--off .np-stripe i    { background: var(--line-strong); }
+.np-docs { display: grid; grid-template-columns: 1fr 1fr; gap: 12px;
+  figure { margin: 0; display: grid; gap: 6px; justify-items: start; border: 1px solid var(--line); border-radius: var(--radius); padding: 10px; background: var(--surface-2); }
+  img { max-height: 180px; width: 100%; object-fit: contain; border-radius: 4px; background: var(--surface); }
+  figcaption { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; color: var(--text-3); } }
+@media (max-width: 640px) { .np-docs { grid-template-columns: 1fr; } }

@@ -1,711 +1,214 @@
-<div class="p-3 sm:p-6 space-y-4">
+<div class="np-page np-tickets" [class.is-open]="showDetail && selectedTicket" [class.is-wide]="showDetail && selectedTicket && inspectorWide">
 
-  <!-- ═══ STATS CARDS (admin only) ═════════════════════════════════════════ -->
-  <div *ngIf="isAdmin" class="grid grid-cols-2 lg:grid-cols-4 gap-3">
-
-    <div class="bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl rounded-2xl border border-slate-200/60 dark:border-slate-700/60 shadow-sm hover:shadow-md transition-all duration-300 p-4">
-      <p class="text-xs font-medium text-slate-500 dark:text-slate-400 uppercase mb-1">Total</p>
-      <p class="text-2xl font-bold text-slate-900 dark:text-white">{{ stats?.total ?? '—' }}</p>
-    </div>
-
-    <div class="bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl rounded-2xl border border-slate-200/60 dark:border-slate-700/60 shadow-sm hover:shadow-md transition-all duration-300 p-4">
-      <p class="text-xs font-medium text-slate-500 dark:text-slate-400 uppercase mb-1">En Proceso</p>
-      <p class="text-2xl font-bold text-blue-600 dark:text-blue-400">{{ stats?.in_progress ?? '—' }}</p>
-    </div>
-
-    <div class="bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl rounded-2xl border border-slate-200/60 dark:border-slate-700/60 shadow-sm hover:shadow-md transition-all duration-300 p-4">
-      <p class="text-xs font-medium text-slate-500 dark:text-slate-400 uppercase mb-1">Cerrados Hoy</p>
-      <p class="text-2xl font-bold text-green-600 dark:text-green-400">{{ stats?.closed_today ?? '—' }}</p>
-    </div>
-
-    <div class="bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl rounded-2xl border border-slate-200/60 dark:border-slate-700/60 shadow-sm hover:shadow-md transition-all duration-300 p-4">
-      <p class="text-xs font-medium text-slate-500 dark:text-slate-400 uppercase mb-1">% Reabiertos</p>
-      <p class="text-2xl font-bold text-red-600 dark:text-red-400">{{ stats?.reopen_pct ?? '—' }}%</p>
-    </div>
-
-  </div>
-
-  <!-- Técnico: simple header -->
-  <div *ngIf="isTecnico" class="bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl rounded-2xl border border-slate-200/60 dark:border-slate-700/60 shadow-sm hover:shadow-md transition-all duration-300 p-4 flex items-center justify-between">
+  <header class="np-head">
     <div>
-      <h1 class="text-base font-semibold text-slate-900 dark:text-white">Mis Tickets</h1>
-      <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-        {{ pendingCount }} pendientes · {{ inProgressCount }} en proceso · {{ closedCount }} cerrados
-      </p>
-    </div>
-    <div class="flex items-center gap-2">
-      <span class="flex items-center gap-1 text-xs text-green-600 dark:text-green-400">
-        <span class="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></span>
-        En vivo
-      </span>
-      <button (click)="loadTickets()"
-              class="p-2 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-700/80 text-slate-500 dark:text-slate-400">
-        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
-        </svg>
-      </button>
-    </div>
-  </div>
-
-  <!-- ═══ FILTERS (admin only) ═════════════════════════════════════════════ -->
-  <div *ngIf="isAdmin" class="bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl rounded-2xl border border-slate-200/60 dark:border-slate-700/60 shadow-sm hover:shadow-md transition-all duration-300 p-4">
-    <div class="flex flex-wrap gap-3 items-end">
-
-      <div class="flex-1 min-w-[130px]">
-        <label class="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">Estado</label>
-        <select [(ngModel)]="filterStatus"
-                class="w-full px-3.5 py-2 text-sm bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl border border-slate-200/60 dark:border-slate-700/60 rounded-xl text-slate-700 dark:text-slate-300 focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-400 transition-all shadow-sm">
-          <option [ngValue]="null">Todos</option>
-          <option [ngValue]="1">Pendiente</option>
-          <option [ngValue]="2">En Proceso</option>
-          <option [ngValue]="3">Cerrado</option>
-        </select>
+      <p class="np-kicker">Soporte <b>/</b> {{ isAdmin ? 'Tickets' : 'Mis tickets' }}</p>
+      <h1 class="np-title">{{ isAdmin ? 'Tickets de soporte' : 'Mis tickets' }}</h1>
+      <div class="np-ribbon">
+        <span><i class="np-dot" style="background:var(--warn)"></i><span class="np-n">{{ pendingCount }}</span>pendientes</span>
+        <span><i class="np-dot" style="background:var(--info)"></i><span class="np-n">{{ inProgressCount }}</span>en proceso</span>
+        <span><i class="np-dot" style="background:var(--ok)"></i><span class="np-n">{{ closedCount }}</span>cerrados</span>
+        <span *ngIf="isAdmin && stats"><span class="np-n">{{ stats.closed_today }}</span>cerrados hoy · <span class="np-mono">{{ stats.reopen_pct }}%</span> reabiertos</span>
+        <span class="np-live"><i></i>en vivo, cada 20 s</span>
       </div>
+    </div>
+    <div class="np-actions">
+      <button type="button" class="np-btn np-btn--ghost" *ngIf="isAdmin" (click)="showStats = !showStats">{{ showStats ? 'Ocultar ranking' : 'Ranking' }}</button>
+      <button type="button" class="np-btn np-btn--ghost" (click)="loadTickets()" title="Actualizar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 12a8 8 0 1 1-2.3-5.7M20 4v5h-5"/></svg>Actualizar</button>
+    </div>
+  </header>
 
-      <div class="flex-1 min-w-[160px]">
-        <label class="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">Técnico</label>
-        <select [(ngModel)]="filterTechId"
-                class="w-full px-3.5 py-2 text-sm bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl border border-slate-200/60 dark:border-slate-700/60 rounded-xl text-slate-700 dark:text-slate-300 focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-400 transition-all shadow-sm">
+  <div class="np-toolbar">
+    <div class="np-chips" role="group" aria-label="Estado">
+      <button type="button" class="np-chip" [attr.aria-pressed]="filterStatus === null" (click)="filterStatus = null; applyFilter()">Todos<span class="np-c">{{ tickets.length }}</span></button>
+      <button type="button" class="np-chip" [attr.aria-pressed]="filterStatus === 1" (click)="filterStatus = 1; applyFilter()">Pendientes<span class="np-c">{{ pendingCount }}</span></button>
+      <button type="button" class="np-chip" [attr.aria-pressed]="filterStatus === 2" (click)="filterStatus = 2; applyFilter()">En proceso<span class="np-c">{{ inProgressCount }}</span></button>
+      <button type="button" class="np-chip" [attr.aria-pressed]="filterStatus === 3" (click)="filterStatus = 3; applyFilter()">Cerrados<span class="np-c">{{ closedCount }}</span></button>
+    </div>
+    <ng-container *ngIf="isAdmin">
+      <label class="np-pagesize">Técnico
+        <select [(ngModel)]="filterTechId" (ngModelChange)="applyFilter()" aria-label="Técnico">
           <option [ngValue]="null">Todos</option>
           <option *ngFor="let t of technicians" [ngValue]="t.id">{{ t.name }}</option>
         </select>
-      </div>
-
-      <div class="flex-1 min-w-[160px]">
-        <label class="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">Buscar</label>
-        <input type="text" [(ngModel)]="filterSearch" placeholder="Nombre, cédula..."
-               class="w-full px-3.5 py-2 text-sm bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl border border-slate-200/60 dark:border-slate-700/60 rounded-xl text-slate-700 dark:text-slate-300 focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-400 transition-all shadow-sm">
-      </div>
-
-      <div class="flex gap-2">
-        <button (click)="applyFilter()"
-                class="px-4 py-2 text-sm font-medium rounded-lg bg-gradient-to-br from-indigo-500 to-violet-600 text-white shadow-md shadow-indigo-500/20 hover:shadow-lg transition-all">
-          Buscar
-        </button>
-        <button (click)="clearFilters()"
-                class="px-4 py-2 text-sm font-medium rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200">
-          Limpiar
-        </button>
-      </div>
-
-      <button (click)="showStats = !showStats"
-              class="px-4 py-2 text-sm font-medium rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200">
-        {{ showStats ? 'Ocultar estadísticas' : 'Estadísticas' }}
-      </button>
-
-      <span class="flex items-center gap-1.5 text-xs text-green-600 dark:text-green-400 ml-auto">
-        <span class="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></span>
-        Actualización automática cada 20s
-      </span>
-
-    </div>
+      </label>
+      <label class="np-search">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg>
+        <input type="search" [(ngModel)]="filterSearch" (keydown.enter)="applyFilter()" placeholder="Nombre o cédula… (Enter)" aria-label="Buscar ticket" />
+      </label>
+      <button type="button" class="np-link np-link--muted" (click)="clearFilters()">Limpiar</button>
+    </ng-container>
   </div>
 
-  <!-- ═══ STATS TABLES (admin only, collapsible) ════════════════════════════ -->
-  <div *ngIf="isAdmin && showStats" class="grid grid-cols-1 md:grid-cols-2 gap-4">
-
-    <div class="bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl rounded-2xl border border-slate-200/60 dark:border-slate-700/60 shadow-sm hover:shadow-md transition-all duration-300 p-4">
-      <h3 class="text-sm font-semibold text-slate-700 dark:text-slate-300 mb-3">Técnicos con más tickets en proceso</h3>
-      <p *ngIf="!stats?.top_technicians?.length" class="text-xs text-slate-400 text-center py-4">Sin datos</p>
-      <ul class="space-y-2">
-        <li *ngFor="let t of stats?.top_technicians; let i = index"
-            class="flex items-center justify-between text-sm">
-          <span class="flex items-center gap-2">
-            <span class="w-5 h-5 rounded-full bg-blue-600 text-white text-xs flex items-center justify-center font-bold">{{ i+1 }}</span>
-            <span class="text-slate-700 dark:text-slate-300">{{ t.names }} {{ t.lastname }}</span>
-          </span>
-          <span class="font-semibold text-blue-600 dark:text-blue-400">{{ t.count }}</span>
-        </li>
-      </ul>
-    </div>
-
-    <div class="bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl rounded-2xl border border-slate-200/60 dark:border-slate-700/60 shadow-sm hover:shadow-md transition-all duration-300 p-4">
-      <h3 class="text-sm font-semibold text-slate-700 dark:text-slate-300 mb-3">Clientes con más tickets</h3>
-      <p *ngIf="!stats?.top_clients?.length" class="text-xs text-slate-400 text-center py-4">Sin datos</p>
-      <ul class="space-y-2">
-        <li *ngFor="let c of stats?.top_clients; let i = index"
-            class="flex items-center justify-between text-sm">
-          <span class="flex items-center gap-2">
-            <span class="w-5 h-5 rounded-full bg-orange-500 text-white text-xs flex items-center justify-center font-bold">{{ i+1 }}</span>
-            <span class="text-slate-700 dark:text-slate-300">{{ c.names }} {{ c.lastname }}</span>
-          </span>
-          <span class="font-semibold text-orange-500">{{ c.count }}</span>
-        </li>
-      </ul>
-    </div>
-
+  <div class="np-grid-2 np-stats-panel" *ngIf="isAdmin && showStats && stats">
+    <div class="np-card"><div class="np-card-h"><h2>Técnicos con más tickets en proceso</h2></div>
+      <ol class="np-rank" *ngIf="stats.top_technicians?.length; else noT"><li *ngFor="let t of stats.top_technicians"><span class="np-rank-n">{{ t.names }} {{ t.lastname }}</span><span class="np-rank-c">{{ t.count }}</span></li></ol>
+      <ng-template #noT><p class="np-muted">Sin datos.</p></ng-template></div>
+    <div class="np-card"><div class="np-card-h"><h2>Clientes con más tickets</h2></div>
+      <ol class="np-rank" *ngIf="stats.top_clients?.length; else noC"><li *ngFor="let c of stats.top_clients"><span class="np-rank-n">{{ c.names }} {{ c.lastname }}</span><span class="np-rank-c">{{ c.count }}</span></li></ol>
+      <ng-template #noC><p class="np-muted">Sin datos.</p></ng-template></div>
   </div>
 
-  <!-- ═══ STATUS TABS + TABLE ═══════════════════════════════════════════════ -->
-  <div class="bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl rounded-2xl border border-slate-200/60 dark:border-slate-700/60 shadow-sm hover:shadow-md transition-all duration-300 overflow-hidden">
-
-    <!-- Tabs -->
-    <div class="flex border-b dark:border-slate-700/60 overflow-x-auto">
-      <button (click)="filterStatus = null; applyFilter()"
-              class="flex-shrink-0 px-4 py-3 text-sm font-medium border-b-2 transition-colors"
-              [class.border-blue-600]="filterStatus === null" [class.text-blue-600]="filterStatus === null"
-              [class.border-transparent]="filterStatus !== null" [class.text-slate-500]="filterStatus !== null">
-        Todos <span class="ml-1 text-xs bg-slate-100/80 dark:bg-slate-700/80 px-1.5 py-0.5 rounded-full">{{ tickets.length }}</span>
-      </button>
-      <button (click)="filterStatus = 1; applyFilter()"
-              class="flex-shrink-0 px-4 py-3 text-sm font-medium border-b-2 transition-colors"
-              [class.border-yellow-500]="filterStatus === 1" [class.text-yellow-600]="filterStatus === 1"
-              [class.border-transparent]="filterStatus !== 1" [class.text-slate-500]="filterStatus !== 1">
-        Pendientes <span class="ml-1 text-xs bg-yellow-100 dark:bg-yellow-900 text-yellow-700 px-1.5 py-0.5 rounded-full">{{ pendingCount }}</span>
-      </button>
-      <button (click)="filterStatus = 2; applyFilter()"
-              class="flex-shrink-0 px-4 py-3 text-sm font-medium border-b-2 transition-colors"
-              [class.border-blue-600]="filterStatus === 2" [class.text-blue-600]="filterStatus === 2"
-              [class.border-transparent]="filterStatus !== 2" [class.text-slate-500]="filterStatus !== 2">
-        En Proceso <span class="ml-1 text-xs bg-blue-100 dark:bg-blue-900 text-blue-700 px-1.5 py-0.5 rounded-full">{{ inProgressCount }}</span>
-      </button>
-      <button (click)="filterStatus = 3; applyFilter()"
-              class="flex-shrink-0 px-4 py-3 text-sm font-medium border-b-2 transition-colors"
-              [class.border-green-600]="filterStatus === 3" [class.text-green-600]="filterStatus === 3"
-              [class.border-transparent]="filterStatus !== 3" [class.text-slate-500]="filterStatus !== 3">
-        Cerrados <span class="ml-1 text-xs bg-green-100 dark:bg-green-900 text-green-700 px-1.5 py-0.5 rounded-full">{{ closedCount }}</span>
-      </button>
-    </div>
-
-    <!-- Loading -->
-    <div *ngIf="loading" class="p-4 space-y-3">
-      <div *ngFor="let _ of [1,2,3,4]" class="h-14 bg-slate-200/60 dark:bg-slate-700/60 rounded-lg animate-pulse"></div>
-    </div>
-
-    <!-- Empty -->
-    <div *ngIf="!loading && tickets.length === 0"
-         class="p-10 text-center text-sm text-slate-400 dark:text-slate-500">
-      No hay tickets.
-    </div>
-
-    <!-- Table -->
-    <div *ngIf="!loading && tickets.length > 0" class="overflow-x-auto">
-      <table class="min-w-full divide-y divide-slate-200/60 dark:divide-slate-700/60">
-        <thead class="bg-slate-50/80 dark:bg-slate-700/80 ">
-          <tr>
-            <th class="px-4 py-3 text-left text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">#</th>
-            <th class="px-4 py-3 text-left text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Cliente</th>
-            <th class="px-4 py-3 text-left text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider hidden sm:table-cell">Servicio</th>
-            <th *ngIf="isAdmin" class="px-4 py-3 text-left text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider hidden md:table-cell">Técnico</th>
-            <th class="px-4 py-3 text-left text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Estado</th>
-            <th class="px-4 py-3 text-left text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider hidden lg:table-cell">Duración</th>
-            <th class="px-4 py-3 text-left text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider hidden sm:table-cell">Prioridad</th>
-            <th class="px-4 py-3"></th>
-          </tr>
-        </thead>
-        <tbody class="divide-y divide-slate-200/60 dark:divide-slate-700/60">
-          <tr *ngFor="let ticket of tickets"
-              class="hover:bg-slate-50 dark:hover:bg-slate-700/50 cursor-pointer transition-colors"
-              (click)="selectTicket(ticket)">
-
-            <td class="px-4 py-3 text-sm font-medium text-slate-900 dark:text-white">{{ ticket.id }}</td>
-
-            <td class="px-4 py-3">
-              <p class="text-sm font-medium text-slate-900 dark:text-white truncate max-w-[120px] sm:max-w-none">
-                {{ ticket.name }} {{ ticket.last_name }}
-              </p>
-              <p class="text-xs text-slate-400 hidden xs:block">{{ ticket.cedula }}</p>
-            </td>
-
-            <td class="px-4 py-3 text-sm text-slate-600 dark:text-slate-300 hidden sm:table-cell">{{ ticket.name_service }}</td>
-
-            <td *ngIf="isAdmin" class="px-4 py-3 text-sm text-slate-600 dark:text-slate-300 hidden md:table-cell">
-              {{ ticket.tech_names }} {{ ticket.tech_lastname }}
-            </td>
-
-            <td class="px-4 py-3">
-              <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium"
-                    [ngClass]="statusClass(ticket.status_id)">
-                {{ statusLabel(ticket.status_id) }}
-              </span>
-              <span *ngIf="ticket.reopened_count && ticket.reopened_count > 0"
-                    class="ml-1 text-xs text-red-600 dark:text-red-400 font-medium">↩{{ ticket.reopened_count }}</span>
-            </td>
-
-            <td class="px-4 py-3 text-xs font-mono text-slate-500 hidden lg:table-cell">
-              <span *ngIf="ticket.status_id === 2" class="text-blue-600 dark:text-blue-400">
-                ⏱ {{ formatSecs(ticket.elapsedSeconds || 0) }}
-              </span>
-              <span *ngIf="ticket.status_id !== 2">{{ formatDuration(ticket) }}</span>
-            </td>
-
-            <td class="px-4 py-3 hidden sm:table-cell">
-              <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium"
-                    [ngClass]="priorityClass(ticket.name_priority)">
-                {{ ticket.name_priority }}
-              </span>
-            </td>
-
-            <td class="px-4 py-3">
-              <button class="p-1.5 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-900/20 text-blue-600 dark:text-blue-400"
-                      (click)="selectTicket(ticket); $event.stopPropagation()">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
-                </svg>
-              </button>
-            </td>
-
-          </tr>
-        </tbody>
-      </table>
-    </div>
-  </div>
-
-</div>
-
-<!-- ═══ CLOSE TICKET MODAL ════════════════════════════════════════════════ -->
-<div *ngIf="showCloseModal"
-     class="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-slate-900/50 ">
-  <div class="bg-white/95 dark:bg-slate-800/95 backdrop-blur-xl rounded-2xl shadow-2xl border border-slate-100 dark:border-slate-700 w-full max-w-md">
-
-    <div class="p-5 border-b dark:border-slate-700/60">
-      <h2 class="text-base font-semibold text-slate-900 dark:text-white">Cerrar Ticket #{{ selectedTicket?.id }}</h2>
-      <p class="text-sm text-slate-500 dark:text-slate-400 mt-0.5">
-        Describe qué fue lo que hiciste para resolver el problema.
-      </p>
-    </div>
-
-    <div class="p-5 space-y-4">
-      <div>
-        <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
-          Descripción del trabajo realizado <span class="text-red-500">*</span>
-        </label>
-        <textarea [(ngModel)]="closeDescription" rows="5"
-                  placeholder="Ej: Se revisó la caja NAP, se reconectó el cable de bajada, se probó velocidad y quedó estable..."
-                  class="w-full px-3.5 py-2 text-sm bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl border border-slate-200/60 dark:border-slate-700/60 rounded-xl text-slate-700 dark:text-slate-300 focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-400 transition-all shadow-sm resize-none"></textarea>
-        <p class="text-xs text-slate-400 mt-0.5">Mínimo 5 caracteres.</p>
+  <div class="np-workspace">
+    <section class="np-registry" aria-label="Tickets">
+      <div class="np-registry-wrap">
+        <table class="np-table np-table--registry">
+          <thead><tr><th class="np-th-stripe"></th><th>N°</th><th>Cliente</th><th>Servicio</th><th *ngIf="isAdmin" class="np-col-tech">Técnico</th><th>Estado</th><th>Duración</th><th>Prioridad</th><th class="np-th-right"></th></tr></thead>
+          <tbody>
+            <tr *ngIf="loading" class="np-empty"><td colspan="9"><span class="np-spinner"></span></td></tr>
+            <tr *ngIf="!loading && tickets.length === 0" class="np-empty"><td colspan="9"><strong>No hay tickets con estos filtros.</strong></td></tr>
+            <tr *ngFor="let ticket of tickets" class="np-row" [ngClass]="'np-row--s' + ticket.status_id" [attr.aria-selected]="isSelected(ticket)" (click)="selectTicket(ticket)" tabindex="0" (keydown.enter)="selectTicket(ticket)">
+              <td class="np-stripe"><i></i></td>
+              <td class="np-data np-strong">{{ ticket.id }}</td>
+              <td><div class="np-name">{{ ticket.name }} {{ ticket.last_name }}</div><div class="np-plan"><em>{{ ticket.cedula }}</em></div></td>
+              <td>{{ ticket.name_service }}</td>
+              <td *ngIf="isAdmin" class="np-col-tech">{{ ticket.tech_names }} {{ ticket.tech_lastname }}</td>
+              <td><span class="np-pill" [ngClass]="'np-pill--s' + ticket.status_id">{{ statusLabel(ticket.status_id) }}</span><span class="np-fine" *ngIf="ticket.reopened_count && ticket.reopened_count > 0">reabierto ×{{ ticket.reopened_count }}</span></td>
+              <td class="np-data" [class.np-pos-info]="ticket.status_id === 2">{{ ticket.status_id === 2 ? formatSecs(ticket.elapsedSeconds || 0) : formatDuration(ticket) }}</td>
+              <td><span class="np-pill" [ngClass]="priorityPill(ticket.name_priority)">{{ ticket.name_priority }}</span></td>
+              <td class="np-td-right"><div class="np-rowacts"><button type="button" class="np-icobtn" title="Abrir ticket"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 6 6 6-6 6"/></svg></button></div></td>
+            </tr>
+          </tbody>
+        </table>
       </div>
-    </div>
+    </section>
 
-    <div class="px-5 pb-5 flex gap-3">
-      <button (click)="showCloseModal = false"
-              class="flex-1 py-2.5 rounded-xl text-sm font-medium bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200">
-        Cancelar
-      </button>
-      <button (click)="submitClose()"
-              [disabled]="closeDescription.trim().length < 5 || closeSubmitting"
-              class="flex-1 py-2.5 rounded-xl text-sm font-medium bg-green-600 hover:bg-green-700 text-white disabled:opacity-50 flex items-center justify-center gap-2">
-        <svg *ngIf="closeSubmitting" class="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
-          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
-          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/>
-        </svg>
-        {{ closeSubmitting ? 'Cerrando...' : 'Confirmar Cierre' }}
-      </button>
-    </div>
+    <!-- ══ Ficha del ticket ══════════════════════════════════════════════ -->
+    <aside class="np-inspector" *ngIf="showDetail && selectedTicket" aria-label="Detalle del ticket">
+      <div class="np-insp-head">
+        <div class="np-avatar">{{ (selectedTicket.name || 'T').charAt(0).toUpperCase() }}</div>
+        <div class="np-insp-id">
+          <h2>{{ selectedTicket.name }} {{ selectedTicket.last_name }}</h2>
+          <div class="np-meta">Ticket <b>#{{ selectedTicket.id }}</b> · CC <b>{{ selectedTicket.cedula }}</b> · Tel <b>{{ selectedTicket.phone }}</b></div>
+        </div>
+        <div class="np-insp-tools">
+          <button type="button" class="np-icobtn np-only-desktop" (click)="inspectorWide = !inspectorWide" [title]="inspectorWide ? 'Reducir' : 'Ampliar'">
+            <svg *ngIf="!inspectorWide" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 4h5v5M9 20H4v-5M20 4l-6 6M4 20l6-6"/></svg>
+            <svg *ngIf="inspectorWide" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 10h6m-6 0V4m0 6 6-6M10 14H4m6 0v6m0-6-6 6"/></svg>
+          </button>
+          <button type="button" class="np-icobtn" (click)="closeDetail()" aria-label="Cerrar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
+        </div>
+      </div>
+      <div class="np-switchrow">
+        <span><span class="np-pill" [ngClass]="'np-pill--s' + selectedTicket.status_id">{{ statusLabel(selectedTicket.status_id) }}</span> <span class="np-pill" [ngClass]="priorityPill(selectedTicket.name_priority)">{{ selectedTicket.name_priority }}</span></span>
+        <span class="np-mono np-fine" *ngIf="selectedTicket.started_at">{{ selectedTicket.status_id === 2 ? formatSecs(selectedTicket.elapsedSeconds || 0) : formatDuration(selectedTicket) }}</span>
+      </div>
 
+      <div class="np-insp-body">
+        <section>
+          <p class="np-sect">Acciones</p>
+          <div class="np-quick">
+            <button type="button" class="np-btn np-btn--ok" *ngIf="selectedTicket.status_id === 1" (click)="startTicket(selectedTicket)" [disabled]="actionLoading">Iniciar</button>
+            <button type="button" class="np-btn np-btn--primary" *ngIf="selectedTicket.status_id === 2" (click)="openCloseModal()" [disabled]="actionLoading">Cerrar ticket</button>
+            <button type="button" class="np-btn np-btn--warn" *ngIf="isAdmin && selectedTicket.status_id === 3" (click)="openReopenModal()" [disabled]="actionLoading">Reabrir</button>
+            <button type="button" class="np-btn np-btn--ghost" *ngIf="isAdmin" (click)="showReassignPanel = !showReassignPanel">Reasignar</button>
+            <button type="button" class="np-btn np-btn--ghost" *ngIf="selectedTicket.status_id === 2" (click)="generatePdf(selectedTicket)">PDF</button>
+            <button type="button" class="np-btn np-btn--danger" *ngIf="isAdmin" (click)="openDeleteModal()">Eliminar</button>
+          </div>
+          <div class="np-panel" *ngIf="isAdmin && showReassignPanel">
+            <label class="np-field"><span>Reasignar técnico</span>
+              <select class="np-input" [(ngModel)]="reassignTechId"><option [ngValue]="null">Seleccionar…</option><option *ngFor="let t of technicians" [ngValue]="t.id">{{ t.name }}</option></select>
+            </label>
+            <div class="np-btnrow"><button type="button" class="np-btn np-btn--primary np-btn--sm" (click)="confirmReassign()" [disabled]="!reassignTechId || actionLoading">Confirmar</button><button type="button" class="np-btn np-btn--ghost np-btn--sm" (click)="showReassignPanel = false">Cancelar</button></div>
+          </div>
+        </section>
+
+        <section>
+          <p class="np-sect">Ticket</p>
+          <dl class="np-dl">
+            <dt>Servicio</dt><dd>{{ selectedTicket.name_service }}</dd>
+            <dt>Técnico</dt><dd>{{ selectedTicket.tech_names }} {{ selectedTicket.tech_lastname }}</dd>
+            <dt>Dirección</dt><dd>{{ selectedTicket.address }}</dd>
+            <dt>Observación</dt><dd>{{ selectedTicket.observation }}</dd>
+          </dl>
+        </section>
+
+        <section>
+          <p class="np-sect">Cronología</p>
+          <div class="np-timeline">
+            <div class="np-tl np-tl--neutral"><span class="np-tl-t">Creado</span><span class="np-tl-m np-data">{{ selectedTicket.created_at }}</span></div>
+            <div class="np-tl np-tl--abono" *ngIf="selectedTicket.started_at"><span class="np-tl-t">Iniciado</span><span class="np-tl-m np-data">{{ selectedTicket.started_at }}</span></div>
+            <div class="np-tl np-tl--ok" *ngIf="selectedTicket.finished_at"><span class="np-tl-t">Cerrado</span><span class="np-tl-m np-data">{{ selectedTicket.finished_at }}</span></div>
+          </div>
+        </section>
+
+        <section>
+          <p class="np-sect">Novedades</p>
+          <div *ngIf="notesLoading" class="np-loading np-loading--inline"><span class="np-spinner"></span> Cargando…</div>
+          <p class="np-muted" *ngIf="!notesLoading && notes.length === 0">Aún no hay novedades registradas.</p>
+          <div class="np-notes" *ngIf="!notesLoading && notes.length">
+            <article class="np-note-item" *ngFor="let note of notes" [class.is-close]="note.note?.startsWith('✅')" [class.is-reopen]="note.note?.startsWith('🔁')">
+              <header><b>{{ note.author_names }} {{ note.author_lastname }}</b><span class="np-data">{{ note.created_at }}</span></header>
+              <p>{{ note.note }}</p>
+              <div class="np-note-photos" *ngIf="note.photos?.length"><a *ngFor="let photo of note.photos" [href]="photo" target="_blank" rel="noopener"><img [src]="photo" alt="Foto adjunta"></a></div>
+              <audio *ngIf="note.audio_path" controls [src]="note.audio_path"></audio>
+            </article>
+          </div>
+        </section>
+
+        <section class="np-panel" *ngIf="selectedTicket.status_id === 2 || isAdmin">
+          <p class="np-sect">Agregar novedad</p>
+          <textarea class="np-input np-textarea" rows="3" [(ngModel)]="noteText" placeholder="Escribí una novedad…"></textarea>
+          <div class="np-note-tools">
+            <label class="np-btn np-btn--ghost np-btn--sm">Fotos<span class="np-c" *ngIf="notePhotos.length">{{ notePhotos.length }}</span><input type="file" multiple accept="image/*" hidden (change)="onPhotosSelected($event)"></label>
+            <button type="button" class="np-btn np-btn--ghost np-btn--sm" *ngIf="!isRecording && !audioBlobUrl" (click)="startRecording()">Grabar audio</button>
+            <button type="button" class="np-btn np-btn--danger np-btn--sm" *ngIf="isRecording" (click)="stopRecording()"><i class="np-rec"></i>Detener · {{ formatRecording() }}</button>
+          </div>
+          <div class="np-tags" *ngIf="notePhotos.length"><span class="np-tag np-tag--neutral" *ngFor="let photo of notePhotos">{{ photo.name }}</span></div>
+          <div class="np-audio-preview" *ngIf="!isRecording && audioBlobUrl">
+            <audio controls [src]="audioBlobUrl"></audio>
+            <div class="np-btnrow"><button type="button" class="np-link np-link--muted" (click)="clearAudio()">Eliminar audio</button><button type="button" class="np-link" (click)="startRecording()">Grabar de nuevo</button></div>
+          </div>
+          <button type="button" class="np-btn np-btn--primary" (click)="submitNote()" [disabled]="!noteText.trim() || noteSubmitting"><span *ngIf="noteSubmitting" class="np-spinner np-spinner--sm"></span>{{ noteSubmitting ? 'Guardando…' : 'Guardar novedad' }}</button>
+        </section>
+      </div>
+    </aside>
   </div>
 </div>
 
-<!-- ═══ REOPEN TICKET MODAL ══════════════════════════════════════════════ -->
-<div *ngIf="showReopenModal"
-     class="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-slate-900/50 ">
-  <div class="bg-white/95 dark:bg-slate-800/95 backdrop-blur-xl rounded-2xl shadow-2xl border border-slate-100 dark:border-slate-700 w-full max-w-md">
-
-    <div class="p-5 border-b dark:border-slate-700/60">
-      <h2 class="text-base font-semibold text-slate-900 dark:text-white">Reabrir Ticket #{{ selectedTicket?.id }}</h2>
-      <p class="text-sm text-slate-500 dark:text-slate-400 mt-0.5">
-        Indica el motivo por el cual se reabre este ticket.
-      </p>
-    </div>
-
-    <div class="p-5 space-y-4">
-      <div>
-        <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
-          Motivo de reapertura <span class="text-red-500">*</span>
-        </label>
-        <textarea [(ngModel)]="reopenReason" rows="4"
-                  placeholder="Ej: El cliente reporta que el problema persiste, se requiere revisión adicional..."
-                  class="w-full px-3.5 py-2 text-sm bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl border border-slate-200/60 dark:border-slate-700/60 rounded-xl text-slate-700 dark:text-slate-300 focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-400 transition-all shadow-sm resize-none"></textarea>
-        <p class="text-xs text-slate-400 mt-0.5">Mínimo 5 caracteres. Quedará registrado en el historial.</p>
+<!-- ══ Cerrar ticket ═══════════════════════════════════════════════════════ -->
+<div *ngIf="showCloseModal" class="np-overlay" (click)="showCloseModal = false">
+  <div class="np-modal" role="dialog" aria-modal="true" aria-label="Cerrar ticket" (click)="$event.stopPropagation()">
+    <div class="np-modal-head"><div><p class="np-kicker">Ticket <b>/</b> #{{ selectedTicket?.id }}</p><h3>Cerrar ticket</h3></div></div>
+    <div class="np-modal-body">
+      <label class="np-field"><span>Trabajo realizado <em>*</em></span>
+        <textarea class="np-input np-textarea" rows="5" [(ngModel)]="closeDescription" placeholder="Ej: se revisó la caja NAP, se reconectó el cable de bajada, se probó velocidad y quedó estable…"></textarea>
+        <small class="np-fine">Mínimo 5 caracteres. Queda en el historial.</small>
+      </label>
+      <div class="np-btnrow np-btnrow--end">
+        <button type="button" class="np-btn np-btn--ghost" (click)="showCloseModal = false">Cancelar</button>
+        <button type="button" class="np-btn np-btn--primary" (click)="submitClose()" [disabled]="closeDescription.trim().length < 5 || closeSubmitting"><span *ngIf="closeSubmitting" class="np-spinner np-spinner--sm"></span>{{ closeSubmitting ? 'Cerrando…' : 'Confirmar cierre' }}</button>
       </div>
     </div>
-
-    <div class="px-5 pb-5 flex gap-3">
-      <button (click)="showReopenModal = false"
-              class="flex-1 py-2.5 rounded-xl text-sm font-medium bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200">
-        Cancelar
-      </button>
-      <button (click)="submitReopen()"
-              [disabled]="reopenReason.trim().length < 5 || reopenSubmitting"
-              class="flex-1 py-2.5 rounded-xl text-sm font-medium bg-orange-500 hover:bg-orange-600 text-white disabled:opacity-50 flex items-center justify-center gap-2">
-        <svg *ngIf="reopenSubmitting" class="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
-          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
-          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/>
-        </svg>
-        {{ reopenSubmitting ? 'Reabriendo...' : 'Confirmar Reapertura' }}
-      </button>
-    </div>
-
   </div>
 </div>
 
-<!-- ═══ DELETE TICKET MODAL ═══════════════════════════════════════════════ -->
-<div *ngIf="showDeleteModal"
-     class="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-slate-900/50 ">
-  <div class="bg-white/95 dark:bg-slate-800/95 backdrop-blur-xl rounded-2xl shadow-2xl border border-slate-100 dark:border-slate-700 w-full max-w-sm">
-
-    <div class="p-5">
-      <div class="flex items-center gap-3 mb-3">
-        <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-pink-500 to-rose-600 flex items-center justify-center shrink-0 shadow-md shadow-pink-500/20">
-          <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
-          </svg>
-        </div>
-        <div>
-          <h2 class="text-base font-semibold text-slate-900 dark:text-white">Eliminar Ticket #{{ selectedTicket?.id }}</h2>
-          <p class="text-sm text-slate-500 dark:text-slate-400">Esta acción no se puede deshacer.</p>
-        </div>
+<!-- ══ Reabrir ═════════════════════════════════════════════════════════════ -->
+<div *ngIf="showReopenModal" class="np-overlay" (click)="showReopenModal = false">
+  <div class="np-modal" role="dialog" aria-modal="true" aria-label="Reabrir ticket" (click)="$event.stopPropagation()">
+    <div class="np-modal-head"><div><p class="np-kicker">Ticket <b>/</b> #{{ selectedTicket?.id }}</p><h3>Reabrir ticket</h3></div></div>
+    <div class="np-modal-body">
+      <label class="np-field"><span>Motivo de reapertura <em>*</em></span>
+        <textarea class="np-input np-textarea" rows="4" [(ngModel)]="reopenReason" placeholder="Ej: el cliente reporta que el problema persiste…"></textarea>
+        <small class="np-fine">Mínimo 5 caracteres. Queda en el historial.</small>
+      </label>
+      <div class="np-btnrow np-btnrow--end">
+        <button type="button" class="np-btn np-btn--ghost" (click)="showReopenModal = false">Cancelar</button>
+        <button type="button" class="np-btn np-btn--warn" (click)="submitReopen()" [disabled]="reopenReason.trim().length < 5 || reopenSubmitting">{{ reopenSubmitting ? 'Reabriendo…' : 'Confirmar reapertura' }}</button>
       </div>
-      <p class="text-sm text-slate-600 dark:text-slate-400 bg-slate-50/80 dark:bg-slate-800/80 rounded-lg p-3">
-        Se eliminará el ticket de <strong>{{ selectedTicket?.name }} {{ selectedTicket?.last_name }}</strong> junto con todas sus notas y archivos adjuntos.
-      </p>
     </div>
-
-    <div class="px-5 pb-5 flex gap-3">
-      <button (click)="showDeleteModal = false"
-              class="flex-1 py-2.5 rounded-xl text-sm font-medium bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200">
-        Cancelar
-      </button>
-      <button (click)="confirmDelete()"
-              [disabled]="deleteSubmitting"
-              class="flex-1 py-2.5 rounded-xl text-sm font-medium bg-red-600 hover:bg-red-700 text-white disabled:opacity-50 flex items-center justify-center gap-2">
-        <svg *ngIf="deleteSubmitting" class="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
-          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
-          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/>
-        </svg>
-        {{ deleteSubmitting ? 'Eliminando...' : 'Sí, eliminar' }}
-      </button>
-    </div>
-
   </div>
 </div>
 
-<!-- ═══ DETAIL DRAWER ════════════════════════════════════════════════════= -->
-<div *ngIf="showDetail" class="fixed inset-0 bg-slate-900/50  z-40" (click)="closeDetail()"></div>
-
-<div *ngIf="showDetail && selectedTicket"
-     class="fixed inset-y-0 right-0 z-50 w-full sm:w-[480px] lg:w-[540px] bg-white/95 dark:bg-slate-800/95 backdrop-blur-xl shadow-2xl border border-slate-100 dark:border-slate-700 flex flex-col overflow-hidden">
-
-  <!-- Header -->
-  <div class="flex items-center justify-between px-5 py-4 border-b dark:border-slate-700/60 flex-shrink-0">
-    <div>
-      <p class="text-xs text-slate-500 dark:text-slate-400">Ticket #{{ selectedTicket.id }}</p>
-      <h2 class="text-base font-semibold text-slate-900 dark:text-white">
-        {{ selectedTicket.name }} {{ selectedTicket.last_name }}
-      </h2>
-    </div>
-    <button (click)="closeDetail()"
-            class="p-2 rounded-full hover:bg-slate-50 dark:hover:bg-slate-700/80 text-slate-500 dark:text-slate-400">
-      <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
-      </svg>
-    </button>
-  </div>
-
-  <!-- Body -->
-  <div class="flex-1 overflow-y-auto p-5 space-y-5">
-
-    <!-- Info grid -->
-    <div class="grid grid-cols-2 gap-3 text-sm">
-
-      <div class="col-span-2 sm:col-span-1">
-        <p class="text-xs text-slate-400 uppercase font-medium mb-0.5">Estado</p>
-        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium"
-              [ngClass]="statusClass(selectedTicket.status_id)">
-          {{ statusLabel(selectedTicket.status_id) }}
-        </span>
-        <span *ngIf="selectedTicket.reopened_count && selectedTicket.reopened_count > 0"
-              class="ml-1 text-xs text-red-600 dark:text-red-400">(Reabierto {{ selectedTicket.reopened_count }}x)</span>
-      </div>
-
-      <div>
-        <p class="text-xs text-slate-400 uppercase font-medium mb-0.5">Prioridad</p>
-        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium"
-              [ngClass]="priorityClass(selectedTicket.name_priority)">
-          {{ selectedTicket.name_priority }}
-        </span>
-      </div>
-
-      <div>
-        <p class="text-xs text-slate-400 uppercase font-medium mb-0.5">Servicio</p>
-        <p class="text-slate-800 dark:text-slate-200">{{ selectedTicket.name_service }}</p>
-      </div>
-
-      <div>
-        <p class="text-xs text-slate-400 uppercase font-medium mb-0.5">Técnico</p>
-        <p class="text-slate-800 dark:text-slate-200">{{ selectedTicket.tech_names }} {{ selectedTicket.tech_lastname }}</p>
-      </div>
-
-      <div>
-        <p class="text-xs text-slate-400 uppercase font-medium mb-0.5">Cédula</p>
-        <p class="text-slate-800 dark:text-slate-200">{{ selectedTicket.cedula }}</p>
-      </div>
-
-      <div>
-        <p class="text-xs text-slate-400 uppercase font-medium mb-0.5">Teléfono</p>
-        <p class="text-slate-800 dark:text-slate-200">{{ selectedTicket.phone }}</p>
-      </div>
-
-      <div class="col-span-2">
-        <p class="text-xs text-slate-400 uppercase font-medium mb-0.5">Dirección</p>
-        <p class="text-slate-800 dark:text-slate-200">{{ selectedTicket.address }}</p>
-      </div>
-
-      <div class="col-span-2">
-        <p class="text-xs text-slate-400 uppercase font-medium mb-0.5">Observación inicial</p>
-        <p class="text-slate-800 dark:text-slate-200 whitespace-pre-line">{{ selectedTicket.observation }}</p>
-      </div>
-
-      <!-- Duration block -->
-      <div class="col-span-2 bg-slate-50/80 dark:bg-slate-800/80 rounded-lg p-3">
-        <div class="flex flex-wrap gap-4 text-xs text-slate-500 dark:text-slate-400">
-          <div><span class="font-medium uppercase">Creado</span>
-            <p class="text-slate-700 dark:text-slate-300">{{ selectedTicket.created_at }}</p></div>
-          <div *ngIf="selectedTicket.started_at">
-            <span class="font-medium uppercase">Iniciado</span>
-            <p class="text-slate-700 dark:text-slate-300">{{ selectedTicket.started_at }}</p></div>
-          <div *ngIf="selectedTicket.finished_at">
-            <span class="font-medium uppercase">Cerrado</span>
-            <p class="text-slate-700 dark:text-slate-300">{{ selectedTicket.finished_at }}</p></div>
-          <div *ngIf="selectedTicket.started_at">
-            <span class="font-medium uppercase">Duración</span>
-            <p class="font-mono text-blue-600 dark:text-blue-400">
-              <span *ngIf="selectedTicket.status_id === 2">⏱ {{ formatSecs(selectedTicket.elapsedSeconds || 0) }}</span>
-              <span *ngIf="selectedTicket.status_id !== 2">{{ formatDuration(selectedTicket) }}</span>
-            </p>
-          </div>
-        </div>
-      </div>
-
-    </div>
-
-    <!-- ── ACTION BUTTONS ────────────────────────────────────────────── -->
-    <div class="flex flex-wrap gap-2">
-
-      <!-- Iniciar (status 1 → 2, both roles) -->
-      <button *ngIf="selectedTicket.status_id === 1"
-              (click)="startTicket(selectedTicket)"
-              [disabled]="actionLoading"
-              class="flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium bg-gradient-to-br from-indigo-500 to-violet-600 text-white shadow-md shadow-indigo-500/20 hover:shadow-lg transition-all disabled:opacity-50">
-        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/>
-          <path stroke-linecap="round" stroke-linejoin="round" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-        </svg>
-        Iniciar
-      </button>
-
-      <!-- Cerrar (status 2 → 3, both roles — opens description modal) -->
-      <button *ngIf="selectedTicket.status_id === 2"
-              (click)="openCloseModal()"
-              [disabled]="actionLoading"
-              class="flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium bg-green-600 hover:bg-green-700 text-white disabled:opacity-50">
-        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
-        </svg>
-        Cerrar Ticket
-      </button>
-
-      <!-- Reabrir (admin only) -->
-      <button *ngIf="isAdmin && selectedTicket.status_id === 3"
-              (click)="openReopenModal()"
-              [disabled]="actionLoading"
-              class="flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium bg-orange-500 hover:bg-orange-600 text-white disabled:opacity-50">
-        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
-        </svg>
-        Reabrir
-      </button>
-
-      <!-- Reasignar (admin only) -->
-      <button *ngIf="isAdmin"
-              (click)="showReassignPanel = !showReassignPanel"
-              class="flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium bg-purple-600 hover:bg-purple-700 text-white">
-        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
-        </svg>
-        Reasignar
-      </button>
-
-      <!-- PDF (status 2, both roles) -->
-      <button *ngIf="selectedTicket.status_id === 2"
-              (click)="generatePdf(selectedTicket)"
-              class="flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium bg-gray-600 hover:bg-gray-700 text-white">
-        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"/>
-        </svg>
-        PDF
-      </button>
-
-      <!-- Eliminar (admin only) -->
-      <button *ngIf="isAdmin"
-              (click)="openDeleteModal()"
-              class="flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium bg-red-600 hover:bg-red-700 text-white ml-auto">
-        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
-        </svg>
-        Eliminar
-      </button>
-
-    </div>
-
-    <!-- Reassign panel (admin only) -->
-    <div *ngIf="isAdmin && showReassignPanel"
-         class="border dark:border-slate-700/60 rounded-lg p-3 bg-purple-50 dark:bg-purple-900/20 space-y-2">
-      <p class="text-sm font-medium text-purple-800 dark:text-purple-300">Reasignar técnico</p>
-      <select [(ngModel)]="reassignTechId"
-              class="w-full px-3.5 py-2 text-sm bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl border border-slate-200/60 dark:border-slate-700/60 rounded-xl text-slate-700 dark:text-slate-300 focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-400 transition-all shadow-sm">
-        <option [ngValue]="null">— Seleccionar —</option>
-        <option *ngFor="let t of technicians" [ngValue]="t.id">{{ t.name }}</option>
-      </select>
-      <div class="flex gap-2">
-        <button (click)="confirmReassign()" [disabled]="!reassignTechId || actionLoading"
-                class="flex-1 py-2 rounded-lg text-sm font-medium bg-purple-600 hover:bg-purple-700 text-white disabled:opacity-50">
-          Confirmar
-        </button>
-        <button (click)="showReassignPanel = false"
-                class="px-4 py-2 rounded-lg text-sm font-medium bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200">
-          Cancelar
-        </button>
-      </div>
-    </div>
-
-    <!-- ── NOTES (available while in progress OR for admin) ───────────── -->
-    <div>
-      <h3 class="text-sm font-semibold text-slate-700 dark:text-slate-300 mb-3">Historial de novedades</h3>
-
-      <div *ngIf="notesLoading" class="space-y-2">
-        <div *ngFor="let _ of [1,2]" class="h-16 bg-slate-200/60 dark:bg-slate-700/60 rounded-lg animate-pulse"></div>
-      </div>
-
-      <div *ngIf="!notesLoading && notes.length === 0"
-           class="text-sm text-slate-400 text-center py-4 border dark:border-slate-700/60 rounded-lg">
-        Aún no hay novedades registradas.
-      </div>
-
-      <div class="space-y-2">
-        <div *ngFor="let note of notes"
-             class="rounded-lg p-3 border"
-             [ngClass]="{
-               'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800': note.note?.startsWith('✅'),
-               'bg-orange-50 dark:bg-orange-900/20 border-orange-200 dark:border-orange-800': note.note?.startsWith('🔁'),
-               'bg-slate-50/80 dark:bg-slate-800/60 border-slate-200/60 dark:border-slate-700/60': !note.note?.startsWith('✅') && !note.note?.startsWith('🔁')
-             }">
-
-          <div class="flex items-center justify-between mb-1.5 gap-2">
-            <span class="text-xs font-semibold text-slate-700 dark:text-slate-300 truncate">
-              {{ note.author_names }} {{ note.author_lastname }}
-            </span>
-            <span class="text-xs text-slate-400 flex-shrink-0">{{ note.created_at }}</span>
-          </div>
-
-          <p class="text-sm text-slate-800 dark:text-slate-200 whitespace-pre-line">{{ note.note }}</p>
-
-          <!-- Photos -->
-          <div *ngIf="note.photos && note.photos.length > 0" class="flex flex-wrap gap-2 mt-2">
-            <a *ngFor="let photo of note.photos" [href]="photo" target="_blank"
-               class="block w-20 h-20 rounded-lg overflow-hidden border dark:border-slate-600/60 hover:opacity-90 transition-opacity">
-              <img [src]="photo" class="w-full h-full object-cover" alt="foto">
-            </a>
-          </div>
-
-          <!-- Audio -->
-          <div *ngIf="note.audio_path" class="mt-2">
-            <audio controls class="w-full h-10" [src]="note.audio_path">
-              Tu navegador no soporta audio.
-            </audio>
-          </div>
-
-        </div>
-      </div>
-
-      <!-- ── Add note form (in-progress or admin) ──────────────────────── -->
-      <div *ngIf="selectedTicket.status_id === 2 || isAdmin"
-           class="mt-4 border dark:border-slate-700/60 rounded-xl p-4 space-y-3 bg-blue-50/30 dark:bg-blue-900/10">
-
-        <h4 class="text-sm font-semibold text-slate-700 dark:text-slate-300">Agregar novedad</h4>
-
-        <textarea [(ngModel)]="noteText" rows="3" placeholder="Escribe una novedad..."
-                  class="w-full px-3.5 py-2 text-sm bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl border border-slate-200/60 dark:border-slate-700/60 rounded-xl text-slate-700 dark:text-slate-300 focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-400 transition-all shadow-sm resize-none"></textarea>
-
-        <!-- Photos -->
-        <div class="flex flex-wrap gap-3">
-          <label class="flex items-center gap-1.5 text-xs text-blue-600 dark:text-blue-400 cursor-pointer hover:underline">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
-            </svg>
-            Fotos {{ notePhotos.length > 0 ? '(' + notePhotos.length + ')' : '' }}
-            <input type="file" multiple accept="image/*" class="hidden" (change)="onPhotosSelected($event)">
-          </label>
-        </div>
-
-        <!-- Photo previews -->
-        <div *ngIf="notePhotos.length > 0" class="flex flex-wrap gap-2">
-          <div *ngFor="let photo of notePhotos"
-               class="w-16 h-16 rounded-lg overflow-hidden border dark:border-slate-600/60 bg-slate-100/80 dark:bg-slate-700/80 flex items-center justify-center">
-            <span class="text-xs text-slate-500 text-center px-1 truncate w-full text-center">{{ photo.name }}</span>
-          </div>
-        </div>
-
-        <!-- Audio recording -->
-        <div class="border dark:border-slate-700/60 rounded-lg p-3 bg-white dark:bg-slate-800/80 space-y-2">
-          <p class="text-xs font-medium text-slate-700 dark:text-slate-300">Audio</p>
-
-          <!-- No recording yet -->
-          <div *ngIf="!isRecording && !audioBlobUrl" class="flex gap-2">
-            <button (click)="startRecording()"
-                    class="flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium bg-red-600 hover:bg-red-700 text-white">
-              <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M12 14a3 3 0 003-3V5a3 3 0 00-6 0v6a3 3 0 003 3zm5-3a5 5 0 01-10 0H5a7 7 0 0014 0h-2z"/>
-              </svg>
-              Grabar audio
-            </button>
-          </div>
-
-          <!-- Recording in progress -->
-          <div *ngIf="isRecording" class="flex items-center gap-3">
-            <span class="flex items-center gap-1.5 text-sm text-red-600 dark:text-red-400 font-medium">
-              <span class="w-2 h-2 rounded-full bg-red-600 animate-pulse"></span>
-              Grabando... {{ formatRecording() }}
-            </span>
-            <button (click)="stopRecording()"
-                    class="flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium bg-slate-700 hover:bg-slate-800 text-white">
-              <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
-                <rect x="6" y="6" width="12" height="12" rx="1"/>
-              </svg>
-              Detener
-            </button>
-          </div>
-
-          <!-- Recording done — preview -->
-          <div *ngIf="!isRecording && audioBlobUrl" class="space-y-2">
-            <audio controls class="w-full h-10" [src]="audioBlobUrl"></audio>
-            <div class="flex gap-2">
-              <button (click)="clearAudio()"
-                      class="text-xs text-red-500 hover:underline">
-                Eliminar audio
-              </button>
-              <button (click)="startRecording()"
-                      class="text-xs text-blue-600 dark:text-blue-400 hover:underline">
-                Grabar de nuevo
-              </button>
-            </div>
-          </div>
-
-        </div>
-
-        <button (click)="submitNote()"
-                [disabled]="!noteText.trim() || noteSubmitting"
-                class="w-full py-2.5 rounded-xl text-sm font-medium bg-gradient-to-br from-indigo-500 to-violet-600 text-white shadow-md shadow-indigo-500/20 hover:shadow-lg transition-all disabled:opacity-50 flex items-center justify-center gap-2">
-          <svg *ngIf="noteSubmitting" class="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
-            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
-            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/>
-          </svg>
-          {{ noteSubmitting ? 'Guardando...' : 'Guardar novedad' }}
-        </button>
-
-      </div>
-
+<!-- ══ Eliminar ════════════════════════════════════════════════════════════ -->
+<div *ngIf="showDeleteModal" class="np-overlay" (click)="showDeleteModal = false">
+  <div class="np-modal np-modal--confirm" role="alertdialog" aria-modal="true" (click)="$event.stopPropagation()">
+    <span class="np-confirm-icon is-danger"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/></svg></span>
+    <h3>¿Eliminar el ticket #{{ selectedTicket?.id }}?</h3>
+    <p>Se elimina el ticket de <b>{{ selectedTicket?.name }} {{ selectedTicket?.last_name }}</b> con todas sus novedades y adjuntos. No se puede deshacer.</p>
+    <div class="np-btnrow np-btnrow--center">
+      <button type="button" class="np-btn np-btn--ghost" (click)="showDeleteModal = false">Cancelar</button>
+      <button type="button" class="np-btn np-btn--danger-solid" (click)="confirmDelete()" [disabled]="deleteSubmitting">{{ deleteSubmitting ? 'Eliminando…' : 'Sí, eliminar' }}</button>
     </div>
   </div>
 </div>

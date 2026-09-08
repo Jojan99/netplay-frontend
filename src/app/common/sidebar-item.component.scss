@@ -1,42 +1,12 @@
-.sidebar-nav-item {
-  position: relative;
-  display: flex;
-  align-items: center;
-  width: 100%;
-  min-height: 42px;
-  border: 1px solid transparent;
-  border-radius: 6px;
-  color: #58697d;
-  font-family: 'Manrope', ui-sans-serif, system-ui, sans-serif;
-  font-weight: 700;
-  transition: background .16s ease, border-color .16s ease, color .16s ease;
-}
-
-.sidebar-nav-item:hover { background: #f0f8f6; color: #0f766e; }
-.sidebar-nav-item-active { border-color: #c9e8e0; background: #e9f7f4; color: #0f766e; }
-.sidebar-nav-item-active::before {
-  position: absolute;
-  top: 50%;
-  left: -8px;
-  width: 3px;
-  height: 18px;
-  border-radius: 0 3px 3px 0;
-  background: #0f766e;
-  content: '';
-  transform: translateY(-50%);
-}
-.sidebar-nav-icon { display: grid; width: 21px; height: 21px; place-items: center; color: currentColor; }
-.sidebar-nav-icon :is(svg, i) { width: 18px; height: 18px; }
-.sidebar-nav-label {
-  display: flex;
-  align-items: center;
-  min-width: 0;
-  margin-left: 10px;
-  letter-spacing: 0;
-}
-.sidebar-nav-badge { background: #d9f0eb; color: #0f766e; }
-
-:host-context(.dark) .sidebar-nav-item { color: #a9bec6; }
-:host-context(.dark) .sidebar-nav-item:hover { background: #193638; color: #89e6d5; }
-:host-context(.dark) .sidebar-nav-item-active { border-color: #32756d; background: #1a413f; color: #9af0df; }
-:host-context(.dark) .sidebar-nav-badge { background: #204b47; color: #a4f0e1; }
+/* ── Ítem de navegación ────────────────────────────────────────────────── */
+.sidebar-nav-item { position: relative; display: flex; align-items: center; width: 100%; min-height: 38px; padding: 0 10px !important; margin: 0 0 2px !important; border: 1px solid transparent; border-radius: var(--radius); color: var(--text-2); font-family: var(--font-body); font-size: 12.5px; font-weight: 700; cursor: pointer; transition: background .15s, color .15s, border-color .15s; }
+.sidebar-nav-item:hover { background: var(--surface-2); color: var(--accent); }
+.sidebar-nav-item-active { border-color: var(--accent-line); background: var(--accent-soft); color: var(--accent); }
+.sidebar-nav-item-active::before { content: ''; position: absolute; top: 50%; left: -8px; width: 3px; height: 18px; border-radius: 0 3px 3px 0; background: var(--accent); transform: translateY(-50%); }
+.sidebar-nav-icon { display: grid; width: 20px; height: 20px; place-items: center; color: currentColor; flex-shrink: 0; }
+.sidebar-nav-icon :is(svg, i) { width: 17px; height: 17px; }
+.sidebar-nav-label { display: flex; align-items: center; min-width: 0; flex: 1; margin-left: 10px; overflow: hidden; white-space: nowrap; }
+.sidebar-nav-badge { background: var(--accent-soft); color: var(--accent); font-family: var(--font-mono); font-size: 10px; padding: 1px 6px; border-radius: 999px; }
+:host ::ng-deep .sidebar-group-label { display: flex; align-items: center; justify-content: space-between; width: 100%; }
+:host ::ng-deep .sidebar-chevron { width: 13px; height: 13px; color: var(--text-3); transition: transform .2s; }
+:host ::ng-deep .sidebar-chevron.is-open { transform: rotate(90deg); }

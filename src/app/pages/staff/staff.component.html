@@ -1,247 +1,92 @@
-<div class="p-6 space-y-8">
-
-  <!-- ══ SECCIÓN: Equipo de trabajo ══════════════════════════════════════════ -->
-  <div>
-    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
-      <div>
-        <h1 class="text-2xl font-bold bg-gradient-to-r from-slate-800 to-slate-600 bg-clip-text text-transparent dark:from-white dark:to-slate-300">Equipo de trabajo</h1>
-        <p class="text-sm text-slate-500 dark:text-slate-400">Administra los usuarios de tu empresa</p>
+<div class="np-page np-staff" [class.is-open]="!!selectedProfile">
+  <header class="np-head">
+    <div>
+      <p class="np-kicker">Operación <b>/</b> Equipo <b>/</b> Cuentas</p>
+      <h1 class="np-title">Cuentas del sistema</h1>
+      <div class="np-ribbon">
+        <span><span class="np-n">{{ staff.length }}</span>usuarios</span>
+        <span><span class="np-n">{{ profiles.length }}</span>roles</span>
+        <span *ngIf="selectedProfile">editando permisos de <b class="np-tag">{{ selectedProfile.name }}</b></span>
       </div>
-      <button (click)="openModal()"
-              class="flex items-center gap-2 px-4 py-2.5 text-sm font-medium bg-gradient-to-br from-indigo-500 to-violet-600 text-white shadow-md shadow-indigo-500/20 hover:shadow-lg transition-all rounded-xl">
-        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
-        </svg>
-        Nuevo usuario
-      </button>
     </div>
+    <div class="np-actions">
+      <button type="button" class="np-btn np-btn--primary" (click)="openModal()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M12 5v14M5 12h14"/></svg>Nuevo usuario</button>
+    </div>
+  </header>
 
-    <div *ngIf="successMsg"
-         class="flex items-center gap-2 p-4 mb-4 text-sm text-green-700 bg-green-50 rounded-lg dark:bg-green-900/20 dark:text-green-400">
-      <svg class="w-4 h-4 shrink-0" fill="currentColor" viewBox="0 0 20 20">
-        <path d="M10 .5a9.5 9.5 0 1 0 9.5 9.5A9.51 9.51 0 0 0 10 .5Zm3.707 8.207-4 4a1 1 0 0 1-1.414 0l-2-2a1 1 0 0 1 1.414-1.414L9 10.586l3.293-3.293a1 1 0 0 1 1.414 1.414Z"/>
-      </svg>
-      {{ successMsg }}
+  <div class="np-toolbar">
+    <div class="np-chips" role="group" aria-label="Permisos por rol">
+      <span class="np-fine np-chips-label">Permisos por rol:</span>
+      <button type="button" class="np-chip" *ngFor="let p of profiles" [attr.aria-pressed]="selectedProfile?.id === p.id" (click)="selectProfile(p)">{{ p.name }}</button>
+      <span class="np-muted" *ngIf="profiles.length === 0">No hay roles configurados.</span>
     </div>
-
-    <div *ngIf="isLoading" class="flex justify-center py-16">
-      <svg class="w-8 h-8 animate-spin text-blue-600" fill="none" viewBox="0 0 24 24">
-        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
-        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"/>
-      </svg>
-    </div>
-
-    <div *ngIf="!isLoading" class="bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl rounded-2xl border border-slate-200/60 dark:border-slate-700/60 shadow-sm hover:shadow-md transition-all duration-300 overflow-x-auto">
-      <table class="min-w-[380px] w-full text-sm text-left text-slate-600 dark:text-slate-300">
-        <thead class="text-xs uppercase bg-slate-50/80 dark:bg-slate-700/80 text-slate-500 dark:text-slate-400">
-          <tr>
-            <th class="px-4 py-3">Nombre</th>
-            <th class="px-4 py-3 hidden sm:table-cell">Usuario</th>
-            <th class="px-4 py-3 hidden md:table-cell">Correo</th>
-            <th class="px-4 py-3">Rol</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr *ngFor="let u of staff"
-              class="border-t border-slate-100/80 dark:border-slate-700/60 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors">
-            <td class="px-4 py-3 font-medium text-slate-800 dark:text-white">
-              <div>{{ u.names }} {{ u.lastname }}</div>
-              <div class="text-xs text-slate-400 sm:hidden">{{ u.username }}</div>
-            </td>
-            <td class="px-4 py-3 hidden sm:table-cell">{{ u.username }}</td>
-            <td class="px-4 py-3 hidden md:table-cell truncate max-w-[180px]">{{ u.email }}</td>
-            <td class="px-4 py-3">
-              <span class="px-2 py-0.5 rounded-full text-xs font-semibold" [ngClass]="roleBadge(u.profile_name)">
-                {{ u.profile_name }}
-              </span>
-            </td>
-          </tr>
-          <tr *ngIf="staff.length === 0">
-            <td colspan="4" class="px-4 py-10 text-center text-slate-400 dark:text-slate-500">
-              No hay usuarios registrados aún.
-            </td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
+    <span class="np-spacer"></span>
+    <p *ngIf="successMsg" class="np-notice np-notice--ok np-notice--inline">{{ successMsg }}</p>
   </div>
 
-  <!-- ══ SECCIÓN: Permisos de módulos por rol ════════════════════════════════ -->
-  <div>
-    <div class="mb-6">
-      <h2 class="text-xl font-bold text-slate-800 dark:text-white">Permisos por rol</h2>
-      <p class="text-sm text-slate-500 dark:text-slate-400">Selecciona un rol para configurar los módulos que puede ver</p>
-    </div>
-
-    <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
-
-      <!-- Lista de roles -->
-      <div class="lg:col-span-1 space-y-2">
-        <button *ngFor="let p of profiles"
-                (click)="selectProfile(p)"
-                [ngClass]="selectedProfile?.id === p.id
-                  ? 'bg-blue-600 text-white shadow-md'
-                  : 'bg-white dark:bg-slate-800/80 text-slate-700 dark:text-slate-300 hover:bg-slate-50/80 dark:hover:bg-slate-700/50'"
-                class="w-full flex items-center gap-3 px-4 py-3 rounded-xl border border-slate-200/60 dark:border-slate-700/60 transition text-left">
-          <span class="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold shrink-0"
-                [ngClass]="selectedProfile?.id === p.id ? 'bg-white/20 text-white' : roleBadge(p.name)">
-            {{ p.name.charAt(0) }}
-          </span>
-          <div>
-            <div class="text-sm font-semibold">{{ p.name }}</div>
-          </div>
-        </button>
-
-        <div *ngIf="profiles.length === 0"
-             class="text-sm text-slate-400 dark:text-slate-500 text-center py-4">
-          No hay roles configurados.
-        </div>
+  <div class="np-workspace">
+    <section class="np-registry" aria-label="Usuarios">
+      <div class="np-registry-wrap">
+        <table class="np-table np-table--registry">
+          <thead><tr><th class="np-th-stripe"></th><th>Nombre</th><th>Usuario</th><th class="np-col-mail">Correo</th><th>Rol</th></tr></thead>
+          <tbody>
+            <tr *ngIf="isLoading" class="np-empty"><td colspan="5"><span class="np-spinner"></span></td></tr>
+            <tr *ngIf="!isLoading && staff.length === 0" class="np-empty"><td colspan="5"><strong>No hay usuarios registrados aún.</strong></td></tr>
+            <tr *ngFor="let u of staff" class="np-row np-row--static">
+              <td class="np-stripe"><i [style.background]="roleColor(u.profile_name)"></i></td>
+              <td><div class="np-name">{{ u.names }} {{ u.lastname }}</div></td>
+              <td class="np-data">{{ u.username }}</td>
+              <td class="np-col-mail">{{ u.email }}</td>
+              <td><span class="np-pill" [ngClass]="rolePill(u.profile_name)">{{ u.profile_name }}</span></td>
+            </tr>
+          </tbody>
+        </table>
       </div>
+    </section>
 
-      <!-- Panel de módulos -->
-      <div class="lg:col-span-3">
-        <!-- Estado: sin selección -->
-        <div *ngIf="!selectedProfile"
-             class="h-full flex flex-col items-center justify-center py-16 bg-white dark:bg-slate-800/80 rounded-xl border border-dashed border-slate-200/60 dark:border-slate-700/60 text-slate-400 dark:text-slate-500">
-          <svg class="w-10 h-10 mb-3 opacity-40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-3-3v6M12 3a9 9 0 1 0 0 18A9 9 0 0 0 12 3Z"/>
-          </svg>
-          <p class="text-sm">Selecciona un rol para configurar sus módulos</p>
-        </div>
-
-        <!-- Loading módulos -->
-        <div *ngIf="selectedProfile && isLoadingModules"
-             class="flex justify-center py-16 bg-white dark:bg-slate-800/80 rounded-xl">
-          <svg class="w-7 h-7 animate-spin text-blue-600" fill="none" viewBox="0 0 24 24">
-            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
-            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"/>
-          </svg>
-        </div>
-
-        <!-- Módulos -->
-        <div *ngIf="selectedProfile && !isLoadingModules"
-             class="bg-white dark:bg-slate-800/80 rounded-xl shadow-sm p-5 space-y-5">
-
-          <div class="flex items-center justify-between">
-            <h3 class="font-semibold text-slate-800 dark:text-white">
-              Módulos para
-              <span class="px-2 py-0.5 rounded-full text-xs font-bold ml-1" [ngClass]="roleBadge(selectedProfile.name)">
-                {{ selectedProfile.name }}
-              </span>
-            </h3>
-
-            <div class="flex items-center gap-3">
-              <span *ngIf="modulesMsg" class="text-sm text-green-600 dark:text-green-400">{{ modulesMsg }}</span>
-              <button (click)="saveModules()" [disabled]="isSavingModules"
-                      class="flex items-center gap-2 px-4 py-2 text-sm font-medium bg-gradient-to-br from-indigo-500 to-violet-600 text-white shadow-md shadow-indigo-500/20 hover:shadow-lg transition-all rounded-xl disabled:opacity-50 transition">
-                <svg *ngIf="isSavingModules" class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
-                  <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
-                  <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"/>
-                </svg>
-                <span>{{ isSavingModules ? 'Guardando...' : 'Guardar cambios' }}</span>
-              </button>
-            </div>
-          </div>
-
-          <!-- Grupos de módulos -->
-          <div *ngFor="let group of moduleGroups" class="space-y-2">
-            <p class="text-xs font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500 border-b border-slate-100/80 dark:border-slate-700/60 pb-1">
-              {{ group }}
-            </p>
-            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2">
-              <label *ngFor="let m of groupModules(group)"
-                     class="flex items-center gap-3 px-3 py-2.5 rounded-lg cursor-pointer transition"
-                     [ngClass]="m.active
-                       ? 'bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800'
-                       : 'bg-slate-50/80 dark:bg-slate-700/80/50 border border-slate-200/60 dark:border-slate-700/60 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors/50'">
-                <input type="checkbox" [(ngModel)]="m.active" class="w-4 h-4 text-blue-600 rounded border-slate-300/60 focus:ring-blue-500">
-                <span class="text-sm text-slate-700 dark:text-slate-300 select-none">{{ m.label }}</span>
-              </label>
-            </div>
-          </div>
-        </div>
+    <!-- ══ Permisos del rol ═════════════════════════════════════════════ -->
+    <aside class="np-inspector" *ngIf="selectedProfile" aria-label="Permisos del rol">
+      <div class="np-insp-head">
+        <div class="np-avatar">{{ selectedProfile.name.charAt(0) }}</div>
+        <div class="np-insp-id"><h2>{{ selectedProfile.name }}</h2><div class="np-meta">Módulos que puede ver este rol</div></div>
+        <div class="np-insp-tools"><button type="button" class="np-icobtn" (click)="selectedProfile = null" aria-label="Cerrar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div>
       </div>
-    </div>
+      <div class="np-switchrow">
+        <span>{{ activeModulesCount }} de {{ moduleItems.length }} módulos activos</span>
+        <span class="np-switchrow-right"><span class="np-fine np-pos" *ngIf="modulesMsg">{{ modulesMsg }}</span>
+          <button type="button" class="np-btn np-btn--primary np-btn--sm" (click)="saveModules()" [disabled]="isSavingModules || isLoadingModules">{{ isSavingModules ? 'Guardando…' : 'Guardar cambios' }}</button></span>
+      </div>
+      <div *ngIf="isLoadingModules" class="np-loading"><span class="np-spinner"></span> Cargando módulos…</div>
+      <div class="np-insp-body" *ngIf="!isLoadingModules">
+        <section *ngFor="let group of moduleGroups">
+          <p class="np-sect">{{ group }}</p>
+          <div class="np-checklist">
+            <label class="np-check" *ngFor="let m of groupModules(group)"><input type="checkbox" [(ngModel)]="m.active" /><span [class.np-strong]="m.active">{{ m.label }}</span><span class="np-spacer"></span><span class="np-fine np-mono">{{ m.module }}</span></label>
+          </div>
+        </section>
+      </div>
+    </aside>
   </div>
-
 </div>
 
-<!-- ══ Modal: Crear usuario ════════════════════════════════════════════════ -->
-<div *ngIf="showModal"
-     class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50   px-4">
-  <div class="w-full max-w-md bg-white dark:bg-slate-800/80 rounded-2xl shadow-xl p-8">
-
-    <div class="flex items-center justify-between mb-6">
-      <h2 class="text-lg font-semibold text-slate-800 dark:text-white">Nuevo usuario</h2>
-      <button (click)="closeModal()" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">
-        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-        </svg>
-      </button>
-    </div>
-
-    <div *ngIf="errorMsg"
-         class="flex items-center gap-2 p-3 mb-4 text-sm text-red-700 bg-red-50 rounded-lg dark:bg-red-900/20 dark:text-red-400">
-      {{ errorMsg }}
-    </div>
-
-    <form (ngSubmit)="save()" #mf="ngForm" novalidate class="space-y-4">
-
-      <div class="grid grid-cols-2 gap-4">
-        <div>
-          <label class="block mb-1.5 text-sm font-medium text-slate-700 dark:text-slate-300">Nombre</label>
-          <input type="text" [(ngModel)]="form.names" name="names" required placeholder="Juan"
-                 class="w-full px-3.5 py-2 text-sm bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl border border-slate-200/60 dark:border-slate-700/60 rounded-xl text-slate-700 dark:text-slate-300 focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-400 transition-all shadow-sm">
-        </div>
-        <div>
-          <label class="block mb-1.5 text-sm font-medium text-slate-700 dark:text-slate-300">Apellido</label>
-          <input type="text" [(ngModel)]="form.lastname" name="lastname" required placeholder="Pérez"
-                 class="w-full px-3.5 py-2 text-sm bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl border border-slate-200/60 dark:border-slate-700/60 rounded-xl text-slate-700 dark:text-slate-300 focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-400 transition-all shadow-sm">
-        </div>
+<!-- ══ Nuevo usuario ═══════════════════════════════════════════════════════ -->
+<div *ngIf="showModal" class="np-overlay" (click)="closeModal()">
+  <div class="np-modal" role="dialog" aria-modal="true" aria-label="Nuevo usuario" (click)="$event.stopPropagation()">
+    <div class="np-modal-head"><div><p class="np-kicker">Cuentas <b>/</b> Alta</p><h3>Nuevo usuario</h3></div>
+      <button type="button" class="np-icobtn" (click)="closeModal()" aria-label="Cerrar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div>
+    <form class="np-modal-body" (ngSubmit)="save()" #mf="ngForm" novalidate>
+      <p *ngIf="errorMsg" class="np-notice np-notice--danger">{{ errorMsg }}</p>
+      <div class="np-form">
+        <label class="np-field"><span>Nombre</span><input type="text" class="np-input" [(ngModel)]="form.names" name="names" required placeholder="Juan" /></label>
+        <label class="np-field"><span>Apellido</span><input type="text" class="np-input" [(ngModel)]="form.lastname" name="lastname" required placeholder="Pérez" /></label>
+        <label class="np-field np-field-full"><span>Correo electrónico</span><input type="email" class="np-input" [(ngModel)]="form.email" name="email" required placeholder="usuario@empresa.com" /></label>
+        <label class="np-field"><span>Usuario</span><input type="text" class="np-input np-mono" [(ngModel)]="form.username" name="username" required placeholder="jperez" /></label>
+        <label class="np-field"><span>Contraseña</span><input type="password" class="np-input" [(ngModel)]="form.password" name="password" required placeholder="Mínimo 6 caracteres" /></label>
+        <label class="np-field np-field-full"><span>Rol</span><select class="np-input" [(ngModel)]="form.profile_id" name="profile_id" required><option *ngFor="let p of profiles" [ngValue]="p.id">{{ p.name }}</option></select></label>
       </div>
-
-      <div>
-        <label class="block mb-1.5 text-sm font-medium text-slate-700 dark:text-slate-300">Correo electrónico</label>
-        <input type="email" [(ngModel)]="form.email" name="email" required placeholder="usuario@empresa.com"
-               class="w-full px-3.5 py-2 text-sm bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl border border-slate-200/60 dark:border-slate-700/60 rounded-xl text-slate-700 dark:text-slate-300 focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-400 transition-all shadow-sm">
-      </div>
-
-      <div>
-        <label class="block mb-1.5 text-sm font-medium text-slate-700 dark:text-slate-300">Nombre de usuario</label>
-        <input type="text" [(ngModel)]="form.username" name="username" required placeholder="jperez"
-               class="w-full px-3.5 py-2 text-sm bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl border border-slate-200/60 dark:border-slate-700/60 rounded-xl text-slate-700 dark:text-slate-300 focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-400 transition-all shadow-sm">
-      </div>
-
-      <div>
-        <label class="block mb-1.5 text-sm font-medium text-slate-700 dark:text-slate-300">Contraseña</label>
-        <input type="password" [(ngModel)]="form.password" name="password" required placeholder="Mínimo 6 caracteres"
-               class="w-full px-3.5 py-2 text-sm bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl border border-slate-200/60 dark:border-slate-700/60 rounded-xl text-slate-700 dark:text-slate-300 focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-400 transition-all shadow-sm">
-      </div>
-
-      <div>
-        <label class="block mb-1.5 text-sm font-medium text-slate-700 dark:text-slate-300">Rol</label>
-        <select [(ngModel)]="form.profile_id" name="profile_id" required
-                class="w-full px-3.5 py-2 text-sm bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl border border-slate-200/60 dark:border-slate-700/60 rounded-xl text-slate-700 dark:text-slate-300 focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-400 transition-all shadow-sm">
-          <option *ngFor="let p of profiles" [ngValue]="p.id">{{ p.name }}</option>
-        </select>
-      </div>
-
-      <div class="flex justify-end gap-3 pt-2">
-        <button type="button" (click)="closeModal()"
-                class="px-4 py-2 text-sm font-medium text-slate-700 bg-slate-100/80 rounded-lg hover:bg-slate-200/60 dark:bg-slate-700/60 dark:text-slate-300 dark:hover:bg-slate-600">
-          Cancelar
-        </button>
-        <button type="submit" [disabled]="isSaving || mf.invalid"
-                class="px-4 py-2 text-sm font-medium bg-gradient-to-br from-indigo-500 to-violet-600 text-white shadow-md shadow-indigo-500/20 hover:shadow-lg transition-all rounded-xl disabled:opacity-50 disabled:cursor-not-allowed transition">
-          <span *ngIf="!isSaving">Crear usuario</span>
-          <span *ngIf="isSaving" class="flex items-center gap-2">
-            <svg class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
-              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
-              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"/>
-            </svg>
-            Guardando...
-          </span>
-        </button>
+      <div class="np-btnrow np-btnrow--end">
+        <button type="button" class="np-btn np-btn--ghost" (click)="closeModal()">Cancelar</button>
+        <button type="submit" class="np-btn np-btn--primary" [disabled]="isSaving || mf.invalid"><span *ngIf="isSaving" class="np-spinner np-spinner--sm"></span>{{ isSaving ? 'Guardando…' : 'Crear usuario' }}</button>
       </div>
     </form>
   </div>

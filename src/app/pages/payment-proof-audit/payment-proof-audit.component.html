@@ -1,0 +1,109 @@
+<div class="np-page np-audit" [class.is-open]="!!selectedItem">
+  <header class="np-head">
+    <div>
+      <p class="np-kicker">Operación <b>/</b> Recaudo <b>/</b> Auditoría</p>
+      <h1 class="np-title">Auditoría de comprobantes</h1>
+      <div class="np-ribbon"><span><span class="np-n">{{ totalItems | number }}</span>comprobantes en este estado</span><span>Revisá la evidencia y decidí antes de tocar la factura.</span></div>
+    </div>
+    <div class="np-actions"><button type="button" class="np-btn np-btn--ghost" (click)="load()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 12a8 8 0 1 1-2.3-5.7M20 4v5h-5"/></svg>Actualizar</button></div>
+  </header>
+
+  <form class="np-toolbar" (ngSubmit)="search()">
+    <div class="np-chips" role="group" aria-label="Estado"><button type="button" class="np-chip" *ngFor="let f of filters" [attr.aria-pressed]="statusFilter === f.value" (click)="setFilter(f.value)">{{ f.label }}</button></div>
+    <label class="np-search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg><input name="client" type="search" [(ngModel)]="searchFilters.client" placeholder="Cliente o cédula…" /></label>
+    <label class="np-field np-field--inline"><span>Monto</span><input name="amount" class="np-input np-input--sm np-mono" [(ngModel)]="searchFilters.amount" inputmode="numeric" placeholder="18900" /></label>
+    <label class="np-field np-field--inline"><span>Referencia</span><input name="reference" class="np-input np-input--sm np-mono" [(ngModel)]="searchFilters.reference" /></label>
+    <label class="np-pagesize">Entidad<select name="bank" [(ngModel)]="searchFilters.bank"><option value="">Todas</option><option *ngFor="let bank of banks" [value]="bank">{{ bank }}</option></select></label>
+    <button type="submit" class="np-btn np-btn--primary np-btn--sm">Buscar</button>
+    <button type="button" class="np-link np-link--muted" (click)="clearSearch()">Limpiar</button>
+  </form>
+
+  <div class="np-workspace">
+    <section class="np-registry" aria-label="Comprobantes">
+      <div class="np-registry-wrap">
+        <table class="np-table np-table--registry">
+          <thead><tr><th class="np-th-stripe"></th><th>Cliente</th><th>Factura</th><th class="np-th-right">Monto</th><th>Fecha pago</th><th>Referencia</th><th class="np-col-bank">Entidad</th><th>Estado</th><th class="np-th-right"></th></tr></thead>
+          <tbody>
+            <tr *ngIf="loading" class="np-empty"><td colspan="9"><span class="np-spinner"></span></td></tr>
+            <tr *ngIf="!loading && items.length === 0" class="np-empty"><td colspan="9"><strong>No hay comprobantes en este estado.</strong></td></tr>
+            <tr *ngFor="let item of items" class="np-row" [ngClass]="'np-row--' + item.status" [attr.aria-selected]="selectedItem?.id === item.id" (click)="selectedItem = item" tabindex="0" (keydown.enter)="selectedItem = item">
+              <td class="np-stripe"><i></i></td>
+              <td><div class="np-name">{{ item.user?.names || 'Cliente' }} {{ item.user?.lastname || '' }}</div><div class="np-plan"><em>{{ item.user?.dni || 'sin documento' }}</em> · recibido {{ formatDateTime(item.created_at) }}</div></td>
+              <td class="np-data">{{ item.invoice?.number_facture || '—' }}</td>
+              <td class="np-money np-pos">{{ formatAmount(item.reported_amount ?? item.detected_amount) }}</td>
+              <td class="np-data">{{ formatDate(item.payment_date) }}</td>
+              <td class="np-data">{{ item.reference_number || '—' }}</td>
+              <td class="np-col-bank">{{ item.bank_name || '—' }}</td>
+              <td><span class="np-pill" [ngClass]="'np-pill--' + item.status">{{ statusLabel(item.status) }}</span></td>
+              <td class="np-td-right"><div class="np-rowacts" (click)="$event.stopPropagation()">
+                <button type="button" class="np-icobtn np-icobtn--ok" *ngIf="item.status !== 'approved'" (click)="approve(item)" title="Aprobar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="m5 13 4 4L19 7"/></svg></button>
+                <button type="button" class="np-icobtn" *ngIf="item.status !== 'rejected'" (click)="reject(item)" title="Rechazar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
+                <button type="button" class="np-icobtn" (click)="selectedItem = item" title="Ver"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 6 6 6-6 6"/></svg></button>
+              </div></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="np-pager" *ngIf="!loading && totalItems > 0">
+        <span class="np-range">{{ fromItem }}–{{ toItem }} de {{ totalItems }}</span>
+        <div class="np-pages"><button type="button" (click)="changePage(currentPage - 1)" [disabled]="currentPage === 1">‹</button><button type="button" aria-current="page">{{ currentPage }}</button><button type="button" (click)="changePage(currentPage + 1)" [disabled]="currentPage === lastPage">›</button></div>
+      </div>
+    </section>
+
+    <aside class="np-inspector" *ngIf="selectedItem as it" aria-label="Comprobante">
+      <div class="np-insp-head">
+        <div class="np-avatar">{{ initials(it) }}</div>
+        <div class="np-insp-id"><h2>{{ it.user?.names || 'Cliente' }} {{ it.user?.lastname || '' }}</h2><div class="np-meta">CC <b>{{ it.user?.dni || '—' }}</b> · recibido <b>{{ formatDateTime(it.created_at) }}</b></div></div>
+        <div class="np-insp-tools"><button type="button" class="np-icobtn" (click)="selectedItem = null" aria-label="Cerrar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div>
+      </div>
+      <div class="np-switchrow"><span class="np-pill" [ngClass]="'np-pill--' + it.status">{{ statusLabel(it.status) }}</span><span class="np-money np-money--lg np-pos">{{ formatAmount(it.reported_amount ?? it.detected_amount) }}</span></div>
+      <div class="np-insp-body">
+        <section>
+          <p class="np-sect">Decisión</p>
+          <div class="np-quick">
+            <button type="button" class="np-btn np-btn--ok" *ngIf="it.status !== 'approved'" (click)="approve(it)">Aprobar</button>
+            <button type="button" class="np-btn np-btn--warn" *ngIf="it.status !== 'suspicious'" (click)="markSuspicious(it)">Sospechoso</button>
+            <button type="button" class="np-btn np-btn--danger" *ngIf="it.status !== 'rejected'" (click)="reject(it)">Rechazar</button>
+            <button type="button" class="np-btn np-btn--ghost" *ngIf="it.status !== 'reverted'" (click)="revert(it)">Revertir</button>
+          </div>
+          <p class="np-notice np-notice--danger" *ngIf="it.rejection_reason">{{ it.rejection_reason }}</p>
+        </section>
+        <section>
+          <p class="np-sect">Datos del pago</p>
+          <dl class="np-dl">
+            <dt>Factura</dt><dd><button type="button" class="np-link np-mono" *ngIf="it.invoice?.number_facture; else noInv" (click)="openFinanceModal(it)">{{ it.invoice.number_facture }}</button><ng-template #noInv>Sin factura</ng-template></dd>
+            <dt>Fecha del pago</dt><dd class="np-mono">{{ formatDate(it.payment_date) }}</dd>
+            <dt>Referencia</dt><dd class="np-mono">{{ it.reference_number || 'No identificada' }}</dd>
+            <dt>Entidad</dt><dd>{{ it.bank_name || 'No identificada' }}</dd>
+            <ng-container *ngIf="hasExtractedDetails(it)">
+              <dt>Destinatario</dt><dd>{{ it.raw_payload?.ocr_extraction?.recipient || 'No identificado' }}</dd>
+              <dt>Cuenta destino</dt><dd class="np-mono">{{ it.raw_payload?.ocr_extraction?.phone_destination || 'No identificada' }}</dd>
+              <dt>Resultado OCR</dt><dd>{{ it.raw_payload?.ocr_extraction?.transaction_status || 'Sin validar' }}</dd>
+            </ng-container>
+          </dl>
+        </section>
+        <section>
+          <p class="np-sect">Evidencia</p>
+          <p class="np-muted" *ngIf="!it.file_path">Sin archivo adjunto.</p>
+          <a *ngIf="it.file_path && !isImage(it.file_path)" class="np-btn np-btn--ghost np-btn--sm" [href]="it.file_path" target="_blank" rel="noopener">Abrir archivo</a>
+          <figure class="np-evidence" *ngIf="it.file_path && isImage(it.file_path)"><a [href]="it.file_path" target="_blank" rel="noopener"><img [src]="it.file_path" alt="Comprobante de pago" /></a><figcaption>Clic para abrir en tamaño real.</figcaption></figure>
+        </section>
+      </div>
+    </aside>
+  </div>
+</div>
+
+<div *ngIf="selectedFinanceItem" class="np-overlay" (click)="closeFinanceModal()">
+  <div class="np-modal" role="dialog" aria-modal="true" aria-label="Factura" (click)="$event.stopPropagation()">
+    <div class="np-modal-head"><div><p class="np-kicker">Factura</p><h3 class="np-mono">#{{ selectedFinanceItem.invoice?.number_facture }}</h3></div>
+      <button type="button" class="np-icobtn" (click)="closeFinanceModal()" aria-label="Cerrar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div>
+    <div class="np-modal-body">
+      <div class="np-stats">
+        <div class="np-stat"><span class="np-stat-l">Comprobante</span><span class="np-stat-v">{{ formatAmount(selectedFinanceItem.reported_amount ?? selectedFinanceItem.detected_amount) }}</span></div>
+        <div class="np-stat"><span class="np-stat-l">Referencia</span><span class="np-stat-v np-stat-v--sm">{{ selectedFinanceItem.reference_number || '—' }}</span></div>
+        <div class="np-stat"><span class="np-stat-l">Estado</span><span class="np-stat-v np-stat-v--sm">{{ statusLabel(selectedFinanceItem.status) }}</span></div>
+      </div>
+      <a routerLink="/dashboard/finanzas" [queryParams]="financeQueryParams(selectedFinanceItem)" class="np-btn np-btn--primary" (click)="closeFinanceModal()">Abrir la cartera del cliente en Finanzas</a>
+    </div>
+  </div>
+</div>

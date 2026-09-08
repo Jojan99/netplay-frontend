@@ -1,0 +1,101 @@
+/* ─── Puente: módulos aún no reestructurados → tokens ───────────────────
+   Las pantallas escritas con utilidades Tailwind (bg-white, text-gray-*,
+   bg-blue-600…) toman la paleta y tipografía del sistema sin tocar su
+   HTML. Cuando una pantalla se reescribe con clases np-*, deja de
+   depender de esto. Todo vive bajo .app-platform (el <main> del panel).
+──────────────────────────────────────────────────────────────────────── */
+.app-platform,
+.dark .app-platform,
+:root[data-theme='dark'] .app-platform {
+  --np-ink: var(--text);
+  --np-muted: var(--text-3);
+  --np-line: var(--line);
+  --np-surface: var(--surface);
+  --np-subtle: var(--surface-2);
+  --np-accent: var(--accent);
+  --np-accent-soft: var(--accent-soft);
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-body);
+}
+
+/* Tipografía */
+.app-platform :is(h1, h2) { font-family: var(--font-display); font-weight: 600; letter-spacing: -0.015em; color: var(--text) !important; }
+.app-platform h1 { font-size: 26px; line-height: 1.1; }
+.app-platform h3, .app-platform h4 { color: var(--text); }
+.app-platform :is(table, tbody, td) { font-variant-numeric: tabular-nums; }
+.app-platform :is(code, pre, kbd, .font-mono) { font-family: var(--font-mono); }
+
+/* Superficies */
+.app-platform [class*='bg-white'] { background-color: var(--surface) !important; }
+.app-platform :is([class*='bg-gray-50'], [class*='bg-slate-50'], [class*='bg-stone-50'], [class*='bg-gray-100'], [class*='bg-slate-100'], [class*='bg-stone-100'], [class*='bg-zinc-50'], [class*='bg-zinc-100']) { background-color: var(--surface-2) !important; }
+.app-platform :is([class*='bg-gray-200'], [class*='bg-slate-200'], [class*='bg-stone-200']) { background-color: var(--surface-3) !important; }
+.dark .app-platform :is([class*='dark:bg-gray-8'], [class*='dark:bg-slate-8'], [class*='dark:bg-stone-8'], [class*='dark:bg-zinc-8']) { background-color: var(--surface) !important; }
+.dark .app-platform :is([class*='dark:bg-gray-9'], [class*='dark:bg-slate-9'], [class*='dark:bg-stone-9'], [class*='dark:bg-zinc-9']) { background-color: var(--surface-2) !important; }
+.dark .app-platform :is([class*='dark:bg-gray-7'], [class*='dark:bg-slate-7'], [class*='dark:bg-stone-7'], [class*='dark:bg-zinc-7']) { background-color: var(--surface-3) !important; }
+
+/* Bordes y divisores */
+.app-platform :is([class*='border-gray-'], [class*='border-slate-'], [class*='border-stone-'], [class*='border-zinc-'], [class*='divide-gray-'], [class*='divide-slate-']),
+.dark .app-platform :is([class*='dark:border-gray-'], [class*='dark:border-slate-'], [class*='dark:border-stone-'], [class*='dark:divide-gray-'], [class*='dark:divide-slate-']) { border-color: var(--line) !important; }
+.app-platform :is([class*='divide-gray-'], [class*='divide-slate-']) > * { border-color: var(--line) !important; }
+.app-platform :is([class*='rounded-2xl'], [class*='rounded-3xl']) { border-radius: var(--radius-lg) !important; }
+.app-platform [class*='rounded-xl'] { border-radius: var(--radius-lg) !important; }
+.app-platform [class*='rounded-lg'] { border-radius: var(--radius) !important; }
+.app-platform :is([class*='shadow-sm'], [class*='shadow-md'], [class*='shadow-lg'], [class*='shadow-xl'], [class*='shadow-2xl']) { box-shadow: var(--shadow) !important; }
+.app-platform [class*='backdrop-blur'] { backdrop-filter: none !important; }
+
+/* Texto */
+.app-platform :is([class*='text-gray-9'], [class*='text-slate-9'], [class*='text-stone-9'], [class*='text-gray-8'], [class*='text-slate-8'], [class*='text-stone-8'], [class*='text-zinc-9'], [class*='text-zinc-8']) { color: var(--text) !important; }
+.app-platform :is([class*='text-gray-7'], [class*='text-slate-7'], [class*='text-stone-7'], [class*='text-gray-6'], [class*='text-slate-6'], [class*='text-stone-6'], [class*='text-zinc-7'], [class*='text-zinc-6']) { color: var(--text-2) !important; }
+.app-platform :is([class*='text-gray-5'], [class*='text-slate-5'], [class*='text-stone-5'], [class*='text-gray-4'], [class*='text-slate-4'], [class*='text-stone-4'], [class*='text-zinc-5'], [class*='text-zinc-4']) { color: var(--text-3) !important; }
+.dark .app-platform :is([class*='dark:text-white'], [class*='dark:text-gray-1'], [class*='dark:text-slate-1'], [class*='dark:text-gray-2'], [class*='dark:text-slate-2'], [class*='dark:text-stone-1'], [class*='dark:text-stone-2']) { color: var(--text) !important; }
+.dark .app-platform :is([class*='dark:text-gray-3'], [class*='dark:text-slate-3'], [class*='dark:text-stone-3'], [class*='dark:text-gray-4'], [class*='dark:text-slate-4'], [class*='dark:text-stone-4']) { color: var(--text-2) !important; }
+.dark .app-platform :is([class*='dark:text-gray-5'], [class*='dark:text-slate-5'], [class*='dark:text-stone-5']) { color: var(--text-3) !important; }
+
+/* Acento: azul / índigo / violeta / cyan → accent */
+.app-platform :is([class*='bg-blue-5'], [class*='bg-blue-6'], [class*='bg-blue-7'], [class*='bg-indigo-5'], [class*='bg-indigo-6'], [class*='bg-indigo-7'], [class*='bg-violet-5'], [class*='bg-violet-6'], [class*='bg-purple-5'], [class*='bg-purple-6'], [class*='bg-sky-5'], [class*='bg-sky-6'], [class*='bg-cyan-5'], [class*='bg-cyan-6'], [class*='bg-teal-5'], [class*='bg-teal-6'], [class*='bg-teal-7'], [class*='from-indigo'], [class*='from-blue'], [class*='from-violet'], [class*='bg-primary-']) {
+  background: var(--accent) !important; color: var(--accent-ink) !important; box-shadow: none !important; }
+.app-platform :is([class*='hover:bg-blue-'], [class*='hover:bg-indigo-'], [class*='hover:bg-teal-'], [class*='hover:bg-violet-']):hover { filter: brightness(1.08); }
+.app-platform :is([class*='bg-blue-50'], [class*='bg-blue-100'], [class*='bg-indigo-50'], [class*='bg-indigo-100'], [class*='bg-sky-50'], [class*='bg-sky-100'], [class*='bg-teal-50'], [class*='bg-teal-100'], [class*='bg-cyan-50'], [class*='bg-cyan-100'], [class*='bg-violet-50'], [class*='bg-purple-50'], [class*='bg-purple-100']),
+.dark .app-platform :is([class*='dark:bg-blue-9'], [class*='dark:bg-indigo-9'], [class*='dark:bg-sky-9'], [class*='dark:bg-teal-9'], [class*='dark:bg-violet-9'], [class*='dark:bg-purple-9']) { background: var(--accent-soft) !important; }
+.app-platform :is([class*='text-blue-'], [class*='text-indigo-'], [class*='text-sky-'], [class*='text-teal-'], [class*='text-cyan-'], [class*='text-violet-'], [class*='text-purple-'], [class*='text-primary-']) { color: var(--accent) !important; }
+.app-platform :is([class*='border-blue-'], [class*='border-indigo-'], [class*='border-teal-'], [class*='border-sky-'], [class*='border-violet-'], [class*='border-purple-']) { border-color: var(--accent-line) !important; }
+.app-platform :is([class*='ring-blue-'], [class*='ring-indigo-'], [class*='focus:ring-blue-'], [class*='focus:ring-indigo-']) { --tw-ring-color: color-mix(in srgb, var(--accent) 35%, transparent) !important; }
+
+/* Semántico: verde / rojo / ámbar se mantienen, pero con los tokens */
+.app-platform :is([class*='bg-green-5'], [class*='bg-green-6'], [class*='bg-green-7'], [class*='bg-emerald-5'], [class*='bg-emerald-6'], [class*='bg-emerald-7'], [class*='from-emerald'], [class*='from-green']) { background: var(--ok) !important; color: #fff !important; }
+.app-platform :is([class*='bg-red-5'], [class*='bg-red-6'], [class*='bg-red-7'], [class*='bg-rose-5'], [class*='bg-rose-6'], [class*='from-red'], [class*='from-rose']) { background: var(--danger) !important; color: #fff !important; }
+.app-platform :is([class*='bg-yellow-5'], [class*='bg-yellow-6'], [class*='bg-amber-5'], [class*='bg-amber-6'], [class*='bg-orange-5'], [class*='bg-orange-6'], [class*='from-amber'], [class*='from-orange']) { background: var(--warn) !important; color: #fff !important; }
+.app-platform :is([class*='bg-green-50'], [class*='bg-green-100'], [class*='bg-emerald-50'], [class*='bg-emerald-100']),
+.dark .app-platform :is([class*='dark:bg-green-9'], [class*='dark:bg-emerald-9']) { background: var(--ok-soft) !important; }
+.app-platform :is([class*='bg-red-50'], [class*='bg-red-100'], [class*='bg-rose-50'], [class*='bg-rose-100']),
+.dark .app-platform :is([class*='dark:bg-red-9'], [class*='dark:bg-rose-9']) { background: var(--danger-soft) !important; }
+.app-platform :is([class*='bg-yellow-50'], [class*='bg-yellow-100'], [class*='bg-amber-50'], [class*='bg-amber-100'], [class*='bg-orange-50'], [class*='bg-orange-100']),
+.dark .app-platform :is([class*='dark:bg-yellow-9'], [class*='dark:bg-amber-9'], [class*='dark:bg-orange-9']) { background: var(--warn-soft) !important; }
+.app-platform :is([class*='text-green-'], [class*='text-emerald-']) { color: var(--ok) !important; }
+.app-platform :is([class*='text-red-'], [class*='text-rose-']) { color: var(--danger) !important; }
+.app-platform :is([class*='text-yellow-'], [class*='text-amber-'], [class*='text-orange-']) { color: var(--warn) !important; }
+.app-platform :is([class*='border-green-'], [class*='border-emerald-']) { border-color: var(--ok) !important; }
+.app-platform :is([class*='border-red-'], [class*='border-rose-']) { border-color: var(--danger) !important; }
+.app-platform :is([class*='border-yellow-'], [class*='border-amber-'], [class*='border-orange-']) { border-color: var(--warn) !important; }
+/* Botones sólidos que llevan texto blanco explícito conservan el contraste */
+.app-platform :is([class*='bg-green-5'], [class*='bg-green-6'], [class*='bg-red-5'], [class*='bg-red-6'], [class*='bg-yellow-5'], [class*='bg-amber-5'], [class*='bg-orange-5'], [class*='bg-blue-5'], [class*='bg-blue-6'], [class*='bg-indigo-6'], [class*='bg-teal-6']) :is([class*='text-'], svg) { color: inherit !important; }
+
+/* Tablas */
+.app-platform thead { background: var(--surface-2) !important; }
+.app-platform thead th { color: var(--text-3) !important; font-size: 10.5px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; }
+.app-platform tbody tr:hover { background: var(--surface-2); }
+.app-platform :is([class*='hover:bg-gray-'], [class*='hover:bg-slate-'], [class*='hover:bg-stone-']):hover { background-color: var(--surface-2) !important; }
+
+/* Controles */
+.app-platform :is(input, select, textarea) { border-color: var(--line-strong) !important; background-color: var(--surface) !important; color: var(--text) !important; border-radius: var(--radius) !important; font-family: var(--font-body); }
+.app-platform :is(input, select, textarea):focus { border-color: var(--accent) !important; box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 14%, transparent) !important; }
+.app-platform :is(input, select, textarea)::placeholder { color: var(--text-3); }
+.app-platform input[type='checkbox'], .app-platform input[type='radio'] { accent-color: var(--accent); }
+.app-platform button { font-family: inherit; }
+.app-platform :is(button, a)[class*='rounded-full'] { border-radius: 999px !important; }
+.app-platform :is(button, a):focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+/* Superposiciones y modales heredados */
+.app-platform :is([class*='bg-black/'], [class*='bg-black\\/'], [class*='bg-gray-900/'], [class*='bg-slate-900/']) { background-color: var(--overlay) !important; }
+.app-platform [class*='animate-spin'][class*='border-'] { border-color: var(--line-strong) !important; border-top-color: var(--accent) !important; }

@@ -1,40 +1,18 @@
-<div class="mx-auto max-w-7xl px-4 py-8 sm:px-6">
-
-  <!-- ── Encabezado ─────────────────────────────────────────────────── -->
-  <header class="mb-7">
-    <p class="mb-1 text-xs font-semibold uppercase tracking-[0.14em] text-emerald-600 dark:text-emerald-400">
-      WhatsApp Business &middot; Meta
-    </p>
-    <h1 class="text-2xl font-bold tracking-tight text-slate-900 dark:text-white">Comunicados</h1>
-    <p class="mt-1 max-w-2xl text-sm text-slate-500 dark:text-slate-400">
-      Manda una plantilla aprobada a tus clientes. Cada mensaje tiene costo en Meta,
-      así que primero se prueba con un número y después se envía.
-    </p>
+<div class="np-page np-meta-com">
+  <header class="np-head">
+    <div>
+      <p class="np-kicker">WhatsApp <b>/</b> API de Meta <b>/</b> Comunicados</p>
+      <h1 class="np-title">Comunicados</h1>
+      <div class="np-ribbon"><span>Cada mensaje tiene costo en Meta: primero se prueba con un número y después se envía.</span></div>
+    </div>
   </header>
-
-  <!-- ── Pestañas ───────────────────────────────────────────────────── -->
-  <div class="mb-6 border-b border-slate-200 dark:border-slate-700">
-    <nav class="-mb-px flex gap-6">
-      <button type="button" (click)="vista = 'nuevo'"
-              class="border-b-2 px-1 pb-3 text-sm font-medium transition"
-              [ngClass]="vista === 'nuevo'
-                ? 'border-emerald-600 text-emerald-700 dark:border-emerald-400 dark:text-emerald-400'
-                : 'border-transparent text-slate-500 hover:border-slate-300 hover:text-slate-700 dark:text-slate-400'">
-        Nuevo comunicado
-      </button>
-      <button type="button" (click)="vista = 'historial'; recargarHistorial()"
-              class="border-b-2 px-1 pb-3 text-sm font-medium transition"
-              [ngClass]="vista === 'historial'
-                ? 'border-emerald-600 text-emerald-700 dark:border-emerald-400 dark:text-emerald-400'
-                : 'border-transparent text-slate-500 hover:border-slate-300 hover:text-slate-700 dark:text-slate-400'">
-        Enviados
-        <span *ngIf="campaigns.length"
-              class="ml-1.5 rounded-full bg-slate-200 px-2 py-0.5 text-xs text-slate-600 dark:bg-slate-700 dark:text-slate-300">
-          {{ campaigns.length }}
-        </span>
-      </button>
-    </nav>
+  <div class="np-toolbar">
+    <div class="np-seg" role="tablist">
+      <button type="button" [attr.aria-pressed]="vista === 'nuevo'" (click)="vista = 'nuevo'">Nuevo comunicado</button>
+      <button type="button" [attr.aria-pressed]="vista === 'historial'" (click)="vista = 'historial'; recargarHistorial()">Enviados<span class="np-c" *ngIf="campaigns.length">{{ campaigns.length }}</span></button>
+    </div>
   </div>
+  <div class="np-scroll np-legacy">
 
   <!-- ── Aviso ──────────────────────────────────────────────────────── -->
   <div *ngIf="aviso" class="mb-6 rounded-lg border px-4 py-3 text-sm"
@@ -364,4 +342,5 @@
       </div>
     </aside>
   </div>
+</div>
 </div>

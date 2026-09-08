@@ -1,133 +1,60 @@
-<div class="crm-conversation-list h-full flex flex-col min-h-0 border-r">
+<div class="wa-list">
+  <div class="wa-list-head">
+    <div class="wa-list-title"><h2>Chats</h2><span class="wa-count">{{ filtered.length }}</span><span class="np-spacer"></span><button type="button" class="wa-ibtn" (click)="refresh.emit()" title="Actualizar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 12a8 8 0 1 1-2.3-5.7M20 4v5h-5"/></svg></button></div>
+    <label class="wa-search">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg>
+      <input type="search" [(ngModel)]="searchQuery" (ngModelChange)="applySearch()" placeholder="Buscar por nombre, número o mensaje" aria-label="Buscar chat" />
+    </label>
+    <div class="wa-filters" role="group" aria-label="Estado">
+      <button type="button" *ngFor="let tab of tabs" class="wa-filter" [attr.aria-pressed]="activeStatus === tab.id" (click)="changeStatus(tab.id)">{{ tab.label }}</button>
+    </div>
+    <div class="wa-filters wa-filters--labels" role="group" aria-label="Etiqueta" *ngIf="labels?.length">
+      <button type="button" *ngFor="let l of labels" class="wa-filter wa-filter--label" [style.--lc]="l.color" [attr.aria-pressed]="activeLabelId === l.id" (click)="setLabel(l.id)"><i></i>{{ l.name }}</button>
+    </div>
+  </div>
 
-  <!-- HEADER -->
-  <div class="crm-conversation-list-header px-4 pt-4 pb-3 border-b shrink-0">
-
-    <!-- TITLE ROW -->
-    <div class="flex items-center justify-between mb-3">
-      <span class="text-sm font-bold crm-conversation-title">Conversaciones</span>
-      <span class="text-xs px-2.5 py-1 rounded-full font-bold crm-conversation-count">
-        {{ filtered.length }}
+  <div class="wa-list-body">
+    <div *ngFor="let c of filtered; trackBy: trackByConversationId" class="wa-row" role="button" tabindex="0" [class.is-active]="activeConversationId === c.id" [class.is-unread]="c.unread_count && activeConversationId !== c.id" [class.is-waiting]="waitingMinutes(c) >= waitAlertMinutes" (click)="selectConversation(c)" (keydown.enter)="selectConversation(c)">
+      <span class="wa-avatar" [ngClass]="'wa-avatar--' + (c.status || 'new')">{{ getInitials(c.customer?.name || '') }}<i class="wa-prio" *ngIf="c.priority === 'high'" title="Prioridad alta"></i></span>
+      <span class="wa-row-body">
+        <span class="wa-row-top"><span class="wa-row-name">{{ c.customer?.name || c.customer?.phone || 'Cliente' }}</span><span class="wa-row-time" [class.is-unread]="c.unread_count && activeConversationId !== c.id">{{ c.last_message?.at ? timeLabel(c.last_message.at) : '' }}</span></span>
+        <span class="wa-row-bottom">
+          <span class="wa-row-preview">
+            <svg *ngIf="c.last_message?.from === 'agent'" class="wa-row-tick" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="m3 13 4 4L15 9M9 17l1 1 10-10"/></svg>
+            <ng-container [ngSwitch]="c.last_message?.type">
+              <ng-container *ngSwitchCase="'image'"><img class="wa-row-thumb" *ngIf="c.last_message?.media_url" [src]="c.last_message.media_url" alt="" loading="lazy" /><svg *ngIf="!c.last_message?.media_url" class="wa-row-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 16 5-5 4 4 3-3 6 6"/></svg><span class="wa-row-txt">{{ c.last_message?.content && c.last_message.content !== 'Foto' ? c.last_message.content : 'Foto' }}</span></ng-container>
+              <ng-container *ngSwitchCase="'sticker'"><img class="wa-row-thumb wa-row-thumb--sticker" *ngIf="c.last_message?.media_url" [src]="c.last_message.media_url" alt="" loading="lazy" /><span class="wa-row-txt">Sticker</span></ng-container>
+              <ng-container *ngSwitchCase="'audio'"><svg class="wa-row-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg><span class="wa-row-txt">Nota de voz</span></ng-container>
+              <ng-container *ngSwitchCase="'video'"><svg class="wa-row-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="6" width="13" height="12" rx="2"/><path d="m16 10 5-3v10l-5-3z"/></svg><span class="wa-row-txt">{{ c.last_message?.content && c.last_message.content !== 'Video' ? c.last_message.content : 'Video' }}</span></ng-container>
+              <ng-container *ngSwitchCase="'document'"><svg class="wa-row-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/></svg><span class="wa-row-txt">{{ c.last_message?.content || 'Documento' }}</span></ng-container>
+              <ng-container *ngSwitchCase="'location'"><svg class="wa-row-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s-7-6-7-12a7 7 0 0 1 14 0c0 6-7 12-7 12z"/><circle cx="12" cy="10" r="2.5"/></svg><span class="wa-row-txt">Ubicación</span></ng-container>
+              <ng-container *ngSwitchCase="'contact'"><svg class="wa-row-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg><span class="wa-row-txt">{{ (c.last_message?.content || 'Contacto').split('\n')[0].replace('👤 Contacto: ', 'Contacto: ') }}</span></ng-container>
+              <ng-container *ngSwitchCase="'poll'"><svg class="wa-row-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 20V10M10 20V4M16 20v-8M22 20H2"/></svg><span class="wa-row-txt">{{ (c.last_message?.content || 'Encuesta').split('\n')[0].replace('📊 ', '') }}</span></ng-container>
+              <ng-container *ngSwitchCase="'event'"><svg class="wa-row-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg><span class="wa-row-txt">{{ (c.last_message?.content || 'Evento').split('\n')[0].replace('📅 ', '') }}</span></ng-container>
+              <span *ngSwitchDefault class="wa-row-txt">{{ lastMessagePreview(c.last_message) }}</span>
+            </ng-container>
+          </span>
+          <span class="wa-row-badges">
+            <span class="wa-wait" *ngIf="waitingMinutes(c) >= waitAlertMinutes" [title]="'El cliente espera respuesta hace ' + waitLabel(waitingMinutes(c))"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>{{ waitLabel(waitingMinutes(c)) }}</span>
+            <span class="wa-labels" *ngIf="c.labels?.length"><i *ngFor="let l of c.labels" [style.background]="l.color || '#8696a0'" [title]="l.name"></i></span>
+            <svg class="wa-pin-ico" *ngIf="isPinned(c.id)" viewBox="0 0 24 24" fill="currentColor"><path d="M14 3l7 7-3 1-3 3 1 6-2 1-4-5-5 5-1-1 5-5-5-4 1-2 6 1 3-3z"/></svg>
+            <span class="wa-tag" *ngIf="c.assigned_user" [title]="'Agente: ' + c.assigned_user.names">{{ c.assigned_user.names }}</span>
+            <span class="wa-unread" *ngIf="c.unread_count && activeConversationId !== c.id">{{ c.unread_count }}</span>
+          </span>
+        </span>
+      </span>
+      <span class="wa-row-more">
+        <button type="button" class="wa-ibtn wa-ibtn--sm" (click)="toggleRowMenu(c.id, $event)" aria-label="Opciones del chat"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="m6 9 6 6 6-6"/></svg></button>
+        <span class="wa-row-menu" *ngIf="rowMenuId === c.id" (click)="$event.stopPropagation()">
+          <button type="button" (click)="togglePin(c.id)">{{ isPinned(c.id) ? 'Desfijar chat' : 'Fijar chat' }}</button>
+          <button type="button" (click)="markUnreadRow(c)">Marcar como no leído</button>
+        </span>
       </span>
     </div>
-
-    <!-- SEARCH -->
-    <div class="relative mb-3">
-      <input type="search"
-             [(ngModel)]="searchQuery"
-             (ngModelChange)="applySearch()"
-             placeholder="Buscar por nombre o teléfono…"
-                  class="crm-conversation-search w-full pl-9 pr-3.5 py-2 text-sm rounded-xl transition-all shadow-sm outline-none" />
-                <i class="fa-solid fa-magnifying-glass absolute left-3 top-2.5 text-xs crm-conversation-muted"></i>
+    <div class="wa-list-empty" *ngIf="!filtered || filtered.length === 0">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 20l1.3-3.8A8 8 0 1 1 8 19.2L4 20z"/></svg>
+      <strong>Sin chats</strong>
+      <span>{{ searchQuery ? 'Nada coincide con "' + searchQuery + '".' : 'Probá con otro filtro.' }}</span>
     </div>
-
-    <!-- FILTERS -->
-    <div class="flex gap-1.5 flex-wrap">
-      <button *ngFor="let tab of [
-        {id:'new',         label:'Nuevo',      color:'#10b981', bg:'#10b98120', border:'#10b98140'},
-        {id:'in_progress', label:'En curso',   color:'#60a5fa', bg:'#3b82f620', border:'#3b82f640'},
-        {id:'closed',      label:'Cerrado',    color:'#f87171', bg:'#ef444420', border:'#ef444430'},
-        {id:'all',         label:'Todos',      color:'#a78bfa', bg:'#8b5cf620', border:'#8b5cf640'}
-      ]"
-        class="px-3 py-1 rounded-xl text-xs font-semibold transition-all duration-200"
-        [style.background]="activeStatus === tab.id ? tab.bg : '#f1f5f9'"
-        [style.color]="activeStatus === tab.id ? tab.color : '#64748b'"
-        [style.border]="'1px solid ' + (activeStatus === tab.id ? tab.border : '#dbe3e9')"
-        (click)="changeStatus($any(tab.id))">
-        {{ tab.label }}
-      </button>
-    </div>
-
   </div>
-
-  <!-- LIST -->
-  <div class="flex-1 min-h-0 overflow-y-auto">
-
-    <button *ngFor="let c of filtered; trackBy: trackByConversationId"
-            class="crm-conversation-row w-full text-left px-4 py-3 transition-all duration-150 border-b relative"
-            [class.crm-conversation-row-active]="activeConversationId === c.id"
-            (click)="selectConversation(c)">
-
-      <div class="flex gap-3 items-start">
-
-        <!-- AVATAR -->
-        <div class="relative flex-shrink-0">
-          <div class="h-10 w-10 rounded-full flex items-center justify-center font-bold text-sm bg-gradient-to-br from-teal-500 to-violet-600 text-white shadow-md shadow-teal-500/20 border border-slate-600">
-            {{ getInitials(c.customer?.name || '') }}
-          </div>
-          <!-- Prioridad dot -->
-          <span *ngIf="c.priority && c.priority !== 'normal'"
-                class="absolute -top-0.5 -right-0.5 text-xs leading-none"
-                [title]="c.priority">
-            {{ priorityDot(c.priority) }}
-          </span>
-        </div>
-
-        <!-- INFO -->
-        <div class="flex-1 min-w-0">
-
-          <!-- NAME + META -->
-<div class="flex justify-between items-center gap-2">
-
-  <span
-    class="font-semibold text-sm truncate crm-conversation-customer-name"
-    [class.crm-conversation-title-active]="activeConversationId === c.id">
-    {{ c.customer?.name || 'Cliente' }}
-  </span>
-
-  <div class="flex items-center gap-1.5 flex-shrink-0">
-
-    <!-- UNREAD BADGE -->
-    <span
-      *ngIf="c.unread_count && activeConversationId !== c.id"
-      class="text-xs font-bold rounded-full min-w-[18px] h-[18px] px-1 flex items-center justify-center bg-teal-500 text-white">
-      {{ c.unread_count }}
-    </span>
-
-    <!-- HORA -->
-    <span
-      *ngIf="c.last_message?.at"
-      class="text-xs flex-shrink-0 crm-conversation-muted">
-      {{ c.last_message.at | date:'HH:mm' }}
-    </span>
-
-  </div>
-</div>
-          <!-- LAST MESSAGE -->
-          <div class="flex items-center gap-1.5 text-xs truncate mt-0.5 crm-conversation-muted">
-            <span class="truncate">{{ lastMessagePreview(c.last_message) }}</span>
-          </div>
-
-          <!-- FOOTER: status + agente -->
-          <div class="flex items-center gap-2 mt-1 flex-wrap">
-            <span class="crm-conversation-status text-xs font-medium px-1.5 py-0.5 rounded-md"
-              [class.crm-status-new]="c.status === 'new'"
-              [class.crm-status-progress]="c.status === 'in_progress'"
-              [class.crm-status-closed]="c.status !== 'new' && c.status !== 'in_progress'">
-              {{ getStatusLabel(c.status) }}
-            </span>
-
-            <span *ngIf="c.assigned_user"
-                  class="text-xs truncate max-w-[80px] crm-conversation-muted">
-              <i class="fa-solid fa-user text-xs mr-0.5"></i>
-              {{ c.assigned_user.names }}
-            </span>
-          </div>
-
-        </div>
-      </div>
-    </button>
-
-    <!-- EMPTY STATE -->
-    <div *ngIf="!filtered || filtered.length === 0"
-         class="flex flex-col items-center justify-center py-16 gap-3">
-      <div class="text-4xl opacity-20">💬</div>
-      <div class="text-sm font-medium text-slate-600">Sin conversaciones</div>
-      <div class="text-xs text-slate-700">
-        {{ searchQuery ? 'Sin resultados para "' + searchQuery + '"' : 'Intenta cambiar el filtro' }}
-      </div>
-    </div>
-
-  </div>
-
 </div>

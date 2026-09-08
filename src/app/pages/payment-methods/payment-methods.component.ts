@@ -31,8 +31,10 @@ interface PaymentsResponse {
   imports: [CommonModule, FormsModule],
   templateUrl: './payment-methods.component.html',
   styleUrls: ['./payment-methods.component.scss'],
+  host: { class: 'np-console' },
 })
 export class PaymentMethodsComponent implements OnInit {
+  get grandTotal(): number { return this.methods.reduce((s, m) => s + (m.total || 0), 0); }
   period = new Date().toISOString().slice(0, 7);
   searchTerm = '';
 

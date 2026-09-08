@@ -1,322 +1,113 @@
-<!-- WRAPPER -->
-<div class="flex mb-1 group relative"
-  [class.justify-end]="message.from === 'agent' || message.from === 'system'"
-  [class.justify-start]="message.from === 'customer'"
-     (contextmenu)="onRightClick($event)">
+<div class="wa-msg" [class.is-out]="isOut" [class.is-in]="!isOut" [class.is-sticker]="isSticker" [class.is-failed]="message.failed" [attr.id]="'msg-' + message.id">
 
-  <!-- ── NOTA INTERNA ──────────────────────────────────────────── -->
-  <div *ngIf="isNote"
-       class="max-w-[78%] rounded-2xl px-4 py-3 text-sm"
-       style="background: #2d2600; border: 1px dashed #f59e0b40; color: #fbbf24;">
-    <div class="flex items-center gap-1.5 mb-1 text-xs font-semibold opacity-70">
-      <i class="fa-solid fa-note-sticky text-yellow-400"></i> Nota interna
-    </div>
-    <div style="white-space: pre-wrap; word-break: break-word;">{{ message.content }}</div>
-    <div class="text-right mt-1 text-xs opacity-50">{{ message.at | date:'HH:mm' }}</div>
+  <!-- Nota interna -->
+  <div class="wa-note" *ngIf="isNote">
+    <span class="wa-note-k">Nota interna</span>
+    <p>{{ message.content }}</p>
+    <span class="wa-meta">{{ message.at | date:'HH:mm' }}</span>
   </div>
 
-  <!-- ── BURBUJA NORMAL ────────────────────────────────────────── -->
-  <div *ngIf="!isNote"
-      class="relative max-w-[78%] min-w-[80px] rounded-2xl overflow-visible"
-      [class.bot-message]="message.from === 'system'"
-      [class.agent-message]="message.from === 'agent'"
-      [class.customer-message]="message.from === 'customer'"
-      [style.background]="message.from === 'agent' || message.from === 'system' ? '#10b981' : '#1e293b'"
-      [style.borderRadius]="message.from === 'agent' || message.from === 'system' ? '18px 4px 18px 18px' : '4px 18px 18px 18px'"
-      [style.border]="message.from === 'customer' ? '1px solid #334155' : 'none'"
-       style="box-shadow: 0 1px 4px rgba(0,0,0,0.3);">
+  <!-- Sticker: sin burbuja -->
+  <div class="wa-sticker" *ngIf="!isNote && isSticker">
+    <img [src]="message.media_url" alt="Sticker" (error)="onImageError($event)" />
+    <button type="button" class="wa-sticker-save" *ngIf="message.from === 'customer' && message.media_url" (click)="saveSticker.emit(message.media_url!)" title="Guardar sticker">+</button>
+    <span class="wa-meta wa-meta--float">{{ message.at | date:'HH:mm' }}</span>
+  </div>
 
-    <!-- STICKER – sin fondo de burbuja -->
-    <ng-container *ngIf="isSticker">
-      <div class="relative overflow-visible group/sticker"
-           style="background: transparent; border: none; box-shadow: none;">
-        <img [src]="message.media_url"
-             alt="sticker"
-             class="block"
-             style="width: 140px; height: 140px; object-fit: contain; border-radius: 12px;"
-             (error)="onImageError($event)" />
-        <!-- Botón guardar sticker (solo mensajes del cliente) -->
-        <button *ngIf="message.from === 'customer' && message.media_url"
-                class="absolute bottom-1 right-1 w-7 h-7 rounded-full flex items-center justify-center
-                       opacity-0 group-hover/sticker:opacity-100 transition-opacity"
-                style="background: #1e293bcc; color: #10b981; border: 1px solid #334155;"
-                title="Guardar sticker"
-                (click)="saveSticker.emit(message.media_url!)">
-          <i class="fa-solid fa-bookmark text-xs"></i>
-        </button>
-      </div>
-    </ng-container>
+  <!-- Burbuja -->
+  <div class="wa-bubble" *ngIf="!isNote && !isSticker" [class.is-media]="isImage || isVideo">
+    <span class="wa-tail"></span>
+    <div class="wa-fwd" *ngIf="message.is_forwarded"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 5l7 7-7 7M21 12H8a5 5 0 0 0-5 5v2"/></svg>Reenviado</div>
+    <div class="wa-bot" *ngIf="message.from === 'system'">Bot automático</div>
+    <button type="button" class="wa-quote" *ngIf="message.quoted as q" [class.is-agent]="q.sender_type !== 'customer'" (click)="jumpTo.emit(q.id)" title="Ir al mensaje original">
+      <b>{{ q.sender_type === 'customer' ? 'Cliente' : 'Vos' }}</b>
+      <span>{{ quotedLabel(q) }}</span>
+      <img *ngIf="q.message_type === 'image' && q.media_url" [src]="q.media_url" alt="" />
+    </button>
 
-    <ng-container *ngIf="!isSticker">
+    <ng-container [ngSwitch]="message.message_type">
 
-      <div *ngIf="message.from === 'system'"
-           class="message-sender-icon message-sender-bot"
-           title="Bot automático"
-           aria-label="Bot automático">
-        <i class="fa-solid fa-robot" aria-hidden="true"></i>
-      </div>
+      <div *ngSwitchCase="'text'" class="wa-text">{{ message.content }}<span class="wa-meta-pad"></span></div>
 
-      <div *ngIf="message.from === 'agent'"
-           class="message-sender-icon message-sender-agent"
-           [title]="message.agent_signature || 'Agente'"
-           [attr.aria-label]="message.agent_signature || 'Agente'">
-        <i class="fa-solid fa-user" aria-hidden="true"></i>
-      </div>
-
-      <!-- INDICADOR DE REENVÍO -->
-      <div *ngIf="message.is_forwarded"
-           class="flex items-center gap-1 px-3.5 pt-2 text-xs opacity-60"
-           [style.color]="message.from === 'agent' ? '#000' : '#94a3b8'">
-        <i class="fa-solid fa-share"></i> Reenviado
-      </div>
-
-      <ng-container [ngSwitch]="message.message_type">
-
-        <!-- ── TEXTO ────────────────────────────────── -->
-        <ng-container *ngSwitchCase="'text'">
-          <div class="px-3.5 pt-2.5 pb-6 text-sm leading-relaxed"
-               style="white-space: pre-wrap; word-break: break-word;"
-               [style.color]="message.from === 'customer' ? '#e2e8f0' : '#062c28'">
-            {{ message.content }}
-          </div>
-        </ng-container>
-
-        <!-- ── IMAGEN ───────────────────────────────── -->
-        <ng-container *ngSwitchCase="'image'">
-          <div class="relative">
-            <img [src]="message.media_url"
-                 class="block w-full max-w-[280px] cursor-zoom-in"
-                 style="border-radius: 0;"
-                 (click)="openImage()"
-                 (error)="onImageError($event)" />
-            <div class="absolute inset-0 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity cursor-zoom-in"
-                 style="background: rgba(0,0,0,0.35);"
-                 (click)="openImage()">
-              <div class="w-10 h-10 rounded-full flex items-center justify-center"
-                   style="background: rgba(255,255,255,0.2); backdrop-filter: blur(4px);">
-                <i class="fa-solid fa-magnifying-glass-plus text-white text-sm"></i>
-              </div>
-            </div>
-          </div>
-          <div *ngIf="message.content"
-               class="px-3.5 pt-2 pb-6 text-sm leading-relaxed"
-               [style.color]="message.from === 'agent' ? '#000' : '#e2e8f0'">
-            {{ message.content }}
-          </div>
-          <div *ngIf="!message.content" class="pb-4"></div>
-        </ng-container>
-
-        <!-- ── DOCUMENTO ─────────────────────────────── -->
-        <ng-container *ngSwitchCase="'document'">
-
-          <!-- PDF -->
-          <ng-container *ngIf="isPdf">
-            <div class="crm-pdf-card" role="button" tabindex="0" (click)="openPdf()"
-                 (keydown.enter)="openPdf()" (keydown.space)="openPdf(); $event.preventDefault()">
-              <div class="crm-pdf-icon">
-                <i class="fa-solid fa-file-pdf"></i>
-              </div>
-              <div class="crm-pdf-copy">
-                <div class="crm-pdf-title">Documento PDF</div>
-                <div class="crm-pdf-subtitle">Abrir vista previa</div>
-              </div>
-              <i class="fa-solid fa-arrow-up-right-from-square crm-pdf-open-icon"></i>
-            </div>
-            <div class="flex items-center gap-2.5 px-3.5 pt-2 pb-6">
-              <button type="button" class="crm-pdf-view-button" (click)="openPdf()">
-                <i class="fa-solid fa-eye"></i> Ver PDF
-              </button>
-            </div>
-          </ng-container>
-
-          <!-- OFFICE -->
-          <ng-container *ngIf="isOffice">
-            <div class="w-64 h-52 overflow-hidden cursor-pointer" (click)="openOffice()">
-              <iframe [src]="safeOfficeUrl" class="w-full h-full pointer-events-none"></iframe>
-            </div>
-            <div class="flex items-center gap-2.5 px-3.5 pt-2 pb-6">
-              <div class="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
-                   style="background: rgba(0,0,0,0.2);">
-                <i class="fa-solid fa-file-word text-sm text-blue-400"></i>
-              </div>
-              <div class="text-xs font-semibold truncate"
-                   [style.color]="message.from === 'agent' ? '#000' : '#e2e8f0'">Documento Office</div>
-            </div>
-          </ng-container>
-
-          <!-- ARCHIVO GENÉRICO -->
-          <ng-container *ngIf="!isPdf && !isOffice">
-            <a [href]="message.media_url" target="_blank" rel="noopener noreferrer"
-               class="flex items-center gap-3 px-3.5 py-3 pb-6 no-underline">
-              <div class="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
-                   style="background: rgba(0,0,0,0.2);">
-                <i class="fa-solid fa-file-zipper text-sm"
-                   [style.color]="message.from === 'agent' ? '#000' : '#a78bfa'"></i>
-              </div>
-              <div class="min-w-0">
-                <div class="text-xs font-semibold truncate"
-                     [style.color]="message.from === 'agent' ? '#000' : '#e2e8f0'">
-                  {{ message.content || 'Archivo' }}
-                </div>
-                <div class="text-xs opacity-60"
-                     [style.color]="message.from === 'agent' ? '#000' : '#94a3b8'">Toca para descargar</div>
-              </div>
-              <i class="fa-solid fa-arrow-down-to-line ml-auto text-xs opacity-50"
-                 [style.color]="message.from === 'agent' ? '#000' : '#e2e8f0'"></i>
-            </a>
-          </ng-container>
-        </ng-container>
-
-        <!-- ── VIDEO ─────────────────────────────────── -->
-        <ng-container *ngSwitchCase="'video'">
-          <div class="relative w-full max-w-[280px] group" style="background:#000; border-radius:0;">
-            <video #videoEl [src]="message.media_url" muted preload="metadata"
-                   class="block w-full" style="max-height:200px; object-fit:cover;"
-                   (dblclick)="openFullscreen(videoEl)" (ended)="onVideoEnded(videoEl)"></video>
-            <div class="absolute inset-0 flex items-center justify-center"
-                 style="background: rgba(0,0,0,0.2);" (click)="toggleVideo(videoEl)">
-              <div class="w-12 h-12 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform"
-                   style="background: rgba(255,255,255,0.15); backdrop-filter: blur(4px); border: 1.5px solid rgba(255,255,255,0.3);">
-                <span class="text-white text-lg" style="transform: translateX(2px)">▶</span>
-              </div>
-            </div>
-          </div>
-          <div *ngIf="message.content" class="px-3.5 pt-2 pb-6 text-sm leading-relaxed"
-               [style.color]="message.from === 'agent' ? '#000' : '#e2e8f0'">{{ message.content }}</div>
-          <div *ngIf="!message.content" class="pb-4"></div>
-        </ng-container>
-
-        <!-- ── AUDIO ─────────────────────────────────── -->
-        <ng-container *ngSwitchCase="'audio'">
-          <div class="flex items-center gap-2.5 px-3 py-2.5 pb-6">
-            <div class="w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0"
-                 style="background: rgba(0,0,0,0.2);">
-              <i class="fa-solid fa-microphone text-sm"
-                 [style.color]="message.from === 'agent' ? '#000' : '#10b981'"></i>
-            </div>
-            <audio [src]="message.media_url" controls class="flex-1"
-                   style="height:32px; min-width:160px; filter: invert(0.8) sepia(0.2) hue-rotate(100deg);">
-            </audio>
-          </div>
-        </ng-container>
-
-        <!-- ── UBICACIÓN ──────────────────────────────── -->
-        <ng-container *ngSwitchCase="'location'">
-          <a [href]="mapsUrl" target="_blank" rel="noopener noreferrer"
-             class="flex flex-col no-underline overflow-hidden" style="border-radius: 0; width: 240px;">
-            <!-- Mapa estático -->
-            <div class="relative w-full" style="height: 120px; background: #1e293b;">
-              <img *ngIf="locationCoords"
-                   [src]="'https://maps.googleapis.com/maps/api/staticmap?center=' + locationCoords!.lat + ',' + locationCoords!.lng + '&zoom=15&size=240x120&markers=' + locationCoords!.lat + ',' + locationCoords!.lng"
-                   class="w-full h-full object-cover" alt="mapa"
-                   style="opacity: 0.7;"
-                   (error)="onImageError($event)" />
-              <div class="absolute inset-0 flex items-center justify-center">
-                <i class="fa-solid fa-location-dot text-3xl" style="color: #ef4444; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5));"></i>
-              </div>
-            </div>
-            <div class="px-3.5 py-2.5 pb-6 flex items-center gap-2">
-              <i class="fa-solid fa-map-pin flex-shrink-0"
-                 [style.color]="message.from === 'agent' ? '#000' : '#10b981'"></i>
-              <div>
-                <div class="text-xs font-semibold" [style.color]="message.from === 'agent' ? '#000' : '#e2e8f0'">
-                  Ubicación
-                </div>
-                <div class="text-xs opacity-60" [style.color]="message.from === 'agent' ? '#000' : '#94a3b8'">
-                  Ver en Google Maps
-                </div>
-              </div>
-            </div>
-          </a>
-        </ng-container>
-
-        <!-- ── CONTACTO ───────────────────────────────── -->
-        <ng-container *ngSwitchCase="'contact'">
-          <div class="flex items-center gap-3 px-3.5 py-3 pb-6">
-            <div class="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 font-bold text-sm"
-                 style="background: #334155; color: #e2e8f0;">
-              <i class="fa-solid fa-user"></i>
-            </div>
-            <div>
-              <div class="text-sm font-semibold" [style.color]="message.from === 'agent' ? '#000' : '#e2e8f0'">
-                {{ message.content?.replace('👤 Contacto: ', '') || 'Contacto' }}
-              </div>
-              <div class="text-xs opacity-60" [style.color]="message.from === 'agent' ? '#000' : '#94a3b8'">
-                Tarjeta de contacto
-              </div>
-            </div>
-          </div>
-        </ng-container>
-
-        <!-- ── REACCIÓN ───────────────────────────────── -->
-        <ng-container *ngSwitchCase="'reaction'">
-          <div class="px-4 py-3 pb-6 text-2xl">
-            {{ message.content?.replace('👍 Reacción: ', '') }}
-          </div>
-        </ng-container>
-
-        <!-- ── DEFAULT ────────────────────────────────── -->
-        <ng-container *ngSwitchDefault>
-          <div class="px-3.5 pt-2.5 pb-6 text-sm leading-relaxed"
-               [style.color]="message.from === 'agent' ? '#000' : '#e2e8f0'">
-            {{ message.content || '[Mensaje no soportado]' }}
-          </div>
-        </ng-container>
-
+      <ng-container *ngSwitchCase="'image'">
+        <div class="wa-image" role="button" tabindex="0" (click)="openImage()" (keydown.enter)="openImage()"><img [src]="message.media_url" alt="Imagen" loading="lazy" (error)="onImageError($event)" /></div>
+        <div class="wa-text wa-caption" *ngIf="message.content">{{ message.content }}<span class="wa-meta-pad"></span></div>
       </ng-container>
 
-      <!-- FIRMA DE AGENTE -->
-      <div *ngIf="message.from === 'agent' && message.agent_signature"
-           class="px-3.5 pb-5 text-xs italic opacity-50" style="color: #000; margin-top: -4px;">
-        — {{ message.agent_signature }}
-      </div>
+      <ng-container *ngSwitchCase="'video'">
+        <div class="wa-video"><video #videoEl [src]="message.media_url" preload="metadata" (ended)="onVideoEnded(videoEl)" (click)="toggleVideo(videoEl)" (dblclick)="openFullscreen(videoEl)"></video><button type="button" class="wa-play-overlay" (click)="toggleVideo(videoEl)" aria-label="Reproducir"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg></button></div>
+        <div class="wa-text wa-caption" *ngIf="message.content">{{ message.content }}<span class="wa-meta-pad"></span></div>
+      </ng-container>
 
-      <!-- META (hora + check) -->
-      <div class="absolute bottom-1.5 right-3 flex items-center gap-1 pointer-events-none"
-           style="font-size: 10px; opacity: 0.65;"
-           [style.color]="message.from === 'agent' ? '#000' : '#94a3b8'">
-        {{ message.at | date:'HH:mm' }}
-        <span *ngIf="message.from === 'agent'" class="text-xs">
-          {{ message.pending ? '✓' : '✓✓' }}
+      <div *ngSwitchCase="'audio'" class="wa-audio">
+        <audio #audioEl [src]="audioSrc" preload="metadata" (loadedmetadata)="onAudioMeta(audioEl)" (timeupdate)="onAudioTime(audioEl)" (ended)="onAudioEnded()" (play)="audioPlaying = true; markDirty()" (pause)="audioPlaying = false; markDirty()"></audio>
+        <span class="wa-audio-avatar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg></span>
+        <button type="button" class="wa-audio-btn" (click)="toggleAudio(audioEl)" [attr.aria-label]="audioPlaying ? 'Pausar' : 'Reproducir'">
+          <svg *ngIf="!audioPlaying" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+          <svg *ngIf="audioPlaying" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="5" width="4" height="14" rx="1"/><rect x="14" y="5" width="4" height="14" rx="1"/></svg>
+        </button>
+        <span class="wa-audio-track">
+          <input type="range" class="wa-audio-range" min="0" [max]="audioDuration || 0" step="0.1" [value]="audioCurrent" (input)="seekAudio(audioEl, $event)" [style.--p]="audioProgress + '%'" aria-label="Posición" />
+          <span class="wa-audio-times"><span class="np-mono">{{ fmt(audioPlaying || audioCurrent > 0 ? audioCurrent : audioDuration) }}</span><span class="wa-meta-inline">{{ message.at | date:'HH:mm' }}<i class="wa-ticks" *ngIf="isOut" [ngClass]="tickClass"></i></span></span>
         </span>
+        <button type="button" class="wa-audio-speed" (click)="cycleSpeed(audioEl)" title="Velocidad">{{ audioSpeed }}×</button>
       </div>
 
+      <ng-container *ngSwitchCase="'document'">
+        <button type="button" class="wa-docmsg" (click)="isPdf ? openPdf() : isOffice ? openOffice() : openLink()">
+          <span class="wa-docmsg-icon" [class.is-pdf]="isPdf" [class.is-office]="isOffice"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/></svg><b>{{ isPdf ? 'PDF' : isOffice ? 'DOC' : ext }}</b></span>
+          <span class="wa-docmsg-copy"><b>{{ docName }}</b><small>{{ isPdf ? 'Documento PDF · tocá para ver' : isOffice ? 'Documento de Office · tocá para ver' : 'Archivo · tocá para descargar' }}</small></span>
+          <span class="wa-docmsg-dl"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 4v11m0 0 4-4m-4 4-4-4M5 20h14"/></svg></span>
+        </button>
+      </ng-container>
+
+      <div *ngSwitchCase="'location'" class="wa-location">
+        <div class="wa-location-map" *ngIf="mapEmbedUrl"><iframe [src]="mapEmbedUrl" title="Mapa" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe></div>
+        <a class="wa-location-copy" [href]="mapsUrl" target="_blank" rel="noopener"><b>{{ locationLabel || 'Ubicación compartida' }}</b><small>{{ locationCoords?.lat }}, {{ locationCoords?.lng }} · Abrir en Google Maps</small></a>
+      </div>
+
+      <div *ngSwitchCase="'contact'" class="wa-contact">
+        <div class="wa-contact-item" *ngFor="let c of contacts">
+          <div class="wa-contact-row"><span class="wa-contact-avatar">{{ c.name.charAt(0).toUpperCase() }}</span><span class="wa-docmsg-copy"><b>{{ c.name }}</b><small class="np-mono" *ngIf="c.phone">{{ c.phone }}</small><small *ngIf="!c.phone">Sin número en la tarjeta</small></span></div>
+          <div class="wa-contact-acts" *ngIf="c.phone">
+            <button type="button" (click)="startChat.emit({ phone: c.phone!, name: c.name })"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 20l1.3-3.8A8 8 0 1 1 8 19.2L4 20z"/></svg>Escribir</button>
+            <a [routerLink]="['/dashboard/usuario']" [queryParams]="{ q: contactQuery(c.phone) }" target="_blank"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>Ver ficha</a>
+          </div>
+        </div>
+        <small class="wa-poll-note" *ngIf="contacts.length > 1">{{ contacts.length }} contactos compartidos</small>
+      </div>
+
+      <div *ngSwitchCase="'poll'" class="wa-poll">
+        <div class="wa-poll-h"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 20V10M10 20V4M16 20v-8M22 20H2"/></svg><b>{{ pollQuestion }}</b></div>
+        <div class="wa-poll-opt" *ngFor="let o of pollOptions"><i></i>{{ o }}</div>
+        <small class="wa-poll-note">Encuesta de WhatsApp · los votos se ven en el teléfono</small>
+      </div>
+
+      <div *ngSwitchCase="'event'" class="wa-event">
+        <div class="wa-event-h"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg><b>{{ eventTitle }}</b></div>
+        <ng-container *ngFor="let l of eventLines"><a *ngIf="isLink(l)" [href]="l.replace('🔗 ', '')" target="_blank" rel="noopener">{{ l.replace('🔗 ', '') }}</a><p *ngIf="!isLink(l)">{{ l }}</p></ng-container>
+      </div>
+
+      <div *ngSwitchCase="'reaction'" class="wa-reaction">{{ message.content?.replace('👍 Reacción: ', '') }}</div>
+
+      <div *ngSwitchDefault class="wa-text">{{ message.content || '[Mensaje no soportado]' }}<span class="wa-meta-pad"></span></div>
     </ng-container>
+
+    <div class="wa-sign" *ngIf="message.from === 'agent' && message.agent_signature">{{ message.agent_signature }}</div>
+
+    <span class="wa-meta" *ngIf="!isAudio">{{ message.at | date:'HH:mm' }}<i class="wa-ticks" *ngIf="isOut" [ngClass]="tickClass"></i></span>
+    <div class="wa-reactions" *ngIf="reactionSummary.length"><button type="button" *ngFor="let r of reactionSummary" [class.is-mine]="r.mine" (click)="sendReaction(r.emoji); $event.stopPropagation()" [title]="r.mine ? 'Quitar mi reacción' : 'Reaccionar igual'">{{ r.emoji }}<span *ngIf="r.count > 1">{{ r.count }}</span></button></div>
   </div>
+  <div class="wa-reactbar" *ngIf="showReactBar" (click)="$event.stopPropagation()"><button type="button" *ngFor="let e of quickEmojis" [class.is-mine]="myReaction === e" (click)="sendReaction(e)">{{ e }}</button><button type="button" class="wa-reactbar-more" (click)="showReactBar = false; moreEmoji.emit(message)" title="Más emojis">+</button></div>
 
-  <!-- BOTÓN REENVIAR (hover) -->
-  <button *ngIf="!isNote"
-          class="self-center opacity-0 group-hover:opacity-100 transition-opacity mx-1 flex-shrink-0
-                 w-7 h-7 rounded-full flex items-center justify-center"
-          style="background: #334155; color: #94a3b8;"
-          [class.order-first]="message.from === 'agent'"
-          title="Reenviar"
-          (click)="forward()">
-    <i class="fa-solid fa-share text-xs"></i>
-  </button>
-
+  <button type="button" class="wa-retry" *ngIf="message.failed" (click)="retry.emit(message)" title="No se envió. Reintentar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M4 12a8 8 0 0 1 14-5.3L20 9M20 4v5h-5M20 12a8 8 0 0 1-14 5.3L4 15M4 20v-5h5"/></svg><span>Reintentar</span></button>
+  <button type="button" class="wa-msg-menu" *ngIf="!isNote" (click)="onRightClick($event); $event.stopPropagation()" aria-label="Opciones"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="m6 9 6 6 6-6"/></svg></button>
 </div>
 
-<!-- MENÚ CONTEXTUAL -->
-<div *ngIf="showContextMenu"
-     class="fixed z-[9999] rounded-2xl shadow-2xl overflow-hidden bg-slate-800/95 backdrop-blur-xl border border-slate-700"
-     [style.left.px]="contextX"
-     [style.top.px]="contextY"
-     style="min-width: 160px;"
-     (click)="$event.stopPropagation()">
-  <button class="flex items-center gap-3 px-4 py-2.5 w-full text-sm text-left transition"
-          style="color: #e2e8f0;"
-          onmouseenter="this.style.background='#334155'"
-          onmouseleave="this.style.background='transparent'"
-          (click)="forward()">
-    <i class="fa-solid fa-share w-4" style="color: #10b981;"></i> Reenviar
-  </button>
-  <button *ngIf="message.message_type === 'text'"
-          class="flex items-center gap-3 px-4 py-2.5 w-full text-sm text-left transition"
-          style="color: #e2e8f0;"
-          onmouseenter="this.style.background='#334155'"
-          onmouseleave="this.style.background='transparent'"
-          (click)="copyText()">
-    <i class="fa-solid fa-copy w-4" style="color: #60a5fa;"></i> Copiar texto
-  </button>
+<div class="wa-ctx" *ngIf="showContextMenu" [style.left.px]="contextX" [style.top.px]="contextY" (click)="$event.stopPropagation()">
+  <button type="button" *ngIf="!message.pending" (click)="openReactBar($event)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M8 14s1.5 2 4 2 4-2 4-2M9 9h.01M15 9h.01"/></svg>Reaccionar</button>
+  <button type="button" *ngIf="message.message_type !== 'reaction'" (click)="reply()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 5 3 12l7 7M3 12h13a5 5 0 0 1 5 5v2"/></svg>Responder</button>
+  <button type="button" (click)="forward()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 5l7 7-7 7M21 12H8a5 5 0 0 0-5 5v2"/></svg>Reenviar</button>
+  <button type="button" *ngIf="message.message_type === 'text'" (click)="copyText()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V6a2 2 0 0 1 2-2h9"/></svg>Copiar texto</button>
+  <button type="button" *ngIf="message.media_url" (click)="openLink()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 4v11m0 0 4-4m-4 4-4-4M5 20h14"/></svg>Descargar</button>
 </div>

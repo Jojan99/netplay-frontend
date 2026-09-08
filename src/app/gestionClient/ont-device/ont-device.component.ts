@@ -14,7 +14,9 @@ interface ConnectedDevice {
   selector: 'app-ont-device',
   standalone: true,
   imports: [CommonModule, HttpClientModule],
-  templateUrl: './ont-device.component.html'
+  templateUrl: './ont-device.component.html',
+  styleUrl: './ont-device.component.scss',
+  host: { class: 'np-console' },
 })
 export class OntDeviceComponent implements OnInit {
 
@@ -231,6 +233,8 @@ parameterValues:[
 }).subscribe();
 
 }
+
+rxBad(): boolean { const v = parseFloat(String(this.ont.rxPower)); return !isNaN(v) && v < -27; }
 
 toggle24(){
 this.showPass24=!this.showPass24;

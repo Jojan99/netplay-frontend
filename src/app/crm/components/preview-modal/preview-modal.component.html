@@ -1,61 +1,14 @@
-<div class="crm-preview-backdrop fixed inset-0 z-50 flex items-center justify-center p-4">
-
-  <div class="crm-preview-panel w-[95vw] h-[95vh] backdrop-blur-xl rounded-2xl overflow-hidden">
-
-    <div class="crm-preview-toolbar flex items-center justify-between px-4 py-3">
-      <div class="flex items-center gap-3 min-w-0">
-        <span class="crm-preview-file-icon flex items-center justify-center rounded-lg">
-          <i class="fa-solid" [ngClass]="type === 'pdf' ? 'fa-file-pdf' : type === 'office' ? 'fa-file-word' : 'fa-file-image'"></i>
-        </span>
-        <div class="min-w-0">
-          <div class="crm-preview-title truncate">{{ type === 'pdf' ? 'Vista previa del PDF' : type === 'office' ? 'Vista previa del documento' : 'Vista previa de imagen' }}</div>
-          <div class="crm-preview-subtitle">Archivo adjunto</div>
-        </div>
-      </div>
-
-      <div class="flex items-center gap-2 flex-shrink-0">
-        <button *ngIf="type === 'pdf' || type === 'office'"
-                type="button"
-                class="crm-preview-download inline-flex items-center gap-2 rounded-lg px-3 py-2 text-xs font-bold"
-                title="Descargar archivo"
-                (click)="download()">
-          <i class="fa-solid fa-download"></i>
-          <span>Descargar</span>
-        </button>
-        <button type="button"
-                class="crm-preview-close flex items-center justify-center rounded-lg"
-                title="Cerrar vista previa"
-                aria-label="Cerrar vista previa"
-                (click)="close.emit()">
-          <i class="fa-solid fa-xmark"></i>
-        </button>
-      </div>
-    </div>
-
-    <div class="crm-preview-content">
-      <!-- PDF -->
-      <iframe
-        *ngIf="type === 'pdf'"
-        [src]="safeUrl"
-        class="crm-preview-frame"
-        title="Vista previa del PDF">
-      </iframe>
-
-      <!-- OFFICE -->
-      <iframe
-        *ngIf="type === 'office'"
-        [src]="safeOfficeUrl"
-        class="crm-preview-frame"
-        title="Vista previa del documento">
-      </iframe>
-
-      <!-- IMAGEN -->
-      <img
-        *ngIf="type === 'image'"
-        [src]="url"
-        class="crm-preview-image"
-        alt="Vista previa del archivo">
-    </div>
+<div class="wa-viewer" (click)="close.emit()" (keydown.escape)="close.emit()" tabindex="-1">
+  <div class="wa-viewer-bar" (click)="$event.stopPropagation()">
+    <span class="wa-viewer-title"><b>{{ type === 'pdf' ? 'Documento PDF' : type === 'office' ? 'Documento de Office' : 'Imagen' }}</b><small class="np-mono">{{ fileLabel }}</small></span>
+    <span class="np-spacer"></span>
+    <a class="wa-viewer-btn" [href]="url" target="_blank" rel="noopener" title="Abrir en pestaña nueva"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 4h6v6M20 4l-9 9M19 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1h5"/></svg></a>
+    <button type="button" class="wa-viewer-btn" (click)="download()" title="Descargar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 4v11m0 0 4-4m-4 4-4-4M5 20h14"/></svg></button>
+    <button type="button" class="wa-viewer-btn" (click)="close.emit()" title="Cerrar" aria-label="Cerrar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
   </div>
-
+  <div class="wa-viewer-body" (click)="$event.stopPropagation()">
+    <iframe *ngIf="type === 'pdf'" [src]="safeUrl" title="Documento PDF"></iframe>
+    <iframe *ngIf="type === 'office'" [src]="safeOfficeUrl" title="Documento"></iframe>
+    <img *ngIf="type === 'image'" [src]="url" alt="Imagen" />
+  </div>
 </div>

@@ -9,6 +9,8 @@ import { InstallationService, InstallationOrder, InstallationLog } from '../../s
   standalone: true,
   imports: [CommonModule, FormsModule, RouterModule],
   templateUrl: './installations.component.html',
+  styleUrl: './installations.component.scss',
+  host: { class: 'np-console' },
 })
 export class InstallationsComponent implements OnInit {
   installations: InstallationOrder[] = [];
@@ -49,6 +51,17 @@ export class InstallationsComponent implements OnInit {
   loadingLogs = false;
 
   showTechModal = false;
+  showTechSummary = false;
+  inspectorWide = false;
+
+  isSelected(i: InstallationOrder): boolean { return this.showDetail && !!this.selected && this.selected.id === i.id; }
+  paymentLabel(s: string): string { return this.PAYMENT_STATUS_OPTIONS.find(o => o.value === s)?.label || s; }
+  logKind(action: string): string {
+    if (action === 'complete') return 'ok';
+    if (action === 'cancel') return 'error';
+    if (action?.startsWith('payment_')) return 'abono';
+    return 'neutral';
+  }
   selectedTech: any = null;
   techInstallations: any[] = [];
 
@@ -248,7 +261,7 @@ export class InstallationsComponent implements OnInit {
   closeCompleteModal(): void {
     this.showCompleteModal = false;
     this.completeNotes = '';
-    this.selected = null;
+    if (!this.showDetail) this.selected = null;
   }
 
   openCancel(id: number): void {
@@ -277,7 +290,7 @@ export class InstallationsComponent implements OnInit {
   closeCancelModal(): void {
     this.showCancelModal = false;
     this.cancelReason = '';
-    this.selected = null;
+    if (!this.showDetail) this.selected = null;
   }
 
   /* cancel(id: number): void {

@@ -1,0 +1,8 @@
+/* ─── Planes: sólo lo propio ────────────────────────────────────────── */
+.np-row--fibra .np-stripe i    { background: var(--accent); }
+.np-row--wireless .np-stripe i { background: var(--info); }
+.np-row--cable .np-stripe i    { background: var(--warn); }
+.np-row--dsl .np-stripe i      { background: #a16207; }
+.np-row--otro .np-stripe i     { background: var(--line-strong); }
+.np-row.is-off { opacity: .6; }
+.np-speed { font-family: var(--font-mono); font-variant-numeric: tabular-nums; white-space: nowrap; b { font-weight: 600; color: var(--text); } small { color: var(--text-3); margin: 0 6px 0 2px; } }

@@ -1,0 +1,5 @@
+/* ─── WhatsApp: sólo lo propio ──────────────────────────────────────── */
+.np-row--static { cursor: default; }
+.np-msg { max-width: 320px; }
+.np-form--single { grid-template-columns: 1fr; }
+.np-empty-block { margin: 40px auto; text-align: center; color: var(--text-3); strong { display: block; color: var(--text-2); } }

@@ -1,5 +1,6 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { DarkThemeToggleComponent } from '../../common/dark-theme-toggle.component';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
 import { CompanyService } from '../../services/company.service';
@@ -7,8 +8,9 @@ import { CompanyService } from '../../services/company.service';
 @Component({
   selector: 'app-register-company',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterModule],
+  imports: [CommonModule, FormsModule, RouterModule, DarkThemeToggleComponent],
   templateUrl: './register-company.component.html',
+  styleUrl: '../sign-in/sign-in/sign-in.component.scss',
 })
 export class RegisterCompanyComponent {
   isLoading = false;

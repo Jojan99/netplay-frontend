@@ -1,6 +1,7 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule }  from '@angular/common';
 import { FormsModule }   from '@angular/forms';
+import { RouterModule }  from '@angular/router';
 import { forkJoin, interval, Subscription, of } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 import { CompanyWhatsappService } from '../../../services/company-whatsapp.service';
@@ -8,9 +9,10 @@ import { CompanyWhatsappService } from '../../../services/company-whatsapp.servi
 @Component({
   selector: 'app-wa-panel',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, RouterModule],
   templateUrl: './wa-panel.component.html',
   styleUrl: './wa-panel.component.scss',
+  host: { class: 'np-console' },
 })
 export class WaPanelComponent implements OnInit, OnDestroy {
 

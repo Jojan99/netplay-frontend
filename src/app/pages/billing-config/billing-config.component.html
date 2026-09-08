@@ -1,24 +1,20 @@
-<div class="p-6 max-w-4xl mx-auto">
-
-  <!-- Tabs -->
-  <div class="flex gap-1 mb-6 border-b border-slate-200/60 dark:border-slate-700/60">
-    <button (click)="activeTab = 'billing'"
-            [class]="activeTab === 'billing' ? 'px-4 py-2 text-sm font-medium border-b-2 border-indigo-500 text-indigo-600 dark:text-indigo-400 font-bold' : 'px-4 py-2 text-sm font-medium text-slate-500 dark:text-slate-400 hover:text-slate-700'">
-      Grupos de facturación
-    </button>
-    <button (click)="activeTab = 'invoice'"
-            [class]="activeTab === 'invoice' ? 'px-4 py-2 text-sm font-medium border-b-2 border-indigo-500 text-indigo-600 dark:text-indigo-400 font-bold' : 'px-4 py-2 text-sm font-medium text-slate-500 dark:text-slate-400 hover:text-slate-700'">
-      Plantilla de factura
-    </button>
-    <button (click)="activeTab = 'payment-methods'"
-            [class]="activeTab === 'payment-methods' ? 'px-4 py-2 text-sm font-medium border-b-2 border-indigo-500 text-indigo-600 dark:text-indigo-400 font-bold' : 'px-4 py-2 text-sm font-medium text-slate-500 dark:text-slate-400 hover:text-slate-700'">
-      Métodos de pago
-    </button>
-    <button (click)="activeTab = 'gateway'; loadGatewayConfig()"
-            [class]="activeTab === 'gateway' ? 'px-4 py-2 text-sm font-medium border-b-2 border-indigo-500 text-indigo-600 dark:text-indigo-400 font-bold' : 'px-4 py-2 text-sm font-medium text-slate-500 dark:text-slate-400 hover:text-slate-700'">
-      Pasarela online
-    </button>
+<div class="np-page np-billing">
+  <header class="np-head">
+    <div>
+      <p class="np-kicker">Operación <b>/</b> Configuración de facturación</p>
+      <h1 class="np-title">Configuración de facturación</h1>
+      <div class="np-ribbon"><span><span class="np-n">{{ schedules.length }}</span>grupos de facturación</span><span>plantilla de factura, métodos de pago y pasarela online</span></div>
+    </div>
+  </header>
+  <div class="np-toolbar">
+    <div class="np-seg" role="tablist">
+      <button type="button" [attr.aria-pressed]="activeTab === 'billing'" (click)="activeTab = 'billing'">Grupos de facturación</button>
+      <button type="button" [attr.aria-pressed]="activeTab === 'invoice'" (click)="activeTab = 'invoice'">Plantilla de factura</button>
+      <button type="button" [attr.aria-pressed]="activeTab === 'payment-methods'" (click)="activeTab = 'payment-methods'">Métodos de pago</button>
+      <button type="button" [attr.aria-pressed]="activeTab === 'gateway'" (click)="activeTab = 'gateway'; loadGatewayConfig()">Pasarela online</button>
+    </div>
   </div>
+  <div class="np-scroll np-legacy">
 
   <!-- ═══════════════ INVOICE CONFIG TAB ═══════════════ -->
   <ng-container *ngIf="activeTab === 'invoice'">
@@ -1406,4 +1402,5 @@
       </button>
     </div>
   </div>
+</div>
 </div>

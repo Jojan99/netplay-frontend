@@ -1,319 +1,201 @@
-<div class="crm-chat-window flex h-full min-h-0">
+<div class="wa-chat" [class.has-info]="showInfoPanel && conversationId && headerData">
 
-  <!-- ════════════════════════════════ CHAT MAIN ════════════════════════════ -->
-  <div class="flex flex-col flex-1 min-h-0 min-w-0">
-
-    <!-- HEADER -->
-    <div class="crm-chat-header-shell shrink-0 border-b backdrop-blur-xl">
-      <app-chat-header
-        *ngIf="headerData"
-        [data]="headerData"
-        [botPaused]="botPaused"
-        (openTransfer)="openTransfer.emit()"
-        (back)="back.emit()"
-        (finish)="finishConversation()"
-        (toggleInfo)="toggleInfoPanel()"
-        (toggleBot)="toggleBotPause()"
-      ></app-chat-header>
-    </div>
-
-    <!-- MENSAJES -->
-    <div class="crm-message-surface flex-1 min-h-0 overflow-y-auto px-4 py-5 flex flex-col gap-1 transition-opacity duration-300"
-         #messagesContainer
-         (dragover)="onDragOver($event)"
-         (dragleave)="onDragLeave($event)"
-         (drop)="onDrop($event)"
-         [class.ring-2]="dragging"
-         [class.ring-teal-500]="dragging"
-          >
-
-      <div *ngIf="loading" class="flex items-center justify-center gap-2 py-8 text-sm text-slate-500">
-        <div class="w-4 h-4 border-2 border-slate-600 border-t-indigo-500 rounded-full animate-spin"></div>
-        Cargando mensajes…
-      </div>
-
-      <app-message-bubble
-        *ngFor="let msg of messages; trackBy: trackByMessage"
-        [message]="msg"
-        (openPreview)="openPreview($event)"
-        (forwardMsg)="onForwardMessage($event)"
-        (saveSticker)="saveStickerFromMessage($event)">
-      </app-message-bubble>
-
-    </div>
-
-    <!-- PREVIEW ARCHIVO SALIENTE -->
-    <div *ngIf="filePreview" class="crm-file-preview px-4 py-3 border-t shrink-0 backdrop-blur-xl">
-      <div class="crm-file-preview-card rounded-2xl p-3 flex gap-3 items-center backdrop-blur-sm">
-
-        <img *ngIf="previewType === 'image'" [src]="previewUrl"
-             class="w-24 h-24 object-cover rounded-xl flex-shrink-0" />
-
-        <video *ngIf="previewType === 'video'" [src]="previewUrl"
-               controls class="w-48 rounded-xl flex-shrink-0"></video>
-
-        <audio *ngIf="previewType === 'audio'" [src]="previewUrl"
-               controls class="flex-1"></audio>
-
-        <div *ngIf="previewType === 'document'" class="flex items-center gap-3 flex-shrink-0">
-          <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-teal-500 to-emerald-600 flex items-center justify-center shrink-0 shadow-md shadow-teal-500/20">
-            <i class="fa-solid fa-file text-white w-5 h-5 flex items-center justify-center"></i>
-          </div>
-          <div>
-            <div class="text-sm font-medium text-slate-700">{{ filePreview.name }}</div>
-            <div class="text-xs text-slate-500">Documento</div>
-          </div>
-        </div>
-
-        <div class="ml-auto flex gap-2 flex-shrink-0">
-          <button class="px-4 py-2 rounded-xl text-sm font-medium transition bg-slate-100 text-slate-600 hover:bg-slate-200"
-                  (click)="clearFile()">Cancelar</button>
-          <button class="px-4 py-2 rounded-xl text-sm font-semibold transition flex items-center gap-2 bg-gradient-to-br from-teal-500 to-emerald-600 text-white shadow-md shadow-teal-500/20 hover:shadow-lg"
-                  (click)="sendMedia()">
-            <i class="fa-solid fa-paper-plane text-xs"></i> Enviar
-          </button>
-        </div>
-      </div>
-    </div>
-
-    <!-- BARRA DE INPUT -->
-    <div class="crm-composer shrink-0 border-t backdrop-blur-xl"
-         *ngIf="conversationId">
-
-      <div class="flex items-end gap-2 px-4 py-3 relative" (click)="closeAttachMenu()">
-
-        <!-- + MENU ADJUNTOS -->
-        <div class="relative flex-shrink-0">
-          <button type="button"
-                  (click)="toggleAttachMenu(); $event.stopPropagation()"
-                  class="w-9 h-9 flex items-center justify-center rounded-full transition bg-slate-700 text-slate-400 hover:bg-slate-600"
-                  [disabled]="sending">
-            <i class="fa-solid fa-plus text-sm"></i>
-          </button>
-
-          <!-- DROPDOWN -->
-          <div *ngIf="showAttachMenu"
-               class="absolute bottom-12 left-0 rounded-2xl shadow-2xl p-2 w-56 z-[9999] bg-slate-800/95 backdrop-blur-xl border border-slate-700/60"
-               (click)="$event.stopPropagation()">
-
-            <button class="flex items-center gap-3 p-3 w-full rounded-xl transition text-left text-slate-200"
-                    onmouseenter="this.style.background='#334155'"
-                    onmouseleave="this.style.background='transparent'"
-                    (click)="openPicker('document')">
-              <div class="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 bg-gradient-to-br from-violet-500 to-indigo-600 shadow-md shadow-violet-500/20">
-                <i class="fa-solid fa-file-lines text-white w-5 h-5 flex items-center justify-center text-sm"></i>
-              </div>
-              <div>
-                <div class="text-sm font-semibold">Documento</div>
-                <div class="text-xs text-slate-500">PDF, Word, Excel…</div>
-              </div>
-            </button>
-
-            <button class="flex items-center gap-3 p-3 w-full rounded-xl transition text-left text-slate-200"
-                    onmouseenter="this.style.background='#334155'"
-                    onmouseleave="this.style.background='transparent'"
-                    (click)="openPicker('media')">
-              <div class="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 bg-gradient-to-br from-teal-500 to-emerald-600 shadow-md shadow-teal-500/20">
-                <i class="fa-solid fa-image text-white w-5 h-5 flex items-center justify-center text-sm"></i>
-              </div>
-              <div>
-                <div class="text-sm font-semibold">Foto o video</div>
-                <div class="text-xs text-slate-500">JPG, PNG, MP4…</div>
-              </div>
-            </button>
-
-            <button class="flex items-center gap-3 p-3 w-full rounded-xl transition text-left text-slate-200"
-                    onmouseenter="this.style.background='#334155'"
-                    onmouseleave="this.style.background='transparent'"
-                    (click)="toggleStickerPicker(); $event.stopPropagation()">
-              <div class="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 bg-gradient-to-br from-purple-500 to-fuchsia-600 shadow-md shadow-purple-500/20">
-                <span class="text-lg text-white">😊</span>
-              </div>
-              <div>
-                <div class="text-sm font-semibold">Sticker</div>
-                <div class="text-xs text-slate-500">Enviar sticker guardado</div>
-              </div>
-            </button>
-
-          </div>
-        </div>
-
-        <!-- STICKER PICKER -->
-        <div *ngIf="showStickerPicker"
-             class="absolute bottom-16 left-12 rounded-2xl shadow-2xl p-3 z-[9999] bg-slate-800/95 backdrop-blur-xl border border-slate-700/60"
-             style="width: 260px;"
-             (click)="$event.stopPropagation()">
-          <div class="text-xs font-semibold mb-2 text-slate-500">Mis Stickers</div>
-          <div *ngIf="stickers.length === 0" class="text-xs text-center py-4 text-slate-600">
-            Sin stickers guardados. Haz clic derecho en un sticker recibido para guardarlo.
-          </div>
-          <div class="grid grid-cols-4 gap-2">
-            <button *ngFor="let s of stickers"
-                    class="rounded-xl overflow-hidden transition hover:scale-110 bg-slate-900"
-                    (click)="sendSticker(s)">
-              <img [src]="s.media_url" alt="sticker"
-                   style="width: 56px; height: 56px; object-fit: contain;" />
-            </button>
-          </div>
-        </div>
-
-        <!-- TEXTAREA -->
-        <div class="flex-1 rounded-2xl px-4 py-2 flex items-end gap-2 bg-slate-900/80 backdrop-blur-sm border border-slate-700/60"
-             style="min-height: 44px;">
-          <textarea #messageTextarea
-                    [(ngModel)]="draftMessage"
-                    placeholder="Escribe un mensaje…"
-                    class="flex-1 bg-transparent outline-none text-sm resize-none overflow-hidden text-slate-200"
-                    style="min-height: 24px; max-height: 120px; line-height: 1.5;"
-                    [disabled]="sending || isRecording || !!audioPreviewUrl || !!filePreview"
-                    (input)="autoResize(messageTextarea)"
-                    (keydown)="handleKeydown($event)">
-          </textarea>
-        </div>
-
-        <!-- MIC -->
-        <button *ngIf="!audioPreviewUrl"
-                class="w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0 transition"
-                [style.background]="isRecording ? '#fef2f2' : '#334155'"
-                [style.color]="isRecording ? '#ef4444' : '#94a3b8'"
-                (click)="isRecording ? stopRecording() : startRecording()">
-          <i class="fa-solid text-sm" [ngClass]="isRecording ? 'fa-stop' : 'fa-microphone'"></i>
-        </button>
-
-        <!-- SEND -->
-        <button *ngIf="!audioPreviewUrl"
-                (click)="sendMessage(draftMessage)"
-                class="w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0 transition bg-gradient-to-br from-teal-500 to-emerald-600 text-white shadow-md shadow-teal-500/20 hover:shadow-lg"
-                [disabled]="sending || isRecording || !!filePreview">
-          <i class="fa-solid fa-paper-plane text-sm" style="transform: translateX(1px)"></i>
-        </button>
-
-      </div>
-
-      <!-- PROCESANDO AUDIO -->
-      <div *ngIf="isProcessingAudio" class="px-4 pb-3 flex items-center gap-2 text-xs text-slate-500">
-        <div class="w-3 h-3 border-2 border-slate-600 border-t-indigo-500 rounded-full animate-spin"></div>
-        Procesando audio…
-      </div>
-
-      <!-- AUDIO PREVIEW -->
-      <div *ngIf="audioPreviewUrl && !isRecording && !isProcessingAudio" class="px-4 pb-3">
-        <div class="flex items-center gap-3 p-3 rounded-2xl bg-slate-900/80 backdrop-blur-sm border border-slate-700/60">
-          <audio [src]="audioPreviewUrl" controls class="flex-1 h-8"
-                 style="filter: invert(0.8) sepia(0.3) hue-rotate(100deg);"></audio>
-          <button class="w-8 h-8 rounded-full flex items-center justify-center transition flex-shrink-0 bg-pink-900/30 text-pink-500 hover:bg-pink-900/50" (click)="cancelAudio()">
-            <i class="fa-solid fa-trash text-xs"></i>
-          </button>
-          <button class="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 transition bg-gradient-to-br from-teal-500 to-emerald-600 text-white shadow-md shadow-teal-500/20 hover:shadow-lg"
-                  (click)="sendRecordedAudio()"
-                  [disabled]="sending || isRecording || isProcessingAudio || !recordedAudioFile">
-            <i class="fa-solid fa-paper-plane text-xs"></i>
-          </button>
-        </div>
-      </div>
-
-      <!-- GRABANDO -->
-      <div *ngIf="isRecording" class="px-4 pb-3 flex items-center gap-2 text-xs font-medium text-pink-500">
-        <div class="w-2 h-2 rounded-full animate-pulse bg-pink-500"></div>
-        Grabando… {{ recordSeconds }}s
-        <div class="ml-auto flex gap-1">
-          <div class="w-1 h-3 rounded-full animate-bounce bg-pink-500" style="animation-delay: 0ms;"></div>
-          <div class="w-1 h-4 rounded-full animate-bounce bg-pink-500" style="animation-delay: 100ms;"></div>
-          <div class="w-1 h-2 rounded-full animate-bounce bg-pink-500" style="animation-delay: 200ms;"></div>
-          <div class="w-1 h-5 rounded-full animate-bounce bg-pink-500" style="animation-delay: 150ms;"></div>
-        </div>
-      </div>
-
-    </div>
-
-    <!-- Inputs ocultos -->
-    <input #docInput type="file" class="hidden"
-           accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.zip,.rar,.txt"
-           (change)="onFileSelected($event)" />
-    <input #mediaInput type="file" class="hidden"
-           accept="image/*,video/*"
-           (change)="onFileSelected($event)" />
-
-  </div>
-
-  <!-- ════════════════════════════════ INFO PANEL ═══════════════════════════ -->
-  <app-crm-info-panel
-    *ngIf="showInfoPanel && conversationId && headerData"
-    [conversationId]="conversationId!"
-    [customerPhone]="headerData!.customerPhone"
-    [customerName]="headerData!.customerName"
-    [currentPriority]="headerData!.priority || 'normal'"
-    [status]="headerData!.status"
-    (priorityChanged)="onPriorityChanged($event)"
-    (customerNameChanged)="headerData!.customerName = $event"
-    (closePanel)="showInfoPanel = false">
-  </app-crm-info-panel>
-
-  <!-- ════════════════════════════════ MODAL PREVIEW ═══════════════════════ -->
-  <app-preview-modal
-    *ngIf="previewOpen"
-    [url]="previewUrl!"
-    [type]="previewType!"
-    (close)="closePreview()">
-  </app-preview-modal>
-
-  <!-- ════════════════════════════════ MODAL REENVIAR ══════════════════════ -->
-  <div *ngIf="forwardingMessage"
-             class="crm-forward-backdrop fixed inset-0 z-[9999] flex items-center justify-center backdrop-blur-sm">
-    <div class="crm-forward-modal rounded-2xl shadow-2xl flex flex-col backdrop-blur-xl"
-         style="width: 380px; max-height: 80vh;">
-
-      <div class="flex items-center justify-between px-5 py-4 border-b border-slate-200">
-        <h3 class="font-bold text-sm text-slate-800">
-          <i class="fa-solid fa-share mr-2 text-teal-500"></i> Reenviar mensaje
-        </h3>
-        <button class="w-7 h-7 rounded-full flex items-center justify-center bg-slate-100 text-slate-500 hover:bg-slate-200"
-                (click)="forwardingMessage = null">
-          <i class="fa-solid fa-xmark text-xs"></i>
-        </button>
-      </div>
-
-      <!-- Mensaje origen -->
-      <div class="px-5 py-3 border-b border-slate-200">
-        <div class="text-xs text-slate-500">Mensaje a reenviar:</div>
-        <div class="mt-1 text-sm px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-slate-700">
-          {{ forwardingMessage.content || '[Archivo]' }}
-        </div>
-      </div>
-
-      <!-- Lista de conversaciones destino -->
-      <div class="flex-1 overflow-y-auto px-4 py-3">
-        <div class="text-xs font-semibold mb-2 text-slate-500">Selecciona destinos:</div>
-        <div *ngIf="allConversations.length === 0" class="text-xs text-center py-6 text-slate-600">
-          Sin conversaciones activas
-        </div>
-        <button *ngFor="let c of allConversations"
-          class="crm-forward-target flex items-center gap-3 w-full px-3 py-2.5 rounded-xl mb-1 transition text-left"
-                [style.background]="forwardTargets.includes(c.id) ? '#e9f7f4' : '#ffffff'"
-                [style.border]="'1px solid ' + (forwardTargets.includes(c.id) ? '#bfe5dc' : '#e2e8f0')"
-                (click)="toggleForwardTarget(c.id)">
-          <div class="w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs flex-shrink-0 bg-gradient-to-br from-teal-500 to-violet-600 text-white shadow-md shadow-teal-500/20">
-            {{ c.customer?.name?.charAt(0)?.toUpperCase() || '?' }}
-          </div>
-          <div class="flex-1 min-w-0">
-            <div class="text-sm font-medium truncate text-slate-700">{{ c.customer?.name || 'Cliente' }}</div>
-            <div class="text-xs text-slate-500">{{ c.customer?.phone }}</div>
-          </div>
-          <i *ngIf="forwardTargets.includes(c.id)" class="fa-solid fa-check text-xs text-teal-500"></i>
-        </button>
-      </div>
-
-      <div class="px-5 py-4 border-t border-slate-200 flex gap-3">
-        <button class="flex-1 py-2 rounded-xl text-sm font-medium transition bg-slate-100 text-slate-700 hover:bg-slate-200"
-                (click)="forwardingMessage = null">Cancelar</button>
-        <button class="flex-1 py-2 rounded-xl text-sm font-semibold transition bg-gradient-to-br from-teal-500 to-emerald-600 text-white shadow-md shadow-teal-500/20 hover:shadow-lg"
-                [disabled]="!forwardTargets.length"
-                (click)="submitForward()">
-          Reenviar ({{ forwardTargets.length }})
-        </button>
-      </div>
-
+  <!-- Sin chat seleccionado -->
+  <div class="wa-empty" *ngIf="!conversationId">
+    <div class="wa-empty-card">
+      <span class="wa-empty-mark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 20l1.3-3.8A8 8 0 1 1 8 19.2L4 20z"/></svg></span>
+      <h2>Bandeja de WhatsApp</h2>
+      <p>Elegí un chat de la izquierda para verlo acá. Los mensajes nuevos llegan en tiempo real.</p>
+      <p class="np-fine">Podés enviar texto, fotos, videos, documentos, stickers y notas de voz.</p>
     </div>
   </div>
 
+  <div class="wa-chat-main" *ngIf="conversationId">
+    <app-chat-header *ngIf="headerData" [data]="headerData" [botPaused]="botPaused" (openTransfer)="openTransfer.emit()" (back)="back.emit()" (finish)="finishConversation()" (toggleInfo)="toggleInfoPanel()" (toggleBot)="toggleBotPause()" (search)="toggleSearch()"></app-chat-header>
+
+    <!-- Búsqueda en la conversación -->
+    <div class="wa-search" *ngIf="searchOpen">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+      <input #searchInput type="text" [(ngModel)]="searchTerm" (input)="runSearch()" (keydown)="onSearchKeydown($event)" placeholder="Buscar en la conversación" />
+      <span class="wa-search-count np-mono" *ngIf="searchTerm">{{ searchHits.length ? (searchPos + 1) + ' / ' + searchHits.length : 'Sin resultados' }}</span>
+      <button type="button" class="wa-ibtn" (click)="searchStep(-1)" [disabled]="!searchHits.length" title="Anterior (más antiguo)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="m6 15 6-6 6 6"/></svg></button>
+      <button type="button" class="wa-ibtn" (click)="searchStep(1)" [disabled]="!searchHits.length" title="Siguiente (más reciente)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="m6 9 6 6 6-6"/></svg></button>
+      <button type="button" class="wa-ibtn" (click)="toggleSearch()" title="Cerrar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
+    </div>
+
+    <!-- Mensajes -->
+    <div class="wa-messages" #messagesContainer [class.is-dragging]="dragging" (dragover)="onDragOver($event)" (dragleave)="onDragLeave($event)" (drop)="onDrop($event)">
+      <div class="wa-drop-hint" *ngIf="dragging">Soltá el archivo para enviarlo</div>
+      <div class="wa-loading" *ngIf="loading"><span class="np-spinner"></span> Cargando mensajes…</div>
+      <ng-container *ngFor="let msg of messages; let i = index; trackBy: trackByMessage">
+        <div class="wa-day" *ngIf="showDaySeparator(i)"><span>{{ dayLabel(msg.at) }}</span></div>
+        <app-message-bubble [message]="msg" [class.is-hit]="isHit(msg.id)" [class.is-hit-current]="isCurrentHit(msg.id)" (openPreview)="openPreview($event)" (forwardMsg)="onForwardMessage($event)" (saveSticker)="saveStickerFromMessage($event)" (retry)="retrySend($event)" (replyTo)="setReply($event)" (jumpTo)="jumpToMessage($event)" (startChat)="startChat.emit($event)" (react)="reactTo($event)" (moreEmoji)="openEmojiForReaction($event)"></app-message-bubble>
+      </ng-container>
+    </div>
+
+    <!-- Adjunto pendiente -->
+    <div class="wa-attach-preview" *ngIf="filePreview">
+      <div class="wa-attach-card">
+        <img *ngIf="previewType === 'image'" [src]="previewUrl" alt="Vista previa" />
+        <video *ngIf="previewType === 'video'" [src]="previewUrl" controls></video>
+        <audio *ngIf="previewType === 'audio'" [src]="previewUrl" controls></audio>
+        <div class="wa-doc" *ngIf="previewType === 'document'"><span class="wa-doc-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/></svg></span><span class="wa-doc-copy"><b>{{ filePreview.name }}</b><small>{{ fileSize(filePreview.size) }}</small></span></div>
+        <div class="wa-attach-actions"><button type="button" class="np-btn np-btn--ghost np-btn--sm" (click)="clearFile()">Cancelar</button><button type="button" class="wa-send" (click)="sendMedia()" [disabled]="sending" title="Enviar"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M3 20.5 22 12 3 3.5V10l13 2-13 2z"/></svg></button></div>
+      </div>
+    </div>
+
+    <!-- Meta: ventana de 24 h cerrada -->
+    <div class="wa-composer wa-composer--blocked" *ngIf="composerBlocked">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+      <div><b>Ventana de 24 horas cerrada</b><p>Por reglas de la API de Meta, sólo se puede escribir libremente durante las 24 h siguientes al último mensaje del cliente<ng-container *ngIf="metaWindowLabel()"> (venció el {{ metaWindowLabel() }})</ng-container>. Cuando el cliente vuelva a escribir, el chat se habilita solo.</p></div>
+    </div>
+
+    <!-- Composer -->
+    <div class="wa-composer" *ngIf="!composerBlocked" (click)="closeAttachMenu(); showQuickPanel = false">
+      <!-- Respondiendo a… -->
+      <div class="wa-replybar" *ngIf="replyTarget">
+        <div class="wa-replybar-card" [class.is-agent]="replyTarget.from !== 'customer'">
+          <b>{{ replyTarget.from === 'customer' ? 'Cliente' : 'Vos' }}</b>
+          <span>{{ replyPreview(replyTarget) }}</span>
+          <img *ngIf="replyTarget.message_type === 'image' && replyTarget.media_url" [src]="replyTarget.media_url" alt="" />
+        </div>
+        <button type="button" class="wa-ibtn" (click)="cancelReply()" title="Cancelar respuesta"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
+      </div>
+      <!-- Grabando -->
+      <div class="wa-recording" *ngIf="isRecording">
+        <button type="button" class="wa-ibtn wa-ibtn--danger" (click)="cancelRecording()" title="Descartar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/></svg></button>
+        <span class="wa-rec-dot"></span><span class="wa-rec-time np-mono">{{ fmtSecs(recordSeconds) }}</span>
+        <span class="wa-wave"><i *ngFor="let n of [1,2,3,4,5,6,7,8,9,10,11,12]"></i></span>
+        <span class="np-spacer"></span>
+        <button type="button" class="wa-ibtn" (click)="stopRecording()" title="Detener y revisar"><svg viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="6" width="12" height="12" rx="2"/></svg></button>
+        <button type="button" class="wa-send" (click)="stopAndSend()" title="Enviar nota de voz"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M3 20.5 22 12 3 3.5V10l13 2-13 2z"/></svg></button>
+      </div>
+
+      <!-- Procesando -->
+      <div class="wa-recording" *ngIf="isProcessingAudio && !isRecording"><span class="np-spinner np-spinner--sm"></span><span>Procesando audio…</span></div>
+
+      <!-- Audio listo para enviar -->
+      <div class="wa-recording" *ngIf="audioPreviewUrl && !isRecording && !isProcessingAudio">
+        <button type="button" class="wa-ibtn wa-ibtn--danger" (click)="cancelAudio()" title="Descartar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/></svg></button>
+        <audio class="wa-audio-preview" [src]="audioPreviewUrl" controls preload="metadata"></audio>
+        <span class="np-spacer"></span>
+        <button type="button" class="wa-send" (click)="sendRecordedAudio()" [disabled]="sending || !recordedAudioFile" title="Enviar nota de voz"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M3 20.5 22 12 3 3.5V10l13 2-13 2z"/></svg></button>
+      </div>
+
+      <!-- Normal -->
+      <div class="wa-composer-row" *ngIf="!isRecording && !isProcessingAudio && !audioPreviewUrl">
+        <div class="wa-attach-wrap">
+          <button type="button" class="wa-ibtn" [class.is-open]="showAttachMenu" (click)="toggleAttachMenu(); $event.stopPropagation()" [disabled]="sending" title="Adjuntar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 5v14M5 12h14"/></svg></button>
+          <div class="wa-attach-menu" *ngIf="showAttachMenu" (click)="$event.stopPropagation()">
+            <button type="button" (click)="openPicker('document')"><span class="wa-attach-ico is-doc"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/></svg></span>Documento</button>
+            <button type="button" (click)="openPicker('media')"><span class="wa-attach-ico is-media"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 16 5-5 4 4 3-3 6 6"/><circle cx="16" cy="9" r="1.5"/></svg></span>Fotos y videos</button>
+            <button type="button" (click)="openLocationModal()"><span class="wa-attach-ico is-location"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s-7-6-7-12a7 7 0 0 1 14 0c0 6-7 12-7 12z"/><circle cx="12" cy="10" r="2.5"/></svg></span>Ubicación</button>
+            <button type="button" (click)="toggleStickerPicker(); $event.stopPropagation()"><span class="wa-attach-ico is-sticker"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M8 14s1.5 2 4 2 4-2 4-2M9 9h.01M15 9h.01"/></svg></span>Sticker</button>
+          </div>
+          <div class="wa-stickers" *ngIf="showStickerPicker" (click)="$event.stopPropagation()">
+            <div class="wa-stickers-h"><b>Mis stickers</b><button type="button" class="np-link" (click)="showStickerPicker = false">Cerrar</button></div>
+            <p class="np-fine" *ngIf="stickers.length === 0">Sin stickers guardados. Clic derecho sobre un sticker recibido para guardarlo.</p>
+            <div class="wa-stickers-grid"><button type="button" *ngFor="let s of stickers" (click)="sendSticker(s)"><img [src]="s.media_url" alt="Sticker" /></button></div>
+          </div>
+        </div>
+        <div class="wa-quick-wrap">
+          <button type="button" class="wa-ibtn" [class.is-active]="showQuickPanel" (click)="toggleQuickPanel(); $event.stopPropagation()" [disabled]="sending" title="Respuestas rápidas (escribí / en el mensaje)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 3 4 14h7l-1 7 9-11h-7l1-7z"/></svg></button>
+          <div class="wa-quick-panel" *ngIf="showQuickPanel" (click)="$event.stopPropagation()">
+            <div class="wa-quick-h"><b>Respuestas rápidas</b><button type="button" class="np-link" (click)="openQuickManager()">Administrar</button></div>
+            <input type="text" class="wa-quick-search" placeholder="Buscar por atajo o título" [(ngModel)]="quickPanelQuery" (keydown.escape)="showQuickPanel = false" autofocus />
+            <p class="np-fine" *ngIf="quickReplies.length === 0">Todavía no hay respuestas guardadas. Creá la primera desde "Administrar".</p>
+            <div class="wa-quick-list">
+              <button type="button" *ngFor="let r of filterQuick(quickPanelQuery)" (click)="applyQuickReply(r)"><span class="wa-quick-key np-mono">/{{ r.shortcut }}</span><span class="wa-quick-copy"><b *ngIf="r.title">{{ r.title }}</b><small>{{ r.content }}</small></span></button>
+            </div>
+          </div>
+        </div>
+        <div class="wa-emoji-wrap">
+          <button type="button" class="wa-ibtn" [class.is-active]="showEmojiPicker" (click)="toggleEmojiPicker($event)" title="Emojis"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M8 14s1.5 2 4 2 4-2 4-2M9 9h.01M15 9h.01"/></svg></button>
+        </div>
+        <div class="wa-input">
+          <div class="wa-slash" *ngIf="showSlashPicker" (click)="$event.stopPropagation()">
+            <p class="wa-slash-h">Respuestas rápidas <small>↑↓ elegir · Enter insertar · Esc cerrar</small></p>
+            <button type="button" *ngFor="let r of slashMatches; let i = index" [class.is-active]="i === slashIndex" (mouseenter)="slashIndex = i" (mousedown)="$event.preventDefault()" (click)="applyQuickReply(r)"><span class="wa-quick-key np-mono">/{{ r.shortcut }}</span><span class="wa-quick-copy"><b *ngIf="r.title">{{ r.title }}</b><small>{{ r.content }}</small></span></button>
+            <p class="np-fine" *ngIf="slashMatches.length === 0">Sin coincidencias. <button type="button" class="np-link" (mousedown)="$event.preventDefault()" (click)="openQuickManager()">Crear respuesta</button></p>
+          </div>
+          <textarea #messageTextarea [(ngModel)]="draftMessage" placeholder="Escribí un mensaje o / para respuestas rápidas" rows="1" [disabled]="!!filePreview" (input)="autoResize(messageTextarea); onDraftInput()" (keydown)="handleKeydown($event)"></textarea>
+        </div>
+        <button type="button" class="wa-ibtn wa-mic" *ngIf="!draftMessage.trim()" (click)="startRecording()" [disabled]="sending || !!filePreview" title="Grabar nota de voz"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3M9 21h6"/></svg></button>
+        <button type="button" class="wa-send" *ngIf="draftMessage.trim()" (click)="sendMessage(draftMessage)" [disabled]="sending" title="Enviar"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M3 20.5 22 12 3 3.5V10l13 2-13 2z"/></svg></button>
+      </div>
+    </div>
+
+    <!-- Selector de emojis (compositor o reacción) -->
+    <div class="wa-emoji" *ngIf="showEmojiPicker" (click)="$event.stopPropagation()">
+      <div class="wa-emoji-h"><b>{{ emojiTarget ? 'Reaccionar al mensaje' : 'Emojis' }}</b><span class="np-spacer"></span><button type="button" class="np-link" (click)="showEmojiPicker = false; emojiTarget = null">Cerrar</button></div>
+      <div class="wa-emoji-tabs"><button type="button" *ngFor="let g of emojiGroups; let i = index" [attr.aria-pressed]="emojiTab === i" (click)="emojiTab = i">{{ g.name }}</button></div>
+      <div class="wa-emoji-grid"><button type="button" *ngFor="let e of emojiGroups[emojiTab].list" (click)="pickEmoji(e)">{{ e }}</button></div>
+    </div>
+
+    <input #docInput type="file" hidden accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.zip,.rar,.txt" (change)="onFileSelected($event)" />
+    <input #mediaInput type="file" hidden accept="image/*,video/*" (change)="onFileSelected($event)" />
+  </div>
+
+  <app-crm-info-panel class="wa-info-host" *ngIf="showInfoPanel && conversationId && headerData" [conversationId]="conversationId!" [customerPhone]="headerData!.customerPhone" [customerName]="headerData!.customerName" [currentPriority]="headerData!.priority || 'normal'" [status]="headerData!.status" (priorityChanged)="onPriorityChanged($event)" (customerNameChanged)="headerData!.customerName = $event" (closePanel)="showInfoPanel = false" [summary]="customerSummary" [summaryLoading]="summaryLoading" (refreshSummary)="loadSummary()" (openConversation)="openConversation.emit($event)"></app-crm-info-panel>
+
+  <app-preview-modal *ngIf="previewOpen" [url]="previewUrl!" [type]="previewType!" (close)="closePreview()"></app-preview-modal>
+
+  <!-- Enviar ubicación -->
+  <div class="np-overlay" *ngIf="showLocationModal" (click)="showLocationModal = false">
+    <div class="np-modal" role="dialog" aria-modal="true" (click)="$event.stopPropagation()">
+      <div class="np-modal-head"><div><p class="np-kicker">Chat <b>/</b> Ubicación</p><h3>Enviar ubicación</h3></div><button type="button" class="np-icobtn" (click)="showLocationModal = false" aria-label="Cerrar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div>
+      <div class="np-modal-body np-form np-form--single">
+        <div class="np-btnrow"><button type="button" class="np-btn np-btn--ghost" [disabled]="locLocating" (click)="useMyLocation()">{{ locLocating ? 'Ubicando…' : 'Usar mi ubicación actual' }}</button></div>
+        <label class="np-field"><span>Pegar coordenadas o link de Google Maps</span><input type="text" class="np-input" [(ngModel)]="locForm.raw" (change)="parseLocationInput()" (keydown.enter)="parseLocationInput()" placeholder="10.9878, -74.7889  ó  https://maps.google.com/…" /></label>
+        <div class="np-grid-2"><label class="np-field"><span>Latitud</span><input type="text" class="np-input np-mono" [(ngModel)]="locForm.lat" /></label><label class="np-field"><span>Longitud</span><input type="text" class="np-input np-mono" [(ngModel)]="locForm.lng" /></label></div>
+        <label class="np-field"><span>Nombre del lugar (opcional)</span><input type="text" class="np-input" [(ngModel)]="locForm.name" placeholder="Oficina Netplay" maxlength="80" /></label>
+        <label class="np-field"><span>Dirección (opcional)</span><input type="text" class="np-input" [(ngModel)]="locForm.address" placeholder="Calle 00 # 00-00" maxlength="120" /></label>
+        <p class="np-notice np-notice--danger" *ngIf="locError">{{ locError }}</p>
+        <div class="np-btnrow np-btnrow--end"><button type="button" class="np-btn np-btn--ghost" (click)="showLocationModal = false">Cancelar</button><button type="button" class="np-btn np-btn--primary" [disabled]="!locForm.lat || !locForm.lng" (click)="sendLocation()">Enviar ubicación</button></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Administrar respuestas rápidas -->
+  <div class="np-overlay" *ngIf="showQuickManager" (click)="showQuickManager = false">
+    <div class="np-modal np-modal--editor np-modal--editor-wide" role="dialog" aria-modal="true" (click)="$event.stopPropagation()">
+      <div class="np-modal-head"><div><p class="np-kicker">Chat <b>/</b> Respuestas rápidas</p><h3>Mensajes pre-guardados</h3></div><button type="button" class="np-icobtn" (click)="showQuickManager = false" aria-label="Cerrar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div>
+      <div class="np-modal-body wa-quick-manager">
+        <div class="wa-quick-form">
+          <p class="np-sect">{{ quickForm.id ? 'Editar respuesta' : 'Nueva respuesta' }}</p>
+          <label class="np-field"><span>Atajo</span><div class="wa-quick-slash-input"><b>/</b><input class="np-input np-mono" type="text" [(ngModel)]="quickForm.shortcut" placeholder="saludo" maxlength="40" (input)="quickForm.shortcut = quickForm.shortcut.toLowerCase().replace('/', '')" /></div><small class="np-fine">Sólo letras, números, guion y guion bajo. Se invoca escribiendo /{{ quickForm.shortcut || 'atajo' }} en el chat.</small></label>
+          <label class="np-field"><span>Título (opcional)</span><input class="np-input" type="text" [(ngModel)]="quickForm.title" placeholder="Saludo inicial" maxlength="100" /></label>
+          <label class="np-field"><span>Mensaje</span><textarea class="np-textarea" rows="5" [(ngModel)]="quickForm.content" [placeholder]="quickPlaceholder" maxlength="4000"></textarea></label>
+          <div class="wa-vars"><span class="np-fine">Variables (se completan con los datos del cliente al usar la respuesta):</span><div class="wa-vars-list"><button type="button" *ngFor="let v of quickVars" class="np-mono" (click)="insertVar(v)">{{ varToken(v) }}</button></div></div>
+          <p class="np-notice np-notice--danger" *ngIf="quickError">{{ quickError }}</p>
+          <div class="np-btnrow np-btnrow--end"><button type="button" class="np-btn np-btn--ghost" *ngIf="quickForm.id" (click)="resetQuickForm()">Cancelar edición</button><button type="button" class="np-btn np-btn--primary" [disabled]="quickSaving || !quickForm.shortcut.trim() || !quickForm.content.trim()" (click)="saveQuickReply()">{{ quickSaving ? 'Guardando…' : (quickForm.id ? 'Guardar cambios' : 'Guardar respuesta') }}</button></div>
+        </div>
+        <div class="wa-quick-existing">
+          <p class="np-sect">Guardadas <span class="np-c">{{ quickReplies.length }}</span></p>
+          <p class="np-muted" *ngIf="quickReplies.length === 0">Sin respuestas todavía.</p>
+          <div class="wa-quick-row" *ngFor="let r of quickReplies" [class.is-editing]="quickForm.id === r.id">
+            <span class="wa-quick-key np-mono">/{{ r.shortcut }}</span>
+            <span class="wa-quick-copy"><b *ngIf="r.title">{{ r.title }}</b><small>{{ r.content }}</small></span>
+            <span class="wa-quick-acts"><button type="button" class="np-icobtn" (click)="editQuickReply(r)" title="Editar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 20h4l10-10-4-4L4 16v4zM13 7l4 4"/></svg></button><button type="button" class="np-icobtn" (click)="deleteQuickReply(r)" title="Eliminar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/></svg></button></span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Reenviar -->
+  <div class="np-overlay" *ngIf="forwardingMessage" (click)="forwardingMessage = null">
+    <div class="np-modal" role="dialog" aria-modal="true" (click)="$event.stopPropagation()">
+      <div class="np-modal-head"><div><p class="np-kicker">Chat <b>/</b> Reenviar</p><h3>Reenviar mensaje</h3></div><button type="button" class="np-icobtn" (click)="forwardingMessage = null" aria-label="Cerrar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div>
+      <div class="np-modal-body">
+        <p class="np-notice np-notice--code">{{ forwardingMessage.content || '[Archivo adjunto]' }}</p>
+        <p class="np-sect">Destinos</p>
+        <div class="np-checklist">
+          <p class="np-muted np-check" *ngIf="allConversations.length === 0">Sin conversaciones activas.</p>
+          <label class="np-check" *ngFor="let c of allConversations"><input type="checkbox" [checked]="forwardTargets.includes(c.id)" (change)="toggleForwardTarget(c.id)" /><span class="np-strong">{{ c.customer?.name || 'Cliente' }}</span><span class="np-spacer"></span><span class="np-data">{{ c.customer?.phone }}</span></label>
+        </div>
+        <div class="np-btnrow np-btnrow--end"><button type="button" class="np-btn np-btn--ghost" (click)="forwardingMessage = null">Cancelar</button><button type="button" class="np-btn np-btn--primary" [disabled]="!forwardTargets.length" (click)="submitForward()">Reenviar ({{ forwardTargets.length }})</button></div>
+      </div>
+    </div>
+  </div>
 </div>

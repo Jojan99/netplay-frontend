@@ -1,152 +1,83 @@
-<!-- ROOT -->
-<div class="crm-mobile-root crm-inbox-shell h-screen flex flex-col">
+<div class="wa-root" [class.is-chat-open]="mobileView === 'chat'">
 
-  <!-- ══════════════════════ TOP NAV BAR ══════════════════════ -->
-  <div class="crm-inbox-topbar shrink-0 flex items-center gap-3 px-4 py-2.5 border-b backdrop-blur-xl">
-
-    <!-- LOGO / TÍTULO -->
-    <div class="flex items-center gap-2 mr-2">
-      <div class="w-7 h-7 rounded-lg flex items-center justify-center bg-gradient-to-br from-teal-500 to-emerald-600 shadow-md shadow-teal-500/20">
-        <i class="fa-brands fa-whatsapp text-white w-5 h-5 flex items-center justify-center text-sm"></i>
-      </div>
-      <span class="text-sm font-bold text-slate-200">Bandeja CRM</span>
+  <!-- Barra superior del módulo -->
+  <div class="wa-topbar np-shell">
+    <div class="wa-topbar-brand">
+      <span class="wa-topbar-mark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 20l1.3-3.8A8 8 0 1 1 8 19.2L4 20z"/></svg></span>
+      <span><span class="wa-topbar-kicker">Comunicación / CRM</span><strong>Bandeja de WhatsApp</strong></span>
     </div>
-
-    <!-- VIEWS -->
-    <div class="flex gap-1">
-      <button class="px-3 py-1.5 rounded-xl text-xs font-semibold transition flex items-center gap-1.5"
-              [style.background]="mainView === 'inbox' ? '#10b98120' : 'transparent'"
-              [style.color]="mainView === 'inbox' ? '#10b981' : '#64748b'"
-              [style.border]="mainView === 'inbox' ? '1px solid #10b98140' : '1px solid transparent'"
-              (click)="setView('inbox')">
-        <i class="fa-solid fa-inbox text-xs"></i> Inbox
-      </button>
-
-      <button class="px-3 py-1.5 rounded-xl text-xs font-semibold transition flex items-center gap-1.5"
-              [style.background]="mainView === 'dashboard' ? '#3b82f620' : 'transparent'"
-              [style.color]="mainView === 'dashboard' ? '#60a5fa' : '#64748b'"
-              [style.border]="mainView === 'dashboard' ? '1px solid #3b82f640' : '1px solid transparent'"
-              (click)="setView('dashboard')">
-        <i class="fa-solid fa-chart-line text-xs"></i> Dashboard
-      </button>
+    <div class="np-seg" role="tablist"><button type="button" [attr.aria-pressed]="mainView === 'inbox'" (click)="setView('inbox')">Chats</button><button type="button" [attr.aria-pressed]="mainView === 'dashboard'" (click)="setView('dashboard')">Dashboard</button></div>
+    <div class="np-chips wa-prov" role="group" aria-label="Proveedor">
+      <span class="wa-prov-item" *ngFor="let p of [{id:'meta',label:'API Meta'},{id:'netplay',label:'WhatsApp Web'}]" (mouseenter)="hoverProvider = p.id" (mouseleave)="hoverProvider = null">
+        <button type="button" class="np-chip" [attr.aria-pressed]="inboxProvider === p.id" (click)="setProvider($any(p.id))">{{ p.label }}<span class="wa-prov-badge" *ngIf="providerUnread[p.id]">{{ providerUnread[p.id] }}</span></button>
+        <div class="wa-prov-pop" *ngIf="hoverProvider === p.id && providerRecent[p.id]?.length">
+          <p class="wa-prov-pop-h">Mensajes nuevos en {{ p.label }}</p>
+          <button type="button" class="wa-prov-row" *ngFor="let c of providerRecent[p.id]" (click)="openFromPreview($any(p.id), c.id)"><span class="wa-prov-name">{{ c.customer?.name || c.customer?.phone }}</span><span class="wa-prov-txt">{{ previewText(c) }}</span><span class="wa-prov-time">{{ c.last_message?.at ? timeAgo(c.last_message.at) : '' }}</span></button>
+        </div>
+      </span>
     </div>
-
-    <div class="crm-provider-tabs">
-      <button type="button" [class.active]="inboxProvider === 'meta'" (click)="setProvider('meta')"><i class="fa-brands fa-whatsapp"></i> Meta API</button>
-      <button type="button" [class.active]="inboxProvider === 'netplay'" (click)="setProvider('netplay')"><i class="fa-solid fa-mobile-screen-button"></i> Netplay WhatsApp</button>
-    </div>
-
-    <!-- SPACER -->
-    <div class="flex-1"></div>
-
-    <!-- ACCIONES -->
-    <div class="flex items-center gap-2">
-
-      <!-- RECARGAR -->
-      <button class="w-8 h-8 flex items-center justify-center rounded-full transition bg-slate-700 text-slate-400 hover:bg-slate-600"
-              title="Recargar inbox"
-              (click)="loadInbox()">
-        <i class="fa-solid fa-rotate-right text-sm"></i>
-      </button>
-
-      <!-- NUEVA CONVERSACIÓN -->
-      <button class="w-8 h-8 flex items-center justify-center rounded-full transition bg-gradient-to-br from-teal-500 to-emerald-600 text-white shadow-md shadow-teal-500/20 hover:shadow-lg"
-              title="Nueva conversación"
-              (click)="showNewConversationModal = true">
-        <i class="fa-solid fa-plus text-sm"></i>
-      </button>
-
-      <!-- BROADCAST -->
-      <button class="px-3 py-1.5 rounded-xl text-xs font-semibold transition flex items-center gap-1.5 bg-slate-700 text-slate-400 border border-slate-600 hover:bg-slate-600 hover:text-slate-200"
-              onmouseenter="this.style.background='#475569'; this.style.color='#e2e8f0'"
-              onmouseleave="this.style.background='#334155'; this.style.color='#94a3b8'"
-              title="Mensaje masivo"
-              (click)="showBroadcastModal = true">
-        <i class="fa-solid fa-bullhorn text-xs"></i>
-        <span class="hidden sm:inline">Broadcast</span>
-      </button>
-
-    </div>
+    <span class="np-spacer"></span>
+    <button type="button" class="wa-sound" [attr.aria-pressed]="soundEnabled" (click)="toggleSound()" [title]="soundEnabled ? 'Silenciar notificaciones' : 'Activar sonido de notificaciones'">
+      <svg *ngIf="soundEnabled" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 17V11a6 6 0 0 1 12 0v6l1.5 2h-15zM10 21h4"/></svg>
+      <svg *ngIf="!soundEnabled" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 17V11a6 6 0 0 1 9.3-5M18 11v6l1.5 2h-15M10 21h4M4 4l16 16"/></svg>
+    </button>
+    <button type="button" class="wa-sound" (click)="openSettings()" title="Configuración del CRM"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg></button>
+    <button type="button" class="np-btn np-btn--ghost np-btn--sm" (click)="showBroadcastModal = true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 11v2a1 1 0 0 0 1 1h2l5 4V6L6 10H4a1 1 0 0 0-1 1zM15 9a4 4 0 0 1 0 6M18 6a8 8 0 0 1 0 12"/></svg>Difusión</button>
+    <button type="button" class="np-btn np-btn--primary np-btn--sm" (click)="showNewConversationModal = true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M12 5v14M5 12h14"/></svg>Nuevo chat</button>
   </div>
 
-  <!-- ══════════════════════ MAIN CONTENT ══════════════════════ -->
-  <div class="flex-1 min-h-0 overflow-hidden">
+  <ng-container *ngIf="mainView === 'dashboard'"><app-crm-dashboard class="wa-dashboard" (openChat)="openChat($event)"></app-crm-dashboard></ng-container>
 
-    <!-- DASHBOARD VIEW -->
-    <ng-container *ngIf="mainView === 'dashboard'">
-      <app-crm-dashboard class="block h-full"></app-crm-dashboard>
-    </ng-container>
-
-    <!-- INBOX VIEW -->
-    <ng-container *ngIf="mainView === 'inbox'">
-      <div class="h-full flex overflow-hidden min-h-0 relative">
-
-        <!-- 📋 LISTA DE CONVERSACIONES -->
-        <div class="absolute md:relative inset-0 md:inset-auto
-                    w-full md:w-96
-                    h-full min-h-0
-                    transition-all duration-400 ease-in-out
-                    will-change-transform will-change-opacity"
-             [class.translate-x-0]="mobileView === 'list' || !isMobile"
-             [class.-translate-x-full]="mobileView === 'chat' && isMobile"
-             [class.opacity-100]="mobileView === 'list' || !isMobile"
-             [class.opacity-0]="mobileView === 'chat' && isMobile"
-             [class.pointer-events-none]="mobileView === 'chat' && isMobile">
-          <app-conversation-list
-            [conversations]="inbox"
-            [activeConversationId]="activeConversationId"
-            [activeStatus]="inboxStatus"
-            (openChat)="openChat($event)"
-            (statusChange)="setStatus($event)">
-          </app-conversation-list>
-        </div>
-
-        <!-- 💬 CHAT -->
-        <div class="crm-inbox-chat-pane absolute md:relative inset-0 md:inset-auto
-              flex-1 min-w-0
-                    h-full min-h-0
-                    transition-all duration-400 ease-in-out
-                    will-change-transform will-change-opacity"
-             [class.translate-x-full]="mobileView === 'list' && isMobile"
-             [class.translate-x-0]="mobileView === 'chat' || !isMobile"
-             [class.opacity-0]="mobileView === 'list' && isMobile"
-             [class.opacity-100]="mobileView === 'chat' || !isMobile"
-             [class.pointer-events-none]="mobileView === 'list' && isMobile"
-             >
-          <app-chat-window
-            class="h-full block"
-            [conversationId]="activeConversationId"
-            (conversationClosed)="onConversationClosed()"
-            (openTransfer)="openTransfer()"
-            (back)="backToList()">
-          </app-chat-window>
-        </div>
-
-        <!-- 🔁 MODAL TRANSFERIR -->
-        <app-transfer-conversation-modal
-          *ngIf="showTransferModal"
-          [conversationId]="activeConversationId!"
-          (closed)="onTransferClosed($event)">
-        </app-transfer-conversation-modal>
-
-      </div>
-    </ng-container>
-
+  <div class="wa-layout" *ngIf="mainView === 'inbox'">
+    <aside class="wa-list-pane">
+      <app-conversation-list [conversations]="inbox" [activeConversationId]="activeConversationId" [activeStatus]="inboxStatus" [labels]="labels" [waitAlertMinutes]="settings?.wait_alert_minutes || 15" (openChat)="openChat($event)" (statusChange)="setStatus($event)" (refresh)="loadInbox()" (markUnread)="markUnread($event)"></app-conversation-list>
+    </aside>
+    <section class="wa-chat-pane">
+      <app-chat-window class="wa-chat-host" [conversationId]="activeConversationId" (conversationClosed)="onConversationClosed()" (openTransfer)="openTransfer()" (back)="backToList()" (openConversation)="openChat($event)" (startChat)="startChatWith($event)"></app-chat-window>
+    </section>
+    <app-transfer-conversation-modal *ngIf="showTransferModal" [conversationId]="activeConversationId!" (closed)="onTransferClosed($event)"></app-transfer-conversation-modal>
   </div>
-
 </div>
 
-<!-- ══════════════════════ MODALES GLOBALES ══════════════════════ -->
+<app-crm-broadcast-modal *ngIf="showBroadcastModal" (closed)="showBroadcastModal = false"></app-crm-broadcast-modal>
+<app-crm-new-conversation-modal *ngIf="showNewConversationModal" (closed)="showNewConversationModal = false" (created)="onConversationCreated($event); showNewConversationModal = false"></app-crm-new-conversation-modal>
 
-<!-- BROADCAST -->
-<app-crm-broadcast-modal
-  *ngIf="showBroadcastModal"
-  (closed)="showBroadcastModal = false">
-</app-crm-broadcast-modal>
+<!-- Avisos de mensajes nuevos -->
+<div class="wa-toasts" *ngIf="toasts.length">
+  <div class="wa-toast" *ngFor="let t of toasts" role="status">
+    <button type="button" class="wa-toast-main" (click)="openToast(t)"><b>{{ t.conv.customer?.name || t.conv.customer?.phone }}</b><small>{{ t.provider === 'meta' ? 'API Meta' : 'WhatsApp Web' }}</small><span>{{ previewText(t.conv) }}</span></button>
+    <button type="button" class="wa-toast-x" (click)="dismissToast(t.id)" aria-label="Cerrar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
+  </div>
+</div>
 
-<!-- NUEVA CONVERSACIÓN -->
-<app-crm-new-conversation-modal
-  *ngIf="showNewConversationModal"
-  (closed)="showNewConversationModal = false"
-  (created)="onConversationCreated($event); showNewConversationModal = false">
-</app-crm-new-conversation-modal>
+<!-- Configuración del CRM -->
+<div class="np-overlay" *ngIf="showSettings" (click)="showSettings = false">
+  <div class="np-modal np-modal--editor wa-settings" role="dialog" aria-modal="true" (click)="$event.stopPropagation()">
+    <div class="np-modal-head"><div><p class="np-kicker">CRM <b>/</b> Configuración</p><h3>Atención y automatizaciones</h3></div><button type="button" class="np-icobtn" (click)="showSettings = false" aria-label="Cerrar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div>
+    <div class="np-modal-body np-modal-body--scroll" *ngIf="settingsForm">
+      <div class="wa-set-grid">
+        <section class="wa-set-card">
+          <header><span class="wa-set-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0M17 11l2 2 4-4"/></svg></span><div><h4>Reparto de chats</h4><p>Cómo se asignan los chats que llegan.</p></div></header>
+          <label class="wa-set-switch"><input type="checkbox" [(ngModel)]="settingsForm.auto_assign" /><span class="wa-set-track"></span><span class="wa-set-copy"><b>Asignación automática</b><small>Cada chat nuevo va al agente activo con menos conversaciones abiertas.</small></span></label>
+          <label class="np-field"><span>Alerta de espera</span><div class="wa-set-inline"><input type="number" class="np-input np-mono" min="1" max="1440" [(ngModel)]="settingsForm.wait_alert_minutes" /><em>minutos sin respuesta</em></div><small class="np-fine">Pasado ese tiempo el chat se marca en la lista y cuenta en el dashboard.</small></label>
+        </section>
+
+        <section class="wa-set-card">
+          <header><span class="wa-set-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></span><div><h4>Horario de atención</h4><p>Ahora mismo: <b [class.is-open]="settingsForm.open_now">{{ settingsForm.open_now ? 'en horario' : 'fuera de horario' }}</b></p></div></header>
+          <div class="np-field"><span>Días</span><div class="wa-days"><button type="button" *ngFor="let d of days" [attr.aria-pressed]="settingsForm.business_days.includes(d.n)" (click)="toggleDay(d.n)">{{ d.l }}</button></div></div>
+          <div class="wa-hours"><label class="np-field"><span>Abre</span><input type="time" class="np-input np-mono" [(ngModel)]="settingsForm.open_time" /></label><label class="np-field"><span>Cierra</span><input type="time" class="np-input np-mono" [(ngModel)]="settingsForm.close_time" /></label></div>
+          <label class="wa-set-switch"><input type="checkbox" [(ngModel)]="settingsForm.off_hours_enabled" /><span class="wa-set-track"></span><span class="wa-set-copy"><b>Responder fuera de horario</b><small>Aviso automático, como máximo uno cada 4 horas por chat.</small></span></label>
+          <label class="np-field" *ngIf="settingsForm.off_hours_enabled"><span>Mensaje fuera de horario</span><textarea class="np-input np-textarea" rows="3" [(ngModel)]="settingsForm.off_hours_message" [placeholder]="settingsForm.off_hours_message_default"></textarea><small class="np-fine">Vacío = mensaje por defecto.</small></label>
+        </section>
+
+        <section class="wa-set-card wa-set-card--wide">
+          <header><span class="wa-set-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 20l1.3-3.8A8 8 0 1 1 8 19.2L4 20z"/></svg></span><div><h4>Mensaje de bienvenida</h4><p>Se envía una sola vez, con el primer mensaje del cliente.</p></div></header>
+          <textarea class="np-input np-textarea" rows="3" [(ngModel)]="settingsForm.welcome_message" [placeholder]="settingsForm.welcome_message_default"></textarea>
+          <small class="np-fine">Vacío = mensaje por defecto. Podés usar *negrita* y saltos de línea como en WhatsApp.</small>
+        </section>
+      </div>
+      <p class="np-notice np-notice--danger" *ngIf="settingsError">{{ settingsError }}</p>
+    </div>
+    <div class="np-modal-foot"><button type="button" class="np-btn np-btn--ghost" (click)="showSettings = false">Cancelar</button><button type="button" class="np-btn np-btn--primary" [disabled]="savingSettings" (click)="saveSettings()">{{ savingSettings ? 'Guardando…' : 'Guardar configuración' }}</button></div>
+  </div>
+</div>

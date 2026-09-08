@@ -1,0 +1,4 @@
+/* ─── Instancias WhatsApp: sólo lo propio ───────────────────────────── */
+.np-row--static { cursor: default; }
+.np-qr-frame { display: grid; place-items: center; min-height: 240px; border: 1px dashed var(--line-strong); border-radius: var(--radius); background: var(--surface-2); padding: 12px; img { max-width: 260px; width: 100%; border-radius: 4px; background: #fff; padding: 8px; } }
+.np-steps { margin: 0; padding-left: 18px; color: var(--text-2); font-size: 12.5px; display: grid; gap: 3px; b { color: var(--text); } }

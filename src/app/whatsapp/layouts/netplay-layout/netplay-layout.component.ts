@@ -1,39 +1,38 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterModule, Router } from '@angular/router';
+import { RouterModule } from '@angular/router';
 
 @Component({
   selector: 'app-netplay-layout',
   standalone: true,
   imports: [CommonModule, RouterModule],
+  host: { class: 'np-console' },
   template: `
-    <div class="max-w-7xl mx-auto mt-4">
-      <!-- Sub-nav -->
-      <div class="flex items-center gap-1 mb-4 overflow-x-auto pb-2 border-b border-gray-200 dark:border-gray-700">
-        <a routerLink="panel" routerLinkActive="bg-green-600 text-white" class="px-3 py-1.5 text-sm rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition whitespace-nowrap text-gray-700 dark:text-gray-300">
-          Panel Config.
-        </a>
-        <a routerLink="instancias" routerLinkActive="bg-green-600 text-white" class="px-3 py-1.5 text-sm rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition whitespace-nowrap text-gray-700 dark:text-gray-300">
-          Instancias
-        </a>
-        <a routerLink="enviar" routerLinkActive="bg-green-600 text-white" class="px-3 py-1.5 text-sm rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition whitespace-nowrap text-gray-700 dark:text-gray-300">
-          Enviar
-        </a>
-        <a routerLink="programados" routerLinkActive="bg-green-600 text-white" class="px-3 py-1.5 text-sm rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition whitespace-nowrap text-gray-700 dark:text-gray-300">
-          Programados
-        </a>
-        <a routerLink="logs" routerLinkActive="bg-green-600 text-white" class="px-3 py-1.5 text-sm rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition whitespace-nowrap text-gray-700 dark:text-gray-300">
-          Logs
-        </a>
-        <a routerLink="webhook" routerLinkActive="bg-green-600 text-white" class="px-3 py-1.5 text-sm rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition whitespace-nowrap text-gray-700 dark:text-gray-300">
-          Webhook
-        </a>
-        <a routerLink="/dashboard/whatsapp" class="ml-auto px-3 py-1.5 text-sm rounded-lg bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 hover:bg-gray-200 transition">
-          ← Volver
-        </a>
+    <div class="np-page np-wa-shell">
+      <div class="np-toolbar np-wa-nav">
+        <a routerLink="/dashboard/whatsapp" class="np-btn np-btn--ghost np-btn--sm" title="Volver a proveedores">‹ WhatsApp</a>
+        <nav class="np-seg" aria-label="WhatsApp Web">
+          <a *ngFor="let l of links" [routerLink]="l.path" routerLinkActive="is-active">{{ l.label }}</a>
+        </nav>
+        <span class="np-spacer"></span>
+        <span class="np-tag">WhatsApp Web · QR</span>
       </div>
-      <router-outlet></router-outlet>
+      <div class="np-wa-outlet"><router-outlet></router-outlet></div>
     </div>
-  `
+  `,
+  styles: [`
+    .np-wa-nav { border-top: 0; padding-top: 0; }
+    .np-seg a { display: inline-flex; align-items: center; height: 32px; padding: 0 11px; font-size: 12px; font-weight: 700; color: var(--text-2); border-right: 1px solid var(--line-strong); text-decoration: none; white-space: nowrap; }
+    .np-seg a:last-child { border-right: 0; }
+    .np-seg a:hover { background: var(--surface-3); }
+    .np-seg a.is-active { background: var(--text); color: var(--bg); }
+    .np-wa-outlet { flex: 1; min-height: 0; display: flex; flex-direction: column; }
+    .np-wa-outlet > * { flex: 1; min-height: 0; display: flex; flex-direction: column; }
+  `],
 })
-export class NetplayLayoutComponent {}
+export class NetplayLayoutComponent {
+  readonly links = [
+    { path: 'panel', label: 'Configuración' }, { path: 'instancias', label: 'Instancias' }, { path: 'enviar', label: 'Enviar' },
+    { path: 'programados', label: 'Programados' }, { path: 'logs', label: 'Logs' }, { path: 'webhook', label: 'Webhook' },
+  ];
+}

@@ -1,0 +1,16 @@
+/* ─── Auditoría de comprobantes: sólo lo propio ─────────────────────── */
+.np-audit { --np-inspector-w: 460px; }
+.np-row--pending .np-stripe i    { background: var(--warn); }
+.np-row--approved .np-stripe i   { background: var(--ok); }
+.np-row--suspicious .np-stripe i { background: #d97706; }
+.np-row--rejected .np-stripe i   { background: var(--danger); }
+.np-row--reverted .np-stripe i   { background: var(--line-strong); }
+.np-pill--pending    { background: var(--warn-soft); color: var(--warn); }
+.np-pill--approved   { background: var(--ok-soft); color: var(--ok); }
+.np-pill--suspicious { background: var(--warn-soft); color: #b45309; }
+.np-pill--rejected   { background: var(--danger-soft); color: var(--danger); }
+.np-pill--reverted   { background: var(--surface-3); color: var(--text-2); }
+.np-evidence { margin: 0; display: grid; gap: 6px; img { width: 100%; max-height: 520px; object-fit: contain; border: 1px solid var(--line); border-radius: var(--radius); background: var(--surface-2); } figcaption { font-size: 11px; color: var(--text-3); } }
+.np-switchrow { gap: 8px; }
+@media (max-width: 1300px) { .np-audit.is-open .np-col-bank { display: none; } }
+@media (max-width: 760px) { .np-col-bank { display: none; } .np-table--registry { min-width: 0; } }

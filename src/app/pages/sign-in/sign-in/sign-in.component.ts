@@ -8,11 +8,12 @@ import { AuthService } from '../../../services/auth.service';
 import { CompanyService } from '../../../services/company.service';
 import { LocationTrackerService } from '../../../services/location-tracker.service';
 import { SignInInterface } from '../../../models/sign-in-interfaces';
+import { DarkThemeToggleComponent } from '../../../common/dark-theme-toggle.component';
 
 @Component({
   selector: 'app-sign-in',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterModule],
+  imports: [CommonModule, FormsModule, RouterModule, DarkThemeToggleComponent],
   templateUrl: './sign-in.component.html',
   styleUrl: './sign-in.component.scss',
 })

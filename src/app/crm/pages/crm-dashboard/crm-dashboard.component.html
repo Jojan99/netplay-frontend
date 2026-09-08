@@ -1,112 +1,50 @@
-<div class="h-full overflow-y-auto px-6 py-6 bg-slate-900 text-slate-200" style="font-family:'Inter',sans-serif;">
-
-  <!-- HEADER -->
-  <div class="flex items-center justify-between mb-6">
-    <div>
-      <h1 class="text-2xl font-bold bg-gradient-to-r from-slate-800 to-slate-600 bg-clip-text text-transparent dark:from-white dark:to-slate-300">Dashboard CRM</h1>
-      <p class="text-xs mt-0.5 text-slate-500">Métricas de conversaciones</p>
-    </div>
-    <button class="px-4 py-2 rounded-xl text-xs font-semibold transition flex items-center gap-2 bg-slate-800/80 backdrop-blur-xl border border-slate-700/60 text-slate-300 hover:bg-slate-700"
-            (click)="loadMetrics()">
-      <i class="fa-solid fa-rotate-right text-xs"></i> Actualizar
-    </button>
-  </div>
-
-  <!-- LOADING -->
-  <div *ngIf="loading" class="flex items-center justify-center py-20 gap-3 text-slate-500">
-    <div class="w-5 h-5 border-2 border-slate-600 border-t-indigo-500 rounded-full animate-spin"></div>
-    Cargando métricas…
-  </div>
-
-  <ng-container *ngIf="!loading && metrics">
-
-    <!-- KPIs -->
-    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-
-      <!-- Total -->
-      <div class="bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl rounded-2xl border border-slate-200/60 dark:border-slate-700/60 shadow-sm hover:shadow-md transition-all duration-300 p-4">
-        <div class="text-xs font-semibold mb-1 uppercase tracking-wide text-slate-500 dark:text-slate-400">Total</div>
-        <div class="text-3xl font-bold text-slate-200 dark:text-white">{{ metrics.total }}</div>
-        <div class="text-xs mt-1 text-slate-500">conversaciones</div>
+<div class="np-page np-crm-dash">
+  <header class="np-head">
+    <div><p class="np-kicker">CRM <b>/</b> Dashboard</p><h1 class="np-title">Métricas de conversaciones</h1><div class="np-ribbon" *ngIf="metrics"><span><span class="np-n">{{ metrics.total }}</span>conversaciones</span><span><span class="np-n">{{ metrics.today }}</span>nuevas hoy</span><span>respuesta promedio <span class="np-n">{{ metrics.avg_response_minutes }}</span>min</span></div></div>
+    <div class="np-actions"><button type="button" class="np-btn np-btn--ghost" (click)="loadMetrics()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 12a8 8 0 1 1-2.3-5.7M20 4v5h-5"/></svg>Actualizar</button></div>
+  </header>
+  <div class="np-scroll">
+    <div *ngIf="loading" class="np-loading"><span class="np-spinner"></span> Cargando métricas…</div>
+    <ng-container *ngIf="!loading && metrics">
+      <section class="np-kpis">
+        <div class="np-kpi np-kpi--accent"><span class="np-kpi-l">Total</span><span class="np-kpi-v">{{ metrics.total }}</span><span class="np-kpi-s">conversaciones</span></div>
+        <div class="np-kpi"><span class="np-kpi-l">Hoy</span><span class="np-kpi-v np-kpi-v--ok">{{ metrics.today }}</span><span class="np-kpi-s">nuevas</span></div>
+        <div class="np-kpi"><span class="np-kpi-l">En curso</span><span class="np-kpi-v np-kpi-v--info">{{ metrics.by_status?.in_progress || 0 }}</span><span class="np-kpi-s">atendiéndose</span></div>
+        <div class="np-kpi"><span class="np-kpi-l">Respuesta</span><span class="np-kpi-v">{{ metrics.avg_response_minutes }} <small>min</small></span><span class="np-kpi-s">primera respuesta, promedio</span></div>
+        <div class="np-kpi" [class.np-kpi--warn]="metrics.waiting?.over_alert"><span class="np-kpi-l">Esperando</span><span class="np-kpi-v" [class.np-kpi-v--warn]="metrics.waiting?.over_alert">{{ metrics.waiting?.over_alert || 0 }}</span><span class="np-kpi-s">más de {{ metrics.waiting?.alert_minutes }} min sin respuesta</span></div>
+        <div class="np-kpi"><span class="np-kpi-l">Hoy</span><span class="np-kpi-v">{{ metrics.messages_today?.inbound || 0 }} <small>/ {{ metrics.messages_today?.outbound || 0 }}</small></span><span class="np-kpi-s">recibidos / enviados · {{ metrics.closed_today || 0 }} cerradas</span></div>
+      </section>
+      <div class="np-grid-2">
+        <section class="np-card"><div class="np-card-h"><h2>Clientes esperando respuesta</h2><span class="np-c">{{ metrics.waiting?.total || 0 }}</span></div>
+          <p class="np-muted" *ngIf="!metrics.waiting?.list?.length">Nadie espera más de {{ metrics.waiting?.alert_minutes }} minutos. 🎉</p>
+          <div class="np-wait-list" *ngIf="metrics.waiting?.list?.length">
+            <button type="button" class="np-wait" *ngFor="let w of metrics.waiting.list" (click)="openChat.emit(w.id)"><span class="np-wait-name">{{ w.name }}</span><span class="np-data">{{ w.phone }}</span><span class="np-pill" [ngClass]="w.minutes >= 120 ? 'np-pill--suspended' : 'np-pill--noip'">{{ waitLabel(w.minutes) }}</span></button>
+          </div>
+        </section>
+        <section class="np-card"><div class="np-card-h"><h2>Tiempo de primera respuesta por agente</h2><span class="np-fine">últimos 30 días</span></div>
+          <p class="np-muted" *ngIf="!metrics.response_by_agent?.length">Sin datos todavía.</p>
+          <div class="np-prio-list" *ngIf="metrics.response_by_agent?.length">
+            <div class="np-prio" *ngFor="let a of metrics.response_by_agent"><span class="np-prio-l">{{ a.agent || 'Sin nombre' }} <small class="np-fine">({{ a.total }})</small></span><span class="np-meter"><i [style.background]="a.avg_minutes <= 5 ? 'var(--ok)' : a.avg_minutes <= 30 ? 'var(--warn)' : 'var(--danger)'" [style.width]="(100 * a.avg_minutes / maxAgentMinutes) + '%'"></i></span><span class="np-data">{{ a.avg_minutes }} min</span></div>
+          </div>
+        </section>
       </div>
-
-      <!-- Hoy -->
-      <div class="bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl rounded-2xl border border-slate-200/60 dark:border-slate-700/60 shadow-sm hover:shadow-md transition-all duration-300 p-4">
-        <div class="text-xs font-semibold mb-1 uppercase tracking-wide text-slate-500 dark:text-slate-400">Hoy</div>
-        <div class="text-3xl font-bold text-teal-400">{{ metrics.today }}</div>
-        <div class="text-xs mt-1 text-slate-500">nuevas</div>
+      <section class="np-card" *ngIf="metrics.by_label?.length"><div class="np-card-h"><h2>Chats abiertos por etiqueta</h2></div>
+        <div class="np-tags np-tags--big"><span class="np-tag-count" *ngFor="let l of metrics.by_label" [style.--lc]="l.color"><i></i>{{ l.name }}<b>{{ l.total }}</b></span></div>
+      </section>
+      <div class="np-grid-2">
+        <section class="np-card"><div class="np-card-h"><h2>Por estado</h2></div><div class="np-chart"><canvas #chartStatus></canvas></div></section>
+        <section class="np-card"><div class="np-card-h"><h2>Últimos 7 días</h2></div><div class="np-chart"><canvas #chartDays></canvas></div></section>
       </div>
-
-      <!-- En progreso -->
-      <div class="bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl rounded-2xl border border-slate-200/60 dark:border-slate-700/60 shadow-sm hover:shadow-md transition-all duration-300 p-4">
-        <div class="text-xs font-semibold mb-1 uppercase tracking-wide text-slate-500 dark:text-slate-400">En curso</div>
-        <div class="text-3xl font-bold text-violet-400">{{ metrics.by_status?.in_progress || 0 }}</div>
-        <div class="text-xs mt-1 text-slate-500">conversaciones</div>
-      </div>
-
-      <!-- Tiempo respuesta -->
-      <div class="bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl rounded-2xl border border-slate-200/60 dark:border-slate-700/60 shadow-sm hover:shadow-md transition-all duration-300 p-4">
-        <div class="text-xs font-semibold mb-1 uppercase tracking-wide text-slate-500 dark:text-slate-400">T. Respuesta</div>
-        <div class="text-3xl font-bold text-orange-400">{{ metrics.avg_response_minutes }}</div>
-        <div class="text-xs mt-1 text-slate-500">min promedio</div>
-      </div>
-
-    </div>
-
-    <!-- CHARTS -->
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-
-      <!-- Donut por estado -->
-      <div class="bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl rounded-2xl border border-slate-200/60 dark:border-slate-700/60 shadow-sm hover:shadow-md transition-all duration-300 p-4">
-        <div class="text-xs font-semibold mb-4 uppercase tracking-wide text-slate-500 dark:text-slate-400">Por Estado</div>
-        <canvas #chartStatus></canvas>
-      </div>
-
-      <!-- Barras últimos 7 días -->
-      <div class="bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl rounded-2xl border border-slate-200/60 dark:border-slate-700/60 shadow-sm hover:shadow-md transition-all duration-300 p-4 col-span-1 md:col-span-2">
-        <div class="text-xs font-semibold mb-4 uppercase tracking-wide text-slate-500 dark:text-slate-400">Últimos 7 días</div>
-        <canvas #chartDays></canvas>
-      </div>
-
-    </div>
-
-    <!-- CHART AGENTES + PRIORIDAD -->
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-
-      <!-- Por agente -->
-      <div class="bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl rounded-2xl border border-slate-200/60 dark:border-slate-700/60 shadow-sm hover:shadow-md transition-all duration-300 p-4">
-        <div class="text-xs font-semibold mb-4 uppercase tracking-wide text-slate-500 dark:text-slate-400">Carga por Agente</div>
-        <canvas *ngIf="metrics.by_agent?.length; else noAgents" #chartAgents></canvas>
-        <ng-template #noAgents>
-          <div class="text-xs text-center py-8 text-slate-600">Sin datos de agentes</div>
-        </ng-template>
-      </div>
-
-      <!-- Por prioridad -->
-      <div class="bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl rounded-2xl border border-slate-200/60 dark:border-slate-700/60 shadow-sm hover:shadow-md transition-all duration-300 p-4">
-        <div class="text-xs font-semibold mb-4 uppercase tracking-wide text-slate-500 dark:text-slate-400">Por Prioridad</div>
-        <div class="flex flex-col gap-3">
-          <div *ngFor="let item of [
-            {key:'high',   label:'Alta',   color:'#ef4444'},
-            {key:'normal', label:'Normal', color:'#f59e0b'},
-            {key:'low',    label:'Baja',   color:'#10b981'}
-          ]">
-            <div class="flex justify-between text-xs mb-1">
-              <span [style.color]="item.color">{{ item.label }}</span>
-              <span class="text-slate-200">{{ metrics.by_priority?.[item.key] || 0 }}</span>
-            </div>
-            <div class="w-full rounded-full h-2 bg-slate-700/50">
-              <div class="h-2 rounded-full transition-all"
-                   [style.background]="item.color"
-                   [style.width]="metrics.total ? ((metrics.by_priority?.[item.key] || 0) / metrics.total * 100) + '%' : '0%'">
-              </div>
+      <div class="np-grid-2">
+        <section class="np-card"><div class="np-card-h"><h2>Carga por agente</h2></div><div class="np-chart"><canvas *ngIf="metrics.by_agent?.length; else noAgents" #chartAgents></canvas><ng-template #noAgents><p class="np-muted">Sin datos de agentes.</p></ng-template></div></section>
+        <section class="np-card"><div class="np-card-h"><h2>Por prioridad</h2></div>
+          <div class="np-prio-list">
+            <div class="np-prio" *ngFor="let item of [{key:'high',label:'Alta',color:'var(--danger)'},{key:'normal',label:'Normal',color:'var(--warn)'},{key:'low',label:'Baja',color:'var(--ok)'}]">
+              <span class="np-prio-l"><i [style.background]="item.color"></i>{{ item.label }}</span><span class="np-meter"><i [style.background]="item.color" [style.width]="metrics.total ? ((metrics.by_priority?.[item.key] || 0) / metrics.total * 100) + '%' : '0%'"></i></span><span class="np-data">{{ metrics.by_priority?.[item.key] || 0 }}</span>
             </div>
           </div>
-        </div>
+        </section>
       </div>
-
-    </div>
-
-  </ng-container>
-
+    </ng-container>
+  </div>
 </div>

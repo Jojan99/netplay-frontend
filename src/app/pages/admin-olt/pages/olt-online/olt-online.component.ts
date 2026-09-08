@@ -1,5 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { OltNavComponent } from '../../shared/olt-nav.component';
 import { FormsModule } from '@angular/forms';
 import { OltService } from '../../../../services/olt.service';
 import { ToastService } from '../../../../services/toast.service';
@@ -7,8 +8,10 @@ import { ToastService } from '../../../../services/toast.service';
 @Component({
   selector: 'app-olt-online',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, OltNavComponent],
   templateUrl: './olt-online.component.html',
+  styleUrl: '../../shared/olt.scss',
+  host: { class: 'np-console' },
 })
 export class OltOnlineComponent implements OnInit {
 
@@ -136,6 +139,13 @@ export class OltOnlineComponent implements OnInit {
   goPage(p: number): void { this.page = p; }
   changePerPage(): void { this.page = 1; }
   minVal(a: number, b: number): number { return Math.min(a, b); }
+
+  rxTone(v: number | null | undefined): string {
+    if (v == null) return '';
+    if (v >= -20) return 'is-ok';
+    if (v >= -27) return 'is-warn';
+    return 'is-danger';
+  }
 
   rxClass(v: number | null | undefined): string {
     if (v == null) return 'text-gray-400';

@@ -1,227 +1,63 @@
-<!-- ═══ Header ═══════════════════════════════════════════════════════════════ -->
-<div class="flex items-center justify-between mb-6">
-  <div>
-    <h2 class="text-2xl font-bold bg-gradient-to-r from-slate-800 to-slate-600 bg-clip-text text-transparent dark:from-white dark:to-slate-300">Logs de Envío de Facturas</h2>
-    <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">Historial de envíos por WhatsApp y Email</p>
-  </div>
-  <button (click)="load()" title="Actualizar"
-          class="p-2 rounded-lg text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-700/80 transition-colors">
-    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-            d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
-    </svg>
-  </button>
-</div>
+<div class="np-page np-sendlogs">
+  <header class="np-head">
+    <div>
+      <p class="np-kicker">Operación <b>/</b> Finanzas <b>/</b> Envíos</p>
+      <h1 class="np-title">Envíos de facturas</h1>
+      <div class="np-ribbon"><span><span class="np-n">{{ total | number }}</span>envíos registrados</span><span>por WhatsApp y correo</span></div>
+    </div>
+    <div class="np-actions"><button type="button" class="np-btn np-btn--ghost" (click)="load()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 12a8 8 0 1 1-2.3-5.7M20 4v5h-5"/></svg>Actualizar</button></div>
+  </header>
 
-<!-- ═══ Filtros ═══════════════════════════════════════════════════════════════ -->
-<div class="bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl rounded-2xl border border-slate-200/60 dark:border-slate-700/60 shadow-sm hover:shadow-md transition-all duration-300 p-4 mb-6">
-  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-3">
-    <div>
-      <label class="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">Canal</label>
-      <select [(ngModel)]="filters.channel" (change)="onFilterChange()"
-              class="w-full px-3.5 py-2 text-sm bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl border border-slate-200/60 dark:border-slate-700/60 rounded-xl text-slate-700 dark:text-slate-300 focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-400 transition-all shadow-sm">
-        <option value="">Todos</option>
-        <option value="whatsapp">WhatsApp</option>
-        <option value="email">Email</option>
-        <option value="both">Ambos</option>
-      </select>
+  <div class="np-toolbar">
+    <div class="np-seg" role="group" aria-label="Canal">
+      <button type="button" [attr.aria-pressed]="filters.channel === ''" (click)="filters.channel = ''; onFilterChange()">Todos</button>
+      <button type="button" [attr.aria-pressed]="filters.channel === 'whatsapp'" (click)="filters.channel = 'whatsapp'; onFilterChange()">WhatsApp</button>
+      <button type="button" [attr.aria-pressed]="filters.channel === 'email'" (click)="filters.channel = 'email'; onFilterChange()">Email</button>
+      <button type="button" [attr.aria-pressed]="filters.channel === 'both'" (click)="filters.channel = 'both'; onFilterChange()">Ambos</button>
     </div>
-    <div>
-      <label class="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">Estado</label>
-      <select [(ngModel)]="filters.status" (change)="onFilterChange()"
-              class="w-full px-3.5 py-2 text-sm bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl border border-slate-200/60 dark:border-slate-700/60 rounded-xl text-slate-700 dark:text-slate-300 focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-400 transition-all shadow-sm">
-        <option value="">Todos</option>
-        <option value="ok">Éxito</option>
-        <option value="error">Error</option>
-        <option value="partial">Parcial</option>
-      </select>
+    <div class="np-chips" role="group" aria-label="Estado">
+      <button type="button" class="np-chip" [attr.aria-pressed]="filters.status === ''" (click)="filters.status = ''; onFilterChange()">Cualquier estado</button>
+      <button type="button" class="np-chip" [attr.aria-pressed]="filters.status === 'ok'" (click)="filters.status = 'ok'; onFilterChange()">Éxito</button>
+      <button type="button" class="np-chip" [attr.aria-pressed]="filters.status === 'partial'" (click)="filters.status = 'partial'; onFilterChange()">Parcial</button>
+      <button type="button" class="np-chip" [attr.aria-pressed]="filters.status === 'error'" (click)="filters.status = 'error'; onFilterChange()">Error</button>
     </div>
-    <div>
-      <label class="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">Desde</label>
-      <input type="date" [(ngModel)]="filters.date_from" (change)="onFilterChange()"
-             class="w-full px-3.5 py-2 text-sm bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl border border-slate-200/60 dark:border-slate-700/60 rounded-xl text-slate-700 dark:text-slate-300 focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-400 transition-all shadow-sm">
-    </div>
-    <div>
-      <label class="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">Hasta</label>
-      <input type="date" [(ngModel)]="filters.date_to" (change)="onFilterChange()"
-             class="w-full px-3.5 py-2 text-sm bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl border border-slate-200/60 dark:border-slate-700/60 rounded-xl text-slate-700 dark:text-slate-300 focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-400 transition-all shadow-sm">
-    </div>
-    <div>
-      <label class="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">Email</label>
-      <input type="text" [(ngModel)]="filters.sent_to_email" (ngModelChange)="onFilterChange()"
-             placeholder="Buscar email..."
-             class="w-full px-3.5 py-2 text-sm bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl border border-slate-200/60 dark:border-slate-700/60 rounded-xl text-slate-700 dark:text-slate-300 focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-400 transition-all shadow-sm">
-    </div>
-    <div>
-      <label class="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">Factura</label>
-      <input type="text" [(ngModel)]="filters.number_facture" (ngModelChange)="onFilterChange()"
-             placeholder="NT308..."
-             class="w-full px-3.5 py-2 text-sm bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl border border-slate-200/60 dark:border-slate-700/60 rounded-xl text-slate-700 dark:text-slate-300 focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-400 transition-all shadow-sm">
-    </div>
+    <label class="np-field np-field--inline"><span>Desde</span><input type="date" class="np-input np-input--sm" [(ngModel)]="filters.date_from" (change)="onFilterChange()" /></label>
+    <label class="np-field np-field--inline"><span>Hasta</span><input type="date" class="np-input np-input--sm" [(ngModel)]="filters.date_to" (change)="onFilterChange()" /></label>
+    <label class="np-field np-field--inline"><span>Email</span><input type="text" class="np-input np-input--sm" [(ngModel)]="filters.sent_to_email" (ngModelChange)="onFilterChange()" placeholder="correo…" /></label>
+    <label class="np-field np-field--inline"><span>Factura</span><input type="text" class="np-input np-input--sm np-mono" [(ngModel)]="filters.number_facture" (ngModelChange)="onFilterChange()" placeholder="NT308…" /></label>
+    <button type="button" class="np-link np-link--muted" (click)="clearFilters()">Limpiar</button>
+    <span class="np-spacer"></span>
+    <label class="np-pagesize">Mostrar<select [(ngModel)]="perPage" (ngModelChange)="changePerPage()"><option *ngFor="let n of perPageOptions" [ngValue]="n">{{ n }}</option></select></label>
   </div>
-  <div class="flex items-center justify-between mt-3">
-    <button (click)="clearFilters()"
-            class="text-sm text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 transition-colors">
-      Limpiar filtros
-    </button>
-    <span class="text-xs text-slate-400">{{ total }} registros</span>
-  </div>
-</div>
 
-<!-- ═══ Tabla escritorio ══════════════════════════════════════════════════════ -->
-<div class="hidden md:block bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl rounded-2xl border border-slate-200/60 dark:border-slate-700/60 shadow-sm hover:shadow-md transition-all duration-300 overflow-hidden">
-  <table class="w-full text-sm">
-    <thead>
-      <tr class="border-b border-slate-100/80 dark:border-slate-700/60 bg-slate-50/80 dark:bg-slate-700/80 ">
-        <th class="text-left px-5 py-3.5 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Factura</th>
-        <th class="text-left px-5 py-3.5 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Canal</th>
-        <th class="text-left px-5 py-3.5 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Estado</th>
-        <th class="text-left px-5 py-3.5 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Destino</th>
-        <th class="text-left px-5 py-3.5 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Mensaje</th>
-        <th class="text-left px-5 py-3.5 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Fecha</th>
-        <th class="text-center px-5 py-3.5 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Detalle</th>
-      </tr>
-    </thead>
-    <tbody class="divide-y divide-slate-100 dark:divide-slate-700">
-      <ng-container *ngFor="let log of logs">
-        <tr class="hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors">
-          <td class="px-5 py-4">
-            <span class="font-mono font-medium text-slate-900 dark:text-white">{{ log.number_facture || '—' }}</span>
-          </td>
-          <td class="px-5 py-4">
-            <span class="text-xs font-medium px-2.5 py-1 rounded-full {{ channelClass(log.channel) }}">
-              {{ channelLabel(log.channel) }}
-            </span>
-          </td>
-          <td class="px-5 py-4">
-            <span class="text-xs font-medium px-2.5 py-1 rounded-full {{ statusClass(log.status) }}">
-              {{ statusLabel(log.status) }}
-            </span>
-          </td>
-          <td class="px-5 py-4 text-slate-600 dark:text-slate-300 text-xs">
-            <div *ngIf="log.sent_to_email" class="flex items-center gap-1">
-              <svg class="w-3.5 h-3.5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
-              </svg>
-              {{ log.sent_to_email }}
-            </div>
-            <div *ngIf="log.sent_to_phone" class="flex items-center gap-1 mt-1">
-              <svg class="w-3.5 h-3.5 text-green-500" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
-              </svg>
-              {{ log.sent_to_phone }}
-            </div>
-            <div *ngIf="!log.sent_to_email && !log.sent_to_phone" class="text-slate-300 dark:text-slate-600">—</div>
-          </td>
-           <td class="px-5 py-4 text-slate-600 dark:text-slate-300 text-xs max-w-xs break-words" [title]="log.message">
-             {{ log.message }}
-           </td>
-          <td class="px-5 py-4 text-slate-500 dark:text-slate-400 text-xs">
-            {{ formatDate(log.created_at) }}
-          </td>
-          <td class="px-5 py-4 text-center">
-            <button *ngIf="log.details" (click)="toggleDetails(log)"
-                    class="p-1.5 rounded-lg text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700/80 transition-colors">
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                      [attr.d]="log._showDetails ? 'M5 15l7-7 7 7' : 'M19 9l-7 7-7-7'"/>
-              </svg>
-            </button>
-          </td>
-        </tr>
-        <!-- Fila expandida con detalles JSON -->
-        <tr *ngIf="log._showDetails && log.details" class="bg-slate-50/80 dark:bg-slate-700/80 ">
-          <td colspan="7" class="px-5 py-3">
-            <pre class="text-xs text-slate-600 dark:text-slate-300 bg-slate-100/80 dark:bg-slate-800/80 rounded-lg  p-3 overflow-auto max-h-40 whitespace-pre-wrap break-all">{{ log.details | json }}</pre>
-          </td>
-        </tr>
-      </ng-container>
-    </tbody>
-  </table>
-
-  <!-- Sin registros -->
-  <div *ngIf="!loading && logs.length === 0" class="text-center py-16 text-slate-400 dark:text-slate-500">
-    <svg class="w-16 h-16 mx-auto mb-4 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
-            d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
-    </svg>
-    <p class="font-medium">No hay registros de envío</p>
-  </div>
-</div>
-
-<!-- ═══ Cards móvil ════════════════════════════════════════════════════════════ -->
-<div class="md:hidden space-y-3">
-  <div *ngFor="let log of logs" class="bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl rounded-2xl border border-slate-200/60 dark:border-slate-700/60 shadow-sm hover:shadow-md transition-all duration-300 p-4">
-    <div class="flex items-center justify-between mb-2">
-      <span class="font-mono font-medium text-slate-900 dark:text-white">{{ log.number_facture || '—' }}</span>
-      <span class="text-xs font-medium px-2 py-1 rounded-full {{ statusClass(log.status) }}">
-        {{ statusLabel(log.status) }}
-      </span>
-    </div>
-    <div class="flex items-center gap-2 mb-2">
-      <span class="text-xs font-medium px-2 py-0.5 rounded-full {{ channelClass(log.channel) }}">
-        {{ channelLabel(log.channel) }}
-      </span>
-      <span class="text-xs text-slate-400">{{ formatDate(log.created_at) }}</span>
-    </div>
-    <div class="text-xs text-slate-600 dark:text-slate-300 mb-2">
-      <div *ngIf="log.sent_to_email" class="flex items-center gap-1">
-        <svg class="w-3 h-3 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
-        </svg>
-        {{ log.sent_to_email }}
+  <div class="np-workspace">
+    <section class="np-registry" aria-label="Envíos">
+      <div class="np-registry-wrap">
+        <table class="np-table np-table--registry">
+          <thead><tr><th class="np-th-stripe"></th><th>Factura</th><th>Canal</th><th>Estado</th><th>Destino</th><th>Mensaje</th><th>Fecha</th><th class="np-th-right"></th></tr></thead>
+          <tbody>
+            <tr *ngIf="loading" class="np-empty"><td colspan="8"><span class="np-spinner"></span></td></tr>
+            <tr *ngIf="!loading && logs.length === 0" class="np-empty"><td colspan="8"><strong>No hay registros de envío.</strong></td></tr>
+            <ng-container *ngFor="let log of logs">
+              <tr class="np-row" [class.is-static]="!log.details" [attr.aria-selected]="log._showDetails" (click)="log.details && toggleDetails(log)">
+                <td class="np-stripe"><i [style.background]="log.status === 'ok' ? 'var(--ok)' : log.status === 'partial' ? 'var(--warn)' : 'var(--danger)'"></i></td>
+                <td class="np-data np-strong">{{ log.number_facture || '—' }}</td>
+                <td><span class="np-tag np-tag--neutral">{{ channelLabel(log.channel) }}</span></td>
+                <td><span class="np-pill" [ngClass]="log.status === 'ok' ? 'np-pill--active' : log.status === 'partial' ? 'np-pill--noip' : 'np-pill--suspended'">{{ statusLabel(log.status) }}</span></td>
+                <td class="np-data"><div *ngIf="log.sent_to_email">{{ log.sent_to_email }}</div><div *ngIf="log.sent_to_phone">{{ log.sent_to_phone }}</div><span *ngIf="!log.sent_to_email && !log.sent_to_phone">—</span></td>
+                <td class="np-truncate np-msg" [title]="log.message">{{ log.message }}</td>
+                <td class="np-data np-nowrap">{{ formatDate(log.created_at) }}</td>
+                <td class="np-td-right"><button type="button" class="np-icobtn" *ngIf="log.details" (click)="toggleDetails(log); $event.stopPropagation()" [title]="log._showDetails ? 'Ocultar detalle' : 'Ver detalle'"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path [attr.d]="log._showDetails ? 'm6 15 6-6 6 6' : 'm6 9 6 6 6-6'"/></svg></button></td>
+              </tr>
+              <tr *ngIf="log._showDetails && log.details" class="np-detail-row"><td colspan="8"><pre class="np-pre">{{ log.details | json }}</pre></td></tr>
+            </ng-container>
+          </tbody>
+        </table>
       </div>
-      <div *ngIf="log.sent_to_phone" class="flex items-center gap-1 mt-1">
-        <svg class="w-3 h-3 text-green-500" fill="currentColor" viewBox="0 0 24 24">
-          <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
-        </svg>
-        {{ log.sent_to_phone }}
+      <div class="np-pager" *ngIf="!loading && total > 0">
+        <span class="np-range">{{ (page - 1) * perPage + 1 }}–{{ page * perPage > total ? total : page * perPage }} de {{ total | number }}</span>
+        <div class="np-pages"><button type="button" (click)="prevPage()" [disabled]="page === 1">‹</button><button type="button" *ngFor="let p of pages" (click)="goToPage(p)" [attr.aria-current]="p === page ? 'page' : null">{{ p }}</button><button type="button" (click)="nextPage()" [disabled]="page === lastPage">›</button></div>
       </div>
-    </div>
-    <p class="text-xs text-slate-600 dark:text-slate-300 mb-2 break-words">{{ log.message }}</p>
-    <button *ngIf="log.details" (click)="toggleDetails(log)"
-            class="text-xs text-blue-600 dark:text-blue-400 hover:underline">
-      {{ log._showDetails ? 'Ocultar detalle' : 'Ver detalle' }}
-    </button>
-    <pre *ngIf="log._showDetails && log.details" class="mt-2 text-xs text-slate-600 dark:text-slate-300 bg-slate-100/80 dark:bg-slate-800/80 rounded-lg  p-2 overflow-auto max-h-32 whitespace-pre-wrap break-all">{{ log.details | json }}</pre>
-  </div>
-  <div *ngIf="!loading && logs.length === 0" class="text-center py-12 text-slate-400 dark:text-slate-500">
-    <p class="font-medium text-sm">No hay registros</p>
-  </div>
-</div>
-
-<!-- ═══ Paginación ═══════════════════════════════════════════════════════════ -->
-<div *ngIf="!loading && logs.length > 0" class="flex items-center justify-between mt-4">
-  <div class="flex items-center gap-2">
-    <span class="text-xs text-slate-500 dark:text-slate-400">Mostrar</span>
-    <select [(ngModel)]="perPage" (change)="changePerPage()"
-            class="text-xs px-3.5 py-2 bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl border border-slate-200/60 dark:border-slate-700/60 rounded-xl text-slate-700 dark:text-slate-300 focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-400 transition-all shadow-sm">
-      <option *ngFor="let opt of perPageOptions" [value]="opt">{{ opt }}</option>
-    </select>
-    <span class="text-xs text-slate-500 dark:text-slate-400">por página</span>
-  </div>
-
-  <div class="flex items-center gap-1">
-    <button (click)="prevPage()" [disabled]="page <= 1"
-            class="p-1.5 rounded-lg text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-700/80 disabled:opacity-40 transition-colors">
-      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
-      </svg>
-    </button>
-    <ng-container *ngFor="let p of pages">
-      <button (click)="goToPage(p)"
-              [class]="p === page
-                ? 'bg-gradient-to-br from-indigo-500 to-violet-600 text-white shadow-md shadow-indigo-500/20 hover:shadow-lg transition-all font-semibold'
-                : 'text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700/80'
-                + ' px-3 py-1 rounded-lg text-xs transition-colors'">
-        {{ p }}
-      </button>
-    </ng-container>
-    <button (click)="nextPage()" [disabled]="page >= lastPage"
-            class="p-1.5 rounded-lg text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-700/80 disabled:opacity-40 transition-colors">
-      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
-      </svg>
-    </button>
+    </section>
   </div>
 </div>

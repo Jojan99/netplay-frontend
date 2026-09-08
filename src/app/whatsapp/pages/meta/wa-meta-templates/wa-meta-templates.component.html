@@ -1,46 +1,19 @@
-<div class="mx-auto max-w-7xl px-4 py-8 sm:px-6">
-
-  <!-- ── Encabezado ─────────────────────────────────────────────────── -->
-  <header class="mb-7 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+<div class="np-page np-meta-tpl">
+  <header class="np-head">
     <div>
-      <p class="mb-1 text-xs font-semibold uppercase tracking-[0.14em] text-emerald-600 dark:text-emerald-400">
-        WhatsApp Business &middot; Meta
-      </p>
-      <h1 class="text-2xl font-bold tracking-tight text-slate-900 dark:text-white">Plantillas y avisos</h1>
-      <p class="mt-1 max-w-2xl text-sm text-slate-500 dark:text-slate-400">
-        Las plantillas son los mensajes que Meta aprueba para escribirle a un cliente que no
-        te ha escrito en las últimas 24 horas.
-      </p>
+      <p class="np-kicker">WhatsApp <b>/</b> API de Meta <b>/</b> Plantillas</p>
+      <h1 class="np-title">Plantillas y avisos</h1>
+      <div class="np-ribbon"><span><span class="np-n">{{ templates.length }}</span>plantillas</span><span><span class="np-n">{{ approvedTemplates.length }}</span>aprobadas</span><span>Meta aprueba las plantillas para escribir fuera de la ventana de 24 h.</span></div>
     </div>
-    <button type="button" (click)="openModal()"
-            class="inline-flex shrink-0 items-center gap-2 rounded-lg bg-emerald-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-emerald-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-slate-900">
-      <span class="text-base leading-none">+</span> Crear plantilla
-    </button>
+    <div class="np-actions"><button type="button" class="np-btn np-btn--primary" (click)="openModal()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M12 5v14M5 12h14"/></svg>Crear plantilla</button></div>
   </header>
-
-  <!-- ── Pestañas ───────────────────────────────────────────────────── -->
-  <div class="mb-6 border-b border-slate-200 dark:border-slate-700">
-    <nav class="-mb-px flex gap-6" aria-label="Secciones">
-      <button type="button" (click)="tab = 'templates'"
-              [attr.aria-current]="tab === 'templates' ? 'page' : null"
-              class="border-b-2 px-1 pb-3 text-sm font-semibold transition"
-              [ngClass]="tab === 'templates'
-                ? 'border-emerald-600 text-emerald-700 dark:border-emerald-400 dark:text-emerald-300'
-                : 'border-transparent text-slate-500 hover:border-slate-300 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200'">
-        Mis plantillas
-        <span class="ml-1.5 rounded-full bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-600 dark:bg-slate-700 dark:text-slate-300">{{ templates.length }}</span>
-      </button>
-      <button type="button" (click)="tab = 'automations'"
-              [attr.aria-current]="tab === 'automations' ? 'page' : null"
-              class="border-b-2 px-1 pb-3 text-sm font-semibold transition"
-              [ngClass]="tab === 'automations'
-                ? 'border-emerald-600 text-emerald-700 dark:border-emerald-400 dark:text-emerald-300'
-                : 'border-transparent text-slate-500 hover:border-slate-300 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200'">
-        Avisos automáticos
-        <span *ngIf="activeBindings > 0" class="ml-1.5 rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-semibold text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300">{{ activeBindings }} activos</span>
-      </button>
-    </nav>
+  <div class="np-toolbar">
+    <div class="np-seg" role="tablist">
+      <button type="button" [attr.aria-pressed]="tab === 'templates'" (click)="tab = 'templates'">Mis plantillas</button>
+      <button type="button" [attr.aria-pressed]="tab === 'automations'" (click)="tab = 'automations'">Avisos automáticos<span class="np-c" *ngIf="bindings.length">{{ bindings.length }}</span></button>
+    </div>
   </div>
+  <div class="np-scroll np-legacy">
 
   <!-- ═══ Pestaña: plantillas ════════════════════════════════════════ -->
   <section *ngIf="tab === 'templates'">
@@ -445,4 +418,5 @@
       </div>
     </div>
   </div>
+</div>
 </div>

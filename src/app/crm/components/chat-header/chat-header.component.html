@@ -1,85 +1,19 @@
-<div class="crm-chat-header shrink-0 flex items-center px-4 py-3 border-b backdrop-blur-xl">
-
-  <!-- IZQUIERDA -->
-  <div class="flex items-center gap-3 min-w-0">
-
-    <!-- BACK MOBILE -->
-    <button class="md:hidden w-8 h-8 flex items-center justify-center rounded-full transition flex-shrink-0 bg-slate-700 text-slate-400 hover:bg-slate-600"
-            (click)="back.emit()">
-      <i class="fa-solid fa-arrow-left text-xs"></i>
-    </button>
-
-    <!-- AVATAR -->
-    <div class="relative flex-shrink-0">
-      <div class="h-10 w-10 rounded-full flex items-center justify-center font-bold text-sm bg-gradient-to-br from-teal-500 to-violet-600 text-white shadow-md shadow-teal-500/20 border border-slate-600">
-        {{ initials }}
-      </div>
-      <span class="absolute bottom-0 right-0 h-2.5 w-2.5 rounded-full border-2 bg-teal-500 border-slate-800"></span>
-    </div>
-
-    <!-- INFO -->
-    <div class="min-w-0 leading-tight">
-      <h4 class="font-semibold truncate text-sm text-slate-200">
-        {{ data.customerName }}
-      </h4>
-      <div class="flex items-center gap-2 text-xs text-slate-500">
-        <span class="text-teal-400 font-medium">● En línea</span>
-        <span class="text-slate-700">•</span>
-        <span>{{ priorityLabel }}</span>
-        <ng-container *ngIf="data.agentName">
-          <span class="text-slate-700">•</span>
-          <span class="truncate max-w-[100px] text-violet-400">
-            <i class="fa-solid fa-user text-xs mr-0.5"></i>{{ data.agentName }}
-          </span>
-        </ng-container>
-      </div>
-    </div>
-
-  </div>
-
-  <!-- DERECHA -->
-  <div class="ml-auto flex items-center gap-2 flex-shrink-0">
-
-    <!-- STATUS BADGE -->
-    <span class="text-xs px-3 py-1 rounded-full font-semibold" [style]="statusStyle">
-      {{ statusLabel }}
+<div class="wa-chat-head">
+  <button type="button" class="wa-ibtn wa-back" (click)="back.emit()" aria-label="Volver a los chats"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m15 6-6 6 6 6"/></svg></button>
+  <button type="button" class="wa-head-id" (click)="toggleInfo.emit()" title="Ver información del contacto">
+    <span class="wa-avatar">{{ initials }}</span>
+    <span class="wa-head-copy">
+      <span class="wa-head-name">{{ data.customerName }}</span>
+      <span class="wa-head-sub"><span class="np-mono">{{ data.customerPhone }}</span><ng-container *ngIf="data.agentName"> · atiende {{ data.agentName }}</ng-container><ng-container *ngIf="data.priority === 'high'"> · <b class="wa-prio-txt">prioridad alta</b></ng-container></span>
     </span>
-
-    <!-- INFO PANEL TOGGLE -->
-    <button class="w-8 h-8 flex items-center justify-center rounded-full transition bg-slate-700 text-slate-400 hover:bg-slate-600"
-            title="Información del cliente"
-            onmouseenter="this.style.background='#475569'; this.style.color='#e2e8f0'"
-            onmouseleave="this.style.background='#334155'; this.style.color='#94a3b8'"
-            (click)="toggleInfo.emit()">
-      <i class="fa-solid fa-circle-info text-sm"></i>
-    </button>
-
-    <button class="px-3 py-1.5 text-xs rounded-xl font-medium transition flex items-center gap-1.5 bg-slate-700 text-slate-300 border border-slate-600"
-          [ngClass]="botPaused ? 'bg-amber-900/30 text-amber-300 border-amber-500/40' : ''"
-            (click)="toggleBot.emit()">
-      <i class="fa-solid" [ngClass]="botPaused ? 'fa-play' : 'fa-pause'"></i>
-      {{ botPaused ? 'Reanudar bot' : 'Pausar bot' }}
-    </button>
-
-    <!-- TRANSFERIR -->
-    <button class="px-3 py-1.5 text-xs rounded-xl font-medium transition flex items-center gap-1.5 bg-slate-700 text-slate-400 border border-slate-600 hover:bg-slate-600 hover:text-slate-200"
-            onmouseenter="this.style.background='#475569'; this.style.color='#e2e8f0'"
-            onmouseleave="this.style.background='#334155'; this.style.color='#94a3b8'"
-            (click)="openTransfer.emit()">
-      <i class="fa-solid fa-arrow-right-arrow-left text-xs"></i>
-      Transferir
-    </button>
-
-    <!-- FINALIZAR -->
-    <button *ngIf="data.status !== 'closed'"
-            class="px-3 py-1.5 text-xs rounded-xl font-semibold transition flex items-center gap-1.5 bg-pink-900/30 text-pink-500 border border-pink-500/20 hover:bg-pink-900/50 hover:border-pink-500"
-            onmouseenter="this.style.background='#ef444415'; this.style.borderColor='#ef4444'"
-            onmouseleave="this.style.background='#2f0f0f'; this.style.borderColor='#ef444430'"
-            (click)="finish.emit()">
-      <i class="fa-solid fa-xmark text-xs"></i>
-      Finalizar
-    </button>
-
-  </div>
-
+  </button>
+  <span class="np-spacer"></span>
+  <span class="wa-status" [ngClass]="'wa-status--' + data.status">{{ statusLabel }}</span>
+  <button type="button" class="wa-pill" [class.is-on]="botPaused" (click)="toggleBot.emit()" [title]="botPaused ? 'El bot está pausado en este chat' : 'Pausar el bot en este chat'">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="7" width="16" height="12" rx="3"/><path d="M12 3v4M8 13h.01M16 13h.01M9 17h6"/></svg>{{ botPaused ? 'Reanudar bot' : 'Pausar bot' }}
+  </button>
+  <button type="button" class="wa-ibtn" (click)="search.emit()" title="Buscar en la conversación"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg></button>
+  <button type="button" class="wa-ibtn" (click)="openTransfer.emit()" title="Transferir a otro agente"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 8h13m0 0-4-4m4 4-4 4M20 16H7m0 0 4 4m-4-4 4-4"/></svg></button>
+  <button type="button" class="wa-ibtn" (click)="toggleInfo.emit()" title="Información del contacto"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/></svg></button>
+  <button type="button" class="wa-ibtn wa-ibtn--danger" *ngIf="data.status !== 'closed'" (click)="finish.emit()" title="Finalizar conversación"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="m8.5 12.5 2.5 2.5 4.5-5"/></svg></button>
 </div>

@@ -52,7 +52,7 @@ export class CrmService {
     });
   }
 
-  sendMessage(conversationId: number, payload: { message: string; type?: string }) {
+  sendMessage(conversationId: number, payload: { message: string; type?: string; quoted_message_id?: number | null }) {
     return this.http.post<any>(this.apiUrl(`conversations/${conversationId}/messages`), payload, {
       headers: this.getHeaders()
     });
@@ -89,8 +89,8 @@ export class CrmService {
     });
   }
 
-  createConversation(phone: string, name: string) {
-    return this.http.post<any>(this.apiUrl('conversations'), { phone, name }, {
+  createConversation(phone: string, name: string, provider?: 'meta' | 'netplay') {
+    return this.http.post<any>(this.apiUrl('conversations'), { phone, name, provider }, {
       headers: this.getHeaders()
     });
   }
@@ -203,6 +203,50 @@ export class CrmService {
 
   deleteSticker(stickerId: number) {
     return this.http.delete<any>(this.apiUrl(`stickers/${stickerId}`), { headers: this.getHeaders() });
+  }
+
+  /* =====================
+     RESPUESTAS RÁPIDAS ("/atajo")
+  ====================== */
+  getQuickReplies() {
+    return this.http.get<any>(this.apiUrl('crm/quick-replies'), { headers: this.getHeaders() });
+  }
+
+  saveQuickReply(data: { id?: number | null; shortcut: string; title?: string | null; content: string }) {
+    return this.http.post<any>(this.apiUrl('crm/quick-replies'), data, { headers: this.getHeaders() });
+  }
+
+  deleteQuickReply(id: number) {
+    return this.http.delete<any>(this.apiUrl(`crm/quick-replies/${id}`), { headers: this.getHeaders() });
+  }
+
+  /* =====================
+     CONFIGURACIÓN DEL CRM
+  ====================== */
+  getSettings() {
+    return this.http.get<any>(this.apiUrl('crm/settings'), { headers: this.getHeaders() });
+  }
+  saveSettings(data: any) {
+    return this.http.post<any>(this.apiUrl('crm/settings'), data, { headers: this.getHeaders() });
+  }
+
+  /* =====================
+     FICHA DEL CLIENTE EN EL CHAT
+  ====================== */
+  getCustomerSummary(conversationId: number) {
+    return this.http.get<any>(this.apiUrl(`conversations/${conversationId}/customer-summary`), { headers: this.getHeaders() });
+  }
+  getConversationHistory(conversationId: number) {
+    return this.http.get<any>(this.apiUrl(`conversations/${conversationId}/history`), { headers: this.getHeaders() });
+  }
+  sendInvoiceFromChat(conversationId: number, invoiceId: number) {
+    return this.http.post<any>(this.apiUrl(`conversations/${conversationId}/send-invoice`), { invoice_id: invoiceId }, { headers: this.getHeaders() });
+  }
+  createPayLink(conversationId: number, invoiceId?: number | null, send = true) {
+    return this.http.post<any>(this.apiUrl(`conversations/${conversationId}/pay-link`), { invoice_id: invoiceId ?? null, send }, { headers: this.getHeaders() });
+  }
+  saveTechNote(conversationId: number) {
+    return this.http.post<any>(this.apiUrl(`conversations/${conversationId}/tech-note`), {}, { headers: this.getHeaders() });
   }
 
   /* =====================

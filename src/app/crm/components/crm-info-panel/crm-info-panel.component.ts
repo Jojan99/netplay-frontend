@@ -8,13 +8,15 @@ import {
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { RouterModule } from '@angular/router';
 import { CrmService } from '../../../services/crm.service';
 
 @Component({
   selector: 'app-crm-info-panel',
   standalone: true,
-  imports: [CommonModule, FormsModule],
-  templateUrl: './crm-info-panel.component.html'
+  imports: [CommonModule, FormsModule, RouterModule],
+  templateUrl: './crm-info-panel.component.html',
+  styleUrl: './crm-info-panel.component.scss'
 })
 export class CrmInfoPanelComponent implements OnChanges {
 
@@ -28,8 +30,109 @@ export class CrmInfoPanelComponent implements OnChanges {
   @Output() ticketCreated      = new EventEmitter<number>();
   @Output() closePanel         = new EventEmitter<void>();
   @Output() customerNameChanged = new EventEmitter<string>();
+  @Output() openConversation   = new EventEmitter<number>();
+  @Input() summary: any = null;            // ficha del cliente (la carga chat-window)
+  @Input() summaryLoading = false;
+  @Output() refreshSummary = new EventEmitter<void>();
 
-  activeTab: 'info' | 'notes' | 'labels' = 'info';
+  activeTab: 'info' | 'notes' | 'labels' | 'history' = 'info';
+
+  /* ── Ficha: facturas, link de pago, nota técnica ─────────────── */
+  sendingInvoiceId: number | null = null;
+  creatingPayLink = false;
+  savingTechNote  = false;
+  showAllInvoices = false;
+  showFullCard = false;
+  actionMsg = '';
+  private flash(msg: string): void { this.actionMsg = msg; setTimeout(() => { if (this.actionMsg === msg) this.actionMsg = ''; }, 3500); }
+  money(v: number): string { return '$' + Math.round(v || 0).toLocaleString('es-CO'); }
+
+  sendInvoice(inv: any): void {
+    if (this.sendingInvoiceId) return;
+    if (!confirm(`¿Enviar la factura ${inv.number} por WhatsApp al cliente?`)) return;
+    this.sendingInvoiceId = inv.id;
+    this.crmService.sendInvoiceFromChat(this.conversationId, inv.id).subscribe({
+      next: () => { this.sendingInvoiceId = null; this.flash(`Factura ${inv.number} enviada`); },
+      error: err => { this.sendingInvoiceId = null; alert(err?.error?.error || 'No se pudo enviar la factura.'); }
+    });
+  }
+  copyInvoiceLink(inv: any): void { navigator.clipboard?.writeText(inv.link).then(() => this.flash('Link de la factura copiado')).catch(() => {}); }
+  sendPayLink(inv?: any): void {
+    if (this.creatingPayLink) return;
+    const what = inv ? `la factura ${inv.number}` : 'todo lo pendiente';
+    if (!confirm(`¿Generar y enviar un link de pago por ${what}?`)) return;
+    this.creatingPayLink = true;
+    this.crmService.createPayLink(this.conversationId, inv?.id ?? null, true).subscribe({
+      next: () => { this.creatingPayLink = false; this.flash('Link de pago enviado al chat'); },
+      error: err => { this.creatingPayLink = false; alert(err?.error?.error || 'No se pudo generar el link de pago.'); }
+    });
+  }
+  saveTechNote(): void {
+    if (this.savingTechNote) return;
+    this.savingTechNote = true;
+    this.crmService.saveTechNote(this.conversationId).subscribe({
+      next: () => { this.savingTechNote = false; this.loadNotes(); this.flash('Estado técnico guardado como nota'); },
+      error: err => { this.savingTechNote = false; alert(err?.error?.error || 'No se pudo guardar la nota.'); }
+    });
+  }
+
+  /* ── Historial de conversaciones del mismo cliente ───────────── */
+  history: any[] = [];
+  historyLoaded = false;
+  loadHistory(): void {
+    if (this.historyLoaded) return;
+    this.crmService.getConversationHistory(this.conversationId).subscribe({ next: res => { this.history = res.data ?? []; this.historyLoaded = true; } });
+  }
+  statusLabel(st: string): string { return st === 'closed' ? 'Cerrada' : st === 'in_progress' ? 'En curso' : 'Nueva'; }
+
+  /* ── Menciones @agente en notas ──────────────────────────────── */
+  agents: any[] = [];
+  private agentsLoaded = false;
+  mentionQuery: string | null = null;
+  mentionIndex = 0;
+  get mentionMatches(): any[] {
+    if (this.mentionQuery === null) return [];
+    const q = this.mentionQuery.toLowerCase();
+    return this.agents.filter(a => this.agentName(a).toLowerCase().includes(q)).slice(0, 6);
+  }
+  agentName(a: any): string { return (a?.name || `${a?.names || ''} ${a?.lastname || ''}`).trim() || a?.email || 'Agente'; }
+  onNoteInput(ev: Event): void {
+    const ta = ev.target as HTMLTextAreaElement;
+    const upto = ta.value.slice(0, ta.selectionStart ?? ta.value.length);
+    const m = upto.match(/(?:^|\s)@([\wáéíóúñÁÉÍÓÚÑ.]*)$/);
+    this.mentionQuery = m ? m[1] : null;
+    this.mentionIndex = 0;
+    if (m && !this.agentsLoaded) { this.agentsLoaded = true; this.crmService.getAgents().subscribe({ next: r => this.agents = r.data ?? r ?? [] }); }
+  }
+  onNoteKeydown(ev: KeyboardEvent, ta: HTMLTextAreaElement): void {
+    if (this.mentionQuery === null || !this.mentionMatches.length) return;
+    if (ev.key === 'ArrowDown') { ev.preventDefault(); this.mentionIndex = (this.mentionIndex + 1) % this.mentionMatches.length; }
+    else if (ev.key === 'ArrowUp') { ev.preventDefault(); this.mentionIndex = (this.mentionIndex - 1 + this.mentionMatches.length) % this.mentionMatches.length; }
+    else if (ev.key === 'Enter' || ev.key === 'Tab') { ev.preventDefault(); this.applyMention(this.mentionMatches[this.mentionIndex], ta); }
+    else if (ev.key === 'Escape') { this.mentionQuery = null; }
+  }
+  applyMention(a: any, ta: HTMLTextAreaElement): void {
+    const pos = ta.selectionStart ?? ta.value.length;
+    const before = ta.value.slice(0, pos).replace(/@[\wáéíóúñÁÉÍÓÚÑ.]*$/, '@' + this.agentName(a).replace(/\s+/g, '.') + ' ');
+    this.newNoteText = before + ta.value.slice(pos);
+    this.mentionQuery = null;
+    setTimeout(() => { ta.focus(); ta.setSelectionRange(before.length, before.length); }, 0);
+  }
+  /** Divide el texto de la nota en segmentos para resaltar @menciones sin innerHTML. */
+  noteParts(content: string): { text: string; mention: boolean }[] {
+    return (content || '').split(/(@[\wáéíóúñÁÉÍÓÚÑ.]+)/g).filter(Boolean).map(t => ({ text: t, mention: t.startsWith('@') }));
+  }
+
+  /* ── Crear etiqueta desde el panel ───────────────────────────── */
+  newLabelName = ''; newLabelColor = '#10b981'; savingLabel = false;
+  createLabel(): void {
+    const name = this.newLabelName.trim(); if (!name || this.savingLabel) return;
+    this.savingLabel = true;
+    this.crmService.createLabel(name, this.newLabelColor).subscribe({
+      next: res => { this.allLabels = [...this.allLabels, res.data ?? res]; this.newLabelName = ''; this.savingLabel = false; },
+      error: () => { this.savingLabel = false; alert('No se pudo crear la etiqueta.'); }
+    });
+  }
 
   // Nombre editable
   editingName   = false;
@@ -86,6 +189,12 @@ export class CrmInfoPanelComponent implements OnChanges {
     this.serviceStatus      = null;
     this.serviceLoaded      = false;
     this.newNoteText        = '';
+    this.history            = [];
+    this.historyLoaded      = false;
+    this.mentionQuery       = null;
+    this.actionMsg          = '';
+    this.showAllInvoices    = false;
+    this.showFullCard       = false;
     this.showTicketForm     = false;
     this.ticketObs          = '';
     this.editingName        = false;

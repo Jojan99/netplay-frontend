@@ -11,6 +11,7 @@ import { TicketInterface, TicketNote, TicketStats } from '../../../models/ticket
   imports: [CommonModule, FormsModule],
   templateUrl: './task-ticket.component.html',
   styleUrls: ['./task-ticket.component.scss'],
+  host: { class: 'np-console' },
 })
 export class TaskTicketComponent implements OnInit, OnDestroy {
 
@@ -494,6 +495,15 @@ export class TaskTicketComponent implements OnInit, OnDestroy {
     if (n.includes('media'))
       return 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-300';
     return 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300';
+  }
+
+  inspectorWide = false;
+  isSelected(t: TicketInterface): boolean { return this.showDetail && this.selectedTicket?.id === t.id; }
+  priorityPill(name: string | undefined): string {
+    const n = (name || '').toLowerCase();
+    if (n.includes('alta') || n.includes('urgente')) return 'np-pill--suspended';
+    if (n.includes('media')) return 'np-pill--noip';
+    return 'np-pill--neutral';
   }
 
   get pendingCount()    { return this.tickets.filter(t => t.status_id === 1).length; }

@@ -6,7 +6,8 @@ import ChartDataLabels from 'chartjs-plugin-datalabels';
 import { UserService } from '../services/user.service';
 import { AuthService } from '../services/auth.service';
 import { FinanceService } from '../services/finance.service';
-import { forkJoin } from 'rxjs';
+import { forkJoin, Subscription } from 'rxjs';
+import { ThemeService } from '../common/services/theme/theme.service';
 
 Chart.register(...registerables, ChartDataLabels);
 
@@ -16,6 +17,7 @@ Chart.register(...registerables, ChartDataLabels);
   standalone: true,
   imports: [CommonModule, FormsModule],
   styleUrls: ['./dashboard.component.scss'],
+  host: { class: 'np-console' },
 })
 export class DashboardComponent implements OnInit, OnDestroy {
 
@@ -56,11 +58,32 @@ export class DashboardComponent implements OnInit, OnDestroy {
   pmSummary: { name: string; total: number; count: number }[] = [];
   pmPeriod   = new Date().toISOString().slice(0, 7); // YYYY-MM
 
+  private themeSub?: Subscription;
+
   constructor(
     private userService: UserService,
     private authService: AuthService,
     private financeService: FinanceService,
+    private themeService: ThemeService,
   ) {}
+
+  /** Lee un token de color del tema activo para usarlo en Chart.js. */
+  private tok(name: string, fallback = '#0f766e'): string {
+    if (typeof getComputedStyle === 'undefined') return fallback;
+    const v = getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+    return v || fallback;
+  }
+  private alpha(hex: string, a: number): string {
+    const m = hex.replace('#', '');
+    if (m.length !== 6) return hex;
+    const r = parseInt(m.slice(0, 2), 16), g = parseInt(m.slice(2, 4), 16), b = parseInt(m.slice(4, 6), 16);
+    return `rgba(${r},${g},${b},${a})`;
+  }
+  private chartBase() {
+    const text3 = this.tok('--text-3', '#7f92a2');
+    const line  = this.tok('--line', '#d5e0e4');
+    return { text3, line, font: { family: "'IBM Plex Mono', monospace", size: 11 } };
+  }
 
   ngOnInit(): void {
     const user = this.authService.getUser();
@@ -82,9 +105,19 @@ export class DashboardComponent implements OnInit, OnDestroy {
     if (this.isAdmin || this.isContador) {
       this.loadPmSummary();
     }
+    // Los gráficos leen los tokens al dibujarse: al cambiar el tema se redibujan.
+    this.themeSub = this.themeService.$theme.subscribe(() => setTimeout(() => this.redrawCharts(), 30));
+  }
+
+  private redrawCharts(): void {
+    if (!Object.keys(this.charts).length) return;
+    if (this.isAdmin || this.isContador) { this.loadIncomeChart(); this.loadClientsChart(); }
+    if (this.isAdmin) { this.loadContractsDonut(); this.loadTicketBarChart(); }
+    if (this.isTecnico) { this.loadTicketDonut(); }
   }
 
   ngOnDestroy(): void {
+    this.themeSub?.unsubscribe();
     Object.values(this.charts).forEach(c => c.destroy());
   }
 
@@ -206,6 +239,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
         const ingresos  = data.map((d: any) => parseFloat(d.total_sum)      || 0);
         const egresos   = data.map((d: any) => parseFloat(d.total_egresses) || 0);
 
+        const ok = this.tok('--ok', '#1f8a4c'), danger = this.tok('--danger', '#c0392b'), base = this.chartBase();
         this.mkChart('incomeChart', {
           type: 'line',
           data: {
@@ -214,22 +248,22 @@ export class DashboardComponent implements OnInit, OnDestroy {
               {
                 label: 'Ingresos',
                 data: ingresos,
-                borderColor: '#10B981',
-                backgroundColor: 'rgba(16,185,129,0.12)',
+                borderColor: ok,
+                backgroundColor: this.alpha(ok, 0.12),
                 fill: true,
-                tension: 0.4,
-                pointBackgroundColor: '#10B981',
-                pointRadius: 4,
+                tension: 0.35,
+                pointBackgroundColor: ok,
+                pointRadius: 3,
               },
               {
                 label: 'Egresos',
                 data: egresos,
-                borderColor: '#F43F5E',
-                backgroundColor: 'rgba(244,63,94,0.10)',
+                borderColor: danger,
+                backgroundColor: this.alpha(danger, 0.10),
                 fill: true,
-                tension: 0.4,
-                pointBackgroundColor: '#F43F5E',
-                pointRadius: 4,
+                tension: 0.35,
+                pointBackgroundColor: danger,
+                pointRadius: 3,
               },
             ],
           },
@@ -237,7 +271,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
             responsive: true,
             maintainAspectRatio: false,
             plugins: {
-              legend: { position: 'bottom', labels: { boxWidth: 12, padding: 16 } },
+              legend: { display: false },
               datalabels: { display: false },
               tooltip: {
                 callbacks: {
@@ -248,10 +282,10 @@ export class DashboardComponent implements OnInit, OnDestroy {
             scales: {
               y: {
                 beginAtZero: true,
-                grid: { color: 'rgba(156,163,175,0.15)' },
-                ticks: { callback: (v: string | number) => `$${(v as number).toLocaleString('es-CO')}` },
+                grid: { color: this.alpha(base.line, 0.7) },
+                ticks: { color: base.text3, font: base.font, callback: (v: string | number) => `$${(v as number).toLocaleString('es-CO')}` },
               },
-              x: { grid: { display: false } },
+              x: { grid: { display: false }, ticks: { color: base.text3, font: base.font } },
             },
           },
         });
@@ -267,6 +301,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
         const activos  = data.map((d: any) => parseInt(d.activeClient)   || 0);
         const inactivos= data.map((d: any) => parseInt(d.inactiveClient) || 0);
 
+        const accent = this.tok('--accent'), danger = this.tok('--danger', '#c0392b'), base = this.chartBase();
         this.mkChart('clientsChart', {
           type: 'bar',
           data: {
@@ -275,14 +310,14 @@ export class DashboardComponent implements OnInit, OnDestroy {
               {
                 label: 'Registrados',
                 data: activos,
-                backgroundColor: 'rgba(59,130,246,0.8)',
-                borderRadius: 4,
+                backgroundColor: this.alpha(accent, 0.85),
+                borderRadius: 3,
               },
               {
                 label: 'Eliminados',
                 data: inactivos,
-                backgroundColor: 'rgba(244,63,94,0.75)',
-                borderRadius: 4,
+                backgroundColor: this.alpha(danger, 0.75),
+                borderRadius: 3,
               },
             ],
           },
@@ -290,12 +325,12 @@ export class DashboardComponent implements OnInit, OnDestroy {
             responsive: true,
             maintainAspectRatio: false,
             plugins: {
-              legend: { position: 'bottom', labels: { boxWidth: 12, padding: 16 } },
+              legend: { display: false },
               datalabels: { display: false },
             },
             scales: {
-              y: { beginAtZero: true, grid: { color: 'rgba(156,163,175,0.15)' }, ticks: { precision: 0 } },
-              x: { grid: { display: false } },
+              y: { beginAtZero: true, grid: { color: this.alpha(base.line, 0.7) }, ticks: { precision: 0, color: base.text3, font: base.font } },
+              x: { grid: { display: false }, ticks: { color: base.text3, font: base.font } },
             },
           },
         });
@@ -304,13 +339,14 @@ export class DashboardComponent implements OnInit, OnDestroy {
   }
 
   private loadContractsDonut(): void {
+    const base = this.chartBase();
     this.mkChart('contractsChart', {
       type: 'doughnut',
       data: {
         labels: ['Activos', 'Inactivos'],
         datasets: [{
           data: [this.active, this.inactive],
-          backgroundColor: ['#3B82F6', '#F43F5E'],
+          backgroundColor: [this.tok('--ok', '#1f8a4c'), this.tok('--danger', '#c0392b')],
           borderWidth: 0,
           hoverOffset: 6,
         }],
@@ -320,7 +356,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
         maintainAspectRatio: false,
         cutout: '70%',
         plugins: {
-          legend: { position: 'bottom', labels: { boxWidth: 12, padding: 16 } },
+          legend: { position: 'bottom', labels: { boxWidth: 10, padding: 14, color: base.text3, font: base.font } },
           datalabels: {
             display: true,
             color: '#fff',
@@ -337,13 +373,14 @@ export class DashboardComponent implements OnInit, OnDestroy {
   }
 
   private loadTicketDonut(): void {
+    const base = this.chartBase();
     this.mkChart('ticketDonutChart', {
       type: 'doughnut',
       data: {
         labels: ['Pendientes', 'En progreso', 'Cerrados'],
         datasets: [{
           data: [this.ticketPending, this.ticketInProgress, this.ticketClosed],
-          backgroundColor: ['#6366F1', '#F59E0B', '#10B981'],
+          backgroundColor: [this.tok('--warn', '#b7791f'), this.tok('--info', '#2563eb'), this.tok('--ok', '#1f8a4c')],
           borderWidth: 0,
           hoverOffset: 6,
         }],
@@ -353,7 +390,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
         maintainAspectRatio: false,
         cutout: '68%',
         plugins: {
-          legend: { position: 'bottom', labels: { boxWidth: 12, padding: 14 } },
+          legend: { position: 'bottom', labels: { boxWidth: 10, padding: 14, color: base.text3, font: base.font } },
           datalabels: {
             display: true,
             color: '#fff',
@@ -367,6 +404,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
   }
 
   private loadTicketBarChart(): void {
+    const base = this.chartBase();
     this.mkChart('ticketBarChart', {
       type: 'bar',
       data: {
@@ -374,8 +412,8 @@ export class DashboardComponent implements OnInit, OnDestroy {
         datasets: [{
           label: 'Tickets',
           data: [this.ticketPending, this.ticketInProgress, this.ticketClosed],
-          backgroundColor: ['#6366F1', '#F59E0B', '#10B981'],
-          borderRadius: 6,
+          backgroundColor: [this.tok('--warn', '#b7791f'), this.tok('--info', '#2563eb'), this.tok('--ok', '#1f8a4c')],
+          borderRadius: 3,
         }],
       },
       options: {
@@ -392,8 +430,8 @@ export class DashboardComponent implements OnInit, OnDestroy {
           },
         },
         scales: {
-          y: { beginAtZero: true, grid: { color: 'rgba(156,163,175,0.15)' }, ticks: { precision: 0 } },
-          x: { grid: { display: false } },
+          y: { beginAtZero: true, grid: { color: this.alpha(base.line, 0.7) }, ticks: { precision: 0, color: base.text3, font: base.font } },
+          x: { grid: { display: false }, ticks: { color: base.text3, font: base.font } },
         },
       },
       plugins: [ChartDataLabels],

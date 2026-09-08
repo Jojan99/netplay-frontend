@@ -1,349 +1,96 @@
-<div class="p-4 max-w-6xl mx-auto space-y-6">
-
-  <!-- Header -->
-  <div>
-    <h1 class="text-2xl font-bold bg-gradient-to-r from-slate-800 to-slate-600 bg-clip-text text-transparent dark:from-white dark:to-slate-300">Reporte de Pagos</h1>
-    <p class="text-sm text-slate-500 dark:text-slate-400">Trazabilidad completa del historial de facturación por cliente</p>
-  </div>
-
-  <!-- Smart Search -->
-  <div class="relative" (click)="$event.stopPropagation()">
-    <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Buscar cliente</label>
-
-    <!-- Status filter -->
-    <div class="flex gap-2 mb-2">
-      <button *ngFor="let opt of [{k:'active',l:'Activos'},{k:'inactive',l:'Inactivos'},{k:'all',l:'Todos'}]"
-        (click)="setStatusFilter(opt.k)"
-        [class]="'px-3 py-1 text-xs font-medium rounded-full border transition-colors ' +
-          (statusFilter === opt.k
-            ? (opt.k==='active' ? 'bg-green-600 text-white border-green-600' : opt.k==='inactive' ? 'bg-red-500 text-white border-red-500' : 'bg-gradient-to-br from-indigo-500 to-violet-600 text-white shadow-md shadow-indigo-500/20 hover:shadow-lg transition-all border-indigo-500')
-            : 'bg-white dark:bg-slate-800/80 text-slate-600 dark:text-slate-300 border-slate-300/60 dark:border-slate-600/60 hover:border-blue-400')">
-        {{ opt.l }}
-      </button>
+<div class="np-page np-report">
+  <header class="np-head">
+    <div>
+      <p class="np-kicker">Operación <b>/</b> Finanzas <b>/</b> Reporte de pagos</p>
+      <h1 class="np-title">{{ selectedUser ? (selectedUser.names + ' ' + selectedUser.lastname) : 'Reporte de pagos' }}</h1>
+      <div class="np-ribbon" *ngIf="!selectedUser"><span>Trazabilidad completa del historial de facturación por cliente.</span></div>
+      <div class="np-ribbon" *ngIf="selectedUser">
+        <span class="np-mono">CC {{ selectedUser.dni }} · {{ selectedUser.phone }}</span>
+        <span *ngIf="selectedUser.address">{{ selectedUser.address }}</span>
+        <span *ngIf="allInvoices.length"><span class="np-pill" [ngClass]="tasaPago >= 80 ? 'np-pill--active' : tasaPago >= 50 ? 'np-pill--noip' : 'np-pill--suspended'">{{ habitLabel }}</span> <span class="np-fine">{{ puntualLabel }}</span></span>
+      </div>
     </div>
+    <div class="np-actions"><button type="button" class="np-btn np-btn--ghost" *ngIf="selectedUser" (click)="clearSelection()">Cambiar cliente</button></div>
+  </header>
 
-    <div class="relative">
-      <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0"/>
-      </svg>
-      <input type="text" [(ngModel)]="searchText" (input)="onSearchInput($event)" (focus)="showDropdown = true"
-        placeholder="Nombre, DNI o teléfono..."
-        class="w-full sm:w-96 pl-9 pr-10 py-2.5 text-sm bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl border border-slate-200/60 dark:border-slate-700/60 rounded-xl text-slate-700 dark:text-slate-300 focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-400 transition-all shadow-sm" />
-      <button *ngIf="selectedUser" (click)="clearSelection()"
-        class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600">
-        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-        </svg>
-      </button>
+  <div class="np-toolbar" (click)="$event.stopPropagation()">
+    <div class="np-chips" role="group" aria-label="Estado de cliente">
+      <button type="button" class="np-chip" *ngFor="let opt of [{k:'active',l:'Activos'},{k:'inactive',l:'Inactivos'},{k:'all',l:'Todos'}]" [attr.aria-pressed]="statusFilter === opt.k" (click)="setStatusFilter(opt.k)">{{ opt.l }}</button>
     </div>
-
-    <!-- Dropdown -->
-    <div *ngIf="showDropdown && filteredUsers.length > 0"
-      class="absolute z-30 mt-1 w-full sm:w-96 bg-white dark:bg-slate-800/80 border border-slate-200/60 dark:border-slate-700/60 rounded-xl shadow-xl max-h-60 overflow-y-auto">
-      <ul class="py-1">
-        <li *ngFor="let u of filteredUsers | slice:0:20"
-          (click)="selectUser(u, $event)"
-          class="flex items-center justify-between px-4 py-2.5 cursor-pointer hover:bg-blue-50 dark:hover:bg-blue-900/30 transition-colors">
-          <div>
-            <div class="text-sm font-medium text-slate-800 dark:text-white">{{ u.names }} {{ u.lastname }}</div>
-            <div class="text-xs text-slate-400">{{ u.dni }} · {{ u.phone }}</div>
-          </div>
-          <span *ngIf="u.internet_status"
-            [class]="'text-xs px-2 py-0.5 rounded-full ' + (u.internet_status === 'ACTIVE' || u.internet_status === 1 ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700')">
-            {{ u.internet_status === 'ACTIVE' || u.internet_status === 1 ? 'Activo' : 'Inactivo' }}
-          </span>
-        </li>
-      </ul>
+    <label class="np-search np-search--dd">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg>
+      <input type="search" [(ngModel)]="searchText" (input)="onSearchInput($event)" (focus)="showDropdown = true" placeholder="Nombre, DNI o teléfono…" aria-label="Buscar cliente" />
+      <div class="np-checklist np-checklist--float" *ngIf="showDropdown && filteredUsers.length > 0">
+        <button type="button" class="np-check np-check--btn" *ngFor="let u of filteredUsers | slice:0:20" (click)="selectUser(u, $event)">
+          <span class="np-strong">{{ u.names }} {{ u.lastname }}</span><span class="np-fine np-mono">{{ u.dni }} · {{ u.phone }}</span><span class="np-spacer"></span>
+          <span class="np-pill" *ngIf="u.internet_status" [ngClass]="(u.internet_status === 'ACTIVE' || u.internet_status === 1) ? 'np-pill--active' : 'np-pill--suspended'">{{ (u.internet_status === 'ACTIVE' || u.internet_status === 1) ? 'Activo' : 'Inactivo' }}</span>
+        </button>
+      </div>
+    </label>
+    <span class="np-spacer"></span>
+    <div class="np-seg" *ngIf="selectedUser && allInvoices.length" role="group">
+      <button type="button" *ngFor="let tab of [{key:'all',label:'Todas'},{key:'paid',label:'Pagadas'},{key:'pending',label:'Pendientes'},{key:'abone',label:'Con abono'}]" [attr.aria-pressed]="activeFilter === tab.key" (click)="setFilter(tab.key)">{{ tab.label }}<span class="np-c">{{ filterCounts[tab.key] }}</span></button>
     </div>
   </div>
 
-  <!-- Empty state -->
-  <div *ngIf="!selectedUser && !isLoadingInvoices"
-    class="flex flex-col items-center justify-center py-16 text-center text-slate-400 dark:text-slate-500">
-    <svg class="w-16 h-16 mb-4 opacity-30" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
-        d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
-    </svg>
-    <p class="font-medium">Selecciona un cliente para ver su reporte completo</p>
-    <p class="text-sm mt-1">Historial de facturas, abonos y hábito de pago</p>
-  </div>
+  <div class="np-scroll">
+    <p class="np-empty-block" *ngIf="!selectedUser && !isLoadingInvoices"><strong>Elegí un cliente para ver su reporte.</strong><span>Historial de facturas, abonos y hábito de pago.</span></p>
+    <div *ngIf="isLoadingInvoices" class="np-loading"><span class="np-spinner"></span> Cargando facturas…</div>
 
-  <!-- Loading -->
-  <div *ngIf="isLoadingInvoices" class="space-y-3 animate-pulse">
-    <div class="h-28 bg-slate-200/60 dark:bg-slate-700/80 rounded-xl"></div>
-    <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
-      <div *ngFor="let i of [1,2,3,4]" class="h-20 bg-slate-200/60 dark:bg-slate-700/80 rounded-xl"></div>
-    </div>
-    <div class="h-48 bg-slate-200/60 dark:bg-slate-700/80 rounded-xl"></div>
-  </div>
+    <ng-container *ngIf="selectedUser && !isLoadingInvoices">
+      <section class="np-kpis">
+        <div class="np-kpi"><span class="np-kpi-l">Facturado</span><span class="np-kpi-v">{{ formatCurrency(totalFacturado) }}</span><span class="np-kpi-s">{{ allInvoices.length }} facturas</span></div>
+        <div class="np-kpi"><span class="np-kpi-l">Pagado</span><span class="np-kpi-v np-kpi-v--ok">{{ formatCurrency(totalPagado) }}</span><span class="np-kpi-s">{{ filterCounts['paid'] }} pagadas · abonos {{ formatCurrency(totalAbonado) }}</span></div>
+        <div class="np-kpi"><span class="np-kpi-l">Saldo pendiente</span><span class="np-kpi-v" [class.np-kpi-v--danger]="totalPendiente > 0">{{ formatCurrency(totalPendiente) }}</span><span class="np-kpi-s">{{ filterCounts['pending'] + filterCounts['abone'] }} sin cancelar</span></div>
+        <div class="np-kpi np-kpi--accent"><span class="np-kpi-l">Tasa de pago</span><span class="np-kpi-v">{{ tasaPago }}%</span><span class="np-kpi-s"><span class="np-bar"><i [style.width.%]="tasaPago" [style.background]="tasaPago >= 80 ? 'var(--ok)' : tasaPago >= 50 ? 'var(--warn)' : 'var(--danger)'"></i></span>{{ avgDaysToPay > 0 ? avgDaysToPay + ' días promedio' : 'sin promedio' }}</span></div>
+      </section>
 
-  <!-- Client content -->
-  <ng-container *ngIf="selectedUser && !isLoadingInvoices">
-
-    <!-- Client card -->
-    <div class="bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl rounded-2xl border border-slate-200/60 dark:border-slate-700/60 shadow-sm hover:shadow-md transition-all duration-300 p-5">
-      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div class="flex items-center gap-4">
-          <div class="w-12 h-12 rounded-full bg-gradient-to-br from-violet-500 to-violet-600 flex items-center justify-center shrink-0 shadow-md shadow-violet-500/20 flex items-center justify-center text-white font-bold text-xl shrink-0">
-            {{ selectedUser.names?.charAt(0)?.toUpperCase() }}
-          </div>
-          <div>
-            <h2 class="text-lg font-bold text-slate-900 dark:text-white">{{ selectedUser.names }} {{ selectedUser.lastname }}</h2>
-            <div class="flex flex-wrap gap-3 mt-1 text-sm text-slate-500 dark:text-slate-400">
-              <span>DNI: {{ selectedUser.dni }}</span>
-              <span>&middot;</span>
-              <span>Tel: {{ selectedUser.phone }}</span>
-              <span *ngIf="selectedUser.email">&middot; {{ selectedUser.email }}</span>
-            </div>
-            <div *ngIf="selectedUser.address" class="text-xs text-slate-400 mt-0.5">{{ selectedUser.address }}</div>
-          </div>
-        </div>
-
-        <!-- Habit badge -->
-        <div class="flex flex-col items-end gap-2">
-          <span [class]="'inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-semibold ' + habitColor">
-            <span class="text-base">{{ habitIcon }}</span>
-            {{ habitLabel }}
-          </span>
-          <span [class]="'text-xs font-medium ' + puntualColor">
-            {{ puntualLabel }}
-          </span>
-        </div>
-      </div>
-    </div>
-
-    <!-- Metrics row -->
-    <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
-      <div class="bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl rounded-2xl border border-slate-200/60 dark:border-slate-700/60 shadow-sm hover:shadow-md transition-all duration-300 p-4">
-        <div class="text-xs text-slate-400 uppercase tracking-wide mb-1">Total facturado</div>
-        <div class="text-xl font-bold text-slate-800 dark:text-white">{{ formatCurrency(totalFacturado) }}</div>
-        <div class="text-xs text-slate-400 mt-1">{{ allInvoices.length }} facturas</div>
-      </div>
-      <div class="bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl rounded-2xl border border-slate-200/60 dark:border-slate-700/60 shadow-sm hover:shadow-md transition-all duration-300 p-4">
-        <div class="text-xs text-slate-400 uppercase tracking-wide mb-1">Total pagado</div>
-        <div class="text-xl font-bold text-green-600">{{ formatCurrency(totalPagado) }}</div>
-        <div class="text-xs text-slate-400 mt-1">{{ filterCounts['paid'] }} facturas pagadas</div>
-      </div>
-      <div class="bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl rounded-2xl border border-slate-200/60 dark:border-slate-700/60 shadow-sm hover:shadow-md transition-all duration-300 p-4">
-        <div class="text-xs text-slate-400 uppercase tracking-wide mb-1">Saldo pendiente</div>
-        <div class="text-xl font-bold text-red-600">{{ formatCurrency(totalPendiente) }}</div>
-        <div class="text-xs text-slate-400 mt-1">{{ filterCounts['pending'] + filterCounts['abone'] }} sin cancelar</div>
-      </div>
-      <div class="bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl rounded-2xl border border-slate-200/60 dark:border-slate-700/60 shadow-sm hover:shadow-md transition-all duration-300 p-4">
-        <div class="text-xs text-slate-400 uppercase tracking-wide mb-1">Tasa de pago</div>
-        <div class="text-xl font-bold text-blue-600">{{ tasaPago }}%</div>
-        <!-- Progress bar -->
-        <div class="mt-2 h-1.5 bg-slate-200/60 dark:bg-slate-700/80 rounded-full overflow-hidden">
-          <div class="h-full rounded-full transition-all duration-500"
-            [style.width.%]="tasaPago"
-            [class]="tasaPago >= 80 ? 'bg-green-500' : tasaPago >= 50 ? 'bg-yellow-500' : 'bg-red-500'">
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Filter tabs -->
-    <div class="flex gap-2 flex-wrap">
-      <button *ngFor="let tab of [
-        {key:'all',     label:'Todas'},
-        {key:'paid',    label:'Pagadas'},
-        {key:'pending', label:'Pendientes'},
-        {key:'abone',   label:'Con abono'}
-      ]"
-        (click)="setFilter(tab.key)"
-        [class]="activeFilter === tab.key
-          ? 'px-4 py-1.5 rounded-full text-sm font-semibold bg-gradient-to-br from-indigo-500 to-violet-600 text-white shadow-md shadow-indigo-500/20 hover:shadow-lg transition-all'
-          : 'px-4 py-1.5 rounded-full text-sm font-medium bg-white dark:bg-slate-800/80 border border-slate-300/60 dark:border-slate-600/60 text-slate-600 dark:text-slate-300 hover:border-blue-400 transition-colors'">
-        {{ tab.label }}
-        <span class="ml-1.5 text-xs opacity-75">({{ filterCounts[tab.key] }})</span>
-      </button>
-    </div>
-
-    <!-- Invoices list -->
-    <div *ngIf="filtered.length === 0" class="text-center py-10 text-slate-400 dark:text-slate-500">
-      No hay facturas en esta categoría
-    </div>
-
-    <div class="space-y-3">
-      <div *ngFor="let inv of filtered"
-        class="bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl rounded-2xl border border-slate-200/60 dark:border-slate-700/60 shadow-sm hover:shadow-md transition-all duration-300 overflow-hidden">
-
-        <!-- Invoice header row -->
-        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 cursor-pointer"
-          (click)="toggleExpand(inv.id)">
-
-          <div class="flex items-center gap-4">
-            <!-- Status dot -->
-            <div [class]="'w-2.5 h-2.5 rounded-full shrink-0 ' +
-              (inv.paid === 1 ? 'bg-green-500' : inv.abone === 1 ? 'bg-blue-500' : 'bg-red-400')">
-            </div>
-            <div>
-              <div class="flex items-center gap-2 flex-wrap">
-                <span class="font-mono font-semibold text-sm text-slate-700 dark:text-slate-300">{{ inv.number_facture }}</span>
-                <span [class]="'px-2 py-0.5 text-xs rounded-full font-medium ' + statusClass(inv)">
-                  {{ statusLabel(inv) }}
-                </span>
-                <span *ngIf="logsForInvoice(inv).length > 0"
-                  class="px-2 py-0.5 text-xs rounded-full bg-slate-100/80 dark:bg-slate-700/80 text-slate-500">
-                  {{ logsForInvoice(inv).length }} mov.
-                </span>
-              </div>
-              <div class="text-xs text-slate-400 mt-0.5">
-                Período: {{ inv.date_facturation | date:'MMMM yyyy' }}
-              </div>
-            </div>
-          </div>
-
-          <!-- Numbers summary -->
-          <div class="flex items-center gap-6 text-right">
-            <div class="text-xs">
-              <div class="text-slate-400">Total</div>
-              <div class="font-semibold text-slate-700 dark:text-slate-300">{{ formatCurrency(inv.price_total) }}</div>
-            </div>
-            <div class="text-xs" *ngIf="inv.price_discount > 0">
-              <div class="text-slate-400">Dcto.</div>
-              <div class="font-medium text-purple-600">-{{ formatCurrency(inv.price_discount) }}</div>
-            </div>
-            <div class="text-xs" *ngIf="inv.price_abone > 0">
-              <div class="text-slate-400">Abonado</div>
-              <div class="font-medium text-blue-600">{{ formatCurrency(inv.price_abone) }}</div>
-            </div>
-            <div class="text-xs">
-              <div class="text-slate-400">Balance</div>
-              <div [class]="'font-bold text-sm ' + (invoiceBalance(inv) > 0 ? 'text-red-600' : 'text-green-600')">
-                {{ formatCurrency(invoiceBalance(inv)) }}
-              </div>
-            </div>
-            <!-- Expand arrow -->
-            <svg class="w-4 h-4 text-slate-400 shrink-0 transition-transform duration-200"
-              [class.rotate-180]="expandedInvoiceId === inv.id"
-              fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
-            </svg>
-          </div>
-        </div>
-
-        <!-- Expanded detail -->
-        <div *ngIf="expandedInvoiceId === inv.id"
-          class="border-t border-slate-100/60 dark:border-slate-700/60 bg-slate-50/80 dark:bg-slate-800/80">
-
-          <!-- Traceability data -->
-          <div class="px-4 py-3 grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs border-b border-slate-100/60 dark:border-slate-700/60">
-            <div>
-              <div class="text-slate-400 mb-0.5">Generada</div>
-              <div class="font-medium text-slate-700 dark:text-slate-300">{{ inv.created_at | date:'dd/MM/yyyy' }}</div>
-            </div>
-            <div>
-              <div class="text-slate-400 mb-0.5">Días facturados</div>
-              <div class="font-medium text-slate-700 dark:text-slate-300">{{ inv.days_facture || '—' }}</div>
-            </div>
-            <div *ngIf="inv.paid === 1">
-              <div class="text-slate-400 mb-0.5">Pagada el</div>
-              <div class="font-medium text-green-600">{{ inv.paid_at | date:'dd/MM/yyyy HH:mm' }}</div>
-            </div>
-            <div *ngIf="inv.paid === 1">
-              <div class="text-slate-400 mb-0.5">Registrado por</div>
-              <div class="font-medium text-slate-700 dark:text-slate-300">{{ inv.paid_by_name }}</div>
-            </div>
-            <div *ngIf="inv.porcentage_discount > 0">
-              <div class="text-slate-400 mb-0.5">% Descuento</div>
-              <div class="font-medium text-purple-600">{{ inv.porcentage_discount }}%</div>
-            </div>
-          </div>
-
-          <!-- Payment logs timeline -->
-          <div class="px-4 py-4">
-            <div class="flex items-center justify-between mb-3">
-              <h4 class="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider text-xs font-bold tracking-wide">
-                Movimientos de pago ({{ logsForInvoice(inv).length }})
-              </h4>
-              <button *ngIf="inv.paid === 1" (click)="downloadComprobante(inv); $event.stopPropagation()"
-                class="flex items-center gap-1.5 px-3 py-1.5 text-xs bg-gradient-to-br from-indigo-500 to-violet-600 text-white shadow-md shadow-indigo-500/20 hover:shadow-lg transition-all rounded-lg transition-colors">
-                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                    d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
-                </svg>
-                Comprobante
-              </button>
-            </div>
-
-            <!-- No logs yet -->
-            <div *ngIf="logsForInvoice(inv).length === 0"
-              class="text-xs text-slate-400 dark:text-slate-500 italic py-2">
-              Sin movimientos registrados aún
-            </div>
-
-            <!-- Timeline -->
-            <div *ngIf="logsForInvoice(inv).length > 0"
-              class="relative pl-5 border-l-2 border-slate-200/60 dark:border-slate-700/60 space-y-3">
-              <div *ngFor="let log of logsForInvoice(inv)" class="relative">
-                <div [class]="'absolute -left-[1.35rem] w-2.5 h-2.5 rounded-full ring-2 ring-white dark:ring-slate-800 ' + logTypeColor(log.type)"></div>
-                <div class="bg-white dark:bg-slate-800/80 rounded-lg p-3 border border-slate-200/60 dark:border-slate-700/60 shadow-sm">
-                  <div class="flex items-center justify-between gap-2 flex-wrap">
-                    <div class="flex items-center gap-2">
-                      <span [class]="'px-2 py-0.5 text-xs rounded-full font-medium ' +
-                        (log.type === 'pago_completo' ? 'bg-green-100 text-green-800' :
-                         log.type === 'abono' ? 'bg-blue-100 text-blue-800' :
-                         log.type === 'descuento' ? 'bg-purple-100 text-purple-800' : 'bg-slate-100/80 text-slate-700')">
-                        {{ logTypeLabel(log.type) }}
-                      </span>
-                      <span class="text-xs font-bold text-slate-800 dark:text-slate-200">{{ formatCurrency(log.amount) }}</span>
+      <section class="np-card">
+        <div class="np-card-h"><h2>Facturas</h2><span class="np-card-meta"><b>{{ filtered.length }}</b> en esta vista · hacé clic para ver la trazabilidad</span></div>
+        <p class="np-muted" *ngIf="filtered.length === 0">No hay facturas en esta categoría.</p>
+        <div class="np-tablewrap" *ngIf="filtered.length">
+          <table class="np-table np-table--compact np-ledger">
+            <thead><tr><th></th><th>N°</th><th>Período</th><th>Estado</th><th class="np-th-right">Total</th><th class="np-th-right">Dcto.</th><th class="np-th-right">Abonado</th><th class="np-th-right">Saldo</th><th class="np-th-right">Mov.</th></tr></thead>
+            <tbody>
+              <ng-container *ngFor="let inv of filtered">
+                <tr class="np-row" [attr.aria-selected]="expandedInvoiceId === inv.id" (click)="toggleExpand(inv.id)">
+                  <td class="np-stripe"><i [style.background]="inv.paid === 1 ? 'var(--ok)' : inv.abone === 1 ? 'var(--info)' : 'var(--danger)'"></i></td>
+                  <td class="np-data np-strong">{{ inv.number_facture }}</td>
+                  <td class="np-data">{{ inv.date_facturation | date:'MMM yyyy' }}</td>
+                  <td><span class="np-pill" [ngClass]="inv.paid === 1 ? 'np-pill--active' : inv.abone === 1 ? 'np-pill--info' : 'np-pill--noip'">{{ statusLabel(inv) }}</span></td>
+                  <td class="np-money">{{ formatCurrency(inv.price_total) }}</td>
+                  <td class="np-data np-td-right">{{ inv.price_discount > 0 ? '−' + formatCurrency(inv.price_discount) : '—' }}</td>
+                  <td class="np-data np-td-right" [class.np-pos-info]="inv.price_abone > 0">{{ inv.price_abone > 0 ? formatCurrency(inv.price_abone) : '—' }}</td>
+                  <td class="np-money" [class.np-neg]="invoiceBalance(inv) > 0" [class.np-pos]="invoiceBalance(inv) <= 0">{{ formatCurrency(invoiceBalance(inv)) }}</td>
+                  <td class="np-data np-td-right">{{ logsForInvoice(inv).length || '—' }}</td>
+                </tr>
+                <tr *ngIf="expandedInvoiceId === inv.id" class="np-detail-row">
+                  <td colspan="9">
+                    <div class="np-detail-grid">
+                      <dl class="np-dl">
+                        <dt>Generada</dt><dd class="np-mono">{{ inv.created_at | date:'dd/MM/yy' }}</dd>
+                        <dt>Días facturados</dt><dd class="np-mono">{{ inv.days_facture || '—' }}</dd>
+                        <ng-container *ngIf="inv.porcentage_discount > 0"><dt>Descuento</dt><dd class="np-mono">{{ inv.porcentage_discount }}%</dd></ng-container>
+                        <ng-container *ngIf="inv.paid === 1"><dt>Pagada</dt><dd class="np-mono">{{ inv.paid_at | date:'dd/MM/yy HH:mm' }}</dd><dt>Registró</dt><dd>{{ inv.paid_by_name }}</dd></ng-container>
+                      </dl>
+                      <div>
+                        <p class="np-sect">Movimientos de pago<span class="np-sect-actions"><button type="button" class="np-link" *ngIf="inv.paid === 1" (click)="downloadComprobante(inv); $event.stopPropagation()">Comprobante</button></span></p>
+                        <p class="np-muted" *ngIf="logsForInvoice(inv).length === 0">Sin movimientos registrados aún.</p>
+                        <div class="np-timeline" *ngIf="logsForInvoice(inv).length">
+                          <div class="np-tl" *ngFor="let log of logsForInvoice(inv)" [ngClass]="'np-tl--' + log.type">
+                            <span class="np-tl-t">{{ logTypeLabel(log.type) }}</span><span class="np-tl-m">{{ formatCurrency(log.amount) }}</span>
+                            <span class="np-tl-d">{{ log.created_at | date:'dd/MM/yy HH:mm' }} · {{ log.payment_method?.name || log.payment_method_name || 'sin método' }} · por {{ log.recorded_by_name }}<ng-container *ngIf="log.notes"> · {{ log.notes }}</ng-container></span>
+                          </div>
+                        </div>
+                      </div>
                     </div>
-                    <span class="text-xs text-slate-400">{{ log.created_at | date:'dd/MM/yyyy HH:mm' }}</span>
-                  </div>
-                  <div class="mt-1.5 text-xs text-slate-500 dark:text-slate-400">
-                    Registrado por <span class="font-medium text-slate-700 dark:text-slate-300">{{ log.recorded_by_name }}</span>
-                  </div>
-                  <div class="mt-1 flex items-center gap-2 flex-wrap">
-                    <span *ngIf="log.payment_method?.name || log.payment_method_name"
-                          class="inline-flex items-center gap-1 px-2 py-0.5 text-xs rounded-full bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300">
-                      <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 8.25h19.5M2.25 9h19.5m-16.5 5.25h6m-6 2.25h3m-3.75 3h15a2.25 2.25 0 0 0 2.25-2.25V6.75A2.25 2.25 0 0 0 19.5 4.5h-15a2.25 2.25 0 0 0-2.25 2.25v10.5A2.25 2.25 0 0 0 4.5 19.5Z"/></svg>
-                      {{ log.payment_method?.name || log.payment_method_name }}
-                    </span>
-                    <span *ngIf="log.notes" class="text-xs text-slate-400 italic">{{ log.notes }}</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
+                  </td>
+                </tr>
+              </ng-container>
+            </tbody>
+          </table>
         </div>
-
-      </div>
-    </div>
-
-    <!-- Summary footer -->
-    <div *ngIf="allInvoices.length > 0"
-      class="bg-slate-50/80 dark:bg-slate-800/80 rounded-xl border border-slate-200/60 dark:border-slate-700/60 p-4">
-      <h3 class="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-3">Análisis del hábito de pago</h3>
-      <div class="grid grid-cols-2 sm:grid-cols-3 gap-4 text-sm">
-        <div>
-          <span class="text-slate-400">Facturas totales:</span>
-          <span class="ml-2 font-semibold text-slate-800 dark:text-white">{{ allInvoices.length }}</span>
-        </div>
-        <div>
-          <span class="text-slate-400">Pagadas:</span>
-          <span class="ml-2 font-semibold text-green-600">{{ filterCounts['paid'] }}</span>
-        </div>
-        <div>
-          <span class="text-slate-400">Pendientes:</span>
-          <span class="ml-2 font-semibold text-red-600">{{ filterCounts['pending'] }}</span>
-        </div>
-        <div>
-          <span class="text-slate-400">Con abono parcial:</span>
-          <span class="ml-2 font-semibold text-blue-600">{{ filterCounts['abone'] }}</span>
-        </div>
-        <div>
-          <span class="text-slate-400">Total abonado:</span>
-          <span class="ml-2 font-semibold text-blue-600">{{ formatCurrency(totalAbonado) }}</span>
-        </div>
-        <div>
-          <span class="text-slate-400">Días prom. para pagar:</span>
-          <span [class]="'ml-2 font-semibold ' + puntualColor">
-            {{ avgDaysToPay > 0 ? avgDaysToPay + ' días' : '—' }}
-          </span>
-        </div>
-      </div>
-    </div>
-
-  </ng-container>
+      </section>
+    </ng-container>
+  </div>
 </div>

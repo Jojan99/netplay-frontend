@@ -1,117 +1,35 @@
-<div class="flex flex-col lg:flex-row h-full gap-4 p-4">
-
-  <!-- Panel lateral -->
-  <div class="w-full lg:w-72 shrink-0 flex flex-col gap-3">
-
-    <!-- Header -->
-    <div class="bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl rounded-2xl border border-slate-200/60 dark:border-slate-700/60 shadow-sm hover:shadow-md transition-all duration-300 p-4">
-      <h2 class="text-lg font-bold bg-gradient-to-r from-slate-800 to-slate-600 bg-clip-text text-transparent dark:from-white dark:to-slate-300 flex items-center gap-2">
-        <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"/>
-          <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1 1 15 0Z"/>
-        </svg>
-        Mapa de Técnicos
-      </h2>
-      <p class="text-xs text-slate-400 dark:text-slate-500 mt-1">
-        Actualización cada 30 seg
-        <span *ngIf="lastUpdate"> · {{ lastUpdate | date:'HH:mm:ss' }}</span>
-      </p>
-      <button (click)="loadLocations()"
-              class="mt-3 w-full flex items-center justify-center gap-2 px-3 py-2 rounded-xl
-                     bg-gradient-to-br from-indigo-500 to-violet-600 text-white shadow-md shadow-indigo-500/20 hover:shadow-lg transition-all text-sm font-medium">
-        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182m0-4.991v4.99"/>
-        </svg>
-        Actualizar
-      </button>
-    </div>
-
-    <!-- Stats -->
-    <div class="bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl rounded-2xl border border-slate-200/60 dark:border-slate-700/60 shadow-sm hover:shadow-md transition-all duration-300 p-4">
-      <div class="flex items-center justify-between">
-        <span class="text-sm text-slate-500 dark:text-slate-400">Técnicos activos</span>
-        <span class="text-2xl font-bold text-blue-600">{{ technicians.length }}</span>
-      </div>
-      <div class="mt-2 h-1 rounded-full bg-slate-200/60 dark:bg-slate-700/60">
-        <div class="h-1 rounded-full bg-indigo-500" [style.width]="technicians.length > 0 ? '100%' : '0%'"></div>
+<div class="np-page np-techmap is-open">
+  <header class="np-head">
+    <div>
+      <p class="np-kicker">Operación <b>/</b> Técnicos en campo</p>
+      <h1 class="np-title">Mapa de técnicos</h1>
+      <div class="np-ribbon">
+        <span><i class="np-dot" style="background:var(--ok)"></i><span class="np-n">{{ technicians.length }}</span>técnicos activos en los últimos 30 min</span>
+        <span class="np-mono np-fine">actualiza cada 30 s<ng-container *ngIf="lastUpdate"> · {{ lastUpdate | date:'HH:mm:ss' }}</ng-container></span>
       </div>
     </div>
+    <div class="np-actions"><button type="button" class="np-btn np-btn--ghost" (click)="loadLocations()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 12a8 8 0 1 1-2.3-5.7M20 4v5h-5"/></svg>Actualizar</button></div>
+  </header>
 
-    <!-- Lista de técnicos -->
-    <div class="bg-white dark:bg-slate-800/80 rounded-xl shadow-sm flex-1 overflow-hidden flex flex-col max-h-64 lg:max-h-none">
-      <div class="px-4 py-3 border-b border-slate-200/60 dark:border-slate-700/60">
-        <p class="text-sm font-semibold text-slate-700 dark:text-slate-300">Ubicaciones recientes</p>
-        <p class="text-xs text-slate-400">(últimos 30 min)</p>
+  <div class="np-workspace np-techmap-ws">
+    <section class="np-map-wrap">
+      <div id="technician-map"></div>
+      <div class="np-map-empty" *ngIf="!isLoading && technicians.length === 0"><strong>Sin técnicos activos.</strong><span>El mapa se actualiza solo cuando alguien inicia sesión en la app.</span></div>
+    </section>
+    <aside class="np-inspector" aria-label="Técnicos">
+      <div class="np-insp-head"><div class="np-insp-id"><h2>Ubicaciones recientes</h2><div class="np-meta">Tocá un técnico para centrar el mapa</div></div></div>
+      <div class="np-insp-body">
+        <div *ngIf="isLoading" class="np-loading"><span class="np-spinner"></span> Cargando…</div>
+        <p class="np-notice np-notice--danger" *ngIf="!isLoading && errorMsg">{{ errorMsg }}</p>
+        <p class="np-muted" *ngIf="!isLoading && !errorMsg && technicians.length === 0">Ningún técnico activo. Aparecen al iniciar sesión.</p>
+        <div class="np-checklist" *ngIf="!isLoading && technicians.length > 0">
+          <button type="button" class="np-check np-check--btn" *ngFor="let tech of technicians" (click)="centerOnTech(tech)">
+            <span class="np-avatar np-avatar--sm">{{ (tech.first_name || 'T')[0].toUpperCase() }}</span>
+            <span><span class="np-strong">{{ tech.first_name }} {{ tech.last_name }}</span><span class="np-fine">{{ tech.job_title || 'Técnico' }}</span></span>
+            <span class="np-spacer"></span><span class="np-fine np-mono">{{ getMinutesAgo(tech.last_location_update) }}</span>
+          </button>
+        </div>
       </div>
-
-      <!-- Loading -->
-      <div *ngIf="isLoading" class="flex-1 flex items-center justify-center p-8">
-        <svg class="animate-spin w-6 h-6 text-indigo-500" fill="none" viewBox="0 0 24 24">
-          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"></path>
-        </svg>
-      </div>
-
-      <!-- Error -->
-      <div *ngIf="!isLoading && errorMsg"
-           class="flex-1 flex flex-col items-center justify-center p-6 text-center">
-        <svg class="w-8 h-8 text-red-400 mb-2" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z"/>
-        </svg>
-        <p class="text-sm text-red-500">{{ errorMsg }}</p>
-      </div>
-
-      <!-- Sin técnicos -->
-      <div *ngIf="!isLoading && !errorMsg && technicians.length === 0"
-           class="flex-1 flex flex-col items-center justify-center p-6 text-center">
-        <svg class="w-10 h-10 text-slate-300 mb-2" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"/>
-          <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1 1 15 0Z"/>
-        </svg>
-        <p class="text-sm text-slate-400">Ningún técnico activo</p>
-        <p class="text-xs text-slate-300 mt-1">Los técnicos aparecen al iniciar sesión</p>
-      </div>
-
-      <!-- Lista -->
-      <div *ngIf="!isLoading && technicians.length > 0" class="flex-1 overflow-y-auto divide-y divide-slate-50/80 dark:divide-slate-700/60">
-        <button *ngFor="let tech of technicians"
-                (click)="centerOnTech(tech)"
-                class="w-full flex items-center gap-3 px-4 py-3 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors text-left">
-
-          <!-- Avatar -->
-          <div class="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center text-white font-bold text-sm shrink-0 shadow-md shadow-indigo-500/20">
-            {{ (tech.first_name || 'T')[0].toUpperCase() }}
-          </div>
-
-          <div class="min-w-0 flex-1">
-            <p class="text-sm font-medium text-slate-800 dark:text-white truncate">
-              {{ tech.first_name }} {{ tech.last_name }}
-            </p>
-            <p class="text-xs text-slate-400 truncate">{{ tech.job_title || 'Técnico' }}</p>
-          </div>
-
-          <!-- Indicador tiempo -->
-          <span class="text-xs text-green-600 dark:text-green-400 shrink-0 font-medium">
-            {{ getMinutesAgo(tech.last_location_update) }}
-          </span>
-        </button>
-      </div>
-    </div>
-
+    </aside>
   </div>
-
-  <!-- Mapa -->
-  <div class="flex-1 rounded-xl overflow-hidden shadow-sm border border-slate-200/60 dark:border-slate-700/60 relative min-h-[350px] lg:min-h-0">
-    <div id="technician-map" class="w-full h-full min-h-[350px] lg:min-h-0"></div>
-
-    <!-- Badge sin ubicación -->
-    <div *ngIf="!isLoading && technicians.length === 0"
-         class="absolute inset-0 flex items-center justify-center pointer-events-none">
-      <div class="bg-white/95 dark:bg-slate-800/95 backdrop-blur-xl rounded-2xl border border-slate-100 dark:border-slate-700 px-6 py-4 text-center shadow-lg">
-        <p class="text-sm font-semibold text-slate-600 dark:text-slate-300">Sin técnicos activos</p>
-        <p class="text-xs text-slate-400 mt-1">El mapa se actualizará automáticamente</p>
-      </div>
-    </div>
-  </div>
-
 </div>

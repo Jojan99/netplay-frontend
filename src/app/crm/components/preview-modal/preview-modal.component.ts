@@ -6,7 +6,8 @@ import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
   selector: 'app-preview-modal',
   standalone: true,
   imports: [CommonModule],
-  templateUrl: './preview-modal.component.html'
+  templateUrl: './preview-modal.component.html',
+  styleUrl: './preview-modal.component.scss'
 })
 export class PreviewModalComponent {
 
@@ -47,6 +48,8 @@ export class PreviewModalComponent {
     link.click();
     link.remove();
   }
+
+  get fileLabel(): string { return this.fileName; }
 
   private get fileName(): string {
     const path = this.url.split('?')[0].split('#')[0];
