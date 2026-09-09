@@ -20,7 +20,14 @@
       <h1 class="np-title np-login-title">Iniciar sesión</h1>
       <p class="np-login-help">Ingresá con tu documento y contraseña.</p>
 
-      <p *ngIf="Islogin" class="np-notice np-notice--danger" role="alert">Documento o contraseña incorrectos. Revisá los datos e intentá de nuevo.</p>
+      <p *ngIf="Islogin && !needsConfirmation" class="np-notice np-notice--danger" role="alert">{{ errorMsg || 'Documento o contraseña incorrectos. Revisá los datos e intentá de nuevo.' }}</p>
+      <div *ngIf="Islogin && needsConfirmation" class="np-notice np-notice--info" role="alert">
+        {{ errorMsg }}
+        <div class="np-btnrow" style="margin-top:8px">
+          <button type="button" class="np-btn np-btn--ghost np-btn--sm" (click)="resendConfirmation()" [disabled]="resending"><span class="np-spinner np-spinner--sm" *ngIf="resending"></span>{{ resending ? 'Enviando…' : 'Reenviar correo de activación' }}</button>
+        </div>
+        <p class="np-fine" *ngIf="resendMsg" style="margin:6px 0 0">{{ resendMsg }}</p>
+      </div>
 
       <label class="np-field"><span>Documento</span>
         <input type="text" name="user" id="user" class="np-input np-mono" autocomplete="username" inputmode="numeric"

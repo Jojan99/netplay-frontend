@@ -20,6 +20,10 @@ import { DarkThemeToggleComponent } from '../../../common/dark-theme-toggle.comp
 export class SignInComponent {
   isLoading = false;
   Islogin   = false;
+  errorMsg  = '';
+  needsConfirmation = false;   // la empresa existe pero falta activar el correo
+  resendMsg = '';
+  resending = false;
 
   public SignInInterfaces: SignInInterface = { user: '', password: '' };
 
@@ -50,12 +54,27 @@ export class SignInComponent {
           });
         } else {
           this.Islogin = true;
+          this.needsConfirmation = !!res.data?.needs_confirmation;
+          this.errorMsg = res.message || 'Documento o contraseña incorrectos.';
         }
       },
       error: () => {
         this.isLoading = false;
         this.Islogin   = true;
+        this.needsConfirmation = false;
+        this.errorMsg = 'No pudimos conectar. Revisá tu internet e intentá de nuevo.';
       },
+    });
+  }
+
+  /** Vuelve a mandar el correo de activación cuando la cuenta quedó sin confirmar. */
+  resendConfirmation(): void {
+    if (this.resending || !this.SignInInterfaces.user) return;
+    this.resending = true;
+    this.resendMsg = '';
+    this.companyService.resendConfirmation(this.SignInInterfaces.user).subscribe({
+      next: (r: any) => { this.resending = false; this.resendMsg = r?.message || 'Te reenviamos el correo de activación.'; },
+      error: () => { this.resending = false; this.resendMsg = 'No pudimos reenviar el correo. Escribinos para activarte la cuenta.'; },
     });
   }
 }

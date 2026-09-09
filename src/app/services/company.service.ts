@@ -20,6 +20,10 @@ export class CompanyService {
     return this.http.post(this.base + 'register', data);
   }
 
+  resendConfirmation(user: string): Observable<any> {
+    return this.http.post(this.base + 'resend-confirmation', { user });
+  }
+
   getStaff(): Observable<any> {
     return this.http.get(this.base + 'staff', { headers: this.getHeaders() });
   }
