@@ -107,6 +107,10 @@ export class RegisterCompanyComponent {
       next: (res) => {
         this.isLoading = false;
         if (!res.error) {
+          // La pantalla siguiente muestra a qué dirección salió el correo y
+          // permite reenviarlo. Va por sessionStorage y no por la URL para no
+          // dejar el correo en el historial del navegador.
+          try { sessionStorage.setItem('alta_email', payload['email'] ?? ''); } catch {}
           this.router.navigate(['/confirm-email']);
         } else {
           this.errorMsg = res.message || 'No pudimos registrar la empresa.';

@@ -1,0 +1,74 @@
+<!-- Guía oculta: una sola línea para poder recuperarla -->
+<div class="np-guia-min" *ngIf="guia() && !visible()">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 22a10 10 0 1 0 0-20 10 10 0 0 0 0 20z"/><path d="M12 16v-4M12 8.5v.5"/></svg>
+  <span>Guía de primeros pasos · {{ guia()!.completados }} de {{ guia()!.total }} listos</span>
+  <button type="button" class="np-guia-link" (click)="volverAMostrar()">Ver guía</button>
+</div>
+
+<section class="np-guia" *ngIf="visible() && guia() as g">
+
+  <header class="np-guia-head">
+    <div class="np-guia-head-txt">
+      <p class="np-kicker">Primeros pasos <b>/</b> {{ nombreEmpresa }}</p>
+      <h2 class="np-guia-title">
+        {{ completa() ? 'Tenés todo configurado' : '¡Bienvenido a Netplay!' }}
+      </h2>
+      <p class="np-guia-sub" *ngIf="!completa()">
+        Netplay administra tu ISP de punta a punta: tus clientes y sus planes, la facturación
+        mensual, el cobro en línea y la atención por WhatsApp. Estos pasos dejan el sistema
+        listo para operar — se van marcando solos a medida que cargás la información.
+      </p>
+      <p class="np-guia-sub" *ngIf="completa()">
+        Completaste la configuración inicial. Dejamos la guía acá por si sumás gente al equipo
+        y necesitás repasar dónde está cada cosa.
+      </p>
+    </div>
+
+    <button type="button" class="np-guia-close" (click)="ocultar()" [disabled]="ocultando()" title="No mostrar más">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M18 6 6 18M6 6l12 12"/></svg>
+    </button>
+  </header>
+
+  <!-- Avance -->
+  <div class="np-guia-avance">
+    <div class="np-guia-barra"><span [style.width.%]="g.porcentaje"></span></div>
+    <b class="np-guia-pct">{{ g.completados }}/{{ g.total }}</b>
+  </div>
+
+  <!-- Lo siguiente por hacer -->
+  <div class="np-guia-next" *ngIf="siguiente() as s">
+    <div class="np-guia-next-txt">
+      <p class="np-fine">Seguí por acá</p>
+      <b>{{ s.titulo }}</b>
+      <span>{{ s.detalle }}</span>
+    </div>
+    <button type="button" class="np-btn np-btn--primary np-btn--sm" (click)="ir(s)">{{ s.boton }}</button>
+  </div>
+
+  <!-- Lista completa -->
+  <ol class="np-guia-lista">
+    <li *ngFor="let p of g.pasos; let i = index" [class.is-done]="p.hecho">
+      <span class="np-guia-mark">
+        <svg *ngIf="p.hecho" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="m5 13 4 4L19 7"/></svg>
+        <i *ngIf="!p.hecho">{{ i + 1 }}</i>
+      </span>
+
+      <div class="np-guia-item">
+        <div class="np-guia-item-top">
+          <b>{{ p.titulo }}</b>
+          <small class="np-guia-cuenta" *ngIf="p.cuenta">{{ p.cuenta }}</small>
+        </div>
+        <span class="np-guia-detalle">{{ p.detalle }}</span>
+      </div>
+
+      <button type="button" class="np-btn np-btn--ghost np-btn--sm" (click)="ir(p)">
+        {{ p.hecho ? 'Revisar' : p.boton }}
+      </button>
+    </li>
+  </ol>
+
+  <footer class="np-guia-foot">
+    <span class="np-fine">Los pasos se marcan solos cuando cargás la información. No hace falta confirmarlos.</span>
+    <button type="button" class="np-guia-link" (click)="ocultar()" [disabled]="ocultando()">No mostrar más</button>
+  </footer>
+</section>

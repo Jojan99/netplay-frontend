@@ -8,6 +8,7 @@ import { AuthService } from '../services/auth.service';
 import { FinanceService } from '../services/finance.service';
 import { forkJoin, Subscription } from 'rxjs';
 import { ThemeService } from '../common/services/theme/theme.service';
+import { OnboardingGuideComponent } from '../components/onboarding-guide/onboarding-guide.component';
 
 Chart.register(...registerables, ChartDataLabels);
 
@@ -15,7 +16,7 @@ Chart.register(...registerables, ChartDataLabels);
   selector: 'app-dashboard',
   templateUrl: './dashboard.component.html',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, OnboardingGuideComponent],
   styleUrls: ['./dashboard.component.scss'],
   host: { class: 'np-console' },
 })

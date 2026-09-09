@@ -20,8 +20,17 @@ export class CompanyService {
     return this.http.post(this.base + 'register', data);
   }
 
-  resendConfirmation(user: string): Observable<any> {
-    return this.http.post(this.base + 'resend-confirmation', { user });
+  /** El backend acepta usuario o correo; desde el alta solo tenemos el correo. */
+  resendConfirmation(user: string, email?: string): Observable<any> {
+    return this.http.post(this.base + 'resend-confirmation', { user, email });
+  }
+
+  /**
+   * Canjea el vale de un solo uso que deja la confirmación del correo por una
+   * sesión, para no pedirle credenciales a quien acaba de activar su cuenta.
+   */
+  confirmSession(vale: string): Observable<any> {
+    return this.http.post(this.base + 'confirm-session', { vale });
   }
 
   getStaff(): Observable<any> {

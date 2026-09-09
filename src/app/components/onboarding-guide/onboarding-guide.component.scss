@@ -1,0 +1,109 @@
+/* Guía de primeros pasos — usa los tokens del panel, sin colores propios */
+:host { display: block; }
+
+.np-guia {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  padding: 20px 20px 14px;
+  margin-bottom: 18px;
+  box-shadow: var(--shadow);
+  display: grid;
+  gap: 16px;
+}
+
+/* Cabecera */
+.np-guia-head { display: flex; align-items: flex-start; gap: 14px; }
+.np-guia-head-txt { display: grid; gap: 5px; min-width: 0; }
+.np-guia-title {
+  margin: 0; font-family: var(--font-display); font-weight: 600;
+  font-size: clamp(19px, 2.2vw, 24px); letter-spacing: -0.02em; color: var(--text);
+}
+.np-guia-sub { margin: 0; font-size: 13px; line-height: 1.55; color: var(--text-2); max-width: 74ch; }
+
+.np-guia-close {
+  margin-left: auto; flex: none; display: grid; place-items: center;
+  width: 30px; height: 30px; border-radius: 8px;
+  background: transparent; border: 1px solid var(--line); color: var(--text-3); cursor: pointer;
+  svg { width: 15px; height: 15px; }
+  &:hover:not(:disabled) { color: var(--text); border-color: var(--line-strong); background: var(--surface-2); }
+  &:disabled { opacity: .5; cursor: default; }
+}
+
+/* Avance */
+.np-guia-avance { display: grid; grid-template-columns: 1fr auto; gap: 12px; align-items: center; }
+.np-guia-barra {
+  height: 6px; border-radius: 999px; background: var(--surface-3); overflow: hidden;
+  span { display: block; height: 100%; border-radius: 999px; background: var(--accent); transition: width .35s ease; }
+}
+.np-guia-pct { font-family: var(--font-mono); font-size: 12px; color: var(--text-2); }
+
+/* Siguiente paso destacado */
+.np-guia-next {
+  display: flex; align-items: center; gap: 14px; flex-wrap: wrap;
+  background: var(--accent-soft); border: 1px solid var(--accent-line);
+  border-radius: var(--radius); padding: 13px 15px;
+  .np-fine { text-transform: uppercase; letter-spacing: .07em; font-size: 10.5px; color: var(--accent); font-family: var(--font-mono); }
+  .np-btn { margin-left: auto; }
+}
+.np-guia-next-txt {
+  display: grid; gap: 2px; min-width: 0; flex: 1 1 260px;
+  b { font-size: 14px; color: var(--text); }
+  span { font-size: 12.5px; color: var(--text-2); line-height: 1.5; }
+}
+
+/* Lista de pasos */
+.np-guia-lista {
+  list-style: none; margin: 0; padding: 0; display: grid;
+  border-top: 1px solid var(--line);
+
+  li {
+    display: grid; grid-template-columns: 26px 1fr auto; gap: 12px;
+    align-items: center; padding: 12px 2px; border-bottom: 1px solid var(--line);
+  }
+  li:last-child { border-bottom: 0; }
+  li.is-done { .np-guia-item b { color: var(--text-2); } }
+}
+
+.np-guia-mark {
+  display: grid; place-items: center; width: 26px; height: 26px; border-radius: 999px;
+  background: var(--surface-2); border: 1px solid var(--line);
+  font-family: var(--font-mono); font-size: 11px; font-weight: 700; color: var(--text-3);
+  svg { width: 13px; height: 13px; }
+  i { font-style: normal; }
+  .is-done & { background: var(--ok-soft); border-color: transparent; color: var(--ok); }
+}
+
+.np-guia-item { display: grid; gap: 2px; min-width: 0; }
+.np-guia-item-top { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap;
+  b { font-size: 13.5px; color: var(--text); } }
+.np-guia-cuenta {
+  font-family: var(--font-mono); font-size: 10.5px; color: var(--ok);
+  background: var(--ok-soft); border-radius: 999px; padding: 1px 7px;
+}
+.np-guia-detalle { font-size: 12.5px; color: var(--text-3); line-height: 1.5; }
+
+/* Pie */
+.np-guia-foot { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.np-guia-link {
+  margin-left: auto; background: none; border: 0; padding: 0; cursor: pointer;
+  font-size: 12px; color: var(--text-3); text-decoration: underline;
+  &:hover:not(:disabled) { color: var(--accent); }
+  &:disabled { opacity: .5; cursor: default; }
+}
+
+/* Versión minimizada */
+.np-guia-min {
+  display: flex; align-items: center; gap: 9px; margin-bottom: 14px;
+  padding: 9px 13px; border: 1px dashed var(--line-strong); border-radius: var(--radius);
+  background: var(--surface); font-size: 12.5px; color: var(--text-2);
+  svg { width: 15px; height: 15px; flex: none; color: var(--text-3); }
+  .np-guia-link { margin-left: auto; }
+}
+
+@media (max-width: 640px) {
+  .np-guia { padding: 16px 14px 12px; }
+  .np-guia-lista li { grid-template-columns: 26px 1fr; row-gap: 8px;
+    .np-btn { grid-column: 2; justify-self: start; } }
+  .np-guia-next .np-btn { margin-left: 0; width: 100%; }
+}
