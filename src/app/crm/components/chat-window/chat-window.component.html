@@ -29,7 +29,7 @@
       <div class="wa-loading" *ngIf="loading"><span class="np-spinner"></span> Cargando mensajes…</div>
       <ng-container *ngFor="let msg of messages; let i = index; trackBy: trackByMessage">
         <div class="wa-day" *ngIf="showDaySeparator(i)"><span>{{ dayLabel(msg.at) }}</span></div>
-        <app-message-bubble [message]="msg" [class.is-hit]="isHit(msg.id)" [class.is-hit-current]="isCurrentHit(msg.id)" (openPreview)="openPreview($event)" (forwardMsg)="onForwardMessage($event)" (saveSticker)="saveStickerFromMessage($event)" (retry)="retrySend($event)" (replyTo)="setReply($event)" (jumpTo)="jumpToMessage($event)" (startChat)="startChat.emit($event)" (react)="reactTo($event)" (moreEmoji)="openEmojiForReaction($event)" [canVote]="canVote" (vote)="votePoll($event)"></app-message-bubble>
+        <app-message-bubble [message]="msg" [class.is-hit]="isHit(msg.id)" [class.is-hit-current]="isCurrentHit(msg.id)" (openPreview)="openPreview($event)" (forwardMsg)="onForwardMessage($event)" (deleteMsg)="onDeleteMessage($event)" (editMsg)="onEditMessage($event)" (saveSticker)="saveStickerFromMessage($event)" (retry)="retrySend($event)" (replyTo)="setReply($event)" (jumpTo)="jumpToMessage($event)" (startChat)="startChat.emit($event)" (react)="reactTo($event)" (moreEmoji)="openEmojiForReaction($event)" [canVote]="canVote" (vote)="votePoll($event)"></app-message-bubble>
       </ng-container>
     </div>
 
@@ -56,6 +56,15 @@
     <!-- Composer -->
     <div class="wa-composer" *ngIf="!composerBlocked" (click)="closeAttachMenu(); showQuickPanel = false">
       <!-- Respondiendo a… -->
+      <!-- Editando: mismo patrón que responder, para no sacar al agente del hilo -->
+      <div class="wa-replybar wa-editbar" *ngIf="editTarget">
+        <div class="wa-replybar-card is-agent">
+          <b>Editando tu mensaje</b>
+          <span>{{ editTarget.content }}</span>
+        </div>
+        <button type="button" class="wa-ibtn" (click)="cancelEdit()" title="Cancelar la edición"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
+      </div>
+
       <div class="wa-replybar" *ngIf="replyTarget">
         <div class="wa-replybar-card" [class.is-agent]="replyTarget.from !== 'customer'">
           <b>{{ replyTarget.from === 'customer' ? 'Cliente' : 'Vos' }}</b>

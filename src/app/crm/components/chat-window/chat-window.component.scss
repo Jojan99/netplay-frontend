@@ -124,3 +124,6 @@
 :host.is-compact .wa-messages { padding: 10px 10px 8px; }
 :host.is-compact .wa-attach-preview { padding: 8px 10px; }
 :host.is-compact .wa-emoji { left: 6px; width: calc(100% - 12px); }
+
+/* Aviso de edición sobre el compositor: se distingue de la respuesta */
+.wa-editbar .wa-replybar-card { border-left-color: var(--warn); }

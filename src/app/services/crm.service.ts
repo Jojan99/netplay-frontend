@@ -226,6 +226,16 @@ export class CrmService {
   getSettings() {
     return this.http.get<any>(this.apiUrl('crm/settings'), { headers: this.getHeaders() });
   }
+  /** Borra un mensaje para todos (solo WhatsApp Web). */
+  deleteMessage(conversationId: number, messageId: number) {
+    return this.http.delete<any>(this.apiUrl(`conversations/${conversationId}/messages/${messageId}`), { headers: this.getHeaders() });
+  }
+
+  /** Edita un mensaje propio. WhatsApp solo lo permite dentro de los 15 minutos. */
+  editMessage(conversationId: number, messageId: number, content: string) {
+    return this.http.put<any>(this.apiUrl(`conversations/${conversationId}/messages/${messageId}`), { content }, { headers: this.getHeaders() });
+  }
+
   /* =====================
      GRUPOS DE WHATSAPP
      Solo WhatsApp Web: la API de Meta no soporta grupos.

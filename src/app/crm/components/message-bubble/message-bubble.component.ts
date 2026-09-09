@@ -33,6 +33,11 @@ export interface ChatMessage {
   /** En un grupo: quién escribió el mensaje. Vacío en los chats individuales. */
   participant_name?: string | null;
   participant_phone?: string | null;
+  /** Borrado para todos: la burbuja queda como "mensaje eliminado". */
+  deleted?: boolean;
+  deleted_by?: string | null;
+  /** Editado después de enviarse. */
+  edited?: boolean;
   _renderKey?: number;
 }
 
@@ -54,6 +59,24 @@ export class MessageBubbleComponent implements OnChanges {
   @Output() retry        = new EventEmitter<ChatMessage>();
   @Output() replyTo      = new EventEmitter<ChatMessage>();
   @Output() jumpTo       = new EventEmitter<number>();
+  @Output() deleteMsg    = new EventEmitter<ChatMessage>();
+  @Output() editMsg      = new EventEmitter<ChatMessage>();
+
+  /**
+   * WhatsApp solo deja editar dentro de los 15 minutos siguientes al envío,
+   * y solo mensajes de texto propios. Se comprueba acá para no ofrecer una
+   * acción que la pasarela va a rechazar.
+   */
+  get puedeEditar(): boolean {
+    if (!this.isOut || this.message?.message_type !== 'text') return false;
+    if (this.message?.deleted || this.message?.pending) return false;
+    const enviado = new Date(this.message.at).getTime();
+    return Number.isFinite(enviado) && (Date.now() - enviado) < 15 * 60 * 1000;
+  }
+
+  get puedeBorrar(): boolean {
+    return this.isOut && !this.message?.deleted && !this.message?.pending;
+  }
 
   /** Clase de las palomitas según el ack: reloj (pendiente), 1 gris, 2 grises, 2 azules. */
   get tickClass(): string {
@@ -85,6 +108,9 @@ export class MessageBubbleComponent implements OnChanges {
   audioCurrent  = 0;
   audioSpeed: 1 | 1.5 | 2 = 1;
   get audioProgress(): number { return this.audioDuration ? Math.min(100, (this.audioCurrent / this.audioDuration) * 100) : 0; }
+  pedirBorrar(): void { this.showContextMenu = false; this.deleteMsg.emit(this.message); }
+  pedirEditar(): void { this.showContextMenu = false; this.editMsg.emit(this.message); }
+
   get isOut(): boolean { return this.message?.from === 'agent' || this.message?.from === 'system'; }
   markDirty(): void { this.cdr.markForCheck(); }
   onAudioMeta(a: HTMLAudioElement): void { this.audioDuration = isFinite(a.duration) ? a.duration : 0; this.cdr.markForCheck(); }

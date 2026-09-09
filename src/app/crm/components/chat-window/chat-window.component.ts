@@ -450,7 +450,92 @@ export class ChatWindowComponent implements OnChanges, OnDestroy {
       })
       .listen('.poll.vote', (e: { messageId: number; votes: any[] }) => {
         this.zone.run(() => this.applyPollVotes(e.messageId, e.votes || []));
+      })
+      // Un mensaje que ya estaba en pantalla cambió: lo borraron o lo editaron,
+      // desde el panel o desde el teléfono del cliente.
+      .listen('.message.revised', (e: { message_id: number; accion: string; content: string | null }) => {
+        this.zone.run(() => this.aplicarRevision(e.message_id, e.accion, e.content));
       });
+  }
+
+  /** Refleja en pantalla un borrado o una edición, sin recargar el hilo. */
+  private aplicarRevision(messageId: number, accion: string, content: string | null): void {
+    const m = this.messages.find(x => x.id === messageId);
+    if (!m) return;
+
+    if (accion === 'deleted') {
+      m.deleted = true;
+    } else if (accion === 'edited') {
+      m.content = content ?? m.content;
+      m.edited = true;
+    }
+
+    m._renderKey = Date.now();   // fuerza el repintado de la burbuja
+  }
+
+  /** Borra un mensaje propio para todos. */
+  onDeleteMessage(msg: ChatMessage): void {
+    if (!this.conversationId) return;
+
+    this.dialog.confirm(
+      'Eliminar este mensaje para vos y para el cliente. No se puede deshacer.',
+      { title: 'Eliminar el mensaje', okLabel: 'Eliminar', danger: true }
+    ).then(ok => {
+      if (!ok) return;
+
+      this.crmService.deleteMessage(this.conversationId!, msg.id).subscribe({
+        next: () => this.aplicarRevision(msg.id, 'deleted', null),
+        error: err => this.toast.error(err?.error?.error || 'No se pudo eliminar el mensaje.'),
+      });
+    });
+  }
+
+  /**
+   * Edita un mensaje propio, en línea en el compositor.
+   *
+   * Se carga el texto donde se escribe, con un aviso arriba, igual que al
+   * responder: es lo que hace WhatsApp y evita sacar al agente del hilo con
+   * un modal. WhatsApp solo permite editar hasta 15 minutos después del envío.
+   */
+  editTarget: ChatMessage | null = null;
+
+  onEditMessage(msg: ChatMessage): void {
+    if (!this.conversationId) return;
+    this.editTarget = msg;
+    this.replyTarget = null;
+    this.draftMessage = msg.content ?? '';
+    setTimeout(() => {
+      const ta = this.messageTextarea?.nativeElement;
+      if (!ta) return;
+      this.autoResize(ta);
+      ta.focus();
+      ta.setSelectionRange(ta.value.length, ta.value.length);
+    }, 0);
+  }
+
+  cancelEdit(): void {
+    this.editTarget = null;
+    this.draftMessage = '';
+    this.resetComposeHeight();
+  }
+
+  /** Confirma la edición pendiente. Devuelve true si se ocupó del envío. */
+  private guardarEdicion(texto: string): boolean {
+    const objetivo = this.editTarget;
+    if (!objetivo) return false;
+
+    this.editTarget = null;
+    this.draftMessage = '';
+    this.resetComposeHeight();
+
+    if (texto === (objetivo.content ?? '')) return true;   // no cambió nada
+
+    this.crmService.editMessage(this.conversationId!, objetivo.id, texto).subscribe({
+      next: () => this.aplicarRevision(objetivo.id, 'edited', texto),
+      error: err => this.toast.error(err?.error?.error || 'No se pudo editar el mensaje.'),
+    });
+
+    return true;
   }
 
   // ── Encuestas ────────────────────────────────────────────────
@@ -770,6 +855,10 @@ export class ChatWindowComponent implements OnChanges, OnDestroy {
 
     const text = (value ?? '').trim();
     if (!text || this.sending || !this.conversationId) return;
+
+    // Si hay una edición pendiente, el botón de enviar la confirma en vez de
+    // mandar un mensaje nuevo.
+    if (this.guardarEdicion(text)) { this.sending = false; return; }
 
     this.sending = true;
     this.draftMessage = '';
