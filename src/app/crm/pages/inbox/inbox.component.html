@@ -37,7 +37,7 @@
 
   <div class="wa-layout" *ngIf="mainView === 'inbox'">
     <aside class="wa-list-pane">
-      <app-conversation-list [conversations]="inbox" [activeConversationId]="activeConversationId" [activeStatus]="inboxStatus" [labels]="labels" [waitAlertMinutes]="settings?.wait_alert_minutes || 15" (openChat)="openChat($event)" (statusChange)="setStatus($event)" (refresh)="loadInbox()" (markUnread)="markUnread($event)"></app-conversation-list>
+      <app-conversation-list [conversations]="inbox" [activeConversationId]="activeConversationId" [activeStatus]="inboxStatus" [mostrarEstados]="vista === 'clientes'" [labels]="labels" [waitAlertMinutes]="settings?.wait_alert_minutes || 15" (openChat)="openChat($event)" (statusChange)="setStatus($event)" (refresh)="loadInbox()" (markUnread)="markUnread($event)"></app-conversation-list>
     </aside>
     <section class="wa-chat-pane">
       <app-chat-window class="wa-chat-host" [conversationId]="activeConversationId" (conversationClosed)="onConversationClosed()" (openTransfer)="openTransfer()" (back)="backToList()" (openConversation)="openChat($event)" (startChat)="startChatWith($event)"></app-chat-window>

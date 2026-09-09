@@ -15,6 +15,12 @@ export class ConversationListComponent implements OnChanges {
   @Input() activeConversationId: number | null = null;
   @Input() activeStatus: 'all' | 'new' | 'in_progress' | 'closed' = 'all';
 
+  /**
+   * En la sección de grupos los estados no aplican: un grupo no se "atiende"
+   * ni se "finaliza" como el chat de un cliente, es un hilo permanente.
+   */
+  @Input() mostrarEstados = true;
+
   @Output() statusChange = new EventEmitter<'all' | 'new' | 'in_progress' | 'closed'>();
   @Output() openChat     = new EventEmitter<number>();
   @Output() refresh      = new EventEmitter<void>();

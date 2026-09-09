@@ -216,6 +216,12 @@ export class InboxComponent implements OnInit, OnDestroy {
         const filters: any = { provider };
         if (provider === this.inboxProvider && this.inboxStatus !== 'all') filters.status = this.inboxStatus;
 
+        // La recarga tiene que respetar la sección en la que está el agente.
+        // Sin esto, al llegar el evento del propio mensaje enviado en un grupo
+        // la lista se repoblaba con los chats de clientes y sacaba al agente
+        // de la sección de grupos.
+        if (this.vista === 'grupos') filters.grupos = 1;
+
         this.crmService.getInbox(filters).subscribe(res => {
           const freshInbox = res.data ?? [];
           freshInbox.forEach((c: any) => { c.unread_count = this.unreadMap.get(c.id) || 0; });

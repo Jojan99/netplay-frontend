@@ -745,6 +745,7 @@ export class ChatWindowComponent implements OnChanges, OnDestroy {
 
     this.sending = true;
     this.draftMessage = '';
+    this.resetComposeHeight();
 
     const tempId = Date.now();
     const quoted = this.replyTarget;
@@ -996,6 +997,21 @@ export class ChatWindowComponent implements OnChanges, OnDestroy {
   autoResize(textarea: HTMLTextAreaElement): void {
     textarea.style.height = 'auto';
     textarea.style.height = textarea.scrollHeight + 'px';
+  }
+
+  /**
+   * Devuelve el compositor a su alto de una línea.
+   *
+   * autoResize deja un style.height en línea, y ese alto no se va solo al
+   * vaciar el texto porque el evento (input) no se dispara cuando el modelo
+   * se limpia por código. Sin esto, después de enviar una respuesta rápida
+   * larga el recuadro se quedaba enorme y vacío.
+   */
+  private resetComposeHeight(): void {
+    setTimeout(() => {
+      const ta = this.messageTextarea?.nativeElement;
+      if (ta) ta.style.height = '';
+    }, 0);
   }
 
   handleKeydown(event: KeyboardEvent): void {
