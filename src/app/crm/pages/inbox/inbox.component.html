@@ -7,7 +7,13 @@
       <span><span class="wa-topbar-kicker">Comunicación / CRM</span><strong>Bandeja de WhatsApp</strong></span>
     </div>
     <div class="np-seg" role="tablist"><button type="button" [attr.aria-pressed]="mainView === 'inbox'" (click)="setView('inbox')">Chats</button><button type="button" [attr.aria-pressed]="mainView === 'dashboard'" (click)="setView('dashboard')">Dashboard</button></div>
-    <div class="np-chips wa-prov" role="group" aria-label="Proveedor">
+    <!-- Los grupos van aparte: son hilos internos y mezclarlos con la atención
+         llenaría la bandeja de ruido. Solo existen en WhatsApp Web. -->
+    <div class="np-seg" role="tablist" *ngIf="mainView === 'inbox'">
+      <button type="button" [attr.aria-pressed]="vista === 'clientes'" (click)="setVista('clientes')">Clientes</button>
+      <button type="button" [attr.aria-pressed]="vista === 'grupos'" (click)="setVista('grupos')">Grupos</button>
+    </div>
+    <div class="np-chips wa-prov" role="group" aria-label="Proveedor" *ngIf="vista === 'clientes'">
       <span class="wa-prov-item" *ngFor="let p of [{id:'meta',label:'API Meta'},{id:'netplay',label:'WhatsApp Web'}]" (mouseenter)="hoverProvider = p.id" (mouseleave)="hoverProvider = null">
         <button type="button" class="np-chip" [attr.aria-pressed]="inboxProvider === p.id" (click)="setProvider($any(p.id))">{{ p.label }}<span class="wa-prov-badge" *ngIf="providerUnread[p.id]">{{ providerUnread[p.id] }}</span></button>
         <div class="wa-prov-pop" *ngIf="hoverProvider === p.id && providerRecent[p.id]?.length">
@@ -16,6 +22,7 @@
         </div>
       </span>
     </div>
+    <button type="button" class="np-btn np-btn--ghost np-btn--sm" *ngIf="vista === 'grupos'" (click)="abrirGrupos()">Elegir grupos</button>
     <span class="np-spacer"></span>
     <button type="button" class="wa-sound" [attr.aria-pressed]="soundEnabled" (click)="toggleSound()" [title]="soundEnabled ? 'Silenciar notificaciones' : 'Activar sonido de notificaciones'">
       <svg *ngIf="soundEnabled" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 17V11a6 6 0 0 1 12 0v6l1.5 2h-15zM10 21h4"/></svg>
@@ -93,5 +100,45 @@
       <p class="np-notice np-notice--danger" *ngIf="settingsError">{{ settingsError }}</p>
     </div>
     <div class="np-modal-foot"><button type="button" class="np-btn np-btn--ghost" (click)="showSettings = false">Cancelar</button><button type="button" class="np-btn np-btn--primary" [disabled]="savingSettings" (click)="saveSettings()">{{ savingSettings ? 'Guardando…' : 'Guardar configuración' }}</button></div>
+  </div>
+</div>
+
+<!-- ═══ Elegir qué grupos entran al CRM ═══════════════════════════════════ -->
+<div class="np-modal-back" *ngIf="showGrupos" (click)="showGrupos = false">
+  <div class="np-modal np-modal--editor" role="dialog" aria-modal="true" (click)="$event.stopPropagation()">
+    <div class="np-modal-head">
+      <div><p class="np-kicker">CRM <b>/</b> WhatsApp Web</p><h3>Grupos que seguís</h3></div>
+      <button type="button" class="np-icobtn" (click)="showGrupos = false" aria-label="Cerrar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
+    </div>
+
+    <div class="np-modal-body np-modal-body--scroll">
+      <p class="np-login-help">
+        Solo entran al CRM los grupos que marques. Los demás se ignoran, para que
+        la bandeja no se llene con conversaciones que no son de atención.
+      </p>
+
+      <div class="np-loading" *ngIf="cargandoGrupos"><span class="np-spinner"></span> Leyendo los grupos de la línea…</div>
+
+      <p class="np-muted" *ngIf="!cargandoGrupos && !grupos.length">
+        No encontramos grupos en esta línea, o el servicio de WhatsApp no está disponible.
+      </p>
+
+      <div class="wa-grupos" *ngIf="!cargandoGrupos && grupos.length">
+        <label class="wa-set-switch" *ngFor="let g of grupos">
+          <input type="checkbox" [checked]="g.seguido" (change)="alternarGrupo(g)" />
+          <span class="wa-set-track"></span>
+          <span class="wa-set-copy">
+            <b>{{ g.nombre }}</b>
+            <small>{{ g.participantes }} participante{{ g.participantes === 1 ? '' : 's' }}</small>
+          </span>
+        </label>
+      </div>
+    </div>
+
+    <div class="np-modal-foot">
+      <span class="np-fine">Los mensajes viejos no se traen: entran los que lleguen desde ahora.</span>
+      <span class="np-spacer"></span>
+      <button type="button" class="np-btn np-btn--primary" (click)="showGrupos = false">Listo</button>
+    </div>
   </div>
 </div>

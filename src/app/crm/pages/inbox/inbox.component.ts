@@ -279,11 +279,48 @@ export class InboxComponent implements OnInit, OnDestroy {
   dismissToast(id: number): void { this.toasts = this.toasts.filter(t => t.id !== id); }
   openToast(t: { conv: any; provider: string }): void { this.dismissToast((t as any).id); this.openFromPreview(t.provider as any, t.conv.id); }
 
+  /* ── GRUPOS ─────────────────────────────────────────────────── */
+  //
+  // Los grupos van en su propia sección, no mezclados con la atención a
+  // clientes: son hilos internos (instalaciones, reportes de pago) y
+  // ensuciarían la bandeja. Solo existen en WhatsApp Web; Meta no los soporta.
+  vista: 'clientes' | 'grupos' = 'clientes';
+  grupos: any[] = [];
+  cargandoGrupos = false;
+  showGrupos = false;
+
+  setVista(v: 'clientes' | 'grupos'): void {
+    if (this.vista === v) return;
+    this.vista = v;
+    this.activeConversationId = null;
+    if (v === 'grupos') this.inboxProvider = 'netplay';   // Meta no tiene grupos
+    this.loadInbox();
+  }
+
+  abrirGrupos(): void {
+    this.showGrupos = true;
+    this.cargandoGrupos = true;
+    this.crmService.getGrupos().subscribe({
+      next: r => { this.grupos = r.data ?? []; this.cargandoGrupos = false; },
+      error: () => { this.grupos = []; this.cargandoGrupos = false; },
+    });
+  }
+
+  alternarGrupo(g: any): void {
+    const seguir = !g.seguido;
+    g.seguido = seguir;   // respuesta inmediata; si falla se revierte
+    this.crmService.seguirGrupo(g.jid, g.nombre, g.participantes, seguir).subscribe({
+      next: () => { if (this.vista === 'grupos') this.loadInbox(); },
+      error: () => { g.seguido = !seguir; },
+    });
+  }
+
   /* ── INBOX ──────────────────────────────────────────────────── */
   loadInbox(): void {
     const filters: any = {};
     if (this.inboxStatus !== 'all') filters.status = this.inboxStatus;
     filters.provider = this.inboxProvider;
+    if (this.vista === 'grupos') filters.grupos = 1;
 
     this.crmService.getInbox(filters).subscribe(res => {
       const freshInbox = res.data ?? [];

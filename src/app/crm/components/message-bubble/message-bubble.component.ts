@@ -30,6 +30,9 @@ export interface ChatMessage {
   is_forwarded?: boolean;
   agent_signature?: string | null;
   is_note?: boolean;
+  /** En un grupo: quién escribió el mensaje. Vacío en los chats individuales. */
+  participant_name?: string | null;
+  participant_phone?: string | null;
   _renderKey?: number;
 }
 

@@ -16,6 +16,11 @@
 
   <!-- Burbuja -->
   <div class="wa-bubble" *ngIf="!isNote && !isSticker" [class.is-media]="isImage || isVideo">
+
+    <!-- En un grupo cada mensaje lo escribe alguien distinto: sin el autor el
+         hilo se leería como si hablara una sola persona. -->
+    <span class="wa-participante" *ngIf="!isOut && message.participant_name">{{ message.participant_name }}</span>
+
     <span class="wa-tail"></span>
     <div class="wa-fwd" *ngIf="message.is_forwarded"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 5l7 7-7 7M21 12H8a5 5 0 0 0-5 5v2"/></svg>Reenviado</div>
     <div class="wa-bot" *ngIf="message.from === 'system'">Bot automático</div>

@@ -136,3 +136,13 @@
   .wa-reactbar-more { font: 700 20px var(--font-body); color: var(--wa-text-2); } }
 .wa-msg.is-in .wa-reactbar { left: 0; } .wa-msg.is-out .wa-reactbar { right: 0; }
 .wa-contact-item { display: grid; gap: 6px; padding-bottom: 6px; & + & { border-top: 1px solid rgba(0,0,0,.08); padding-top: 8px; } }
+
+/* Autor del mensaje dentro de un grupo */
+.wa-participante {
+  display: block;
+  font-size: 11.5px;
+  font-weight: 700;
+  color: var(--accent);
+  margin-bottom: 2px;
+  line-height: 1.2;
+}

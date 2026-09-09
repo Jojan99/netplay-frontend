@@ -33,7 +33,7 @@ export class CrmService {
   /* =====================
      INBOX
   ====================== */
-  getInbox(filters?: { mine?: boolean; status?: string; search?: string; provider?: 'meta' | 'netplay' }) {
+  getInbox(filters?: { mine?: boolean; status?: string; search?: string; provider?: 'meta' | 'netplay'; grupos?: number }) {
     let params = new HttpParams();
     if (filters) {
       Object.entries(filters).forEach(([k, v]) => {
@@ -226,6 +226,21 @@ export class CrmService {
   getSettings() {
     return this.http.get<any>(this.apiUrl('crm/settings'), { headers: this.getHeaders() });
   }
+  /* =====================
+     GRUPOS DE WHATSAPP
+     Solo WhatsApp Web: la API de Meta no soporta grupos.
+  ====================== */
+
+  /** Los grupos de la línea, marcando cuáles se están siguiendo. */
+  getGrupos() {
+    return this.http.get<any>(this.apiUrl('crm/grupos'), { headers: this.getHeaders() });
+  }
+
+  /** Empieza o deja de seguir un grupo. */
+  seguirGrupo(jid: string, nombre: string, participantes: number, seguir: boolean) {
+    return this.http.post<any>(this.apiUrl('crm/grupos'), { jid, nombre, participantes, seguir }, { headers: this.getHeaders() });
+  }
+
   saveSettings(data: any) {
     return this.http.post<any>(this.apiUrl('crm/settings'), data, { headers: this.getHeaders() });
   }
