@@ -453,7 +453,7 @@
         <span class="np-spinner np-spinner--sm" *ngIf="creandoSistema"></span>
         {{ creandoSistema ? 'Creando…' : 'Crear las que faltan' }}
       </button>
-      <button type="button" class="np-btn np-btn--ghost np-btn--sm" (click)="cargarSistema()" [disabled]="cargandoSistema">Actualizar</button>
+      <button type="button" class="np-btn np-btn--ghost np-btn--sm" (click)="cargarSistema(true)" [disabled]="cargandoSistema">Actualizar</button>
     </div>
 
     <div class="np-loading" *ngIf="cargandoSistema && !sistema.length"><span class="np-spinner"></span> Consultando tu cuenta de Meta…</div>

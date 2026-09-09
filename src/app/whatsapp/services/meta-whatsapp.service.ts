@@ -44,9 +44,14 @@ export class MetaWhatsappService {
   // así que el sistema las crea en la cuenta de cada empresa en vez de
   // compartir las suyas.
 
-  /** En qué va cada una: no creada, en revisión, aprobada o rechazada. */
-  estadoPlantillasSistema(): Observable<any> {
-    return this.http.get(`${this.base}/plantillas-sistema`, this.h());
+  /**
+   * En qué va cada una: no creada, en revisión, aprobada o rechazada.
+   * @param refrescar true = vuelve a preguntarle a Meta; sin esto responde con
+   *        lo último guardado, que es instantáneo.
+   */
+  estadoPlantillasSistema(refrescar = false): Observable<any> {
+    const q = refrescar ? '?refrescar=1' : '';
+    return this.http.get(`${this.base}/plantillas-sistema${q}`, this.h());
   }
 
   /** Crea las que falten y las deja en revisión de Meta. */

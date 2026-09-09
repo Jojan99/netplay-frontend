@@ -89,9 +89,14 @@ export class WaMetaTemplatesComponent implements OnInit {
   get rechazadas(): any[] { return this.sistema.filter(p => p.estado === 'REJECTED'); }
   get listas(): any[] { return this.sistema.filter(p => p.estado === 'APPROVED'); }
 
-  cargarSistema(): void {
+  /**
+   * @param refrescar true = vuelve a preguntarle a Meta. Sin esto se usa lo
+   *        último que se guardó, que es instantáneo y evita que la pantalla
+   *        dependa de que la API de Meta responda.
+   */
+  cargarSistema(refrescar = false): void {
     this.cargandoSistema = true;
-    this.meta.estadoPlantillasSistema().subscribe({
+    this.meta.estadoPlantillasSistema(refrescar).subscribe({
       next: (r: any) => { this.sistema = r?.data ?? []; this.cargandoSistema = false; },
       error: () => { this.sistema = []; this.cargandoSistema = false; },
     });
@@ -115,9 +120,8 @@ export class WaMetaTemplatesComponent implements OnInit {
         const n = (d.creadas || []).length;
         if (n) this.toast.success(`${n} plantilla${n === 1 ? '' : 's'} enviada${n === 1 ? '' : 's'} a revisión de Meta.`);
         if ((d.errores || []).length) this.toast.error(d.errores[0]);
-        this.cargarSistema();
+        this.cargarSistema(true);
         this.loadBindings();
-    this.cargarSistema();
       },
       error: (e: any) => {
         this.creandoSistema = false;
@@ -149,6 +153,7 @@ export class WaMetaTemplatesComponent implements OnInit {
   ngOnInit(): void {
     this.loadTemplates();
     this.loadBindings();
+    this.cargarSistema();
   }
 
   // ── Carga ──────────────────────────────────────────────────────────────────
