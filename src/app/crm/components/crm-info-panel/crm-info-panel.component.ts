@@ -38,6 +38,13 @@ export class CrmInfoPanelComponent implements OnChanges {
   @Input() summaryLoading = false;
   @Output() refreshSummary = new EventEmitter<void>();
 
+  /**
+   * El catálogo de etiquetas cambió. La bandeja lo escucha para refrescar sus
+   * chips de filtro: antes una etiqueta nueva solo se veía tras recargar la
+   * página, porque la lista de la bandeja se cargaba una sola vez al inicio.
+   */
+  @Output() labelsChanged = new EventEmitter<void>();
+
   activeTab: 'info' | 'notes' | 'labels' | 'history' = 'info';
 
   /* ── Ficha: facturas, link de pago, nota técnica ─────────────── */
@@ -155,7 +162,7 @@ export class CrmInfoPanelComponent implements OnChanges {
     const name = this.newLabelName.trim(); if (!name || this.savingLabel) return;
     this.savingLabel = true;
     this.crmService.createLabel(name, this.newLabelColor).subscribe({
-      next: res => { this.allLabels = [...this.allLabels, res.data ?? res]; this.newLabelName = ''; this.savingLabel = false; },
+      next: res => { this.allLabels = [...this.allLabels, res.data ?? res]; this.newLabelName = ''; this.savingLabel = false; this.labelsChanged.emit(); },
       error: () => { this.savingLabel = false; this.toast.error('No se pudo crear la etiqueta.'); }
     });
   }

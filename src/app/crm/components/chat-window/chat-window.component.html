@@ -140,7 +140,7 @@
     <input #mediaInput type="file" hidden accept="image/*,video/*" (change)="onFileSelected($event)" />
   </div>
 
-  <app-crm-info-panel class="wa-info-host" *ngIf="showInfoPanel && conversationId && headerData" [conversationId]="conversationId!" [customerPhone]="headerData!.customerPhone" [customerName]="headerData!.customerName" [currentPriority]="headerData!.priority || 'normal'" [status]="headerData!.status" (priorityChanged)="onPriorityChanged($event)" (customerNameChanged)="headerData!.customerName = $event" (closePanel)="showInfoPanel = false" [summary]="customerSummary" [summaryLoading]="summaryLoading" (refreshSummary)="loadSummary()" (openConversation)="openConversation.emit($event)"></app-crm-info-panel>
+  <app-crm-info-panel class="wa-info-host" (labelsChanged)="labelsChanged.emit()" *ngIf="showInfoPanel && conversationId && headerData" [conversationId]="conversationId!" [customerPhone]="headerData!.customerPhone" [customerName]="headerData!.customerName" [currentPriority]="headerData!.priority || 'normal'" [status]="headerData!.status" (priorityChanged)="onPriorityChanged($event)" (customerNameChanged)="headerData!.customerName = $event" (closePanel)="showInfoPanel = false" [summary]="customerSummary" [summaryLoading]="summaryLoading" (refreshSummary)="loadSummary()" (openConversation)="openConversation.emit($event)"></app-crm-info-panel>
 
   <app-preview-modal *ngIf="previewOpen" [url]="previewUrl!" [type]="previewType!" (close)="closePreview()"></app-preview-modal>
 

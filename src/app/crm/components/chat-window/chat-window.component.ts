@@ -125,6 +125,15 @@ export class ChatWindowComponent implements OnChanges, OnDestroy {
   sending  = false;
   draftMessage = '';
 
+  /**
+   * Lo que quedó escrito sin enviar, por conversación.
+   *
+   * El componente se reutiliza al cambiar de chat, así que el texto del
+   * compositor se arrastraba de una conversación a otra: se podía terminar
+   * mandándole a un cliente un mensaje empezado para otro.
+   */
+  private borradores = new Map<number, string>();
+
   private mediaStream: MediaStream | null = null;
 
   // ── Adjuntos ──────────────────────────────────────────────────
@@ -208,6 +217,9 @@ export class ChatWindowComponent implements OnChanges, OnDestroy {
 
   // ── Ubicación (enviar) ────────────────────────────────────────
   @Output() startChat = new EventEmitter<{ phone: string; name: string }>();
+
+  /** Se creó o cambió una etiqueta: la bandeja refresca sus chips de filtro. */
+  @Output() labelsChanged = new EventEmitter<void>();
   showLocationModal = false;
   locForm = { lat: '', lng: '', name: '', address: '', raw: '' };
   locError = ''; locLocating = false;
@@ -398,9 +410,25 @@ export class ChatWindowComponent implements OnChanges, OnDestroy {
 
     if (this.currentConversationId) {
       this.echoService.leave(`conversation.${this.currentConversationId}`);
+
+      // Guardar lo que quedó escrito en el chat que se abandona
+      const pendiente = (this.draftMessage ?? '').trim();
+      if (pendiente) this.borradores.set(this.currentConversationId, this.draftMessage);
+      else this.borradores.delete(this.currentConversationId);
     }
 
     this.currentConversationId = this.conversationId;
+
+    // Recuperar el borrador de este chat (vacío si no había). El compositor
+    // se ajusta al contenido: crece si el borrador es largo, vuelve a una
+    // línea si no hay nada.
+    this.draftMessage = this.borradores.get(this.conversationId) ?? '';
+    setTimeout(() => {
+      const ta = this.messageTextarea?.nativeElement;
+      if (!ta) return;
+      if (this.draftMessage) this.autoResize(ta);
+      else ta.style.height = '';
+    }, 0);
     this.showInfoPanel = false;
     this.replyTarget = null;
     this.loadMessages(this.conversationId);
@@ -745,6 +773,7 @@ export class ChatWindowComponent implements OnChanges, OnDestroy {
 
     this.sending = true;
     this.draftMessage = '';
+    if (this.conversationId) this.borradores.delete(this.conversationId);
     this.resetComposeHeight();
 
     const tempId = Date.now();
