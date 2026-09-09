@@ -69,6 +69,8 @@
             <textarea formControlName="observation" rows="4" class="np-input np-textarea" [class.is-invalid]="isInvalid('observation')" placeholder="Describí el problema o requerimiento…"></textarea>
             <small class="np-fine np-neg" *ngIf="isInvalid('observation')">Campo requerido</small>
           </label>
+          <label class="np-check np-field-full"><input type="checkbox" [(ngModel)]="avisarGrupo" [ngModelOptions]="{standalone: true}" /><span class="np-check-copy"><span>Avisar al grupo de WhatsApp</span><small class="np-fine">Se manda el resumen del ticket al grupo configurado.</small></span></label>
+
           <div class="np-field-full np-btnrow np-btnrow--end">
             <button type="button" class="np-btn np-btn--ghost" (click)="cancel()">Cancelar</button>
             <button type="submit" class="np-btn np-btn--primary" [disabled]="isLoading"><span *ngIf="isLoading" class="np-spinner np-spinner--sm"></span>{{ isLoading ? 'Guardando…' : 'Crear ticket' }}</button>

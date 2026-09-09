@@ -293,6 +293,8 @@ export class CrmService {
     address?: string;
     cedula?: string;
     phone?: string;
+    /** Avisar al grupo de WhatsApp configurado. */
+    notify_group?: boolean;
   }) {
     return this.http.post<any>(this.apiUrl(`conversations/${conversationId}/ticket`), data, {
       headers: this.getHeaders()

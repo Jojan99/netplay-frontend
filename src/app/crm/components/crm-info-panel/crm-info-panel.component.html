@@ -75,8 +75,26 @@
           <label class="np-field"><span>Prioridad <em>*</em></span><select class="np-input" [(ngModel)]="ticketPriorityId"><option [value]="0" disabled>Seleccionar…</option><option *ngFor="let p of ticketPriorities" [value]="p.id">{{ p.name }}</option></select></label>
           <label class="np-field"><span>Técnico <em>*</em></span><select class="np-input" [(ngModel)]="ticketTechId"><option [value]="0" disabled>Seleccionar…</option><option *ngFor="let t of ticketTechs" [value]="t.id">{{ t.names }} {{ t.lastname }}</option></select></label>
           <label class="np-field"><span>Observación <em>*</em></span><textarea class="np-input np-textarea" rows="3" [(ngModel)]="ticketObs" placeholder="Describí el problema…"></textarea></label>
-          <label class="np-field"><span>Dirección</span><input type="text" class="np-input" [(ngModel)]="ticketAddress" placeholder="Opcional" /></label>
-          <label class="np-field"><span>Cédula</span><input type="text" class="np-input np-mono" [(ngModel)]="ticketCedula" placeholder="Opcional" /></label>
+          <!-- Los datos del cliente salen de su ficha, como en el módulo de
+               tickets. Antes se pedían a mano y podían quedar en blanco o mal. -->
+          <div class="wa-ticket-cliente" *ngIf="summary?.linked">
+            <p class="np-fine">Se abrirá a nombre de</p>
+            <b>{{ summary.name }}</b>
+            <dl class="np-dl">
+              <ng-container *ngIf="summary.dni"><dt>Cédula</dt><dd class="np-mono">{{ summary.dni }}</dd></ng-container>
+              <ng-container *ngIf="summary.address"><dt>Dirección</dt><dd>{{ summary.address }}</dd></ng-container>
+            </dl>
+          </div>
+
+          <!-- Sin cliente reconocido sí hace falta escribirlos: el ticket los exige. -->
+          <ng-container *ngIf="!summary?.linked">
+            <p class="np-notice np-notice--warn">Este número no coincide con ningún cliente registrado, así que hay que completar los datos a mano.</p>
+            <label class="np-field"><span>Dirección</span><input type="text" class="np-input" [(ngModel)]="ticketAddress" placeholder="Dirección del servicio" /></label>
+            <label class="np-field"><span>Cédula</span><input type="text" class="np-input np-mono" [(ngModel)]="ticketCedula" placeholder="Documento del titular" /></label>
+          </ng-container>
+
+          <label class="np-check"><input type="checkbox" [(ngModel)]="ticketAvisarGrupo" /><span class="np-check-copy"><span>Avisar al grupo de WhatsApp</span><small class="np-fine">Se manda el resumen del ticket al grupo configurado.</small></span></label>
+
           <div class="np-btnrow np-btnrow--end"><button type="button" class="np-btn np-btn--ghost np-btn--sm" (click)="showTicketForm = false">Cancelar</button><button type="button" class="np-btn np-btn--primary np-btn--sm" [disabled]="savingTicket || !ticketFormValid" (click)="submitTicket()">{{ savingTicket ? 'Creando…' : 'Crear ticket' }}</button></div>
         </div>
       </section>

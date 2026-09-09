@@ -53,3 +53,12 @@
 .wa-card-table td, .wa-card-table th { white-space: nowrap; }
 .wa-card-table .wa-inv-acts { display: inline-flex; gap: 2px; a { display: inline-grid; place-items: center; } }
 @media (max-width: 767px) { .wa-card-grid { grid-template-columns: 1fr; } }
+
+/* Datos del cliente que se usarán en el ticket, tomados de su ficha */
+.wa-ticket-cliente {
+  border: 1px solid var(--line); border-radius: var(--radius);
+  padding: 10px 12px; background: var(--surface-2);
+  b { font-size: 13.5px; color: var(--text); }
+  .np-fine { text-transform: uppercase; letter-spacing: .06em; font-size: 10.5px; }
+  .np-dl { margin-top: 6px; }
+}

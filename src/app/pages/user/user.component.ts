@@ -1,6 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { HttpClientModule } from '@angular/common/http';
-import { Component, HostListener, ChangeDetectorRef, OnInit, ViewChild, ElementRef } from '@angular/core';
+import { Component, HostListener, ChangeDetectorRef, OnInit, ViewChild, ElementRef, inject } from '@angular/core';
+import { DialogService } from '../../services/dialog.service';
 import { ActivatedRoute } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { LayoutComponent } from '../../components/layout/layout.component';
@@ -33,6 +34,8 @@ export type ClientTab = 'resumen' | 'servicios' | 'facturacion' | 'tickets' | 'h
   host: { class: 'np-console' }
 })
 export class UserComponent implements OnInit {
+
+  private dialog = inject(DialogService);
 
   constructor(
     private userSvc: UserService,
@@ -617,8 +620,15 @@ export class UserComponent implements OnInit {
 
   payingFactureId: number | null = null;
 
-  payFacture(item: FactureInterface) {
+  async payFacture(item: FactureInterface) {
     if (!item.id || item.paid === 1) return;
+
+    // Registrar un pago mueve la cartera del cliente y no se deshace solo:
+    // se confirma antes, como el resto de acciones con consecuencia.
+    if (!await this.dialog.confirm(
+      `¿Registrar el pago de la factura ${item.number_facture} por $${Number(item.price_total || 0).toLocaleString('es-CO')}?`
+    )) return;
+
     this.payingFactureId = item.id;
     this.financeSvc.createpaidFacturation(item.id, this.selectedUserId, item.price_total, item.number_facture)
       .subscribe({
@@ -631,7 +641,8 @@ export class UserComponent implements OnInit {
       });
   }
 
-  downloadPdf(id: any) {
+  async downloadPdf(id: any) {
+    if (!await this.dialog.confirm('¿Descargar la factura en PDF?')) return;
     this.userSvc.downloadPdfById(id).subscribe({
       next: (blob: Blob) => {
         if (!blob) return;
@@ -644,7 +655,8 @@ export class UserComponent implements OnInit {
     });
   }
 
-  downloadPayPdf(id: any, extra: any) {
+  async downloadPayPdf(id: any, extra: any) {
+    if (!await this.dialog.confirm('¿Descargar el comprobante de pago?')) return;
     this.userSvc.downloadPayById(id, extra).subscribe({
       next: (blob: Blob) => {
         if (!blob) return;
@@ -657,7 +669,10 @@ export class UserComponent implements OnInit {
     });
   }
 
-  sendInvoiceWA(invoiceId: string, item: any) {
+  async sendInvoiceWA(invoiceId: string, item: any) {
+    // Le llega un WhatsApp a un cliente real: se confirma antes.
+    if (!await this.dialog.confirm(`¿Enviar la factura ${item.number_facture} por WhatsApp al cliente?`)) return;
+
     item._waSending = true;
     this.userSvc.sendInvoiceByWhatsApp(invoiceId).subscribe({
       next: (res: any) => {

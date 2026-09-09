@@ -1,4 +1,5 @@
 import { ToastService } from '../../../services/toast.service';
+import { DialogService } from '../../../services/dialog.service';
 import { Component, OnInit, ChangeDetectorRef, inject } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { UserService } from '../../../services/user.service';
@@ -135,7 +136,12 @@ export class MaintenanceTicketComponent implements OnInit {
     return tech ? `${tech.names} ${tech.lastname}` : '';
   }
 
-  submit() {
+  private dialog = inject(DialogService);
+
+  /** Avisar al grupo de WhatsApp al crear. Antes salía siempre, sin preguntar. */
+  avisarGrupo = true;
+
+  async submit() {
     if (this.ticketForm.invalid || !this.selectedUser) {
       this.ticketForm.markAllAsTouched();
       if (!this.selectedUser) this.toast.error('Debe seleccionar un cliente');

@@ -349,6 +349,9 @@ export class CrmInfoPanelComponent implements OnChanges {
     this.showTicketForm = true;
   }
 
+  /** Avisar al grupo de WhatsApp al crear. Antes salía siempre, sin preguntar. */
+  ticketAvisarGrupo = true;
+
   get ticketFormValid(): boolean {
     return !!this.ticketObs.trim()
       && this.ticketServiceId > 0
@@ -356,17 +359,28 @@ export class CrmInfoPanelComponent implements OnChanges {
       && this.ticketTechId > 0;
   }
 
-  submitTicket(): void {
+  async submitTicket(): Promise<void> {
     if (!this.ticketFormValid || this.savingTicket) return;
+
+    // Confirmar antes de crear, como el resto de acciones del panel
+    // (sendInvoice y sendPayLink ya lo hacían; esta no).
+    const aQuien = this.summary?.linked ? ` para ${this.summary.name}` : '';
+    if (!await this.dialog.confirm(
+      `¿Crear el ticket${aQuien}?` + (this.ticketAvisarGrupo ? ' Se avisará al grupo de WhatsApp.' : '')
+    )) return;
+
     this.savingTicket = true;
     this.crmService.createTicketFromConversation(this.conversationId, {
       observation:  this.ticketObs.trim(),
       type_service: this.ticketServiceId,
       priority:     this.ticketPriorityId,
       tecnichal:    this.ticketTechId,
-      address:      this.ticketAddress.trim() || undefined,
-      cedula:       this.ticketCedula.trim()  || undefined,
-      phone:        this.ticketPhone.trim()   || undefined,
+      // Si el cliente está reconocido, los datos salen de su ficha; el backend
+      // ya los resuelve, así que no se mandan campos vacíos que los pisen.
+      address:      this.summary?.linked ? undefined : (this.ticketAddress.trim() || undefined),
+      cedula:       this.summary?.linked ? undefined : (this.ticketCedula.trim()  || undefined),
+      phone:        this.ticketPhone.trim() || undefined,
+      notify_group: this.ticketAvisarGrupo,
     }).subscribe({
       next: res => {
         this.ticketCreated.emit(res.ticket_id);
