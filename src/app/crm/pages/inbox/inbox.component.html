@@ -104,7 +104,7 @@
 </div>
 
 <!-- ═══ Elegir qué grupos entran al CRM ═══════════════════════════════════ -->
-<div class="np-modal-back" *ngIf="showGrupos" (click)="showGrupos = false">
+<div class="np-overlay" *ngIf="showGrupos" (click)="showGrupos = false">
   <div class="np-modal np-modal--editor" role="dialog" aria-modal="true" (click)="$event.stopPropagation()">
     <div class="np-modal-head">
       <div><p class="np-kicker">CRM <b>/</b> WhatsApp Web</p><h3>Grupos que seguís</h3></div>
