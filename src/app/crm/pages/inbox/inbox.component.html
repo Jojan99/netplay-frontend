@@ -75,6 +75,20 @@
           <textarea class="np-input np-textarea" rows="3" [(ngModel)]="settingsForm.welcome_message" [placeholder]="settingsForm.welcome_message_default"></textarea>
           <small class="np-fine">Vacío = mensaje por defecto. Podés usar *negrita* y saltos de línea como en WhatsApp.</small>
         </section>
+
+        <section class="wa-set-card wa-set-card--wide">
+          <header><span class="wa-set-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3 4 6v6c0 4.4 3.4 8.4 8 9 4.6-.6 8-4.6 8-9V6l-8-3z"/><path d="M9.5 12l1.8 1.8L15 10"/></svg></span><div><h4>Identificar antes de atender</h4><p>Le pide la cédula al cliente y abre su ficha antes de pasarlo al agente.</p></div></header>
+
+          <label class="wa-set-switch"><input type="checkbox" [(ngModel)]="settingsForm.identificacion_enabled" /><span class="wa-set-track"></span><span class="wa-set-copy"><b>Pedir cédula antes de entrar al CRM</b><small>Mientras el cliente no se identifique, el chat no aparece en la bandeja. Lo que escriba no se pierde: entra completo cuando responde.</small></span></label>
+
+          <ng-container *ngIf="settingsForm.identificacion_enabled">
+            <label class="wa-set-switch"><input type="checkbox" [(ngModel)]="settingsForm.identificacion_solo_desconocidos" /><span class="wa-set-track"></span><span class="wa-set-copy"><b>Solo si no lo reconozco por el teléfono</b><small>Evita el trámite a los clientes que ya tenés registrados con ese número.</small></span></label>
+
+            <label class="np-field"><span>Intentos</span><div class="wa-set-inline"><input type="number" class="np-input np-mono" min="1" max="5" [(ngModel)]="settingsForm.identificacion_intentos" /><em>antes de pasarlo igual al agente</em></div><small class="np-fine">Si no logra dar una cédula válida, la conversación pasa igual y queda marcada como sin identificar. Nadie se queda atrapado hablándole a un bot.</small></label>
+
+            <label class="np-field"><span>Mensaje que se le envía</span><textarea class="np-input np-textarea" rows="3" [(ngModel)]="settingsForm.identificacion_mensaje" [placeholder]="settingsForm.identificacion_mensaje_default"></textarea><small class="np-fine">Vacío = mensaje por defecto. Reconoce la cédula con puntos, con espacios, y aunque venga junto al nombre.</small></label>
+          </ng-container>
+        </section>
       </div>
       <p class="np-notice np-notice--danger" *ngIf="settingsError">{{ settingsError }}</p>
     </div>
