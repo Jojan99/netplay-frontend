@@ -11,6 +11,7 @@
     <div class="np-seg" role="tablist">
       <button type="button" [attr.aria-pressed]="tab === 'templates'" (click)="tab = 'templates'">Mis plantillas</button>
       <button type="button" [attr.aria-pressed]="tab === 'automations'" (click)="tab = 'automations'">Avisos automáticos<span class="np-c" *ngIf="bindings.length">{{ bindings.length }}</span></button>
+      <button type="button" [attr.aria-pressed]="tab === 'sistema'" (click)="tab = 'sistema'">Las que necesita el sistema<span class="np-c np-c--warn" *ngIf="faltantes.length">{{ faltantes.length }}</span></button>
     </div>
   </div>
   <div class="np-scroll np-legacy">
@@ -419,4 +420,69 @@
     </div>
   </div>
 </div>
+
+  <!-- ═══ Plantillas que el sistema necesita para operar ═══════════════════ -->
+  <section class="np-sistema" *ngIf="tab === 'sistema'">
+
+    <div class="np-sistema-intro">
+      <p>
+        Estos son los avisos que la plataforma manda sola: la factura del mes, el
+        recordatorio de pago, la suspensión por mora. Para que salgan cuando el
+        cliente <b>no</b> escribió en las últimas 24 horas, Meta exige una plantilla
+        aprobada.
+      </p>
+      <p class="np-fine">
+        Una plantilla aprobada solo sirve dentro de la cuenta donde fue aprobada, así
+        que el sistema las crea en <b>tu</b> cuenta de WhatsApp Business. Podés
+        reemplazar cualquiera por una tuya desde “Avisos automáticos”.
+      </p>
+    </div>
+
+    <div class="np-sistema-resumen">
+      <span class="np-pill np-pill--active">{{ listas.length }} aprobadas</span>
+      <span class="np-pill np-pill--warn"    *ngIf="enRevision.length">{{ enRevision.length }} en revisión</span>
+      <span class="np-pill np-pill--danger"  *ngIf="rechazadas.length">{{ rechazadas.length }} rechazadas</span>
+      <span class="np-pill np-pill--neutral" *ngIf="faltantes.length">{{ faltantes.length }} sin crear</span>
+      <span class="np-spacer"></span>
+      <button type="button" class="np-btn np-btn--primary np-btn--sm"
+              *ngIf="faltantes.length" [disabled]="creandoSistema" (click)="crearFaltantes()">
+        <span class="np-spinner np-spinner--sm" *ngIf="creandoSistema"></span>
+        {{ creandoSistema ? 'Creando…' : 'Crear las que faltan' }}
+      </button>
+      <button type="button" class="np-btn np-btn--ghost np-btn--sm" (click)="cargarSistema()" [disabled]="cargandoSistema">Actualizar</button>
+    </div>
+
+    <div class="np-loading" *ngIf="cargandoSistema && !sistema.length"><span class="np-spinner"></span> Consultando tu cuenta de Meta…</div>
+
+    <p class="np-muted" *ngIf="!cargandoSistema && !sistema.length">
+      No pudimos leer tu cuenta de Meta. Revisá que la API esté configurada en la pestaña de conexión.
+    </p>
+
+    <table class="np-table" *ngIf="sistema.length">
+      <thead><tr><th>Aviso</th><th>Plantilla</th><th>Estado</th><th>Variables</th></tr></thead>
+      <tbody>
+        <tr *ngFor="let p of sistema">
+          <td>
+            <b>{{ p.label }}</b>
+            <small class="np-fine np-block">{{ p.descripcion }}</small>
+          </td>
+          <td>
+            <span class="np-mono">{{ p.vinculada || p.sugerida }}</span>
+            <small class="np-fine np-block" *ngIf="p.propia">Es tuya, no la del sistema</small>
+          </td>
+          <td>
+            <span class="np-pill" [ngClass]="claseEstado(p.estado)">{{ etiquetaEstado(p.estado) }}</span>
+            <small class="np-fine np-block np-neg" *ngIf="p.motivo">{{ p.motivo }}</small>
+          </td>
+          <td><span class="np-mono np-fine">{{ p.variables.join(', ') }}</span></td>
+        </tr>
+      </tbody>
+    </table>
+
+    <p class="np-fine np-sistema-pie" *ngIf="sistema.length">
+      Meta tarda desde unos minutos hasta un día en revisar. Mientras una plantilla no
+      esté aprobada, ese aviso no puede salir fuera de la ventana de 24 horas.
+    </p>
+  </section>
+
 </div>

@@ -52,7 +52,7 @@ interface Variable { key: string; label: string; example: string; }
 export class WaMetaTemplatesComponent implements OnInit {
   private toast = inject(ToastService);
   private dialog = inject(DialogService);
-  tab: 'templates' | 'automations' = 'templates';
+  tab: 'templates' | 'automations' | 'sistema' = 'templates';
 
   loading = true;
   loadingBindings = true;
@@ -73,6 +73,76 @@ export class WaMetaTemplatesComponent implements OnInit {
   /** Espacios que el texto realmente usa hoy, ordenados. */
   usedSlots: number[] = [];
   previewComponents: TemplateComponent[] = [];
+
+  /* ── Plantillas que el sistema necesita para operar ──────────────────
+   *
+   * Una plantilla aprobada solo sirve en la cuenta de Meta donde fue
+   * aprobada, así que no se pueden compartir entre empresas. El sistema trae
+   * su catálogo y lo crea en la cuenta de cada una.
+   */
+  sistema: any[] = [];
+  cargandoSistema = false;
+  creandoSistema = false;
+
+  get faltantes(): any[] { return this.sistema.filter(p => p.estado === 'NO_CREADA'); }
+  get enRevision(): any[] { return this.sistema.filter(p => p.estado === 'PENDING'); }
+  get rechazadas(): any[] { return this.sistema.filter(p => p.estado === 'REJECTED'); }
+  get listas(): any[] { return this.sistema.filter(p => p.estado === 'APPROVED'); }
+
+  cargarSistema(): void {
+    this.cargandoSistema = true;
+    this.meta.estadoPlantillasSistema().subscribe({
+      next: (r: any) => { this.sistema = r?.data ?? []; this.cargandoSistema = false; },
+      error: () => { this.sistema = []; this.cargandoSistema = false; },
+    });
+  }
+
+  async crearFaltantes(): Promise<void> {
+    const cuantas = this.faltantes.length;
+    if (!cuantas || this.creandoSistema) return;
+
+    if (!await this.dialog.confirm(
+      `Se crearán ${cuantas} plantilla${cuantas === 1 ? '' : 's'} en tu cuenta de WhatsApp Business y quedarán en revisión de Meta. ` +
+      `La aprobación puede tardar desde unos minutos hasta un día.`,
+      { title: 'Crear las plantillas del sistema', okLabel: 'Crear' }
+    )) return;
+
+    this.creandoSistema = true;
+    this.meta.crearPlantillasSistema(this.faltantes.map(p => p.evento)).subscribe({
+      next: (r: any) => {
+        this.creandoSistema = false;
+        const d = r?.data ?? {};
+        const n = (d.creadas || []).length;
+        if (n) this.toast.success(`${n} plantilla${n === 1 ? '' : 's'} enviada${n === 1 ? '' : 's'} a revisión de Meta.`);
+        if ((d.errores || []).length) this.toast.error(d.errores[0]);
+        this.cargarSistema();
+        this.loadBindings();
+    this.cargarSistema();
+      },
+      error: (e: any) => {
+        this.creandoSistema = false;
+        this.toast.error(e?.error?.data?.errores?.[0] || e?.error?.error || 'No se pudieron crear las plantillas.');
+      },
+    });
+  }
+
+  etiquetaEstado(estado: string): string {
+    return ({
+      APPROVED:   'Aprobada',
+      PENDING:    'En revisión',
+      REJECTED:   'Rechazada',
+      NO_CREADA:  'Sin crear',
+    } as Record<string, string>)[estado] ?? estado;
+  }
+
+  claseEstado(estado: string): string {
+    return ({
+      APPROVED:  'np-pill--active',
+      PENDING:   'np-pill--warn',
+      REJECTED:  'np-pill--danger',
+      NO_CREADA: 'np-pill--neutral',
+    } as Record<string, string>)[estado] ?? 'np-pill--neutral';
+  }
 
   constructor(private meta: MetaWhatsappService) {}
 

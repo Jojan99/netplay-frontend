@@ -38,6 +38,22 @@ export class MetaWhatsappService {
     return this.http.delete(`${this.base}/templates/${name}`, this.h());
   }
 
+  // ── Plantillas que el sistema necesita para operar ───────────────────────────
+  //
+  // Una plantilla aprobada solo sirve en la cuenta de Meta donde fue aprobada,
+  // así que el sistema las crea en la cuenta de cada empresa en vez de
+  // compartir las suyas.
+
+  /** En qué va cada una: no creada, en revisión, aprobada o rechazada. */
+  estadoPlantillasSistema(): Observable<any> {
+    return this.http.get(`${this.base}/plantillas-sistema`, this.h());
+  }
+
+  /** Crea las que falten y las deja en revisión de Meta. */
+  crearPlantillasSistema(eventos?: string[]): Observable<any> {
+    return this.http.post(`${this.base}/plantillas-sistema`, JSON.stringify(eventos ? { eventos } : {}), this.h());
+  }
+
   // ── Automatizaciones (evento → plantilla) ────────────────────────────────────
   getTemplateBindings(): Observable<any> {
     return this.http.get(`${this.base}/template-bindings`, this.h());

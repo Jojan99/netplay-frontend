@@ -1,2 +1,16 @@
 /* ─── Meta: cabecera nueva; el cuerpo usa el puente global ──────────── */
 .np-legacy { padding-top: 4px; }
+
+/* Plantillas que el sistema necesita para operar */
+.np-sistema { display: grid; gap: 16px; }
+.np-sistema-intro {
+  display: grid; gap: 6px;
+  p { margin: 0; font-size: 13.5px; line-height: 1.55; color: var(--text-2); max-width: 78ch; }
+  .np-fine { color: var(--text-3); }
+  b { color: var(--text); }
+}
+.np-sistema-resumen { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.np-sistema-pie { color: var(--text-3); margin: 0; }
+.np-block { display: block; margin-top: 2px; }
+.np-neg { color: var(--danger); }
+.np-c--warn { background: var(--warn-soft); color: var(--warn); }
