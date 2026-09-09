@@ -484,8 +484,9 @@ getIpzonebyZone(vlan: string, segment: string, routerId?: number | null) {
     return this.http.post<any>(url, formData, { headers });
   }
 
-  sendInvoiceByWhatsApp(invoiceId: string): Observable<any> {
+  /** @param canal 'netplay' (WhatsApp Web) o 'meta' (API oficial). */
+  sendInvoiceByWhatsApp(invoiceId: string, canal?: string): Observable<any> {
     const url = `${this.env.rootUrl}api/generatePdf/sendInvoiceByWhatsApp/${invoiceId}`;
-    return this.http.post<any>(url, {}, { headers: this.getHeaders() });
+    return this.http.post<any>(url, canal ? { canal } : {}, { headers: this.getHeaders() });
   }
 }

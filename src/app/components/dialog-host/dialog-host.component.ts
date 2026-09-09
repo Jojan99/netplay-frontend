@@ -23,6 +23,23 @@ import { DialogService } from '../../services/dialog.service';
         </div>
       </div>
     </div>
+
+    <!-- Elegir entre varios caminos, no solo sí/no -->
+    <div class="np-overlay np-overlay--top" *ngIf="dialog.currentChoice() as c" (click)="dialog.pick(null)">
+      <div class="np-modal np-modal--confirm" role="alertdialog" aria-modal="true" (click)="$event.stopPropagation()">
+        <h3 *ngIf="c.title">{{ c.title }}</h3>
+        <p class="np-confirm-msg">{{ c.message }}</p>
+        <div class="np-choice">
+          <button type="button" class="np-choice-opt" *ngFor="let o of c.options" [disabled]="o.disabled" (click)="dialog.pick(o.id)">
+            <b>{{ o.label }}</b>
+            <small *ngIf="o.hint">{{ o.hint }}</small>
+          </button>
+        </div>
+        <div class="np-btnrow np-btnrow--center">
+          <button type="button" class="np-btn np-btn--ghost" (click)="dialog.pick(null)">Cancelar</button>
+        </div>
+      </div>
+    </div>
   `,
   styles: [`
     :host, :host.np-console { display: contents !important; height: auto !important; }
@@ -33,10 +50,23 @@ import { DialogService } from '../../services/dialog.service';
     h3 { margin: 0 0 6px; font-family: var(--font-display); font-weight: 600; font-size: 18px; color: var(--text); }
     .np-confirm-msg { margin: 0 0 18px; font-size: 14px; line-height: 1.5; color: var(--text-2); white-space: pre-wrap; }
     .np-btnrow--center { justify-content: center; }
+    .np-choice { display: grid; gap: 8px; margin-bottom: 16px; }
+    .np-choice-opt {
+      display: grid; gap: 2px; text-align: left; padding: 11px 13px;
+      background: var(--surface); border: 1px solid var(--line-strong);
+      border-radius: var(--radius); cursor: pointer; font-family: inherit;
+      b { font-size: 13.5px; color: var(--text); }
+      small { font-size: 12px; color: var(--text-3); line-height: 1.4; }
+      &:hover:not(:disabled) { border-color: var(--accent); background: var(--accent-soft); }
+      &:disabled { opacity: .5; cursor: default; }
+    }
   `],
 })
 export class DialogHostComponent {
   constructor(public dialog: DialogService) {}
-  @HostListener('document:keydown.escape') onEsc(): void { if (this.dialog.current()) this.dialog.answer(false); }
+  @HostListener('document:keydown.escape') onEsc(): void {
+    if (this.dialog.current()) this.dialog.answer(false);
+    if (this.dialog.currentChoice()) this.dialog.pick(null);
+  }
   @HostListener('document:keydown.enter') onEnter(): void { if (this.dialog.current()) this.dialog.answer(true); }
 }

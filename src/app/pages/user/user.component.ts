@@ -670,11 +670,23 @@ export class UserComponent implements OnInit {
   }
 
   async sendInvoiceWA(invoiceId: string, item: any) {
-    // Le llega un WhatsApp a un cliente real: se confirma antes.
-    if (!await this.dialog.confirm(`¿Enviar la factura ${item.number_facture} por WhatsApp al cliente?`)) return;
+    // Por cuál canal. No es lo mismo: la API de Meta solo acepta mensajes
+    // libres si el cliente escribió en las últimas 24 h, y forzarlo fuera de
+    // esa ventana es lo que termina costando el bloqueo de la línea. Si está
+    // cerrada, el backend manda la plantilla aprobada en vez del PDF.
+    const canal = await this.dialog.choose(
+      `¿Por dónde enviamos la factura ${item.number_facture}?`,
+      [
+        { id: 'netplay', label: 'WhatsApp Web', hint: 'Manda el PDF directo. Sin límite de horario.' },
+        { id: 'meta',    label: 'API de Meta',  hint: 'Si el cliente no escribió en 24 h se envía la plantilla aprobada, no el PDF.' },
+      ],
+      'Enviar factura'
+    );
+
+    if (!canal) return;
 
     item._waSending = true;
-    this.userSvc.sendInvoiceByWhatsApp(invoiceId).subscribe({
+    this.userSvc.sendInvoiceByWhatsApp(invoiceId, canal).subscribe({
       next: (res: any) => {
         item._waSending = false;
         this.toast(res.message || 'Factura enviada por WhatsApp', 'success');
