@@ -106,6 +106,13 @@ export class CrmWidgetComponent implements OnInit, OnDestroy {
   /* ── acciones ──────────────────────────────────────────────── */
   toggle(): void { this.open = !this.open; this.minimized = false; if (this.open && !this.inbox.length) this.loadInbox(); }
   hide(): void { this.enabled = false; this.open = false; try { localStorage.setItem('crm_widget', 'off'); } catch {} }
+
+  /** Vuelve a mostrarlo. Sin esto, "Ocultar" era una puerta de una sola dirección. */
+  restore(): void {
+    this.enabled = true;
+    try { localStorage.removeItem('crm_widget'); } catch {}
+    if (!this.loaded) { this.loaded = true; this.loadInbox(); }
+  }
   setProvider(p: Provider): void { if (this.provider === p) return; this.provider = p; this.activeConversationId = null; this.loadInbox(); }
   openChat(id: number): void {
     this.activeConversationId = id; this.unreadMap.set(id, 0);

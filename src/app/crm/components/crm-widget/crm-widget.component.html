@@ -1,3 +1,12 @@
+<!-- Ocultado por el usuario: queda una pastilla mínima para poder traerlo de
+     vuelta. Antes "Ocultar" guardaba la preferencia en el navegador y no había
+     ninguna forma de reactivarlo: el widget desaparecía para siempre. -->
+<button type="button" class="wg-restore" *ngIf="!enabled && visible" (click)="restore()"
+        title="Volver a mostrar la bandeja de WhatsApp">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 20l1.3-3.8A8 8 0 1 1 8 19.2L4 20z"/></svg>
+  <span>WhatsApp</span>
+</button>
+
 <ng-container *ngIf="enabled && visible">
   <!-- Lanzador -->
   <button type="button" class="wg-launch" *ngIf="!open" (click)="toggle()" title="Abrir bandeja de WhatsApp">
