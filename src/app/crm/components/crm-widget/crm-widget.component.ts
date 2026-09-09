@@ -25,6 +25,11 @@ type Provider = 'meta' | 'netplay';
 export class CrmWidgetComponent implements OnInit, OnDestroy {
   @ViewChild('panel') panel?: ElementRef<HTMLElement>;
 
+  /** Filtro de la lista: los botones Nuevo / En curso / Cerrado.
+      Antes iba fijo en 'all' y no se escuchaba el cambio, así que los
+      botones se marcaban pero la lista seguía mostrando todo. */
+  status: 'all' | 'new' | 'in_progress' | 'closed' = 'all';
+
   enabled = true;        // el usuario puede ocultarlo desde el botón
   visible = false;       // ruta actual fuera del CRM
   open = false;
@@ -70,7 +75,10 @@ export class CrmWidgetComponent implements OnInit, OnDestroy {
   }
 
   loadInbox(): void {
-    this.crm.getInbox({ provider: this.provider }).subscribe({
+    const filtros: any = { provider: this.provider };
+    if (this.status !== 'all') filtros.status = this.status;
+
+    this.crm.getInbox(filtros).subscribe({
       next: res => { this.inbox = (res.data ?? []).map((c: any) => ({ ...c, unread_count: this.unreadMap.get(c.id) || 0 })); this.recount(); },
       error: err => { if (err?.status === 401 || err?.status === 403) this.enabled = false; }
     });
@@ -104,6 +112,12 @@ export class CrmWidgetComponent implements OnInit, OnDestroy {
   }
 
   /* ── acciones ──────────────────────────────────────────────── */
+  setStatus(status: 'all' | 'new' | 'in_progress' | 'closed'): void {
+    if (this.status === status) return;
+    this.status = status;
+    this.loadInbox();
+  }
+
   toggle(): void { this.open = !this.open; this.minimized = false; if (this.open && !this.inbox.length) this.loadInbox(); }
   hide(): void { this.enabled = false; this.open = false; try { localStorage.setItem('crm_widget', 'off'); } catch {} }
 

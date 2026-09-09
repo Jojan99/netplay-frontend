@@ -28,7 +28,7 @@
     <div class="wg-body" *ngIf="!minimized">
       <div class="wg-list" *ngIf="!activeConversationId">
         <div class="wg-prov"><button type="button" class="np-chip" [attr.aria-pressed]="provider === 'meta'" (click)="setProvider('meta')">API Meta</button><button type="button" class="np-chip" [attr.aria-pressed]="provider === 'netplay'" (click)="setProvider('netplay')">WhatsApp Web</button><span class="np-spacer"></span><button type="button" class="np-link" (click)="hide()" title="Ocultar el widget en este navegador">Ocultar</button></div>
-        <app-conversation-list class="wg-list-host" [conversations]="inbox" [activeConversationId]="activeConversationId" activeStatus="all" [labels]="labels" (openChat)="openChat($event)" (refresh)="loadInbox()" (markUnread)="markUnread($event)"></app-conversation-list>
+        <app-conversation-list class="wg-list-host" [conversations]="inbox" [activeConversationId]="activeConversationId" [activeStatus]="status" [labels]="labels" (openChat)="openChat($event)" (statusChange)="setStatus($event)" (refresh)="loadInbox()" (markUnread)="markUnread($event)"></app-conversation-list>
       </div>
       <app-chat-window class="wg-chat" *ngIf="activeConversationId" [conversationId]="activeConversationId" [compact]="true" (back)="back()" (conversationClosed)="back(); loadInbox()" (openConversation)="openChat($event)"></app-chat-window>
     </div>
