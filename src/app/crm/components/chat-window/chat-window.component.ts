@@ -880,7 +880,18 @@ export class ChatWindowComponent implements OnChanges, OnDestroy {
     this.focusComposer(0);
     this.crmService.sendMessage(this.conversationId, { message: text, type: 'text', quoted_message_id: quoted?.id })
       .subscribe({
-        next:  () => { this.sending = false; this.focusComposer(0); }, // el mensaje real llega por Echo y reemplaza al optimista
+        next: (res: any) => {
+          this.sending = false;
+          this.focusComposer(0);   // el mensaje real llega por Echo y reemplaza al optimista
+
+          // WhatsApp identifica a algunos contactos solo por un número interno
+          // (LID) y no por su teléfono. En ese caso el mensaje se direcciona
+          // igual, pero conviene decirlo: si el contacto no lo tiene guardado,
+          // puede no verlo. Antes esto pasaba en silencio.
+          if (res?.destinoResuelto === false) {
+            this.toast.info('Enviado, pero de este contacto solo conocemos su identificador de WhatsApp, no su teléfono. Pedile el número para asegurar la entrega.');
+          }
+        },
         error: () => { this.sending = false; this.markFailed(tempId); }
       });
   }
