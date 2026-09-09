@@ -88,6 +88,10 @@ export class ClientApiService {
 
   // ── Perfil ───────────────────────────────────────────────────────────────
   // ── Cuenta: estado, pagos, contratos, actividad ──
+  getStatement(): Observable<any> {
+    return this.http.get(`${this.baseUrl}/statement`, this.headers());
+  }
+
   getStatus(): Observable<any> {
     return this.http.get(`${this.baseUrl}/status`, this.headers());
   }

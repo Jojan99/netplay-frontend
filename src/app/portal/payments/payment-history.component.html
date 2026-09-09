@@ -18,6 +18,17 @@
   <a routerLink="/portal/facturas" class="pt-btn pt-btn--soft pt-btn--sm">Ver mis facturas</a>
 </div>
 
+<section class="pt-card" *ngIf="!loading() && invoices().length">
+  <div class="pt-card-h"><h2>Facturas y cómo las pagaste</h2></div>
+  <div class="pt-list">
+    <div class="pt-row" *ngFor="let f of invoices()">
+      <span class="pt-row-ico" [ngClass]="f.paid ? 'is-ok' : 'is-warn'"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/></svg></span>
+      <span class="pt-row-copy"><b class="np-mono">{{ f.number }}</b><small>Pagada con {{ f.paid_with }}<ng-container *ngIf="f.paid_at"> · {{ f.paid_at | date:'dd/MM/yyyy' }}</ng-container></small></span>
+      <span class="pt-row-end"><b>{{ formatCurrency(f.total) }}</b><span class="pt-pill" [ngClass]="f.paid ? 'is-ok' : 'is-warn'">{{ f.paid ? 'Pagada' : 'Abonada' }}</span></span>
+    </div>
+  </div>
+</section>
+
 <section class="pt-list" *ngIf="!loading() && payments().length > 0">
   <div class="pt-row" *ngFor="let p of payments()">
     <span class="pt-row-ico" [ngClass]="statusClass(p.status) || 'is-info'">

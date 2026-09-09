@@ -18,6 +18,7 @@ export class PaymentHistoryComponent implements OnInit {
   totalPaid = signal(0);
   openingId = signal<number | null>(null);
   errorMsg  = signal('');
+  invoices  = signal<any[]>([]);
 
   approved = computed(() => this.payments().filter(p => p.status === 'approved'));
 
@@ -25,6 +26,11 @@ export class PaymentHistoryComponent implements OnInit {
 
   load(): void {
     this.loading.set(true);
+    // El estado de cuenta dice con qué medio se pagó cada factura
+    this.api.getStatement().subscribe({
+      next: (res) => this.invoices.set((res.data?.invoices ?? []).filter((f: any) => f.paid_with)),
+      error: () => {},
+    });
     this.api.getPayments().subscribe({
       next: (res) => {
         this.payments.set(res.data?.payments ?? []);

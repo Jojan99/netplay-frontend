@@ -46,6 +46,10 @@
           <button type="button" class="np-btn np-btn--primary np-btn--sm" *ngIf="summary.pay_link_available" [disabled]="creatingPayLink" (click)="sendPayLink()">{{ creatingPayLink ? 'Generando…' : 'Enviar link de pago' }}</button>
           <button type="button" class="np-btn np-btn--ghost np-btn--sm" *ngIf="summary.last_unpaid" [disabled]="sendingInvoiceId" (click)="sendInvoice(summary.last_unpaid)">{{ sendingInvoiceId === summary.last_unpaid.id ? 'Enviando…' : 'Enviar última factura' }}</button>
         </div>
+        <div class="np-btnrow">
+          <button type="button" class="np-btn np-btn--ghost np-btn--sm" [disabled]="loadingStatement" (click)="openStatement()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 4h6v6M20 4l-9 9M19 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1h5"/></svg>Estado de cuenta</button>
+          <button type="button" class="np-btn np-btn--ghost np-btn--sm" (click)="copyStatement()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V6a2 2 0 0 1 2-2h9"/></svg>Copiar enlace</button>
+        </div>
         <p class="np-fine" *ngIf="summary.debt?.total && !summary.pay_link_available">La empresa no tiene pasarela de pago activa: sólo se puede enviar la factura.</p>
         <div class="wa-invoices" *ngIf="summary.invoices?.length">
           <div class="wa-inv" *ngFor="let inv of (showAllInvoices ? summary.invoices : summary.invoices.slice(0, 3))" [class.is-paid]="inv.paid">

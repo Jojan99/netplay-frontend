@@ -59,6 +59,29 @@ export class CrmInfoPanelComponent implements OnChanges {
       error: err => { this.sendingInvoiceId = null; this.toast.error(err?.error?.error || 'No se pudo enviar la factura.'); }
     });
   }
+  /** Enlace personal con todas las facturas del cliente y por dónde pagó cada una. */
+  statementUrl = '';
+  loadingStatement = false;
+  openStatement(): void {
+    const id = this.summary?.user_id; if (!id || this.loadingStatement) return;
+    this.loadingStatement = true;
+    this.crmService.getClientStatement(id).subscribe({
+      next: r => { this.loadingStatement = false; this.statementUrl = r.data?.share_url || ''; if (this.statementUrl) window.open(this.statementUrl, '_blank', 'noopener'); },
+      error: () => { this.loadingStatement = false; alert('No se pudo abrir el estado de cuenta.'); }
+    });
+  }
+  copyStatement(): void {
+    const id = this.summary?.user_id; if (!id) return;
+    this.crmService.getClientStatement(id).subscribe({
+      next: r => {
+        const url = r.data?.share_url; if (!url) return;
+        this.statementUrl = url;
+        navigator.clipboard?.writeText(url).then(() => this.flash('Enlace del estado de cuenta copiado')).catch(() => {});
+      },
+      error: () => alert('No se pudo generar el enlace.')
+    });
+  }
+
   copyInvoiceLink(inv: any): void { navigator.clipboard?.writeText(inv.link).then(() => this.flash('Link de la factura copiado')).catch(() => {}); }
   async sendPayLink(inv?: any) {
     if (this.creatingPayLink) return;

@@ -245,6 +245,10 @@ export class CrmService {
   createPayLink(conversationId: number, invoiceId?: number | null, send = true) {
     return this.http.post<any>(this.apiUrl(`conversations/${conversationId}/pay-link`), { invoice_id: invoiceId ?? null, send }, { headers: this.getHeaders() });
   }
+  getClientStatement(userId: number) {
+    return this.http.get<any>(`${this.env.rootUrl}api/clients/${userId}/statement`, { headers: this.getHeaders() });
+  }
+
   saveTechNote(conversationId: number) {
     return this.http.post<any>(this.apiUrl(`conversations/${conversationId}/tech-note`), {}, { headers: this.getHeaders() });
   }
