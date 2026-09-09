@@ -365,7 +365,10 @@ export class UserComponent implements OnInit {
   loadAuditLog(userId: number) {
     this.loadingAudit = true;
     this.userSvc.getAuditLog(userId).subscribe({
-      next: r => { this.auditLogs = r.data ?? []; this.loadingAudit = false; },
+      next: r => {
+        if (this.selectedUserId !== userId) return;   // se abrió otro cliente
+        this.auditLogs = r.data ?? []; this.loadingAudit = false;
+      },
       error: () => { this.loadingAudit = false; }
     });
   }
@@ -432,10 +435,17 @@ export class UserComponent implements OnInit {
     this.selectedUserData = null;
   }
 
+  /**
+   * Todas las cargas del modal comprueban que el cliente siga siendo el mismo
+   * antes de aplicar la respuesta. Sin eso, abrir un cliente y enseguida otro
+   * podía dejar datos mezclados de los dos.
+   */
   loadModalUser(id: number) {
     this.loadingModal = true;
     this.userSvc.getUserById(id).subscribe({
       next: r => {
+        if (this.selectedUserId !== id) return;   // se abrió otro cliente
+
         const e = r.data;
         this.selectedUserData = e;
         this.internet_plan = e.internet_plans_id ?? 0;
@@ -586,6 +596,11 @@ export class UserComponent implements OnInit {
     this.loadingFacture = true;
     this.userSvc.getDatePayFacture(cabId, filterPaid).subscribe({
       next: r => {
+        // Si mientras respondía se abrió otro cliente, esta respuesta ya no
+        // corresponde: aplicarla mostraba la cabecera de un cliente con las
+        // facturas de otro, que es un error grave en una pantalla de plata.
+        if (this.selectedUserCab !== cabId) return;
+
         this.factureInfo = (r.data ?? []).map((e: any) => ({
           id: e.id,
           number_facture: e.number_facture,
@@ -728,7 +743,10 @@ export class UserComponent implements OnInit {
     this.loadingTickets = true;
     this.ticketPage = 1;
     this.userSvc.getTicketsByUser(userId).subscribe({
-      next: r => { this.userTickets = r.data ?? []; this.loadingTickets = false; },
+      next: r => {
+        if (this.selectedUserId !== userId) return;   // se abrió otro cliente
+        this.userTickets = r.data ?? []; this.loadingTickets = false;
+      },
       error: () => { this.loadingTickets = false; }
     });
   }
