@@ -108,6 +108,14 @@ export class InboxComponent implements OnInit, OnDestroy {
       auto_assign: !!f.auto_assign, off_hours_enabled: !!f.off_hours_enabled, business_days: f.business_days,
       open_time: f.open_time, close_time: f.close_time, off_hours_message: f.off_hours_message || null,
       welcome_message: f.welcome_message || null, wait_alert_minutes: Number(f.wait_alert_minutes) || 15,
+
+      // Identificación previa. Va acá y no en un spread del formulario porque
+      // este envío arma el cuerpo campo por campo: si no se agrega, el ajuste
+      // cambia en pantalla pero nunca llega al servidor y vuelve apagado.
+      identificacion_enabled: !!f.identificacion_enabled,
+      identificacion_solo_desconocidos: !!f.identificacion_solo_desconocidos,
+      identificacion_intentos: Number(f.identificacion_intentos) || 2,
+      identificacion_mensaje: f.identificacion_mensaje || null,
     }).subscribe({
       next: r => { this.settings = r.data; this.savingSettings = false; this.showSettings = false; },
       error: err => { this.savingSettings = false; this.settingsError = err?.error?.message || 'No se pudo guardar.'; }
