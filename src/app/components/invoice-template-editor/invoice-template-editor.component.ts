@@ -5,6 +5,7 @@ import { FormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
 import { InvoiceTemplate, InvoiceTemplateConfig, InvoiceTemplateService } from '../../services/invoice-template.service';
 import { environment } from '../../../environments/environment';
+import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 
 @Component({
   selector: 'app-invoice-template-editor',
@@ -25,24 +26,38 @@ export class InvoiceTemplateEditorComponent implements OnInit {
 
   // Form
   editing: InvoiceTemplate | null = null;
-  form: Partial<InvoiceTemplate> = this.defaultForm();
+  form: Partial<InvoiceTemplate> | null = null;
+  autoPreview = true;
+  private previewTimer: any = null;
 
   // Preview
   previewHtml = '';
   showPreview = false;
 
-  readonly types: { id: InvoiceTemplate['type']; label: string; icon: string }[] = [
-    { id: 'classic', label: 'Clásica', icon: 'M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z' },
-    { id: 'modern', label: 'Moderna', icon: 'M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zM16 13a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z' },
-    { id: 'minimal', label: 'Minimalista', icon: 'M4 6h16M4 12h16M4 18h16' },
-    { id: 'receipt', label: 'Ticket / POS', icon: 'M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z' },
+  readonly types: { id: InvoiceTemplate['type']; label: string; hint: string }[] = [
+    { id: 'classic', label: 'Clásica',     hint: 'Carta formal con membrete y tabla de detalle.' },
+    { id: 'modern',  label: 'Moderna',     hint: 'Banda de color y total destacado.' },
+    { id: 'minimal', label: 'Minimalista', hint: 'Mucho aire y líneas finas.' },
+    { id: 'receipt', label: 'Tirilla',     hint: 'Angosta, para impresora térmica.' },
   ];
 
-  readonly colorPresets = ['#2563eb', '#0f172a', '#10b981', '#ef4444', '#f59e0b', '#8b5cf6', '#ec4899', '#000000'];
+  /** Casillas de "qué se muestra", con su explicación. */
+  readonly visibleOptions: { key: keyof InvoiceTemplateConfig; label: string; hint: string }[] = [
+    { key: 'show_logo',          label: 'Logo de la empresa',   hint: 'Se toma el que subiste en los datos de facturación.' },
+    { key: 'show_activity',      label: 'Actividad económica',  hint: 'Código CIIU en el membrete.' },
+    { key: 'show_iva_condition', label: 'Régimen de IVA',       hint: 'Condición tributaria de la empresa.' },
+    { key: 'show_payment_info',  label: 'Medios de pago',       hint: 'Cuentas y billeteras donde te pueden pagar.' },
+    { key: 'show_balance',       label: 'Saldo anterior',       hint: 'Suma las facturas pendientes de meses previos.' },
+    { key: 'show_footer',        label: 'Mensaje final',        hint: 'La frase de cierre al pie de la factura.' },
+  ];
+
+  readonly colorPresets  = ['#1e3a5f', '#0f172a', '#1d4ed8', '#0f766e', '#7c2d12', '#4c1d95', '#111827', '#b91c1c'];
+  readonly accentPresets = ['#0d9488', '#10b981', '#2563eb', '#f59e0b', '#e11d48', '#8b5cf6'];
 
   constructor(
     private templateService: InvoiceTemplateService,
-    private http: HttpClient
+    private http: HttpClient,
+    private sanitizer: DomSanitizer,
   ) {}
 
   ngOnInit(): void {
@@ -86,30 +101,32 @@ export class InvoiceTemplateEditorComponent implements OnInit {
   startCreate(): void {
     this.editing = null;
     this.form = this.defaultForm();
-    this.showPreview = false;
     this.previewHtml = '';
+    this.schedulePreview();
   }
 
   startEdit(t: InvoiceTemplate): void {
     this.editing = t;
     this.form = {
+      id: t.id,
       name: t.name,
       type: t.type,
       is_default: t.is_default,
       config: { ...this.defaultForm().config, ...(t.config ?? {}) }
     };
-    this.showPreview = false;
     this.previewHtml = '';
+    this.schedulePreview();
   }
 
   cancelEdit(): void {
     this.editing = null;
-    this.form = this.defaultForm();
-    this.showPreview = false;
+    this.form = null;
+    this.previewHtml = '';
+    clearTimeout(this.previewTimer);
   }
 
   save(): void {
-    if (!this.form.name?.trim()) {
+    if (!this.form?.name?.trim()) {
       this.error = 'El nombre es obligatorio';
       return;
     }
@@ -178,7 +195,21 @@ export class InvoiceTemplateEditorComponent implements OnInit {
     });
   }
 
+  /** Redibuja la vista previa poco después del último cambio, sin pedir un clic. */
+  schedulePreview(): void {
+    if (!this.autoPreview || !this.form) return;
+    clearTimeout(this.previewTimer);
+    this.previewTimer = setTimeout(() => this.loadPreview(), 400);
+  }
+
+  pickType(type: InvoiceTemplate['type']): void {
+    if (!this.form) return;
+    this.form.type = type;
+    this.schedulePreview();
+  }
+
   loadPreview(): void {
+    if (!this.form) return;
     this.previewLoading = true;
     this.showPreview = true;
     this.templateService.preview(this.form.type!, this.form.config as InvoiceTemplateConfig).subscribe({
@@ -194,11 +225,18 @@ export class InvoiceTemplateEditorComponent implements OnInit {
   }
 
   updateConfig(key: keyof InvoiceTemplateConfig, value: any): void {
+    if (!this.form) return;
     this.form.config = { ...this.form.config, [key]: value };
+    this.schedulePreview();
   }
 
   get cfg(): InvoiceTemplateConfig {
-    return this.form.config || {};
+    return this.form?.config || {};
+  }
+
+  /** El HTML lo genera nuestro propio backend; se marca seguro para el iframe. */
+  get safePreview(): SafeHtml {
+    return this.sanitizer.bypassSecurityTrustHtml(this.previewHtml);
   }
 
   getTypeLabel(type: string): string {

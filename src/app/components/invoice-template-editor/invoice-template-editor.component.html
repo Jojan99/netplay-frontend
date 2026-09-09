@@ -1,186 +1,106 @@
-<div class="space-y-6">
-  <!-- Messages -->
-  <div *ngIf="success" class="flex items-center gap-2 p-4 text-sm text-green-700 bg-green-50 rounded-lg dark:bg-green-900/20 dark:text-green-400">
-    {{ success }}
-  </div>
-  <div *ngIf="error" class="flex items-center gap-2 p-4 text-sm text-red-700 bg-red-50 rounded-lg dark:bg-red-900/20 dark:text-red-400">
-    {{ error }}
-  </div>
+<div class="np-tpl">
+  <p class="np-notice np-notice--ok" *ngIf="success">{{ success }}</p>
+  <p class="np-notice np-notice--danger" *ngIf="error">{{ error }}</p>
 
-  <!-- Loading -->
-  <div *ngIf="loading" class="text-center py-10 text-slate-400">Cargando plantillas...</div>
+  <div class="np-loading" *ngIf="loading"><span class="np-spinner"></span> Cargando plantillas…</div>
 
-  <!-- Templates list -->
-  <div *ngIf="!loading && !editing" class="space-y-4">
-    <div class="flex items-center justify-between">
-      <h3 class="text-lg font-semibold text-slate-800 dark:text-white">Mis plantillas</h3>
-      <button (click)="startCreate()" class="flex items-center gap-2 px-4 py-2 text-sm font-medium bg-gradient-to-br from-indigo-500 to-violet-600 text-white shadow-md shadow-indigo-500/20 hover:shadow-lg transition-all rounded-lg">
-        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
-        Nueva plantilla
-      </button>
+  <!-- ═══ Listado ═══ -->
+  <ng-container *ngIf="!loading && !form">
+    <div class="np-subbar">
+      <p class="np-sect np-sect--inline">Mis plantillas <span class="np-c">{{ templates.length }}</span></p>
+      <span class="np-spacer"></span>
+      <button type="button" class="np-btn np-btn--primary np-btn--sm" (click)="startCreate()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M12 5v14M5 12h14"/></svg>Nueva plantilla</button>
     </div>
 
-    <div *ngIf="templates.length === 0" class="text-center py-12 text-slate-400 bg-white dark:bg-slate-800/80 rounded-xl border border-dashed border-slate-200/60 dark:border-slate-700/60">
-      No tienes plantillas creadas. Crea una para personalizar tus facturas.
+    <div class="np-tpl-empty" *ngIf="templates.length === 0">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5M9 13h6M9 17h6"/></svg>
+      <b>Todavía no tenés plantillas</b>
+      <span>Creá una para elegir el diseño, los colores y qué datos aparecen en cada factura.</span>
+      <button type="button" class="np-btn np-btn--primary np-btn--sm" (click)="startCreate()">Crear la primera</button>
     </div>
 
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-      <div *ngFor="let t of templates"
-           (click)="startEdit(t)"
-           class="cursor-pointer bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl rounded-2xl border border-slate-200/60 dark:border-slate-700/60 shadow-sm hover:shadow-md transition-all duration-300 p-5 relative group">
-        <div class="flex items-start justify-between">
-          <div>
-            <div class="flex items-center gap-2">
-              <h4 class="font-semibold text-slate-800 dark:text-white">{{ t.name }}</h4>
-              <span *ngIf="t.is_default" class="text-xs px-2 py-0.5 rounded-full bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300">Por defecto</span>
-            </div>
-            <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">{{ getTypeLabel(t.type) }}</p>
-            <p class="text-xs text-slate-400 mt-1">{{ t.updated_at | date:'short' }}</p>
-          </div>
-          <div class="flex gap-2 opacity-0 group-hover:opacity-100 transition">
-            <button (click)="setDefault(t, $event)" title="Establecer por defecto"
-                    class="p-1.5 rounded-lg text-slate-400 hover:text-green-600 hover:bg-green-50 dark:hover:bg-green-900/20">
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
-            </button>
-            <button (click)="deleteTemplate(t, $event)" title="Eliminar"
-                    class="p-1.5 rounded-lg text-slate-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20">
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
-            </button>
-          </div>
+    <div class="np-tpl-grid" *ngIf="templates.length">
+      <article class="np-tpl-card" *ngFor="let t of templates" [class.is-default]="t.is_default" (click)="startEdit(t)">
+        <div class="np-tpl-thumb" [ngClass]="'is-' + t.type" [style.--tpl]="t.config?.primary_color || '#1e3a5f'" [style.--tpl-accent]="t.config?.accent_color || '#0d9488'">
+          <span class="np-tpl-thumb-bar"></span>
+          <span class="np-tpl-thumb-line is-title"></span>
+          <span class="np-tpl-thumb-line"></span>
+          <span class="np-tpl-thumb-line is-short"></span>
+          <span class="np-tpl-thumb-table"></span>
+          <span class="np-tpl-thumb-total"></span>
         </div>
-      </div>
+        <div class="np-tpl-card-body">
+          <div class="np-tpl-card-top"><b>{{ t.name }}</b><span class="np-pill np-pill--active" *ngIf="t.is_default">Por defecto</span></div>
+          <small class="np-fine">{{ getTypeLabel(t.type) }} · actualizada {{ t.updated_at | date:'dd/MM/yy' }}</small>
+        </div>
+        <div class="np-tpl-card-acts">
+          <button type="button" class="np-icobtn" *ngIf="!t.is_default" (click)="setDefault(t, $event)" title="Usar por defecto"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="m5 12 5 5L20 7"/></svg></button>
+          <button type="button" class="np-icobtn" (click)="deleteTemplate(t, $event)" title="Eliminar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/></svg></button>
+        </div>
+      </article>
     </div>
-  </div>
+  </ng-container>
 
-  <!-- Editor form -->
-  <div *ngIf="form" class="space-y-6">
-    <div class="flex items-center gap-3">
-      <button (click)="cancelEdit()" class="text-sm text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200">
-        &larr; Volver al listado
-      </button>
+  <!-- ═══ Editor ═══ -->
+  <div class="np-tpl-editor" *ngIf="form">
+    <div class="np-subbar">
+      <button type="button" class="np-btn np-btn--ghost np-btn--sm" (click)="cancelEdit()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="m15 6-6 6 6 6"/></svg>Volver</button>
+      <p class="np-sect np-sect--inline">{{ form.id ? 'Editar plantilla' : 'Nueva plantilla' }}</p>
+      <span class="np-spacer"></span>
+      <button type="button" class="np-btn np-btn--primary np-btn--sm" (click)="save()" [disabled]="saving || !form.name"><span class="np-spinner np-spinner--sm" *ngIf="saving"></span>{{ saving ? 'Guardando…' : 'Guardar plantilla' }}</button>
     </div>
 
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-      <!-- Left: Form -->
-      <div class="space-y-5">
-        <div>
-          <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Nombre de la plantilla</label>
-          <input type="text" [(ngModel)]="form.name" placeholder="Ej. Factura Moderna 2024"
-                 class="w-full px-3.5 py-2 text-sm bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl border border-slate-200/60 dark:border-slate-700/60 rounded-xl text-slate-800 dark:text-white focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-400 transition-all shadow-sm">
-        </div>
+    <div class="np-tpl-cols">
+      <!-- Opciones -->
+      <section class="np-tpl-side">
+        <label class="np-field"><span>Nombre</span><input type="text" class="np-input" [(ngModel)]="form.name" placeholder="Factura 2026" /></label>
 
-        <div>
-          <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Tipo de diseño base</label>
-          <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
-            <div *ngFor="let t of types"
-                 (click)="form.type = t.id"
-                 [class]="form.type === t.id
-                   ? 'border-2 border-blue-500 bg-blue-50 dark:bg-blue-900/20'
-                   : 'border-2 border-slate-200/60 dark:border-slate-700/60 hover:border-slate-300 cursor-pointer'"
-                 class="rounded-xl p-3 text-center transition cursor-pointer">
-              <svg class="w-6 h-6 mx-auto mb-1 text-slate-600 dark:text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" [attr.d]="t.icon"/>
-              </svg>
-              <div class="text-xs font-medium text-slate-700 dark:text-slate-200">{{ t.label }}</div>
-            </div>
-          </div>
-        </div>
-
-        <div class="flex items-center gap-3">
-          <input type="checkbox" id="is_default" [(ngModel)]="form.is_default" class="w-4 h-4 text-blue-600 rounded border-slate-300">
-          <label for="is_default" class="text-sm text-slate-700 dark:text-slate-300">Establecer como plantilla por defecto</label>
-        </div>
-
-        <!-- Colors -->
-        <div>
-          <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Color principal</label>
-          <div class="flex flex-wrap gap-2">
-            <button *ngFor="let c of colorPresets"
-                    (click)="updateConfig('primary_color', c)"
-                    [class.ring-2.ring-offset-2.ring-blue-500]="cfg.primary_color === c"
-                    class="w-8 h-8 rounded-full border border-slate-200/60 dark:border-slate-600/60 transition"
-                    [style.background-color]="c"></button>
-            <input type="color" [(ngModel)]="cfg.primary_color" (change)="updateConfig('primary_color', cfg.primary_color)"
-                   class="w-8 h-8 p-0 border-0 rounded-full overflow-hidden cursor-pointer">
-          </div>
-        </div>
-
-        <div *ngIf="form.type === 'modern'">
-          <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Color de acento</label>
-          <div class="flex flex-wrap gap-2">
-            <button *ngFor="let c of colorPresets"
-                    (click)="updateConfig('accent_color', c)"
-                    [class.ring-2.ring-offset-2.ring-blue-500]="cfg.accent_color === c"
-                    class="w-8 h-8 rounded-full border border-slate-200/60 dark:border-slate-600/60 transition"
-                    [style.background-color]="c"></button>
-            <input type="color" [(ngModel)]="cfg.accent_color" (change)="updateConfig('accent_color', cfg.accent_color)"
-                   class="w-8 h-8 p-0 border-0 rounded-full overflow-hidden cursor-pointer">
-          </div>
-        </div>
-
-        <!-- Visibility toggles -->
-        <div>
-          <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Elementos visibles</label>
-          <div class="space-y-2">
-            <label class="flex items-center gap-2 cursor-pointer">
-              <input type="checkbox" [(ngModel)]="cfg.show_logo" (change)="updateConfig('show_logo', cfg.show_logo)" class="w-4 h-4 rounded border-slate-300 text-blue-600">
-              <span class="text-sm text-slate-600 dark:text-slate-300">Mostrar logo</span>
-            </label>
-            <label class="flex items-center gap-2 cursor-pointer">
-              <input type="checkbox" [(ngModel)]="cfg.show_activity" (change)="updateConfig('show_activity', cfg.show_activity)" class="w-4 h-4 rounded border-slate-300 text-blue-600">
-              <span class="text-sm text-slate-600 dark:text-slate-300">Actividad económica</span>
-            </label>
-            <label class="flex items-center gap-2 cursor-pointer">
-              <input type="checkbox" [(ngModel)]="cfg.show_iva_condition" (change)="updateConfig('show_iva_condition', cfg.show_iva_condition)" class="w-4 h-4 rounded border-slate-300 text-blue-600">
-              <span class="text-sm text-slate-600 dark:text-slate-300">Condición IVA</span>
-            </label>
-            <label class="flex items-center gap-2 cursor-pointer">
-              <input type="checkbox" [(ngModel)]="cfg.show_payment_info" (change)="updateConfig('show_payment_info', cfg.show_payment_info)" class="w-4 h-4 rounded border-slate-300 text-blue-600">
-              <span class="text-sm text-slate-600 dark:text-slate-300">Información de pago</span>
-            </label>
-            <label class="flex items-center gap-2 cursor-pointer">
-              <input type="checkbox" [(ngModel)]="cfg.show_footer" (change)="updateConfig('show_footer', cfg.show_footer)" class="w-4 h-4 rounded border-slate-300 text-blue-600">
-              <span class="text-sm text-slate-600 dark:text-slate-300">Pie de página / mensaje final</span>
-            </label>
-            <label class="flex items-center gap-2 cursor-pointer">
-              <input type="checkbox" [(ngModel)]="cfg.show_balance" (change)="updateConfig('show_balance', cfg.show_balance)" class="w-4 h-4 rounded border-slate-300 text-blue-600">
-              <span class="text-sm text-slate-600 dark:text-slate-300">Saldo anterior</span>
-            </label>
-          </div>
-        </div>
-
-        <div class="flex gap-3 pt-2">
-          <button (click)="save()" [disabled]="saving"
-                  class="px-5 py-2.5 text-sm font-medium bg-gradient-to-br from-indigo-500 to-violet-600 text-white shadow-md shadow-indigo-500/20 hover:shadow-lg transition-all disabled:opacity-50 rounded-lg transition">
-            {{ saving ? 'Guardando...' : (editing ? 'Actualizar plantilla' : 'Crear plantilla') }}
-          </button>
-          <button (click)="cancelEdit()"
-                  class="px-5 py-2.5 text-sm font-medium bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 rounded-lg transition">
-            Cancelar
-          </button>
-          <button (click)="loadPreview()" [disabled]="previewLoading"
-                  class="ml-auto px-5 py-2.5 text-sm font-medium text-blue-700 bg-blue-50 hover:bg-blue-100 dark:bg-blue-900/20 dark:text-blue-300 dark:hover:bg-blue-900/40 rounded-lg transition">
-            {{ previewLoading ? 'Generando...' : 'Ver preview' }}
+        <p class="np-sect">Diseño base</p>
+        <div class="np-tpl-types">
+          <button type="button" *ngFor="let t of types" [attr.aria-pressed]="form.type === t.id" (click)="pickType(t.id)">
+            <span class="np-tpl-mini" [ngClass]="'is-' + t.id" [style.--tpl]="cfg.primary_color" [style.--tpl-accent]="cfg.accent_color"><i></i><i></i><i></i></span>
+            <b>{{ t.label }}</b><small>{{ t.hint }}</small>
           </button>
         </div>
-      </div>
 
-      <!-- Right: Preview -->
-      <div class="bg-slate-50/80 dark:bg-slate-900/80 backdrop-blur-xl rounded-2xl border border-slate-200/60 dark:border-slate-700/60 shadow-sm hover:shadow-md transition-all duration-300 p-4">
-        <div class="flex items-center justify-between mb-3">
-          <h4 class="text-sm font-semibold text-slate-700 dark:text-slate-200">Vista previa</h4>
-          <span class="text-xs text-slate-400">Datos de ejemplo</span>
+        <p class="np-sect">Colores</p>
+        <div class="np-tpl-color">
+          <span class="np-fine">Principal</span>
+          <div class="np-tpl-swatches">
+            <button type="button" *ngFor="let c of colorPresets" [style.background]="c" [class.is-on]="cfg.primary_color === c" (click)="updateConfig('primary_color', c)" [attr.aria-label]="c"></button>
+            <input type="color" [(ngModel)]="cfg.primary_color" (change)="updateConfig('primary_color', cfg.primary_color)" />
+          </div>
         </div>
-        <div *ngIf="!showPreview && !previewHtml" class="text-center py-20 text-slate-400 text-sm">
-          Haz clic en "Ver preview" para generar una vista previa de la factura
+        <div class="np-tpl-color" *ngIf="form.type === 'modern'">
+          <span class="np-fine">Acento</span>
+          <div class="np-tpl-swatches">
+            <button type="button" *ngFor="let c of accentPresets" [style.background]="c" [class.is-on]="cfg.accent_color === c" (click)="updateConfig('accent_color', c)" [attr.aria-label]="c"></button>
+            <input type="color" [(ngModel)]="cfg.accent_color" (change)="updateConfig('accent_color', cfg.accent_color)" />
+          </div>
         </div>
-        <div *ngIf="previewLoading" class="text-center py-20 text-slate-400 text-sm">
-          Generando preview...
+
+        <p class="np-sect">Qué se muestra</p>
+        <div class="np-checklist">
+          <label class="np-check" *ngFor="let o of visibleOptions"><input type="checkbox" [ngModel]="$any(cfg)[o.key]" (ngModelChange)="updateConfig(o.key, $event)" /><span class="np-check-copy"><span [class.np-strong]="$any(cfg)[o.key]">{{ o.label }}</span><small class="np-fine">{{ o.hint }}</small></span></label>
         </div>
-        <div *ngIf="showPreview && previewHtml" class="bg-white rounded-lg shadow-sm overflow-auto" style="max-height: 600px;">
-          <iframe [srcdoc]="previewHtml" class="w-full" style="min-height: 500px; border: none;"></iframe>
+
+        <label class="np-check np-tpl-default"><input type="checkbox" [(ngModel)]="form.is_default" /><span class="np-check-copy"><span class="np-strong">Usar por defecto</span><small class="np-fine">Todas las facturas nuevas saldrán con esta plantilla.</small></span></label>
+      </section>
+
+      <!-- Vista previa -->
+      <section class="np-tpl-preview">
+        <div class="np-tpl-preview-h">
+          <p class="np-sect np-sect--inline">Vista previa</p>
+          <span class="np-spacer"></span>
+          <span class="np-fine" *ngIf="autoPreview">se actualiza sola</span>
+          <button type="button" class="np-btn np-btn--ghost np-btn--sm" (click)="loadPreview()" [disabled]="previewLoading"><span class="np-spinner np-spinner--sm" *ngIf="previewLoading"></span>{{ previewLoading ? 'Generando…' : 'Actualizar' }}</button>
         </div>
-      </div>
+        <div class="np-tpl-paper">
+          <div class="np-loading" *ngIf="previewLoading && !previewHtml"><span class="np-spinner"></span> Generando la factura…</div>
+          <iframe *ngIf="previewHtml" [srcdoc]="safePreview" title="Vista previa de la factura"></iframe>
+          <p class="np-muted" *ngIf="!previewHtml && !previewLoading">La vista previa aparece acá con datos de ejemplo.</p>
+        </div>
+      </section>
     </div>
   </div>
 </div>
