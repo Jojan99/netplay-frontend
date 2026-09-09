@@ -182,6 +182,17 @@
   &:disabled { opacity: .5; }
   &::placeholder { color: var(--text-3); } }
 select.np-input { padding-right: 28px; }
+
+/* Opciones del desplegable nativo.
+   Con color-scheme ya declarado en :root el navegador dibuja el popup con el
+   chrome correcto, pero Chrome en Linux/Windows sigue heredando el color del
+   control para las <option>. Se fijan explícitamente para que el nombre de la
+   opción se lea siempre, también sobre el resaltado del teclado. */
+select option,
+select optgroup {
+  color: var(--text);
+  background: var(--surface);
+}
 .np-dl .np-input { height: 30px; font-size: 12.5px; }
 
 .np-subbar { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; }

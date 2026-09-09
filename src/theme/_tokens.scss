@@ -5,6 +5,13 @@
    cambiar valores, no reescribir estilos.
 ──────────────────────────────────────────────────────────────────────── */
 :root {
+  /* Le dice al navegador con qué chrome dibujar los controles nativos: el
+     desplegable de un <select>, la barra de scroll, el selector de fecha.
+     Sin esto el popup del select se dibujaba con el fondo claro del sistema
+     mientras el texto seguía tomando el color casi blanco del tema, y los
+     nombres de las opciones quedaban ilegibles al abrirlo. */
+  color-scheme: light;
+
   --bg: #eef2f3;
   --surface: #ffffff;
   --surface-2: #f5f8f8;
@@ -38,6 +45,8 @@
 
 :root[data-theme='dark'],
 :root.dark {
+  color-scheme: dark;
+
   --bg: #0e171c;
   --surface: #142229;
   --surface-2: #182a32;
