@@ -74,6 +74,20 @@ export class WaMetaTemplatesComponent implements OnInit {
   usedSlots: number[] = [];
   previewComponents: TemplateComponent[] = [];
 
+  /**
+   * Qué aviso está desplegado en la lista.
+   *
+   * Antes cada evento mostraba su tarjeta completa —selector, mapeo de
+   * variables, programación y vista previa— y con ocho eventos la pantalla se
+   * volvía interminable. Ahora la lista es compacta y solo se abre el que se
+   * está editando.
+   */
+  expandido: string | null = null;
+
+  alternar(evento: string): void {
+    this.expandido = this.expandido === evento ? null : evento;
+  }
+
   /* ── Plantillas que el sistema necesita para operar ──────────────────
    *
    * Una plantilla aprobada solo sirve en la cuenta de Meta donde fue

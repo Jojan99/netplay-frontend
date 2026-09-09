@@ -69,7 +69,7 @@
   </section>
 
   <!-- ═══ Pestaña: avisos automáticos ════════════════════════════════ -->
-  <section *ngIf="tab === 'automations'" class="space-y-5">
+  <section *ngIf="tab === 'automations'" class="space-y-2">
 
     <p class="rounded-xl border border-sky-200 bg-sky-50 px-4 py-3 text-sm text-sky-900 dark:border-sky-900 dark:bg-sky-950/40 dark:text-sky-200">
       Cuando el cliente <strong>sí</strong> te ha escrito en las últimas 24 horas se le manda un mensaje
@@ -82,17 +82,26 @@
     </div>
 
     <article *ngFor="let b of bindings"
-             class="overflow-hidden rounded-xl border bg-white shadow-sm transition dark:bg-slate-800"
+             class="overflow-hidden rounded-lg border bg-white transition dark:bg-slate-800"
              [ngClass]="b.enabled ? 'border-emerald-300 dark:border-emerald-800' : 'border-slate-200 dark:border-slate-700'">
 
-      <!-- cabecera del evento -->
-      <div class="flex flex-col gap-3 border-b border-slate-100 px-5 py-4 sm:flex-row sm:items-center sm:justify-between dark:border-slate-700">
-        <div>
-          <h2 class="font-semibold text-slate-900 dark:text-white">{{ b.label }}</h2>
-          <p class="mt-0.5 text-sm text-slate-500 dark:text-slate-400">{{ b.description }}</p>
-        </div>
+      <!-- Fila compacta: se despliega solo la que se está editando. Antes las
+           ocho quedaban abiertas a la vez y la pantalla era interminable. -->
+      <div class="flex flex-col gap-3 px-4 py-3 sm:flex-row sm:items-center sm:justify-between"
+           [ngClass]="expandido === b.event ? 'border-b border-slate-100 dark:border-slate-700' : ''">
+        <button type="button" class="flex min-w-0 flex-1 items-center gap-2.5 text-left" (click)="alternar(b.event)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"
+               class="h-4 w-4 shrink-0 text-slate-400 transition-transform"
+               [class.rotate-90]="expandido === b.event"><path d="m9 6 6 6-6 6"/></svg>
+          <span class="min-w-0">
+            <span class="block truncate font-semibold text-slate-900 dark:text-white">{{ b.label }}</span>
+            <span class="mt-0.5 block truncate text-xs text-slate-500 dark:text-slate-400">
+              {{ b.template_name || 'Sin plantilla asignada' }}
+            </span>
+          </span>
+        </button>
 
-        <label class="inline-flex shrink-0 cursor-pointer items-center gap-3">
+        <label class="inline-flex shrink-0 cursor-pointer items-center gap-3" (click)="$event.stopPropagation()">
           <span class="text-sm font-medium" [ngClass]="b.enabled ? 'text-emerald-700 dark:text-emerald-300' : 'text-slate-500 dark:text-slate-400'">
             {{ b.enabled ? 'Activo' : 'Inactivo' }}
           </span>
@@ -101,7 +110,7 @@
         </label>
       </div>
 
-      <div class="grid gap-6 px-5 py-5 lg:grid-cols-[minmax(0,1fr)_20rem]">
+      <div class="grid gap-6 px-4 py-4 lg:grid-cols-[minmax(0,1fr)_20rem]" *ngIf="expandido === b.event">
 
         <!-- configuración -->
         <div class="space-y-4">
