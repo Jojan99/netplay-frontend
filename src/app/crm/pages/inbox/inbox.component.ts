@@ -214,7 +214,9 @@ export class InboxComponent implements OnInit, OnDestroy {
         }
 
         const filters: any = { provider };
-        if (provider === this.inboxProvider && this.inboxStatus !== 'all') filters.status = this.inboxStatus;
+        if (this.vista === 'clientes' && provider === this.inboxProvider && this.inboxStatus !== 'all') {
+          filters.status = this.inboxStatus;
+        }
 
         // La recarga tiene que respetar la sección en la que está el agente.
         // Sin esto, al llegar el evento del propio mensaje enviado en un grupo
@@ -295,11 +297,26 @@ export class InboxComponent implements OnInit, OnDestroy {
   cargandoGrupos = false;
   showGrupos = false;
 
+  /** El proveedor que tenía el agente antes de entrar a grupos. */
+  private proveedorPrevio: InboxProvider | null = null;
+
   setVista(v: 'clientes' | 'grupos'): void {
     if (this.vista === v) return;
     this.vista = v;
     this.activeConversationId = null;
-    if (v === 'grupos') this.inboxProvider = 'netplay';   // Meta no tiene grupos
+    this.mobileView = 'list';
+
+    if (v === 'grupos') {
+      // Meta no soporta grupos: se fuerza WhatsApp Web, pero se recuerda cuál
+      // tenía el agente para devolvérselo al volver. Si no, volvía a clientes
+      // con el proveedor cambiado y la bandeja parecía vacía.
+      this.proveedorPrevio = this.inboxProvider;
+      this.inboxProvider = 'netplay';
+    } else if (this.proveedorPrevio) {
+      this.inboxProvider = this.proveedorPrevio;
+      this.proveedorPrevio = null;
+    }
+
     this.loadInbox();
   }
 
@@ -324,7 +341,14 @@ export class InboxComponent implements OnInit, OnDestroy {
   /* ── INBOX ──────────────────────────────────────────────────── */
   loadInbox(): void {
     const filters: any = {};
-    if (this.inboxStatus !== 'all') filters.status = this.inboxStatus;
+
+    // En grupos no se aplica el estado: las pestañas están ocultas ahí, así que
+    // un filtro heredado de la vista de clientes ("En curso", por ejemplo)
+    // dejaba la lista de grupos vacía sin que se pudiera cambiar.
+    if (this.vista === 'clientes' && this.inboxStatus !== 'all') {
+      filters.status = this.inboxStatus;
+    }
+
     filters.provider = this.inboxProvider;
     if (this.vista === 'grupos') filters.grupos = 1;
 
