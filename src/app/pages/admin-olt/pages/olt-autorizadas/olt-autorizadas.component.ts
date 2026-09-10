@@ -167,20 +167,40 @@ export class OltAutorizadasComponent implements OnInit {
     this.deleteModal = true;
   }
 
+  /**
+   * Resultado de una operación contra la OLT.
+   *
+   * El backend responde 200 aunque la OLT haya rechazado: el resultado viene
+   * en el cuerpo. Mostrar cualquier respuesta como éxito hacía que un borrado
+   * fallido se viera igual que uno bueno —modal cerrado, mensaje en verde— y
+   * la ONT seguía ahí.
+   */
+  private resultado(res: any, alSalirBien: () => void, textoPorDefecto: string): void {
+    if (res?.error !== 0) {
+      this.toast.error(res?.message || 'La OLT no pudo completar la operación.');
+      return;
+    }
+
+    this.toast.success(res.message || textoPorDefecto);
+    alSalirBien();
+  }
+
   confirmDelete(): void {
     if (!this.selectedOltId || !this.selectedOnt) return;
     this.processing = true;
     const d = { fsp: this.selectedOnt.fsp, ont_id: this.selectedOnt.ont_id };
     this.oltService.deleteONT(this.selectedOltId, d).subscribe({
       next: (res: any) => {
-        this.processing  = false;
-        this.deleteModal = false;
-        this.toast.success(res.message || 'ONT eliminada');
-        this.loadOnts(true);
+        this.processing = false;
+
+        this.resultado(res, () => {
+          this.deleteModal = false;
+          this.loadOnts(true);
+        }, 'ONT eliminada.');
       },
       error: (err: any) => {
         this.processing = false;
-        this.toast.error(err?.error?.message || 'Error al eliminar la ONT');
+        this.toast.error(err?.error?.message || 'No se pudo contactar la OLT.');
       },
     });
   }
@@ -240,14 +260,15 @@ export class OltAutorizadasComponent implements OnInit {
       this.selectedClient?.id ?? null,
     ).subscribe({
       next: (res) => {
-        this.assigning    = false;
-        this.assignModal  = false;
-        this.toast.success(res.message || 'Cliente asignado');
-        // Actualizar la ONT local con el cliente asignado
-        const idx = this.onts.findIndex(o => o.fsp === this.assignOnt.fsp && o.ont_id === this.assignOnt.ont_id);
-        if (idx >= 0) {
-          this.onts[idx] = { ...this.onts[idx], assigned_client: this.selectedClient, user_data_id: this.selectedClient?.id ?? null };
-        }
+        this.assigning = false;
+
+        this.resultado(res, () => {
+          this.assignModal = false;
+          const idx = this.onts.findIndex(o => o.fsp === this.assignOnt.fsp && o.ont_id === this.assignOnt.ont_id);
+          if (idx >= 0) {
+            this.onts[idx] = { ...this.onts[idx], assigned_client: this.selectedClient, user_data_id: this.selectedClient?.id ?? null };
+          }
+        }, 'Cliente asignado a la ONT.');
       },
       error: (err) => {
         this.assigning = false;
@@ -261,13 +282,15 @@ export class OltAutorizadasComponent implements OnInit {
     this.assigning = true;
     this.oltService.assignClientToOnt(this.selectedOltId, this.assignOnt.fsp, this.assignOnt.ont_id, null).subscribe({
       next: (res) => {
-        this.assigning   = false;
-        this.assignModal = false;
-        this.toast.success(res.message || 'Cliente desasignado');
-        const idx = this.onts.findIndex(o => o.fsp === this.assignOnt.fsp && o.ont_id === this.assignOnt.ont_id);
-        if (idx >= 0) {
-          this.onts[idx] = { ...this.onts[idx], assigned_client: null, user_data_id: null };
-        }
+        this.assigning = false;
+
+        this.resultado(res, () => {
+          this.assignModal = false;
+          const idx = this.onts.findIndex(o => o.fsp === this.assignOnt.fsp && o.ont_id === this.assignOnt.ont_id);
+          if (idx >= 0) {
+            this.onts[idx] = { ...this.onts[idx], assigned_client: null, user_data_id: null };
+          }
+        }, 'Cliente desvinculado de la ONT.');
       },
       error: (err) => {
         this.assigning = false;
