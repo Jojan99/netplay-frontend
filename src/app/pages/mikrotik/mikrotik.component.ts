@@ -455,11 +455,6 @@ export class MikrotikComponent implements OnInit {
     return String(i.running) === 'true' ? 'up' : 'down';
   }
 
-  tituloPuerto(p: Puerto): string {
-    const estado = { up: 'conectado', down: 'sin enlace', off: 'deshabilitado', na: 'no presente' }[this.estadoPuerto(p)];
-    return `${p.nombre} · ${estado}`;
-  }
-
   get puertosArriba(): number {
     return this.puertos.filter(p => this.estadoPuerto(p) === 'up').length;
   }
@@ -481,6 +476,102 @@ export class MikrotikComponent implements OnInit {
     const u = ['B', 'KB', 'MB', 'GB', 'TB'];
     const i = Math.min(Math.floor(Math.log(b) / Math.log(1024)), u.length - 1);
     return `${(b / Math.pow(1024, i)).toFixed(i ? 1 : 0)} ${u[i]}`;
+  }
+
+  /** Lo que el operador anotó en el puerto: "WAN", "TRONCAL 1 UTP". */
+  comentarioPuerto(p: Puerto): string {
+    const i = (this.routerInfo?.interfaces ?? []).find((x: any) => x.name === p.nombre);
+    return (i?.comment ?? '').trim();
+  }
+
+  tituloPuerto(p: Puerto): string {
+    const estado = { up: 'con enlace', down: 'sin enlace', off: 'deshabilitado', na: 'no presente' }[this.estadoPuerto(p)];
+    const nota = this.comentarioPuerto(p);
+    return `${p.nombre} · ${estado}${nota ? ' · ' + nota : ''} — clic para ver el detalle`;
+  }
+
+  /** Los puertos partidos en bloques, como están en el equipo. */
+  get bloquesDePuertos(): { titulo: string; puertos: Puerto[] }[] {
+    const cobre = this.puertos.filter(p => !this.esSfp(p));
+    const optico = this.puertos.filter(p => this.esSfp(p));
+    const bloques: { titulo: string; puertos: Puerto[] }[] = [];
+    if (cobre.length) bloques.push({ titulo: 'Ethernet', puertos: cobre });
+    if (optico.length) bloques.push({ titulo: 'SFP', puertos: optico });
+    return bloques;
+  }
+
+  // ── Detalle de un puerto ──────────────────────────────────────────────────
+  // Junta en una pantalla lo que en Winbox está repartido en varias: cómo
+  // negoció el enlace, el módulo óptico, el tráfico de este momento, las VLAN
+  // que salen por ahí y los clientes que cuelgan.
+  puertoAbierto: Puerto | null = null;
+  detalle: any = null;
+  cargandoDetalle = false;
+  detalleError = '';
+  private refrescoDetalle: any = null;
+
+  abrirPuerto(p: Puerto) {
+    if (this.estadoPuerto(p) === 'na') return;
+
+    this.puertoAbierto = p;
+    this.detalle = null;
+    this.detalleError = '';
+    this.pedirDetalle();
+
+    // El tráfico en vivo pierde sentido si queda congelado.
+    clearInterval(this.refrescoDetalle);
+    this.refrescoDetalle = setInterval(() => this.pedirDetalle(true), 5000);
+  }
+
+  private pedirDetalle(silencioso = false) {
+    const p = this.puertoAbierto;
+    if (!p) return;
+
+    if (!silencioso) this.cargandoDetalle = true;
+
+    this.svc.getPortDetail(p.nombre, this.selectedRouterId).subscribe({
+      next: r => {
+        this.cargandoDetalle = false;
+        if (r?.error !== 0) { this.detalleError = r?.message || 'No se pudo consultar el puerto.'; return; }
+        this.detalle = r.data;
+        this.detalleError = '';
+      },
+      error: () => {
+        this.cargandoDetalle = false;
+        if (!silencioso) this.detalleError = 'No se pudo consultar el puerto.';
+      },
+    });
+  }
+
+  cerrarPuerto() {
+    clearInterval(this.refrescoDetalle);
+    this.refrescoDetalle = null;
+    this.puertoAbierto = null;
+    this.detalle = null;
+  }
+
+  /** Bits por segundo a un texto corto. */
+  velocidad(bps: any): string {
+    const b = Number(bps ?? 0);
+    if (!b) return '0 bps';
+    const u = ['bps', 'Kbps', 'Mbps', 'Gbps'];
+    const i = Math.min(Math.floor(Math.log(b) / Math.log(1000)), u.length - 1);
+    return `${(b / Math.pow(1000, i)).toFixed(i >= 2 ? 1 : 0)} ${u[i]}`;
+  }
+
+  /** Cuánto del enlace se está usando, para la barra. */
+  usoDelEnlace(bps: any): number {
+    const capacidad = this.capacidadBps();
+    if (!capacidad) return 0;
+    return Math.min(100, Math.round((Number(bps ?? 0) / capacidad) * 100));
+  }
+
+  private capacidadBps(): number {
+    const rate = String(this.detalle?.enlace?.velocidad ?? '');
+    const m = rate.match(/^([\d.]+)\s*([GMK])/i);
+    if (!m) return 0;
+    const mult: any = { G: 1e9, M: 1e6, K: 1e3 };
+    return parseFloat(m[1]) * (mult[m[2].toUpperCase()] ?? 1);
   }
 
   // ── Info ──────────────────────────────────────────────────────────────────

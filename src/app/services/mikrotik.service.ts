@@ -92,6 +92,13 @@ export class MikrotikService {
     return this.http.get(`${this.base}/router-photo`, { ...this.h(), params: new HttpParams().set('board', board) });
   }
 
+  /** Todo lo que el router sabe de un puerto. */
+  getPortDetail(name: string, routerId?: number | null): Observable<any> {
+    let params = new HttpParams().set('name', name);
+    if (routerId) params = params.set('router_id', String(routerId));
+    return this.http.get(`${this.base}/port-detail`, { ...this.h(), params });
+  }
+
   /** Clientes que están compartiendo una misma IP. */
   getIpConflicts(): Observable<any> {
     return this.http.get(`${this.base}/ip-conflicts`, this.h());

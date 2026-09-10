@@ -229,3 +229,149 @@
 @media (max-width: 720px) {
   .np-equipo { grid-template-columns: 1fr; }
 }
+
+/* ── Panel: bloques y notas ───────────────────────────────────────────────
+   Los puertos van agrupados como en el equipo, con la etiqueta de lo que hay
+   conectado debajo: sin eso son sólo números. */
+.np-panel-bloques {
+  flex: 1 1 auto;
+  display: flex;
+  gap: 18px;
+  flex-wrap: wrap;
+}
+
+.np-panel-bloque {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+
+  & + & { padding-left: 18px; border-left: 1px dashed #39414f; }
+}
+
+.np-panel-bloque-t {
+  font-size: 9px;
+  text-transform: uppercase;
+  letter-spacing: .09em;
+  color: #6d7889;
+  text-align: center;
+}
+
+.np-puerto {
+  /* Es un botón: se resetea lo que trae el navegador. */
+  appearance: none;
+  font: inherit;
+  cursor: pointer;
+  transition: transform .1s ease, box-shadow .1s ease;
+
+  &:hover, &:focus-visible {
+    transform: translateY(-2px);
+    box-shadow: 0 3px 10px rgba(0, 0, 0, .45);
+    outline: none;
+    b { color: #d6dde8; }
+  }
+
+  &[data-estado='na'] { cursor: default; }
+  &[data-estado='na']:hover { transform: none; box-shadow: none; }
+}
+
+.np-panel-notas {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 8px;
+  margin-top: 8px;
+
+  span:empty { display: none; }
+
+  span {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 5px;
+    padding: 2px 8px;
+    border-radius: 999px;
+    background: var(--surface-2);
+    border: 1px solid var(--line);
+    font-size: 11px;
+    color: var(--text-2);
+
+    b {
+      font-variant-numeric: tabular-nums;
+      color: var(--text-3);
+      font-size: 10px;
+    }
+
+    &.is-off { opacity: .5; }
+  }
+}
+
+.np-panel-tip { margin-left: auto; font-style: italic; }
+
+/* ── Detalle del puerto ───────────────────────────────────────────────────*/
+.np-portmodal {
+  .np-modal-head h3 { display: flex; align-items: center; gap: 10px; }
+}
+
+.np-port-traf {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 18px;
+  padding: 14px 16px;
+  margin-bottom: 4px;
+  background: var(--surface-2);
+  border-radius: var(--radius);
+}
+
+.np-port-dir {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+
+  b { font-size: 21px; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
+}
+
+.np-port-dir-k {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: .04em;
+  color: var(--text-3);
+
+  em { font-style: normal; opacity: .7; }
+}
+
+.np-bar {
+  height: 6px;
+  border-radius: 3px;
+  background: var(--line);
+  overflow: hidden;
+
+  i {
+    display: block;
+    height: 100%;
+    border-radius: 3px;
+    background: var(--accent);
+    transition: width .4s ease;
+
+    &.is-tx { background: var(--ok); }
+  }
+}
+
+.np-port-vivo {
+  grid-column: 1 / -1;
+  margin: 0;
+  text-align: right;
+}
+
+.np-port-cols {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 4px 24px;
+}
+
+.np-port-bloque {
+  min-width: 0;
+
+  .np-sync-h { margin-top: 14px; }
+}
+
+@media (max-width: 600px) {
+  .np-port-traf { grid-template-columns: 1fr; }
+}

@@ -89,23 +89,43 @@
 
             <div class="np-panel-chasis">
               <span class="np-panel-oreja" aria-hidden="true"></span>
-              <div class="np-panel-puertos">
-                <span *ngFor="let p of puertos"
-                      class="np-puerto"
-                      [class.is-sfp]="esSfp(p)"
-                      [attr.data-estado]="estadoPuerto(p)"
-                      [title]="tituloPuerto(p)">
-                  <i class="np-puerto-led"></i>
-                  <b>{{ p.label || p.nombre }}</b>
-                </span>
+
+              <div class="np-panel-bloques">
+                <div class="np-panel-bloque" *ngFor="let b of bloquesDePuertos">
+                  <div class="np-panel-puertos">
+                    <button *ngFor="let p of b.puertos"
+                            type="button"
+                            class="np-puerto"
+                            [class.is-sfp]="esSfp(p)"
+                            [attr.data-estado]="estadoPuerto(p)"
+                            [title]="tituloPuerto(p)"
+                            (click)="abrirPuerto(p)">
+                      <i class="np-puerto-led"></i>
+                      <b>{{ p.label || p.nombre }}</b>
+                    </button>
+                  </div>
+                  <span class="np-panel-bloque-t">{{ b.titulo }}</span>
+                </div>
               </div>
+
               <span class="np-panel-oreja" aria-hidden="true"></span>
+            </div>
+
+            <!-- Lo que hay conectado en cada puerto, según lo que anotó el
+                 operador en el router. -->
+            <div class="np-panel-notas">
+              <span *ngFor="let p of puertos" [class.is-off]="estadoPuerto(p) !== 'up'">
+                <ng-container *ngIf="comentarioPuerto(p)">
+                  <b>{{ p.label || p.nombre }}</b>{{ comentarioPuerto(p) }}
+                </ng-container>
+              </span>
             </div>
 
             <div class="np-panel-leyenda">
               <span><i data-estado="up"></i>Con enlace</span>
               <span><i data-estado="down"></i>Sin enlace</span>
               <span><i data-estado="off"></i>Deshabilitado</span>
+              <span class="np-panel-tip">Hacé clic en un puerto para ver su detalle</span>
             </div>
           </div>
         </section>
@@ -492,6 +512,183 @@
                 [disabled]="separando || !separarPreview.separados.length" (click)="aplicarSeparar()">
           {{ separando ? 'Aplicando…' : 'Separar registros' }}
         </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ Detalle de un puerto ═══════════════════════════════════════════════ -->
+<div *ngIf="puertoAbierto" class="np-overlay" (click)="cerrarPuerto()">
+  <div class="np-modal np-modal--lg np-portmodal" role="dialog" aria-modal="true" aria-label="Detalle del puerto" (click)="$event.stopPropagation()">
+    <div class="np-modal-head">
+      <div>
+        <p class="np-kicker">{{ routerInfo?.resource?.board_name }} <b>/</b> Puerto</p>
+        <h3>
+          {{ puertoAbierto.nombre }}
+          <span class="np-pill" [ngClass]="{
+            'np-pill--active': estadoPuerto(puertoAbierto) === 'up',
+            'np-pill--neutral': estadoPuerto(puertoAbierto) === 'down',
+            'np-pill--suspended': estadoPuerto(puertoAbierto) === 'off' }">
+            {{ { up: 'Con enlace', down: 'Sin enlace', off: 'Deshabilitado', na: '—' }[estadoPuerto(puertoAbierto)] }}
+          </span>
+        </h3>
+        <p class="np-equipo-sub" *ngIf="detalle?.puerto?.comentario">{{ detalle.puerto.comentario }}</p>
+      </div>
+      <button type="button" class="np-icobtn" (click)="cerrarPuerto()" aria-label="Cerrar">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M6 6l12 12M18 6 6 18"/></svg>
+      </button>
+    </div>
+
+    <div class="np-modal-body">
+      <div *ngIf="cargandoDetalle && !detalle" class="np-loading"><span class="np-spinner"></span> Consultando el puerto…</div>
+      <p class="np-notice np-notice--danger" *ngIf="detalleError">{{ detalleError }}</p>
+
+      <ng-container *ngIf="detalle">
+        <!-- Tráfico de este momento -->
+        <section class="np-port-traf" *ngIf="detalle.vivo">
+          <div class="np-port-dir">
+            <span class="np-port-dir-k">Bajada <em>rx</em></span>
+            <b>{{ velocidad(detalle.vivo.rx_bps) }}</b>
+            <div class="np-bar"><i [style.width.%]="usoDelEnlace(detalle.vivo.rx_bps)"></i></div>
+            <span class="np-fine">{{ detalle.vivo.rx_pps | number }} paq/s</span>
+          </div>
+          <div class="np-port-dir">
+            <span class="np-port-dir-k">Subida <em>tx</em></span>
+            <b>{{ velocidad(detalle.vivo.tx_bps) }}</b>
+            <div class="np-bar"><i class="is-tx" [style.width.%]="usoDelEnlace(detalle.vivo.tx_bps)"></i></div>
+            <span class="np-fine">{{ detalle.vivo.tx_pps | number }} paq/s</span>
+          </div>
+          <p class="np-fine np-port-vivo">En vivo · se actualiza cada 5 s</p>
+        </section>
+
+        <div class="np-port-cols">
+          <!-- Enlace -->
+          <section class="np-port-bloque" *ngIf="detalle.enlace">
+            <h4 class="np-sync-h">Enlace</h4>
+            <dl class="np-equipo-specs">
+              <div><dt>Estado</dt><dd class="np-mono">{{ detalle.enlace.estado || '—' }}</dd></div>
+              <div><dt>Velocidad</dt><dd class="np-mono">{{ detalle.enlace.velocidad || '—' }}</dd></div>
+              <div><dt>Dúplex</dt><dd class="np-mono">{{ detalle.enlace.full_duplex ? 'full' : 'half' }}</dd></div>
+              <div><dt>Autonegociación</dt><dd class="np-mono">{{ detalle.enlace.autonegociacion || '—' }}</dd></div>
+              <div><dt>Control de flujo</dt><dd class="np-mono">tx {{ detalle.enlace.control_flujo_tx ? 'sí' : 'no' }} · rx {{ detalle.enlace.control_flujo_rx ? 'sí' : 'no' }}</dd></div>
+            </dl>
+            <p class="np-fine" *ngIf="detalle.enlace.anuncia_el_otro?.length">
+              El equipo del otro lado anuncia: {{ detalle.enlace.anuncia_el_otro.join(', ') }}
+            </p>
+          </section>
+
+          <!-- Módulo óptico -->
+          <section class="np-port-bloque" *ngIf="detalle.enlace?.sfp">
+            <h4 class="np-sync-h">Módulo óptico</h4>
+            <dl class="np-equipo-specs">
+              <div><dt>Módulo</dt><dd class="np-mono">{{ detalle.enlace.sfp.presente ? 'presente' : 'sin módulo' }}</dd></div>
+              <div><dt>Tipo</dt><dd class="np-mono">{{ detalle.enlace.sfp.tipo || '—' }}</dd></div>
+              <div *ngIf="detalle.enlace.sfp.proveedor"><dt>Fabricante</dt><dd class="np-mono">{{ detalle.enlace.sfp.proveedor }}</dd></div>
+              <div *ngIf="detalle.enlace.sfp.modelo"><dt>Modelo</dt><dd class="np-mono">{{ detalle.enlace.sfp.modelo }}</dd></div>
+              <div *ngIf="detalle.enlace.sfp.temperatura"><dt>Temperatura</dt><dd class="np-mono">{{ detalle.enlace.sfp.temperatura }} °C</dd></div>
+              <div *ngIf="detalle.enlace.sfp.potencia_rx"><dt>Potencia rx</dt><dd class="np-mono">{{ detalle.enlace.sfp.potencia_rx }}</dd></div>
+              <div *ngIf="detalle.enlace.sfp.potencia_tx"><dt>Potencia tx</dt><dd class="np-mono">{{ detalle.enlace.sfp.potencia_tx }}</dd></div>
+            </dl>
+            <p class="np-notice np-notice--warn np-notice--inline" *ngIf="detalle.enlace.sfp.sin_senal || detalle.enlace.sfp.falla_tx">
+              {{ detalle.enlace.sfp.sin_senal ? 'No está recibiendo señal óptica. ' : '' }}
+              {{ detalle.enlace.sfp.falla_tx ? 'Falla en el transmisor.' : '' }}
+            </p>
+          </section>
+
+          <!-- Configuración -->
+          <section class="np-port-bloque">
+            <h4 class="np-sync-h">Configuración</h4>
+            <dl class="np-equipo-specs">
+              <div><dt>Nombre</dt><dd class="np-mono">{{ detalle.puerto.nombre }}</dd></div>
+              <div *ngIf="detalle.puerto.nombre_fisico"><dt>Puerto físico</dt><dd class="np-mono">{{ detalle.puerto.nombre_fisico }}</dd></div>
+              <div><dt>MAC</dt><dd class="np-mono">{{ detalle.puerto.mac || '—' }}</dd></div>
+              <div><dt>MTU</dt><dd class="np-mono">{{ detalle.puerto.mtu || '—' }}<span *ngIf="detalle.puerto.l2mtu"> · L2 {{ detalle.puerto.l2mtu }}</span></dd></div>
+              <div><dt>Habilitado</dt><dd class="np-mono">{{ detalle.puerto.habilitado ? 'sí' : 'no' }}</dd></div>
+            </dl>
+          </section>
+
+          <!-- Acumulado -->
+          <section class="np-port-bloque">
+            <h4 class="np-sync-h">Desde el último reinicio</h4>
+            <dl class="np-equipo-specs">
+              <div><dt>Recibido</dt><dd class="np-mono">{{ tamano(detalle.acumulado.rx_bytes) }}</dd></div>
+              <div><dt>Enviado</dt><dd class="np-mono">{{ tamano(detalle.acumulado.tx_bytes) }}</dd></div>
+              <div><dt>Paquetes rx</dt><dd class="np-mono">{{ detalle.acumulado.rx_paquetes | number }}</dd></div>
+              <div><dt>Paquetes tx</dt><dd class="np-mono">{{ detalle.acumulado.tx_paquetes | number }}</dd></div>
+            </dl>
+          </section>
+        </div>
+
+        <!-- Errores: sólo si hay -->
+        <ng-container *ngIf="detalle.errores?.length">
+          <h4 class="np-sync-h">Errores detectados</h4>
+          <div class="np-tablewrap"><table class="np-table np-table--compact">
+            <thead><tr><th>Tipo</th><th class="np-th-right">Contador</th></tr></thead>
+            <tbody>
+              <tr *ngFor="let e of detalle.errores">
+                <td>{{ e.etiqueta }}</td>
+                <td class="np-td-right np-mono">{{ e.valor | number }}</td>
+              </tr>
+            </tbody>
+          </table></div>
+          <p class="np-fine">Si crecen con el tiempo suele ser cable, conector u óptica.</p>
+        </ng-container>
+
+        <!-- VLAN e IP -->
+        <div class="np-port-cols">
+          <section class="np-port-bloque" *ngIf="detalle.vlans?.length">
+            <h4 class="np-sync-h">VLAN que salen por acá <span class="np-fine">({{ detalle.vlans.length }})</span></h4>
+            <div class="np-tablewrap np-sync-box"><table class="np-table np-table--compact">
+              <thead><tr><th>VLAN</th><th>ID</th><th>Estado</th></tr></thead>
+              <tbody>
+                <tr *ngFor="let v of detalle.vlans">
+                  <td class="np-strong">{{ v.name }}<span class="np-fine" *ngIf="v.comentario"> · {{ v.comentario }}</span></td>
+                  <td class="np-data np-mono">{{ v.vlan_id }}</td>
+                  <td><span class="np-pill" [ngClass]="v.con_enlace ? 'np-pill--active' : 'np-pill--neutral'">{{ v.con_enlace ? 'activa' : 'caída' }}</span></td>
+                </tr>
+              </tbody>
+            </table></div>
+          </section>
+
+          <section class="np-port-bloque" *ngIf="detalle.ips?.length">
+            <h4 class="np-sync-h">Direcciones IP <span class="np-fine">({{ detalle.ips.length }})</span></h4>
+            <div class="np-tablewrap np-sync-box"><table class="np-table np-table--compact">
+              <thead><tr><th>Dirección</th><th>Interfaz</th></tr></thead>
+              <tbody>
+                <tr *ngFor="let ip of detalle.ips">
+                  <td class="np-data np-mono np-strong">{{ ip.direccion }}</td>
+                  <td class="np-data">{{ ip.interfaz }}</td>
+                </tr>
+              </tbody>
+            </table></div>
+          </section>
+        </div>
+
+        <!-- Clientes -->
+        <ng-container *ngIf="detalle.clientes?.total">
+          <h4 class="np-sync-h">
+            Equipos colgando de este puerto
+            <span class="np-fine">({{ detalle.clientes.activos }} activos de {{ detalle.clientes.total }})</span>
+          </h4>
+          <div class="np-tablewrap"><table class="np-table np-table--compact">
+            <thead><tr><th>IP</th><th>MAC</th><th>Documento</th><th>Interfaz</th></tr></thead>
+            <tbody>
+              <tr *ngFor="let c of detalle.clientes.muestra">
+                <td class="np-data np-mono np-strong">{{ c.ip }}</td>
+                <td class="np-data np-mono">{{ c.mac }}</td>
+                <td class="np-data np-mono">{{ c.documento || '—' }}</td>
+                <td class="np-data">{{ c.interfaz }}</td>
+              </tr>
+            </tbody>
+          </table></div>
+          <p class="np-fine" *ngIf="detalle.clientes.total > detalle.clientes.muestra.length">
+            Se muestran {{ detalle.clientes.muestra.length }}; la lista completa está en <b>Clientes ARP</b>.
+          </p>
+        </ng-container>
+      </ng-container>
+
+      <div class="np-btnrow np-btnrow--end">
+        <button type="button" class="np-btn np-btn--ghost" (click)="cerrarPuerto()">Cerrar</button>
       </div>
     </div>
   </div>
