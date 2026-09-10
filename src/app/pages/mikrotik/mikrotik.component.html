@@ -311,6 +311,12 @@
           <b>Por dónde llegan</b> del asistente.
         </p>
 
+        <p class="np-notice np-notice--code" *ngIf="pppoe.otros_ppp?.length">
+          En el router hay
+          <b *ngFor="let o of pppoe.otros_ppp; let i = index">{{ i ? ', ' : '' }}{{ o.sesiones }} sesión(es) de {{ o.servicio | uppercase }}</b>.
+          No son clientes PPPoE —suele ser la VPN de administración— así que no se cuentan acá.
+        </p>
+
         <section class="np-kpis">
           <div class="np-kpi"><span class="np-kpi-k">Servidor</span>
             <b class="np-kpi-v" [ngClass]="servidorInvalido ? 'np-kpi-v--danger' : (pppoe.disponible ? 'np-kpi-v--ok' : 'np-kpi-v--warn')">
@@ -343,10 +349,10 @@
 
         <!-- Conectados ahora -->
         <ng-container *ngIf="vistaPppoe === 'conectados'">
-          <p class="np-pm-vacio" *ngIf="!sesionesPppoe.length">Ningún cliente conectado en este momento.</p>
+          <p class="np-pm-vacio" *ngIf="!sesionesPppoe.length">Ningún cliente conectado por PPPoE en este momento.</p>
           <section class="np-registry" *ngIf="sesionesPppoe.length">
             <div class="np-registry-wrap"><table class="np-table np-table--registry">
-              <thead><tr><th class="np-th-stripe"></th><th>Cliente</th><th>Usuario</th><th>IP</th><th>MAC del equipo</th><th>Conectado hace</th><th>Servicio</th></tr></thead>
+              <thead><tr><th class="np-th-stripe"></th><th>Cliente</th><th>Usuario</th><th>IP</th><th>Equipo</th><th>Conectado hace</th><th>Servicio</th></tr></thead>
               <tbody>
                 <tr *ngFor="let u of sesionesPppoe" class="np-row">
                   <td class="np-stripe"><i style="background: var(--ok)"></i></td>
