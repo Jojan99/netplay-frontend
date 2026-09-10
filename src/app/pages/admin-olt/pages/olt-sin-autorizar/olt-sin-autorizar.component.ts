@@ -215,6 +215,7 @@ export class OltSinAutorizarComponent implements OnInit {
     this.clienteElegido = null;
     this.clienteElegidoId = null;
     this.buscaCliente = '';
+    this.mostrarLista = false;
     this.verificarSiYaExiste();
     this.cargarClientes();
   }
@@ -305,25 +306,14 @@ export class OltSinAutorizarComponent implements OnInit {
     return partes.join(' · ') + (c.tiene_ont ? '  — ya tiene ONT' : '');
   }
 
-  /** El desplegable propio: un select nativo con varias filas se ve mal. */
-  comboAbierto = false;
-
-  abrirCombo(): void {
-    this.comboAbierto = true;
-    this.buscaCliente = '';
-
-    // Se enfoca el buscador para poder escribir sin un clic más.
-    setTimeout(() => this.buscador?.nativeElement?.focus(), 0);
-  }
-
-  cerrarCombo(): void {
-    this.comboAbierto = false;
-  }
+  /** La lista sólo aparece mientras se escribe, como en el alta de tickets. */
+  mostrarLista = false;
 
   elegirCliente(c: any): void {
     this.clienteElegido = c;
     this.clienteElegidoId = c.id;
-    this.comboAbierto = false;
+    this.mostrarLista = false;
+    this.buscaCliente = '';
 
     // La OLT recibe el nombre como descripción, que es lo que se ve en ella.
     this.form.description = c.nombre;
@@ -332,15 +322,15 @@ export class OltSinAutorizarComponent implements OnInit {
   /** Cerrar el desplegable al hacer clic en cualquier otro lado. */
   @HostListener('document:click', ['$event'])
   clicFuera(e: MouseEvent): void {
-    if (!this.comboAbierto) return;
+    if (!this.mostrarLista) return;
 
-    const combo = (e.target as HTMLElement)?.closest('.olt-combo');
-    if (!combo) this.comboAbierto = false;
+    if (!(e.target as HTMLElement)?.closest('.olt-busca-cliente')) this.mostrarLista = false;
   }
 
   quitarCliente(): void {
     this.clienteElegido = null;
     this.clienteElegidoId = null;
+    this.buscaCliente = '';
     this.form.description = '';
   }
 

@@ -71,48 +71,41 @@
       <div class="np-form">
         <label class="np-field"><span>Puerto FSP <em>*</em></span><input class="np-input np-mono" [(ngModel)]="form.fsp" placeholder="0/0/3" /></label>
         <label class="np-field"><span>Serial</span><input class="np-input np-mono" [(ngModel)]="form.serial" placeholder="HWTC12345678" /><small class="np-fine">Precargado desde la OLT.</small></label>
-        <!-- A quién se le pone la ONT. Están todos los clientes; los que ya
-             tienen una quedan marcados, no ocultos. -->
+        <!-- A quién se le pone la ONT. La lista aparece al escribir, igual que
+             en el alta de tickets: son cientos y mostrarlos todos no sirve. -->
         <div class="np-field np-field-full">
           <span>Cliente</span>
 
-          <div class="olt-combo">
-            <button type="button" class="olt-combo-btn" (click)="abrirCombo()" [class.is-open]="comboAbierto">
-              <ng-container *ngIf="clienteElegido">
-                <b>{{ clienteElegido.nombre }}</b>
-                <small>cc {{ clienteElegido.dni }}<span *ngIf="clienteElegido.plan"> · {{ clienteElegido.plan }}</span></small>
-              </ng-container>
-              <span class="olt-combo-vacio" *ngIf="!clienteElegido">
-                {{ cargandoClientes ? 'Cargando clientes…' : 'Elegí el cliente…' }}
-              </span>
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="m6 9 6 6 6-6"/></svg>
-            </button>
-
-            <div class="olt-combo-panel" *ngIf="comboAbierto">
-              <input #buscador class="np-input" [(ngModel)]="buscaCliente"
-                     placeholder="Buscar por nombre, documento o dirección…" />
-
-              <p class="olt-combo-cuenta">{{ clientesFiltrados.length }} de {{ clientes.length }} clientes</p>
-
-              <div class="olt-combo-lista">
-                <button type="button" class="olt-combo-item" *ngFor="let c of clientesFiltrados"
-                        [class.is-tomado]="c.tiene_ont" (click)="elegirCliente(c)">
-                  <b>{{ c.nombre }}</b>
-                  <small>
-                    cc {{ c.dni }}<span *ngIf="c.plan"> · {{ c.plan }}</span>
-                    <span class="olt-combo-tag" *ngIf="c.tiene_ont">ya tiene ONT</span>
-                  </small>
-                </button>
-
-                <p class="olt-combo-nada" *ngIf="!clientesFiltrados.length">Ningún cliente coincide.</p>
-              </div>
+          <div class="np-client-card" *ngIf="clienteElegido">
+            <div class="np-avatar">{{ clienteElegido.nombre?.charAt(0)?.toUpperCase() }}</div>
+            <div class="np-insp-id">
+              <h2>{{ clienteElegido.nombre }}</h2>
+              <div class="np-meta">CC <b>{{ clienteElegido.dni }}</b><span *ngIf="clienteElegido.plan"> · {{ clienteElegido.plan }}</span></div>
+              <div class="np-meta np-meta--addr" *ngIf="clienteElegido.direccion">{{ clienteElegido.direccion }}</div>
             </div>
+            <button type="button" class="np-btn np-btn--ghost np-btn--sm" (click)="quitarCliente()">Cambiar</button>
           </div>
 
-          <p class="np-fine" *ngIf="clienteElegido">
-            <span *ngIf="clienteElegido.direccion">{{ clienteElegido.direccion }} · </span>
-            <button type="button" class="np-link" (click)="quitarCliente()">quitar</button>
-          </p>
+          <label class="np-field np-field--search olt-busca-cliente" *ngIf="!clienteElegido">
+            <input type="search" class="np-input" [(ngModel)]="buscaCliente"
+                   (input)="mostrarLista = true" (focus)="mostrarLista = true"
+                   [placeholder]="cargandoClientes ? 'Cargando clientes…' : 'Nombre, cédula o dirección…'" />
+
+            <div class="np-checklist np-checklist--float" *ngIf="mostrarLista && buscaCliente">
+              <button type="button" class="np-check np-check--btn" *ngFor="let c of clientesFiltrados | slice:0:30"
+                      (click)="elegirCliente(c)">
+                <span class="np-strong">{{ c.nombre }}</span>
+                <span class="np-spacer"></span>
+                <span class="np-data">{{ c.dni }}</span>
+                <span class="olt-tomado" *ngIf="c.tiene_ont">ya tiene ONT</span>
+              </button>
+
+              <p class="np-muted np-check" *ngIf="!clientesFiltrados.length">No se encontraron clientes.</p>
+              <p class="np-muted np-check" *ngIf="clientesFiltrados.length > 30">
+                {{ clientesFiltrados.length }} coinciden — afiná la búsqueda para verlos todos.
+              </p>
+            </div>
+          </label>
         </div>
 
         <label class="np-field np-field-full"><span>Descripción en la OLT <em>es lo que se ve en el equipo</em></span>
