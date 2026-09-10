@@ -120,7 +120,10 @@ export class MikrotikComponent implements OnInit {
         if (r?.error !== 0) { this.syncError = r?.message || 'No se pudo leer el router.'; return; }
         this.syncPreview = this.resumirSync(r.data);
       },
-      error: () => { this.sincronizando = false; this.syncError = 'No se pudo leer el router.'; },
+      error: () => {
+        this.sincronizando = false;
+        this.syncError = 'No se pudo leer el router. No se cambió nada.';
+      },
     });
   }
 
@@ -161,7 +164,16 @@ export class MikrotikComponent implements OnInit {
         this.syncPreview = null;
         this.loadConflicts();
       },
-      error: () => { this.sincronizando = false; this.syncError = 'No se pudo sincronizar.'; },
+      // Que se corte la respuesta no significa que no se haya aplicado: el
+      // proceso sigue del lado del servidor. Antes esto decía "no se pudo" y
+      // el cambio en realidad ya estaba hecho, así que se vuelve a leer el
+      // estado real y se cuenta lo que se ve.
+      error: () => {
+        this.sincronizando = false;
+        this.syncPreview = null;
+        this.syncError = 'Se cortó la respuesta del servidor. Puede que la sincronización sí se haya aplicado: revisá la lista, que se está recargando.';
+        this.loadConflicts();
+      },
     });
   }
 
