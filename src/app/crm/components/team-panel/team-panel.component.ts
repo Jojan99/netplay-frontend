@@ -244,8 +244,10 @@ export class TeamPanelComponent implements OnInit, OnDestroy {
   private peerActive(id: number): void {
     const p = this.peers.get(id); if (!p || p.state === 'active') return;
     clearTimeout(p.timer); p.state = 'active'; this.peers = new Map(this.peers);
-    // Ya hay audio: no queda nada por lo que timbrar.
+    // Ya hay audio: no queda nada por lo que timbrar, y el micrófono tiene
+    // que estar abierto sí o sí.
     this.stopRing();
+    this.micDurante(true);
     if (!this.call.since) { this.call = { ...this.call, since: Date.now() }; clearInterval(this.tickTimer); this.tickTimer = setInterval(() => this.zone.run(() => this.callSeconds = Math.floor((Date.now() - this.call.since) / 1000)), 1000); }
   }
   private dropPeer(id: number, reason?: string, notify = false): void {
@@ -508,7 +510,12 @@ export class TeamPanelComponent implements OnInit, OnDestroy {
    * cualquier teléfono: no se manda audio hasta que la otra parte atiende.
    */
   private micDurante(activo: boolean): void {
-    this.localStream?.getAudioTracks().forEach(t => t.enabled = activo && !this.call.muted);
+    const tracks = this.localStream?.getAudioTracks() ?? [];
+    const valor = activo && !this.call.muted;
+
+    tracks.forEach(t => t.enabled = valor);
+
+    if (tracks.length) console.log('[Equipo llamada] micrófono', valor ? 'abierto' : 'en silencio');
   }
 
   private startRing(outgoing: boolean): void {
@@ -534,14 +541,14 @@ export class TeamPanelComponent implements OnInit, OnDestroy {
   }
 
   private stopRing(): void {
-    const sonaba = !!this.ringOsc;
-
     clearInterval(this.ringOsc); this.ringOsc = null;
     clearTimeout(this.ringBeatTimer); this.ringBeatTimer = null;
     clearTimeout(this.ringCorte); this.ringCorte = null;
 
-    // Se devuelve el micrófono, que estaba en silencio mientras timbraba.
-    if (sonaba) this.micDurante(true);
+    // Siempre se devuelve el micrófono, aunque el timbre ya se hubiera
+    // apagado solo: condicionarlo dejaba mudo al que llamaba durante toda la
+    // llamada, y quedarse sin audio es mucho peor que oír medio tono.
+    this.micDurante(true);
 
     // Callar lo que ya estaba sonando o programado para sonar.
     this.ringNodes.forEach(n => {
