@@ -71,36 +71,28 @@
       <div class="np-form">
         <label class="np-field"><span>Puerto FSP <em>*</em></span><input class="np-input np-mono" [(ngModel)]="form.fsp" placeholder="0/0/3" /></label>
         <label class="np-field"><span>Serial</span><input class="np-input np-mono" [(ngModel)]="form.serial" placeholder="HWTC12345678" /><small class="np-fine">Precargado desde la OLT.</small></label>
-        <!-- A quién se le pone la ONT. Sólo aparecen los clientes que todavía
-             no tienen una, para no vincularla a alguien que ya tiene la suya. -->
+        <!-- A quién se le pone la ONT. Están todos los clientes; los que ya
+             tienen una quedan marcados para que se vea, no ocultos. -->
         <div class="np-field np-field-full">
-          <span>Cliente <em>sólo los que todavía no tienen ONT</em></span>
+          <span>Cliente
+            <em *ngIf="!cargandoClientes">{{ clientesFiltrados.length }} de {{ clientes.length }}</em>
+            <em *ngIf="cargandoClientes">cargando…</em>
+          </span>
 
-          <div class="olt-cliente-elegido" *ngIf="clienteElegido">
-            <div>
-              <b>{{ clienteElegido.nombre }}</b>
-              <small>cc {{ clienteElegido.dni }}<span *ngIf="clienteElegido.plan"> · {{ clienteElegido.plan }}</span><span *ngIf="clienteElegido.direccion"> · {{ clienteElegido.direccion }}</span></small>
-            </div>
-            <button type="button" class="np-btn np-btn--ghost np-btn--sm" (click)="quitarCliente()">Cambiar</button>
-          </div>
+          <input class="np-input olt-busca" [(ngModel)]="buscaCliente"
+                 placeholder="Escribí para filtrar por nombre, documento o dirección…" />
 
-          <ng-container *ngIf="!clienteElegido">
-            <input class="np-input" [(ngModel)]="buscaCliente" (ngModelChange)="buscarClienteDemorado()"
-                   placeholder="Buscar por nombre, documento o dirección…" />
+          <select class="np-input" size="7" [(ngModel)]="clienteElegidoId" (ngModelChange)="onClienteChange()">
+            <option [ngValue]="null" disabled>Seleccione el cliente…</option>
+            <option *ngFor="let c of clientesFiltrados" [ngValue]="c.id" [class.is-tomado]="c.tiene_ont">
+              {{ etiquetaCliente(c) }}
+            </option>
+          </select>
 
-            <p class="np-fine" *ngIf="cargandoClientes">Buscando…</p>
-
-            <div class="olt-clientes" *ngIf="!cargandoClientes">
-              <button type="button" class="olt-cliente" *ngFor="let c of clientes" (click)="elegirCliente(c)">
-                <b>{{ c.nombre }}</b>
-                <small>cc {{ c.dni }}<span *ngIf="c.plan"> · {{ c.plan }}</span></small>
-              </button>
-
-              <p class="np-fine" *ngIf="!clientes.length">
-                Ningún cliente sin ONT coincide con la búsqueda.
-              </p>
-            </div>
-          </ng-container>
+          <p class="np-fine" *ngIf="clienteElegido">
+            Se vincula a <b>{{ clienteElegido.nombre }}</b><span *ngIf="clienteElegido.direccion"> · {{ clienteElegido.direccion }}</span>
+            <button type="button" class="np-link" (click)="quitarCliente()">quitar</button>
+          </p>
         </div>
 
         <label class="np-field np-field-full"><span>Descripción en la OLT <em>es lo que se ve en el equipo</em></span>

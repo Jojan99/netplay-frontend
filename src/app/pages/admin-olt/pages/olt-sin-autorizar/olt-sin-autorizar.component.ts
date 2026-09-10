@@ -213,6 +213,7 @@ export class OltSinAutorizarComponent implements OnInit {
     this.modal = true;
     this.pasos = [];
     this.clienteElegido = null;
+    this.clienteElegidoId = null;
     this.buscaCliente = '';
     this.verificarSiYaExiste();
     this.cargarClientes();
@@ -260,16 +261,22 @@ export class OltSinAutorizarComponent implements OnInit {
   // saber después qué puerto atiende a cada cliente.
   clientes: any[] = [];
   clienteElegido: any = null;
+  clienteElegidoId: number | null = null;
   buscaCliente = '';
   cargandoClientes = false;
-  private buscaPendiente: any = null;
 
+  /**
+   * Se traen todos de una vez y se filtran acá.
+   *
+   * Son unos cientos: pedirlos al servidor en cada tecla haría esperar por
+   * algo que ya está en memoria.
+   */
   cargarClientes(): void {
     if (!this.selectedOltId) return;
 
     this.cargandoClientes = true;
 
-    this.oltService.clientesSinOnt(this.selectedOltId, this.buscaCliente.trim() || undefined).subscribe({
+    this.oltService.clientesSinOnt(this.selectedOltId).subscribe({
       next: (res) => {
         this.cargandoClientes = false;
         this.clientes = res?.data ?? [];
@@ -278,20 +285,34 @@ export class OltSinAutorizarComponent implements OnInit {
     });
   }
 
-  /** Se espera a que termine de escribir para no consultar en cada tecla. */
-  buscarClienteDemorado(): void {
-    clearTimeout(this.buscaPendiente);
-    this.buscaPendiente = setTimeout(() => this.cargarClientes(), 350);
+  get clientesFiltrados(): any[] {
+    const t = this.buscaCliente.trim().toLowerCase();
+
+    if (!t) return this.clientes;
+
+    return this.clientes.filter(c =>
+      (c.nombre || '').toLowerCase().includes(t) ||
+      (c.dni || '').toLowerCase().includes(t) ||
+      (c.direccion || '').toLowerCase().includes(t));
   }
 
-  elegirCliente(c: any): void {
-    this.clienteElegido = c;
+  /** Lo que se lee en cada opción del desplegable. */
+  etiquetaCliente(c: any): string {
+    const partes = [c.nombre, c.dni ? 'cc ' + c.dni : null, c.plan].filter(Boolean);
+
+    return partes.join(' · ') + (c.tiene_ont ? '  — ya tiene ONT' : '');
+  }
+
+  onClienteChange(): void {
+    this.clienteElegido = this.clientes.find(c => c.id === Number(this.clienteElegidoId)) ?? null;
+
     // La OLT recibe el nombre como descripción, que es lo que se ve en ella.
-    this.form.description = c.nombre;
+    if (this.clienteElegido) this.form.description = this.clienteElegido.nombre;
   }
 
   quitarCliente(): void {
     this.clienteElegido = null;
+    this.clienteElegidoId = null;
     this.form.description = '';
   }
 
