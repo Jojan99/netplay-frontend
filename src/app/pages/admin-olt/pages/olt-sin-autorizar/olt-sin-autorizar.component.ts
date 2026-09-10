@@ -1,4 +1,4 @@
-import { Component, HostListener, OnInit } from '@angular/core';
+import { Component, ElementRef, HostListener, OnInit, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { OltNavComponent } from '../../shared/olt-nav.component';
 import { FormsModule } from '@angular/forms';
@@ -259,6 +259,8 @@ export class OltSinAutorizarComponent implements OnInit {
   // vincula por error a alguien que ya tiene la suya. El nombre sigue viajando
   // a la OLT como descripción; el vínculo se guarda del lado nuestro para
   // saber después qué puerto atiende a cada cliente.
+  @ViewChild('buscador') buscador?: ElementRef<HTMLInputElement>;
+
   clientes: any[] = [];
   clienteElegido: any = null;
   clienteElegidoId: number | null = null;
@@ -303,11 +305,37 @@ export class OltSinAutorizarComponent implements OnInit {
     return partes.join(' · ') + (c.tiene_ont ? '  — ya tiene ONT' : '');
   }
 
-  onClienteChange(): void {
-    this.clienteElegido = this.clientes.find(c => c.id === Number(this.clienteElegidoId)) ?? null;
+  /** El desplegable propio: un select nativo con varias filas se ve mal. */
+  comboAbierto = false;
+
+  abrirCombo(): void {
+    this.comboAbierto = true;
+    this.buscaCliente = '';
+
+    // Se enfoca el buscador para poder escribir sin un clic más.
+    setTimeout(() => this.buscador?.nativeElement?.focus(), 0);
+  }
+
+  cerrarCombo(): void {
+    this.comboAbierto = false;
+  }
+
+  elegirCliente(c: any): void {
+    this.clienteElegido = c;
+    this.clienteElegidoId = c.id;
+    this.comboAbierto = false;
 
     // La OLT recibe el nombre como descripción, que es lo que se ve en ella.
-    if (this.clienteElegido) this.form.description = this.clienteElegido.nombre;
+    this.form.description = c.nombre;
+  }
+
+  /** Cerrar el desplegable al hacer clic en cualquier otro lado. */
+  @HostListener('document:click', ['$event'])
+  clicFuera(e: MouseEvent): void {
+    if (!this.comboAbierto) return;
+
+    const combo = (e.target as HTMLElement)?.closest('.olt-combo');
+    if (!combo) this.comboAbierto = false;
   }
 
   quitarCliente(): void {
