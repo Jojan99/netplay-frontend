@@ -399,3 +399,18 @@ button.np-kpi:hover { background: var(--surface-2); }
 .np-tpl-preview-h { display: flex; align-items: center; gap: 8px; }
 .np-tpl-paper { border: 1px solid var(--line); border-radius: var(--radius-lg); background: var(--surface-2); min-height: 520px; display: grid; place-items: center; padding: 14px; overflow: auto;
   iframe { width: 100%; min-width: 660px; height: 760px; border: 0; background: #fff; box-shadow: var(--shadow-lg); } }
+
+/* ── Panel del equipo abierto ─────────────────────────────────────────────
+   El panel vive dentro de la cabecera, y la cabecera tiene z-index propio:
+   eso encierra a todo lo que hay adentro, así que por más alto que se le
+   ponga al panel no puede superar a lo que está fuera de ella. Mientras el
+   panel está abierto se levanta la cabecera entera y se aparta la burbuja de
+   WhatsApp, que en el teléfono caía justo encima del botón de enviar. */
+body.np-equipo-abierto .app-shell-header { z-index: 90; }
+body.np-equipo-abierto .wg-launch { display: none; }
+
+/* En el teléfono el panel ocupa toda la pantalla, así que la burbuja no tiene
+   dónde ir; en pantallas grandes alcanza con correrla para que no estorbe. */
+@media (min-width: 768px) {
+  body.np-equipo-abierto .wg-launch { display: grid; right: 420px; }
+}

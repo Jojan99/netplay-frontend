@@ -6,7 +6,7 @@
 </button>
 
 <!-- Panel lateral -->
-<div class="tp-backdrop" *ngIf="open" (click)="open = false"></div>
+<div class="tp-backdrop" *ngIf="open" (click)="cerrar()"></div>
 <aside class="tp-panel" *ngIf="open">
   <header class="tp-head">
     <button type="button" class="np-icobtn" *ngIf="active !== null" (click)="backToList()" aria-label="Volver"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="m15 6-6 6 6 6"/></svg></button>
@@ -16,7 +16,7 @@
     <span class="np-spacer"></span>
     <button type="button" class="np-icobtn tp-call" *ngIf="active === null" [disabled]="onlineCount === 0" (click)="openGroupPicker()" title="Llamada grupal"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0M16 4.5a3.5 3.5 0 0 1 0 7M21.5 20a6.5 6.5 0 0 0-5-6.3"/></svg></button>
     <button type="button" class="np-icobtn tp-call" *ngIf="activeMember as m" [disabled]="!online.has(m.id) || call.state === 'ringing-in'" (click)="callMember(m)" [title]="call.state === 'in-call' ? 'Agregar a la llamada' : 'Llamar'"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2"/></svg></button>
-    <button type="button" class="np-icobtn" (click)="open = false" aria-label="Cerrar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
+    <button type="button" class="np-icobtn" (click)="cerrar()" aria-label="Cerrar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
   </header>
 
   <!-- Lista -->

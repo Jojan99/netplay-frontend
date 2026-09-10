@@ -95,7 +95,8 @@ export class TeamPanelComponent implements OnInit, OnDestroy {
     this.team.ice().subscribe({ next: r => { if (Array.isArray(r.data) && r.data.length) this.iceServers = r.data; }, error: () => {} });
     this.connect();
   }
-  ngOnDestroy(): void { this.endCall(true); this.echo.leave(`company.${this.companyId}`); this.echo.leave(`user.${this.myId}`); }
+  ngOnDestroy(): void {
+    try { document.body.classList.remove('np-equipo-abierto'); } catch {} this.endCall(true); this.echo.leave(`company.${this.companyId}`); this.echo.leave(`user.${this.myId}`); }
 
   loadMembers(): void {
     this.team.members().subscribe({ next: r => { this.me = r.data?.me || null; this.members = r.data?.members || []; this.generalUnread = r.data?.general_unread || 0; }, error: () => {} });
@@ -133,7 +134,26 @@ export class TeamPanelComponent implements OnInit, OnDestroy {
   }
 
   /* ── Hilos ───────────────────────────────────────────────────── */
-  toggle(): void { this.open = !this.open; if (this.open && this.active !== null) this.markRead(); }
+  toggle(): void {
+    this.open = !this.open;
+    if (this.open && this.active !== null) this.markRead();
+    this.marcarAbierto();
+  }
+
+  /**
+   * Avisa al resto de la página que el panel está abierto.
+   *
+   * El panel vive dentro de la cabecera, que tiene su propio z-index y por
+   * eso encierra todo lo que hay adentro: por más alto que se le ponga al
+   * panel, no puede superar a lo que está fuera de la cabecera. Con esta
+   * marca en el body, el tema levanta la cabecera y aparta la burbuja de
+   * WhatsApp, que en el teléfono caía justo encima del botón de enviar.
+   */
+  cerrar(): void { this.open = false; this.marcarAbierto(); }
+
+  private marcarAbierto(): void {
+    try { document.body.classList.toggle('np-equipo-abierto', this.open); } catch {}
+  }
   openThread(which: 'general' | number): void {
     this.active = which; this.messages = []; this.loadingThread = true;
     this.team.messages(which).subscribe({ next: r => { this.messages = r.data || []; this.loadingThread = false; this.scrollThread(); this.markRead(); }, error: () => this.loadingThread = false });
