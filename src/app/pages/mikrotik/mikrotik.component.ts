@@ -228,6 +228,84 @@ export class MikrotikComponent implements OnInit {
     return this.pppoeUsuarios.filter(u => !!u.sesion).length;
   }
 
+  /** Qué se ve en la pestaña: sesiones, credenciales o perfiles. */
+  vistaPppoe: 'conectados' | 'usuarios' | 'perfiles' = 'conectados';
+
+  get sesionesPppoe(): any[] {
+    return this.pppoeUsuarios.filter(u => !!u.sesion);
+  }
+
+  /** El servidor quedó creado pero el router no lo pudo levantar. */
+  get servidorInvalido(): boolean {
+    return (this.pppoe?.servidores ?? []).some((s: any) => s.invalido);
+  }
+
+  // ── Desmontar PPPoE ───────────────────────────────────────────────────────
+  mostrarBaja = false;
+  queSeBorra: any = null;
+  bajaOpciones = { usuarios: false, perfiles: true, pool: true };
+  desmontando = false;
+  resultadoBaja: any = null;
+
+  abrirBaja() {
+    this.mostrarBaja = true;
+    this.queSeBorra = null;
+    this.resultadoBaja = null;
+    this.bajaOpciones = { usuarios: false, perfiles: true, pool: true };
+
+    this.svc.getPppoeQueSeBorra(this.selectedRouterId).subscribe({
+      next: r => {
+        if (r?.error !== 0) { this.pppoeError = r?.message || 'No se pudo leer el router.'; return; }
+        this.queSeBorra = r.data;
+      },
+      error: () => { this.pppoeError = 'No se pudo leer el router.'; },
+    });
+  }
+
+  get perfilesBaja(): string {
+    return (this.queSeBorra?.perfiles ?? []).map((p: any) => p.nombre).join(', ');
+  }
+
+  cerrarBaja() {
+    this.mostrarBaja = false;
+    this.queSeBorra = null;
+    this.resultadoBaja = null;
+  }
+
+  async confirmarBaja() {
+    const q = this.queSeBorra;
+    if (!q) return;
+
+    const usuarios = this.bajaOpciones.usuarios ? q.usuarios.length : 0;
+
+    const ok = await this.dialog.confirm(
+      `Se va a quitar el servidor PPPoE del router.` +
+      (q.conectados ? ` Hay ${q.conectados} cliente(s) conectados ahora mismo: se les corta el servicio.` : '') +
+      (usuarios ? ` Además se borran ${usuarios} credencial(es) de cliente, y eso no se puede deshacer.` : '') +
+      ` ¿Confirmás?`,
+      { okLabel: 'Quitar PPPoE', danger: true },
+    );
+
+    if (!ok) return;
+
+    this.desmontando = true;
+    this.pppoeError = '';
+
+    this.svc.desmontarPppoe({
+      ...this.bajaOpciones,
+      nombre_pool: q.pool,
+      router_id: this.selectedRouterId,
+    }).subscribe({
+      next: r => {
+        this.desmontando = false;
+        this.resultadoBaja = r.data;
+        if (r?.error !== 0) { this.pppoeError = r?.message || 'No se pudo desmontar.'; return; }
+        this.loadPppoe();
+      },
+      error: () => { this.desmontando = false; this.pppoeError = 'No se pudo desmontar.'; },
+    });
+  }
+
   // ── Conflictos de IP ──────────────────────────────────────────────────────
   // Dos clientes con la misma IP se pelean el ARP del router: a los dos les
   // anda el internet a ratos. Acá se listan para irlos resolviendo de a uno.

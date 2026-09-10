@@ -21,6 +21,10 @@
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 12a8 8 0 1 1-2.3-5.7M20 4v5h-5"/></svg>
         {{ sincronizando ? 'Leyendo el router…' : 'Sincronizar con el router' }}
       </button>
+      <button type="button" class="np-btn np-btn--danger" *ngIf="activeTab === 'pppoe' && pppoe?.servidores?.length" (click)="abrirBaja()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/></svg>
+        Quitar PPPoE
+      </button>
       <button type="button" class="np-btn np-btn--primary" *ngIf="activeTab === 'pppoe'" (click)="abrirAsistente()">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v4M12 17v4M3 12h4M17 12h4M6 6l3 3M15 15l3 3M18 6l-3 3M9 15l-3 3"/></svg>
         {{ pppoe?.disponible ? 'Revisar configuración' : 'Configurar servidor PPPoE' }}
@@ -294,43 +298,119 @@
       <p class="np-notice np-notice--danger" *ngIf="pppoeError && !loadingPppoe">{{ pppoeError }}</p>
 
       <ng-container *ngIf="!loadingPppoe && pppoe">
-        <p class="np-notice np-notice--code" *ngIf="!pppoe.disponible">
+        <p class="np-notice np-notice--code" *ngIf="!pppoe.servidores.length">
           <strong>Este router todavía no atiende clientes PPPoE.</strong>
           Si repartís IP fija no hace falta hacer nada. Si querés trabajar con usuario y contraseña,
-          <b>Configurar servidor PPPoE</b> deja listo el rango de direcciones, el perfil y el servidor en un paso.
+          <b>Configurar servidor PPPoE</b> te lleva paso a paso.
+        </p>
+
+        <p class="np-notice np-notice--danger" *ngIf="servidorInvalido">
+          <strong>El router no pudo levantar el servidor.</strong>
+          Está creado pero marcado como inválido: suele ser porque la interfaz elegida no sirve para
+          atender clientes — está caída, en un bridge o ya la usa otro servicio. Revisá el paso
+          <b>Por dónde llegan</b> del asistente.
         </p>
 
         <section class="np-kpis">
-          <div class="np-kpi"><span class="np-kpi-k">Servidor</span><b class="np-kpi-v" [ngClass]="pppoe.disponible ? 'np-kpi-v--ok' : 'np-kpi-v--warn'">{{ pppoe.disponible ? 'Activo' : 'Sin montar' }}</b></div>
-          <div class="np-kpi"><span class="np-kpi-k">Conectados ahora</span><b class="np-kpi-v">{{ conectados }}</b></div>
-          <div class="np-kpi"><span class="np-kpi-k">Usuarios</span><b class="np-kpi-v">{{ pppoeUsuarios.length }}</b></div>
+          <div class="np-kpi"><span class="np-kpi-k">Servidor</span>
+            <b class="np-kpi-v" [ngClass]="servidorInvalido ? 'np-kpi-v--danger' : (pppoe.disponible ? 'np-kpi-v--ok' : 'np-kpi-v--warn')">
+              {{ servidorInvalido ? 'Con error' : (pppoe.disponible ? 'Activo' : 'Sin montar') }}
+            </b>
+          </div>
+          <div class="np-kpi"><span class="np-kpi-k">Conectados ahora</span><b class="np-kpi-v np-kpi-v--accent">{{ conectados }}</b></div>
+          <div class="np-kpi"><span class="np-kpi-k">Credenciales</span><b class="np-kpi-v">{{ pppoeUsuarios.length }}</b></div>
           <div class="np-kpi"><span class="np-kpi-k">Perfiles</span><b class="np-kpi-v">{{ pppoe.perfiles.length }}</b></div>
         </section>
 
-        <section class="np-registry" *ngIf="pppoeUsuarios.length">
-          <div class="np-registry-wrap"><table class="np-table np-table--registry">
-            <thead><tr><th class="np-th-stripe"></th><th>Usuario</th><th>Documento</th><th>Perfil</th><th>IP actual</th><th>Conectado desde</th><th>Estado</th></tr></thead>
-            <tbody>
-              <tr *ngFor="let u of pppoeUsuarios" class="np-row">
-                <td class="np-stripe"><i [style.background]="u.sesion ? 'var(--ok)' : (u.habilitado ? 'var(--line-strong)' : 'var(--danger)')"></i></td>
-                <td class="np-data np-strong np-mono">{{ u.usuario }}</td>
-                <td class="np-data np-mono">{{ u.comentario || '—' }}</td>
-                <td class="np-data">{{ u.perfil || '—' }}</td>
-                <td class="np-data np-mono">{{ u.sesion?.ip || '—' }}</td>
-                <td class="np-data">{{ u.sesion?.desde || '—' }}</td>
-                <td>
-                  <span class="np-pill" [ngClass]="u.sesion ? 'np-pill--active' : (u.habilitado ? 'np-pill--neutral' : 'np-pill--suspended')">
-                    {{ u.sesion ? 'Conectado' : (u.habilitado ? 'Sin conectar' : 'Suspendido') }}
-                  </span>
-                </td>
-              </tr>
-            </tbody>
-          </table></div>
+        <!-- Los servidores montados -->
+        <section class="np-card" *ngIf="pppoe.servidores.length">
+          <div class="np-card-h"><h2>Servidor</h2></div>
+          <div class="np-pm-datos">
+            <div *ngFor="let sv of pppoe.servidores"><span>{{ sv.nombre }}</span><b>{{ sv.interfaz }}</b></div>
+            <div *ngFor="let sv of pppoe.servidores"><span>Perfil por defecto</span><b>{{ sv.perfil }}</b></div>
+            <div *ngFor="let sv of pppoe.servidores"><span>Autenticación</span><b>{{ sv.autenticacion || '—' }}</b></div>
+            <div *ngFor="let sv of pppoe.servidores"><span>Una sesión por equipo</span><b>{{ sv.una_sesion ? 'Sí' : 'No' }}</b></div>
+          </div>
         </section>
 
-        <p class="np-notice np-notice--code" *ngIf="!pppoeUsuarios.length">
-          Todavía no hay usuarios PPPoE. Se crean al registrar un cliente eligiendo <b>PPPoE</b> como tipo de conexión.
-        </p>
+        <div class="np-seg np-pppoe-seg" role="tablist">
+          <button type="button" role="tab" [attr.aria-pressed]="vistaPppoe === 'conectados'" (click)="vistaPppoe = 'conectados'">Conectados ({{ conectados }})</button>
+          <button type="button" role="tab" [attr.aria-pressed]="vistaPppoe === 'usuarios'" (click)="vistaPppoe = 'usuarios'">Credenciales ({{ pppoeUsuarios.length }})</button>
+          <button type="button" role="tab" [attr.aria-pressed]="vistaPppoe === 'perfiles'" (click)="vistaPppoe = 'perfiles'">Perfiles ({{ pppoe.perfiles.length }})</button>
+        </div>
+
+        <!-- Conectados ahora -->
+        <ng-container *ngIf="vistaPppoe === 'conectados'">
+          <p class="np-pm-vacio" *ngIf="!sesionesPppoe.length">Ningún cliente conectado en este momento.</p>
+          <section class="np-registry" *ngIf="sesionesPppoe.length">
+            <div class="np-registry-wrap"><table class="np-table np-table--registry">
+              <thead><tr><th class="np-th-stripe"></th><th>Cliente</th><th>Usuario</th><th>IP</th><th>MAC del equipo</th><th>Conectado hace</th><th>Servicio</th></tr></thead>
+              <tbody>
+                <tr *ngFor="let u of sesionesPppoe" class="np-row">
+                  <td class="np-stripe"><i style="background: var(--ok)"></i></td>
+                  <td><div class="np-name">{{ u.cliente || '—' }}<span class="np-fine" *ngIf="u.comentario"> · {{ u.comentario }}</span></div></td>
+                  <td class="np-data np-mono np-strong">{{ u.usuario }}</td>
+                  <td class="np-data np-mono">{{ u.sesion.ip }}</td>
+                  <td class="np-data np-mono">{{ u.sesion.mac || '—' }}</td>
+                  <td class="np-data">{{ u.sesion.desde }}</td>
+                  <td class="np-data">{{ u.sesion.servicio }}</td>
+                </tr>
+              </tbody>
+            </table></div>
+          </section>
+        </ng-container>
+
+        <!-- Todas las credenciales -->
+        <ng-container *ngIf="vistaPppoe === 'usuarios'">
+          <p class="np-pm-vacio" *ngIf="!pppoeUsuarios.length">
+            Todavía no hay credenciales. Se crean al registrar un cliente eligiendo <b>PPPoE</b>.
+          </p>
+          <section class="np-registry" *ngIf="pppoeUsuarios.length">
+            <div class="np-registry-wrap"><table class="np-table np-table--registry">
+              <thead><tr><th class="np-th-stripe"></th><th>Cliente</th><th>Usuario</th><th>Documento</th><th>Perfil</th><th>Última salida</th><th>Motivo</th><th>Estado</th></tr></thead>
+              <tbody>
+                <tr *ngFor="let u of pppoeUsuarios" class="np-row">
+                  <td class="np-stripe"><i [style.background]="u.sesion ? 'var(--ok)' : (u.habilitado ? 'var(--line-strong)' : 'var(--danger)')"></i></td>
+                  <td><div class="np-name">{{ u.cliente || '—' }}</div></td>
+                  <td class="np-data np-mono np-strong">{{ u.usuario }}</td>
+                  <td class="np-data np-mono">{{ u.comentario || '—' }}</td>
+                  <td class="np-data">{{ u.perfil || '—' }}</td>
+                  <td class="np-data">{{ u.ultima_salida || '—' }}</td>
+                  <td class="np-data np-fine">{{ u.ultimo_motivo || '—' }}</td>
+                  <td>
+                    <span class="np-pill" [ngClass]="u.sesion ? 'np-pill--active' : (u.habilitado ? 'np-pill--neutral' : 'np-pill--suspended')">
+                      {{ u.sesion ? 'Conectado' : (u.habilitado ? 'Sin conectar' : 'Suspendido') }}
+                    </span>
+                  </td>
+                </tr>
+              </tbody>
+            </table></div>
+          </section>
+        </ng-container>
+
+        <!-- Perfiles -->
+        <ng-container *ngIf="vistaPppoe === 'perfiles'">
+          <p class="np-notice np-notice--code">
+            El perfil es lo que fija la velocidad y de qué rango sale la IP. Los que reparten de otro
+            rango son de otro servicio —una VPN, por ejemplo— y no sirven para clientes.
+          </p>
+          <section class="np-registry">
+            <div class="np-registry-wrap"><table class="np-table np-table--registry">
+              <thead><tr><th class="np-th-stripe"></th><th>Perfil</th><th>Velocidad</th><th>Puerta de enlace</th><th>Reparte de</th><th>En uso</th><th></th></tr></thead>
+              <tbody>
+                <tr *ngFor="let p of pppoe.perfiles" class="np-row">
+                  <td class="np-stripe"><i [style.background]="p.velocidad ? 'var(--accent)' : 'var(--line-strong)'"></i></td>
+                  <td class="np-data np-strong">{{ p.nombre }}</td>
+                  <td class="np-data np-mono">{{ p.velocidad || 'sin límite' }}</td>
+                  <td class="np-data np-mono">{{ p.direccion_local || '—' }}</td>
+                  <td class="np-data np-mono">{{ p.pool || '—' }}</td>
+                  <td class="np-data">{{ p.en_uso }}</td>
+                  <td><span class="np-pill np-pill--neutral" *ngIf="p.del_sistema">del sistema</span></td>
+                </tr>
+              </tbody>
+            </table></div>
+          </section>
+        </ng-container>
       </ng-container>
     </ng-container>
 
@@ -911,6 +991,99 @@
           <button type="button" class="np-btn np-btn--primary" (click)="siguientePaso()" *ngIf="paso < ultimoPaso" [disabled]="!puedeAvanzar">Siguiente</button>
           <button type="button" class="np-btn np-btn--primary" (click)="montarPppoe()" *ngIf="paso === ultimoPaso" [disabled]="montando">
             {{ montando ? 'Configurando…' : 'Configurar el router' }}
+          </button>
+        </div>
+      </ng-container>
+    </div>
+  </div>
+</div>
+
+<!-- ══ Quitar PPPoE ═══════════════════════════════════════════════════════ -->
+<div *ngIf="mostrarBaja" class="np-overlay" (click)="cerrarBaja()">
+  <div class="np-modal np-modal--lg" role="dialog" aria-modal="true" aria-label="Quitar PPPoE" (click)="$event.stopPropagation()">
+    <div class="np-modal-head">
+      <div>
+        <p class="np-kicker">MikroTik <b>/</b> PPPoE</p>
+        <h3>Quitar PPPoE del router</h3>
+      </div>
+      <button type="button" class="np-icobtn" (click)="cerrarBaja()" aria-label="Cerrar">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M6 6l12 12M18 6 6 18"/></svg>
+      </button>
+    </div>
+
+    <div class="np-modal-body">
+      <div *ngIf="!queSeBorra && !resultadoBaja" class="np-loading"><span class="np-spinner"></span> Viendo qué hay montado…</div>
+
+      <ng-container *ngIf="resultadoBaja">
+        <p class="np-notice" [ngClass]="resultadoBaja.ok ? 'np-notice--ok' : 'np-notice--danger'">
+          <strong>{{ resultadoBaja.ok ? 'Listo, PPPoE quedó fuera del router.' : 'No se pudo terminar.' }}</strong>
+        </p>
+        <ul class="np-sync-list"><li *ngFor="let p of resultadoBaja.pasos">{{ p }}</li></ul>
+        <p class="np-notice np-notice--warn np-notice--inline" *ngIf="resultadoBaja.error">{{ resultadoBaja.error }}</p>
+        <div class="np-btnrow np-btnrow--end">
+          <button type="button" class="np-btn np-btn--primary" (click)="cerrarBaja()">Cerrar</button>
+        </div>
+      </ng-container>
+
+      <ng-container *ngIf="queSeBorra && !resultadoBaja">
+        <p class="np-notice np-notice--danger" *ngIf="queSeBorra.conectados">
+          <strong>Hay {{ queSeBorra.conectados }} cliente(s) conectados ahora mismo.</strong>
+          Al quitar el servidor se les corta el servicio en el acto.
+        </p>
+
+        <section>
+          <h4 class="np-sync-h">Se quita siempre</h4>
+          <ul class="np-sync-list">
+            <li *ngFor="let sv of queSeBorra.servidores">Servidor <b>{{ sv.nombre }}</b> en {{ sv.interfaz }}</li>
+            <li *ngIf="!queSeBorra.servidores.length">No hay servidor montado.</li>
+          </ul>
+        </section>
+
+        <section>
+          <h4 class="np-sync-h">Y además, si lo marcás</h4>
+
+          <label class="np-check np-baja-op">
+            <input type="checkbox" [(ngModel)]="bajaOpciones.perfiles" />
+            <span>
+              Los <b>{{ queSeBorra.perfiles.length }} perfil(es)</b> que reparten de «{{ queSeBorra.pool }}»
+              <em *ngIf="queSeBorra.perfiles.length">— {{ perfilesBaja }}</em>
+              <br /><small>Los de otros rangos, como los de una VPN, no se tocan.</small>
+            </span>
+          </label>
+
+          <label class="np-check np-baja-op">
+            <input type="checkbox" [(ngModel)]="bajaOpciones.pool" />
+            <span>
+              El rango <b>{{ queSeBorra.pool }}</b> y su regla de salida a internet
+            </span>
+          </label>
+
+          <label class="np-check np-baja-op" [class.is-peligro]="bajaOpciones.usuarios">
+            <input type="checkbox" [(ngModel)]="bajaOpciones.usuarios" />
+            <span>
+              Las <b>{{ queSeBorra.usuarios.length }} credencial(es)</b> de los clientes
+              <br /><small>Esto no se puede deshacer: hay que volver a crearlas una por una.</small>
+            </span>
+          </label>
+
+          <div class="np-tablewrap np-sync-box" *ngIf="bajaOpciones.usuarios && queSeBorra.usuarios.length">
+            <table class="np-table np-table--compact">
+              <thead><tr><th>Usuario</th><th>Documento</th><th>Perfil</th></tr></thead>
+              <tbody>
+                <tr *ngFor="let u of queSeBorra.usuarios">
+                  <td class="np-mono np-strong">{{ u.usuario }}</td>
+                  <td class="np-mono">{{ u.documento || '—' }}</td>
+                  <td>{{ u.perfil }}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <div class="np-btnrow np-btnrow--end">
+          <button type="button" class="np-btn np-btn--ghost" (click)="cerrarBaja()">Cancelar</button>
+          <button type="button" class="np-btn np-btn--danger-solid" [disabled]="desmontando" (click)="confirmarBaja()">
+            {{ desmontando ? 'Quitando…' : 'Quitar PPPoE' }}
           </button>
         </div>
       </ng-container>

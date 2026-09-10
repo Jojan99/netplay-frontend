@@ -695,3 +695,23 @@
 .np-wiz-mini { padding: 4px 8px; font-size: 12px; }
 
 .np-wiz-resumen { margin-top: 4px; }
+
+/* ── PPPoE ────────────────────────────────────────────────────────────────*/
+.np-pppoe-seg { margin: 4px 0 12px; }
+
+.np-baja-op {
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+  padding: 9px 11px;
+  margin-bottom: 6px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  font-size: 13px;
+
+  small { display: block; margin-top: 2px; font-size: 11.5px; color: var(--text-3); }
+  em { font-style: normal; color: var(--text-3); }
+
+  /* Borrar credenciales no se deshace: se marca distinto. */
+  &.is-peligro { border-color: var(--danger); background: var(--danger-soft); }
+}

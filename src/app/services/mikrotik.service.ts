@@ -107,6 +107,16 @@ export class MikrotikService {
     return this.http.post(`${this.base}/pppoe/montar`, data, this.h());
   }
 
+  /** Qué se llevaría por delante desmontar PPPoE. */
+  getPppoeQueSeBorra(routerId?: number | null): Observable<any> {
+    return this.http.get(`${this.base}/pppoe/que-se-borra`, { ...this.h(), ...this.params(routerId) });
+  }
+
+  /** Desmonta PPPoE del router. */
+  desmontarPppoe(data: any): Observable<any> {
+    return this.http.post(`${this.base}/pppoe/desmontar`, data, this.h());
+  }
+
   /** Todo lo que el router sabe de un puerto. */
   getPortDetail(name: string, routerId?: number | null): Observable<any> {
     let params = new HttpParams().set('name', name);
