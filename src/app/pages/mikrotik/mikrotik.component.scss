@@ -50,3 +50,182 @@
 
   li { margin-bottom: 4px; }
 }
+
+/* ── Ficha del equipo ─────────────────────────────────────────────────────
+   Foto del modelo, sus datos y el panel de puertos con el estado real. */
+.np-equipo {
+  display: grid;
+  grid-template-columns: minmax(180px, 260px) 1fr;
+  gap: 20px;
+  align-items: start;
+  padding: 18px;
+  margin-bottom: 14px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+}
+
+.np-equipo-foto {
+  margin: 0;
+  display: grid;
+  place-items: center;
+  min-height: 110px;
+  padding: 10px;
+  background: var(--surface-2);
+  border-radius: var(--radius);
+
+  img { max-width: 100%; height: auto; }
+}
+
+.np-equipo-sinfoto {
+  color: var(--text-3);
+  svg { width: 56px; height: 56px; }
+}
+
+.np-equipo-modelo {
+  margin: 2px 0 4px;
+  font-size: 19px;
+  letter-spacing: -0.01em;
+}
+
+.np-equipo-sub {
+  margin: 0 0 12px;
+  font-size: 12.5px;
+  color: var(--text-2);
+}
+
+.np-equipo-specs {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 10px 16px;
+  margin: 0;
+
+  dt { font-size: 11px; text-transform: uppercase; letter-spacing: .04em; color: var(--text-3); }
+  dd { margin: 1px 0 0; font-size: 13px; }
+}
+
+/* El panel ocupa el ancho completo debajo de la foto y los datos. */
+.np-panel {
+  grid-column: 1 / -1;
+  margin-top: 4px;
+  padding-top: 14px;
+  border-top: 1px solid var(--line);
+}
+
+.np-panel-h {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 8px;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: .04em;
+  color: var(--text-3);
+
+  b { text-transform: none; letter-spacing: 0; font-size: 12.5px; color: var(--text); }
+}
+
+/* Chasis: fondo oscuro con las orejas de rack a los lados. */
+.np-panel-chasis {
+  display: flex;
+  align-items: stretch;
+  gap: 6px;
+  padding: 10px;
+  border-radius: 8px;
+  background: linear-gradient(180deg, #2a2f38, #1c2027);
+  border: 1px solid #10131a;
+  overflow-x: auto;
+}
+
+.np-panel-oreja {
+  flex: 0 0 10px;
+  border-radius: 3px;
+  background: repeating-linear-gradient(180deg, #3a4150 0 3px, #2a2f38 3px 9px);
+}
+
+.np-panel-puertos {
+  flex: 1 1 auto;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  justify-content: flex-start;
+}
+
+/* Cada puerto imita el conector: cuerpo con muesca arriba y un LED. */
+.np-puerto {
+  position: relative;
+  width: 30px;
+  height: 34px;
+  border-radius: 3px 3px 4px 4px;
+  background: linear-gradient(180deg, #10141b, #191f28);
+  border: 1px solid #0a0d12;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  padding-bottom: 3px;
+  cursor: help;
+
+  /* La muesca del RJ45. */
+  &::before {
+    content: '';
+    position: absolute;
+    top: -1px;
+    width: 12px;
+    height: 7px;
+    border-radius: 0 0 2px 2px;
+    background: #0a0d12;
+  }
+
+  b {
+    font-size: 9.5px;
+    font-weight: 600;
+    color: #8b95a5;
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* El SFP es más ancho y plano, sin muesca. */
+  &.is-sfp {
+    width: 40px;
+    border-radius: 3px;
+    background: linear-gradient(180deg, #141a23, #1e252f);
+    &::before { display: none; }
+  }
+}
+
+.np-puerto-led {
+  width: 7px;
+  height: 7px;
+  margin-top: 9px;
+  margin-bottom: 2px;
+  border-radius: 50%;
+  background: #39404d;
+}
+
+.np-puerto[data-estado='up'] .np-puerto-led {
+  background: #35d07f;
+  box-shadow: 0 0 6px rgba(53, 208, 127, .85);
+}
+.np-puerto[data-estado='down'] .np-puerto-led { background: #39404d; }
+.np-puerto[data-estado='off']  .np-puerto-led { background: #e5544b; }
+.np-puerto[data-estado='na']   { opacity: .45; }
+
+.np-panel-leyenda {
+  display: flex;
+  gap: 16px;
+  margin-top: 8px;
+  font-size: 11.5px;
+  color: var(--text-3);
+
+  span { display: inline-flex; align-items: center; gap: 6px; }
+
+  i {
+    width: 8px; height: 8px; border-radius: 50%; background: #39404d;
+    &[data-estado='up']  { background: #35d07f; }
+    &[data-estado='off'] { background: #e5544b; }
+  }
+}
+
+@media (max-width: 720px) {
+  .np-equipo { grid-template-columns: 1fr; }
+}

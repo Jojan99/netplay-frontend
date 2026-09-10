@@ -3,6 +3,7 @@ import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MikrotikService } from '../../services/mikrotik.service';
+import { buscarModelo, ModeloMikrotik, Puerto } from './modelos-mikrotik';
 
 @Component({
   selector: 'app-mikrotik',
@@ -417,13 +418,78 @@ export class MikrotikComponent implements OnInit {
     else if (this.activeTab === 'conflicts') this.loadConflicts();
   }
 
+  // ── Ficha del equipo ──────────────────────────────────────────────────────
+  // La foto del modelo se pide aparte para no demorar la pantalla, y el panel
+  // de puertos se dibuja con el estado que reporta el router: así se ve de un
+  // vistazo cuáles están conectados, cosa que una foto no puede mostrar.
+  fotoRouter: string | null = null;
+  modelo: ModeloMikrotik | null = null;
+
+  private cargarFicha() {
+    const board = this.routerInfo?.resource?.board_name ?? '';
+    this.modelo = buscarModelo(board);
+    this.fotoRouter = null;
+
+    if (!board) return;
+
+    this.svc.getRouterPhoto(board).subscribe({
+      next: r => { this.fotoRouter = r?.data?.url ?? null; },
+      error: () => { this.fotoRouter = null; },
+    });
+  }
+
+  /** Puertos a dibujar: los del catálogo, o los que reporte el router. */
+  get puertos(): Puerto[] {
+    if (this.modelo) return this.modelo.puertos;
+
+    // Modelo desconocido: se arma con las interfaces físicas que haya.
+    const fisicas = (this.routerInfo?.interfaces ?? []).filter((i: any) => i.type === 'ether');
+    return fisicas.map((i: any, n: number) => ({ nombre: i.name, tipo: 'eth' as const, label: String(n + 1) }));
+  }
+
+  /** Estado real de un puerto, para pintarlo. */
+  estadoPuerto(p: Puerto): 'up' | 'down' | 'off' | 'na' {
+    const i = (this.routerInfo?.interfaces ?? []).find((x: any) => x.name === p.nombre);
+    if (!i) return 'na';
+    if (String(i.disabled) === 'true') return 'off';
+    return String(i.running) === 'true' ? 'up' : 'down';
+  }
+
+  tituloPuerto(p: Puerto): string {
+    const estado = { up: 'conectado', down: 'sin enlace', off: 'deshabilitado', na: 'no presente' }[this.estadoPuerto(p)];
+    return `${p.nombre} · ${estado}`;
+  }
+
+  get puertosArriba(): number {
+    return this.puertos.filter(p => this.estadoPuerto(p) === 'up').length;
+  }
+
+  esSfp(p: Puerto): boolean {
+    return p.tipo !== 'eth' && p.tipo !== 'poe';
+  }
+
+  memPercent2(): number {
+    const t = Number(this.routerInfo?.resource?.total_memory ?? 0);
+    const f = Number(this.routerInfo?.resource?.free_memory ?? 0);
+    return t ? Math.round(((t - f) / t) * 100) : 0;
+  }
+
+  /** Bytes a un texto corto. */
+  tamano(bytes: any): string {
+    const b = Number(bytes ?? 0);
+    if (!b) return '—';
+    const u = ['B', 'KB', 'MB', 'GB', 'TB'];
+    const i = Math.min(Math.floor(Math.log(b) / Math.log(1024)), u.length - 1);
+    return `${(b / Math.pow(1024, i)).toFixed(i ? 1 : 0)} ${u[i]}`;
+  }
+
   // ── Info ──────────────────────────────────────────────────────────────────
 
   loadInfo() {
     this.loadingInfo = true;
     this.routerInfo = null;
     this.svc.getRouterInfo(this.selectedRouterId).subscribe({
-      next: r => { this.routerInfo = r.data; this.loadingInfo = false; },
+      next: r => { this.routerInfo = r.data; this.loadingInfo = false; this.cargarFicha(); },
       error: () => { this.loadingInfo = false; },
     });
   }

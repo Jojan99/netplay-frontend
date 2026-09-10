@@ -87,6 +87,11 @@ export class MikrotikService {
     return this.http.post(`${this.base}/getIpAvalibles`, { vlan, segment, router_id: routerId ?? undefined }, this.h());
   }
 
+  /** Foto del modelo de equipo, servida por la plataforma. */
+  getRouterPhoto(board: string): Observable<any> {
+    return this.http.get(`${this.base}/router-photo`, { ...this.h(), params: new HttpParams().set('board', board) });
+  }
+
   /** Clientes que están compartiendo una misma IP. */
   getIpConflicts(): Observable<any> {
     return this.http.get(`${this.base}/ip-conflicts`, this.h());

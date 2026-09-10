@@ -54,6 +54,62 @@
       <div *ngIf="loadingInfo" class="np-loading"><span class="np-spinner"></span> Consultando router…</div>
       <p class="np-notice np-notice--danger" *ngIf="!loadingInfo && !routerInfo">No se pudo cargar. Verificá la configuración del router. <button type="button" class="np-link" (click)="setTab('config')">Ir a configuración</button></p>
       <ng-container *ngIf="routerInfo">
+        <!-- Ficha del equipo: la foto del modelo y sus puertos con el estado
+             real, que es lo que una foto sola no puede mostrar. -->
+        <section class="np-equipo">
+          <figure class="np-equipo-foto">
+            <img *ngIf="fotoRouter" [src]="fotoRouter" [alt]="routerInfo.resource?.board_name" loading="lazy" />
+            <div *ngIf="!fotoRouter" class="np-equipo-sinfoto" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                <rect x="2" y="8" width="20" height="8" rx="1.5"/><path d="M6 12h.01M9 12h.01M12 12h.01"/>
+              </svg>
+            </div>
+          </figure>
+
+          <div class="np-equipo-datos">
+            <p class="np-kicker">{{ routerInfo.resource?.platform || 'MikroTik' }}</p>
+            <h2 class="np-equipo-modelo">{{ routerInfo.resource?.board_name || 'Modelo desconocido' }}</h2>
+            <p class="np-equipo-sub" *ngIf="modelo">{{ modelo.descripcion }}</p>
+
+            <dl class="np-equipo-specs">
+              <div><dt>Identidad</dt><dd class="np-mono">{{ routerInfo.identity }}</dd></div>
+              <div><dt>RouterOS</dt><dd class="np-mono">{{ routerInfo.resource?.version }}</dd></div>
+              <div><dt>Arquitectura</dt><dd class="np-mono">{{ routerInfo.resource?.architecture || '—' }}</dd></div>
+              <div><dt>Núcleos</dt><dd class="np-mono">{{ routerInfo.resource?.cpu_count || '—' }}</dd></div>
+              <div><dt>Memoria</dt><dd class="np-mono">{{ tamano(routerInfo.resource?.total_memory) }}</dd></div>
+              <div><dt>Encendido hace</dt><dd class="np-mono">{{ routerInfo.resource?.uptime }}</dd></div>
+            </dl>
+          </div>
+
+          <div class="np-panel" *ngIf="puertos.length">
+            <div class="np-panel-h">
+              <span>Puertos</span>
+              <b>{{ puertosArriba }} de {{ puertos.length }} con enlace</b>
+            </div>
+
+            <div class="np-panel-chasis">
+              <span class="np-panel-oreja" aria-hidden="true"></span>
+              <div class="np-panel-puertos">
+                <span *ngFor="let p of puertos"
+                      class="np-puerto"
+                      [class.is-sfp]="esSfp(p)"
+                      [attr.data-estado]="estadoPuerto(p)"
+                      [title]="tituloPuerto(p)">
+                  <i class="np-puerto-led"></i>
+                  <b>{{ p.label || p.nombre }}</b>
+                </span>
+              </div>
+              <span class="np-panel-oreja" aria-hidden="true"></span>
+            </div>
+
+            <div class="np-panel-leyenda">
+              <span><i data-estado="up"></i>Con enlace</span>
+              <span><i data-estado="down"></i>Sin enlace</span>
+              <span><i data-estado="off"></i>Deshabilitado</span>
+            </div>
+          </div>
+        </section>
+
         <section class="np-kpis">
           <div class="np-kpi np-kpi--accent"><span class="np-kpi-l">Identidad</span><span class="np-kpi-v np-kpi-v--text">{{ routerInfo.identity }}</span><span class="np-kpi-s">{{ routerInfo.resource?.board_name }} · {{ routerInfo.resource?.architecture }}</span></div>
           <div class="np-kpi"><span class="np-kpi-l">CPU</span><span class="np-kpi-v" [class.np-kpi-v--ok]="cpuPercent() < 70" [class.np-kpi-v--warn]="cpuPercent() >= 70 && cpuPercent() < 90" [class.np-kpi-v--danger]="cpuPercent() >= 90">{{ cpuPercent() }}%</span><span class="np-kpi-s"><span class="np-meter"><i [style.width.%]="cpuPercent()" [style.background]="cpuPercent() < 70 ? 'var(--ok)' : cpuPercent() < 90 ? 'var(--warn)' : 'var(--danger)'"></i></span>{{ routerInfo.resource?.cpu_count }} CPU</span></div>
