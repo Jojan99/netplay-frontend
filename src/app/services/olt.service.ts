@@ -100,6 +100,11 @@ export class OltService {
     return this.http.post<any>(`${this.env.rootUrl}api/management/olt/${oltId}/mover-ont`, JSON.stringify(data), { headers: this.getHeaders() });
   }
 
+  /** Reintenta sólo el service-port de una ONT que quedó a medias. */
+  completarServicePort(oltId: number, data: any): Observable<any> {
+    return this.http.post<any>(`${this.env.rootUrl}api/management/olt/${oltId}/completar-service-port`, JSON.stringify(data), { headers: this.getHeaders() });
+  }
+
   /** Clientes que todavía no tienen una ONT vinculada. */
   clientesSinOnt(oltId: number, q?: string): Observable<any> {
     let params = new HttpParams();

@@ -61,12 +61,22 @@
         </div>
       </div>
 
-      <!-- Qué se hizo y qué no, cuando la operación tuvo varios pasos. -->
-      <ul class="np-sync-list" *ngIf="pasos.length">
-        <li *ngFor="let p of pasos">
-          <b>{{ p.ok ? '✓' : '✗' }}</b> {{ p.paso }}<span class="np-fine" *ngIf="p.detalle"> — {{ p.detalle }}</span>
-        </li>
-      </ul>
+      <!-- Qué se hizo y qué no. Un alta son varios pasos contra la OLT y
+           cualquiera puede fallar solo: verlos evita repetir todo. -->
+      <section class="olt-pasos" *ngIf="pasos.length">
+        <div class="olt-paso" *ngFor="let p of pasos" [attr.data-estado]="p.ok ? 'ok' : (p.omitido ? 'omitido' : 'falla')">
+          <i>{{ p.ok ? '✓' : (p.omitido ? '–' : '✗') }}</i>
+          <div>
+            <b>{{ p.paso }}</b>
+            <small *ngIf="p.detalle">{{ p.detalle }}</small>
+          </div>
+        </div>
+
+        <button type="button" class="np-btn np-btn--warn np-btn--sm" *ngIf="faltaServicePort"
+                [disabled]="completando" (click)="completarServicePort()">
+          {{ completando ? 'Creando…' : 'Crear sólo el service-port' }}
+        </button>
+      </section>
 
       <div class="np-form">
         <label class="np-field"><span>Puerto FSP <em>*</em></span><input class="np-input np-mono" [(ngModel)]="form.fsp" placeholder="0/0/3" /></label>

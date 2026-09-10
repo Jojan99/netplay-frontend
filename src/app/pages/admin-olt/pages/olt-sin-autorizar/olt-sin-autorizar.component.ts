@@ -244,15 +244,68 @@ export class OltSinAutorizarComponent implements OnInit {
 
   private trasProvisionar(res: any): void {
     this.registering = false;
+    this.pasos = res?.data?.pasos ?? [];
+    this.ontRegistrada = res?.data ?? null;
 
     if (res?.error !== 0) {
       this.toast.error(res?.message || 'La OLT no autorizó la ONT.');
       return;
     }
 
-    this.modal = false;
     this.toast.success(res.message || 'ONT autorizada.');
     this.loadUnauth();
+
+    // Si algún paso quedó pendiente, el modal se queda abierto para poder
+    // reintentarlo: cerrarlo daría por terminado algo que no lo está.
+    if (!this.pasos.some(p => !p.ok && !p.omitido)) this.modal = false;
+  }
+
+  /** Lo que devolvió el alta, para poder reintentar un paso suelto. */
+  ontRegistrada: any = null;
+  completando = false;
+
+  get faltaServicePort(): boolean {
+    return this.pasos.some(p => !p.ok && p.paso?.toLowerCase().includes('service-port'));
+  }
+
+  /**
+   * Reintenta sólo el service-port.
+   *
+   * Es el paso que más falla, y sin él el cliente conecta pero no navega. No
+   * hace falta volver a autorizar: la ONT ya está.
+   */
+  completarServicePort(): void {
+    if (!this.selectedOltId || !this.ontRegistrada?.ont_id) return;
+
+    this.completando = true;
+
+    this.oltService.completarServicePort(this.selectedOltId, {
+      fsp:         this.ontRegistrada.fsp ?? this.form.fsp,
+      ont_id:      this.ontRegistrada.ont_id,
+      vlan:        this.form.vlan,
+      description: this.form.description,
+    }).subscribe({
+      next: (res) => {
+        this.completando = false;
+
+        if (res?.error !== 0) { this.toast.error(res?.message || 'No se pudo crear el service-port.'); return; }
+
+        this.toast.success(res.message || 'Service-port creado.');
+
+        // Se marca el paso como resuelto en vez de rehacer todo el listado.
+        this.pasos = this.pasos.map(p =>
+          p.paso?.toLowerCase().includes('service-port')
+            ? { ...p, ok: true, detalle: res.message }
+            : p);
+
+        this.modal = false;
+        this.loadUnauth();
+      },
+      error: () => {
+        this.completando = false;
+        this.toast.error('No se pudo contactar la OLT.');
+      },
+    });
   }
 
   // ── A quién se le pone esta ONT ───────────────────────────────────────────
@@ -400,7 +453,8 @@ export class OltSinAutorizarComponent implements OnInit {
   }
 
   /** Qué se hizo y qué no, cuando la operación tiene varios pasos. */
-  pasos: { paso: string; ok: boolean; detalle?: string }[] = [];
+  /** omitido: el paso no se hizo a propósito, no es un fallo. */
+  pasos: { paso: string; ok: boolean; detalle?: string; omitido?: boolean }[] = [];
 
   selectedOltName(): string {
     return this.olts.find(o => o.id === this.selectedOltId)?.name ?? '';
