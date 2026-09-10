@@ -640,3 +640,58 @@
   .np-pm-traf { flex-wrap: wrap; gap: 14px; }
   .np-pm-tabs { overflow-x: auto; }
 }
+
+/* ── Asistente de PPPoE ───────────────────────────────────────────────────
+   Cada paso es una decisión, no un formulario largo: así se entiende qué se
+   está configurando y por qué. */
+.np-wiz { display: flex; flex-direction: column; max-height: 88vh; }
+
+.np-wiz-pasos {
+  display: flex;
+  list-style: none;
+  margin: 0;
+  padding: 12px 16px;
+  gap: 6px;
+  border-bottom: 1px solid var(--line);
+  background: var(--surface-2);
+  overflow-x: auto;
+
+  li {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    padding: 4px 10px 4px 4px;
+    border-radius: 999px;
+    font-size: 12px;
+    color: var(--text-3);
+    white-space: nowrap;
+
+    &.is-actual { background: var(--surface); color: var(--text); font-weight: 600; box-shadow: 0 1px 3px rgba(0,0,0,.08); }
+    &.is-hecho  { color: var(--ok); }
+  }
+}
+
+.np-wiz-n {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  font-size: 10.5px;
+  font-weight: 700;
+  background: var(--line);
+  color: var(--text-2);
+
+  .is-actual & { background: var(--accent); color: #fff; }
+  .is-hecho &  { background: var(--ok-soft); color: var(--ok); }
+}
+
+.np-wiz-detalle {
+  margin: 0;
+  font-size: 13px;
+  color: var(--text-2);
+}
+
+.np-wiz-mini { padding: 4px 8px; font-size: 12px; }
+
+.np-wiz-resumen { margin-top: 4px; }

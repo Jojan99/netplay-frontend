@@ -770,16 +770,26 @@
 
 <!-- ══ Asistente de PPPoE ═════════════════════════════════════════════════ -->
 <div *ngIf="mostrarAsistente" class="np-overlay" (click)="cerrarAsistente()">
-  <div class="np-modal np-modal--lg" role="dialog" aria-modal="true" aria-label="Configurar servidor PPPoE" (click)="$event.stopPropagation()">
+  <div class="np-modal np-modal--lg np-wiz" role="dialog" aria-modal="true" aria-label="Configurar servidor PPPoE" (click)="$event.stopPropagation()">
     <div class="np-modal-head">
       <div>
         <p class="np-kicker">MikroTik <b>/</b> PPPoE</p>
-        <h3>Configurar el servidor PPPoE</h3>
+        <h3>Dejar el router listo para PPPoE</h3>
       </div>
       <button type="button" class="np-icobtn" (click)="cerrarAsistente()" aria-label="Cerrar">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M6 6l12 12M18 6 6 18"/></svg>
       </button>
     </div>
+
+    <!-- Los pasos, siempre visibles: se ve dónde se está y qué falta -->
+    <ol class="np-wiz-pasos" *ngIf="opcionesPppoe && !resultadoMontaje">
+      <li *ngFor="let p of pasosPppoe"
+          [class.is-actual]="p.n === paso"
+          [class.is-hecho]="p.n < paso">
+        <span class="np-wiz-n">{{ p.n < paso ? '✓' : p.n }}</span>
+        <span class="np-wiz-t">{{ p.titulo }}</span>
+      </li>
+    </ol>
 
     <div class="np-modal-body">
       <div *ngIf="!opcionesPppoe && !resultadoMontaje" class="np-loading"><span class="np-spinner"></span> Leyendo el router…</div>
@@ -794,30 +804,37 @@
         </ul>
         <p class="np-notice np-notice--warn np-notice--inline" *ngIf="resultadoMontaje.error">{{ resultadoMontaje.error }}</p>
         <p class="np-fine" *ngIf="resultadoMontaje.ok">
-          Ahora al registrar un cliente vas a poder elegir <b>PPPoE</b> como tipo de conexión.
+          Ya podés registrar clientes eligiendo <b>PPPoE</b>: cada uno toma solo el perfil de su plan.
         </p>
         <div class="np-btnrow np-btnrow--end">
           <button type="button" class="np-btn np-btn--primary" (click)="cerrarAsistente()">Cerrar</button>
         </div>
       </ng-container>
 
-      <!-- Formulario -->
       <ng-container *ngIf="opcionesPppoe && !resultadoMontaje">
-        <p class="np-notice np-notice--code">
-          Se crean tres cosas en el router: el <b>rango de direcciones</b> que se les reparte a los clientes,
-          el <b>perfil</b> que dice de dónde salen esas IP y cuál es la puerta de enlace, y el <b>servidor</b>
-          que escucha en la interfaz por donde llegan. Si algo ya existe se actualiza, no se duplica.
-        </p>
+        <p class="np-wiz-detalle">{{ pasoActual.detalle }}</p>
 
-        <div class="np-form">
-          <label class="np-field np-field-full"><span>Interfaz por donde llegan los clientes</span>
+        <!-- 1 · Interfaz -->
+        <div class="np-form" *ngIf="paso === 1">
+          <p class="np-notice np-notice--code np-field-full">
+            Es la interfaz del router donde están conectados los clientes: la que va al switch,
+            a la OLT o a la antena. No es la de internet.
+          </p>
+          <label class="np-field np-field-full"><span>Interfaz</span>
             <select class="np-input" [(ngModel)]="form.interfaz">
               <option value="" disabled>Seleccione interfaz…</option>
               <option *ngFor="let i of interfacesParaPppoe" [value]="i.nombre">{{ i.nombre }} · {{ i.tipo }}</option>
             </select>
           </label>
+        </div>
 
-          <label class="np-field"><span>Rango de IP para clientes</span>
+        <!-- 2 · Direcciones -->
+        <div class="np-form" *ngIf="paso === 2">
+          <p class="np-notice np-notice--code np-field-full">
+            Cada cliente que se conecta toma una IP de este rango. La puerta de enlace es la
+            dirección del router dentro de esa red — tiene que estar fuera del rango.
+          </p>
+          <label class="np-field"><span>Rango para clientes</span>
             <input type="text" class="np-input np-mono" [(ngModel)]="form.rango" />
           </label>
           <label class="np-field"><span>Puerta de enlace</span>
@@ -826,20 +843,74 @@
           <label class="np-field"><span>Nombre del rango</span>
             <input type="text" class="np-input np-mono" [(ngModel)]="form.pool" />
           </label>
-          <label class="np-field"><span>Nombre del perfil</span>
-            <input type="text" class="np-input np-mono" [(ngModel)]="form.perfil" />
-          </label>
-          <label class="np-field np-field-full"><span>Nombre del servicio <em>lo que ven los equipos de los clientes</em></span>
+          <label class="np-field"><span>Nombre del servicio <em>lo ven los equipos</em></span>
             <input type="text" class="np-input np-mono" [(ngModel)]="form.servicio" />
           </label>
+        </div>
+
+        <!-- 3 · Planes -->
+        <ng-container *ngIf="paso === 3">
+          <p class="np-notice np-notice--code">
+            En PPPoE la velocidad no se pone cliente por cliente: la fija el perfil. Se crea uno
+            por plan y cada cliente toma el de su plan sin que haya que elegirlo.
+          </p>
+
+          <p class="np-pm-vacio" *ngIf="!planesPppoe.length">
+            No hay planes de internet cargados todavía. Podés seguir y crearlos después.
+          </p>
+
+          <div class="np-tablewrap np-sync-box" *ngIf="planesPppoe.length">
+            <table class="np-table np-table--compact">
+              <thead><tr><th></th><th>Plan</th><th>Velocidad</th><th>Perfil que se crea</th></tr></thead>
+              <tbody>
+                <tr *ngFor="let p of planesPppoe">
+                  <td><input type="checkbox" [(ngModel)]="p.crear" /></td>
+                  <td class="np-strong">{{ p.plan }}</td>
+                  <td class="np-mono">{{ p.bajada }}↓ / {{ p.subida }}↑ Mbps</td>
+                  <td><input type="text" class="np-input np-mono np-wiz-mini" [(ngModel)]="p.perfil" [disabled]="!p.crear" /></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <p class="np-fine np-pm-nota" *ngIf="planesPppoe.length">
+            {{ planesElegidos.length }} de {{ planesPppoe.length }} seleccionados.
+          </p>
+        </ng-container>
+
+        <!-- 4 · Salida a internet -->
+        <div class="np-form" *ngIf="paso === 4">
+          <p class="np-notice np-notice--code np-field-full">
+            Sin esto los clientes se conectan y toman IP, pero no navegan. Elegí por dónde sale
+            el tráfico a internet — si tenés una lista de interfaces WAN, es esa.
+          </p>
+          <label class="np-field np-field-full"><span>Salida a internet</span>
+            <select class="np-input" [(ngModel)]="form.salida">
+              <option value="">No tocar el NAT (ya lo tengo configurado)</option>
+              <option *ngFor="let sal of opcionesPppoe.salidas" [value]="sal.nombre">{{ sal.nombre }} · {{ sal.tipo }}</option>
+            </select>
+          </label>
+
+          <div class="np-wiz-resumen np-field-full">
+            <h4 class="np-sync-h">Resumen</h4>
+            <div class="np-pm-datos">
+              <div><span>Clientes llegan por</span><b>{{ form.interfaz }}</b></div>
+              <div><span>Rango</span><b class="np-mono">{{ form.rango }}</b></div>
+              <div><span>Puerta de enlace</span><b class="np-mono">{{ form.gateway }}</b></div>
+              <div><span>Perfiles de plan</span><b>{{ planesElegidos.length }}</b></div>
+              <div><span>Salida a internet</span><b>{{ form.salida || 'sin tocar' }}</b></div>
+            </div>
+          </div>
         </div>
 
         <p class="np-notice np-notice--warn np-notice--inline" *ngIf="pppoeError">{{ pppoeError }}</p>
 
         <div class="np-btnrow np-btnrow--end">
-          <button type="button" class="np-btn np-btn--ghost" (click)="cerrarAsistente()">Cancelar</button>
-          <button type="button" class="np-btn np-btn--primary" [disabled]="montando || !form.interfaz" (click)="montarPppoe()">
-            {{ montando ? 'Configurando…' : 'Configurar' }}
+          <button type="button" class="np-btn np-btn--ghost" (click)="cerrarAsistente()" *ngIf="paso === 1">Cancelar</button>
+          <button type="button" class="np-btn np-btn--ghost" (click)="pasoAnterior()" *ngIf="paso > 1">Atrás</button>
+          <button type="button" class="np-btn np-btn--primary" (click)="siguientePaso()" *ngIf="paso < ultimoPaso" [disabled]="!puedeAvanzar">Siguiente</button>
+          <button type="button" class="np-btn np-btn--primary" (click)="montarPppoe()" *ngIf="paso === ultimoPaso" [disabled]="montando">
+            {{ montando ? 'Configurando…' : 'Configurar el router' }}
           </button>
         </div>
       </ng-container>

@@ -95,8 +95,42 @@ export class MikrotikComponent implements OnInit {
   montando = false;
   mostrarAsistente = false;
   opcionesPppoe: any = null;
-  form = { interfaz: '', pool: '', rango: '', gateway: '', perfil: '', servicio: '' };
+  form = { interfaz: '', pool: '', rango: '', gateway: '', perfil: '', servicio: '', salida: '' };
   resultadoMontaje: any = null;
+
+  /** El asistente va por pasos: cada uno es una decisión, no un formulario. */
+  paso = 1;
+  readonly ultimoPaso = 4;
+  planesPppoe: any[] = [];
+
+  readonly pasosPppoe = [
+    { n: 1, titulo: 'Por dónde llegan', detalle: 'La interfaz donde están conectados los clientes' },
+    { n: 2, titulo: 'Qué IP reparte',   detalle: 'El rango de direcciones y la puerta de enlace' },
+    { n: 3, titulo: 'Los planes',       detalle: 'Un perfil por plan, con su velocidad' },
+    { n: 4, titulo: 'Salida a internet',detalle: 'Por dónde navegan los clientes' },
+  ];
+
+  get pasoActual() {
+    return this.pasosPppoe.find(p => p.n === this.paso) ?? this.pasosPppoe[0];
+  }
+
+  get puedeAvanzar(): boolean {
+    if (this.paso === 1) return !!this.form.interfaz;
+    if (this.paso === 2) return !!this.form.rango.trim() && !!this.form.gateway.trim();
+    return true;
+  }
+
+  siguientePaso() {
+    if (this.paso < this.ultimoPaso && this.puedeAvanzar) this.paso++;
+  }
+
+  pasoAnterior() {
+    if (this.paso > 1) this.paso--;
+  }
+
+  get planesElegidos(): any[] {
+    return this.planesPppoe.filter(p => p.crear);
+  }
 
   loadPppoe() {
     this.loadingPppoe = true;
@@ -117,6 +151,8 @@ export class MikrotikComponent implements OnInit {
     this.mostrarAsistente = true;
     this.resultadoMontaje = null;
     this.opcionesPppoe = null;
+    this.paso = 1;
+    this.planesPppoe = [];
 
     this.svc.getPppoeOpciones(this.selectedRouterId).subscribe({
       next: r => {
@@ -132,7 +168,12 @@ export class MikrotikComponent implements OnInit {
           gateway: s.gateway ?? '',
           perfil: s.perfil ?? 'perfil-pppoe',
           servicio: s.servicio ?? 'pppoe-netplay',
+          // La lista de WAN si existe: es lo habitual en routers ya armados.
+          salida: (r.data?.salidas ?? []).find((x: any) => x.tipo === 'lista')?.nombre ?? '',
         };
+
+        // Todos los planes marcados: lo normal es querer un perfil por cada uno.
+        this.planesPppoe = (r.data?.planes ?? []).map((p: any) => ({ ...p, crear: true }));
       },
       error: () => { this.pppoeError = 'No se pudo leer el router.'; },
     });
@@ -147,9 +188,14 @@ export class MikrotikComponent implements OnInit {
   async montarPppoe() {
     if (!this.form.interfaz) { this.pppoeError = 'Elegí la interfaz por donde llegan los clientes.'; return; }
 
+    const perfiles = this.planesElegidos.length;
+
     const ok = await this.dialog.confirm(
-      `Se va a configurar el servidor PPPoE en «${this.form.interfaz}», con el rango ${this.form.rango} ` +
-      `y la puerta de enlace ${this.form.gateway}. Se escribe en el router. ¿Confirmás?`,
+      `Se va a configurar el servidor PPPoE en «${this.form.interfaz}», con el rango ${this.form.rango}, ` +
+      `puerta de enlace ${this.form.gateway}` +
+      (perfiles ? `, ${perfiles} perfil(es) de plan` : '') +
+      (this.form.salida ? ` y salida a internet por «${this.form.salida}»` : '') +
+      `. Se escribe en el router. ¿Confirmás?`,
       { okLabel: 'Configurar' },
     );
 
@@ -158,7 +204,11 @@ export class MikrotikComponent implements OnInit {
     this.montando = true;
     this.pppoeError = '';
 
-    this.svc.montarPppoe({ ...this.form, router_id: this.selectedRouterId }).subscribe({
+    this.svc.montarPppoe({
+      ...this.form,
+      perfiles: this.planesElegidos,
+      router_id: this.selectedRouterId,
+    }).subscribe({
       next: r => {
         this.montando = false;
         this.resultadoMontaje = r.data;
