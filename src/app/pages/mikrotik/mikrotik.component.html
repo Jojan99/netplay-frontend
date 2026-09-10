@@ -21,6 +21,10 @@
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 12a8 8 0 1 1-2.3-5.7M20 4v5h-5"/></svg>
         {{ sincronizando ? 'Leyendo el router…' : 'Sincronizar con el router' }}
       </button>
+      <button type="button" class="np-btn np-btn--primary" *ngIf="activeTab === 'pppoe'" (click)="abrirAsistente()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v4M12 17v4M3 12h4M17 12h4M6 6l3 3M15 15l3 3M18 6l-3 3M9 15l-3 3"/></svg>
+        {{ pppoe?.disponible ? 'Revisar configuración' : 'Configurar servidor PPPoE' }}
+      </button>
       <button type="button" class="np-btn np-btn--primary" *ngIf="activeTab === 'queues'" (click)="openCreateQueue()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M12 5v14M5 12h14"/></svg>Nueva cola</button>
     </div>
   </header>
@@ -269,6 +273,52 @@
 
         <p class="np-notice np-notice--code" *ngIf="conflicts.length && !conflictsVisibles.length">
           Ninguno está cortando ahora mismo. Quitá el filtro para ver los latentes.
+        </p>
+      </ng-container>
+    </ng-container>
+
+    <!-- ══ PPPoE ══ -->
+    <ng-container *ngIf="activeTab === 'pppoe'">
+      <div *ngIf="loadingPppoe" class="np-loading"><span class="np-spinner"></span> Consultando el router…</div>
+      <p class="np-notice np-notice--danger" *ngIf="pppoeError && !loadingPppoe">{{ pppoeError }}</p>
+
+      <ng-container *ngIf="!loadingPppoe && pppoe">
+        <p class="np-notice np-notice--code" *ngIf="!pppoe.disponible">
+          <strong>Este router todavía no atiende clientes PPPoE.</strong>
+          Si repartís IP fija no hace falta hacer nada. Si querés trabajar con usuario y contraseña,
+          <b>Configurar servidor PPPoE</b> deja listo el rango de direcciones, el perfil y el servidor en un paso.
+        </p>
+
+        <section class="np-kpis">
+          <div class="np-kpi"><span class="np-kpi-k">Servidor</span><b class="np-kpi-v" [ngClass]="pppoe.disponible ? 'np-kpi-v--ok' : 'np-kpi-v--warn'">{{ pppoe.disponible ? 'Activo' : 'Sin montar' }}</b></div>
+          <div class="np-kpi"><span class="np-kpi-k">Conectados ahora</span><b class="np-kpi-v">{{ conectados }}</b></div>
+          <div class="np-kpi"><span class="np-kpi-k">Usuarios</span><b class="np-kpi-v">{{ pppoeUsuarios.length }}</b></div>
+          <div class="np-kpi"><span class="np-kpi-k">Perfiles</span><b class="np-kpi-v">{{ pppoe.perfiles.length }}</b></div>
+        </section>
+
+        <section class="np-registry" *ngIf="pppoeUsuarios.length">
+          <div class="np-registry-wrap"><table class="np-table np-table--registry">
+            <thead><tr><th class="np-th-stripe"></th><th>Usuario</th><th>Documento</th><th>Perfil</th><th>IP actual</th><th>Conectado desde</th><th>Estado</th></tr></thead>
+            <tbody>
+              <tr *ngFor="let u of pppoeUsuarios" class="np-row">
+                <td class="np-stripe"><i [style.background]="u.sesion ? 'var(--ok)' : (u.habilitado ? 'var(--line-strong)' : 'var(--danger)')"></i></td>
+                <td class="np-data np-strong np-mono">{{ u.usuario }}</td>
+                <td class="np-data np-mono">{{ u.comentario || '—' }}</td>
+                <td class="np-data">{{ u.perfil || '—' }}</td>
+                <td class="np-data np-mono">{{ u.sesion?.ip || '—' }}</td>
+                <td class="np-data">{{ u.sesion?.desde || '—' }}</td>
+                <td>
+                  <span class="np-pill" [ngClass]="u.sesion ? 'np-pill--active' : (u.habilitado ? 'np-pill--neutral' : 'np-pill--suspended')">
+                    {{ u.sesion ? 'Conectado' : (u.habilitado ? 'Sin conectar' : 'Suspendido') }}
+                  </span>
+                </td>
+              </tr>
+            </tbody>
+          </table></div>
+        </section>
+
+        <p class="np-notice np-notice--code" *ngIf="!pppoeUsuarios.length">
+          Todavía no hay usuarios PPPoE. Se crean al registrar un cliente eligiendo <b>PPPoE</b> como tipo de conexión.
         </p>
       </ng-container>
     </ng-container>
@@ -702,6 +752,85 @@
             Sin nada para revisar en este puerto.
           </p>
         </ng-container>
+      </ng-container>
+    </div>
+  </div>
+</div>
+
+<!-- ══ Asistente de PPPoE ═════════════════════════════════════════════════ -->
+<div *ngIf="mostrarAsistente" class="np-overlay" (click)="cerrarAsistente()">
+  <div class="np-modal np-modal--lg" role="dialog" aria-modal="true" aria-label="Configurar servidor PPPoE" (click)="$event.stopPropagation()">
+    <div class="np-modal-head">
+      <div>
+        <p class="np-kicker">MikroTik <b>/</b> PPPoE</p>
+        <h3>Configurar el servidor PPPoE</h3>
+      </div>
+      <button type="button" class="np-icobtn" (click)="cerrarAsistente()" aria-label="Cerrar">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M6 6l12 12M18 6 6 18"/></svg>
+      </button>
+    </div>
+
+    <div class="np-modal-body">
+      <div *ngIf="!opcionesPppoe && !resultadoMontaje" class="np-loading"><span class="np-spinner"></span> Leyendo el router…</div>
+
+      <!-- Resultado -->
+      <ng-container *ngIf="resultadoMontaje">
+        <p class="np-notice" [ngClass]="resultadoMontaje.ok ? 'np-notice--ok' : 'np-notice--danger'">
+          <strong>{{ resultadoMontaje.ok ? 'Listo, el router ya atiende clientes PPPoE.' : 'No se pudo terminar.' }}</strong>
+        </p>
+        <ul class="np-sync-list">
+          <li *ngFor="let p of resultadoMontaje.pasos">{{ p }}</li>
+        </ul>
+        <p class="np-notice np-notice--warn np-notice--inline" *ngIf="resultadoMontaje.error">{{ resultadoMontaje.error }}</p>
+        <p class="np-fine" *ngIf="resultadoMontaje.ok">
+          Ahora al registrar un cliente vas a poder elegir <b>PPPoE</b> como tipo de conexión.
+        </p>
+        <div class="np-btnrow np-btnrow--end">
+          <button type="button" class="np-btn np-btn--primary" (click)="cerrarAsistente()">Cerrar</button>
+        </div>
+      </ng-container>
+
+      <!-- Formulario -->
+      <ng-container *ngIf="opcionesPppoe && !resultadoMontaje">
+        <p class="np-notice np-notice--code">
+          Se crean tres cosas en el router: el <b>rango de direcciones</b> que se les reparte a los clientes,
+          el <b>perfil</b> que dice de dónde salen esas IP y cuál es la puerta de enlace, y el <b>servidor</b>
+          que escucha en la interfaz por donde llegan. Si algo ya existe se actualiza, no se duplica.
+        </p>
+
+        <div class="np-form">
+          <label class="np-field np-field-full"><span>Interfaz por donde llegan los clientes</span>
+            <select class="np-input" [(ngModel)]="form.interfaz">
+              <option value="" disabled>Seleccione interfaz…</option>
+              <option *ngFor="let i of interfacesParaPppoe" [value]="i.nombre">{{ i.nombre }} · {{ i.tipo }}</option>
+            </select>
+          </label>
+
+          <label class="np-field"><span>Rango de IP para clientes</span>
+            <input type="text" class="np-input np-mono" [(ngModel)]="form.rango" />
+          </label>
+          <label class="np-field"><span>Puerta de enlace</span>
+            <input type="text" class="np-input np-mono" [(ngModel)]="form.gateway" />
+          </label>
+          <label class="np-field"><span>Nombre del rango</span>
+            <input type="text" class="np-input np-mono" [(ngModel)]="form.pool" />
+          </label>
+          <label class="np-field"><span>Nombre del perfil</span>
+            <input type="text" class="np-input np-mono" [(ngModel)]="form.perfil" />
+          </label>
+          <label class="np-field np-field-full"><span>Nombre del servicio <em>lo que ven los equipos de los clientes</em></span>
+            <input type="text" class="np-input np-mono" [(ngModel)]="form.servicio" />
+          </label>
+        </div>
+
+        <p class="np-notice np-notice--warn np-notice--inline" *ngIf="pppoeError">{{ pppoeError }}</p>
+
+        <div class="np-btnrow np-btnrow--end">
+          <button type="button" class="np-btn np-btn--ghost" (click)="cerrarAsistente()">Cancelar</button>
+          <button type="button" class="np-btn np-btn--primary" [disabled]="montando || !form.interfaz" (click)="montarPppoe()">
+            {{ montando ? 'Configurando…' : 'Configurar' }}
+          </button>
+        </div>
       </ng-container>
     </div>
   </div>

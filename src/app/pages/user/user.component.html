@@ -324,7 +324,64 @@
             </div>
           </section>
 
+          <!-- Tipo de conexión: se puede migrar sin borrar el cliente. -->
           <section>
+            <p class="np-sect">Tipo de conexión</p>
+            <p class="np-fine np-conex-actual">
+              Hoy se conecta
+              <b *ngIf="!clienteEsPppoe">con IP fija</b>
+              <b *ngIf="clienteEsPppoe">por PPPoE, con el usuario <span class="np-mono">{{ selectedUserData?.pppoe_user }}</span></b>.
+            </p>
+
+            <div class="np-form">
+              <div class="np-field np-field-full np-tipoconex">
+                <span>Cambiar a</span>
+                <div class="np-seg" role="group">
+                  <button type="button" [attr.aria-pressed]="cambioTipo === 'static'" (click)="cambioTipo = 'static'" [disabled]="!clienteEsPppoe">IP fija</button>
+                  <button type="button" [attr.aria-pressed]="cambioTipo === 'pppoe'" (click)="cambioTipo = 'pppoe'">PPPoE</button>
+                </div>
+              </div>
+
+              <ng-container *ngIf="cambioTipo === 'pppoe'">
+                <label class="np-field"><span>Usuario PPPoE</span>
+                  <input type="text" class="np-input np-mono" [(ngModel)]="cambioUsuario" placeholder="Suele ser el documento" />
+                </label>
+                <label class="np-field"><span>Contraseña <em *ngIf="clienteEsPppoe">dejala vacía para no cambiarla</em></span>
+                  <input type="text" class="np-input np-mono" [(ngModel)]="cambioClave" placeholder="Contraseña del cliente" />
+                </label>
+                <label class="np-field np-field-full"><span>Perfil PPP <em>define la velocidad</em></span>
+                  <select class="np-input" [(ngModel)]="cambioPerfil" [disabled]="!pppoePerfilesCliente.length">
+                    <option value="" disabled>{{ pppoePerfilesCliente.length ? 'Seleccione perfil…' : 'Sin perfiles en el router' }}</option>
+                    <option *ngFor="let p of pppoePerfilesCliente" [value]="p.nombre">{{ p.nombre }}{{ p.velocidad ? ' · ' + p.velocidad : '' }}</option>
+                  </select>
+                </label>
+              </ng-container>
+
+              <ng-container *ngIf="cambioTipo === 'static'">
+                <label class="np-field"><span>VLAN</span>
+                  <select class="np-input" [(ngModel)]="cambioVlan" (ngModelChange)="onCambioVlanChange($event)">
+                    <option [ngValue]="null" disabled>Seleccione VLAN…</option>
+                    <option *ngFor="let iface of interfaces" [ngValue]="iface">{{ iface.names }}</option>
+                  </select>
+                </label>
+                <label class="np-field"><span>IP <em>({{ migrIpzone.length }} disponibles)</em></span>
+                  <select class="np-input np-mono" [(ngModel)]="cambioIp" [disabled]="!migrIpzone.length">
+                    <option value="" disabled>Seleccione IP…</option>
+                    <option *ngFor="let ip of migrIpzone" [value]="ip.id">{{ ip.names }}</option>
+                  </select>
+                </label>
+              </ng-container>
+
+              <p class="np-notice np-notice--warn np-notice--inline np-field-full" *ngIf="cambioAviso">{{ cambioAviso }}</p>
+
+              <button type="button" class="np-btn np-btn--warn np-field-full"
+                      (click)="aplicarCambioConexion()" [disabled]="cambiandoConexion">
+                {{ cambiandoConexion ? 'Aplicando…' : 'Cambiar la conexión' }}
+              </button>
+            </div>
+          </section>
+
+          <section *ngIf="!clienteEsPppoe">
             <p class="np-sect">Migración de IP</p>
             <div class="np-form">
               <label class="np-field"><span>VLAN</span>

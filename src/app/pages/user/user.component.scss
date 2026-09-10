@@ -50,3 +50,9 @@
   > span { margin: 0; }
   .np-seg { flex: 0 0 auto; }
 }
+
+/* Cómo está conectado hoy el cliente, antes de ofrecer el cambio. */
+.np-conex-actual {
+  margin: -4px 0 10px;
+  color: var(--text-2);
+}

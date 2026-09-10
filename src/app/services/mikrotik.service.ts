@@ -97,6 +97,16 @@ export class MikrotikService {
     return this.http.get(`${this.base}/pppoe`, { ...this.h(), ...this.params(routerId) });
   }
 
+  /** Qué hace falta decidir para montar el servidor PPPoE. */
+  getPppoeOpciones(routerId?: number | null): Observable<any> {
+    return this.http.get(`${this.base}/pppoe/opciones`, { ...this.h(), ...this.params(routerId) });
+  }
+
+  /** Monta el servidor PPPoE en el router. */
+  montarPppoe(data: any): Observable<any> {
+    return this.http.post(`${this.base}/pppoe/montar`, data, this.h());
+  }
+
   /** Todo lo que el router sabe de un puerto. */
   getPortDetail(name: string, routerId?: number | null): Observable<any> {
     let params = new HttpParams().set('name', name);

@@ -481,6 +481,118 @@ export class UserComponent implements OnInit {
   serial = '';
   submittingService = false;
 
+  // ── Tipo de conexión del cliente ──────────────────────────────────────────
+  // Se puede pasar de IP fija a PPPoE y al revés sin borrar el cliente: son
+  // dos formas de estar en el router, no dos clientes distintos.
+  cambioTipo: 'static' | 'pppoe' = 'pppoe';
+  cambioUsuario = '';
+  cambioClave = '';
+  cambioPerfil = '';
+  cambioIp = '';
+  cambioVlan: any = null;
+  cambiandoConexion = false;
+  cambioAviso = '';
+
+  get clienteEsPppoe(): boolean {
+    return this.selectedUserData?.connection_type === 'pppoe';
+  }
+
+  prepararCambioConexion() {
+    // Se ofrece lo contrario de lo que tiene: es el cambio que tiene sentido.
+    this.cambioTipo = this.clienteEsPppoe ? 'static' : 'pppoe';
+    this.cambioUsuario = this.selectedUserData?.pppoe_user || String(this.selectedUserData?.dni ?? '');
+    this.cambioClave = '';
+    this.cambioPerfil = this.selectedUserData?.pppoe_profile || '';
+    this.cambioIp = '';
+    this.cambioVlan = null;
+    this.cambioAviso = '';
+
+    if (this.cambioTipo === 'pppoe' || this.clienteEsPppoe) this.cargarPppoeCliente();
+  }
+
+  async aplicarCambioConexion() {
+    const aPppoe = this.cambioTipo === 'pppoe';
+
+    if (aPppoe && !this.cambioUsuario.trim()) {
+      this.toast('Falta el usuario PPPoE', 'error');
+      return;
+    }
+
+    if (aPppoe && !this.cambioClave.trim() && !this.clienteEsPppoe) {
+      this.toast('Falta la contraseña PPPoE', 'error');
+      return;
+    }
+
+    if (!aPppoe && (!this.cambioIp || !this.cambioVlan)) {
+      this.toast('Elegí la VLAN y la IP', 'error');
+      return;
+    }
+
+    const ok = await this.dialog.confirm(
+      aPppoe
+        ? `El cliente pasa a conectarse por PPPoE con el usuario «${this.cambioUsuario}». ` +
+          `Se le quita la IP fija y tiene que reconectar con las credenciales nuevas. ¿Confirmás?`
+        : `El cliente pasa a IP fija con ${this.cambioIp}. Se le borra la credencial PPPoE ` +
+          `y tiene que reiniciar el equipo. ¿Confirmás?`,
+      { okLabel: 'Cambiar la conexión' },
+    );
+
+    if (!ok) return;
+
+    this.cambiandoConexion = true;
+    this.cambioAviso = '';
+
+    this.userSvc.cambiarConexion({
+      user_id: this.selectedUserId,
+      connection_type: this.cambioTipo,
+      pppoe_user: aPppoe ? this.cambioUsuario.trim() : undefined,
+      pppoe_password: aPppoe ? this.cambioClave.trim() : undefined,
+      pppoe_profile: aPppoe ? this.cambioPerfil : undefined,
+      ip: !aPppoe ? this.cambioIp : undefined,
+      vlan: !aPppoe ? this.cambioVlan?.names : undefined,
+    }).subscribe({
+      next: r => {
+        this.cambiandoConexion = false;
+        this.toast(r.message ?? 'Listo', r.error ? 'error' : 'success');
+
+        if (!r.error) {
+          this.loadModalUser(this.selectedUserId);
+          this.getAllUser();
+        } else {
+          this.cambioAviso = r.message ?? '';
+        }
+      },
+      error: () => {
+        this.cambiandoConexion = false;
+        this.cambioAviso = 'No se pudo cambiar la conexión.';
+      },
+    });
+  }
+
+  /** Las IP libres para pasarlo a IP fija, por la VLAN elegida. */
+  onCambioVlanChange(iface: any) {
+    this.cambioVlan = iface;
+    this.cambioIp = '';
+    this.migrIpzone = [];
+
+    if (!iface) return;
+
+    this.userSvc.getIpzonebyZone(iface.names, iface.network, this.selectedRouterId).subscribe({
+      next: r => { this.migrIpzone = r?.error === 0 && r.data?.ips ? r.data.ips.map((e: any) => ({ id: e.ip, names: e.ip })) : []; },
+      error: () => { this.migrIpzone = []; },
+    });
+  }
+
+  // ── PPPoE del cliente ─────────────────────────────────────────────────────
+  pppoePerfilesCliente: any[] = [];
+
+  private cargarPppoeCliente() {
+    this.userSvc.getPppoe(this.selectedRouterId).subscribe({
+      next: r => { this.pppoePerfilesCliente = r?.data?.estado?.perfiles ?? []; },
+      error: () => { this.pppoePerfilesCliente = []; },
+    });
+  }
+
   // ── Migración IP ──────────────────────────────────────────────────────────
   migrVlan: any = null;
   migrSeg: any = null;
@@ -540,6 +652,7 @@ export class UserComponent implements OnInit {
     if (!this.routers.length) this.loadRouters();
     this.onServiceRouterChange();
     this.loadAssignedOnt(this.selectedUserId);
+    this.prepararCambioConexion();
   }
 
   onServiceRouterChange() {

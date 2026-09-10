@@ -270,6 +270,12 @@ export class UserService {
   }
 
 
+/** Pasa un cliente de IP fija a PPPoE o al revés. */
+cambiarConexion(data: { user_id: number; connection_type: string; pppoe_user?: string; pppoe_password?: string; pppoe_profile?: string; ip?: string; vlan?: string }) {
+  const url = this.env.rootUrl + 'api/management/cambiar-conexion';
+  return this.http.post<any>(url, data, { headers: this.getHeaders() });
+}
+
 /** Perfiles y pools PPPoE del router, para el alta de clientes. */
 getPppoe(routerId?: number | null) {
   let url = this.env.rootUrl + 'api/management/pppoe';

@@ -30,13 +30,14 @@ const ESTADOS: Record<EstadoPuerto, string> = {
 })
 export class MikrotikComponent implements OnInit {
   private dialog = inject(DialogService);
-  activeTab: 'info' | 'clients' | 'queues' | 'conflicts' | 'config' = 'info';
+  activeTab: 'info' | 'clients' | 'queues' | 'conflicts' | 'pppoe' | 'config' = 'info';
 
-  tabs: { key: 'info' | 'clients' | 'queues' | 'conflicts' | 'config'; label: string }[] = [
+  tabs: { key: 'info' | 'clients' | 'queues' | 'conflicts' | 'pppoe' | 'config'; label: string }[] = [
     { key: 'info', label: 'Info Router' },
     { key: 'clients', label: 'Clientes ARP' },
     { key: 'queues', label: 'Ancho de Banda' },
     { key: 'conflicts', label: 'Conflictos de IP' },
+    { key: 'pppoe', label: 'PPPoE' },
     { key: 'config', label: 'Configuración' },
   ];
 
@@ -78,6 +79,100 @@ export class MikrotikComponent implements OnInit {
   routerFormError = false;
   showRouterPass = false;
   deletingRouterId: number | null = null;
+
+  // ── PPPoE ─────────────────────────────────────────────────────────────────
+  // Montar PPPoE a mano son cuatro cosas en cuatro pantallas de Winbox, y si
+  // falta una nada funciona. Acá se hace en un paso.
+  pppoe: any = null;
+  pppoeUsuarios: any[] = [];
+  loadingPppoe = false;
+  pppoeError = '';
+
+  montando = false;
+  mostrarAsistente = false;
+  opcionesPppoe: any = null;
+  form = { interfaz: '', pool: '', rango: '', gateway: '', perfil: '', servicio: '' };
+  resultadoMontaje: any = null;
+
+  loadPppoe() {
+    this.loadingPppoe = true;
+    this.pppoeError = '';
+
+    this.svc.getPppoe(this.selectedRouterId).subscribe({
+      next: r => {
+        this.loadingPppoe = false;
+        if (r?.error !== 0) { this.pppoeError = r?.message || 'No se pudo leer el router.'; return; }
+        this.pppoe = r.data?.estado ?? null;
+        this.pppoeUsuarios = r.data?.usuarios ?? [];
+      },
+      error: () => { this.loadingPppoe = false; this.pppoeError = 'No se pudo leer el router.'; },
+    });
+  }
+
+  abrirAsistente() {
+    this.mostrarAsistente = true;
+    this.resultadoMontaje = null;
+    this.opcionesPppoe = null;
+
+    this.svc.getPppoeOpciones(this.selectedRouterId).subscribe({
+      next: r => {
+        if (r?.error !== 0) { this.pppoeError = r?.message || 'No se pudo leer el router.'; return; }
+
+        this.opcionesPppoe = r.data;
+        const s = r.data?.sugerencia ?? {};
+
+        this.form = {
+          interfaz: '',
+          pool: s.pool ?? 'pool-pppoe',
+          rango: s.rango ?? '',
+          gateway: s.gateway ?? '',
+          perfil: s.perfil ?? 'perfil-pppoe',
+          servicio: s.servicio ?? 'pppoe-netplay',
+        };
+      },
+      error: () => { this.pppoeError = 'No se pudo leer el router.'; },
+    });
+  }
+
+  /** Sólo las interfaces por donde tiene sentido escuchar clientes. */
+  get interfacesParaPppoe(): any[] {
+    return (this.opcionesPppoe?.interfaces ?? [])
+      .filter((i: any) => ['ether', 'vlan', 'bridge'].includes(i.tipo));
+  }
+
+  async montarPppoe() {
+    if (!this.form.interfaz) { this.pppoeError = 'Elegí la interfaz por donde llegan los clientes.'; return; }
+
+    const ok = await this.dialog.confirm(
+      `Se va a configurar el servidor PPPoE en «${this.form.interfaz}», con el rango ${this.form.rango} ` +
+      `y la puerta de enlace ${this.form.gateway}. Se escribe en el router. ¿Confirmás?`,
+      { okLabel: 'Configurar' },
+    );
+
+    if (!ok) return;
+
+    this.montando = true;
+    this.pppoeError = '';
+
+    this.svc.montarPppoe({ ...this.form, router_id: this.selectedRouterId }).subscribe({
+      next: r => {
+        this.montando = false;
+        this.resultadoMontaje = r.data;
+        if (r?.error !== 0) { this.pppoeError = r?.message || 'No se pudo configurar.'; return; }
+        this.loadPppoe();
+      },
+      error: () => { this.montando = false; this.pppoeError = 'No se pudo configurar el servidor.'; },
+    });
+  }
+
+  cerrarAsistente() {
+    this.mostrarAsistente = false;
+    this.resultadoMontaje = null;
+  }
+
+  get conectados(): number {
+    return this.pppoeUsuarios.filter(u => !!u.sesion).length;
+  }
 
   // ── Conflictos de IP ──────────────────────────────────────────────────────
   // Dos clientes con la misma IP se pelean el ARP del router: a los dos les
@@ -417,12 +512,13 @@ export class MikrotikComponent implements OnInit {
 
   // ── Tabs ──────────────────────────────────────────────────────────────────
 
-  setTab(tab: 'info' | 'clients' | 'queues' | 'conflicts' | 'config') {
+  setTab(tab: 'info' | 'clients' | 'queues' | 'conflicts' | 'pppoe' | 'config') {
     this.activeTab = tab;
     if (tab === 'info')      { this.loadInfo(); }
     if (tab === 'clients')   { if (!this.clients.length) this.loadClients(); }
     if (tab === 'queues')    { if (!this.queues.length) this.loadQueues(); }
     if (tab === 'conflicts') { if (!this.conflicts.length) this.loadConflicts(); }
+    if (tab === 'pppoe')     { this.loadPppoe(); }
     if (tab === 'config')    { this.loadRouters(); }
   }
 
@@ -431,6 +527,7 @@ export class MikrotikComponent implements OnInit {
     else if (this.activeTab === 'clients') this.loadClients();
     else if (this.activeTab === 'queues')  this.loadQueues();
     else if (this.activeTab === 'conflicts') this.loadConflicts();
+    else if (this.activeTab === 'pppoe') this.loadPppoe();
   }
 
   // ── Ficha del equipo ──────────────────────────────────────────────────────
