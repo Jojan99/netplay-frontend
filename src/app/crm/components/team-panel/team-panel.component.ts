@@ -244,6 +244,7 @@ export class TeamPanelComponent implements OnInit, OnDestroy {
   private peerActive(id: number): void {
     const p = this.peers.get(id); if (!p || p.state === 'active') return;
     clearTimeout(p.timer); p.state = 'active'; this.peers = new Map(this.peers);
+    // Ya hay audio: no queda nada por lo que timbrar.
     this.stopRing();
     if (!this.call.since) { this.call = { ...this.call, since: Date.now() }; clearInterval(this.tickTimer); this.tickTimer = setInterval(() => this.zone.run(() => this.callSeconds = Math.floor((Date.now() - this.call.since) / 1000)), 1000); }
   }
@@ -451,16 +452,72 @@ export class TeamPanelComponent implements OnInit, OnDestroy {
   toggleMute(): void { this.call = { ...this.call, muted: !this.call.muted }; this.localStream?.getAudioTracks().forEach(t => t.enabled = !this.call.muted); }
 
   /* ── Sonidos ─────────────────────────────────────────────────── */
+  /** Los tonos que están sonando, para poder callarlos de verdad. */
+  private ringNodes: { o: OscillatorNode; g: GainNode }[] = [];
+  private ringBeatTimer: any = null;
+
   private pop(freq: number): void {
-    try { const Ctx = (window as any).AudioContext || (window as any).webkitAudioContext; if (!Ctx) return; this.ringCtx ??= new Ctx(); const ctx = this.ringCtx!; if (ctx.state === 'suspended') ctx.resume().catch(() => {});
-      const o = ctx.createOscillator(), g = ctx.createGain(); o.frequency.value = freq; const t = ctx.currentTime; g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.25, t + 0.01); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.25); o.connect(g).connect(ctx.destination); o.start(t); o.stop(t + 0.3); } catch {}
+    try {
+      const Ctx = (window as any).AudioContext || (window as any).webkitAudioContext; if (!Ctx) return;
+      this.ringCtx ??= new Ctx(); const ctx = this.ringCtx!;
+      if (ctx.state === 'suspended') ctx.resume().catch(() => {});
+
+      const o = ctx.createOscillator(), g = ctx.createGain();
+      o.frequency.value = freq;
+      const t = ctx.currentTime;
+      g.gain.setValueAtTime(0.0001, t);
+      g.gain.exponentialRampToValueAtTime(0.25, t + 0.01);
+      g.gain.exponentialRampToValueAtTime(0.0001, t + 0.25);
+      o.connect(g).connect(ctx.destination);
+      o.start(t); o.stop(t + 0.3);
+
+      // Se guardan para poder cortarlos: un oscilador ya programado sigue
+      // sonando aunque se pare el temporizador que lo creó.
+      this.ringNodes.push({ o, g });
+      o.onended = () => { this.ringNodes = this.ringNodes.filter(n => n.o !== o); };
+    } catch {}
   }
+
+  /**
+   * ¿Todavía tiene sentido que suene?
+   *
+   * El timbre se apaga solo en vez de depender de que cada camino se acuerde
+   * de pararlo: alcanzaba con que uno se olvidara para que quedara sonando
+   * con la llamada ya conectada.
+   */
+  private debeTimbrar(): boolean {
+    // Me están llamando y todavía no contesté.
+    if (this.call.state === 'ringing-in') return true;
+
+    // Estoy llamando: suena mientras el otro no haya atendido.
+    return this.call.state === 'in-call' && this.peerList.some(p => p.state === 'ringing');
+  }
+
   private startRing(outgoing: boolean): void {
     this.stopRing();
-    const beat = () => { this.pop(outgoing ? 440 : 880); setTimeout(() => this.pop(outgoing ? 440 : 660), 350); };
-    beat(); this.ringOsc = setInterval(beat, outgoing ? 3000 : 2000);
+
+    const beat = () => {
+      if (!this.debeTimbrar()) { this.stopRing(); return; }
+
+      this.pop(outgoing ? 440 : 880);
+      this.ringBeatTimer = setTimeout(() => this.pop(outgoing ? 440 : 660), 350);
+    };
+
+    beat();
+    this.ringOsc = setInterval(beat, outgoing ? 3000 : 2000);
   }
-  private stopRing(): void { if (this.ringOsc) { clearInterval(this.ringOsc); this.ringOsc = null; } }
+
+  private stopRing(): void {
+    clearInterval(this.ringOsc); this.ringOsc = null;
+    clearTimeout(this.ringBeatTimer); this.ringBeatTimer = null;
+
+    // Callar lo que ya estaba sonando o programado para sonar.
+    this.ringNodes.forEach(n => {
+      try { n.g.gain.cancelScheduledValues(0); n.g.gain.value = 0; n.o.stop(); } catch {}
+    });
+
+    this.ringNodes = [];
+  }
 
   @HostListener('window:beforeunload') onUnload(): void { if (this.call.state !== 'idle') this.endCall(true); }
 }
