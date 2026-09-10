@@ -83,7 +83,7 @@ export class OltService {
 
   // ── ONT Write Operations ───────────────────────────────────────────────────
 
-  registerONT(oltId: number, data: { fsp: string; serial?: string; description?: string; ont_id?: number | null; line_profile_id?: number | null; srv_profile_id?: number | null; vlan?: number | null }): Observable<any> {
+  registerONT(oltId: number, data: { fsp: string; serial?: string; description?: string; ont_id?: number | null; line_profile_id?: number | null; srv_profile_id?: number | null; vlan?: number | null; user_data_id?: number }): Observable<any> {
     return this.http.post<any>(`${this.env.rootUrl}api/management/olt/${oltId}/register`, JSON.stringify(data), { headers: this.getHeaders() });
   }
 
@@ -98,6 +98,13 @@ export class OltService {
   /** La quita de donde esté y la autoriza en el puerto pedido. */
   moverOnt(oltId: number, data: any): Observable<any> {
     return this.http.post<any>(`${this.env.rootUrl}api/management/olt/${oltId}/mover-ont`, JSON.stringify(data), { headers: this.getHeaders() });
+  }
+
+  /** Clientes que todavía no tienen una ONT vinculada. */
+  clientesSinOnt(oltId: number, q?: string): Observable<any> {
+    let params = new HttpParams();
+    if (q) params = params.set('q', q);
+    return this.http.get<any>(`${this.env.rootUrl}api/management/olt/${oltId}/clientes-sin-ont`, { headers: this.getHeaders(), params });
   }
 
   /** ONT que quedaron a medio provisionar. */

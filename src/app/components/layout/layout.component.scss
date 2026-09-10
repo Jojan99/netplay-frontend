@@ -76,3 +76,69 @@ main {
     }
 }
 
+
+/* ── Avisos ───────────────────────────────────────────────────────────────
+   El marcado de los avisos existía pero sin una sola regla de estilo: se
+   pintaba al final de la página, sin posición, así que nunca se veía. De ahí
+   que una ONT se registrara bien y en pantalla no apareciera nada. */
+.app-shell-toasts {
+  position: fixed;
+  top: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  /* Por encima de los modales, que están en 60-81: un aviso que queda debajo
+     del modal que lo provocó no sirve de nada. */
+  z-index: 300;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: max-content;
+  max-width: calc(100vw - 32px);
+  pointer-events: none;
+}
+
+.app-shell-toast {
+  pointer-events: auto;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 11px 14px;
+  border-radius: var(--radius, 10px);
+  background: var(--surface, #fff);
+  border: 1px solid var(--line, #e5e7eb);
+  border-left: 3px solid var(--text-3, #9ca3af);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, .18);
+  font-size: 13.5px;
+  color: var(--text, #111827);
+  animation: app-toast-in .18s ease;
+
+  &--success { border-left-color: var(--ok, #16a34a); }
+  &--error   { border-left-color: var(--danger, #dc2626); }
+  &--warning { border-left-color: var(--warn, #d97706); }
+  &--info    { border-left-color: var(--accent, #2563eb); }
+}
+
+.app-shell-toast-close {
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  border: 0;
+  border-radius: 50%;
+  background: none;
+  color: var(--text-3, #9ca3af);
+  cursor: pointer;
+
+  &:hover { background: var(--surface-2, #f3f4f6); color: var(--text, #111827); }
+  svg { width: 14px; height: 14px; }
+}
+
+@keyframes app-toast-in {
+  from { opacity: 0; transform: translateY(-8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@media (max-width: 600px) {
+  .app-shell-toasts { left: 16px; right: 16px; transform: none; width: auto; }
+}

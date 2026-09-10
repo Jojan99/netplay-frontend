@@ -71,7 +71,41 @@
       <div class="np-form">
         <label class="np-field"><span>Puerto FSP <em>*</em></span><input class="np-input np-mono" [(ngModel)]="form.fsp" placeholder="0/0/3" /></label>
         <label class="np-field"><span>Serial</span><input class="np-input np-mono" [(ngModel)]="form.serial" placeholder="HWTC12345678" /><small class="np-fine">Precargado desde la OLT.</small></label>
-        <label class="np-field np-field-full"><span>Descripción / cliente</span><input class="np-input" [(ngModel)]="form.description" placeholder="Nombre del cliente o referencia" /></label>
+        <!-- A quién se le pone la ONT. Sólo aparecen los clientes que todavía
+             no tienen una, para no vincularla a alguien que ya tiene la suya. -->
+        <div class="np-field np-field-full">
+          <span>Cliente <em>sólo los que todavía no tienen ONT</em></span>
+
+          <div class="olt-cliente-elegido" *ngIf="clienteElegido">
+            <div>
+              <b>{{ clienteElegido.nombre }}</b>
+              <small>cc {{ clienteElegido.dni }}<span *ngIf="clienteElegido.plan"> · {{ clienteElegido.plan }}</span><span *ngIf="clienteElegido.direccion"> · {{ clienteElegido.direccion }}</span></small>
+            </div>
+            <button type="button" class="np-btn np-btn--ghost np-btn--sm" (click)="quitarCliente()">Cambiar</button>
+          </div>
+
+          <ng-container *ngIf="!clienteElegido">
+            <input class="np-input" [(ngModel)]="buscaCliente" (ngModelChange)="buscarClienteDemorado()"
+                   placeholder="Buscar por nombre, documento o dirección…" />
+
+            <p class="np-fine" *ngIf="cargandoClientes">Buscando…</p>
+
+            <div class="olt-clientes" *ngIf="!cargandoClientes">
+              <button type="button" class="olt-cliente" *ngFor="let c of clientes" (click)="elegirCliente(c)">
+                <b>{{ c.nombre }}</b>
+                <small>cc {{ c.dni }}<span *ngIf="c.plan"> · {{ c.plan }}</span></small>
+              </button>
+
+              <p class="np-fine" *ngIf="!clientes.length">
+                Ningún cliente sin ONT coincide con la búsqueda.
+              </p>
+            </div>
+          </ng-container>
+        </div>
+
+        <label class="np-field np-field-full"><span>Descripción en la OLT <em>es lo que se ve en el equipo</em></span>
+          <input class="np-input" [(ngModel)]="form.description" placeholder="Se completa con el nombre del cliente" />
+        </label>
         <label class="np-field"><span>Line profile</span><select class="np-input" [(ngModel)]="form.line_profile_id" [disabled]="loadingProfiles"><option [ngValue]="null">{{ loadingProfiles ? 'Cargando…' : 'Sin perfil' }}</option><option *ngFor="let p of lineProfiles" [ngValue]="p.profile_id">{{ p.profile_id }} · {{ p.profile_name }}</option></select></label>
         <label class="np-field"><span>Service profile</span><select class="np-input" [(ngModel)]="form.srv_profile_id" [disabled]="loadingProfiles"><option [ngValue]="null">{{ loadingProfiles ? 'Cargando…' : 'Sin perfil' }}</option><option *ngFor="let p of srvProfiles" [ngValue]="p.profile_id">{{ p.profile_id }} · {{ p.profile_name }}</option></select></label>
         <label class="np-field np-field-full"><span>VLAN / segmento de red</span><select class="np-input" [(ngModel)]="selectedSegment" (ngModelChange)="onSegmentChange()" [disabled]="loadingSegments"><option [ngValue]="null">{{ loadingSegments ? 'Cargando VLANs…' : 'Sin VLAN' }}</option><option *ngFor="let seg of lanSegments" [ngValue]="seg">{{ segmentLabel(seg) }}</option></select>

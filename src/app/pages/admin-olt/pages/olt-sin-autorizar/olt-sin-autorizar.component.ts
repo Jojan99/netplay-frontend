@@ -212,7 +212,10 @@ export class OltSinAutorizarComponent implements OnInit {
     };
     this.modal = true;
     this.pasos = [];
+    this.clienteElegido = null;
+    this.buscaCliente = '';
     this.verificarSiYaExiste();
+    this.cargarClientes();
   }
 
   confirmRegister(): void {
@@ -225,6 +228,7 @@ export class OltSinAutorizarComponent implements OnInit {
       line_profile_id: this.form.line_profile_id,
       srv_profile_id:  this.form.srv_profile_id,
       vlan:            this.form.vlan,
+      user_data_id:    this.clienteElegido?.id ?? undefined,
     }).subscribe({
       // El backend responde 200 aunque la OLT haya rechazado: el resultado
       // viene dentro. Antes se mostraba en verde el texto del error.
@@ -247,6 +251,48 @@ export class OltSinAutorizarComponent implements OnInit {
     this.modal = false;
     this.toast.success(res.message || 'ONT autorizada.');
     this.loadUnauth();
+  }
+
+  // ── A quién se le pone esta ONT ───────────────────────────────────────────
+  // Se listan sólo los clientes que todavía no tienen una ONT: así no se
+  // vincula por error a alguien que ya tiene la suya. El nombre sigue viajando
+  // a la OLT como descripción; el vínculo se guarda del lado nuestro para
+  // saber después qué puerto atiende a cada cliente.
+  clientes: any[] = [];
+  clienteElegido: any = null;
+  buscaCliente = '';
+  cargandoClientes = false;
+  private buscaPendiente: any = null;
+
+  cargarClientes(): void {
+    if (!this.selectedOltId) return;
+
+    this.cargandoClientes = true;
+
+    this.oltService.clientesSinOnt(this.selectedOltId, this.buscaCliente.trim() || undefined).subscribe({
+      next: (res) => {
+        this.cargandoClientes = false;
+        this.clientes = res?.data ?? [];
+      },
+      error: () => { this.cargandoClientes = false; this.clientes = []; },
+    });
+  }
+
+  /** Se espera a que termine de escribir para no consultar en cada tecla. */
+  buscarClienteDemorado(): void {
+    clearTimeout(this.buscaPendiente);
+    this.buscaPendiente = setTimeout(() => this.cargarClientes(), 350);
+  }
+
+  elegirCliente(c: any): void {
+    this.clienteElegido = c;
+    // La OLT recibe el nombre como descripción, que es lo que se ve en ella.
+    this.form.description = c.nombre;
+  }
+
+  quitarCliente(): void {
+    this.clienteElegido = null;
+    this.form.description = '';
   }
 
   // ── Ya autorizada en otro puerto ──────────────────────────────────────────
@@ -298,6 +344,7 @@ export class OltSinAutorizarComponent implements OnInit {
       line_profile_id: this.form.line_profile_id,
       srv_profile_id:  this.form.srv_profile_id,
       vlan:            this.form.vlan,
+      user_data_id:    this.clienteElegido?.id ?? undefined,
     }).subscribe({
       next: (res) => {
         this.moviendo = false;
