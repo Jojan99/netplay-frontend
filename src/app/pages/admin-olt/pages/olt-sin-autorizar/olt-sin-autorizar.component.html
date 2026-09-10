@@ -43,6 +43,31 @@
     <div class="np-modal-head"><div><p class="np-kicker">OLT <b>/</b> {{ selectedOltName() }}</p><h3>Autorizar ONT</h3></div>
       <button type="button" class="np-icobtn" (click)="modal = false" aria-label="Cerrar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div>
     <div class="np-modal-body">
+      <!-- Una ONT sólo puede estar en un puerto: si ya está en otro, la OLT
+           rechaza el alta sin explicar. Se avisa antes de intentar. -->
+      <p class="np-notice np-notice--inline np-fine" *ngIf="buscandoOnt">Revisando si esta ONT ya está autorizada…</p>
+
+      <div class="np-notice np-notice--warn" *ngIf="yaExiste">
+        <strong>Esta ONT ya está autorizada en {{ yaExiste.fsp }}</strong>
+        <span *ngIf="yaExiste.ont_id"> · ONT ID {{ yaExiste.ont_id }}</span>
+        <span *ngIf="yaExiste.descripcion"> · {{ yaExiste.descripcion }}</span>
+        <br />
+        Para autorizarla en {{ form.fsp }} hay que quitarla de donde está. El cliente pierde
+        el servicio un momento.
+        <div class="np-btnrow">
+          <button type="button" class="np-btn np-btn--warn np-btn--sm" (click)="moverOnt()" [disabled]="moviendo">
+            {{ moviendo ? 'Moviendo…' : 'Quitar de ' + yaExiste.fsp + ' y autorizar acá' }}
+          </button>
+        </div>
+      </div>
+
+      <!-- Qué se hizo y qué no, cuando la operación tuvo varios pasos. -->
+      <ul class="np-sync-list" *ngIf="pasos.length">
+        <li *ngFor="let p of pasos">
+          <b>{{ p.ok ? '✓' : '✗' }}</b> {{ p.paso }}<span class="np-fine" *ngIf="p.detalle"> — {{ p.detalle }}</span>
+        </li>
+      </ul>
+
       <div class="np-form">
         <label class="np-field"><span>Puerto FSP <em>*</em></span><input class="np-input np-mono" [(ngModel)]="form.fsp" placeholder="0/0/3" /></label>
         <label class="np-field"><span>Serial</span><input class="np-input np-mono" [(ngModel)]="form.serial" placeholder="HWTC12345678" /><small class="np-fine">Precargado desde la OLT.</small></label>
@@ -55,7 +80,7 @@
         </label>
       </div>
       <p class="np-notice np-notice--warn" *ngIf="!loadingProfiles && lineProfiles.length === 0 && srvProfiles.length === 0">No hay perfiles sincronizados. En <strong>Perfiles</strong> hacé clic en Sincronizar desde OLT.</p>
-      <div class="np-btnrow np-btnrow--end"><button type="button" class="np-btn np-btn--ghost" (click)="modal = false">Cancelar</button><button type="button" class="np-btn np-btn--primary" (click)="confirmRegister()" [disabled]="registering || !form.fsp">{{ registering ? 'Autorizando…' : 'Confirmar autorización' }}</button></div>
+      <div class="np-btnrow np-btnrow--end"><button type="button" class="np-btn np-btn--ghost" (click)="modal = false">Cancelar</button><button type="button" class="np-btn np-btn--primary" (click)="confirmRegister()" [disabled]="registering || !form.fsp || !!yaExiste" [title]="yaExiste ? 'Primero hay que quitarla del puerto donde está' : ''">{{ registering ? 'Autorizando…' : 'Confirmar autorización' }}</button></div>
     </div>
   </div>
 </div>

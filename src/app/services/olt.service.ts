@@ -87,6 +87,24 @@ export class OltService {
     return this.http.post<any>(`${this.env.rootUrl}api/management/olt/${oltId}/register`, JSON.stringify(data), { headers: this.getHeaders() });
   }
 
+  /** ¿Esta ONT ya está autorizada en algún puerto? */
+  buscarOnt(oltId: number, serial: string): Observable<any> {
+    return this.http.get<any>(`${this.env.rootUrl}api/management/olt/${oltId}/buscar-ont`, {
+      headers: this.getHeaders(),
+      params: new HttpParams().set('serial', serial),
+    });
+  }
+
+  /** La quita de donde esté y la autoriza en el puerto pedido. */
+  moverOnt(oltId: number, data: any): Observable<any> {
+    return this.http.post<any>(`${this.env.rootUrl}api/management/olt/${oltId}/mover-ont`, JSON.stringify(data), { headers: this.getHeaders() });
+  }
+
+  /** ONT que quedaron a medio provisionar. */
+  ontsIncompletas(oltId: number): Observable<any> {
+    return this.http.get<any>(`${this.env.rootUrl}api/management/olt/${oltId}/onts-incompletas`, { headers: this.getHeaders() });
+  }
+
   deleteONT(oltId: number, data: { fsp: string; ont_id: number }): Observable<any> {
     return this.http.delete<any>(`${this.env.rootUrl}api/management/olt/${oltId}/ont`, { headers: this.getHeaders(), body: JSON.stringify(data) });
   }

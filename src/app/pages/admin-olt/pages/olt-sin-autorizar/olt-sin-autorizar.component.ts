@@ -5,6 +5,7 @@ import { FormsModule } from '@angular/forms';
 import { OltService } from '../../../../services/olt.service';
 import { MikrotikService } from '../../../../services/mikrotik.service';
 import { ToastService } from '../../../../services/toast.service';
+import { DialogService } from '../../../../services/dialog.service';
 
 @Component({
   selector: 'app-olt-sin-autorizar',
@@ -59,6 +60,7 @@ export class OltSinAutorizarComponent implements OnInit {
     private oltService: OltService,
     private mikrotikService: MikrotikService,
     private toast: ToastService,
+    private dialog: DialogService,
   ) {}
 
   ngOnInit(): void {
@@ -209,6 +211,8 @@ export class OltSinAutorizarComponent implements OnInit {
       vlan:            this.defaultVlan,
     };
     this.modal = true;
+    this.pasos = [];
+    this.verificarSiYaExiste();
   }
 
   confirmRegister(): void {
@@ -222,18 +226,95 @@ export class OltSinAutorizarComponent implements OnInit {
       srv_profile_id:  this.form.srv_profile_id,
       vlan:            this.form.vlan,
     }).subscribe({
-      next: (res) => {
-        this.registering = false;
-        this.modal       = false;
-        this.toast.success(res.message || 'ONT autorizada correctamente');
-        this.loadUnauth();
-      },
+      // El backend responde 200 aunque la OLT haya rechazado: el resultado
+      // viene dentro. Antes se mostraba en verde el texto del error.
+      next: (res) => this.trasProvisionar(res),
       error: (err) => {
         this.registering = false;
-        this.toast.error(err?.error?.message || 'Error al autorizar la ONT');
+        this.toast.error(err?.error?.message || 'No se pudo contactar la OLT.');
       },
     });
   }
+
+  private trasProvisionar(res: any): void {
+    this.registering = false;
+
+    if (res?.error !== 0) {
+      this.toast.error(res?.message || 'La OLT no autorizó la ONT.');
+      return;
+    }
+
+    this.modal = false;
+    this.toast.success(res.message || 'ONT autorizada.');
+    this.loadUnauth();
+  }
+
+  // ── Ya autorizada en otro puerto ──────────────────────────────────────────
+  // Una ONT sólo puede estar en un puerto. Cuando se cambia de fibra queda en
+  // el anterior, y la OLT rechaza el alta sin decir por qué: por eso se
+  // pregunta antes y se ofrece moverla.
+  yaExiste: any = null;
+  buscandoOnt = false;
+  moviendo = false;
+
+  private verificarSiYaExiste(): void {
+    const serial = (this.form.serial || '').trim();
+    this.yaExiste = null;
+
+    if (!serial || !this.selectedOltId) return;
+
+    this.buscandoOnt = true;
+
+    this.oltService.buscarOnt(this.selectedOltId, serial).subscribe({
+      next: (res) => {
+        this.buscandoOnt = false;
+        const d = res?.data;
+
+        // Sólo interesa si está en OTRO puerto: en el mismo no hay conflicto.
+        if (d?.encontrada && d.fsp !== this.form.fsp) this.yaExiste = d;
+      },
+      error: () => { this.buscandoOnt = false; },
+    });
+  }
+
+  async moverOnt(): Promise<void> {
+    if (!this.selectedOltId || !this.yaExiste) return;
+
+    const ok = await this.dialog.confirm(
+      `La ONT está autorizada en ${this.yaExiste.fsp} (ONT ID ${this.yaExiste.ont_id}). ` +
+      `Se va a quitar de ahí y autorizar en ${this.form.fsp}. El cliente pierde el servicio un momento. ¿Confirmás?`,
+      { okLabel: 'Mover la ONT' },
+    );
+
+    if (!ok) return;
+
+    this.moviendo = true;
+    this.registering = true;
+
+    this.oltService.moverOnt(this.selectedOltId, {
+      fsp:             this.form.fsp,
+      serial:          this.form.serial || undefined,
+      description:     this.form.description || undefined,
+      line_profile_id: this.form.line_profile_id,
+      srv_profile_id:  this.form.srv_profile_id,
+      vlan:            this.form.vlan,
+    }).subscribe({
+      next: (res) => {
+        this.moviendo = false;
+        this.pasos = res?.data?.pasos ?? [];
+        this.trasProvisionar(res);
+        if (res?.error === 0) this.yaExiste = null;
+      },
+      error: (err) => {
+        this.moviendo = false;
+        this.registering = false;
+        this.toast.error(err?.error?.message || 'No se pudo mover la ONT.');
+      },
+    });
+  }
+
+  /** Qué se hizo y qué no, cuando la operación tiene varios pasos. */
+  pasos: { paso: string; ok: boolean; detalle?: string }[] = [];
 
   selectedOltName(): string {
     return this.olts.find(o => o.id === this.selectedOltId)?.name ?? '';
