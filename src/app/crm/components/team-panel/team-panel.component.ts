@@ -428,8 +428,13 @@ export class TeamPanelComponent implements OnInit, OnDestroy {
 
   async accept(): Promise<void> {
     if (this.call.state !== 'ringing-in' || !this.call.incomingFrom) return;
-    if (!(await this.getMic())) { this.reject(); return; }
+
+    // El timbre se calla apenas se contesta, antes de pedir el micrófono: si
+    // el navegador muestra el diálogo de permiso, seguía sonando todo el rato
+    // que el usuario tardara en responderlo.
     this.stopRing(); clearTimeout(this.ringTimer);
+
+    if (!(await this.getMic())) { this.reject(); return; }
     const host = this.call.incomingFrom;
     this.call = { ...this.call, state: 'in-call', muted: false };
     const p = this.ensurePeer(host, 'connecting'); this.setPeerConnecting(p);
@@ -455,6 +460,7 @@ export class TeamPanelComponent implements OnInit, OnDestroy {
   /** Los tonos que están sonando, para poder callarlos de verdad. */
   private ringNodes: { o: OscillatorNode; g: GainNode }[] = [];
   private ringBeatTimer: any = null;
+  private ringCorte: any = null;
 
   private pop(freq: number): void {
     try {
@@ -493,8 +499,22 @@ export class TeamPanelComponent implements OnInit, OnDestroy {
     return this.call.state === 'in-call' && this.peerList.some(p => p.state === 'ringing');
   }
 
+  /**
+   * Mientras suena el tono de llamada, el micrófono no transmite.
+   *
+   * El que llama tiene el micrófono abierto desde antes de que le contesten,
+   * así que su propio tono salía por los parlantes, se lo comía el micrófono
+   * y el que atendía escuchaba el timbre dentro de la llamada. Es lo que hace
+   * cualquier teléfono: no se manda audio hasta que la otra parte atiende.
+   */
+  private micDurante(activo: boolean): void {
+    this.localStream?.getAudioTracks().forEach(t => t.enabled = activo && !this.call.muted);
+  }
+
   private startRing(outgoing: boolean): void {
     this.stopRing();
+
+    if (outgoing) this.micDurante(false);
 
     const beat = () => {
       if (!this.debeTimbrar()) { this.stopRing(); return; }
@@ -505,11 +525,23 @@ export class TeamPanelComponent implements OnInit, OnDestroy {
 
     beat();
     this.ringOsc = setInterval(beat, outgoing ? 3000 : 2000);
+
+    // Pase lo que pase, no sigue sonando más de un minuto.
+    clearTimeout(this.ringCorte);
+    this.ringCorte = setTimeout(() => this.zone.run(() => {
+      if (this.ringOsc) { this.diag(this.peerList[0]?.member?.id ?? this.myId, 'timbre cortado por tiempo'); this.stopRing(); }
+    }), 60000);
   }
 
   private stopRing(): void {
+    const sonaba = !!this.ringOsc;
+
     clearInterval(this.ringOsc); this.ringOsc = null;
     clearTimeout(this.ringBeatTimer); this.ringBeatTimer = null;
+    clearTimeout(this.ringCorte); this.ringCorte = null;
+
+    // Se devuelve el micrófono, que estaba en silencio mientras timbraba.
+    if (sonaba) this.micDurante(true);
 
     // Callar lo que ya estaba sonando o programado para sonar.
     this.ringNodes.forEach(n => {
