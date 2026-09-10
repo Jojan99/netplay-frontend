@@ -13,6 +13,10 @@
       <label class="np-pagesize" *ngIf="routers.length > 1 && activeTab !== 'config'">Router<select [(ngModel)]="selectedRouterId" (ngModelChange)="onRouterChange()"><option *ngFor="let r of routers" [value]="r.id">{{ r.name || r.host }}</option></select></label>
       <button type="button" class="np-btn np-btn--ghost" *ngIf="activeTab !== 'config'" (click)="refresh()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 12a8 8 0 1 1-2.3-5.7M20 4v5h-5"/></svg>Actualizar</button>
       <button type="button" class="np-btn np-btn--primary" *ngIf="activeTab === 'config'" (click)="openAddRouter()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M12 5v14M5 12h14"/></svg>Agregar MikroTik</button>
+      <button type="button" class="np-btn np-btn--primary" *ngIf="activeTab === 'conflicts'" [disabled]="sincronizando" (click)="simularSync()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 12a8 8 0 1 1-2.3-5.7M20 4v5h-5"/></svg>
+        {{ sincronizando ? 'Leyendo el router…' : 'Sincronizar con el router' }}
+      </button>
       <button type="button" class="np-btn np-btn--primary" *ngIf="activeTab === 'queues'" (click)="openCreateQueue()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M12 5v14M5 12h14"/></svg>Nueva cola</button>
     </div>
   </header>
@@ -134,7 +138,13 @@
         <p class="np-notice np-notice--code" *ngIf="conflicts.length">
           Dos clientes con la misma IP se pelean el ARP del router: a los dos les anda el internet a ratos.
           Se resuelve dándole otra IP a uno de ellos — el cambio se aplica en el router al instante.
+          <br />
+          Muchos de estos casos son sólo la plataforma desactualizada: el botón
+          <b>Sincronizar con el router</b> trae la IP con la que cada cliente navega de verdad.
+          Eso corre solo cada hora.
         </p>
+
+        <p class="np-notice np-notice--danger" *ngIf="syncError">{{ syncError }}</p>
 
         <section class="np-card np-conflict" *ngFor="let c of conflictsVisibles">
           <div class="np-card-h">
@@ -292,6 +302,66 @@
         <button type="button" class="np-btn np-btn--ghost" (click)="cerrarCambioDeIp()">Cancelar</button>
         <button type="button" class="np-btn np-btn--primary" [disabled]="!fixIp || guardandoFix" (click)="confirmarCambioDeIp()">
           {{ guardandoFix ? 'Aplicando…' : 'Cambiar la IP' }}
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ Qué haría la sincronización ════════════════════════════════════════ -->
+<div *ngIf="syncPreview" class="np-overlay" (click)="cerrarSync()">
+  <div class="np-modal np-modal--lg" role="dialog" aria-modal="true" aria-label="Sincronizar IPs con el router" (click)="$event.stopPropagation()">
+    <div class="np-modal-head">
+      <div>
+        <p class="np-kicker">Conflictos de IP <b>/</b> Sincronizar</p>
+        <h3>Lo que dice el router</h3>
+      </div>
+      <button type="button" class="np-icobtn" (click)="cerrarSync()" aria-label="Cerrar">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M6 6l12 12M18 6 6 18"/></svg>
+      </button>
+    </div>
+
+    <div class="np-modal-body">
+      <section class="np-kpis">
+        <div class="np-kpi"><span class="np-kpi-k">Sin IP registrada</span><b class="np-kpi-v">{{ syncPreview.faltaban.length }}</b></div>
+        <div class="np-kpi"><span class="np-kpi-k">Con IP distinta</span><b class="np-kpi-v np-kpi-v--warn">{{ syncPreview.cambios.length }}</b></div>
+        <div class="np-kpi"><span class="np-kpi-k">Ya coincidían</span><b class="np-kpi-v">{{ syncPreview.sinCambio }}</b></div>
+        <div class="np-kpi"><span class="np-kpi-k">Sin resolver</span><b class="np-kpi-v">{{ syncPreview.ambiguos.length }}</b></div>
+      </section>
+
+      <p class="np-notice np-notice--code">
+        Sólo se escribe en la plataforma: el MikroTik no se toca. Los casos ambiguos
+        —un documento con dos IPs, o una IP en dos documentos— se dejan como están para revisarlos a mano.
+      </p>
+
+      <ng-container *ngIf="syncPreview.cambios.length">
+        <h4 class="np-sync-h">Clientes cuya IP cambia</h4>
+        <div class="np-tablewrap np-sync-box"><table class="np-table np-table--compact">
+          <thead><tr><th>Cliente</th><th>Documento</th><th>En la plataforma</th><th>En el router</th></tr></thead>
+          <tbody>
+            <tr *ngFor="let c of syncPreview.cambios">
+              <td class="np-strong">{{ c.cliente }}</td>
+              <td class="np-data np-mono">{{ c.documento }}</td>
+              <td class="np-data np-mono">{{ c.antes }}</td>
+              <td class="np-data np-mono">{{ c.ahora }}</td>
+            </tr>
+          </tbody>
+        </table></div>
+      </ng-container>
+
+      <ng-container *ngIf="syncPreview.ambiguos.length">
+        <h4 class="np-sync-h">Sin resolver</h4>
+        <ul class="np-sync-list">
+          <li *ngFor="let a of syncPreview.ambiguos"><b class="np-mono">{{ a.documento }}</b> — {{ a.motivo }}</li>
+        </ul>
+      </ng-container>
+
+      <div class="np-btnrow np-btnrow--end">
+        <button type="button" class="np-btn np-btn--ghost" (click)="cerrarSync()">Cerrar</button>
+        <button type="button" class="np-btn np-btn--primary"
+                [disabled]="sincronizando || (!syncPreview.cambios.length && !syncPreview.faltaban.length)"
+                (click)="aplicarSync()">
+          {{ sincronizando ? 'Sincronizando…' : 'Sincronizar ahora' }}
         </button>
       </div>
     </div>

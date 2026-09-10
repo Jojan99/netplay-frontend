@@ -92,6 +92,14 @@ export class MikrotikService {
     return this.http.get(`${this.base}/ip-conflicts`, this.h());
   }
 
+  /**
+   * Copia al sistema la IP que cada cliente tiene en el router.
+   * Con simular=true no escribe nada: sólo informa qué cambiaría.
+   */
+  syncIps(simular: boolean, routerId?: number | null): Observable<any> {
+    return this.http.post(`${this.base}/sync-ips`, { simular, router_id: routerId ?? undefined }, this.h());
+  }
+
   /** Le da al cliente una IP libre y reescribe el ARP del router. */
   migrarIp(data: { service_id: number; new_ip: string; vlan: string; router_id?: number | null }): Observable<any> {
     return this.http.post(`${this.base}/migrarIp`, data, this.h());

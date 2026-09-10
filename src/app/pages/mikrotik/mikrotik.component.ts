@@ -100,6 +100,76 @@ export class MikrotikComponent implements OnInit {
       : 'Registros distintos con la misma IP: la lista de IPs libres se calculaba sólo con el ARP y no veía a los clientes apagados.';
   }
 
+  // ── Sincronizar con el router ─────────────────────────────────────────────
+  // El MikroTik identifica al cliente por su documento, así que se puede leer
+  // de ahí la IP con la que realmente navega y dejarla igual en el sistema.
+  // Corre solo cada hora; el botón sirve para hacerlo ahora y para mirar antes
+  // qué cambiaría.
+  sincronizando = false;
+  syncPreview: any = null;
+  syncError = '';
+
+  simularSync() {
+    this.sincronizando = true;
+    this.syncError = '';
+    this.syncPreview = null;
+
+    this.svc.syncIps(true).subscribe({
+      next: r => {
+        this.sincronizando = false;
+        if (r?.error !== 0) { this.syncError = r?.message || 'No se pudo leer el router.'; return; }
+        this.syncPreview = this.resumirSync(r.data);
+      },
+      error: () => { this.sincronizando = false; this.syncError = 'No se pudo leer el router.'; },
+    });
+  }
+
+  private resumirSync(d: any) {
+    const cambios = d?.cambios ?? [];
+    return {
+      faltaban: cambios.filter((c: any) => c.tipo === 'faltaba'),
+      cambios:  cambios.filter((c: any) => c.tipo === 'cambio'),
+      sinCambio: d?.sin_cambio ?? 0,
+      desconocidos: d?.desconocidos ?? [],
+      ambiguos: d?.ambiguos ?? [],
+      errores: d?.errores ?? [],
+    };
+  }
+
+  async aplicarSync() {
+    const p = this.syncPreview;
+    if (!p) return;
+
+    const total = p.faltaban.length + p.cambios.length;
+
+    const ok = await this.dialog.confirm(
+      `Se va a guardar la IP del router en ${total} cliente(s): ` +
+      `${p.faltaban.length} que no tenían IP registrada y ${p.cambios.length} que la tenían distinta. ` +
+      `No se toca el router, sólo la plataforma. ¿Confirmás?`,
+      { okLabel: 'Sincronizar' },
+    );
+
+    if (!ok) return;
+
+    this.sincronizando = true;
+    this.syncError = '';
+
+    this.svc.syncIps(false).subscribe({
+      next: r => {
+        this.sincronizando = false;
+        if (r?.error !== 0) { this.syncError = r?.message || 'No se pudo sincronizar.'; return; }
+        this.syncPreview = null;
+        this.loadConflicts();
+      },
+      error: () => { this.sincronizando = false; this.syncError = 'No se pudo sincronizar.'; },
+    });
+  }
+
+  cerrarSync() {
+    this.syncPreview = null;
+    this.syncError = '';
+  }
+
   // ── Resolver un conflicto: darle otra IP a un cliente ──────────────────────
   fixCliente: any = null;
   fixGrupo: any = null;
