@@ -198,7 +198,11 @@ export class TeamPanelComponent implements OnInit, OnDestroy {
   private async getMic(): Promise<boolean> {
     if (this.localStream) return true;
     try { this.localStream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true }, video: false }); return true; }
-    catch { this.toast.error('No se pudo acceder al micrófono.'); return false; }
+    catch (e: any) {
+      this.toast.error('No se pudo acceder al micrófono. Revisá el permiso del navegador.');
+      console.warn('[Equipo llamada] micrófono', e?.name, e?.message);
+      return false;
+    }
   }
   private participantIds(): number[] { return [this.myId, ...this.peerList.map(p => p.member.id)]; }
   private signal(to: number, type: string, payload: any = null): void {
@@ -226,7 +230,7 @@ export class TeamPanelComponent implements OnInit, OnDestroy {
       const p = this.peers.get(peerId); if (p) { p.diag = `ice ${pc.iceConnectionState} · ${pc.signalingState}`; this.peers = new Map(this.peers); }
       console.log('[Equipo llamada]', peerId, 'conn', pc.connectionState, 'ice', pc.iceConnectionState, 'sig', pc.signalingState);
       if (st === 'connected' || st === 'completed') this.peerActive(peerId);
-      if (st === 'failed') this.dropPeer(peerId, 'no se pudo conectar el audio');
+      if (st === 'failed') { this.diag(peerId, `ice failed · ${pc.iceConnectionState} · ${pc.signalingState}`); this.dropPeer(peerId, 'no se pudo conectar el audio'); }
       if (st === 'disconnected') setTimeout(() => { const cur: string = pc.connectionState || pc.iceConnectionState; if (cur === 'disconnected') this.dropPeer(peerId, 'se perdió la conexión'); }, 6000);
     });
     pc.onconnectionstatechange = onState; pc.oniceconnectionstatechange = onState;
@@ -328,18 +332,56 @@ export class TeamPanelComponent implements OnInit, OnDestroy {
         break;
       }
       case 'offer': {
-        if (this.call.state !== 'in-call' || s.call_id !== this.call.id) return;
+        // Acá se cortaba la llamada sin dejar rastro: si algo fallaba, el que
+        // aceptó se quedaba mirando la pantalla y el que llamó esperando un
+        // answer que nunca salía.
+        if (this.call.state !== 'in-call' || s.call_id !== this.call.id) {
+          this.diag(fromId, `offer descartado: estado=${this.call.state} call=${s.call_id} mia=${this.call.id}`);
+          return;
+        }
+
         const p = this.ensurePeer(from, 'connecting'); if (p.state !== 'active') this.setPeerConnecting(p);
         if (!p.pc) p.pc = this.newPc(fromId);
-        await p.pc.setRemoteDescription(new RTCSessionDescription(s.payload));
+
+        if (!s.payload?.sdp) { this.diag(fromId, 'offer sin sdp'); return; }
+
+        try {
+          await p.pc.setRemoteDescription(new RTCSessionDescription(s.payload));
+        } catch (e: any) {
+          this.diag(fromId, `setRemoteDescription(offer) falló: ${e?.name} ${e?.message} · sig=${p.pc.signalingState}`);
+          this.dropPeer(fromId, 'no se pudo abrir el audio');
+          return;
+        }
+
         for (const c of p.pendingIce) await p.pc.addIceCandidate(c).catch(() => {}); p.pendingIce = [];
-        const answer = await p.pc.createAnswer(); await p.pc.setLocalDescription(answer);
-        this.signal(fromId, 'answer', { sdp: answer.sdp, type: answer.type });
+
+        try {
+          const answer = await p.pc.createAnswer();
+          await p.pc.setLocalDescription(answer);
+          this.signal(fromId, 'answer', { sdp: answer.sdp, type: answer.type });
+          this.diag(fromId, `answer enviado (${answer.sdp?.length || 0} bytes)`);
+        } catch (e: any) {
+          this.diag(fromId, `createAnswer falló: ${e?.name} ${e?.message} · sig=${p.pc.signalingState} · tracks=${this.localStream?.getTracks().length ?? 0}`);
+          this.dropPeer(fromId, 'no se pudo abrir el audio');
+        }
         break;
       }
       case 'answer': {
-        const p = this.peers.get(fromId); if (!p?.pc || s.call_id !== this.call.id) return;
-        await p.pc.setRemoteDescription(new RTCSessionDescription(s.payload));
+        const p = this.peers.get(fromId);
+
+        if (!p?.pc || s.call_id !== this.call.id) {
+          this.diag(fromId, `answer descartado: pc=${!!p?.pc} call=${s.call_id} mia=${this.call.id}`);
+          return;
+        }
+
+        try {
+          await p.pc.setRemoteDescription(new RTCSessionDescription(s.payload));
+        } catch (e: any) {
+          this.diag(fromId, `setRemoteDescription(answer) falló: ${e?.name} ${e?.message} · sig=${p.pc.signalingState}`);
+          this.dropPeer(fromId, 'no se pudo abrir el audio');
+          return;
+        }
+
         for (const c of p.pendingIce) await p.pc.addIceCandidate(c).catch(() => {}); p.pendingIce = [];
         break;
       }
@@ -360,8 +402,27 @@ export class TeamPanelComponent implements OnInit, OnDestroy {
   }
   private async makeOffer(p: Peer): Promise<void> {
     if (!p.pc) p.pc = this.newPc(p.member.id);
-    const offer = await p.pc.createOffer(); await p.pc.setLocalDescription(offer);
-    this.signal(p.member.id, 'offer', { sdp: offer.sdp, type: offer.type });
+
+    try {
+      const offer = await p.pc.createOffer();
+      await p.pc.setLocalDescription(offer);
+      this.signal(p.member.id, 'offer', { sdp: offer.sdp, type: offer.type });
+      this.diag(p.member.id, `offer enviado (${offer.sdp?.length || 0} bytes, tracks=${this.localStream?.getTracks().length ?? 0})`);
+    } catch (e: any) {
+      this.diag(p.member.id, `createOffer falló: ${e?.name} ${e?.message}`);
+      this.dropPeer(p.member.id, 'no se pudo iniciar el audio');
+    }
+  }
+
+  /**
+   * Deja constancia en el servidor de por dónde va la llamada.
+   *
+   * WebRTC falla en el navegador del otro, así que sin esto no hay forma de
+   * saber qué pasó: la única señal era que el audio nunca abría.
+   */
+  private diag(peerId: number, texto: string): void {
+    console.log('[Equipo llamada]', peerId, texto);
+    this.team.signal(peerId, 'diag', `${this.myId}→${peerId}: ${texto}`, this.call.id).subscribe({ error: () => {} });
   }
 
   async accept(): Promise<void> {
