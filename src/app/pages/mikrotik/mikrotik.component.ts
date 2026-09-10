@@ -14,12 +14,13 @@ import { MikrotikService } from '../../services/mikrotik.service';
 })
 export class MikrotikComponent implements OnInit {
   private dialog = inject(DialogService);
-  activeTab: 'info' | 'clients' | 'queues' | 'config' = 'info';
+  activeTab: 'info' | 'clients' | 'queues' | 'conflicts' | 'config' = 'info';
 
-  tabs: { key: 'info' | 'clients' | 'queues' | 'config'; label: string }[] = [
+  tabs: { key: 'info' | 'clients' | 'queues' | 'conflicts' | 'config'; label: string }[] = [
     { key: 'info', label: 'Info Router' },
     { key: 'clients', label: 'Clientes ARP' },
     { key: 'queues', label: 'Ancho de Banda' },
+    { key: 'conflicts', label: 'Conflictos de IP' },
     { key: 'config', label: 'Configuración' },
   ];
 
@@ -62,6 +63,144 @@ export class MikrotikComponent implements OnInit {
   showRouterPass = false;
   deletingRouterId: number | null = null;
 
+  // ── Conflictos de IP ──────────────────────────────────────────────────────
+  // Dos clientes con la misma IP se pelean el ARP del router: a los dos les
+  // anda el internet a ratos. Acá se listan para irlos resolviendo de a uno.
+  conflicts: any[] = [];
+  loadingConflicts = false;
+  conflictsError = '';
+  conflictsSummary: any = null;
+  soloUrgentes = false;
+
+  loadConflicts() {
+    this.loadingConflicts = true;
+    this.conflictsError = '';
+    this.svc.getIpConflicts().subscribe({
+      next: r => {
+        this.loadingConflicts = false;
+        if (r?.error !== 0) { this.conflictsError = r?.message || 'No se pudo leer la lista.'; return; }
+        this.conflictsSummary = r.data?.resumen ?? null;
+        this.conflicts = [...(r.data?.compartidas ?? []), ...(r.data?.repetidas ?? [])];
+      },
+      error: () => {
+        this.loadingConflicts = false;
+        this.conflictsError = 'No se pudo leer la lista de conflictos.';
+      },
+    });
+  }
+
+  get conflictsVisibles(): any[] {
+    return this.soloUrgentes ? this.conflicts.filter(c => c.urgente) : this.conflicts;
+  }
+
+  /** Por qué está repetida, en palabras del negocio. */
+  explicacion(c: any): string {
+    return c.tipo === 'ficha'
+      ? 'Comparten el mismo registro de asignación: cambiarle la IP a uno se la cambiaba a todos.'
+      : 'Registros distintos con la misma IP: la lista de IPs libres se calculaba sólo con el ARP y no veía a los clientes apagados.';
+  }
+
+  // ── Resolver un conflicto: darle otra IP a un cliente ──────────────────────
+  fixCliente: any = null;
+  fixGrupo: any = null;
+  fixVlans: any[] = [];
+  fixVlan: any = null;
+  fixIps: any[] = [];
+  fixIp = '';
+  loadingFixIps = false;
+  fixError = '';
+  guardandoFix = false;
+
+  abrirCambioDeIp(grupo: any, cliente: any) {
+    this.fixGrupo = grupo;
+    this.fixCliente = cliente;
+    this.fixVlan = null;
+    this.fixIps = [];
+    this.fixIp = '';
+    this.fixError = '';
+    this.fixVlans = [];
+
+    // Las VLAN se piden por el router del cliente, no por el que esté
+    // seleccionado arriba: pueden no ser el mismo.
+    this.svc.getLanSegments(cliente.router_id ?? this.selectedRouterId).subscribe({
+      next: r => {
+        this.fixVlans = r?.error === 0 && r.data ? Object.values(r.data) : [];
+        if (!this.fixVlans.length) this.fixError = 'El router no devolvió VLAN.';
+      },
+      error: () => { this.fixError = 'No se pudo conectar con el router del cliente.'; },
+    });
+  }
+
+  cerrarCambioDeIp() {
+    this.fixCliente = null;
+    this.fixGrupo = null;
+  }
+
+  onFixVlanChange(vlan: any) {
+    this.fixVlan = vlan;
+    this.fixIp = '';
+    this.fixIps = [];
+    if (vlan) this.cargarFixIps();
+  }
+
+  cargarFixIps(intento = 1) {
+    if (!this.fixVlan) return;
+    this.loadingFixIps = true;
+    this.fixError = '';
+
+    const routerId = this.fixCliente?.router_id ?? this.selectedRouterId;
+
+    this.svc.getIpAvalibles(this.fixVlan.names, routerId, this.fixVlan.network).subscribe({
+      next: r => {
+        if (r?.error !== 0) {
+          if (intento < 3) { setTimeout(() => this.cargarFixIps(intento + 1), 900 * intento); return; }
+          this.loadingFixIps = false;
+          this.fixIps = [];
+          this.fixError = r?.message || 'El router no respondió.';
+          return;
+        }
+        this.loadingFixIps = false;
+        this.fixIps = (r.data?.ips ?? []).map((e: any) => e.ip);
+        if (!this.fixIps.length) this.fixError = 'No quedan IPs libres en esta VLAN.';
+      },
+      error: () => {
+        if (intento < 3) { setTimeout(() => this.cargarFixIps(intento + 1), 900 * intento); return; }
+        this.loadingFixIps = false;
+        this.fixIps = [];
+        this.fixError = 'No se pudo conectar con el router.';
+      },
+    });
+  }
+
+  async confirmarCambioDeIp() {
+    if (!this.fixCliente || !this.fixIp || !this.fixVlan) return;
+
+    const ok = await this.dialog.confirm(
+      `Se le va a asignar la IP ${this.fixIp} a ${this.fixCliente.nombre}. ` +
+      `El cambio se aplica en el router y le corta la conexión un momento. ¿Confirmás?`,
+      { okLabel: 'Cambiar la IP' },
+    );
+
+    if (!ok) return;
+
+    this.guardandoFix = true;
+
+    this.svc.migrarIp({
+      service_id: this.fixCliente.user_id,
+      new_ip: this.fixIp,
+      vlan: this.fixVlan.names,
+      router_id: this.fixCliente.router_id ?? this.selectedRouterId,
+    }).subscribe({
+      next: r => {
+        this.guardandoFix = false;
+        if (r?.error !== 0) { this.fixError = r?.message || 'No se pudo cambiar la IP.'; return; }
+        this.cerrarCambioDeIp();
+        this.loadConflicts();
+      },
+      error: () => { this.guardandoFix = false; this.fixError = 'No se pudo cambiar la IP.'; },
+    });
+  }
+
   constructor(private svc: MikrotikService) {}
 
   ngOnInit() {
@@ -98,18 +237,20 @@ export class MikrotikComponent implements OnInit {
 
   // ── Tabs ──────────────────────────────────────────────────────────────────
 
-  setTab(tab: 'info' | 'clients' | 'queues' | 'config') {
+  setTab(tab: 'info' | 'clients' | 'queues' | 'conflicts' | 'config') {
     this.activeTab = tab;
-    if (tab === 'info')    { this.loadInfo(); }
-    if (tab === 'clients') { if (!this.clients.length) this.loadClients(); }
-    if (tab === 'queues')  { if (!this.queues.length) this.loadQueues(); }
-    if (tab === 'config')  { this.loadRouters(); }
+    if (tab === 'info')      { this.loadInfo(); }
+    if (tab === 'clients')   { if (!this.clients.length) this.loadClients(); }
+    if (tab === 'queues')    { if (!this.queues.length) this.loadQueues(); }
+    if (tab === 'conflicts') { if (!this.conflicts.length) this.loadConflicts(); }
+    if (tab === 'config')    { this.loadRouters(); }
   }
 
   refresh() {
     if (this.activeTab === 'info')    this.loadInfo();
     else if (this.activeTab === 'clients') this.loadClients();
     else if (this.activeTab === 'queues')  this.loadQueues();
+    else if (this.activeTab === 'conflicts') this.loadConflicts();
   }
 
   // ── Info ──────────────────────────────────────────────────────────────────

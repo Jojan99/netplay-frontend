@@ -83,7 +83,17 @@ export class MikrotikService {
     return this.http.get(`${this.base}/getLanSegments`, { ...this.h(), ...this.params(routerId) });
   }
 
-  getIpAvalibles(vlan: string, routerId?: number | null): Observable<any> {
-    return this.http.post(`${this.base}/getIpAvalibles`, { vlan, router_id: routerId ?? undefined }, this.h());
+  getIpAvalibles(vlan: string, routerId?: number | null, segment?: string): Observable<any> {
+    return this.http.post(`${this.base}/getIpAvalibles`, { vlan, segment, router_id: routerId ?? undefined }, this.h());
+  }
+
+  /** Clientes que están compartiendo una misma IP. */
+  getIpConflicts(): Observable<any> {
+    return this.http.get(`${this.base}/ip-conflicts`, this.h());
+  }
+
+  /** Le da al cliente una IP libre y reescribe el ARP del router. */
+  migrarIp(data: { service_id: number; new_ip: string; vlan: string; router_id?: number | null }): Observable<any> {
+    return this.http.post(`${this.base}/migrarIp`, data, this.h());
   }
 }

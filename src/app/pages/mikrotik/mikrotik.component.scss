@@ -9,3 +9,20 @@
 .np-input-wrap { position: relative; display: block; .np-input { padding-right: 64px; } }
 .np-eye { position: absolute; right: 6px; top: 50%; transform: translateY(-50%); font-size: 11px; font-weight: 700; color: var(--accent); padding: 4px 6px; border-radius: 4px; &:hover { background: var(--accent-soft); } }
 .np-name .np-tag { margin-left: 8px; }
+
+/* ── Conflictos de IP ─────────────────────────────────────────────────────
+   Una tarjeta por IP repetida, con los clientes que se la disputan. */
+.np-conflict {
+  margin-bottom: 14px;
+
+  .np-card-h h2 {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+}
+
+.np-conflict-why {
+  margin: 0 0 10px;
+  padding: 0 2px;
+}

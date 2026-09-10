@@ -19,6 +19,19 @@
 
   <div class="np-toolbar">
     <div class="np-seg" role="tablist"><button type="button" role="tab" *ngFor="let t of tabs" [attr.aria-pressed]="activeTab === t.key" (click)="setTab(t.key)">{{ t.label }}</button></div>
+    <ng-container *ngIf="activeTab === 'conflicts' && conflictsSummary">
+      <span class="np-fine">
+        <b>{{ conflictsSummary.urgentes }}</b> cortando ahora ·
+        <b>{{ conflicts.length }}</b> conflictos ·
+        <b>{{ conflictsSummary.clientes_afectados }}</b> clientes
+      </span>
+      <span class="np-spacer"></span>
+      <label class="np-check">
+        <input type="checkbox" [(ngModel)]="soloUrgentes" />
+        Sólo los que ya están cortando
+      </label>
+    </ng-container>
+
     <ng-container *ngIf="activeTab === 'clients'">
       <label class="np-search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg><input type="search" [(ngModel)]="clientSearch" (input)="filterClients()" placeholder="IP, MAC, DNI o nombre…" /></label>
       <span class="np-fine">{{ filteredClients.length }} de {{ clients.length }} · {{ selectedIds.size }} seleccionados</span>
@@ -104,6 +117,66 @@
       </section>
     </ng-container>
 
+    <!-- ══ CONFLICTOS DE IP ══ -->
+    <ng-container *ngIf="activeTab === 'conflicts'">
+      <div *ngIf="loadingConflicts" class="np-loading"><span class="np-spinner"></span> Buscando IPs repetidas…</div>
+
+      <p class="np-notice np-notice--danger" *ngIf="conflictsError && !loadingConflicts">
+        {{ conflictsError }}
+        <button type="button" class="np-link" (click)="loadConflicts()">Reintentar</button>
+      </p>
+
+      <ng-container *ngIf="!loadingConflicts && !conflictsError">
+        <p class="np-notice np-notice--ok" *ngIf="!conflicts.length">
+          <strong>Ningún cliente está compartiendo IP.</strong>
+        </p>
+
+        <p class="np-notice np-notice--code" *ngIf="conflicts.length">
+          Dos clientes con la misma IP se pelean el ARP del router: a los dos les anda el internet a ratos.
+          Se resuelve dándole otra IP a uno de ellos — el cambio se aplica en el router al instante.
+        </p>
+
+        <section class="np-card np-conflict" *ngFor="let c of conflictsVisibles">
+          <div class="np-card-h">
+            <h2>
+              <span class="np-mono">{{ c.ip || 'sin IP' }}</span>
+              <span class="np-pill" [ngClass]="c.urgente ? 'np-pill--suspended' : 'np-pill--neutral'">
+                {{ c.urgente ? 'Cortando ahora' : 'Latente' }}
+              </span>
+            </h2>
+            <span class="np-card-meta"><b>{{ c.clientes.length }}</b> clientes · {{ c.activos }} activos</span>
+          </div>
+
+          <p class="np-fine np-conflict-why">{{ explicacion(c) }}</p>
+
+          <div class="np-tablewrap"><table class="np-table np-table--compact">
+            <thead><tr><th>Cliente</th><th>Documento</th><th>Estado</th><th>Router</th><th class="np-th-right">Acción</th></tr></thead>
+            <tbody>
+              <tr *ngFor="let cl of c.clientes">
+                <td class="np-strong">{{ cl.nombre }}</td>
+                <td class="np-data np-mono">{{ cl.dni }}</td>
+                <td>
+                  <span class="np-pill" [ngClass]="cl.estado === 'ACTIVE' ? 'np-pill--active' : 'np-pill--neutral'">
+                    {{ cl.estado === 'ACTIVE' ? 'Activo' : 'Inactivo' }}
+                  </span>
+                </td>
+                <td class="np-data">{{ cl.router || '—' }}</td>
+                <td class="np-td-right">
+                  <button type="button" class="np-btn np-btn--ghost np-btn--sm" (click)="abrirCambioDeIp(c, cl)">
+                    Darle otra IP
+                  </button>
+                </td>
+              </tr>
+            </tbody>
+          </table></div>
+        </section>
+
+        <p class="np-notice np-notice--code" *ngIf="conflicts.length && !conflictsVisibles.length">
+          Ninguno está cortando ahora mismo. Quitá el filtro para ver los latentes.
+        </p>
+      </ng-container>
+    </ng-container>
+
     <!-- ══ CONFIG ══ -->
     <ng-container *ngIf="activeTab === 'config'">
       <div *ngIf="loadingRouters" class="np-loading"><span class="np-spinner"></span> Cargando routers…</div>
@@ -167,6 +240,60 @@
       </div>
       <p *ngIf="routerFormMsg" class="np-notice" [ngClass]="routerFormError ? 'np-notice--danger' : 'np-notice--ok'">{{ routerFormMsg }}</p>
       <div class="np-btnrow np-btnrow--end"><button type="button" class="np-btn np-btn--ghost" (click)="showRouterForm = false">Cancelar</button><button type="button" class="np-btn np-btn--primary" (click)="saveRouter()" [disabled]="savingRouter || !routerForm.host || !routerForm.user || (!editingRouter && !routerForm.pass)">{{ savingRouter ? 'Guardando…' : (editingRouter ? 'Guardar cambios' : 'Agregar') }}</button></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ Darle otra IP a un cliente ═════════════════════════════════════════ -->
+<div *ngIf="fixCliente" class="np-overlay" (click)="cerrarCambioDeIp()">
+  <div class="np-modal" role="dialog" aria-modal="true" aria-label="Cambiar la IP del cliente" (click)="$event.stopPropagation()">
+    <div class="np-modal-head">
+      <div>
+        <p class="np-kicker">Conflictos de IP <b>/</b> Resolver</p>
+        <h3>Nueva IP para {{ fixCliente.nombre }}</h3>
+      </div>
+      <button type="button" class="np-icobtn" (click)="cerrarCambioDeIp()" aria-label="Cerrar">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M6 6l12 12M18 6 6 18"/></svg>
+      </button>
+    </div>
+
+    <div class="np-modal-body">
+      <p class="np-fine">
+        Hoy comparte <span class="np-mono">{{ fixGrupo?.ip }}</span> con
+        {{ fixGrupo?.clientes?.length - 1 }} cliente(s) más. Documento
+        <span class="np-mono">{{ fixCliente.dni }}</span>.
+      </p>
+
+      <div class="np-form">
+        <label class="np-field"><span>VLAN</span>
+          <select class="np-input" [(ngModel)]="fixVlan" (ngModelChange)="onFixVlanChange($event)">
+            <option [ngValue]="null" disabled>Seleccione VLAN…</option>
+            <option *ngFor="let v of fixVlans" [ngValue]="v">{{ v.names }}</option>
+          </select>
+        </label>
+
+        <label class="np-field"><span>IP libre
+          <em *ngIf="loadingFixIps">buscando…</em>
+          <em *ngIf="!loadingFixIps && fixIps.length">({{ fixIps.length }} disponibles)</em>
+        </span>
+          <select class="np-input np-mono" [(ngModel)]="fixIp" [disabled]="loadingFixIps || !fixIps.length">
+            <option value="" disabled>{{ loadingFixIps ? 'Consultando el router…' : 'Seleccione IP…' }}</option>
+            <option *ngFor="let ip of fixIps" [value]="ip">{{ ip }}</option>
+          </select>
+        </label>
+      </div>
+
+      <p class="np-notice np-notice--warn np-notice--inline" *ngIf="fixError">
+        {{ fixError }}
+        <button type="button" class="np-link" *ngIf="fixVlan" (click)="cargarFixIps()">Reintentar</button>
+      </p>
+
+      <div class="np-btnrow np-btnrow--end">
+        <button type="button" class="np-btn np-btn--ghost" (click)="cerrarCambioDeIp()">Cancelar</button>
+        <button type="button" class="np-btn np-btn--primary" [disabled]="!fixIp || guardandoFix" (click)="confirmarCambioDeIp()">
+          {{ guardandoFix ? 'Aplicando…' : 'Cambiar la IP' }}
+        </button>
+      </div>
     </div>
   </div>
 </div>
