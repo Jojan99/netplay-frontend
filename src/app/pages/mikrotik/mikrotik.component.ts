@@ -95,9 +95,91 @@ export class MikrotikComponent implements OnInit {
 
   /** Por qué está repetida, en palabras del negocio. */
   explicacion(c: any): string {
+    if (c.solo_dato) {
+      return 'En el router esta IP la tiene un solo cliente: el otro la hereda del registro compartido. ' +
+             'Se arregla separando los registros, sin tocar el MikroTik.';
+    }
+
     return c.tipo === 'ficha'
-      ? 'Comparten el mismo registro de asignación: cambiarle la IP a uno se la cambiaba a todos.'
-      : 'Registros distintos con la misma IP: la lista de IPs libres se calculaba sólo con el ARP y no veía a los clientes apagados.';
+      ? 'Comparten el mismo registro de asignación: cambiarle la IP a uno se la cambia a todos.'
+      : 'Registros distintos con la misma IP, y los dos la tienen en el router: hay que cambiarle la IP a uno.';
+  }
+
+  /** Qué dice el router de este cliente. */
+  enRouter(cliente: any, grupo: any): string {
+    if (cliente.ip_router === null || cliente.ip_router === undefined) return '—';
+    if (!cliente.ip_router) return 'sin entrada';
+    return cliente.ip_router === grupo.ip ? 'esta IP' : cliente.ip_router;
+  }
+
+  // ── Arreglo automático: separar los registros compartidos ─────────────────
+  // La mayoría de los "conflictos" no son de red: son clientes pegados al
+  // registro de otro. En el router uno solo tiene esa IP y el resto ni
+  // aparece. Separar los registros los resuelve todos de una, sin tocar el
+  // MikroTik y sin cortarle el servicio a nadie.
+  separando = false;
+  separarPreview: any = null;
+  separarError = '';
+
+  simularSeparar() {
+    this.separando = true;
+    this.separarError = '';
+    this.separarPreview = null;
+
+    this.svc.separarFichas(true).subscribe({
+      next: r => {
+        this.separando = false;
+        if (r?.error !== 0) { this.separarError = r?.message || 'No se pudo leer el router.'; return; }
+        const s = r.data?.separados ?? [];
+        this.separarPreview = {
+          separados: s,
+          conIp: s.filter((x: any) => !!x.ahora),
+          sinIp: s.filter((x: any) => !x.ahora),
+          conflictos: r.data?.conflictos ?? [],
+        };
+      },
+      error: () => {
+        this.separando = false;
+        this.separarError = 'No se pudo leer el router. No se cambió nada.';
+      },
+    });
+  }
+
+  async aplicarSeparar() {
+    const p = this.separarPreview;
+    if (!p) return;
+
+    const ok = await this.dialog.confirm(
+      `Se le va a dar registro propio a ${p.separados.length} cliente(s): ` +
+      `${p.conIp.length} quedan con la IP que tienen en el router y ${p.sinIp.length} sin IP, ` +
+      `porque hoy no tienen entrada en el MikroTik. No se toca el router ni se corta ningún servicio. ¿Confirmás?`,
+      { okLabel: 'Separar registros' },
+    );
+
+    if (!ok) return;
+
+    this.separando = true;
+    this.separarError = '';
+
+    this.svc.separarFichas(false).subscribe({
+      next: r => {
+        this.separando = false;
+        if (r?.error !== 0) { this.separarError = r?.message || 'No se pudo aplicar.'; return; }
+        this.separarPreview = null;
+        this.loadConflicts();
+      },
+      error: () => {
+        this.separando = false;
+        this.separarPreview = null;
+        this.separarError = 'Se cortó la respuesta del servidor. Puede que sí se haya aplicado: revisá la lista, que se está recargando.';
+        this.loadConflicts();
+      },
+    });
+  }
+
+  cerrarSeparar() {
+    this.separarPreview = null;
+    this.separarError = '';
   }
 
   // ── Sincronizar con el router ─────────────────────────────────────────────

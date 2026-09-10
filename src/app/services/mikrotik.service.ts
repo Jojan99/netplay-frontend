@@ -100,6 +100,14 @@ export class MikrotikService {
     return this.http.post(`${this.base}/sync-ips`, { simular, router_id: routerId ?? undefined }, this.h());
   }
 
+  /**
+   * Le da a cada cliente su propio registro de IP, con la que tiene en el
+   * router. No toca el MikroTik.
+   */
+  separarFichas(simular: boolean): Observable<any> {
+    return this.http.post(`${this.base}/separar-fichas`, { simular }, this.h());
+  }
+
   /** Le da al cliente una IP libre y reescribe el ARP del router. */
   migrarIp(data: { service_id: number; new_ip: string; vlan: string; router_id?: number | null }): Observable<any> {
     return this.http.post(`${this.base}/migrarIp`, data, this.h());

@@ -13,6 +13,10 @@
       <label class="np-pagesize" *ngIf="routers.length > 1 && activeTab !== 'config'">Router<select [(ngModel)]="selectedRouterId" (ngModelChange)="onRouterChange()"><option *ngFor="let r of routers" [value]="r.id">{{ r.name || r.host }}</option></select></label>
       <button type="button" class="np-btn np-btn--ghost" *ngIf="activeTab !== 'config'" (click)="refresh()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 12a8 8 0 1 1-2.3-5.7M20 4v5h-5"/></svg>Actualizar</button>
       <button type="button" class="np-btn np-btn--primary" *ngIf="activeTab === 'config'" (click)="openAddRouter()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M12 5v14M5 12h14"/></svg>Agregar MikroTik</button>
+      <button type="button" class="np-btn np-btn--ghost" *ngIf="activeTab === 'conflicts' && conflicts.length" [disabled]="separando" (click)="simularSeparar()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg>
+        {{ separando ? 'Revisando…' : 'Arreglar automáticamente' }}
+      </button>
       <button type="button" class="np-btn np-btn--primary" *ngIf="activeTab === 'conflicts'" [disabled]="sincronizando" (click)="simularSync()">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 12a8 8 0 1 1-2.3-5.7M20 4v5h-5"/></svg>
         {{ sincronizando ? 'Leyendo el router…' : 'Sincronizar con el router' }}
@@ -145,13 +149,20 @@
         </p>
 
         <p class="np-notice np-notice--danger" *ngIf="syncError">{{ syncError }}</p>
+        <p class="np-notice np-notice--danger" *ngIf="separarError">{{ separarError }}</p>
+
+        <p class="np-notice np-notice--ok" *ngIf="conflictsSummary?.con_router && conflictsSummary?.solo_dato && !conflictsSummary?.urgentes">
+          <strong>Ninguno está cortando el servicio.</strong>
+          En el router cada una de estas IPs la tiene un solo cliente; los demás la heredan del registro
+          compartido. <b>Arreglar automáticamente</b> los resuelve todos sin tocar el MikroTik.
+        </p>
 
         <section class="np-card np-conflict" *ngFor="let c of conflictsVisibles">
           <div class="np-card-h">
             <h2>
               <span class="np-mono">{{ c.ip || 'sin IP' }}</span>
               <span class="np-pill" [ngClass]="c.urgente ? 'np-pill--suspended' : 'np-pill--neutral'">
-                {{ c.urgente ? 'Cortando ahora' : 'Latente' }}
+                {{ c.urgente ? 'Cortando ahora' : (c.solo_dato ? 'Sólo el dato' : 'Latente') }}
               </span>
             </h2>
             <span class="np-card-meta"><b>{{ c.clientes.length }}</b> clientes · {{ c.activos }} activos</span>
@@ -160,7 +171,7 @@
           <p class="np-fine np-conflict-why">{{ explicacion(c) }}</p>
 
           <div class="np-tablewrap"><table class="np-table np-table--compact">
-            <thead><tr><th>Cliente</th><th>Documento</th><th>Estado</th><th>Router</th><th class="np-th-right">Acción</th></tr></thead>
+            <thead><tr><th>Cliente</th><th>Documento</th><th>Estado</th><th>En el router</th><th>Router</th><th class="np-th-right">Acción</th></tr></thead>
             <tbody>
               <tr *ngFor="let cl of c.clientes">
                 <td class="np-strong">{{ cl.nombre }}</td>
@@ -170,6 +181,7 @@
                     {{ cl.estado === 'ACTIVE' ? 'Activo' : 'Inactivo' }}
                   </span>
                 </td>
+                <td class="np-data np-mono">{{ enRouter(cl, c) }}</td>
                 <td class="np-data">{{ cl.router || '—' }}</td>
                 <td class="np-td-right">
                   <button type="button" class="np-btn np-btn--ghost np-btn--sm" (click)="abrirCambioDeIp(c, cl)">
@@ -362,6 +374,67 @@
                 [disabled]="sincronizando || (!syncPreview.cambios.length && !syncPreview.faltaban.length)"
                 (click)="aplicarSync()">
           {{ sincronizando ? 'Sincronizando…' : 'Sincronizar ahora' }}
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ Arreglo automático ═════════════════════════════════════════════════ -->
+<div *ngIf="separarPreview" class="np-overlay" (click)="cerrarSeparar()">
+  <div class="np-modal np-modal--lg" role="dialog" aria-modal="true" aria-label="Separar registros de IP" (click)="$event.stopPropagation()">
+    <div class="np-modal-head">
+      <div>
+        <p class="np-kicker">Conflictos de IP <b>/</b> Arreglo automático</p>
+        <h3>Separar los registros compartidos</h3>
+      </div>
+      <button type="button" class="np-icobtn" (click)="cerrarSeparar()" aria-label="Cerrar">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M6 6l12 12M18 6 6 18"/></svg>
+      </button>
+    </div>
+
+    <div class="np-modal-body">
+      <section class="np-kpis">
+        <div class="np-kpi"><span class="np-kpi-k">Clientes a separar</span><b class="np-kpi-v">{{ separarPreview.separados.length }}</b></div>
+        <div class="np-kpi"><span class="np-kpi-k">Quedan con su IP</span><b class="np-kpi-v">{{ separarPreview.conIp.length }}</b></div>
+        <div class="np-kpi"><span class="np-kpi-k">Quedan sin IP</span><b class="np-kpi-v np-kpi-v--warn">{{ separarPreview.sinIp.length }}</b></div>
+        <div class="np-kpi"><span class="np-kpi-k">Hay que decidir</span><b class="np-kpi-v">{{ separarPreview.conflictos.length }}</b></div>
+      </section>
+
+      <p class="np-notice np-notice--code">
+        Cada cliente pasa a tener su propio registro con la IP que el router dice que tiene.
+        <b>No se toca el MikroTik</b>, así que nadie pierde el servicio. Los que quedan sin IP es porque
+        hoy no tienen entrada en el router — el dato pasa a decir la verdad.
+      </p>
+
+      <h4 class="np-sync-h">Detalle</h4>
+      <div class="np-tablewrap np-sync-box"><table class="np-table np-table--compact">
+        <thead><tr><th>Cliente</th><th>Documento</th><th>Tenía</th><th>Queda con</th></tr></thead>
+        <tbody>
+          <tr *ngFor="let s of separarPreview.separados">
+            <td class="np-strong">{{ s.cliente }}</td>
+            <td class="np-data np-mono">{{ s.dni }}</td>
+            <td class="np-data np-mono">{{ s.antes }}</td>
+            <td class="np-data np-mono">{{ s.ahora || 'sin IP' }}</td>
+          </tr>
+        </tbody>
+      </table></div>
+
+      <ng-container *ngIf="separarPreview.conflictos.length">
+        <h4 class="np-sync-h">Estos hay que decidirlos a mano</h4>
+        <ul class="np-sync-list">
+          <li *ngFor="let c of separarPreview.conflictos">
+            <b class="np-mono">{{ c.ip }}</b> — la tienen en el router:
+            <span *ngFor="let cl of c.clientes; let i = index">{{ i ? ', ' : '' }}{{ cl.nombre }}</span>
+          </li>
+        </ul>
+      </ng-container>
+
+      <div class="np-btnrow np-btnrow--end">
+        <button type="button" class="np-btn np-btn--ghost" (click)="cerrarSeparar()">Cerrar</button>
+        <button type="button" class="np-btn np-btn--primary"
+                [disabled]="separando || !separarPreview.separados.length" (click)="aplicarSeparar()">
+          {{ separando ? 'Aplicando…' : 'Separar registros' }}
         </button>
       </div>
     </div>
