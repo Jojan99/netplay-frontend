@@ -27,6 +27,12 @@ export interface ModeloMikrotik {
   u?: number;
   descripcion: string;
   puertos: Puerto[];
+  /**
+   * En cuántas filas van los puertos de cobre en el equipo real. Los de 24
+   * puertos vienen en dos, con los impares arriba y los pares abajo; los CCR
+   * de 12 en una sola.
+   */
+  filas?: 1 | 2;
 }
 
 /** Genera ether1..N, sfp1..N, etc. sin repetir la lista a mano. */
@@ -112,6 +118,7 @@ export const MODELOS: ModeloMikrotik[] = [
     nombre: 'CRS326-24G-2S+',
     familia: 'switch', u: 1,
     descripcion: '24 Gigabit + 2 SFP+',
+    filas: 2,
     puertos: [...serie('ether', 1, 24, 'eth'), ...serie('sfp-sfpplus', 1, 2, 'sfp+')],
   },
   {
@@ -119,6 +126,7 @@ export const MODELOS: ModeloMikrotik[] = [
     nombre: 'CRS328-24P-4S+',
     familia: 'switch', u: 1,
     descripcion: '24 Gigabit PoE+ + 4 SFP+',
+    filas: 2,
     puertos: [...serie('ether', 1, 24, 'poe'), ...serie('sfp-sfpplus', 1, 4, 'sfp+')],
   },
   {

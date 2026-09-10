@@ -88,24 +88,34 @@
           <div class="np-panel" *ngIf="puertos.length">
             <div class="np-panel-h">
               <span>Puertos</span>
-              <b>{{ puertosArriba }} de {{ puertos.length }} con enlace</b>
+              <b>
+                {{ puertosArriba }} de {{ puertos.length }} con enlace
+                <em class="np-panel-degradado" *ngIf="puertosDegradados">
+                  · {{ puertosDegradados }} por debajo de su velocidad
+                </em>
+              </b>
             </div>
 
             <div class="np-panel-chasis">
               <span class="np-panel-oreja" aria-hidden="true"></span>
+              <span class="np-panel-marca" aria-hidden="true">{{ routerInfo.resource?.board_name }}</span>
 
               <div class="np-panel-bloques">
                 <div class="np-panel-bloque" *ngFor="let b of bloquesDePuertos; trackBy: porTitulo">
-                  <div class="np-panel-puertos">
+                  <!-- En dos filas los puertos van escalonados como en el
+                       equipo: impares arriba, pares abajo. -->
+                  <div class="np-panel-puertos" [class.is-dos-filas]="b.filas === 2">
                     <button *ngFor="let p of b.puertos; trackBy: porNombre"
                             type="button"
                             class="np-puerto"
                             [class.is-sfp]="p.sfp"
+                            [class.is-degradado]="p.degradado"
                             [attr.data-estado]="p.estado"
                             [title]="p.titulo"
                             (click)="abrirPuerto(p)">
                       <i class="np-puerto-led"></i>
                       <b>{{ p.etiqueta }}</b>
+                      <u *ngIf="p.velocidad">{{ p.velocidad.replace('bps', '') }}</u>
                     </button>
                   </div>
                   <span class="np-panel-bloque-t">{{ b.titulo }}</span>
@@ -127,6 +137,7 @@
               <span><i data-estado="up"></i>Con enlace</span>
               <span><i data-estado="down"></i>Sin enlace</span>
               <span><i data-estado="off"></i>Deshabilitado</span>
+              <span *ngIf="puertosDegradados"><i class="np-leyenda-degradado"></i>Por debajo de su velocidad</span>
               <span class="np-panel-tip">Hacé clic en un puerto para ver su detalle</span>
             </div>
           </div>

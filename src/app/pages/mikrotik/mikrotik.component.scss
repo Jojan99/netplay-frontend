@@ -151,134 +151,197 @@
   justify-content: flex-start;
 }
 
-/* Cada puerto imita el conector: cuerpo con muesca arriba y un LED. */
-.np-puerto {
+/* ── Panel de puertos ─────────────────────────────────────────────────────
+   Se dibuja el frente del equipo en vez de mostrar una foto: así cada puerto
+   lleva su estado y su velocidad reales, que es lo que hace falta mirar. */
+.np-panel-degradado { color: var(--warn); font-style: normal; }
+
+.np-panel-chasis {
   position: relative;
-  width: 30px;
-  height: 34px;
+  display: flex;
+  align-items: stretch;
+  gap: 10px;
+  padding: 14px 12px 12px;
+  border-radius: 9px;
+  background:
+    linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,0) 42%),
+    linear-gradient(180deg, #2f353f, #1a1e25);
+  border: 1px solid #0d1015;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.07), 0 6px 18px rgba(0,0,0,.28);
+  overflow-x: auto;
+}
+
+/* El modelo grabado en el chasis, como viene serigrafiado en el equipo. */
+.np-panel-marca {
+  position: absolute;
+  top: 5px;
+  left: 34px;
+  font-size: 8.5px;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: #59626f;
+  pointer-events: none;
+}
+
+/* Las orejas de rack, con sus tornillos. */
+.np-panel-oreja {
+  flex: 0 0 12px;
+  border-radius: 3px;
+  background: linear-gradient(180deg, #3d4451, #2b313a);
+  box-shadow: inset 0 0 0 1px rgba(0,0,0,.35);
+  position: relative;
+
+  &::before, &::after {
+    content: '';
+    position: absolute;
+    left: 50%;
+    width: 4px;
+    height: 4px;
+    margin-left: -2px;
+    border-radius: 50%;
+    background: #171b21;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.14);
+  }
+  &::before { top: 9px; }
+  &::after  { bottom: 9px; }
+}
+
+.np-panel-bloques {
+  flex: 1 1 auto;
+  display: flex;
+  gap: 20px;
+  flex-wrap: wrap;
+  align-items: flex-end;
+}
+
+.np-panel-bloque {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+
+  & + & { padding-left: 20px; border-left: 1px solid rgba(255,255,255,.07); }
+}
+
+.np-panel-bloque-t {
+  font-size: 8.5px;
+  text-transform: uppercase;
+  letter-spacing: .12em;
+  color: #626c7b;
+  text-align: center;
+}
+
+.np-panel-puertos {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+
+  /* Dos filas escalonadas: impares arriba, pares abajo, como el equipo. */
+  &.is-dos-filas {
+    display: grid;
+    grid-auto-flow: column;
+    grid-template-rows: repeat(2, auto);
+  }
+}
+
+/* Cada puerto imita el conector: cuerpo con la muesca del RJ45 y su LED. */
+.np-puerto {
+  appearance: none;
+  font: inherit;
+  position: relative;
+  width: 34px;
+  padding: 9px 0 3px;
   border-radius: 3px 3px 4px 4px;
-  background: linear-gradient(180deg, #10141b, #191f28);
-  border: 1px solid #0a0d12;
+  background: linear-gradient(180deg, #0d1117, #1b212a 70%, #232a34);
+  border: 1px solid #070a0e;
+  box-shadow: inset 0 -3px 6px rgba(0,0,0,.5);
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: flex-end;
-  padding-bottom: 3px;
-  cursor: help;
+  gap: 2px;
+  cursor: pointer;
+  transition: transform .12s ease, box-shadow .12s ease;
 
-  /* La muesca del RJ45. */
+  /* La muesca del conector. */
   &::before {
     content: '';
     position: absolute;
     top: -1px;
-    width: 12px;
-    height: 7px;
+    width: 13px;
+    height: 6px;
     border-radius: 0 0 2px 2px;
-    background: #0a0d12;
+    background: #070a0e;
   }
 
   b {
     font-size: 9.5px;
-    font-weight: 600;
-    color: #8b95a5;
+    font-weight: 700;
+    color: #7d8797;
     font-variant-numeric: tabular-nums;
+    line-height: 1;
   }
 
-  /* El SFP es más ancho y plano, sin muesca. */
+  /* La velocidad negociada, en chico bajo el número. */
+  u {
+    text-decoration: none;
+    font-size: 7.5px;
+    letter-spacing: .02em;
+    color: #566070;
+    line-height: 1;
+  }
+
+  &:hover, &:focus-visible {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,.5), inset 0 -3px 6px rgba(0,0,0,.5);
+    outline: none;
+    b { color: #dfe5ee; }
+  }
+
+  /* El óptico es más ancho y plano, y no tiene muesca. */
   &.is-sfp {
-    width: 40px;
+    width: 44px;
     border-radius: 3px;
-    background: linear-gradient(180deg, #141a23, #1e252f);
+    background: linear-gradient(180deg, #121820, #202833);
     &::before { display: none; }
+  }
+
+  &[data-estado='na'] { opacity: .4; cursor: default; }
+  &[data-estado='na']:hover { transform: none; }
+
+  /* Negoció por debajo de lo que soporta: se marca el borde. */
+  &.is-degradado {
+    border-color: #8a6516;
+    box-shadow: inset 0 -3px 6px rgba(0,0,0,.5), 0 0 0 1px rgba(224,168,38,.35);
+    u { color: #e0a826; font-weight: 700; }
   }
 }
 
 .np-puerto-led {
   width: 7px;
   height: 7px;
-  margin-top: 9px;
-  margin-bottom: 2px;
   border-radius: 50%;
-  background: #39404d;
+  background: #333a45;
+  box-shadow: inset 0 0 2px rgba(0,0,0,.6);
 }
 
 .np-puerto[data-estado='up'] .np-puerto-led {
   background: #35d07f;
-  box-shadow: 0 0 6px rgba(53, 208, 127, .85);
+  box-shadow: 0 0 7px rgba(53, 208, 127, .9);
 }
-.np-puerto[data-estado='down'] .np-puerto-led { background: #39404d; }
-.np-puerto[data-estado='off']  .np-puerto-led { background: #e5544b; }
-.np-puerto[data-estado='na']   { opacity: .45; }
-
-.np-panel-leyenda {
-  display: flex;
-  gap: 16px;
-  margin-top: 8px;
-  font-size: 11.5px;
-  color: var(--text-3);
-
-  span { display: inline-flex; align-items: center; gap: 6px; }
-
-  i {
-    width: 8px; height: 8px; border-radius: 50%; background: #39404d;
-    &[data-estado='up']  { background: #35d07f; }
-    &[data-estado='off'] { background: #e5544b; }
-  }
+.np-puerto[data-estado='off'] .np-puerto-led {
+  background: #e5544b;
+  box-shadow: 0 0 6px rgba(229, 84, 75, .7);
+}
+.np-puerto.is-degradado[data-estado='up'] .np-puerto-led {
+  background: #e0a826;
+  box-shadow: 0 0 7px rgba(224, 168, 38, .85);
 }
 
-@media (max-width: 720px) {
-  .np-equipo { grid-template-columns: 1fr; }
-}
-
-/* ── Panel: bloques y notas ───────────────────────────────────────────────
-   Los puertos van agrupados como en el equipo, con la etiqueta de lo que hay
-   conectado debajo: sin eso son sólo números. */
-.np-panel-bloques {
-  flex: 1 1 auto;
-  display: flex;
-  gap: 18px;
-  flex-wrap: wrap;
-}
-
-.np-panel-bloque {
-  display: flex;
-  flex-direction: column;
-  gap: 5px;
-
-  & + & { padding-left: 18px; border-left: 1px dashed #39414f; }
-}
-
-.np-panel-bloque-t {
-  font-size: 9px;
-  text-transform: uppercase;
-  letter-spacing: .09em;
-  color: #6d7889;
-  text-align: center;
-}
-
-.np-puerto {
-  /* Es un botón: se resetea lo que trae el navegador. */
-  appearance: none;
-  font: inherit;
-  cursor: pointer;
-  transition: transform .1s ease, box-shadow .1s ease;
-
-  &:hover, &:focus-visible {
-    transform: translateY(-2px);
-    box-shadow: 0 3px 10px rgba(0, 0, 0, .45);
-    outline: none;
-    b { color: #d6dde8; }
-  }
-
-  &[data-estado='na'] { cursor: default; }
-  &[data-estado='na']:hover { transform: none; box-shadow: none; }
-}
-
+/* Lo que hay conectado en cada puerto, según lo anotado en el router. */
 .np-panel-notas {
   display: flex;
   flex-wrap: wrap;
   gap: 4px 8px;
-  margin-top: 8px;
+  margin-top: 10px;
 
   span:empty { display: none; }
 
@@ -293,16 +356,29 @@
     font-size: 11px;
     color: var(--text-2);
 
-    b {
-      font-variant-numeric: tabular-nums;
-      color: var(--text-3);
-      font-size: 10px;
-    }
-
+    b { font-variant-numeric: tabular-nums; color: var(--text-3); font-size: 10px; }
     &.is-off { opacity: .5; }
   }
 }
 
+.np-panel-leyenda {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+  margin-top: 9px;
+  font-size: 11.5px;
+  color: var(--text-3);
+
+  span { display: inline-flex; align-items: center; gap: 6px; }
+
+  i {
+    width: 8px; height: 8px; border-radius: 50%; background: #39404d;
+    &[data-estado='up']  { background: #35d07f; }
+    &[data-estado='off'] { background: #e5544b; }
+  }
+}
+
+.np-leyenda-degradado { background: #e0a826 !important; }
 .np-panel-tip { margin-left: auto; font-style: italic; }
 
 /* ── Detalle del puerto ───────────────────────────────────────────────────

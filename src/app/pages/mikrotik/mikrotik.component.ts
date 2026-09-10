@@ -14,6 +14,10 @@ interface PuertoVivo extends Puerto {
   nota: string;
   sfp: boolean;
   titulo: string;
+  /** Como negoció: "1Gbps", "100Mbps". */
+  velocidad: string | null;
+  /** Negoció por debajo de lo que el puerto soporta. */
+  degradado: boolean;
 }
 
 const ESTADOS: Record<EstadoPuerto, string> = {
@@ -560,8 +564,9 @@ export class MikrotikComponent implements OnInit {
    * clic nunca llegaba a completarse sobre el mismo elemento.
    */
   puertos: Puerto[] = [];
-  bloquesDePuertos: { titulo: string; puertos: PuertoVivo[] }[] = [];
+  bloquesDePuertos: { titulo: string; puertos: PuertoVivo[]; filas: number }[] = [];
   puertosArriba = 0;
+  puertosDegradados = 0;
   notasDePuertos: { etiqueta: string; nota: string; apagado: boolean }[] = [];
 
   private armarPuertos() {
@@ -572,19 +577,32 @@ export class MikrotikComponent implements OnInit {
       .filter((i: any) => i.type === 'ether')
       .map((i: any, n: number) => ({ nombre: i.name, tipo: 'eth' as const, label: String(n + 1) }));
 
+    const enlaces = this.routerInfo?.enlaces ?? {};
+
     const vivos: PuertoVivo[] = this.puertos.map(p => {
       const estado = this.estadoPuerto(p);
       const nota = this.comentarioPuerto(p);
+      const velocidad = enlaces[p.nombre]?.velocidad ?? null;
+
+      // Un puerto Gigabit conectado a 100 Mbps casi siempre es el cable o el
+      // conector: conviene que salte a la vista sin tener que abrir nada.
+      const degradado = estado === 'up' && !!velocidad && /^(10|100)Mbps$/i.test(velocidad);
+
+      const detalle = [ESTADOS[estado], velocidad, nota].filter(Boolean).join(' · ');
 
       return {
         ...p,
         etiqueta: p.label || p.nombre,
         estado,
         nota,
+        velocidad,
+        degradado,
         sfp: this.esSfp(p),
-        titulo: `${p.nombre} · ${ESTADOS[estado]}${nota ? ' · ' + nota : ''} — clic para ver el detalle`,
+        titulo: `${p.nombre} · ${detalle}${degradado ? ' — negoció por debajo de lo que soporta' : ''} — clic para ver el detalle`,
       };
     });
+
+    this.puertosDegradados = vivos.filter(p => p.degradado).length;
 
     this.puertosArriba = vivos.filter(p => p.estado === 'up').length;
 
@@ -596,8 +614,17 @@ export class MikrotikComponent implements OnInit {
     const optico = vivos.filter(p => p.sfp);
 
     this.bloquesDePuertos = [];
-    if (cobre.length) this.bloquesDePuertos.push({ titulo: 'Ethernet', puertos: cobre });
-    if (optico.length) this.bloquesDePuertos.push({ titulo: 'SFP', puertos: optico });
+
+    if (cobre.length) {
+      this.bloquesDePuertos.push({
+        titulo: 'Ethernet',
+        puertos: cobre,
+        // Los equipos de muchos puertos los traen en dos filas escalonadas.
+        filas: this.modelo?.filas === 2 ? 2 : 1,
+      });
+    }
+
+    if (optico.length) this.bloquesDePuertos.push({ titulo: 'SFP', puertos: optico, filas: 1 });
   }
 
   /** Para que *ngFor no recree los botones en cada ciclo. */
