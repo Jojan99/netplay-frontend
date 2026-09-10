@@ -601,6 +601,13 @@
       <button type="button" class="np-tab" role="tab" [attr.aria-selected]="!showUserFormProfile" (click)="showUserFormProfile = false">Conexión</button>
     </div>
     <div class="np-modal-body">
+      <!-- El alta se guarda sola: si el router falla o se cierra el modal, no
+           hay que volver a escribir todo. -->
+      <div *ngIf="borradorRestaurado" class="np-notice np-notice--info np-notice--inline np-field-full np-aviso">
+        <span>Retomamos el alta que habías empezado.</span>
+        <button type="button" class="np-btn np-btn--ghost np-btn--sm" (click)="descartarBorrador()">Empezar en blanco</button>
+      </div>
+
       <div *ngIf="showUserFormProfile" class="np-form">
         <label class="np-field" *ngFor="let f of [
             {label:'Nombres',   key:'names',    type:'text',  ph:'Nombres'},
@@ -611,10 +618,11 @@
             {label:'Dirección', key:'address',  type:'text',  ph:'Calle, número, barrio'}
           ]">
           <span>{{ f.label }}</span>
-          <input [type]="f.type" class="np-input" [(ngModel)]="newUser[f.key]" [placeholder]="f.ph" />
+          <input [type]="f.type" class="np-input" [(ngModel)]="newUser[f.key]"
+                 (ngModelChange)="guardarBorrador()" [placeholder]="f.ph" />
         </label>
         <label class="np-field"><span>Periodo de facturación</span>
-          <select class="np-input" [(ngModel)]="newUser.periode_facturation">
+          <select class="np-input" [(ngModel)]="newUser.periode_facturation" (ngModelChange)="guardarBorrador()">
             <option [value]="0" disabled>Seleccione…</option>
             <option *ngFor="let d of DataCortes" [value]="d.id">{{ d.names }}</option>
           </select>
@@ -629,8 +637,9 @@
           </select>
         </label>
         <label class="np-field"><span>VLAN</span>
-          <select class="np-input" [(ngModel)]="selectedVlan" (ngModelChange)="onInterfaceChange($event)">
-            <option [ngValue]="null" disabled>Seleccione VLAN…</option>
+          <select class="np-input" [(ngModel)]="selectedVlan" (ngModelChange)="onInterfaceChange($event)"
+                  [disabled]="loadingIfaces">
+            <option [ngValue]="null" disabled>{{ loadingIfaces ? 'Leyendo el router…' : 'Seleccione VLAN…' }}</option>
             <option *ngFor="let iface of interfaces" [ngValue]="iface">{{ iface.names }}</option>
           </select>
         </label>
@@ -640,18 +649,39 @@
             <option *ngFor="let s of segments" [ngValue]="s">{{ s.network }}</option>
           </select>
         </label>
-        <label class="np-field"><span>IP <em>({{ Ipzone.length }} disponibles)</em></span>
-          <select class="np-input np-mono" [(ngModel)]="newUser.ip" [disabled]="!Ipzone.length">
-            <option [value]="0" disabled>Seleccione IP…</option>
+
+        <!-- Aviso de router caído: antes el select de IP quedaba vacío sin
+             explicación y la única salida era cerrar y reabrir el formulario. -->
+        <div *ngIf="ifacesError" class="np-notice np-notice--warn np-notice--inline np-field-full np-aviso">
+          <span>{{ ifacesError }}</span>
+          <button type="button" class="np-btn np-btn--ghost np-btn--sm" (click)="cargarInterfaces()" [disabled]="loadingIfaces">
+            {{ loadingIfaces ? 'Reintentando…' : 'Reintentar' }}
+          </button>
+        </div>
+
+        <label class="np-field"><span>IP
+          <em *ngIf="!loadingIps">({{ Ipzone.length }} disponibles)</em>
+          <em *ngIf="loadingIps">consultando el router…</em>
+        </span>
+          <select class="np-input np-mono" [(ngModel)]="newUser.ip" (ngModelChange)="guardarBorrador()"
+                  [disabled]="loadingIps || !Ipzone.length">
+            <option [value]="0" disabled>{{ loadingIps ? 'Buscando IPs libres…' : 'Seleccione IP…' }}</option>
             <option *ngFor="let ip of Ipzone" [value]="ip.id">{{ ip.names }}</option>
           </select>
         </label>
         <label class="np-field"><span>Plan de internet</span>
-          <select class="np-input" [(ngModel)]="newUser.plan_id">
+          <select class="np-input" [(ngModel)]="newUser.plan_id" (ngModelChange)="guardarBorrador()">
             <option [value]="0" disabled>Seleccione plan…</option>
             <option *ngFor="let p of PlanInternet" [value]="p.id">{{ p.names }}</option>
           </select>
         </label>
+      </div>
+
+      <div *ngIf="ipsError && !showUserFormProfile" class="np-notice np-notice--warn np-notice--inline np-aviso">
+        <span>{{ ipsError }}</span>
+        <button type="button" class="np-btn np-btn--ghost np-btn--sm" (click)="cargarIps()" [disabled]="loadingIps">
+          {{ loadingIps ? 'Reintentando…' : 'Reintentar' }}
+        </button>
       </div>
 
       <div class="np-btnrow np-btnrow--end">

@@ -895,48 +895,248 @@ export class UserComponent implements OnInit {
   }
 
   // ── Create user form ──────────────────────────────────────────────────────
-  newUser: any = { names: '', lastname: '', dni: '', phone: '', email: '', address: '', plan_id: 0, ip: 0, periode_facturation: 0, countries: 1 };
+  /** Dónde queda el alta a medio llenar. */
+  private readonly BORRADOR_ALTA = 'np:alta-cliente';
+
+  newUser: any = this.usuarioEnBlanco();
   submittingNewUser = false;
   showUserFormProfile = true;
   selectedVlan: any = null;
   selectedSeg: any = null;
+
+  // El backend responde HTTP 200 aunque el MikroTik no contestó (error: 1).
+  // Sin este estado el select de IP quedaba vacío y deshabilitado sin decir
+  // por qué, y no había forma de reintentar sin cerrar y reabrir el modal.
+  loadingIps = false;
+  ipsError: string | null = null;
+  loadingIfaces = false;
+  ifacesError: string | null = null;
+  borradorRestaurado = false;
+
+  private usuarioEnBlanco() {
+    return {
+      names: '', lastname: '', dni: '', phone: '', email: '', address: '',
+      plan_id: 0, ip: 0, periode_facturation: 0, countries: 1,
+    };
+  }
 
   onCreateRouterChange() {
     this.selectedVlan = null;
     this.segments = [];
     this.selectedSeg = null;
     this.Ipzone = [];
+    this.ipsError = null;
+    this.cargarInterfaces();
+    this.guardarBorrador();
+  }
+
+  /** VLAN del router elegido, con aviso si el router no responde. */
+  cargarInterfaces() {
+    this.loadingIfaces = true;
+    this.ifacesError = null;
+
     this.userSvc.getneighborhoodAll(this.selectedRouterId).subscribe({
-      next: r => { this.interfaces = r.error === 0 && r.data ? Object.values(r.data) : []; }
+      next: r => {
+        this.loadingIfaces = false;
+        this.interfaces = r?.error === 0 && r.data ? Object.values(r.data) : [];
+
+        if (!this.interfaces.length) {
+          this.ifacesError = r?.message || 'El router no devolvió VLAN.';
+          return;
+        }
+
+        this.reemparejarVlan();
+      },
+      error: () => {
+        this.loadingIfaces = false;
+        this.interfaces = [];
+        this.ifacesError = 'No se pudo conectar con el router.';
+      },
     });
+  }
+
+  /**
+   * Vuelve a apuntar la VLAN del borrador al objeto real de la lista: el
+   * select compara por referencia, así que el objeto guardado no se veía
+   * seleccionado aunque tuviera los mismos datos.
+   */
+  private reemparejarVlan() {
+    if (!this.selectedVlan) return;
+
+    const igual = this.interfaces.find((i: any) => i.names === this.selectedVlan.names);
+    this.selectedVlan = igual ?? null;
+    this.segments     = igual ? [igual] : [];
+    this.selectedSeg  = this.segments[0] ?? null;
+
+    if (this.selectedSeg) this.cargarIps();
+    else this.Ipzone = [];
   }
 
   onInterfaceChange(iface: any) {
     this.selectedVlan = iface;
     this.segments = iface ? [iface] : [];
-    this.selectedSeg = null;
     this.Ipzone = [];
+    this.ipsError = null;
+
+    // La VLAN trae un único segmento: se elige solo, para no obligar a
+    // seleccionar lo único que hay.
+    this.selectedSeg = this.segments[0] ?? null;
+    if (this.selectedSeg) this.cargarIps();
+
+    this.guardarBorrador();
   }
 
   onSegmentChange(seg: any) {
+    this.selectedSeg = seg;
+
+    if (!seg || !this.selectedVlan) {
+      this.Ipzone = [];
+      this.ipsError = null;
+      return;
+    }
+
+    this.cargarIps();
+    this.guardarBorrador();
+  }
+
+  /**
+   * Pide al router las IPs libres del segmento.
+   *
+   * Reintenta solo hasta tres veces: el MikroTik a veces no contesta a la
+   * primera y antes eso dejaba el alta trabada, sin más salida que cerrar el
+   * modal y volver a abrirlo perdiendo todo lo escrito.
+   */
+  cargarIps(intento = 1) {
+    const seg = this.selectedSeg;
+
     if (!seg || !this.selectedVlan) { this.Ipzone = []; return; }
+
+    this.loadingIps = true;
+    this.ipsError   = null;
+
     this.userSvc.getIpzonebyZone(seg.names, seg.network, this.selectedRouterId).subscribe({
       next: r => {
-        this.Ipzone = r.error === 0 && r.data?.ips ? r.data.ips.map((e: any) => ({ id: e.ip, names: e.ip })) : [];
+        // error !== 0 es el router que no respondió, no un segmento lleno.
+        if (r?.error !== 0) {
+          if (intento < 3) { setTimeout(() => this.cargarIps(intento + 1), 900 * intento); return; }
+          this.loadingIps = false;
+          this.Ipzone = [];
+          this.ipsError = r?.message || 'El router no respondió. Reintentá en un momento.';
+          return;
+        }
+
+        this.loadingIps = false;
+        this.Ipzone = (r?.data?.ips ?? []).map((e: any) => ({ id: e.ip, names: e.ip }));
+        this.ipsError = this.Ipzone.length ? null : 'No quedan IPs libres en este segmento.';
+
+        // Si la IP que traía el borrador ya se la dieron a otro, se descarta.
+        if (this.newUser.ip && !this.Ipzone.some((i: any) => i.id === this.newUser.ip)) {
+          this.newUser.ip = 0;
+        }
       },
-      error: () => { this.Ipzone = []; }
+      error: () => {
+        if (intento < 3) { setTimeout(() => this.cargarIps(intento + 1), 900 * intento); return; }
+        this.loadingIps = false;
+        this.Ipzone = [];
+        this.ipsError = 'No se pudo conectar con el router. Verificá que esté en línea y reintentá.';
+      },
     });
   }
 
-  openCreateUserModal() {
-    this.newUser = { names: '', lastname: '', dni: '', phone: '', email: '', address: '', plan_id: 0, ip: 0, periode_facturation: 0, countries: 1 };
-    this.showUserFormProfile = true;
-    this.selectedVlan = null; this.selectedSeg = null; this.Ipzone = [];
+  /* ── Borrador del alta ────────────────────────────────────────────────────
+   * El formulario se guarda mientras se llena. Si el router falla, si se
+   * cierra el modal sin querer o si se recarga la página, lo escrito sigue
+   * ahí y solo hace falta reintentar la consulta de IPs.
+   */
+
+  private guardaPendiente: any = null;
+
+  guardarBorrador() {
+    clearTimeout(this.guardaPendiente);
+    this.guardaPendiente = setTimeout(() => this.escribirBorrador(), 400);
+  }
+
+  private escribirBorrador() {
+    if (!this.hayAlgoEscrito()) { this.limpiarBorrador(); return; }
+
+    try {
+      localStorage.setItem(this.BORRADOR_ALTA, JSON.stringify({
+        newUser:  this.newUser,
+        routerId: this.selectedRouterId,
+        vlan:     this.selectedVlan,
+        pestania: this.showUserFormProfile,
+        guardado: Date.now(),
+      }));
+    } catch {
+      // Modo privado o cuota llena: el formulario sigue funcionando igual.
+    }
+  }
+
+  private hayAlgoEscrito(): boolean {
+    const u = this.newUser ?? {};
+    return ['names', 'lastname', 'dni', 'phone', 'email', 'address'].some(k => !!String(u[k] ?? '').trim())
+        || Number(u.plan_id) > 0
+        || Number(u.periode_facturation) > 0
+        || !!this.selectedVlan;
+  }
+
+  private leerBorrador(): any | null {
+    try {
+      const crudo = localStorage.getItem(this.BORRADOR_ALTA);
+      if (!crudo) return null;
+
+      const b = JSON.parse(crudo);
+
+      // Un borrador de más de un día ya no le sirve a nadie.
+      if (!b?.guardado || Date.now() - b.guardado > 86_400_000) { this.limpiarBorrador(); return null; }
+
+      return b;
+    } catch {
+      return null;
+    }
+  }
+
+  private limpiarBorrador() {
+    try { localStorage.removeItem(this.BORRADOR_ALTA); } catch { /* nada que borrar */ }
+  }
+
+  /** Tirar el borrador y arrancar el alta de cero. */
+  descartarBorrador() {
+    clearTimeout(this.guardaPendiente);
+    this.limpiarBorrador();
+    this.borradorRestaurado = false;
+
+    this.newUser          = this.usuarioEnBlanco();
     this.selectedRouterId = null;
+    this.selectedVlan     = null;
+    this.selectedSeg      = null;
+    this.segments         = [];
+    this.Ipzone           = [];
+    this.ipsError         = null;
+    this.showUserFormProfile = true;
+  }
+
+  openCreateUserModal() {
+    const b = this.leerBorrador();
+
+    this.newUser          = b?.newUser ?? this.usuarioEnBlanco();
+    this.selectedRouterId = b?.routerId ?? null;
+    this.selectedVlan     = b?.vlan ?? null;
+    this.selectedSeg      = null;
+    this.segments         = this.selectedVlan ? [this.selectedVlan] : [];
+    this.Ipzone           = [];
+    this.ipsError         = null;
+    this.ifacesError      = null;
+    this.showUserFormProfile = b ? (b.pestania ?? true) : true;
+    this.borradorRestaurado  = !!b;
+
     if (!this.routers.length) this.loadRouters();
-    if (!this.interfaces.length) this.userSvc.getneighborhoodAll(this.selectedRouterId).subscribe({
-      next: r => { this.interfaces = r.error === 0 && r.data ? Object.values(r.data) : []; }
-    });
+
+    // Las VLAN se piden siempre: de ahí sale el objeto real con el que se
+    // reempareja la del borrador y se vuelven a pedir las IPs libres, que
+    // cambian todo el tiempo.
+    this.cargarInterfaces();
+
     this.showCreateUser = true;
   }
 
@@ -947,7 +1147,16 @@ export class UserComponent implements OnInit {
     this.userSvc.create(this.newUser).subscribe({
       next: r => {
         this.toast(r.message ?? (r.error ? 'Error' : 'Cliente creado'), r.error ? 'error' : 'success');
-        if (!r.error) { this.showCreateUser = false; this.getAllUser(); }
+        if (!r.error) {
+          // Recién acá se tira el borrador: si el alta falló, lo escrito queda.
+          this.limpiarBorrador();
+          this.borradorRestaurado = false;
+          this.newUser = this.usuarioEnBlanco();
+          this.selectedVlan = null; this.selectedSeg = null;
+          this.segments = []; this.Ipzone = [];
+          this.showCreateUser = false;
+          this.getAllUser();
+        }
         this.submittingNewUser = false;
       },
       error: () => { this.toast('Error al crear cliente', 'error'); this.submittingNewUser = false; }

@@ -17,3 +17,16 @@
   .np-col-doc, .np-col-phone, .np-col-ip { display: none; }
   .np-plan-mobile { display: inline; }
 }
+
+/* Aviso con su botón de reintento en la misma línea: el mensaje ocupa lo que
+   sobra y el botón no se estira. */
+.np-aviso {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  justify-content: space-between;
+  flex-wrap: wrap;
+
+  > span { flex: 1 1 auto; }
+  > .np-btn { flex: 0 0 auto; }
+}
