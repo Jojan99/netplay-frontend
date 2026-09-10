@@ -337,6 +337,8 @@
           <button type="button" role="tab" [attr.aria-pressed]="vistaPppoe === 'conectados'" (click)="vistaPppoe = 'conectados'">Conectados ({{ conectados }})</button>
           <button type="button" role="tab" [attr.aria-pressed]="vistaPppoe === 'usuarios'" (click)="vistaPppoe = 'usuarios'">Credenciales ({{ pppoeUsuarios.length }})</button>
           <button type="button" role="tab" [attr.aria-pressed]="vistaPppoe === 'perfiles'" (click)="vistaPppoe = 'perfiles'">Perfiles ({{ pppoe.perfiles.length }})</button>
+          <button type="button" role="tab" [attr.aria-pressed]="vistaPppoe === 'pools'" (click)="vistaPppoe = 'pools'">Rangos de IP ({{ pppoePools.length }})</button>
+          <button type="button" role="tab" [attr.aria-pressed]="vistaPppoe === 'servidores'" (click)="vistaPppoe = 'servidores'">Servidores ({{ pppoe.servidores.length }})</button>
         </div>
 
         <!-- Conectados ahora -->
@@ -394,18 +396,105 @@
             El perfil es lo que fija la velocidad y de qué rango sale la IP. Los que reparten de otro
             rango son de otro servicio —una VPN, por ejemplo— y no sirven para clientes.
           </p>
+          <div class="np-btnrow">
+            <button type="button" class="np-btn np-btn--primary np-btn--sm" (click)="nuevoPerfil()">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M12 5v14M5 12h14"/></svg>Nuevo perfil
+            </button>
+          </div>
           <section class="np-registry">
             <div class="np-registry-wrap"><table class="np-table np-table--registry">
-              <thead><tr><th class="np-th-stripe"></th><th>Perfil</th><th>Velocidad</th><th>Puerta de enlace</th><th>Reparte de</th><th>En uso</th><th></th></tr></thead>
+              <thead><tr><th class="np-th-stripe"></th><th>Perfil</th><th>Velocidad</th><th>Puerta de enlace</th><th>Reparte de</th><th>En uso</th><th class="np-th-right">Acciones</th></tr></thead>
               <tbody>
-                <tr *ngFor="let p of pppoe.perfiles" class="np-row">
+                <tr *ngFor="let p of pppoe.perfiles" class="np-row" (click)="!p.del_sistema && editarPerfil(p)">
                   <td class="np-stripe"><i [style.background]="p.velocidad ? 'var(--accent)' : 'var(--line-strong)'"></i></td>
-                  <td class="np-data np-strong">{{ p.nombre }}</td>
+                  <td class="np-data np-strong">{{ p.nombre }}<span class="np-pill np-pill--neutral" *ngIf="p.del_sistema">del sistema</span></td>
                   <td class="np-data np-mono">{{ p.velocidad || 'sin límite' }}</td>
                   <td class="np-data np-mono">{{ p.direccion_local || '—' }}</td>
                   <td class="np-data np-mono">{{ p.pool || '—' }}</td>
                   <td class="np-data">{{ p.en_uso }}</td>
-                  <td><span class="np-pill np-pill--neutral" *ngIf="p.del_sistema">del sistema</span></td>
+                  <td class="np-td-right"><div class="np-rowacts" (click)="$event.stopPropagation()">
+                    <button type="button" class="np-icobtn" (click)="editarPerfil(p)" title="Editar" [disabled]="p.del_sistema">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 20h4L18 10l-4-4L4 16v4zM13 7l4 4"/></svg>
+                    </button>
+                    <button type="button" class="np-icobtn" (click)="borrarPppoe('perfil', p.nombre)" title="Eliminar" [disabled]="p.del_sistema">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/></svg>
+                    </button>
+                  </div></td>
+                </tr>
+              </tbody>
+            </table></div>
+          </section>
+        </ng-container>
+
+        <!-- Rangos de IP -->
+        <ng-container *ngIf="vistaPppoe === 'pools'">
+          <p class="np-notice np-notice--code">
+            El rango es el conjunto de direcciones que se les reparte a los clientes. Un perfil toma
+            de acá la IP de cada uno que se conecta.
+          </p>
+          <div class="np-btnrow">
+            <button type="button" class="np-btn np-btn--primary np-btn--sm" (click)="nuevoPool()">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M12 5v14M5 12h14"/></svg>Nuevo rango
+            </button>
+          </div>
+          <section class="np-registry">
+            <div class="np-registry-wrap"><table class="np-table np-table--registry">
+              <thead><tr><th class="np-th-stripe"></th><th>Rango</th><th>Direcciones</th><th>Lo usan</th><th class="np-th-right">Acciones</th></tr></thead>
+              <tbody>
+                <tr *ngFor="let p of pppoePools" class="np-row" (click)="editarPool(p)">
+                  <td class="np-stripe"><i [style.background]="p.usado_por.length ? 'var(--accent)' : 'var(--line-strong)'"></i></td>
+                  <td class="np-data np-strong">{{ p.nombre }}</td>
+                  <td class="np-data np-mono">{{ p.rangos }}</td>
+                  <td class="np-data">{{ p.usado_por.join(', ') || '—' }}</td>
+                  <td class="np-td-right"><div class="np-rowacts" (click)="$event.stopPropagation()">
+                    <button type="button" class="np-icobtn" (click)="editarPool(p)" title="Editar">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 20h4L18 10l-4-4L4 16v4zM13 7l4 4"/></svg>
+                    </button>
+                    <button type="button" class="np-icobtn" (click)="borrarPppoe('pool', p.nombre)" title="Eliminar">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/></svg>
+                    </button>
+                  </div></td>
+                </tr>
+              </tbody>
+            </table></div>
+          </section>
+        </ng-container>
+
+        <!-- Servidores -->
+        <ng-container *ngIf="vistaPppoe === 'servidores'">
+          <p class="np-notice np-notice--code">
+            El servidor es lo que escucha en una interfaz y atiende a los clientes que se conectan.
+            La interfaz es por donde llegan ellos, no la de internet.
+          </p>
+          <div class="np-btnrow">
+            <button type="button" class="np-btn np-btn--primary np-btn--sm" (click)="nuevoServidor()">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M12 5v14M5 12h14"/></svg>Nuevo servidor
+            </button>
+          </div>
+          <p class="np-pm-vacio" *ngIf="!pppoe.servidores.length">No hay ningún servidor PPPoE montado.</p>
+          <section class="np-registry" *ngIf="pppoe.servidores.length">
+            <div class="np-registry-wrap"><table class="np-table np-table--registry">
+              <thead><tr><th class="np-th-stripe"></th><th>Servicio</th><th>Interfaz</th><th>Perfil por defecto</th><th>Autenticación</th><th>Estado</th><th class="np-th-right">Acciones</th></tr></thead>
+              <tbody>
+                <tr *ngFor="let sv of pppoe.servidores" class="np-row" (click)="editarServidor(sv)">
+                  <td class="np-stripe"><i [style.background]="sv.invalido ? 'var(--danger)' : (sv.habilitado ? 'var(--ok)' : 'var(--line-strong)')"></i></td>
+                  <td class="np-data np-strong">{{ sv.nombre }}</td>
+                  <td class="np-data np-mono">{{ sv.interfaz }}</td>
+                  <td class="np-data">{{ sv.perfil }}</td>
+                  <td class="np-data np-mono">{{ sv.autenticacion || '—' }}</td>
+                  <td>
+                    <span class="np-pill" [ngClass]="sv.invalido ? 'np-pill--suspended' : (sv.habilitado ? 'np-pill--active' : 'np-pill--neutral')">
+                      {{ sv.invalido ? 'Con error' : (sv.habilitado ? 'Activo' : 'Apagado') }}
+                    </span>
+                  </td>
+                  <td class="np-td-right"><div class="np-rowacts" (click)="$event.stopPropagation()">
+                    <button type="button" class="np-icobtn" (click)="editarServidor(sv)" title="Editar">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 20h4L18 10l-4-4L4 16v4zM13 7l4 4"/></svg>
+                    </button>
+                    <button type="button" class="np-icobtn" (click)="borrarPppoe('servidor', sv.nombre, 'Los clientes conectados pierden el servicio.')" title="Eliminar">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/></svg>
+                    </button>
+                  </div></td>
                 </tr>
               </tbody>
             </table></div>
@@ -1087,6 +1176,94 @@
           </button>
         </div>
       </ng-container>
+    </div>
+  </div>
+</div>
+
+<!-- ══ Crear o editar una pieza de PPPoE ══════════════════════════════════ -->
+<div *ngIf="editando" class="np-overlay" (click)="cerrarEdicion()">
+  <div class="np-modal" role="dialog" aria-modal="true" [attr.aria-label]="tituloEdicion" (click)="$event.stopPropagation()">
+    <div class="np-modal-head">
+      <div>
+        <p class="np-kicker">MikroTik <b>/</b> PPPoE</p>
+        <h3>{{ tituloEdicion }}</h3>
+      </div>
+      <button type="button" class="np-icobtn" (click)="cerrarEdicion()" aria-label="Cerrar">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M6 6l12 12M18 6 6 18"/></svg>
+      </button>
+    </div>
+
+    <div class="np-modal-body">
+      <!-- Perfil -->
+      <div class="np-form" *ngIf="editando === 'perfil'">
+        <label class="np-field np-field-full"><span>Nombre</span>
+          <input type="text" class="np-input np-mono" [(ngModel)]="edita.nombre" placeholder="plan-200mg" />
+        </label>
+        <label class="np-field"><span>Velocidad <em>subida/bajada</em></span>
+          <input type="text" class="np-input np-mono" [(ngModel)]="edita.velocidad" placeholder="200M/200M" />
+        </label>
+        <label class="np-field"><span>Puerta de enlace</span>
+          <input type="text" class="np-input np-mono" [(ngModel)]="edita.gateway" placeholder="10.20.0.1" />
+        </label>
+        <label class="np-field"><span>Reparte de</span>
+          <select class="np-input" [(ngModel)]="edita.pool">
+            <option value="">sin rango</option>
+            <option *ngFor="let p of pppoePools" [value]="p.nombre">{{ p.nombre }} · {{ p.rangos }}</option>
+          </select>
+        </label>
+        <label class="np-field"><span>DNS <em>opcional</em></span>
+          <input type="text" class="np-input np-mono" [(ngModel)]="edita.dns" placeholder="8.8.8.8" />
+        </label>
+        <label class="np-check np-field-full">
+          <input type="checkbox" [(ngModel)]="edita.una_sesion" />
+          Una sola sesión por credencial
+        </label>
+      </div>
+
+      <!-- Rango -->
+      <div class="np-form" *ngIf="editando === 'pool'">
+        <label class="np-field np-field-full"><span>Nombre</span>
+          <input type="text" class="np-input np-mono" [(ngModel)]="edita.nombre" placeholder="pool-pppoe" />
+        </label>
+        <label class="np-field np-field-full"><span>Direcciones</span>
+          <input type="text" class="np-input np-mono" [(ngModel)]="edita.rangos" placeholder="10.20.0.2-10.20.3.254" />
+        </label>
+        <p class="np-fine np-field-full">
+          Podés poner un rango, varios separados por coma, o una red en formato 10.20.0.0/22.
+          La puerta de enlace del perfil tiene que quedar fuera del rango.
+        </p>
+      </div>
+
+      <!-- Servidor -->
+      <div class="np-form" *ngIf="editando === 'servidor'">
+        <label class="np-field np-field-full"><span>Nombre del servicio <em>lo ven los equipos</em></span>
+          <input type="text" class="np-input np-mono" [(ngModel)]="edita.servicio" placeholder="pppoe-netplay" />
+        </label>
+        <label class="np-field"><span>Interfaz <em>por donde llegan</em></span>
+          <select class="np-input" [(ngModel)]="edita.interfaz">
+            <option value="" disabled>Seleccione…</option>
+            <option *ngFor="let i of pppoeInterfaces" [value]="i.nombre">{{ i.nombre }} · {{ i.tipo }}</option>
+          </select>
+        </label>
+        <label class="np-field"><span>Perfil por defecto</span>
+          <select class="np-input" [(ngModel)]="edita.perfil">
+            <option *ngFor="let p of pppoe?.perfiles" [value]="p.nombre">{{ p.nombre }}</option>
+          </select>
+        </label>
+        <label class="np-check np-field-full">
+          <input type="checkbox" [(ngModel)]="edita.una_sesion" />
+          Una sola sesión por equipo
+        </label>
+      </div>
+
+      <p class="np-notice np-notice--warn np-notice--inline" *ngIf="errorEdicion">{{ errorEdicion }}</p>
+
+      <div class="np-btnrow np-btnrow--end">
+        <button type="button" class="np-btn np-btn--ghost" (click)="cerrarEdicion()">Cancelar</button>
+        <button type="button" class="np-btn np-btn--primary" [disabled]="guardandoPppoe" (click)="guardarEdicion()">
+          {{ guardandoPppoe ? 'Guardando…' : 'Guardar' }}
+        </button>
+      </div>
     </div>
   </div>
 </div>

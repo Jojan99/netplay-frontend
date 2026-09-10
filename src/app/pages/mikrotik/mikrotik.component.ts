@@ -142,6 +142,8 @@ export class MikrotikComponent implements OnInit {
         if (r?.error !== 0) { this.pppoeError = r?.message || 'No se pudo leer el router.'; return; }
         this.pppoe = r.data?.estado ?? null;
         this.pppoeUsuarios = r.data?.usuarios ?? [];
+        this.pppoePools = r.data?.pools ?? [];
+        this.pppoeInterfaces = r.data?.interfaces ?? [];
       },
       error: () => { this.loadingPppoe = false; this.pppoeError = 'No se pudo leer el router.'; },
     });
@@ -228,8 +230,113 @@ export class MikrotikComponent implements OnInit {
     return this.pppoeUsuarios.filter(u => !!u.sesion).length;
   }
 
-  /** Qué se ve en la pestaña: sesiones, credenciales o perfiles. */
-  vistaPppoe: 'conectados' | 'usuarios' | 'perfiles' = 'conectados';
+  /** Qué se ve en la pestaña. */
+  vistaPppoe: 'conectados' | 'usuarios' | 'perfiles' | 'pools' | 'servidores' = 'conectados';
+
+  pppoePools: any[] = [];
+  pppoeInterfaces: any[] = [];
+
+  // ── Crear y editar perfiles, rangos y servidores ──────────────────────────
+  // Los tres se editan igual —abrir, llenar, guardar— así que comparten el
+  // mismo modal en vez de repetir tres formularios casi iguales.
+  editando: 'perfil' | 'pool' | 'servidor' | null = null;
+  edita: any = {};
+  guardandoPppoe = false;
+  errorEdicion = '';
+
+  get tituloEdicion(): string {
+    const q = { perfil: 'perfil', pool: 'rango de IP', servidor: 'servidor' }[this.editando ?? 'perfil'];
+    return (this.edita?.nombre_anterior ? 'Editar ' : 'Nuevo ') + q;
+  }
+
+  nuevoPerfil() {
+    this.editando = 'perfil';
+    this.errorEdicion = '';
+    this.edita = {
+      nombre: '', nombre_anterior: null, velocidad: '',
+      gateway: '', pool: this.pppoePools[0]?.nombre ?? '', dns: '', una_sesion: true,
+    };
+  }
+
+  editarPerfil(p: any) {
+    this.editando = 'perfil';
+    this.errorEdicion = '';
+    this.edita = {
+      nombre: p.nombre, nombre_anterior: p.nombre,
+      velocidad: p.velocidad ?? '', gateway: p.direccion_local ?? '',
+      pool: p.pool ?? '', dns: p.dns ?? '', una_sesion: !!p.una_sesion,
+    };
+  }
+
+  nuevoPool() {
+    this.editando = 'pool';
+    this.errorEdicion = '';
+    this.edita = { nombre: '', nombre_anterior: null, rangos: '' };
+  }
+
+  editarPool(p: any) {
+    this.editando = 'pool';
+    this.errorEdicion = '';
+    this.edita = { nombre: p.nombre, nombre_anterior: p.nombre, rangos: p.rangos };
+  }
+
+  nuevoServidor() {
+    this.editando = 'servidor';
+    this.errorEdicion = '';
+    this.edita = {
+      servicio: 'pppoe-netplay', nombre_anterior: null,
+      interfaz: '', perfil: this.pppoe?.perfiles?.[0]?.nombre ?? 'default', una_sesion: true,
+    };
+  }
+
+  editarServidor(sv: any) {
+    this.editando = 'servidor';
+    this.errorEdicion = '';
+    this.edita = {
+      servicio: sv.nombre, nombre_anterior: sv.nombre,
+      interfaz: sv.interfaz, perfil: sv.perfil, una_sesion: !!sv.una_sesion,
+    };
+  }
+
+  cerrarEdicion() {
+    this.editando = null;
+    this.edita = {};
+    this.errorEdicion = '';
+  }
+
+  guardarEdicion() {
+    this.guardandoPppoe = true;
+    this.errorEdicion = '';
+
+    this.svc.guardarPppoe({ que: this.editando, ...this.edita, router_id: this.selectedRouterId }).subscribe({
+      next: r => {
+        this.guardandoPppoe = false;
+        if (r?.error !== 0) { this.errorEdicion = r?.message || 'No se pudo guardar.'; return; }
+        this.cerrarEdicion();
+        this.loadPppoe();
+      },
+      error: () => { this.guardandoPppoe = false; this.errorEdicion = 'No se pudo guardar.'; },
+    });
+  }
+
+  async borrarPppoe(que: string, nombre: string, aviso?: string) {
+    const ok = await this.dialog.confirm(
+      `¿Eliminar ${que === 'pool' ? 'el rango' : 'el ' + que} «${nombre}»?` + (aviso ? ' ' + aviso : ''),
+      { okLabel: 'Eliminar', danger: true },
+    );
+
+    if (!ok) return;
+
+    this.svc.eliminarPppoe({ que, nombre, router_id: this.selectedRouterId }).subscribe({
+      next: r => {
+        // El motivo importa: casi siempre es que algo lo está usando.
+        if (r?.error !== 0) { this.pppoeError = r?.message || 'No se pudo eliminar.'; return; }
+        this.pppoeError = '';
+        this.loadPppoe();
+      },
+      error: () => { this.pppoeError = 'No se pudo eliminar.'; },
+    });
+  }
 
   get sesionesPppoe(): any[] {
     return this.pppoeUsuarios.filter(u => !!u.sesion);

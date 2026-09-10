@@ -117,6 +117,16 @@ export class MikrotikService {
     return this.http.post(`${this.base}/pppoe/desmontar`, data, this.h());
   }
 
+  /** Crea o edita un perfil, un rango o un servidor PPPoE. */
+  guardarPppoe(data: any): Observable<any> {
+    return this.http.post(`${this.base}/pppoe/guardar`, data, this.h());
+  }
+
+  /** Borra un perfil, rango, servidor o credencial. */
+  eliminarPppoe(data: any): Observable<any> {
+    return this.http.post(`${this.base}/pppoe/eliminar`, data, this.h());
+  }
+
   /** Todo lo que el router sabe de un puerto. */
   getPortDetail(name: string, routerId?: number | null): Observable<any> {
     let params = new HttpParams().set('name', name);
