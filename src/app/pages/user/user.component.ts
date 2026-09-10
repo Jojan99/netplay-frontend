@@ -498,8 +498,10 @@ export class UserComponent implements OnInit {
   }
 
   prepararCambioConexion() {
-    // Se ofrece lo contrario de lo que tiene: es el cambio que tiene sentido.
-    this.cambioTipo = this.clienteEsPppoe ? 'static' : 'pppoe';
+    // Se marca el tipo que el cliente tiene hoy. Antes se preseleccionaba el
+    // contrario —el cambio "que tenía sentido"— y eso hacía parecer que el
+    // sistema lo daba por PPPoE cuando en realidad era de IP fija.
+    this.cambioTipo = this.clienteEsPppoe ? 'pppoe' : 'static';
     this.cambioUsuario = this.selectedUserData?.pppoe_user || String(this.selectedUserData?.dni ?? '');
     this.cambioClave = '';
     this.cambioPerfil = this.selectedUserData?.pppoe_profile || '';
@@ -510,8 +512,20 @@ export class UserComponent implements OnInit {
     if (this.cambioTipo === 'pppoe' || this.clienteEsPppoe) this.cargarPppoeCliente();
   }
 
+  /** Sin cambio no hay nada que aplicar. */
+  get hayCambioDeConexion(): boolean {
+    return this.cambioTipo !== (this.clienteEsPppoe ? 'pppoe' : 'static');
+  }
+
   async aplicarCambioConexion() {
     const aPppoe = this.cambioTipo === 'pppoe';
+
+    // Editar las credenciales de un cliente que ya es PPPoE sí es un cambio
+    // válido; pasarlo al mismo tipo sin tocar nada, no.
+    if (!this.hayCambioDeConexion && !this.clienteEsPppoe) {
+      this.toast('El cliente ya se conecta con IP fija', 'info');
+      return;
+    }
 
     if (aPppoe && !this.cambioUsuario.trim()) {
       this.toast('Falta el usuario PPPoE', 'error');
