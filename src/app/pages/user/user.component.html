@@ -630,20 +630,30 @@
       </div>
 
       <div *ngIf="!showUserFormProfile" class="np-form">
+        <!-- Cómo se conecta el cliente: con IP fija vive en el ARP del router;
+             con PPPoE entra con usuario y contraseña y la IP se la da el pool. -->
+        <div class="np-field np-field-full np-tipoconex">
+          <span>Tipo de conexión</span>
+          <div class="np-seg" role="group">
+            <button type="button" [attr.aria-pressed]="!esPppoe" (click)="cambiarTipoConexion('static')">IP fija</button>
+            <button type="button" [attr.aria-pressed]="esPppoe" (click)="cambiarTipoConexion('pppoe')">PPPoE</button>
+          </div>
+        </div>
+
         <label class="np-field np-field-full" *ngIf="routers.length > 1 || loadingRouters"><span>Router</span>
           <select class="np-input" [(ngModel)]="selectedRouterId" (ngModelChange)="onCreateRouterChange()" [disabled]="loadingRouters">
             <option [ngValue]="null" disabled>{{ loadingRouters ? 'Cargando routers…' : 'Seleccione router…' }}</option>
             <option *ngFor="let r of routers" [ngValue]="r.id">{{ r.name || r.host || ('Router ' + r.id) }}</option>
           </select>
         </label>
-        <label class="np-field"><span>VLAN</span>
+        <label class="np-field" *ngIf="!esPppoe"><span>VLAN</span>
           <select class="np-input" [(ngModel)]="selectedVlan" (ngModelChange)="onInterfaceChange($event)"
                   [disabled]="loadingIfaces">
             <option [ngValue]="null" disabled>{{ loadingIfaces ? 'Leyendo el router…' : 'Seleccione VLAN…' }}</option>
             <option *ngFor="let iface of interfaces" [ngValue]="iface">{{ iface.names }}</option>
           </select>
         </label>
-        <label class="np-field"><span>Segmento</span>
+        <label class="np-field" *ngIf="!esPppoe"><span>Segmento</span>
           <select class="np-input" [(ngModel)]="selectedSeg" (ngModelChange)="onSegmentChange($event)" [disabled]="!segments.length">
             <option [ngValue]="null" disabled>Seleccione segmento…</option>
             <option *ngFor="let s of segments" [ngValue]="s">{{ s.network }}</option>
@@ -652,14 +662,14 @@
 
         <!-- Aviso de router caído: antes el select de IP quedaba vacío sin
              explicación y la única salida era cerrar y reabrir el formulario. -->
-        <div *ngIf="ifacesError" class="np-notice np-notice--warn np-notice--inline np-field-full np-aviso">
+        <div *ngIf="ifacesError && !esPppoe" class="np-notice np-notice--warn np-notice--inline np-field-full np-aviso">
           <span>{{ ifacesError }}</span>
           <button type="button" class="np-btn np-btn--ghost np-btn--sm" (click)="cargarInterfaces()" [disabled]="loadingIfaces">
             {{ loadingIfaces ? 'Reintentando…' : 'Reintentar' }}
           </button>
         </div>
 
-        <label class="np-field"><span>IP
+        <label class="np-field" *ngIf="!esPppoe"><span>IP
           <em *ngIf="!loadingIps">({{ Ipzone.length }} disponibles)</em>
           <em *ngIf="loadingIps">consultando el router…</em>
         </span>
@@ -669,6 +679,33 @@
             <option *ngFor="let ip of Ipzone" [value]="ip.id">{{ ip.names }}</option>
           </select>
         </label>
+        <ng-container *ngIf="esPppoe">
+          <label class="np-field"><span>Usuario PPPoE</span>
+            <input type="text" class="np-input np-mono" [(ngModel)]="newUser.pppoe_user"
+                   (ngModelChange)="guardarBorrador()" placeholder="Suele ser el documento" />
+          </label>
+
+          <label class="np-field"><span>Contraseña PPPoE</span>
+            <span class="np-input-wrap">
+              <input type="text" class="np-input np-mono" [(ngModel)]="newUser.pppoe_password"
+                     (ngModelChange)="guardarBorrador()" placeholder="Contraseña del cliente" />
+              <button type="button" class="np-eye" (click)="generarClavePppoe()" title="Generar una contraseña">GENERAR</button>
+            </span>
+          </label>
+
+          <label class="np-field np-field-full"><span>Perfil PPP <em>define la velocidad</em></span>
+            <select class="np-input" [(ngModel)]="newUser.pppoe_profile" (ngModelChange)="guardarBorrador()"
+                    [disabled]="!pppoePerfiles.length">
+              <option value="" disabled>{{ pppoePerfiles.length ? 'Seleccione perfil…' : 'Sin perfiles en el router' }}</option>
+              <option *ngFor="let p of pppoePerfiles" [value]="p.nombre">
+                {{ p.nombre }}{{ p.velocidad ? ' · ' + p.velocidad : '' }}
+              </option>
+            </select>
+          </label>
+
+          <p class="np-notice np-notice--warn np-notice--inline np-field-full" *ngIf="pppoeAviso">{{ pppoeAviso }}</p>
+        </ng-container>
+
         <label class="np-field"><span>Plan de internet</span>
           <select class="np-input" [(ngModel)]="newUser.plan_id" (ngModelChange)="guardarBorrador()">
             <option [value]="0" disabled>Seleccione plan…</option>

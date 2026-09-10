@@ -30,3 +30,23 @@
   > span { flex: 1 1 auto; }
   > .np-btn { flex: 0 0 auto; }
 }
+
+/* Elegir cómo se conecta el cliente: IP fija o PPPoE. */
+.np-tipoconex {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+
+  > span { margin: 0; }
+  .np-seg { flex: 0 0 auto; }
+}
+
+/* Elegir cómo se conecta el cliente: IP fija o PPPoE. */
+.np-tipoconex {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+
+  > span { margin: 0; }
+  .np-seg { flex: 0 0 auto; }
+}

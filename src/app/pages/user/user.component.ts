@@ -917,7 +917,72 @@ export class UserComponent implements OnInit {
     return {
       names: '', lastname: '', dni: '', phone: '', email: '', address: '',
       plan_id: 0, ip: 0, periode_facturation: 0, countries: 1,
+      // Con IP fija el cliente vive en el ARP del router; con PPPoE entra con
+      // usuario y contraseña y la IP se la da el pool.
+      connection_type: 'static',
+      pppoe_user: '', pppoe_password: '', pppoe_profile: '',
     };
+  }
+
+  // ── PPPoE ─────────────────────────────────────────────────────────────────
+  pppoeDisponible = false;
+  pppoePerfiles: any[] = [];
+  pppoeAviso = '';
+
+  get esPppoe(): boolean {
+    return this.newUser?.connection_type === 'pppoe';
+  }
+
+  cambiarTipoConexion(tipo: 'static' | 'pppoe') {
+    this.newUser.connection_type = tipo;
+    this.guardarBorrador();
+
+    if (tipo === 'pppoe') {
+      this.cargarPppoe();
+      // El usuario por defecto es el documento: es lo que se usa para
+      // encontrarlo después, igual que el comment del ARP.
+      if (!this.newUser.pppoe_user && this.newUser.dni) {
+        this.newUser.pppoe_user = String(this.newUser.dni).trim();
+      }
+    }
+  }
+
+  cargarPppoe() {
+    this.pppoeAviso = '';
+
+    this.userSvc.getPppoe(this.selectedRouterId).subscribe({
+      next: r => {
+        if (r?.error !== 0) { this.pppoeAviso = r?.message || 'No se pudo leer el router.'; return; }
+
+        this.pppoeDisponible = !!r.data?.estado?.disponible;
+        this.pppoePerfiles = r.data?.estado?.perfiles ?? [];
+
+        if (!this.pppoePerfiles.length) {
+          this.pppoeAviso = 'El router no tiene perfiles PPP configurados.';
+          return;
+        }
+
+        if (!this.newUser.pppoe_profile) {
+          this.newUser.pppoe_profile = this.pppoePerfiles[0].nombre;
+        }
+
+        // Se puede crear igual, pero conviene avisar: sin servidor PPPoE
+        // levantado el cliente no va a poder autenticarse.
+        if (!this.pppoeDisponible) {
+          this.pppoeAviso = 'El router no tiene un servidor PPPoE levantado. Se puede crear el usuario, pero no podrá conectarse hasta que lo configures.';
+        }
+      },
+      error: () => { this.pppoeAviso = 'No se pudo leer la configuración PPPoE del router.'; },
+    });
+  }
+
+  /** Una contraseña que el cliente no tenga que inventar. */
+  generarClavePppoe() {
+    const abc = 'abcdefghijkmnpqrstuvwxyz23456789';
+    let clave = '';
+    for (let i = 0; i < 10; i++) clave += abc[Math.floor(Math.random() * abc.length)];
+    this.newUser.pppoe_password = clave;
+    this.guardarBorrador();
   }
 
   onCreateRouterChange() {
@@ -1141,9 +1206,19 @@ export class UserComponent implements OnInit {
   }
 
   createUser() {
+    if (this.esPppoe && (!this.newUser.pppoe_user?.trim() || !this.newUser.pppoe_password?.trim())) {
+      this.toast('Para una conexión PPPoE hacen falta el usuario y la contraseña', 'error');
+      return;
+    }
+
     this.submittingNewUser = true;
     this.newUser.vlan = this.selectedVlan?.names ?? '';
     this.newUser.router_id = this.selectedRouterId;
+
+    // Con PPPoE no se manda IP: la asigna el pool del router.
+    if (this.esPppoe) {
+      this.newUser.ip = null;
+    }
     this.userSvc.create(this.newUser).subscribe({
       next: r => {
         this.toast(r.message ?? (r.error ? 'Error' : 'Cliente creado'), r.error ? 'error' : 'success');

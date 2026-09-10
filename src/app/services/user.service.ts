@@ -270,6 +270,13 @@ export class UserService {
   }
 
 
+/** Perfiles y pools PPPoE del router, para el alta de clientes. */
+getPppoe(routerId?: number | null) {
+  let url = this.env.rootUrl + 'api/management/pppoe';
+  if (routerId) url += `?router_id=${routerId}`;
+  return this.http.get<any>(url, { headers: this.getHeaders() });
+}
+
 getIpzonebyZone(vlan: string, segment: string, routerId?: number | null) {
   const parameter: any = { vlan, segment };
   if (routerId) parameter.router_id = routerId;
