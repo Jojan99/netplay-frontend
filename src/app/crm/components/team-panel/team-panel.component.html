@@ -5,6 +5,11 @@
   <span class="tp-badge" *ngIf="totalUnread">{{ totalUnread }}</span>
 </button>
 
+<!-- Todo lo que flota va acá dentro. El contenedor se cuelga del body al
+     arrancar: dentro de la barra superior quedaba encerrado por el z-index de
+     la barra y la burbuja de WhatsApp le pasaba por encima. -->
+<div #flotante class="tp-float">
+
 <!-- Panel lateral -->
 <div class="tp-backdrop" *ngIf="open" (click)="cerrar()"></div>
 <aside class="tp-panel" *ngIf="open">
@@ -109,4 +114,6 @@
   <div class="tp-call-peers" *ngIf="call.state === 'in-call' && (call.group || peerList.length > 1)">
     <span class="tp-call-peer" *ngFor="let p of peerList; trackBy: trackPeer" [class.is-active]="p.state === 'active'" [title]="p.diag || ''"><i></i>{{ p.member.name.split(' ')[0] }}<small>{{ p.state === 'active' ? 'en línea' : p.state === 'ringing' ? 'llamando…' : 'conectando…' }}</small></span>
   </div>
+</div>
+
 </div>

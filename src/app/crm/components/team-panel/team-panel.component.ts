@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, NgZone, Inject, PLATFORM_ID, ElementRef, ViewChild, HostListener } from '@angular/core';
+import { Component, OnInit, OnDestroy, AfterViewInit, NgZone, Inject, PLATFORM_ID, ElementRef, ViewChild, HostListener } from '@angular/core';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { TeamService } from '../../../services/team.service';
@@ -25,12 +25,15 @@ type CallState = 'idle' | 'ringing-in' | 'in-call';
   styleUrl: './team-panel.component.scss',
   host: { class: 'np-console' },
 })
-export class TeamPanelComponent implements OnInit, OnDestroy {
+export class TeamPanelComponent implements OnInit, AfterViewInit, OnDestroy {
   @ViewChild('thread') thread?: ElementRef<HTMLElement>;
   @ViewChild('audioHost') audioHost?: ElementRef<HTMLElement>;
   @ViewChild('fileInput') fileInput?: ElementRef<HTMLInputElement>;
 
   open = false;
+
+  /** Lo que flota: panel, llamada y selector de grupo. */
+  @ViewChild('flotante') flotante?: ElementRef<HTMLElement>;
   me: Member | null = null;
   members: Member[] = [];
   generalUnread = 0;
@@ -95,8 +98,26 @@ export class TeamPanelComponent implements OnInit, OnDestroy {
     this.team.ice().subscribe({ next: r => { if (Array.isArray(r.data) && r.data.length) this.iceServers = r.data; }, error: () => {} });
     this.connect();
   }
+  /**
+   * Saca lo flotante de la barra superior y lo cuelga del body.
+   *
+   * La barra tiene z-index propio y eso encierra a todo lo que hay adentro:
+   * por más alto que se le pusiera al panel, para el resto de la página valía
+   * lo que valiera la barra, y la burbuja de WhatsApp le pasaba por encima
+   * justo sobre el botón de enviar. Colgado del body, cada cosa vale lo que
+   * dice su z-index.
+   */
+  ngAfterViewInit(): void {
+    try {
+      const el = this.flotante?.nativeElement;
+      if (el && el.parentElement !== document.body) document.body.appendChild(el);
+    } catch {}
+  }
+
   ngOnDestroy(): void {
-    try { document.body.classList.remove('np-equipo-abierto'); } catch {} this.endCall(true); this.echo.leave(`company.${this.companyId}`); this.echo.leave(`user.${this.myId}`); }
+    try { document.body.classList.remove('np-equipo-abierto'); } catch {}
+    // Se movió a mano, así que Angular no lo va a limpiar solo.
+    try { this.flotante?.nativeElement?.remove(); } catch {} this.endCall(true); this.echo.leave(`company.${this.companyId}`); this.echo.leave(`user.${this.myId}`); }
 
   loadMembers(): void {
     this.team.members().subscribe({ next: r => { this.me = r.data?.me || null; this.members = r.data?.members || []; this.generalUnread = r.data?.general_unread || 0; }, error: () => {} });
