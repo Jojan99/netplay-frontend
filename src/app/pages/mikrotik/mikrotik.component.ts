@@ -542,6 +542,9 @@ export class MikrotikComponent implements OnInit {
   // que salen por ahí y los clientes que cuelgan.
   puertoAbierto: PuertoVivo | null = null;
   detalle: any = null;
+
+  /** El detalle es mucho dato: en pestañas no obliga a bajar sin parar. */
+  tabDetalle: 'resumen' | 'red' | 'clientes' | 'diagnostico' = 'resumen';
   cargandoDetalle = false;
   detalleError = '';
   private refrescoDetalle: any = null;
@@ -551,6 +554,7 @@ export class MikrotikComponent implements OnInit {
 
     this.puertoAbierto = p;
     this.detalle = null;
+    this.tabDetalle = 'resumen';
     this.detalleError = '';
     this.pedirDetalle();
 
@@ -584,6 +588,19 @@ export class MikrotikComponent implements OnInit {
     this.refrescoDetalle = null;
     this.puertoAbierto = null;
     this.detalle = null;
+  }
+
+  /** Lo que hay que mirar primero: si algo anda mal, se avisa en la pestaña. */
+  get hayQueRevisar(): boolean {
+    const d = this.detalle;
+    return !!(d?.errores?.length || d?.enlace?.sfp?.sin_senal || d?.enlace?.sfp?.falla_tx);
+  }
+
+  /** Un enlace que negoció por debajo de lo que soporta suele ser el cable. */
+  get enlaceDegradado(): boolean {
+    const soportado = this.detalle?.enlace?.soportado ?? [];
+    const rate = String(this.detalle?.enlace?.velocidad ?? '');
+    return !!rate && soportado.some((s: string) => s.includes('1G')) && !rate.startsWith('1G');
   }
 
   etiquetaEstado(e: EstadoPuerto): string {
