@@ -5,6 +5,21 @@ import { FormsModule } from '@angular/forms';
 import { MikrotikService } from '../../services/mikrotik.service';
 import { buscarModelo, ModeloMikrotik, Puerto } from './modelos-mikrotik';
 
+type EstadoPuerto = 'up' | 'down' | 'off' | 'na';
+
+/** Un puerto con todo lo que la plantilla necesita, ya resuelto. */
+interface PuertoVivo extends Puerto {
+  etiqueta: string;
+  estado: EstadoPuerto;
+  nota: string;
+  sfp: boolean;
+  titulo: string;
+}
+
+const ESTADOS: Record<EstadoPuerto, string> = {
+  up: 'con enlace', down: 'sin enlace', off: 'deshabilitado', na: 'no presente',
+};
+
 @Component({
   selector: 'app-mikrotik',
   standalone: true,
@@ -429,6 +444,7 @@ export class MikrotikComponent implements OnInit {
     const board = this.routerInfo?.resource?.board_name ?? '';
     this.modelo = buscarModelo(board);
     this.fotoRouter = null;
+    this.armarPuertos();
 
     if (!board) return;
 
@@ -438,35 +454,77 @@ export class MikrotikComponent implements OnInit {
     });
   }
 
-  /** Puertos a dibujar: los del catálogo, o los que reporte el router. */
-  get puertos(): Puerto[] {
-    if (this.modelo) return this.modelo.puertos;
+  /**
+   * Los puertos ya resueltos, con su estado y su nota.
+   *
+   * Se calcula una vez por lectura del router y no en un getter: un getter
+   * devuelve un array nuevo en cada ciclo de detección de cambios, Angular lo
+   * ve como una lista distinta y recrea los botones sin parar — con eso el
+   * clic nunca llegaba a completarse sobre el mismo elemento.
+   */
+  puertos: Puerto[] = [];
+  bloquesDePuertos: { titulo: string; puertos: PuertoVivo[] }[] = [];
+  puertosArriba = 0;
+  notasDePuertos: { etiqueta: string; nota: string; apagado: boolean }[] = [];
+
+  private armarPuertos() {
+    const delModelo = this.modelo?.puertos;
 
     // Modelo desconocido: se arma con las interfaces físicas que haya.
-    const fisicas = (this.routerInfo?.interfaces ?? []).filter((i: any) => i.type === 'ether');
-    return fisicas.map((i: any, n: number) => ({ nombre: i.name, tipo: 'eth' as const, label: String(n + 1) }));
+    this.puertos = delModelo ?? (this.routerInfo?.interfaces ?? [])
+      .filter((i: any) => i.type === 'ether')
+      .map((i: any, n: number) => ({ nombre: i.name, tipo: 'eth' as const, label: String(n + 1) }));
+
+    const vivos: PuertoVivo[] = this.puertos.map(p => {
+      const estado = this.estadoPuerto(p);
+      const nota = this.comentarioPuerto(p);
+
+      return {
+        ...p,
+        etiqueta: p.label || p.nombre,
+        estado,
+        nota,
+        sfp: this.esSfp(p),
+        titulo: `${p.nombre} · ${ESTADOS[estado]}${nota ? ' · ' + nota : ''} — clic para ver el detalle`,
+      };
+    });
+
+    this.puertosArriba = vivos.filter(p => p.estado === 'up').length;
+
+    this.notasDePuertos = vivos
+      .filter(p => !!p.nota)
+      .map(p => ({ etiqueta: p.etiqueta, nota: p.nota, apagado: p.estado !== 'up' }));
+
+    const cobre = vivos.filter(p => !p.sfp);
+    const optico = vivos.filter(p => p.sfp);
+
+    this.bloquesDePuertos = [];
+    if (cobre.length) this.bloquesDePuertos.push({ titulo: 'Ethernet', puertos: cobre });
+    if (optico.length) this.bloquesDePuertos.push({ titulo: 'SFP', puertos: optico });
   }
 
+  /** Para que *ngFor no recree los botones en cada ciclo. */
+  porNombre = (_: number, p: { nombre: string }) => p.nombre;
+  porTitulo = (_: number, b: { titulo: string }) => b.titulo;
+  porEtiqueta = (_: number, n: { etiqueta: string }) => n.etiqueta;
+
   /** Estado real de un puerto, para pintarlo. */
-  estadoPuerto(p: Puerto): 'up' | 'down' | 'off' | 'na' {
+  estadoPuerto(p: Puerto): EstadoPuerto {
     const i = (this.routerInfo?.interfaces ?? []).find((x: any) => x.name === p.nombre);
     if (!i) return 'na';
     if (String(i.disabled) === 'true') return 'off';
     return String(i.running) === 'true' ? 'up' : 'down';
   }
 
-  get puertosArriba(): number {
-    return this.puertos.filter(p => this.estadoPuerto(p) === 'up').length;
+  /** Lo que el operador anotó en el puerto: "WAN", "TRONCAL 1 UTP". */
+  comentarioPuerto(p: Puerto): string {
+    const i = (this.routerInfo?.interfaces ?? []).find((x: any) => x.name === p.nombre);
+    return (i?.comment ?? '').trim();
   }
 
+  /** Los ópticos se dibujan distinto: más anchos y sin la muesca del RJ45. */
   esSfp(p: Puerto): boolean {
     return p.tipo !== 'eth' && p.tipo !== 'poe';
-  }
-
-  memPercent2(): number {
-    const t = Number(this.routerInfo?.resource?.total_memory ?? 0);
-    const f = Number(this.routerInfo?.resource?.free_memory ?? 0);
-    return t ? Math.round(((t - f) / t) * 100) : 0;
   }
 
   /** Bytes a un texto corto. */
@@ -478,40 +536,18 @@ export class MikrotikComponent implements OnInit {
     return `${(b / Math.pow(1024, i)).toFixed(i ? 1 : 0)} ${u[i]}`;
   }
 
-  /** Lo que el operador anotó en el puerto: "WAN", "TRONCAL 1 UTP". */
-  comentarioPuerto(p: Puerto): string {
-    const i = (this.routerInfo?.interfaces ?? []).find((x: any) => x.name === p.nombre);
-    return (i?.comment ?? '').trim();
-  }
-
-  tituloPuerto(p: Puerto): string {
-    const estado = { up: 'con enlace', down: 'sin enlace', off: 'deshabilitado', na: 'no presente' }[this.estadoPuerto(p)];
-    const nota = this.comentarioPuerto(p);
-    return `${p.nombre} · ${estado}${nota ? ' · ' + nota : ''} — clic para ver el detalle`;
-  }
-
-  /** Los puertos partidos en bloques, como están en el equipo. */
-  get bloquesDePuertos(): { titulo: string; puertos: Puerto[] }[] {
-    const cobre = this.puertos.filter(p => !this.esSfp(p));
-    const optico = this.puertos.filter(p => this.esSfp(p));
-    const bloques: { titulo: string; puertos: Puerto[] }[] = [];
-    if (cobre.length) bloques.push({ titulo: 'Ethernet', puertos: cobre });
-    if (optico.length) bloques.push({ titulo: 'SFP', puertos: optico });
-    return bloques;
-  }
-
   // ── Detalle de un puerto ──────────────────────────────────────────────────
   // Junta en una pantalla lo que en Winbox está repartido en varias: cómo
   // negoció el enlace, el módulo óptico, el tráfico de este momento, las VLAN
   // que salen por ahí y los clientes que cuelgan.
-  puertoAbierto: Puerto | null = null;
+  puertoAbierto: PuertoVivo | null = null;
   detalle: any = null;
   cargandoDetalle = false;
   detalleError = '';
   private refrescoDetalle: any = null;
 
-  abrirPuerto(p: Puerto) {
-    if (this.estadoPuerto(p) === 'na') return;
+  abrirPuerto(p: PuertoVivo) {
+    if (p.estado === 'na') return;
 
     this.puertoAbierto = p;
     this.detalle = null;
@@ -548,6 +584,10 @@ export class MikrotikComponent implements OnInit {
     this.refrescoDetalle = null;
     this.puertoAbierto = null;
     this.detalle = null;
+  }
+
+  etiquetaEstado(e: EstadoPuerto): string {
+    return { up: 'Con enlace', down: 'Sin enlace', off: 'Deshabilitado', na: '—' }[e];
   }
 
   /** Bits por segundo a un texto corto. */

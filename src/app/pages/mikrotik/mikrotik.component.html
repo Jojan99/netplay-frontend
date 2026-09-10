@@ -91,17 +91,17 @@
               <span class="np-panel-oreja" aria-hidden="true"></span>
 
               <div class="np-panel-bloques">
-                <div class="np-panel-bloque" *ngFor="let b of bloquesDePuertos">
+                <div class="np-panel-bloque" *ngFor="let b of bloquesDePuertos; trackBy: porTitulo">
                   <div class="np-panel-puertos">
-                    <button *ngFor="let p of b.puertos"
+                    <button *ngFor="let p of b.puertos; trackBy: porNombre"
                             type="button"
                             class="np-puerto"
-                            [class.is-sfp]="esSfp(p)"
-                            [attr.data-estado]="estadoPuerto(p)"
-                            [title]="tituloPuerto(p)"
+                            [class.is-sfp]="p.sfp"
+                            [attr.data-estado]="p.estado"
+                            [title]="p.titulo"
                             (click)="abrirPuerto(p)">
                       <i class="np-puerto-led"></i>
-                      <b>{{ p.label || p.nombre }}</b>
+                      <b>{{ p.etiqueta }}</b>
                     </button>
                   </div>
                   <span class="np-panel-bloque-t">{{ b.titulo }}</span>
@@ -114,10 +114,8 @@
             <!-- Lo que hay conectado en cada puerto, según lo que anotó el
                  operador en el router. -->
             <div class="np-panel-notas">
-              <span *ngFor="let p of puertos" [class.is-off]="estadoPuerto(p) !== 'up'">
-                <ng-container *ngIf="comentarioPuerto(p)">
-                  <b>{{ p.label || p.nombre }}</b>{{ comentarioPuerto(p) }}
-                </ng-container>
+              <span *ngFor="let n of notasDePuertos; trackBy: porEtiqueta" [class.is-off]="n.apagado">
+                <b>{{ n.etiqueta }}</b>{{ n.nota }}
               </span>
             </div>
 
@@ -526,10 +524,10 @@
         <h3>
           {{ puertoAbierto.nombre }}
           <span class="np-pill" [ngClass]="{
-            'np-pill--active': estadoPuerto(puertoAbierto) === 'up',
-            'np-pill--neutral': estadoPuerto(puertoAbierto) === 'down',
-            'np-pill--suspended': estadoPuerto(puertoAbierto) === 'off' }">
-            {{ { up: 'Con enlace', down: 'Sin enlace', off: 'Deshabilitado', na: '—' }[estadoPuerto(puertoAbierto)] }}
+            'np-pill--active': puertoAbierto.estado === 'up',
+            'np-pill--neutral': puertoAbierto.estado === 'down',
+            'np-pill--suspended': puertoAbierto.estado === 'off' }">
+            {{ etiquetaEstado(puertoAbierto.estado) }}
           </span>
         </h3>
         <p class="np-equipo-sub" *ngIf="detalle?.puerto?.comentario">{{ detalle.puerto.comentario }}</p>
