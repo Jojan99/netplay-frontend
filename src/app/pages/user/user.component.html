@@ -101,7 +101,7 @@
                 </td>
                 <td class="np-data np-col-doc">{{ user.dni }}</td>
                 <td class="np-data np-col-phone">{{ user.phone || '—' }}</td>
-                <td class="np-data np-data--dim np-col-ip">{{ user.ip || '—' }}</td>
+                <td class="np-data np-data--dim np-col-ip">{{ user.ip || (filaEsPppoe(user) ? 'PPPoE' : '—') }}</td>
                 <td><span class="np-pill" [ngClass]="'np-pill--' + rowStatus(user)">{{ rowStatusLabel(user) }}</span></td>
                 <td class="np-td-right">
                   <div class="np-rowacts" (click)="$event.stopPropagation()">
@@ -159,7 +159,7 @@
         <div class="np-avatar">{{ initialOf(selectedUserData?.names) }}</div>
         <div class="np-insp-id">
           <h2>{{ selectedUserData?.names || '…' }} {{ selectedUserData?.lastname || '' }}</h2>
-          <div class="np-meta">CC <b>{{ selectedUserData?.dni || '—' }}</b> · IP <b>{{ selectedUserData?.ip || 'sin asignar' }}</b></div>
+          <div class="np-meta">CC <b>{{ selectedUserData?.dni || '—' }}</b> · IP <b>{{ ipCabecera }}</b></div>
         </div>
         <div class="np-insp-tools">
           <button type="button" class="np-icobtn np-only-desktop" *ngIf="!inspectorAutoWide" (click)="toggleInspectorWide()"
@@ -265,7 +265,7 @@
           <section>
             <p class="np-sect">Acciones</p>
             <div class="np-quick">
-              <button type="button" class="np-btn np-btn--ghost" (click)="openPingModal(selectedUserData.ip, selectedUserData.names, selectedUserData.lastname, selectedUserData.dni, selectedUserId)">Ping</button>
+              <button type="button" class="np-btn np-btn--ghost" [disabled]="!ipDeGestion" [title]="ipDeGestion ? 'Ping a ' + ipDeGestion : (clienteEsPppoe ? 'El cliente no tiene sesión PPPoE activa' : 'Sin IP asignada')" (click)="openPingModal(ipDeGestion, selectedUserData.names, selectedUserData.lastname, selectedUserData.dni, selectedUserId)">Ping</button>
               <button type="button" class="np-btn np-btn--ghost" (click)="setTab('tickets'); showNewTicketForm = true">Nuevo ticket</button>
               <button type="button" class="np-btn np-btn--ghost" (click)="downloadCsvUser()">Exportar CSV</button>
               <button type="button" class="np-btn np-btn--ghost" (click)="openSuspendModal(selectedUserData.dni, selectedUserId, selectedUserData.status_internet, selectedUserData.router_id)">
@@ -326,12 +326,18 @@
 
           <!-- Tipo de conexión: se puede migrar sin borrar el cliente. -->
           <section>
-            <p class="np-sect">Tipo de conexión</p>
+            <p class="np-sect">Conexión</p>
             <p class="np-fine np-conex-actual">
               Hoy se conecta
               <b *ngIf="!clienteEsPppoe">con IP fija</b>
               <b *ngIf="clienteEsPppoe">por PPPoE, con el usuario <span class="np-mono">{{ selectedUserData?.pppoe_user }}</span></b>.
             </p>
+            <p class="np-fine" *ngIf="clienteEsPppoe && sesionPppoe">
+              Conectado ahora · IP de gestión <b class="np-mono">{{ sesionPppoe.ip }}</b>
+              <ng-container *ngIf="sesionPppoe.desde"> · hace {{ sesionPppoe.desde }}</ng-container>
+              <ng-container *ngIf="sesionPppoe.mac"> · equipo <span class="np-mono">{{ sesionPppoe.mac }}</span></ng-container>
+            </p>
+            <p class="np-fine" *ngIf="clienteEsPppoe && !sesionPppoe && !cargandoSesionPppoe">Sin sesión PPPoE activa en este momento.</p>
 
             <div class="np-form">
               <div class="np-field np-field-full np-tipoconex">
@@ -363,7 +369,7 @@
                 <label class="np-field"><span>VLAN</span>
                   <select class="np-input" [(ngModel)]="cambioVlan" (ngModelChange)="onCambioVlanChange($event)">
                     <option [ngValue]="null" disabled>Seleccione VLAN…</option>
-                    <option *ngFor="let iface of interfaces" [ngValue]="iface">{{ iface.names }}</option>
+                    <option *ngFor="let iface of interfaces" [ngValue]="iface">{{ iface.names }}{{ iface.network ? ' · ' + iface.network : '' }}</option>
                   </select>
                 </label>
                 <label class="np-field"><span>IP <em>({{ migrIpzone.length }} disponibles)</em></span>
@@ -377,42 +383,12 @@
               <p class="np-notice np-notice--warn np-notice--inline np-field-full" *ngIf="cambioAviso">{{ cambioAviso }}</p>
 
               <button type="button" class="np-btn np-btn--warn np-field-full"
-                      (click)="aplicarCambioConexion()"
-                      [disabled]="cambiandoConexion || (!hayCambioDeConexion && !clienteEsPppoe)">
-                {{ cambiandoConexion ? 'Aplicando…'
-                   : (hayCambioDeConexion
-                      ? (cambioTipo === 'pppoe' ? 'Pasar a PPPoE' : 'Pasar a IP fija')
-                      : (clienteEsPppoe ? 'Guardar las credenciales' : 'Elegí un tipo distinto para cambiar')) }}
+                      (click)="aplicarConexion()" [disabled]="!puedeAplicarConexion">
+                {{ etiquetaConexion }}
               </button>
             </div>
           </section>
 
-          <section *ngIf="!clienteEsPppoe">
-            <p class="np-sect">Migración de IP</p>
-            <div class="np-form">
-              <label class="np-field"><span>VLAN</span>
-                <select class="np-input" [(ngModel)]="migrVlan" (ngModelChange)="onMigrVlanChange($event)">
-                  <option [ngValue]="null" disabled>Seleccione VLAN…</option>
-                  <option *ngFor="let iface of interfaces" [ngValue]="iface">{{ iface.names }}</option>
-                </select>
-              </label>
-              <label class="np-field"><span>Segmento</span>
-                <select class="np-input" [(ngModel)]="migrSeg" (ngModelChange)="onMigrSegChange($event)" [disabled]="!migrSegments.length">
-                  <option [ngValue]="null" disabled>Seleccione segmento…</option>
-                  <option *ngFor="let s of migrSegments" [ngValue]="s">{{ s.network }}</option>
-                </select>
-              </label>
-              <label class="np-field np-field-full"><span>IP <em>({{ migrIpzone.length }} disponibles)</em></span>
-                <select class="np-input np-mono" [(ngModel)]="migrIp" [disabled]="!migrIpzone.length">
-                  <option value="" disabled>Seleccione IP…</option>
-                  <option *ngFor="let ip of migrIpzone" [value]="ip.id">{{ ip.names }}</option>
-                </select>
-              </label>
-              <button type="button" class="np-btn np-btn--warn np-field-full" (click)="migrarIp()" [disabled]="submittingMigr || !migrIp || !migrVlan">
-                {{ submittingMigr ? 'Migrando…' : 'Migrar IP' }}
-              </button>
-            </div>
-          </section>
         </ng-container>
 
         <!-- ── Facturación ─────────────────────────────────────────────── -->

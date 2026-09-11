@@ -67,9 +67,15 @@ export class UserComponent implements OnInit {
   statusFilter: ClientStatusFilter = 'all';
   @ViewChild('searchInput') searchInput?: ElementRef<HTMLInputElement>;
 
+  /** Un cliente PPPoE no tiene IP fija: la recibe al conectarse, no le falta. */
+  filaEsPppoe(u: UserInterface): boolean { return u.connection_type === 'pppoe'; }
+
+  /** ¿Le falta IP de verdad? Sólo a los de IP fija sin asignar. */
+  sinIp(u: UserInterface): boolean { return !u.ip && !this.filaEsPppoe(u); }
+
   rowStatus(u: UserInterface): ClientRowStatus {
     if (u.internet_status !== 'ACTIVE') return 'suspended';
-    if (!u.ip) return 'noip';
+    if (this.sinIp(u)) return 'noip';
     return 'active';
   }
 
@@ -80,14 +86,14 @@ export class UserComponent implements OnInit {
 
   get countActive()    { return this.UserInterfaces.filter(u => u.internet_status === 'ACTIVE').length; }
   get countSuspended() { return this.UserInterfaces.filter(u => u.internet_status !== 'ACTIVE').length; }
-  get countNoIp()      { return this.UserInterfaces.filter(u => !u.ip).length; }
+  get countNoIp()      { return this.UserInterfaces.filter(u => this.sinIp(u)).length; }
   get countNoWa()      { return this.UserInterfaces.filter(u => !u.whatsapp_enabled).length; }
 
   get filteredUsers(): UserInterface[] {
     switch (this.statusFilter) {
       case 'active':    return this.UserInterfaces.filter(u => u.internet_status === 'ACTIVE');
       case 'suspended': return this.UserInterfaces.filter(u => u.internet_status !== 'ACTIVE');
-      case 'noip':      return this.UserInterfaces.filter(u => !u.ip);
+      case 'noip':      return this.UserInterfaces.filter(u => this.sinIp(u));
       case 'nowa':      return this.UserInterfaces.filter(u => !u.whatsapp_enabled);
       default:          return this.UserInterfaces;
     }
@@ -252,6 +258,7 @@ export class UserComponent implements OnInit {
           alias: e.alias,
           whatsapp_enabled: e.whatsapp_enabled ?? false,
           router_id: e.router_id ?? null,
+          connection_type: e.connection_type ?? 'static',
         }));
         if (this.currentPage > this.totalPages) this.currentPage = 1;
         this.skeletor = false;
@@ -275,6 +282,7 @@ export class UserComponent implements OnInit {
             dni: e.dni, phone: e.phone, email: e.email, internet_status: e.internet_status,
             plan_name: e.plan_name, ip: e.ip, id_cab: e.id_cab, date_create: e.date_create, alias: e.alias,
             router_id: e.router_id ?? null,
+            connection_type: e.connection_type ?? 'static',
           }));
           this.currentPage = 1;
           this.skeletor = false;
@@ -448,6 +456,8 @@ export class UserComponent implements OnInit {
 
         const e = r.data;
         this.selectedUserData = e;
+        this.sesionPppoe = null;
+        if (e?.connection_type === 'pppoe') this.cargarPppoeCliente(e?.router_id ? Number(e.router_id) : null);
         this.internet_plan = e.internet_plans_id ?? 0;
         this.data_cortes   = e.data_cortes_id ?? 0;
         this.loadingModal  = false;
@@ -584,6 +594,89 @@ export class UserComponent implements OnInit {
   }
 
   /** Las IP libres para pasarlo a IP fija, por la VLAN elegida. */
+  /**
+   * Una sola acción para la sección de conexión. Antes había dos formularios
+   * —"Tipo de conexión" y "Migración de IP"— que para un cliente de IP fija
+   * pedían lo mismo (VLAN e IP), y el primero dejaba el botón deshabilitado.
+   * Ahora: IP fija → IP fija es cambiar de IP; cualquier otro caso es cambiar
+   * el tipo de conexión.
+   */
+  aplicarConexion(): void {
+    if (this.cambioTipo === 'static' && !this.clienteEsPppoe) {
+      void this.cambiarIpFija();
+      return;
+    }
+
+    void this.aplicarCambioConexion();
+  }
+
+  get etiquetaConexion(): string {
+    if (this.cambiandoConexion) return 'Aplicando…';
+
+    if (this.cambioTipo === 'static') {
+      return this.clienteEsPppoe ? 'Pasar a IP fija' : 'Cambiar a esta IP';
+    }
+
+    return this.clienteEsPppoe ? 'Guardar las credenciales' : 'Pasar a PPPoE';
+  }
+
+  /** ¿Está todo lo que hace falta para aplicar? */
+  get puedeAplicarConexion(): boolean {
+    if (this.cambiandoConexion) return false;
+
+    if (this.cambioTipo === 'static') {
+      // Ya en IP fija, elegir la misma IP que tiene no es un cambio.
+      return !!this.cambioVlan && !!this.cambioIp && this.cambioIp !== this.selectedUserData?.ip;
+    }
+
+    return !!this.cambioUsuario.trim();
+  }
+
+  /** Cliente de IP fija que cambia de IP (lo que hacía "Migración de IP"). */
+  private async cambiarIpFija(): Promise<void> {
+    if (!this.cambioIp || !this.cambioVlan) {
+      this.toast('Elegí la VLAN y la IP', 'error');
+      return;
+    }
+
+    const ok = await this.dialog.confirm(
+      `El cliente pasa de ${this.selectedUserData?.ip || 'sin IP'} a ${this.cambioIp} (${this.cambioVlan.names}). ` +
+      `Hay que reconfigurar su equipo con la IP nueva. ¿Confirmás?`,
+      { okLabel: 'Cambiar la IP' },
+    );
+
+    if (!ok) return;
+
+    this.cambiandoConexion = true;
+    this.cambioAviso = '';
+
+    this.userSvc.migrarIp({
+      service_id: this.selectedUserId,
+      new_ip: this.cambioIp,
+      vlan: this.cambioVlan.names,
+      router_id: this.selectedRouterId,
+    }).subscribe({
+      next: r => {
+        this.cambiandoConexion = false;
+        this.toast(r.message ?? (r.error ? 'Error' : 'IP cambiada'), r.error ? 'error' : 'success');
+
+        if (!r.error) {
+          this.cambioVlan = null;
+          this.cambioIp = '';
+          this.migrIpzone = [];
+          this.loadModalUser(this.selectedUserId);
+          this.getAllUser();
+        } else {
+          this.cambioAviso = r.message ?? '';
+        }
+      },
+      error: () => {
+        this.cambiandoConexion = false;
+        this.toast('Error al cambiar la IP', 'error');
+      },
+    });
+  }
+
   onCambioVlanChange(iface: any) {
     this.cambioVlan = iface;
     this.cambioIp = '';
@@ -600,11 +693,44 @@ export class UserComponent implements OnInit {
   // ── PPPoE del cliente ─────────────────────────────────────────────────────
   pppoePerfilesCliente: any[] = [];
 
-  private cargarPppoeCliente() {
-    this.userSvc.getPppoe(this.selectedRouterId).subscribe({
-      next: r => { this.pppoePerfilesCliente = r?.data?.estado?.perfiles ?? []; },
-      error: () => { this.pppoePerfilesCliente = []; },
+  /**
+   * La sesión PPPoE activa del cliente: su IP de gestión, el equipo y hace
+   * cuánto está conectado. Un cliente PPPoE no aparece en el ARP, así que
+   * sin esto la ficha decía "IP sin asignar" y no había a qué hacerle ping.
+   */
+  sesionPppoe: { ip: string | null; desde: string | null; mac: string | null } | null = null;
+  cargandoSesionPppoe = false;
+
+  private cargarPppoeCliente(routerId?: number | null) {
+    const router = routerId ?? this.selectedRouterId ?? (this.selectedUserData?.router_id ? Number(this.selectedUserData.router_id) : null);
+    this.cargandoSesionPppoe = true;
+
+    this.userSvc.getPppoe(router).subscribe({
+      next: r => {
+        this.cargandoSesionPppoe  = false;
+        this.pppoePerfilesCliente = r?.data?.estado?.perfiles ?? [];
+
+        const usuario = this.selectedUserData?.pppoe_user;
+        const cred = (r?.data?.usuarios ?? []).find((u: any) =>
+          (usuario && u.usuario === usuario) || String(u.user_id) === String(this.selectedUserId));
+
+        this.sesionPppoe = cred?.sesion ?? null;
+      },
+      error: () => { this.cargandoSesionPppoe = false; this.pppoePerfilesCliente = []; },
     });
+  }
+
+  /** La IP para ver y para hacerle ping: la fija, o la de la sesión PPPoE. */
+  get ipDeGestion(): string {
+    if (this.clienteEsPppoe) return this.sesionPppoe?.ip ?? '';
+    return this.selectedUserData?.ip ?? '';
+  }
+
+  /** Lo que se muestra al lado del documento en el encabezado de la ficha. */
+  get ipCabecera(): string {
+    if (!this.clienteEsPppoe) return this.selectedUserData?.ip || 'sin asignar';
+    if (this.cargandoSesionPppoe && !this.sesionPppoe) return 'PPPoE · consultando…';
+    return this.sesionPppoe?.ip ? `PPPoE · ${this.sesionPppoe.ip}` : 'PPPoE · desconectado';
   }
 
   // ── Migración IP ──────────────────────────────────────────────────────────
@@ -614,37 +740,6 @@ export class UserComponent implements OnInit {
   migrSegments: any[] = [];
   migrIpzone: any[] = [];
   submittingMigr = false;
-
-  onMigrVlanChange(iface: any) {
-    this.migrVlan = iface;
-    this.migrSegments = iface ? [iface] : [];
-    this.migrSeg = null;
-    this.migrIpzone = [];
-    this.migrIp = '';
-  }
-
-  onMigrSegChange(seg: any) {
-    if (!seg || !this.migrVlan) { this.migrIpzone = []; return; }
-    this.userSvc.getIpzonebyZone(seg.names, seg.network, this.selectedRouterId).subscribe({
-      next: r => {
-        this.migrIpzone = r.error === 0 && r.data?.ips ? r.data.ips.map((e: any) => ({ id: e.ip, names: e.ip })) : [];
-      }
-    });
-  }
-
-  migrarIp() {
-    if (!this.migrIp || !this.migrVlan) return;
-    this.submittingMigr = true;
-    this.userSvc.migrarIp({ service_id: this.selectedUserId, new_ip: this.migrIp, vlan: this.migrVlan.names, router_id: this.selectedRouterId })
-      .subscribe({
-        next: r => {
-          this.toast(r.message ?? (r.error ? 'Error' : 'IP migrada'), r.error ? 'error' : 'success');
-          if (!r.error) { this.migrVlan = null; this.migrSeg = null; this.migrIp = ''; this.migrIpzone = []; this.migrSegments = []; this.loadModalUser(this.selectedUserId); }
-          this.submittingMigr = false;
-        },
-        error: () => { this.toast('Error al migrar IP', 'error'); this.submittingMigr = false; }
-      });
-  }
 
   // ── Equipo ONT asignado ────────────────────────────────────────────────────
   assignedOnt: any   = null;
