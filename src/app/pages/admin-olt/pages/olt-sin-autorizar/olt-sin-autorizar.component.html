@@ -12,6 +12,27 @@
   </header>
   <div class="np-toolbar"><app-olt-nav></app-olt-nav><span class="np-spacer"></span><label class="np-pagesize" *ngIf="onts.length">Mostrar<select [(ngModel)]="perPage" (ngModelChange)="changePerPage()"><option *ngFor="let n of perPageOptions" [ngValue]="n">{{ n }}</option></select></label></div>
 
+  <!-- Autorización automática por puerto: sólo en equipos que la permiten -->
+  <section class="olt-autoauth" *ngIf="autoAuthSoportado && puertosAutoAuth.length">
+    <div class="olt-autoauth-h">
+      <strong>Autorización automática</strong>
+      <span class="np-fine">Con el puerto en automático, cualquier ONU que se conecte queda autorizada sola. En manual, espera acá hasta que la autorices.</span>
+    </div>
+    <div class="olt-autoauth-puertos">
+      <div class="olt-autoauth-p" *ngFor="let p of puertosAutoAuth">
+        <span class="olt-autoauth-n">PON {{ p.puerto }}</span>
+        <button type="button" class="np-switch" role="switch"
+                [attr.aria-checked]="p.auto"
+                [attr.aria-label]="'Autorización automática del puerto ' + p.puerto"
+                [disabled]="cambiandoPuerto !== null"
+                (click)="cambiarAutoAuth(p.puerto, !p.auto)"></button>
+        <span class="olt-autoauth-e" [class.is-auto]="p.auto">
+          {{ cambiandoPuerto === p.puerto ? 'aplicando…' : (p.auto ? 'automática' : 'manual') }}
+        </span>
+      </div>
+    </div>
+  </section>
+
   <div class="np-workspace">
     <section class="np-registry">
       <div class="np-registry-wrap"><table class="np-table np-table--registry">

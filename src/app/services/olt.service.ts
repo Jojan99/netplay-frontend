@@ -80,6 +80,16 @@ export class OltService {
       { headers: this.getHeaders() });
   }
 
+  /** Qué puertos PON autorizan solos las ONU nuevas (sólo algunos equipos). */
+  getAutoAutorizacion(oltId: number): Observable<any> {
+    return this.http.get<any>(`${this.env.rootUrl}api/management/olt/${oltId}/auto-autorizacion`, { headers: this.getHeaders() });
+  }
+
+  cambiarAutoAutorizacion(oltId: number, puerto: number, activar: boolean): Observable<any> {
+    return this.http.post<any>(`${this.env.rootUrl}api/management/olt/${oltId}/auto-autorizacion`,
+      JSON.stringify({ puerto, activar }), { headers: this.getHeaders() });
+  }
+
   /** Prueba la conexión con la OLT paso por paso. */
   diagnosticoOlt(oltId: number): Observable<any> {
     return this.http.get<any>(`${this.env.rootUrl}api/management/olt/${oltId}/diagnostico`, { headers: this.getHeaders() });

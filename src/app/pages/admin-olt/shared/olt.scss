@@ -187,3 +187,46 @@
   white-space: pre;
   overflow-x: auto;
 }
+
+/* Autorización automática por puerto, en «Sin autorizar». */
+.olt-autoauth {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 24px;
+  padding: 10px 14px;
+  margin-bottom: 12px;
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+}
+
+.olt-autoauth-h {
+  flex: 1 1 280px;
+  display: grid;
+  gap: 2px;
+
+  strong { font-size: 12.5px; color: var(--text); }
+}
+
+.olt-autoauth-puertos { display: flex; flex-wrap: wrap; gap: 8px 18px; }
+
+.olt-autoauth-p {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.olt-autoauth-n {
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: .3px;
+  color: var(--text-2);
+}
+
+.olt-autoauth-e {
+  min-width: 64px;
+  font-size: 11px;
+  color: var(--text-3);
+
+  &.is-auto { color: var(--ok); font-weight: 700; }
+}

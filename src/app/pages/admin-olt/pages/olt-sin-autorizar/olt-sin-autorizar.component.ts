@@ -63,6 +63,60 @@ export class OltSinAutorizarComponent implements OnInit {
     private dialog: DialogService,
   ) {}
 
+  /**
+   * Autorización automática por puerto PON. Sólo la muestran los equipos que
+   * la permiten (hoy, C-Data EPON): en los demás queda oculta.
+   */
+  autoAuth: Record<string, { auto: boolean; modo: string; de_fabrica: boolean }> = {};
+  autoAuthSoportado = false;
+  cargandoAutoAuth  = false;
+  cambiandoPuerto: number | null = null;
+
+  get puertosAutoAuth(): { puerto: number; auto: boolean; de_fabrica: boolean }[] {
+    return Object.entries(this.autoAuth).map(([p, v]) => ({ puerto: +p, auto: v.auto, de_fabrica: v.de_fabrica }));
+  }
+
+  cargarAutoAuth(): void {
+    if (!this.selectedOltId) return;
+
+    this.cargandoAutoAuth = true;
+
+    this.oltService.getAutoAutorizacion(this.selectedOltId).subscribe({
+      next: (res) => {
+        this.cargandoAutoAuth  = false;
+        this.autoAuthSoportado = !!res?.data?.soportado;
+        this.autoAuth          = res?.data?.puertos ?? {};
+      },
+      error: () => { this.cargandoAutoAuth = false; this.autoAuthSoportado = false; },
+    });
+  }
+
+  cambiarAutoAuth(puerto: number, activar: boolean): void {
+    if (!this.selectedOltId || this.cambiandoPuerto !== null) return;
+
+    this.cambiandoPuerto = puerto;
+
+    this.oltService.cambiarAutoAutorizacion(this.selectedOltId, puerto, activar).subscribe({
+      next: (res) => {
+        this.cambiandoPuerto = null;
+
+        // Se muestra lo que la OLT dice que quedó, aunque el cambio haya fallado.
+        if (res?.data?.puertos) this.autoAuth = res.data.puertos;
+
+        if (res?.status === 0) {
+          this.toast.success(res.message);
+          this.loadUnauth();
+        } else {
+          this.toast.error(res?.message || 'La OLT no aplicó el cambio');
+        }
+      },
+      error: (err) => {
+        this.cambiandoPuerto = null;
+        this.toast.error(err?.error?.message || 'No se pudo cambiar la autorización automática');
+      },
+    });
+  }
+
   ngOnInit(): void {
     this.loadOlts();
     this.loadLanSegments();
@@ -84,6 +138,7 @@ export class OltSinAutorizarComponent implements OnInit {
           this.defaultVlan   = this.olts[0].default_vlan ?? null;
           this.loadUnauth();
           this.loadProfiles();
+          this.cargarAutoAuth();
         }
       },
       error: () => { this.loadingOlts = false; },
@@ -97,9 +152,12 @@ export class OltSinAutorizarComponent implements OnInit {
     this.srvProfiles  = [];
     const olt = this.olts.find(o => o.id === this.selectedOltId);
     this.defaultVlan = olt?.default_vlan ?? null;
+    this.autoAuth = {};
+    this.autoAuthSoportado = false;
     if (this.selectedOltId) {
       this.loadUnauth();
       this.loadProfiles();
+      this.cargarAutoAuth();
     }
   }
 
