@@ -172,3 +172,18 @@
 }
 
 .np-warn-text { color: var(--danger); }
+
+/* Script de RouterOS entregado al crear la OLT con su túnel. */
+.olt-script-modal { display: flex; flex-direction: column; max-height: calc(100vh - 60px); }
+
+.olt-script {
+  margin: 10px 0 0;
+  padding: 12px 14px;
+  background: var(--text);
+  color: var(--bg);
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  line-height: 1.55;
+  white-space: pre;
+  overflow-x: auto;
+}

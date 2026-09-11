@@ -50,6 +50,11 @@ export class OltListComponent implements OnInit {
 
   pestana = 'conexion';
 
+  /** El script del túnel que se creó junto con la OLT. */
+  scriptTunel = '';
+  scriptModal = false;
+  nombreDelTunel = '';
+
   constructor(
     private oltService: OltService,
     private toast: ToastService,
@@ -75,7 +80,31 @@ export class OltListComponent implements OnInit {
       snmp_host: '', snmp_jump_host: '', snmp_jump_port: 22,
       snmp_jump_user: '', snmp_jump_pass: '',
       zte_onu_type: '', zte_dba_profile: '', vsol_onu_profile: '',
+      // El túnel de gestión se crea con la OLT: cuando el equipo está en una
+      // red privada, el camino para llegar a él es parte del alta.
+      crear_tunel_vpn: false, tunel_nombre: '', tunel_redes: '',
     };
+  }
+
+  /**
+   * La red /24 del host de la OLT, que es la que va al túnel por defecto.
+   * Casi siempre la red de gestión es la del propio equipo.
+   */
+  get redSugerida(): string {
+    const host = (this.form.host || '').trim();
+
+    if (!/^\d{1,3}(\.\d{1,3}){3}$/.test(host)) return '';
+
+    return host.split('.').slice(0, 3).join('.') + '.0/24';
+  }
+
+  /** Una IP privada detrás de un router es justo el caso que el túnel resuelve. */
+  get hostEsPrivado(): boolean {
+    const host = (this.form.host || '').trim();
+
+    return /^10\./.test(host)
+        || /^192\.168\./.test(host)
+        || /^172\.(1[6-9]|2\d|3[01])\./.test(host);
   }
 
   loadMarcas(): void {
@@ -180,6 +209,16 @@ export class OltListComponent implements OnInit {
     this.saving = true;
 
     const payload: any = { ...this.form };
+
+    // Al editar no se toca el túnel: se administra desde la pestaña VPN.
+    if (this.modalMode === 'edit') {
+      delete payload.crear_tunel_vpn;
+      delete payload.tunel_nombre;
+      delete payload.tunel_redes;
+    } else if (payload.crear_tunel_vpn && !payload.tunel_redes?.trim()) {
+      payload.tunel_redes = this.redSugerida;
+    }
+
     if (!payload.password) delete payload.password;
     if (!payload.enable_password) delete payload.enable_password;
     if (!payload.jump_pass) delete payload.jump_pass;
@@ -195,6 +234,13 @@ export class OltListComponent implements OnInit {
         this.modal  = false;
         this.toast.success(res.message || 'OLT guardada');
         this.loadOlts();
+
+        // Si vino con túnel, el script es lo primero que hace falta.
+        if (res?.data?.script) {
+          this.scriptTunel    = res.data.script;
+          this.nombreDelTunel = res.data.tunel?.nombre ?? '';
+          this.scriptModal    = true;
+        }
       },
       error: (err) => {
         this.saving = false;
@@ -229,4 +275,11 @@ export class OltListComponent implements OnInit {
     const map: Record<string, string> = { direct: 'Directo', jump: 'Vía jump host' };
     return map[mode] ?? mode;
   }
+  copiarScriptTunel(): void {
+    navigator.clipboard?.writeText(this.scriptTunel).then(
+      () => this.toast.success('Script copiado. Pegalo en la terminal del router.'),
+      () => this.toast.error('El navegador no permitió copiar; seleccioná el texto a mano.'),
+    );
+  }
+
 }

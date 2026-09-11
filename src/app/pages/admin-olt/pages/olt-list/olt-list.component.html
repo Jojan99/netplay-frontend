@@ -52,7 +52,7 @@
       <button type="button" class="np-tab" *ngFor="let t of pestanas" role="tab"
               [attr.aria-selected]="pestana === t.id" (click)="pestana = t.id">
         {{ t.label }}
-        <span class="np-c" *ngIf="t.id === 'acceso' && form.access_mode === 'jump'">·</span>
+        <span class="np-c" *ngIf="t.id === 'acceso' && (form.access_mode === 'jump' || form.crear_tunel_vpn)">·</span>
         <span class="np-c" *ngIf="t.id === 'marca' && faltaDatoDeMarca">!</span>
       </button>
     </div>
@@ -102,6 +102,26 @@
       </ng-container>
 
       <ng-container *ngIf="pestana === 'acceso'">
+        <!-- El túnel se crea con la OLT: es el camino para llegar al equipo -->
+        <section class="np-panel" *ngIf="modalMode === 'create'">
+          <div class="np-sect">Túnel de gestión</div>
+          <p class="np-hint">
+            <span *ngIf="hostEsPrivado">Esa IP es privada, así que la OLT está detrás de un router. Con un túnel el router marca hacia la plataforma y el equipo queda alcanzable sin dejarle SSH abierto ni guardar su contraseña.</span>
+            <span *ngIf="!hostEsPrivado">Si la OLT tiene IP pública no hace falta túnel. Se puede crear igual si preferís no exponerla.</span>
+          </p>
+          <label class="np-check np-check--box np-field-full">
+            <input type="checkbox" [(ngModel)]="form.crear_tunel_vpn" />
+            <span>Crear el túnel al guardar y darme el script del router</span>
+          </label>
+          <div class="np-form" *ngIf="form.crear_tunel_vpn">
+            <label class="np-field"><span>Nombre del nodo</span><input class="np-input" [(ngModel)]="form.tunel_nombre" [placeholder]="'Nodo ' + (form.name || '…')" /></label>
+            <label class="np-field"><span>Redes alcanzables</span><input class="np-input np-mono" [(ngModel)]="form.tunel_redes" [placeholder]="redSugerida || '10.11.104.0/24'" /></label>
+          </div>
+          <p class="np-hint" *ngIf="form.crear_tunel_vpn && redSugerida && !form.tunel_redes.trim()">
+            Si lo dejás vacío se usa <code>{{ redSugerida }}</code>, deducida del host. Si ya hay un túnel que cubre esa red, se reutiliza en vez de crear otro.
+          </p>
+        </section>
+
         <p class="np-hint" *ngIf="form.access_mode !== 'jump'">La OLT está marcada como acceso directo. Si hay que pasar por un bastión, cambiá «Cómo se llega» en Conexión.</p>
         <div class="np-form">
           <label class="np-field"><span>Jump host</span><input class="np-input np-mono" [(ngModel)]="form.jump_host" placeholder="10.0.0.1" /></label>
@@ -154,5 +174,27 @@
       <app-olt-equipo [oltId]="equipoId" [marcaConfigurada]="equipoMarca" (modeloDetectado)="modeloLeido($event)"></app-olt-equipo>
     </div>
     <div class="np-modal-foot"><button type="button" class="np-btn np-btn--ghost" (click)="cerrarEquipo()">Cerrar</button></div>
+  </div>
+</div>
+
+<!-- Script del túnel creado junto con la OLT -->
+<div *ngIf="scriptModal" class="np-overlay" (click)="scriptModal = false">
+  <div class="np-modal np-modal--lg olt-script-modal" role="dialog" aria-modal="true" (click)="$event.stopPropagation()">
+    <div class="np-modal-head">
+      <div><p class="np-kicker">OLT <b>/</b> Túnel creado</p><h3>{{ nombreDelTunel || 'Script del router' }}</h3></div>
+      <button type="button" class="np-icobtn" (click)="scriptModal = false" aria-label="Cerrar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
+    </div>
+    <div class="np-modal-body np-modal-body--scroll">
+      <div class="olt-aviso is-warn">
+        <strong>La clave privada del router va en este script.</strong>
+        <span>Es la única vez que se muestra en claro. Si lo perdés se vuelve a generar desde la pestaña VPN, sin reconfigurar nada.</span>
+      </div>
+      <p class="np-hint">Pegá todo el bloque en la terminal del MikroTik. Requiere RouterOS 7.1 o superior.</p>
+      <pre class="olt-script">{{ scriptTunel }}</pre>
+    </div>
+    <div class="np-modal-foot">
+      <button type="button" class="np-btn np-btn--ghost" (click)="scriptModal = false">Cerrar</button>
+      <button type="button" class="np-btn np-btn--primary" (click)="copiarScriptTunel()">Copiar script</button>
+    </div>
   </div>
 </div>
