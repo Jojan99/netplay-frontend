@@ -122,13 +122,23 @@
           </p>
         </section>
 
-        <p class="np-hint" *ngIf="form.access_mode !== 'jump'">La OLT está marcada como acceso directo. Si hay que pasar por un bastión, cambiá «Cómo se llega» en Conexión.</p>
-        <div class="np-form">
-          <label class="np-field"><span>Jump host</span><input class="np-input np-mono" [(ngModel)]="form.jump_host" placeholder="10.0.0.1" /></label>
-          <label class="np-field"><span>Puerto SSH</span><input type="number" class="np-input np-mono" [(ngModel)]="form.jump_port" /></label>
-          <label class="np-field"><span>Usuario</span><input class="np-input np-mono" [(ngModel)]="form.jump_user" /></label>
-          <label class="np-field"><span>Contraseña{{ modalMode === 'edit' ? ' ·  sin cambio si va vacía' : '' }}</span><input type="password" class="np-input" [(ngModel)]="form.jump_pass" autocomplete="new-password" /></label>
-        </div>
+        <!-- El jump es el camino viejo: sólo se pide si se eligió a propósito.
+             Con acceso directo no hay nada que llenar acá. -->
+        <section class="np-panel" *ngIf="form.access_mode === 'jump'">
+          <div class="np-sect">Jump host (bastión SSH)</div>
+          <p class="np-hint">La plataforma abre una sesión SSH en este equipo y tuneliza cada consulta por ahí. Necesita SSH abierto y guarda su contraseña; el túnel de arriba evita las dos cosas.</p>
+          <div class="np-form">
+            <label class="np-field"><span>Jump host</span><input class="np-input np-mono" [(ngModel)]="form.jump_host" placeholder="10.0.0.1" /></label>
+            <label class="np-field"><span>Puerto SSH</span><input type="number" class="np-input np-mono" [(ngModel)]="form.jump_port" /></label>
+            <label class="np-field"><span>Usuario</span><input class="np-input np-mono" [(ngModel)]="form.jump_user" /></label>
+            <label class="np-field"><span>Contraseña{{ modalMode === 'edit' ? ' ·  sin cambio si va vacía' : '' }}</span><input type="password" class="np-input" [(ngModel)]="form.jump_pass" autocomplete="new-password" /></label>
+          </div>
+        </section>
+
+        <p class="np-hint" *ngIf="form.access_mode !== 'jump'">
+          Acceso directo: la plataforma se conecta a <code>{{ form.host || 'la IP de la OLT' }}</code> sin intermediarios.
+          Si la OLT está en una red privada, lo que hace falta es el túnel de arriba, no un jump host.
+        </p>
       </ng-container>
 
       <ng-container *ngIf="pestana === 'snmp'">

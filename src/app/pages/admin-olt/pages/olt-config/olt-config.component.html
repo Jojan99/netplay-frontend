@@ -45,14 +45,25 @@
             <label class="np-field"><span>Srv profile ID</span><input type="number" class="np-input np-mono" [(ngModel)]="form.ont_srvprofile_id" placeholder="10" /></label>
           </div>
         </section>
-        <section class="np-card">
+        <!-- Sólo tiene sentido con acceso por jump: con acceso directo estos
+             datos no se usan, y pedirlos hacía pensar que eran obligatorios. -->
+        <section class="np-card" *ngIf="form.access_mode === 'jump'">
           <div class="np-card-h"><h2>Jump host (bastión SSH)</h2><button type="button" class="np-link" (click)="showAdvanced = !showAdvanced">{{ showAdvanced ? 'Ocultar' : 'Mostrar' }}</button></div>
+          <p class="np-hint">La plataforma abre una sesión SSH acá y tuneliza cada consulta. El túnel de la pestaña VPN evita depender de eso.</p>
           <div class="np-form" *ngIf="showAdvanced">
             <label class="np-field"><span>Jump host IP</span><input class="np-input np-mono" [(ngModel)]="form.jump_host" placeholder="10.0.0.1" /></label>
             <label class="np-field"><span>Puerto SSH</span><input type="number" class="np-input np-mono" [(ngModel)]="form.jump_port" /></label>
             <label class="np-field"><span>Usuario bastión</span><input class="np-input np-mono" [(ngModel)]="form.jump_user" /></label>
             <label class="np-field"><span>Contraseña bastión (vacío = sin cambio)</span><input type="password" class="np-input" [(ngModel)]="form.jump_pass" /></label>
           </div>
+        </section>
+        <section class="np-card" *ngIf="form.access_mode !== 'jump'">
+          <div class="np-card-h"><h2>Cómo se llega</h2></div>
+          <p class="np-hint">
+            Acceso directo a <code>{{ form.host || 'la IP de la OLT' }}</code>, sin intermediarios.
+            Si el equipo está en una red privada, el camino se arma con un túnel en la pestaña VPN;
+            no hace falta jump host.
+          </p>
         </section>
         <section class="np-card">
           <div class="np-card-h"><h2>SNMP</h2><button type="button" class="np-link" (click)="showSnmp = !showSnmp">{{ showSnmp ? 'Ocultar' : 'Mostrar' }}</button></div>
