@@ -34,13 +34,13 @@
 .olt-marca-badge {
   display: inline-flex; align-items: center; height: 20px; padding: 0 8px;
   font-size: 10.5px; font-weight: 800; letter-spacing: .5px; text-transform: uppercase;
-  color: #fff; background: var(--text);
+  color: var(--bg); background: var(--text);
 
   /* Cada fabricante con su color, para reconocerlo de un vistazo. */
-  &[data-marca="huawei"] { background: #c7000b; }
-  &[data-marca="zte"]    { background: #0a4b9b; }
-  &[data-marca="cdata"]  { background: #0f7a4e; }
-  &[data-marca="vsol"]   { background: #d2691e; }
+  &[data-marca="huawei"] { background: #c7000b; color: #fff; }
+  &[data-marca="zte"]    { background: #0a4b9b; color: #fff; }
+  &[data-marca="cdata"]  { background: #0f7a4e; color: #fff; }
+  &[data-marca="vsol"]   { background: #d2691e; color: #fff; }
 }
 
 .olt-datos {

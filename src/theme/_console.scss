@@ -26,10 +26,11 @@
 
 /* ─── Toasts ─────────────────────────────────────────────────────────── */
 .np-toasts { position: fixed; top: 16px; right: 16px; z-index: 9999; display: grid; gap: 8px; max-width: 320px; pointer-events: none; }
-.np-toast { padding: 10px 14px; border-radius: var(--radius); font-weight: 700; font-size: 12.5px; color: #fff; background: var(--text); box-shadow: var(--shadow); border-left: 4px solid var(--accent); pointer-events: auto; }
-.np-toast--success { border-left-color: var(--ok); }
-.np-toast--error   { border-left-color: var(--danger); }
-.np-toast--info    { border-left-color: var(--info); }
+/* Fondo y texto salen de tokens distintos: así se leen en claro y en oscuro. */
+.np-toast { padding: 10px 14px; border-radius: var(--radius); font-weight: 700; font-size: 12.5px; color: var(--text); background: var(--surface); box-shadow: var(--shadow); border: 1px solid var(--line-strong); border-left: 4px solid var(--accent); pointer-events: auto; }
+.np-toast--success { background: var(--ok-soft); border-color: var(--ok); }
+.np-toast--error   { background: var(--danger-soft); border-color: var(--danger); }
+.np-toast--info    { background: var(--info-soft); border-color: var(--info); }
 
 /* ─── Cabecera ───────────────────────────────────────────────────────── */
 .np-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 24px; padding: 2px 0 18px; }

@@ -313,7 +313,8 @@
             </div>
           </section>
 
-          <section>
+          <!-- Solo IP fija: en PPPoE el servicio lo da la sesión del usuario. -->
+          <section *ngIf="!clienteEsPppoe">
             <p class="np-sect">Autorizar servicio</p>
             <div class="np-form">
               <label class="np-field"><span>MAC</span><input type="text" class="np-input np-mono" [(ngModel)]="mac" placeholder="AA:BB:CC:DD:EE:FF" /></label>
