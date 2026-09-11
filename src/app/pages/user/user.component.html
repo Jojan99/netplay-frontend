@@ -296,7 +296,26 @@
                     <div class="np-name">{{ assignedOnt.olt?.name || 'OLT' }}</div>
                     <div class="np-meta">{{ assignedOnt.olt?.host }}</div>
                   </div>
-                  <span class="np-pill" [ngClass]="assignedOnt.status === 'online' ? 'np-pill--active' : 'np-pill--suspended'">{{ assignedOnt.status }}</span>
+                  <span class="np-pill" [ngClass]="estadoOnt === 'online' ? 'np-pill--active' : 'np-pill--suspended'">{{ estadoOnt }}</span>
+                </div>
+                <!-- Medido en la OLT ahora, no lo guardado en la última sincronización. -->
+                <div class="np-ont-vivo" *ngIf="ontVivo || midiendoOnt">
+                  <div *ngIf="midiendoOnt && !ontVivo" class="np-loading np-loading--inline"><span class="np-spinner np-spinner--sm"></span> Midiendo en la OLT…</div>
+                  <p *ngIf="ontVivo?.error" class="np-fine">{{ ontVivo.error }}</p>
+                  <ng-container *ngIf="ontVivo && !ontVivo.error">
+                    <div class="np-ont-senal" [attr.data-estado]="ontVivo.estado">
+                      <span>Señal</span>
+                      <b class="np-mono">{{ ontVivo.potencia !== null ? (ontVivo.potencia | number:'1.2-2') + ' dBm' : '—' }}</b>
+                      <em>{{ etiquetaSenal(ontVivo.estado) }}</em>
+                    </div>
+                    <div class="np-ont-medidas">
+                      <span *ngIf="ontVivo.temperatura !== null">{{ ontVivo.temperatura | number:'1.0-1' }} °C</span>
+                      <span *ngIf="ontVivo.tx !== null">Tx {{ ontVivo.tx | number:'1.2-2' }} dBm</span>
+                      <span *ngIf="ontVivo.distancia_m !== null">{{ ontVivo.distancia_m }} m</span>
+                      <span *ngIf="ontVivo.modelo">{{ ontVivo.modelo }}</span>
+                    </div>
+                  </ng-container>
+                  <button type="button" class="np-link" (click)="medirOnt(selectedUserId, true)" [disabled]="midiendoOnt">{{ midiendoOnt ? 'Midiendo…' : 'Medir de nuevo' }}</button>
                 </div>
                 <dl class="np-dl">
                   <dt>Puerto (FSP)</dt><dd class="np-mono">{{ assignedOnt.fsp }}</dd>
@@ -611,15 +630,60 @@
 
 <!-- ══ Confirmar eliminación ═══════════════════════════════════════════════ -->
 <div *ngIf="showDeleteModal" class="np-overlay" (click)="showDeleteModal = false">
-  <div class="np-modal np-modal--confirm" role="alertdialog" aria-modal="true" (click)="$event.stopPropagation()">
+  <div class="np-modal np-modal--confirm np-baja" role="alertdialog" aria-modal="true" (click)="$event.stopPropagation()">
     <span class="np-confirm-icon is-danger">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/></svg>
     </span>
     <h3>¿Eliminar este cliente?</h3>
     <p>Documento <b class="np-mono">{{ pendingDeleteDni }}</b>. Esta acción no se puede deshacer.</p>
+
+    <!-- Lo que tiene en el router: se decide aquí si se borra o se deshabilita. -->
+    <div class="np-baja-router">
+      <p class="np-baja-t">En el MikroTik<span *ngIf="enRouter?.router"> · {{ enRouter.router }}</span></p>
+
+      <div *ngIf="cargandoEnRouter" class="np-loading np-loading--inline"><span class="np-spinner np-spinner--sm"></span> Revisando el MikroTik…</div>
+
+      <p *ngIf="!cargandoEnRouter && enRouter && !enRouter.ok" class="np-notice np-notice--warn np-notice--inline">
+        {{ enRouter.error || 'No se pudo leer el MikroTik.' }} El cliente se elimina igual.
+      </p>
+
+      <p *ngIf="!cargandoEnRouter && enRouter?.ok && !enRouter.hay_algo" class="np-fine">No tiene nada configurado en el router.</p>
+
+      <ng-container *ngIf="!cargandoEnRouter && enRouter?.ok && enRouter.hay_algo">
+        <ul class="np-baja-lista">
+          <li *ngFor="let c of enRouter.pppoe">
+            <span class="np-baja-k">Credencial PPPoE</span>
+            <b class="np-mono">{{ c.usuario }}</b>
+            <span class="np-pill np-pill--active" *ngIf="c.sesion">Conectado · {{ c.sesion.ip }}</span>
+            <span class="np-pill np-pill--suspended" *ngIf="!c.habilitado">Deshabilitada</span>
+          </li>
+          <li *ngFor="let a of enRouter.arp">
+            <span class="np-baja-k">ARP</span>
+            <b class="np-mono">{{ a.ip }}</b>
+            <span class="np-fine">{{ a.interfaz }}</span>
+          </li>
+          <li *ngFor="let l of enRouter.listas">
+            <span class="np-baja-k">Lista «{{ l.lista }}»</span>
+            <b class="np-mono">{{ l.ip }}</b>
+          </li>
+        </ul>
+
+        <label class="np-baja-opcion" [class.is-on]="quitarDelRouter">
+          <input type="checkbox" [(ngModel)]="quitarDelRouter" />
+          <span>
+            <b>Eliminar también sus credenciales del MikroTik</b>
+            <small *ngIf="quitarDelRouter">Se borran y se corta la sesión abierta. No se pueden recuperar.</small>
+            <small *ngIf="!quitarDelRouter">Si no, quedan deshabilitadas: deja de navegar y se pueden reactivar.</small>
+          </span>
+        </label>
+      </ng-container>
+    </div>
+
     <div class="np-btnrow np-btnrow--center">
       <button type="button" class="np-btn np-btn--ghost" (click)="showDeleteModal = false">Cancelar</button>
-      <button type="button" class="np-btn np-btn--danger-solid" (click)="confirmDelete()">Eliminar</button>
+      <button type="button" class="np-btn np-btn--danger-solid" (click)="confirmDelete()" [disabled]="cargandoEnRouter || eliminando">
+        {{ eliminando ? 'Eliminando…' : (quitarDelRouter ? 'Eliminar cliente y credenciales' : 'Eliminar cliente') }}
+      </button>
     </div>
   </div>
 </div>

@@ -169,10 +169,18 @@ export class UserService {
     return this.http.post<any>(url, parameter, { headers: this.getHeaders() });
   }
 
-  deleteUserData(id: any) {
-    const url = `${this.env.rootUrl}api/user/deleteUserDataById/${id}`;
-  
+  /**
+   * Elimina el cliente. `router` dice qué hacer con lo suyo en el MikroTik:
+   * 'quitar' lo borra, 'suspender' lo deshabilita, 'nada' no lo toca.
+   */
+  deleteUserData(id: any, router: 'quitar' | 'suspender' | 'nada' = 'suspender') {
+    const url = `${this.env.rootUrl}api/user/deleteUserDataById/${id}?router=${router}`;
     return this.http.delete<any>(url, { headers: this.getHeaders() });
+  }
+
+  /** Lo que el cliente tiene en su MikroTik: credencial PPPoE, ARP, listas. */
+  clienteEnRouter(id: any): Observable<any> {
+    return this.http.get<any>(`${this.env.rootUrl}api/user/${id}/en-router`, { headers: this.getHeaders() });
   }
   
   

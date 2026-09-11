@@ -354,7 +354,7 @@
             <div class="np-registry-wrap"><table class="np-table np-table--registry">
               <thead><tr><th class="np-th-stripe"></th><th>Cliente</th><th>Usuario</th><th>IP</th><th>Equipo</th><th>Conectado hace</th><th>Servicio</th></tr></thead>
               <tbody>
-                <tr *ngFor="let u of sesionesPppoe" class="np-row">
+                <tr *ngFor="let u of sesionesPppoe" class="np-row np-cred-fila" (click)="abrirCredencial(u)">
                   <td class="np-stripe"><i style="background: var(--ok)"></i></td>
                   <td><div class="np-name">{{ u.cliente || '—' }}<span class="np-fine" *ngIf="u.comentario"> · {{ u.comentario }}</span></div></td>
                   <td class="np-data np-mono np-strong">{{ u.usuario }}</td>
@@ -374,21 +374,45 @@
             Todavía no hay credenciales. Se crean al registrar un cliente eligiendo <b>PPPoE</b>.
           </p>
           <section class="np-registry" *ngIf="pppoeUsuarios.length">
-            <div class="np-registry-wrap"><table class="np-table np-table--registry">
-              <thead><tr><th class="np-th-stripe"></th><th>Cliente</th><th>Usuario</th><th>Documento</th><th>Perfil</th><th>Última salida</th><th>Motivo</th><th>Estado</th></tr></thead>
+            <div class="np-registry-wrap"><table class="np-table np-table--registry np-cred-tabla">
+              <thead><tr><th class="np-th-stripe"></th><th>Cliente</th><th>Usuario</th><th>Perfil</th><th>Equipo ONT</th><th>Sesión</th><th>Estado</th><th class="np-th-right"></th></tr></thead>
               <tbody>
-                <tr *ngFor="let u of pppoeUsuarios" class="np-row">
+                <tr *ngFor="let u of pppoeUsuarios" class="np-row np-cred-fila" (click)="abrirCredencial(u)">
                   <td class="np-stripe"><i [style.background]="u.sesion ? 'var(--ok)' : (u.habilitado ? 'var(--line-strong)' : 'var(--danger)')"></i></td>
-                  <td><div class="np-name">{{ u.cliente || '—' }}</div></td>
+                  <td>
+                    <div class="np-name">
+                      <button type="button" class="np-cred-cliente" *ngIf="u.user_id && !u.ficha?.eliminado" (click)="$event.stopPropagation(); abrirFicha(u)" title="Abrir la ficha del cliente">{{ u.cliente }}</button>
+                      <span *ngIf="u.user_id && u.ficha?.eliminado">{{ u.cliente }} <span class="np-pill np-pill--suspended">Eliminado</span></span>
+                      <span *ngIf="!u.user_id" class="np-muted">Sin cliente</span>
+                    </div>
+                    <div class="np-fine np-mono">{{ u.comentario || '—' }}</div>
+                  </td>
                   <td class="np-data np-mono np-strong">{{ u.usuario }}</td>
-                  <td class="np-data np-mono">{{ u.comentario || '—' }}</td>
                   <td class="np-data">{{ u.perfil || '—' }}</td>
-                  <td class="np-data">{{ u.ultima_salida || '—' }}</td>
-                  <td class="np-data np-fine">{{ u.ultimo_motivo || '—' }}</td>
+                  <td class="np-data">
+                    <span *ngIf="u.ont" class="np-cred-ont" [class.is-on]="u.ont.estado === 'online'">
+                      <i></i>{{ u.ont.olt }} · <span class="np-mono">{{ u.ont.fsp }}:{{ u.ont.ont_id }}</span>
+                    </span>
+                    <span *ngIf="!u.ont" class="np-muted">—</span>
+                  </td>
+                  <td class="np-data">
+                    <ng-container *ngIf="u.sesion"><span class="np-mono">{{ u.sesion.ip }}</span><span class="np-fine"> · {{ u.sesion.desde }}</span></ng-container>
+                    <span *ngIf="!u.sesion" class="np-fine">{{ u.ultima_salida && !u.ultima_salida.startsWith('1970') ? 'Salió ' + u.ultima_salida : '—' }}</span>
+                  </td>
                   <td>
                     <span class="np-pill" [ngClass]="u.sesion ? 'np-pill--active' : (u.habilitado ? 'np-pill--neutral' : 'np-pill--suspended')">
-                      {{ u.sesion ? 'Conectado' : (u.habilitado ? 'Sin conectar' : 'Suspendido') }}
+                      {{ u.sesion ? 'Conectado' : (u.habilitado ? 'Sin conectar' : 'Deshabilitada') }}
                     </span>
+                  </td>
+                  <td class="np-th-right">
+                    <div class="np-rowacts np-cred-acts">
+                      <button type="button" class="np-icobtn" title="Ver detalle" (click)="$event.stopPropagation(); abrirCredencial(u)">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>
+                      </button>
+                      <button type="button" class="np-icobtn np-cred-borrar" title="Eliminar credencial" (click)="$event.stopPropagation(); borrarCredencial(u)" [disabled]="borrandoCred">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/></svg>
+                      </button>
+                    </div>
                   </td>
                 </tr>
               </tbody>
@@ -1270,6 +1294,125 @@
           {{ guardandoPppoe ? 'Guardando…' : 'Guardar' }}
         </button>
       </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ Detalle de una credencial PPPoE ═════════════════════════════════════ -->
+<div *ngIf="credencial as c" class="np-overlay" (click)="cerrarCredencial()">
+  <div class="np-modal np-modal--lg np-cred" role="dialog" aria-modal="true" aria-label="Detalle de la credencial" (click)="$event.stopPropagation()">
+    <div class="np-modal-head">
+      <div>
+        <p class="np-kicker">PPPoE <b>/</b> Credencial</p>
+        <h3><span class="np-mono">{{ c.usuario }}</span>
+          <span class="np-pill" [ngClass]="c.sesion ? 'np-pill--active' : (c.habilitado ? 'np-pill--neutral' : 'np-pill--suspended')">
+            {{ c.sesion ? 'Conectado' : (c.habilitado ? 'Sin conectar' : 'Deshabilitada') }}
+          </span>
+        </h3>
+      </div>
+      <button type="button" class="np-icobtn" aria-label="Cerrar" (click)="cerrarCredencial()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 6l12 12M18 6L6 18"/></svg>
+      </button>
+    </div>
+
+    <div class="np-modal-body np-cred-body">
+      <!-- Cliente -->
+      <section class="np-cred-sec">
+        <p class="np-sect">Cliente</p>
+        <ng-container *ngIf="c.user_id; else sinCliente">
+          <div class="np-cred-quien">
+            <span class="np-cred-avatar">{{ (c.cliente || 'C').charAt(0) }}</span>
+            <div>
+              <b>{{ c.cliente }}</b>
+              <span class="np-fine">CC <span class="np-mono">{{ c.ficha?.documento }}</span><ng-container *ngIf="c.ficha?.telefono"> · {{ c.ficha.telefono }}</ng-container></span>
+            </div>
+            <span class="np-pill np-pill--suspended" *ngIf="c.ficha?.eliminado">Eliminado</span>
+          </div>
+          <div class="np-pm-datos">
+            <div><span>Plan</span><b>{{ c.ficha?.plan || '—' }}</b></div>
+            <div><span>Servicio</span><b>{{ c.ficha?.estado || '—' }}</b></div>
+            <div><span>Conexión</span><b>{{ c.ficha?.conexion === 'pppoe' ? 'PPPoE' : 'IP fija' }}</b></div>
+            <div *ngIf="c.ficha?.direccion"><span>Dirección</span><b>{{ c.ficha.direccion }}</b></div>
+          </div>
+          <p class="np-notice np-notice--warn np-notice--inline" *ngIf="c.ficha?.conexion !== 'pppoe' && !c.ficha?.eliminado">
+            El cliente figura con IP fija, pero tiene esta credencial PPPoE en el router.
+          </p>
+        </ng-container>
+        <ng-template #sinCliente>
+          <p class="np-fine">Ningún cliente tiene el documento <b class="np-mono">{{ c.comentario || '—' }}</b> ni el usuario <b class="np-mono">{{ c.usuario }}</b>. Puede ser una credencial vieja o creada a mano en el router.</p>
+        </ng-template>
+      </section>
+
+      <!-- Sesión y credencial -->
+      <section class="np-cred-sec">
+        <p class="np-sect">{{ c.sesion ? 'Sesión activa' : 'Sesión' }}</p>
+        <div class="np-pm-datos" *ngIf="c.sesion">
+          <div><span>IP de gestión</span><b class="np-mono">{{ c.sesion.ip }}</b></div>
+          <div><span>Conectado hace</span><b>{{ c.sesion.desde }}</b></div>
+          <div><span>MAC del equipo</span><b class="np-mono">{{ c.sesion.mac || '—' }}</b></div>
+          <div><span>ID de sesión</span><b class="np-mono">{{ c.sesion.sesion_id || '—' }}</b></div>
+        </div>
+        <div class="np-pm-datos" *ngIf="!c.sesion">
+          <div><span>Última salida</span><b>{{ c.ultima_salida && !c.ultima_salida.startsWith('1970') ? c.ultima_salida : 'Nunca se conectó' }}</b></div>
+          <div><span>Motivo</span><b>{{ c.ultimo_motivo || '—' }}</b></div>
+          <div><span>Último equipo</span><b class="np-mono">{{ c.ultima_mac || '—' }}</b></div>
+        </div>
+        <div class="np-pm-datos np-cred-mini">
+          <div><span>Perfil</span><b>{{ c.perfil || '—' }}</b></div>
+          <div><span>Servicio</span><b>{{ c.servicio || 'any' }}</b></div>
+          <div><span>Habilitada</span><b>{{ c.habilitado ? 'Sí' : 'No' }}</b></div>
+        </div>
+      </section>
+
+      <!-- Equipo ONT, medido en la OLT -->
+      <section class="np-cred-sec np-cred-full" *ngIf="c.ont">
+        <div class="np-cred-sec-h">
+          <p class="np-sect">Equipo ONT</p>
+          <button type="button" class="np-btn np-btn--ghost np-btn--sm" (click)="medirOntCredencial(true)" [disabled]="midiendoOntCred">
+            {{ midiendoOntCred ? 'Midiendo…' : 'Medir de nuevo' }}
+          </button>
+        </div>
+        <div class="np-cred-ont-head">
+          <span class="np-cred-ont" [class.is-on]="estadoOnt(c) === 'online'"><i></i>{{ estadoOnt(c) || 'sin dato' }}</span>
+          <b>{{ c.ont.olt }}</b>
+          <span class="np-fine">Puerto <span class="np-mono">{{ c.ont.fsp }}</span> · ONT <span class="np-mono">{{ c.ont.ont_id }}</span> · <span class="np-mono">{{ c.ont.serial }}</span></span>
+        </div>
+
+        <div *ngIf="midiendoOntCred && !ontCredencial" class="np-loading np-loading--inline"><span class="np-spinner np-spinner--sm"></span> Consultando la OLT…</div>
+        <p *ngIf="ontCredencial?.error" class="np-notice np-notice--warn np-notice--inline">{{ ontCredencial.error }}</p>
+
+        <ng-container *ngIf="ontCredencial && !ontCredencial.error">
+          <div class="np-senal" [attr.data-estado]="ontCredencial.estado">
+            <div class="np-senal-v">
+              <b class="np-mono">{{ ontCredencial.potencia !== null ? (ontCredencial.potencia | number:'1.2-2') : '—' }}</b><span>dBm recibidos</span>
+              <em>{{ etiquetaSenal(ontCredencial.estado) }}</em>
+            </div>
+            <div class="np-senal-barra" *ngIf="ontCredencial.potencia !== null" aria-hidden="true">
+              <i [style.left.%]="posicionSenal(ontCredencial.potencia)"></i>
+            </div>
+            <div class="np-senal-escala" aria-hidden="true"><span>-35</span><span>-29</span><span>-25</span><span>-8</span><span>-5</span></div>
+          </div>
+          <div class="np-pm-datos">
+            <div *ngIf="ontCredencial.tx !== null"><span>Tx de la ONT</span><b class="np-mono">{{ ontCredencial.tx | number:'1.2-2' }} dBm</b></div>
+            <div *ngIf="ontCredencial.olt_rx !== null"><span>Rx en la OLT</span><b class="np-mono">{{ ontCredencial.olt_rx | number:'1.2-2' }} dBm</b></div>
+            <div *ngIf="ontCredencial.temperatura !== null"><span>Temperatura</span><b>{{ ontCredencial.temperatura | number:'1.0-1' }} °C</b></div>
+            <div *ngIf="ontCredencial.voltaje !== null"><span>Voltaje</span><b>{{ ontCredencial.voltaje | number:'1.2-2' }} V</b></div>
+            <div *ngIf="ontCredencial.corriente !== null"><span>Corriente láser</span><b>{{ ontCredencial.corriente | number:'1.1-2' }} mA</b></div>
+            <div *ngIf="ontCredencial.distancia_m !== null"><span>Distancia</span><b>{{ ontCredencial.distancia_m }} m</b></div>
+            <div *ngIf="ontCredencial.modelo"><span>Modelo</span><b>{{ ontCredencial.modelo }}</b></div>
+            <div *ngIf="ontCredencial.firmware"><span>Firmware</span><b class="np-mono">{{ ontCredencial.firmware }}</b></div>
+          </div>
+          <p class="np-fine np-cred-medido">Medido {{ ontCredencial.medido_en | date:'HH:mm:ss' }}<ng-container *ngIf="ontCredencial.desde_cache"> · lectura reciente guardada</ng-container></p>
+        </ng-container>
+      </section>
+      <p class="np-fine np-cred-full" *ngIf="c.user_id && !c.ont">El cliente no tiene una ONT vinculada en Admin OLT.</p>
+    </div>
+
+    <div class="np-modal-foot np-cred-foot">
+      <button type="button" class="np-btn np-btn--danger" (click)="borrarCredencial(c)" [disabled]="borrandoCred">{{ borrandoCred ? 'Eliminando…' : 'Eliminar credencial' }}</button>
+      <span class="np-spacer"></span>
+      <button type="button" class="np-btn np-btn--ghost" (click)="cerrarCredencial()">Cerrar</button>
+      <button type="button" class="np-btn np-btn--primary" *ngIf="c.user_id && !c.ficha?.eliminado" (click)="abrirFicha(c)">Abrir ficha del cliente</button>
     </div>
   </div>
 </div>

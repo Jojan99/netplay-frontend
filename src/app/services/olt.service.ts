@@ -260,6 +260,12 @@ export class OltService {
     return this.http.get<any>(`${this.env.rootUrl}api/management/olt/ont/by-user/${userId}`, { headers: this.getHeaders() });
   }
 
+  /** La ONT del cliente leída de la OLT ahora: estado, señal, temperatura. */
+  ontEnVivo(userId: number, refrescar = false): Observable<any> {
+    const q = refrescar ? '?refrescar=1' : '';
+    return this.http.get<any>(`${this.env.rootUrl}api/management/olt/ont/by-user/${userId}/en-vivo${q}`, { headers: this.getHeaders() });
+  }
+
   cliCommand(oltId: number, command: string): Observable<any> {
     return this.http.post<any>(`${this.env.rootUrl}api/management/olt/${oltId}/cli`, JSON.stringify({ command }), { headers: this.getHeaders() });
   }

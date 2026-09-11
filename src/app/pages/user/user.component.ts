@@ -162,6 +162,15 @@ export class UserComponent implements OnInit {
     this.modalTab = tab;
   }
 
+  private abrirAlCargar = 0;
+
+  private abrirPendiente() {
+    if (!this.abrirAlCargar) return;
+    const u = this.UserInterfaces.find(x => Number(x.id_user) === this.abrirAlCargar);
+    this.abrirAlCargar = 0;
+    if (u) this.openRow(u);
+  }
+
   openRow(u: UserInterface) {
     if (this.isSelected(u)) return;
     this.openClienteModal(u.alias, u.id_user, u.id_cab);
@@ -179,6 +188,8 @@ export class UserComponent implements OnInit {
     this.loadCatalogs();
     // ?q=… abre el módulo ya filtrado (lo usa la ficha del cliente del CRM)
     const q = (this.route.snapshot.queryParamMap.get('q') || '').trim();
+    // ?cliente=<id> abre su ficha en cuanto llega la lista (lo usa PPPoE).
+    this.abrirAlCargar = Number(this.route.snapshot.queryParamMap.get('cliente')) || 0;
     if (q) { this.search = q; this.getSearchUser(); } else { this.getAllUser(); }
     this.companyWaSvc.getConfig().subscribe({
       next: (res) => {
@@ -262,6 +273,7 @@ export class UserComponent implements OnInit {
         }));
         if (this.currentPage > this.totalPages) this.currentPage = 1;
         this.skeletor = false;
+        this.abrirPendiente();
       },
       error: () => { this.skeletor = false; }
     });
@@ -286,6 +298,7 @@ export class UserComponent implements OnInit {
           }));
           this.currentPage = 1;
           this.skeletor = false;
+          this.abrirPendiente();
         },
         error: () => { this.skeletor = false; }
       });
@@ -745,13 +758,44 @@ export class UserComponent implements OnInit {
   assignedOnt: any   = null;
   loadingOnt         = false;
 
+  /** Lo que la OLT dice de la ONT ahora; el estado guardado puede tener horas. */
+  ontVivo: any = null;
+  midiendoOnt = false;
+
   loadAssignedOnt(userId: number): void {
     this.loadingOnt  = true;
     this.assignedOnt = null;
+    this.ontVivo     = null;
     this.oltService.getOntByUserId(userId).subscribe({
-      next: (res) => { this.loadingOnt = false; this.assignedOnt = res.data ?? null; },
+      next: (res) => {
+        this.loadingOnt = false;
+        this.assignedOnt = res.data ?? null;
+        if (this.assignedOnt) this.medirOnt(userId);
+      },
       error: () => { this.loadingOnt = false; },
     });
+  }
+
+  medirOnt(userId: number = this.selectedUserId, refrescar = false): void {
+    this.midiendoOnt = true;
+    this.oltService.ontEnVivo(userId, refrescar).subscribe({
+      next: (res) => {
+        // La respuesta puede llegar con otra ficha ya abierta.
+        if (Number(userId) !== Number(this.selectedUserId)) return;
+        this.midiendoOnt = false;
+        this.ontVivo = res.data?.vivo ?? null;
+      },
+      error: () => { this.midiendoOnt = false; },
+    });
+  }
+
+  etiquetaSenal(estado: string): string {
+    return ({ buena: 'Buena', regular: 'Regular', baja: 'Baja', critica: 'Crítica', saturada: 'Saturada' } as any)[estado] ?? 'Sin dato';
+  }
+
+  /** Estado que se muestra: el de la OLT si respondió, si no el guardado. */
+  get estadoOnt(): string {
+    return this.ontVivo?.status && !this.ontVivo?.error ? this.ontVivo.status : (this.assignedOnt?.status ?? '');
   }
 
   openServiciosTab() {
@@ -1044,25 +1088,42 @@ export class UserComponent implements OnInit {
     });
   }
 
+  // ── Eliminar ──────────────────────────────────────────────────────────────
+  /** Lo que el cliente tiene en su MikroTik, leído al abrir la confirmación. */
+  enRouter: any = null;
+  cargandoEnRouter = false;
+  /** Si al eliminar se borran también sus credenciales del MikroTik. */
+  quitarDelRouter = false;
+  eliminando = false;
+
   openDeleteModal(id: any, dni: any, routerId?: number | null) {
     this.pendingDeleteId       = id;
     this.pendingDeleteDni      = dni;
     this.pendingDeleteRouterId = routerId ?? null;
+    this.quitarDelRouter       = false;
+    this.enRouter              = null;
     this.showDeleteModal       = true;
+    this.cargandoEnRouter      = true;
+    this.userSvc.clienteEnRouter(id).subscribe({
+      next: r => { this.cargandoEnRouter = false; this.enRouter = r?.data ?? { ok: false, error: r?.message }; },
+      error: () => { this.cargandoEnRouter = false; this.enRouter = { ok: false, error: 'No se pudo leer el MikroTik.' }; },
+    });
   }
 
   confirmDelete() {
-    this.userSvc.deleteUserData(this.pendingDeleteId).subscribe({
+    if (this.eliminando) return;
+    this.eliminando = true;
+    // Si no se borra, se deshabilita: el cliente eliminado no puede seguir
+    // navegando, pero su credencial queda para reactivarlo si fue un error.
+    this.userSvc.deleteUserData(this.pendingDeleteId, this.quitarDelRouter ? 'quitar' : 'suspender').subscribe({
       next: r => {
-        if (!r.error) {
-          this.userSvc.disableUser(this.pendingDeleteDni, this.pendingDeleteId, 2, this.pendingDeleteRouterId).subscribe();
-        }
+        this.eliminando = false;
         this.toast(r.message ?? 'Eliminado', r.error ? 'error' : 'success');
         this.showDeleteModal = false;
         if (!r.error && this.showClienteModal && this.selectedUserId === this.pendingDeleteId) this.closeClienteModal();
         this.getAllUser();
       },
-      error: () => { this.toast('Error al eliminar', 'error'); this.showDeleteModal = false; }
+      error: () => { this.eliminando = false; this.toast('Error al eliminar', 'error'); this.showDeleteModal = false; }
     });
   }
 
