@@ -30,6 +30,7 @@ export class OltNavComponent {
     { path: '/dashboard/olt/online',        label: 'En línea',      exact: false },
     { path: '/dashboard/olt/service-ports', label: 'Service ports', exact: false },
     { path: '/dashboard/olt/perfiles',      label: 'Perfiles',      exact: false },
+    { path: '/dashboard/olt/vpn',           label: 'VPN',           exact: false },
     { path: '/dashboard/olt/config',        label: 'Configuración', exact: false },
     { path: '/dashboard/olt/cli',           label: 'CLI',           exact: false },
   ];

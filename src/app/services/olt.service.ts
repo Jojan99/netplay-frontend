@@ -110,6 +110,46 @@ export class OltService {
     return this.http.delete<any>(`${this.env.rootUrl}api/management/olt/${id}`, { headers: this.getHeaders() });
   }
 
+  // ── VPN de gestión ────────────────────────────────────────────────────────
+
+  /** Estado del servidor WireGuard y de cada túnel. */
+  getVpnEstado(): Observable<any> {
+    return this.http.get<any>(`${this.env.rootUrl}api/management/vpn/estado`, { headers: this.getHeaders() });
+  }
+
+  /** El script que instala el servidor; se corre una vez con sudo. */
+  getVpnInstalador(): Observable<any> {
+    return this.http.get<any>(`${this.env.rootUrl}api/management/vpn/instalador`, { headers: this.getHeaders() });
+  }
+
+  crearTunelVpn(datos: any): Observable<any> {
+    return this.http.post<any>(`${this.env.rootUrl}api/management/vpn/tuneles`, JSON.stringify(datos), { headers: this.getHeaders() });
+  }
+
+  /** El script de configuración para el MikroTik de ese túnel. */
+  getScriptTunel(id: number): Observable<any> {
+    return this.http.get<any>(`${this.env.rootUrl}api/management/vpn/tuneles/${id}/script`, { headers: this.getHeaders() });
+  }
+
+  actualizarTunelVpn(id: number, datos: any): Observable<any> {
+    return this.http.put<any>(`${this.env.rootUrl}api/management/vpn/tuneles/${id}`, JSON.stringify(datos), { headers: this.getHeaders() });
+  }
+
+  eliminarTunelVpn(id: number): Observable<any> {
+    return this.http.delete<any>(`${this.env.rootUrl}api/management/vpn/tuneles/${id}`, { headers: this.getHeaders() });
+  }
+
+  /** Deja una OLT alcanzándose por el túnel en lugar del jump host. */
+  usarTunelEnOlt(tunelId: number, oltId: number, verificar = true): Observable<any> {
+    return this.http.post<any>(`${this.env.rootUrl}api/management/vpn/tuneles/${tunelId}/usar-en-olt`,
+      JSON.stringify({ olt_id: oltId, verificar }), { headers: this.getHeaders() });
+  }
+
+  probarTunel(tunelId: number, ip: string, puerto: number): Observable<any> {
+    return this.http.post<any>(`${this.env.rootUrl}api/management/vpn/tuneles/${tunelId}/probar`,
+      JSON.stringify({ ip, puerto }), { headers: this.getHeaders() });
+  }
+
   // ── ONT Queries ───────────────────────────────────────────────────────────
 
   getUnauthONTs(oltId: number): Observable<any> {

@@ -1,0 +1,231 @@
+<div class="np-page np-olt">
+  <header class="np-head">
+    <div>
+      <p class="np-kicker">Red <b>/</b> OLT <b>/</b> VPN</p>
+      <h1 class="np-title">VPN de gestión</h1>
+      <div class="np-ribbon">
+        <span *ngIf="servidor" class="np-mono">{{ servidor.endpoint_host }}:{{ servidor.listen_port }}</span>
+        <span *ngIf="tuneles.length"><span class="np-n">{{ tuneles.length }}</span>túneles <b>·</b> <span class="np-n">{{ conectados }}</span>conectados</span>
+        <span *ngIf="!tuneles.length">El router marca hacia acá y la OLT queda alcanzable sin jump host.</span>
+      </div>
+    </div>
+    <div class="np-actions">
+      <button type="button" class="np-btn np-btn--ghost" (click)="cargar()" [disabled]="cargando"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 12a8 8 0 1 1-2.3-5.7M20 4v5h-5"/></svg>Actualizar</button>
+      <button type="button" class="np-btn np-btn--primary" (click)="abrirAlta()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M12 5v14M5 12h14"/></svg>Nuevo túnel</button>
+    </div>
+  </header>
+  <div class="np-toolbar"><app-olt-nav></app-olt-nav></div>
+
+  <div class="np-scroll">
+    <div *ngIf="cargando && !estado" class="np-loading"><span class="np-spinner"></span> Consultando el servidor…</div>
+
+    <!-- Falta el paso con root: es lo primero que hay que resolver -->
+    <section class="np-card vpn-instalar" *ngIf="estado && !instalado">
+      <div class="np-card-h"><h2>Falta instalar el servidor</h2></div>
+      <p class="np-hint">
+        La plataforma ya generó las claves y la configuración, pero crear la interfaz de red
+        necesita permisos de root, y PHP no los tiene ni debería tenerlos. Corré una sola vez
+        este comando en el servidor y el resto queda automático.
+      </p>
+      <div class="vpn-comando">
+        <code>sudo bash /var/www/netplay/storage/app/vpn/instalar.sh</code>
+        <button type="button" class="np-btn np-btn--sm np-btn--ghost" (click)="copiar('sudo bash /var/www/netplay/storage/app/vpn/instalar.sh', 'Comando')">Copiar</button>
+      </div>
+      <p class="np-hint">
+        Instala <code>wireguard-tools</code>, deja un ayudante que sólo sabe sincronizar y consultar,
+        le da permiso de sudo únicamente a ese ayudante, abre el puerto UDP {{ servidor?.listen_port }}
+        y lo deja levantando al arrancar.
+        <button type="button" class="np-link" (click)="verInstalador()">Ver qué hace exactamente</button>
+      </p>
+    </section>
+
+    <div class="olt-aviso is-danger" *ngIf="error">
+      <strong>El servidor no respondió.</strong><span>{{ error }}</span>
+    </div>
+
+    <!-- Datos del servidor: es lo que va en el script del router -->
+    <section class="np-kpis" *ngIf="servidor">
+      <div class="np-kpi" [class.np-kpi--accent]="levantada">
+        <span class="np-kpi-l">Interfaz</span>
+        <span class="np-kpi-v" [class.np-kpi-v--ok]="levantada" [class.np-kpi-v--danger]="!levantada">{{ levantada ? 'arriba' : 'abajo' }}</span>
+        <span class="np-kpi-s np-mono">{{ servidor.interfaz }}</span>
+      </div>
+      <div class="np-kpi">
+        <span class="np-kpi-l">Dónde marcan los routers</span>
+        <span class="np-kpi-v np-mono vpn-kpi-chico">{{ servidor.endpoint_host || '—' }}</span>
+        <span class="np-kpi-s">UDP {{ servidor.listen_port }}</span>
+      </div>
+      <div class="np-kpi">
+        <span class="np-kpi-l">Red del túnel</span>
+        <span class="np-kpi-v np-mono vpn-kpi-chico">{{ servidor.subred }}</span>
+        <span class="np-kpi-s">servidor en {{ servidor.ip_servidor }}</span>
+      </div>
+      <div class="np-kpi">
+        <span class="np-kpi-l">Túneles conectados</span>
+        <span class="np-kpi-v" [class.np-kpi-v--ok]="conectados > 0">{{ conectados }}</span>
+        <span class="np-kpi-s">de {{ tuneles.length }} configurados</span>
+      </div>
+    </section>
+
+    <!-- Mientras haya OLT por jump host, este es el trabajo pendiente -->
+    <div class="olt-aviso is-warn" *ngIf="oltsConJump.length && instalado">
+      <strong>{{ oltsConJump.length }} OLT siguen entrando por jump host.</strong>
+      <span>
+        Una vez que el túnel del nodo esté conectado, pasalas a acceso directo con «Usar en una OLT»:
+        dejan de depender de que el router tenga SSH abierto y de abrir una sesión en cada consulta.
+      </span>
+    </div>
+
+    <section class="np-registry" *ngIf="tuneles.length">
+      <div class="np-registry-wrap"><table class="np-table np-table--registry">
+        <thead><tr>
+          <th class="np-th-stripe"></th><th>Túnel</th><th>IP en el túnel</th><th>Redes alcanzables</th>
+          <th>Estado</th><th>Último saludo</th><th class="np-th-right">Tráfico</th><th class="np-th-right">Acciones</th>
+        </tr></thead>
+        <tbody>
+          <tr *ngFor="let t of tuneles" class="np-row np-row--static" [ngClass]="t.conectado ? 'np-row--on' : 'np-row--off'">
+            <td class="np-stripe"><i></i></td>
+            <td><div class="np-name">{{ t.nombre }}</div><div class="np-plan" *ngIf="t.notas">{{ t.notas }}</div></td>
+            <td class="np-data">{{ t.ip_tunel }}</td>
+            <td><span class="np-tags"><span class="np-tag" *ngFor="let r of t.redes_remotas">{{ r }}</span></span></td>
+            <td>
+              <span class="np-pill" [ngClass]="t.conectado ? 'np-pill--active' : 'np-pill--suspended'">{{ t.conectado ? 'conectado' : 'sin saludo' }}</span>
+              <div class="np-fine" *ngIf="!t.en_servidor && instalado">no está cargado en el servidor</div>
+            </td>
+            <td class="np-data">{{ haceCuanto(t.ultimo_saludo) }}<div class="np-fine np-mono" *ngIf="t.endpoint">{{ t.endpoint }}</div></td>
+            <td class="np-data np-td-right">↓ {{ transferencia(t.bytes_rx) }}<div class="np-fine">↑ {{ transferencia(t.bytes_tx) }}</div></td>
+            <td class="np-td-right"><div class="np-rowacts">
+              <button type="button" class="np-icobtn" (click)="verScript(t)" title="Ver el script del router"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 6 4 12l5 6M15 6l5 6-5 6"/></svg></button>
+              <button type="button" class="np-icobtn" (click)="probar(t)" [disabled]="probando" title="Probar alcance por el túnel"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12h4l3-8 4 16 3-8h4"/></svg></button>
+              <button type="button" class="np-icobtn" (click)="abrirOlt(t)" title="Usar en una OLT"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="6" width="18" height="12" rx="1"/><path d="M7 10h2M11 10h2M7 14h10"/></svg></button>
+              <button type="button" class="np-icobtn" (click)="confirmarBorrado(t)" title="Eliminar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/></svg></button>
+            </div></td>
+          </tr>
+        </tbody>
+      </table></div>
+
+      <div class="vpn-prueba">
+        <label class="np-field np-field--inline"><span>Probar alcance a</span><input class="np-input np-mono" [(ngModel)]="pruebaIp" placeholder="10.11.104.2" /></label>
+        <label class="np-field np-field--inline"><span>Puerto</span><input type="number" class="np-input np-mono" [(ngModel)]="pruebaPuerto" /></label>
+        <span class="np-fine">Si lo dejás vacío se prueba la OLT que caiga dentro de las redes del túnel.</span>
+      </div>
+    </section>
+
+    <p class="np-empty-block" *ngIf="estado && !tuneles.length">
+      <strong>Todavía no hay túneles.</strong>
+      <span>Creá uno por cada nodo: el router de ese nodo marca hacia acá y sus equipos quedan alcanzables.</span>
+    </p>
+  </div>
+</div>
+
+<!-- Alta de túnel -->
+<div *ngIf="modal" class="np-overlay" (click)="modal = false">
+  <div class="np-modal" role="dialog" aria-modal="true" (click)="$event.stopPropagation()">
+    <div class="np-modal-head">
+      <div><p class="np-kicker">VPN <b>/</b> Nuevo</p><h3>Nuevo túnel</h3></div>
+      <button type="button" class="np-icobtn" (click)="modal = false" aria-label="Cerrar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
+    </div>
+    <div class="np-modal-body">
+      <p class="np-hint">Un túnel por nodo. Las redes son las que quedan alcanzables detrás de ese router: la de la OLT, la de administración, las que hagan falta.</p>
+      <div class="np-form">
+        <label class="np-field np-field-full"><span>Nombre del nodo <em>*</em></span><input class="np-input" [(ngModel)]="form.nombre" placeholder="Nodo Rebolo" /></label>
+        <label class="np-field np-field-full"><span>Redes alcanzables <em>*</em></span><input class="np-input np-mono" [(ngModel)]="form.redes_remotas" placeholder="10.11.104.0/24, 192.168.88.0/24" /></label>
+        <label class="np-field"><span>Puerto en el router</span><input type="number" class="np-input np-mono" [(ngModel)]="form.puerto_router" /></label>
+        <label class="np-field"><span>Keepalive (s)</span><input type="number" class="np-input np-mono" [(ngModel)]="form.keepalive" /></label>
+        <label class="np-field np-field-full"><span>Notas</span><input class="np-input" [(ngModel)]="form.notas" placeholder="Reemplaza el jump host 181.48.150.42" /></label>
+      </div>
+    </div>
+    <div class="np-modal-foot">
+      <button type="button" class="np-btn np-btn--ghost" (click)="modal = false">Cancelar</button>
+      <button type="button" class="np-btn np-btn--primary" (click)="crear()" [disabled]="!puedeGuardar || guardando"><span *ngIf="guardando" class="np-spinner np-spinner--sm"></span>{{ guardando ? 'Creando…' : 'Crear y generar script' }}</button>
+    </div>
+  </div>
+</div>
+
+<!-- Script para el router -->
+<div *ngIf="scriptModal" class="np-overlay" (click)="scriptModal = false">
+  <div class="np-modal np-modal--lg vpn-modal-script" role="dialog" aria-modal="true" (click)="$event.stopPropagation()">
+    <div class="np-modal-head">
+      <div><p class="np-kicker">VPN <b>/</b> Script del router</p><h3>{{ tunelDelScript?.nombre }}</h3></div>
+      <button type="button" class="np-icobtn" (click)="scriptModal = false" aria-label="Cerrar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
+    </div>
+    <div class="np-modal-body np-modal-body--scroll">
+      <p class="np-hint">
+        Pegá todo el bloque en la terminal del MikroTik (RouterOS 7.1 o superior).
+        Se puede volver a ejecutar sin duplicar nada: lo primero que hace es limpiar lo que dejó antes.
+      </p>
+      <div class="olt-aviso is-warn" *ngIf="recienCreado">
+        <strong>La clave privada del router va en este script.</strong>
+        <span>Es la única vez que se muestra en claro. Si lo perdés se puede volver a generar desde el listado, sin reconfigurar nada.</span>
+      </div>
+      <pre class="vpn-script">{{ script }}</pre>
+    </div>
+    <div class="np-modal-foot">
+      <button type="button" class="np-btn np-btn--ghost" (click)="descargarScript()">Descargar .rsc</button>
+      <button type="button" class="np-btn np-btn--ghost" (click)="scriptModal = false">Cerrar</button>
+      <button type="button" class="np-btn np-btn--primary" (click)="copiarScript()">Copiar script</button>
+    </div>
+  </div>
+</div>
+
+<!-- Instalador del servidor -->
+<div *ngIf="instaladorModal" class="np-overlay" (click)="instaladorModal = false">
+  <div class="np-modal np-modal--lg vpn-modal-script" role="dialog" aria-modal="true" (click)="$event.stopPropagation()">
+    <div class="np-modal-head">
+      <div><p class="np-kicker">VPN <b>/</b> Servidor</p><h3>Instalación del servidor</h3></div>
+      <button type="button" class="np-icobtn" (click)="instaladorModal = false" aria-label="Cerrar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
+    </div>
+    <div class="np-modal-body np-modal-body--scroll">
+      <p class="np-hint">Esto es lo que corre el comando. Se ejecuta una sola vez.</p>
+      <pre class="vpn-script">{{ instalador?.script }}</pre>
+    </div>
+    <div class="np-modal-foot">
+      <button type="button" class="np-btn np-btn--ghost" (click)="instaladorModal = false">Cerrar</button>
+      <button type="button" class="np-btn np-btn--primary" (click)="copiar(instalador?.comando || '', 'Comando')">Copiar el comando</button>
+    </div>
+  </div>
+</div>
+
+<!-- Pasar una OLT al túnel -->
+<div *ngIf="oltModal" class="np-overlay" (click)="oltModal = false">
+  <div class="np-modal" role="dialog" aria-modal="true" (click)="$event.stopPropagation()">
+    <div class="np-modal-head">
+      <div><p class="np-kicker">VPN <b>/</b> {{ tunelParaOlt?.nombre }}</p><h3>Usar este túnel para una OLT</h3></div>
+      <button type="button" class="np-icobtn" (click)="oltModal = false" aria-label="Cerrar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
+    </div>
+    <div class="np-modal-body">
+      <p class="np-hint">
+        La OLT pasa a acceso directo por el túnel y deja de usar jump host. Antes de guardar se
+        comprueba que el equipo responda: si el túnel todavía no está arriba, no se cambia nada.
+      </p>
+      <div class="np-form">
+        <label class="np-field np-field-full"><span>OLT</span>
+          <select class="np-input" [(ngModel)]="oltElegida">
+            <option *ngFor="let o of olts" [ngValue]="o.id">{{ o.name }} · {{ o.host }} ({{ o.access_mode === 'jump' ? 'jump host' : 'directo' }})</option>
+          </select>
+        </label>
+      </div>
+      <div class="olt-aviso is-warn" *ngIf="!tunelParaOlt?.conectado">
+        <strong>Este túnel todavía no saludó.</strong>
+        <span>Aplicá el script en el router primero; si no, la comprobación va a fallar y la OLT se queda como está.</span>
+      </div>
+    </div>
+    <div class="np-modal-foot">
+      <button type="button" class="np-btn np-btn--ghost" (click)="oltModal = false">Cancelar</button>
+      <button type="button" class="np-btn np-btn--primary" (click)="moverOlt()" [disabled]="!oltElegida || moviendo"><span *ngIf="moviendo" class="np-spinner np-spinner--sm"></span>{{ moviendo ? 'Comprobando…' : 'Pasar al túnel' }}</button>
+    </div>
+  </div>
+</div>
+
+<!-- Borrado -->
+<div *ngIf="borrando" class="np-overlay" (click)="borrando = null">
+  <div class="np-modal np-modal--confirm" role="alertdialog" aria-modal="true" (click)="$event.stopPropagation()">
+    <span class="np-confirm-icon is-danger"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/></svg></span>
+    <h3>¿Eliminar «{{ borrando.nombre }}»?</h3>
+    <p>El router pierde el túnel en cuanto se aplique el cambio. Si alguna OLT llega por acá, primero hay que cambiarle el acceso.</p>
+    <div class="np-btnrow np-btnrow--center">
+      <button type="button" class="np-btn np-btn--ghost" (click)="borrando = null">Cancelar</button>
+      <button type="button" class="np-btn np-btn--danger-solid" (click)="borrar()">Eliminar</button>
+    </div>
+  </div>
+</div>
