@@ -190,6 +190,11 @@
 
 /* Autorización automática por puerto, en «Sin autorizar». */
 .olt-autoauth {
+  /* Va entre la barra y la tabla, dentro de una columna flex de alto fijo:
+     sin esto el navegador la aplastaba para darle lugar a la tabla, y los
+     switches quedaban debajo de ella, que se llevaba los clicks. Igual que
+     .np-head y .np-toolbar, no se achica. */
+  flex-shrink: 0;
   display: flex;
   flex-wrap: wrap;
   align-items: center;
