@@ -114,8 +114,20 @@
             <span>Crear el túnel al guardar y darme el script del router</span>
           </label>
           <div class="np-form" *ngIf="form.crear_tunel_vpn">
-            <label class="np-field"><span>Nombre del nodo</span><input class="np-input" [(ngModel)]="form.tunel_nombre" [placeholder]="'Nodo ' + (form.name || '…')" /></label>
-            <label class="np-field"><span>Redes alcanzables</span><input class="np-input np-mono" [(ngModel)]="form.tunel_redes" [placeholder]="redSugerida || '10.11.104.0/24'" /></label>
+            <!-- Un router lleva un solo túnel: si ya tiene uno, la red se suma ahí.
+                 Crear otro y correr su script pisaba el anterior. -->
+            <label class="np-field np-field-full" *ngIf="tuneles.length"><span>¿Detrás de qué router está?</span>
+              <select class="np-input" [(ngModel)]="form.tunel_id">
+                <option [ngValue]="null">Un router nuevo: crear su túnel</option>
+                <option *ngFor="let t of tuneles" [ngValue]="t.id">{{ t.nombre }} · {{ t.redes_remotas.join(', ') }}</option>
+              </select>
+            </label>
+            <label class="np-field" *ngIf="!form.tunel_id"><span>Nombre del nodo</span><input class="np-input" [(ngModel)]="form.tunel_nombre" [placeholder]="'Nodo ' + (form.name || '…')" /></label>
+            <label class="np-field" [class.np-field-full]="form.tunel_id"><span>{{ form.tunel_id ? 'Red de esta OLT' : 'Redes alcanzables' }}</span><input class="np-input np-mono" [(ngModel)]="form.tunel_redes" [placeholder]="redSugerida || '10.11.104.0/24'" /></label>
+          </div>
+          <div class="olt-aviso is-warn" *ngIf="form.crear_tunel_vpn && tunelElegido">
+            <strong>La red se suma a «{{ tunelElegido.nombre }}».</strong>
+            <span>Después de guardar, pegá el script en ese mismo router: agrega el acceso a la red nueva sin tocar las que ya tiene.</span>
           </div>
           <p class="np-hint" *ngIf="form.crear_tunel_vpn && redSugerida && !form.tunel_redes.trim()">
             Si lo dejás vacío se usa <code>{{ redSugerida }}</code>, deducida del host. Si ya hay un túnel que cubre esa red, se reutiliza en vez de crear otro.

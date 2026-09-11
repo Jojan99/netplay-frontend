@@ -50,6 +50,9 @@ export class OltListComponent implements OnInit {
 
   pestana = 'conexion';
 
+  /** Túneles de la empresa, para sumar la OLT a uno existente. */
+  tuneles: { id: number; nombre: string; redes_remotas: string[] }[] = [];
+
   /** El script del túnel que se creó junto con la OLT. */
   scriptTunel = '';
   scriptModal = false;
@@ -83,6 +86,8 @@ export class OltListComponent implements OnInit {
       // El túnel de gestión se crea con la OLT: cuando el equipo está en una
       // red privada, el camino para llegar a él es parte del alta.
       crear_tunel_vpn: false, tunel_nombre: '', tunel_redes: '',
+      // null = crear uno nuevo; un id = sumar la red a ese túnel.
+      tunel_id: null as number | null,
     };
   }
 
@@ -144,7 +149,16 @@ export class OltListComponent implements OnInit {
     });
   }
 
+  /** Los túneles se cargan al abrir el alta: la lista cambia poco. */
+  private cargarTuneles(): void {
+    this.oltService.getVpnEstado().subscribe({
+      next: (res) => { this.tuneles = res?.data?.tuneles ?? []; },
+      error: () => { this.tuneles = []; },
+    });
+  }
+
   openCreate(): void {
+    this.cargarTuneles();
     this.modalMode = 'create';
     this.editingId = null;
     this.form = this.formularioVacio();
@@ -219,6 +233,8 @@ export class OltListComponent implements OnInit {
       payload.tunel_redes = this.redSugerida;
     }
 
+    if (!payload.tunel_id) delete payload.tunel_id;
+
     if (!payload.password) delete payload.password;
     if (!payload.enable_password) delete payload.enable_password;
     if (!payload.jump_pass) delete payload.jump_pass;
@@ -280,6 +296,11 @@ export class OltListComponent implements OnInit {
       () => this.toast.success('Script copiado. Pegalo en la terminal del router.'),
       () => this.toast.error('El navegador no permitió copiar; seleccioná el texto a mano.'),
     );
+  }
+
+  /** El túnel elegido, para mostrar qué redes ya lleva. */
+  get tunelElegido(): { nombre: string; redes_remotas: string[] } | null {
+    return this.tuneles.find(t => t.id === this.form.tunel_id) ?? null;
   }
 
 }

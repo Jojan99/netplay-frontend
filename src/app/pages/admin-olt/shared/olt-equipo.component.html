@@ -78,6 +78,7 @@
         <div class="olt-puertos">
           <span class="olt-puerto" *ngFor="let p of s.puertos" [ngClass]="claseDe(p)" [title]="tituloDe(p)">
             {{ numeroDe(p) }}
+            <small class="olt-puerto-onus" *ngIf="p.onus">{{ p.onus }}</small>
           </span>
         </div>
       </div>

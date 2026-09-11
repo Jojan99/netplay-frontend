@@ -11,6 +11,11 @@ interface PuertoOlt {
   habilitado: boolean;
   mbps: number | null;
   fsp?: string | null;
+  /** Uplinks: "GE1", "XGE2". Sin el tipo, ge0/0/1 y xge0/0/1 salían los dos como "1". */
+  etiqueta?: string;
+  /** Puertos PON de OLT que publican cada ONU como interfaz. */
+  onus?: number;
+  onus_arriba?: number;
 }
 
 interface TarjetaOlt {
@@ -131,6 +136,8 @@ export class OltEquipoComponent implements OnChanges {
 
   /** El número que se pinta en cada puerto del dibujo. */
   numeroDe(p: PuertoOlt): string {
+    if (p.etiqueta) return p.etiqueta;
+
     const partes = (p.fsp ?? '').split('/');
     return partes.length === 3 ? partes[2] : p.nombre.replace(/\D+/g, '');
   }
@@ -148,7 +155,9 @@ export class OltEquipoComponent implements OnChanges {
       : p.enlace === 'transicion' ? 'negociando'
       : 'sin enlace';
 
-    return `${p.nombre} — ${estado}${p.mbps ? ` · ${p.mbps} Mbps` : ''}${p.alias ? ` · ${p.alias}` : ''}`;
+    const onus = p.onus ? ` · ${p.onus_arriba ?? 0} de ${p.onus} ONU arriba` : '';
+
+    return `${p.nombre} — ${estado}${onus}${p.mbps ? ` · ${p.mbps} Mbps` : ''}${p.alias ? ` · ${p.alias}` : ''}`;
   }
 
   /** El tipo de tarjeta, sacado de la descripción larga del fabricante. */
