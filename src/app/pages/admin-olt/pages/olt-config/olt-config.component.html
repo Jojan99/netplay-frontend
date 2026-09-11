@@ -13,18 +13,27 @@
   <div class="np-toolbar"><app-olt-nav></app-olt-nav></div>
   <div class="np-scroll">
     <p class="np-empty-block" *ngIf="!selectedOltId && !loadingOlts"><strong>Elegí una OLT para editar su configuración.</strong></p>
+    <app-olt-equipo *ngIf="selectedOltId" [oltId]="selectedOltId" [marcaConfigurada]="marcaConfigurada"></app-olt-equipo>
+
     <div class="np-grid-2" *ngIf="selectedOltId">
       <section class="np-card">
         <div class="np-card-h"><h2>Conexión principal</h2></div>
         <div class="np-form">
           <label class="np-field"><span>Nombre <em>*</em></span><input class="np-input" [(ngModel)]="form.name" /></label>
-          <label class="np-field"><span>Marca</span><select class="np-input" [(ngModel)]="form.brand"><option>Huawei</option><option>ZTE</option><option>Fiberhome</option></select></label>
+          <label class="np-field"><span>Marca <em>*</em></span><select class="np-input" [(ngModel)]="form.brand"><option *ngFor="let m of marcas" [value]="m.valor">{{ m.nombre }}</option></select></label>
           <label class="np-field"><span>Host / IP <em>*</em></span><input class="np-input np-mono" [(ngModel)]="form.host" /></label>
           <label class="np-field"><span>Puerto</span><input type="number" class="np-input np-mono" [(ngModel)]="form.port" /></label>
           <label class="np-field"><span>Usuario</span><input class="np-input np-mono" [(ngModel)]="form.username" /></label>
-          <label class="np-field"><span>Modo de acceso</span><select class="np-input" [(ngModel)]="form.access_mode"><option value="telnet">Telnet</option><option value="ssh">SSH</option></select></label>
+          <label class="np-field"><span>Cómo se llega</span><select class="np-input" [(ngModel)]="form.access_mode"><option value="direct">Directo a la OLT</option><option value="jump">Pasando por un jump host</option></select></label>
           <label class="np-field"><span>Nueva contraseña (vacío = sin cambio)</span><input type="password" class="np-input" [(ngModel)]="form.password" /></label>
           <label class="np-field"><span>Enable password</span><input type="password" class="np-input" [(ngModel)]="form.enable_password" /></label>
+        </div>
+        <div class="np-form" *ngIf="form.brand === 'zte'">
+          <label class="np-field"><span>Tipo de ONU (ZTE)</span><input class="np-input np-mono" [(ngModel)]="form.zte_onu_type" placeholder="ZXHN-F660 · ALL" /></label>
+          <label class="np-field"><span>Perfil de tráfico tcont (ZTE)</span><input class="np-input np-mono" [(ngModel)]="form.zte_dba_profile" placeholder="UP-50M" /></label>
+        </div>
+        <div class="np-form" *ngIf="form.brand === 'vsol'">
+          <label class="np-field"><span>Perfil de ONU (V-SOL) <em>*</em></span><input class="np-input np-mono" [(ngModel)]="form.vsol_onu_profile" placeholder="gpononu" /></label>
         </div>
       </section>
       <div class="np-form-col">
@@ -53,7 +62,9 @@
             <label class="np-field"><span>Versión</span><select class="np-input" [(ngModel)]="form.snmp_version"><option value="2c">2c</option><option value="1">1</option></select></label>
             <label class="np-field"><span>Puerto SNMP</span><input type="number" class="np-input np-mono" [(ngModel)]="form.snmp_port" /></label>
             <label class="np-field"><span>SNMP jump host</span><input class="np-input np-mono" [(ngModel)]="form.snmp_jump_host" /></label>
+            <label class="np-field"><span>SNMP jump puerto</span><input type="number" class="np-input np-mono" [(ngModel)]="form.snmp_jump_port" /></label>
             <label class="np-field"><span>SNMP jump usuario</span><input class="np-input np-mono" [(ngModel)]="form.snmp_jump_user" /></label>
+            <label class="np-field"><span>SNMP jump contraseña (vacío = sin cambio)</span><input type="password" class="np-input" [(ngModel)]="form.snmp_jump_pass" /></label>
           </div>
         </section>
       </div>

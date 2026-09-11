@@ -1,6 +1,7 @@
 import { Component, HostListener, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { OltNavComponent } from '../../shared/olt-nav.component';
+import { OltEquipoComponent } from '../../shared/olt-equipo.component';
 import { FormsModule } from '@angular/forms';
 import { OltService } from '../../../../services/olt.service';
 import { ToastService } from '../../../../services/toast.service';
@@ -8,7 +9,7 @@ import { ToastService } from '../../../../services/toast.service';
 @Component({
   selector: 'app-olt-list',
   standalone: true,
-  imports: [CommonModule, FormsModule, OltNavComponent],
+  imports: [CommonModule, FormsModule, OltNavComponent, OltEquipoComponent],
   templateUrl: './olt-list.component.html',
   styleUrl: '../../shared/olt.scss',
   host: { class: 'np-console' },
@@ -24,18 +25,14 @@ export class OltListComponent implements OnInit {
   modalMode: 'create' | 'edit' = 'create';
   editingId: number | null = null;
 
-  form = {
-    name: '', brand: 'Huawei', host: '', port: 23,
-    username: '', password: '', enable_password: '',
-    access_mode: 'telnet',
-    jump_host: '', jump_port: 22, jump_user: '', jump_pass: '',
-    ont_lineprofile_id: null as number | null,
-    ont_srvprofile_id:  null as number | null,
-    default_vlan: null as number | null,
-    snmp_community: 'public', snmp_version: '2c', snmp_port: 161,
-    snmp_host: '', snmp_jump_host: '', snmp_jump_port: 22,
-    snmp_jump_user: '', snmp_jump_pass: '',
-  };
+  /** Marcas con driver, tal como las reporta el backend. */
+  marcas: { valor: string; nombre: string }[] = [];
+
+  form = this.formularioVacio();
+
+  /** Qué OLT se está mirando en el panel de equipo. */
+  equipoId: number | null = null;
+  equipoMarca: string | null = null;
 
   // Delete confirm
   deleteModal     = false;
@@ -50,7 +47,54 @@ export class OltListComponent implements OnInit {
     private toast: ToastService,
   ) {}
 
-  ngOnInit(): void { this.loadOlts(); }
+  ngOnInit(): void {
+    this.loadOlts();
+    this.loadMarcas();
+  }
+
+  /** Un formulario en blanco con los valores que el backend acepta. */
+  private formularioVacio() {
+    return {
+      name: '', brand: 'huawei', host: '', port: 23,
+      username: '', password: '', enable_password: '',
+      // 'direct' o 'jump': es cómo se llega a la OLT, no el protocolo.
+      access_mode: 'direct',
+      jump_host: '', jump_port: 22, jump_user: '', jump_pass: '',
+      ont_lineprofile_id: null as number | null,
+      ont_srvprofile_id:  null as number | null,
+      default_vlan: null as number | null,
+      snmp_community: 'public', snmp_version: '2c', snmp_port: 161,
+      snmp_host: '', snmp_jump_host: '', snmp_jump_port: 22,
+      snmp_jump_user: '', snmp_jump_pass: '',
+      zte_onu_type: '', zte_dba_profile: '', vsol_onu_profile: '',
+    };
+  }
+
+  loadMarcas(): void {
+    this.oltService.getMarcas().subscribe({
+      next: (res) => { this.marcas = res?.data ?? []; },
+      error: () => { /* el select cae a la marca ya guardada */ },
+    });
+  }
+
+  /** Abre la ficha del equipo de esa OLT. */
+  verEquipo(olt: any): void {
+    this.equipoId    = olt.id;
+    this.equipoMarca = olt.brand ?? null;
+  }
+
+  cerrarEquipo(): void { this.equipoId = null; }
+
+  /** El modelo que declaró el equipo se refleja en la tabla al vuelo. */
+  modeloLeido(modelo: string): void {
+    const olt = this.olts.find(o => o.id === this.equipoId);
+    if (olt) olt.model = modelo;
+  }
+
+  nombreDeMarca(valor: string | null): string {
+    if (!valor) return '—';
+    return this.marcas.find(m => m.valor === valor.toLowerCase())?.nombre ?? valor;
+  }
 
   @HostListener('document:keydown.escape')
   onEsc(): void { this.modal = false; this.deleteModal = false; }
@@ -66,16 +110,7 @@ export class OltListComponent implements OnInit {
   openCreate(): void {
     this.modalMode = 'create';
     this.editingId = null;
-    this.form = {
-      name: '', brand: 'Huawei', host: '', port: 23,
-      username: '', password: '', enable_password: '',
-      access_mode: 'telnet',
-      jump_host: '', jump_port: 22, jump_user: '', jump_pass: '',
-      ont_lineprofile_id: null, ont_srvprofile_id: null, default_vlan: null,
-      snmp_community: 'public', snmp_version: '2c', snmp_port: 161,
-      snmp_host: '', snmp_jump_host: '', snmp_jump_port: 22,
-      snmp_jump_user: '', snmp_jump_pass: '',
-    };
+    this.form = this.formularioVacio();
     this.showAdvanced = false;
     this.showSnmp = false;
     this.modal = true;
@@ -85,18 +120,18 @@ export class OltListComponent implements OnInit {
     this.modalMode = 'edit';
     this.editingId = olt.id;
     this.form = {
+      ...this.formularioVacio(),
       name: olt.name ?? '',
-      brand: olt.brand ?? 'Huawei',
+      // La marca viene en minúsculas del backend; antes el select ofrecía
+      // 'Huawei' con mayúscula y el guardado se rechazaba siempre.
+      brand: (olt.brand ?? 'huawei').toLowerCase(),
       host: olt.host ?? '',
       port: olt.port ?? 23,
       username: olt.username ?? '',
-      password: '',
-      enable_password: '',
-      access_mode: olt.access_mode ?? 'telnet',
+      access_mode: olt.access_mode === 'jump' ? 'jump' : 'direct',
       jump_host: olt.jump_host ?? '',
       jump_port: olt.jump_port ?? 22,
       jump_user: olt.jump_user ?? '',
-      jump_pass: '',
       ont_lineprofile_id: olt.ont_lineprofile_id ?? null,
       ont_srvprofile_id: olt.ont_srvprofile_id ?? null,
       default_vlan: olt.default_vlan ?? null,
@@ -107,7 +142,9 @@ export class OltListComponent implements OnInit {
       snmp_jump_host: olt.snmp_jump_host ?? '',
       snmp_jump_port: olt.snmp_jump_port ?? 22,
       snmp_jump_user: olt.snmp_jump_user ?? '',
-      snmp_jump_pass: '',
+      zte_onu_type: olt.zte_onu_type ?? '',
+      zte_dba_profile: olt.zte_dba_profile ?? '',
+      vsol_onu_profile: olt.vsol_onu_profile ?? '',
     };
     this.showAdvanced = !!(olt.jump_host);
     this.showSnmp = !!(olt.snmp_host || olt.snmp_jump_host);
@@ -165,7 +202,7 @@ export class OltListComponent implements OnInit {
   }
 
   accessModeLabel(mode: string): string {
-    const map: Record<string, string> = { telnet: 'Telnet', ssh: 'SSH' };
+    const map: Record<string, string> = { direct: 'Directo', jump: 'Vía jump host' };
     return map[mode] ?? mode;
   }
 }

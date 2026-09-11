@@ -39,6 +39,45 @@ export class OltService {
 
   // ── OLT CRUD ─────────────────────────────────────────────────────────────
 
+  /** Marcas de OLT que la plataforma sabe manejar. */
+  getMarcas(): Observable<any> {
+    return this.http.get<any>(`${this.env.rootUrl}api/management/olt/marcas`, { headers: this.getHeaders() });
+  }
+
+  /** Ficha del equipo: marca, modelo, tarjetas y puertos, leídos por SNMP. */
+  getEquipo(oltId: number, refrescar = false): Observable<any> {
+    const params = new HttpParams().set('refrescar', refrescar ? '1' : '0');
+    return this.http.get<any>(`${this.env.rootUrl}api/management/olt/${oltId}/equipo`, { headers: this.getHeaders(), params });
+  }
+
+  /**
+   * Sube la foto del equipo. No se usa getHeaders() porque fija
+   * Content-Type: application/json y el navegador necesita poner el
+   * multipart/form-data con su propio boundary.
+   */
+  subirFotoOlt(oltId: number, archivo: File): Observable<any> {
+    const cuerpo = new FormData();
+    cuerpo.append('foto', archivo);
+
+    return this.http.post<any>(`${this.env.rootUrl}api/management/olt/${oltId}/foto`, cuerpo, {
+      headers: new HttpHeaders({ Authorization: `Bearer ${this.getAuthToken()}` }),
+    });
+  }
+
+  /** Prueba la conexión con la OLT paso por paso. */
+  diagnosticoOlt(oltId: number): Observable<any> {
+    return this.http.get<any>(`${this.env.rootUrl}api/management/olt/${oltId}/diagnostico`, { headers: this.getHeaders() });
+  }
+
+  /** Olvida el mapa de puertos y la ficha guardadas: hace falta si cambian una placa. */
+  olvidarPuertosOlt(oltId: number): Observable<any> {
+    return this.http.post<any>(`${this.env.rootUrl}api/management/olt/${oltId}/olvidar-puertos`, '{}', { headers: this.getHeaders() });
+  }
+
+  borrarFotoOlt(oltId: number): Observable<any> {
+    return this.http.delete<any>(`${this.env.rootUrl}api/management/olt/${oltId}/foto`, { headers: this.getHeaders() });
+  }
+
   listOlts(): Observable<any> {
     return this.http.get<any>(`${this.env.rootUrl}api/management/olt`, { headers: this.getHeaders() });
   }

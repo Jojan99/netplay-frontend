@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { OltNavComponent } from '../../shared/olt-nav.component';
+import { OltEquipoComponent } from '../../shared/olt-equipo.component';
 import { FormsModule } from '@angular/forms';
 import { OltService } from '../../../../services/olt.service';
 import { ToastService } from '../../../../services/toast.service';
@@ -8,7 +9,7 @@ import { ToastService } from '../../../../services/toast.service';
 @Component({
   selector: 'app-olt-config',
   standalone: true,
-  imports: [CommonModule, FormsModule, OltNavComponent],
+  imports: [CommonModule, FormsModule, OltNavComponent, OltEquipoComponent],
   templateUrl: './olt-config.component.html',
   styleUrl: '../../shared/olt.scss',
   host: { class: 'np-console' },
@@ -22,10 +23,14 @@ export class OltConfigComponent implements OnInit {
   showAdvanced          = false;
   showSnmp              = false;
 
+  /** Marcas con driver, tal como las reporta el backend. */
+  marcas: { valor: string; nombre: string }[] = [];
+
   form = {
-    name: '', brand: 'Huawei', host: '', port: 23,
+    name: '', brand: 'huawei', host: '', port: 23,
     username: '', password: '', enable_password: '',
-    access_mode: 'telnet',
+    // 'direct' o 'jump': es cómo se llega a la OLT, no el protocolo.
+    access_mode: 'direct',
     jump_host: '', jump_port: 22, jump_user: '', jump_pass: '',
     ont_lineprofile_id: null as number | null,
     ont_srvprofile_id:  null as number | null,
@@ -33,6 +38,7 @@ export class OltConfigComponent implements OnInit {
     snmp_community: 'public', snmp_version: '2c', snmp_port: 161,
     snmp_host: '', snmp_jump_host: '', snmp_jump_port: 22,
     snmp_jump_user: '', snmp_jump_pass: '',
+    zte_onu_type: '', zte_dba_profile: '', vsol_onu_profile: '',
   };
 
   constructor(
@@ -40,7 +46,21 @@ export class OltConfigComponent implements OnInit {
     private toast: ToastService,
   ) {}
 
-  ngOnInit(): void { this.loadOlts(); }
+  ngOnInit(): void {
+    this.loadOlts();
+    this.loadMarcas();
+  }
+
+  loadMarcas(): void {
+    this.oltService.getMarcas().subscribe({
+      next: (res) => { this.marcas = res?.data ?? []; },
+      error: () => { /* el select cae a la marca ya guardada */ },
+    });
+  }
+
+  get marcaConfigurada(): string | null {
+    return this.olts.find(o => o.id === this.selectedOltId)?.brand ?? null;
+  }
 
   loadOlts(): void {
     this.loadingOlts = true;
@@ -65,13 +85,15 @@ export class OltConfigComponent implements OnInit {
   fillForm(olt: any): void {
     this.form = {
       name: olt.name ?? '',
-      brand: olt.brand ?? 'Huawei',
+      // El backend guarda la marca en minúsculas; con 'Huawei' el guardado se
+      // rechazaba siempre por validación.
+      brand: (olt.brand ?? 'huawei').toLowerCase(),
       host: olt.host ?? '',
       port: olt.port ?? 23,
       username: olt.username ?? '',
       password: '',
       enable_password: '',
-      access_mode: olt.access_mode ?? 'telnet',
+      access_mode: olt.access_mode === 'jump' ? 'jump' : 'direct',
       jump_host: olt.jump_host ?? '',
       jump_port: olt.jump_port ?? 22,
       jump_user: olt.jump_user ?? '',
@@ -87,6 +109,9 @@ export class OltConfigComponent implements OnInit {
       snmp_jump_port: olt.snmp_jump_port ?? 22,
       snmp_jump_user: olt.snmp_jump_user ?? '',
       snmp_jump_pass: '',
+      zte_onu_type: olt.zte_onu_type ?? '',
+      zte_dba_profile: olt.zte_dba_profile ?? '',
+      vsol_onu_profile: olt.vsol_onu_profile ?? '',
     };
     this.showAdvanced = !!(olt.jump_host);
     this.showSnmp     = !!(olt.snmp_host || olt.snmp_jump_host);

@@ -1,0 +1,117 @@
+<section class="np-card olt-equipo" *ngIf="oltId">
+  <div class="np-card-h">
+    <h2>Equipo</h2>
+    <div class="np-card-actions">
+      <button type="button" class="np-link" (click)="verTarjetas = !verTarjetas" *ngIf="tarjetas.length">
+        {{ verTarjetas ? 'Ocultar tarjetas' : 'Ver tarjetas (' + tarjetas.length + ')' }}
+      </button>
+      <button type="button" class="np-link" (click)="diagnosticar()" [disabled]="diagnosticando">
+        {{ diagnosticando ? 'Probando…' : 'Probar conexión' }}
+      </button>
+      <button type="button" class="np-link" (click)="olvidarPuertos()" title="Volver a leer los puertos desde el equipo">Releer puertos</button>
+      <button type="button" class="np-link" (click)="cargar(true)" [disabled]="cargando">
+        {{ cargando ? 'Consultando…' : 'Volver a consultar' }}
+      </button>
+    </div>
+  </div>
+
+  <div class="np-loading" *ngIf="cargando && !ficha"><span class="np-spinner"></span> Preguntándole al equipo…</div>
+
+  <div class="olt-aviso is-danger" *ngIf="error">
+    <strong>No se pudo leer el equipo.</strong>
+    <span>{{ error }}</span>
+    <span class="np-fine">Se lee por SNMP: revisá comunidad, versión y que el jump host tenga alcance.</span>
+  </div>
+
+  <div class="olt-aviso is-warn" *ngIf="avisoDeMarca">
+    <strong>La marca no coincide.</strong><span>{{ avisoDeMarca }}</span>
+  </div>
+
+  <!-- Resultado de probar la conexión, paso por paso -->
+  <div class="olt-diag" *ngIf="diagnostico">
+    <div class="olt-diag-paso" *ngFor="let p of diagnostico.pasos" [class.is-bad]="!p.ok">
+      <span class="olt-diag-icono">{{ p.ok ? '✓' : '✕' }}</span>
+      <div>
+        <strong>{{ p.paso }}</strong>
+        <span>{{ p.detalle }}</span>
+        <span class="np-fine" *ngIf="p.ms">{{ p.ms }} ms</span>
+      </div>
+    </div>
+  </div>
+
+  <ng-container *ngIf="identidad">
+    <div class="olt-equipo-top">
+      <!-- Foto del operador si la subió; si no, el frente dibujado con datos reales -->
+      <figure class="olt-retrato" *ngIf="foto">
+        <img [src]="foto" [alt]="identidad.modelo || 'OLT'" />
+        <figcaption>
+          <button type="button" class="np-link" (click)="quitarFoto()">Quitar foto</button>
+        </figcaption>
+      </figure>
+
+      <div class="olt-identidad">
+        <div class="olt-marca">
+          <span class="olt-marca-badge" [attr.data-marca]="identidad.marca">{{ identidad.marca_nombre || '—' }}</span>
+          <h3>{{ identidad.modelo || 'Modelo no declarado' }}</h3>
+        </div>
+
+        <dl class="olt-datos">
+          <div><dt>Identidad</dt><dd class="np-mono">{{ identidad.nombre || '—' }}</dd></div>
+          <div><dt>Software</dt><dd class="np-mono">{{ identidad.software || '—' }}</dd></div>
+          <div><dt>Serie</dt><dd class="np-mono">{{ identidad.serie || '—' }}</dd></div>
+          <div><dt>Encendida</dt><dd class="np-mono">{{ identidad.encendida || '—' }}</dd></div>
+          <div *ngIf="identidad.ubicacion"><dt>Ubicación</dt><dd>{{ identidad.ubicacion }}</dd></div>
+          <div><dt>Puertos PON</dt><dd><span class="np-n">{{ conEnlace }}</span> de {{ puertos.length }} con enlace</dd></div>
+        </dl>
+
+        <label class="olt-subir" *ngIf="!foto">
+          <input type="file" accept="image/*" (change)="elegirFoto($event)" [disabled]="subiendo" />
+          <span>{{ subiendo ? 'Subiendo…' : 'Subir foto del equipo' }}</span>
+        </label>
+      </div>
+    </div>
+
+    <!-- Frente del chasis: un bloque por slot de fibra -->
+    <div class="olt-chasis" *ngIf="puertos.length">
+      <div class="olt-slot" *ngFor="let s of slots">
+        <span class="olt-slot-nombre">Slot {{ s.slot }}</span>
+        <div class="olt-puertos">
+          <span class="olt-puerto" *ngFor="let p of s.puertos" [ngClass]="claseDe(p)" [title]="tituloDe(p)">
+            {{ numeroDe(p) }}
+          </span>
+        </div>
+      </div>
+
+      <div class="olt-slot olt-slot--up" *ngIf="uplinks.length">
+        <span class="olt-slot-nombre">Uplinks</span>
+        <div class="olt-puertos">
+          <span class="olt-puerto olt-puerto--rj" *ngFor="let p of uplinks" [ngClass]="claseDe(p)" [title]="tituloDe(p)">
+            {{ numeroDe(p) }}
+          </span>
+        </div>
+      </div>
+
+      <div class="olt-leyenda">
+        <span><i class="olt-mini is-up"></i>con enlace</span>
+        <span><i class="olt-mini is-free"></i>libre</span>
+        <span><i class="olt-mini is-warn"></i>negociando</span>
+        <span><i class="olt-mini is-off"></i>deshabilitado</span>
+      </div>
+    </div>
+
+    <div class="np-tablewrap" *ngIf="verTarjetas && tarjetas.length">
+      <table class="np-table np-table--compact">
+        <thead><tr><th>Tarjeta</th><th>Tipo</th><th>Slot</th><th>Serie</th><th>Software</th></tr></thead>
+        <tbody>
+          <tr *ngFor="let t of tarjetas">
+            <td><div class="np-name">{{ t.nombre || t.modelo || '—' }}</div><div class="np-plan">{{ t.descripcion || '' }}</div></td>
+            <td>{{ tipoDeTarjeta(t) }}</td>
+            <td class="np-data">{{ t.posicion && t.posicion !== '-1' ? t.posicion : '—' }}</td>
+            <td class="np-data">{{ t.serie || '—' }}</td>
+            <td class="np-data">{{ t.software || '—' }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </ng-container>
+</section>

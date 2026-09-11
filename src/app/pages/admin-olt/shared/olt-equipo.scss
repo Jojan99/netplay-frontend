@@ -1,0 +1,169 @@
+/* Ficha del equipo OLT: identidad, frente del chasis y tarjetas. */
+
+.olt-equipo {
+  .np-card-actions { display: flex; gap: 12px; align-items: center; }
+}
+
+.olt-aviso {
+  display: flex; flex-direction: column; gap: 3px;
+  margin: 10px 12px; padding: 10px 12px;
+  border-left: 3px solid var(--warn);
+  background: var(--surface-2);
+  font-size: 12px; color: var(--text-2);
+
+  strong { color: var(--text); font-size: 12.5px; }
+
+  &.is-danger { border-left-color: var(--danger); }
+  &.is-warn   { border-left-color: var(--warn); }
+}
+
+.olt-equipo-top {
+  display: flex; gap: 18px; align-items: flex-start;
+  padding: 14px 12px;
+  border-bottom: 1px solid var(--line);
+}
+
+.olt-retrato {
+  margin: 0; flex: 0 0 200px; max-width: 200px;
+
+  img {
+    width: 100%; display: block;
+    border: 1px solid var(--line-strong);
+    background: var(--surface-2);
+    object-fit: contain;
+  }
+
+  figcaption { margin-top: 5px; text-align: center; font-size: 11px; }
+}
+
+.olt-identidad { flex: 1 1 320px; min-width: 0; }
+
+.olt-marca {
+  display: flex; align-items: center; gap: 9px; flex-wrap: wrap;
+
+  h3 { margin: 0; font-size: 17px; letter-spacing: -.2px; }
+}
+
+.olt-marca-badge {
+  display: inline-flex; align-items: center; height: 20px; padding: 0 8px;
+  font-size: 10.5px; font-weight: 800; letter-spacing: .5px; text-transform: uppercase;
+  color: #fff; background: var(--text);
+
+  /* Cada fabricante con su color, para reconocerlo de un vistazo. */
+  &[data-marca="huawei"] { background: #c7000b; }
+  &[data-marca="zte"]    { background: #0a4b9b; }
+  &[data-marca="cdata"]  { background: #0f7a4e; }
+  &[data-marca="vsol"]   { background: #d2691e; }
+}
+
+.olt-datos {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 8px 16px; margin: 12px 0 0;
+
+  div { min-width: 0; }
+  dt { font-size: 10.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .4px; color: var(--text-3); }
+  dd { margin: 1px 0 0; font-size: 12.5px; color: var(--text); overflow-wrap: anywhere; }
+}
+
+.olt-subir {
+  display: inline-flex; align-items: center; margin-top: 12px;
+  font-size: 11.5px; font-weight: 700; color: var(--text-2);
+  cursor: pointer;
+
+  input { position: absolute; width: 1px; height: 1px; opacity: 0; }
+
+  span {
+    display: inline-flex; align-items: center; height: 28px; padding: 0 11px;
+    border: 1px dashed var(--line-strong);
+  }
+
+  &:hover span { background: var(--surface-3); color: var(--text); }
+}
+
+.olt-chasis { padding: 14px 12px; }
+
+.olt-slot {
+  display: flex; align-items: center; gap: 12px;
+  margin-bottom: 9px;
+
+  &--up { padding-top: 9px; border-top: 1px dashed var(--line); }
+}
+
+.olt-slot-nombre {
+  flex: 0 0 66px;
+  font-size: 10.5px; font-weight: 800; text-transform: uppercase; letter-spacing: .4px;
+  color: var(--text-3);
+}
+
+/* Los puertos van en una banda oscura, como el frente real del equipo. */
+.olt-puertos {
+  display: flex; flex-wrap: wrap; gap: 4px;
+  padding: 7px 8px;
+  background: #1b1f26;
+  border: 1px solid #0d1014;
+}
+
+.olt-puerto {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 26px; height: 26px;
+  font-size: 11px; font-weight: 800; font-variant-numeric: tabular-nums;
+  color: #8a94a6;
+  background: #2a3039;
+  border: 1px solid #11151a;
+  border-radius: 2px;
+
+  &--rj { border-radius: 2px 2px 4px 4px; }
+
+  &.is-up   { color: #04140a; background: #46d37b; border-color: #2aa257; }
+  &.is-warn { color: #1a1205; background: #e8b23c; border-color: #b1831d; }
+  &.is-free { color: #7c869a; background: #2a3039; }
+  &.is-off  { color: #4c525c; background: #22262c; border-style: dashed; }
+}
+
+.olt-leyenda {
+  display: flex; flex-wrap: wrap; gap: 14px; margin-top: 10px;
+  font-size: 11px; color: var(--text-3);
+
+  span { display: inline-flex; align-items: center; gap: 5px; }
+}
+
+.olt-mini {
+  width: 10px; height: 10px; border: 1px solid #11151a; border-radius: 2px;
+
+  &.is-up   { background: #46d37b; }
+  &.is-warn { background: #e8b23c; }
+  &.is-free { background: #2a3039; }
+  &.is-off  { background: #22262c; border-style: dashed; }
+}
+
+@media (max-width: 720px) {
+  .olt-equipo-top { flex-direction: column; }
+  .olt-retrato { flex-basis: auto; max-width: 100%; align-self: center; }
+  .olt-slot { flex-direction: column; align-items: flex-start; gap: 5px; }
+  .olt-slot-nombre { flex-basis: auto; }
+}
+
+/* Resultado de "Probar conexión": un renglón por eslabón. */
+.olt-diag {
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--line);
+}
+
+.olt-diag-paso {
+  display: flex; gap: 9px; align-items: flex-start;
+  padding: 6px 0;
+  font-size: 12px; color: var(--text-2);
+
+  + .olt-diag-paso { border-top: 1px dashed var(--line); }
+
+  strong { display: block; font-size: 12.5px; color: var(--text); }
+  span { display: block; overflow-wrap: anywhere; }
+
+  &.is-bad .olt-diag-icono { color: var(--danger); }
+}
+
+.olt-diag-icono {
+  flex: 0 0 16px;
+  font-weight: 800; color: var(--ok);
+  line-height: 1.5;
+}
