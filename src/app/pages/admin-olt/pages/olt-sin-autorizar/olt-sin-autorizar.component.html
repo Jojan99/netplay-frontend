@@ -19,7 +19,7 @@
       <span class="np-fine">Con el puerto en automático, cualquier ONU que se conecte queda autorizada sola. En manual, espera acá hasta que la autorices.</span>
     </div>
     <div class="olt-autoauth-puertos">
-      <div class="olt-autoauth-p" *ngFor="let p of puertosAutoAuth">
+      <div class="olt-autoauth-p" *ngFor="let p of puertosAutoAuth; trackBy: porPuerto">
         <span class="olt-autoauth-n">PON {{ p.puerto }}</span>
         <button type="button" class="np-switch" role="switch"
                 [attr.aria-checked]="p.auto"

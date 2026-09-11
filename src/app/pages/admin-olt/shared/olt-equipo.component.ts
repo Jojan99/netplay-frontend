@@ -119,6 +119,10 @@ export class OltEquipoComponent implements OnChanges {
       + 'Los comandos de autorización no le van a servir hasta corregir la marca.';
   }
 
+  /** Slots y puertos se identifican por nombre: así Angular reutiliza lo dibujado. */
+  readonly porSlot   = (_: number, s: { slot: string }) => s.slot;
+  readonly porPuerto = (_: number, p: PuertoOlt) => p.ifindex;
+
   /** Las tarjetas se agrupan por slot para dibujar el chasis. */
   get slots(): { slot: string; puertos: PuertoOlt[] }[] {
     const grupos: Record<string, PuertoOlt[]> = {};

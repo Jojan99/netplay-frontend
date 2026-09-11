@@ -73,10 +73,10 @@
 
     <!-- Frente del chasis: un bloque por slot de fibra -->
     <div class="olt-chasis" *ngIf="puertos.length">
-      <div class="olt-slot" *ngFor="let s of slots">
+      <div class="olt-slot" *ngFor="let s of slots; trackBy: porSlot">
         <span class="olt-slot-nombre">Slot {{ s.slot }}</span>
         <div class="olt-puertos">
-          <span class="olt-puerto" *ngFor="let p of s.puertos" [ngClass]="claseDe(p)" [title]="tituloDe(p)">
+          <span class="olt-puerto" *ngFor="let p of s.puertos; trackBy: porPuerto" [ngClass]="claseDe(p)" [title]="tituloDe(p)">
             {{ numeroDe(p) }}
             <small class="olt-puerto-onus" *ngIf="p.onus">{{ p.onus }}</small>
           </span>
@@ -86,7 +86,7 @@
       <div class="olt-slot olt-slot--up" *ngIf="uplinks.length">
         <span class="olt-slot-nombre">Uplinks</span>
         <div class="olt-puertos">
-          <span class="olt-puerto olt-puerto--rj" *ngFor="let p of uplinks" [ngClass]="claseDe(p)" [title]="tituloDe(p)">
+          <span class="olt-puerto olt-puerto--rj" *ngFor="let p of uplinks; trackBy: porPuerto" [ngClass]="claseDe(p)" [title]="tituloDe(p)">
             {{ numeroDe(p) }}
           </span>
         </div>

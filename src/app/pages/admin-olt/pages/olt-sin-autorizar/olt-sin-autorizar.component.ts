@@ -72,8 +72,22 @@ export class OltSinAutorizarComponent implements OnInit {
   cargandoAutoAuth  = false;
   cambiandoPuerto: number | null = null;
 
-  get puertosAutoAuth(): { puerto: number; auto: boolean; de_fabrica: boolean }[] {
-    return Object.entries(this.autoAuth).map(([p, v]) => ({ puerto: +p, auto: v.auto, de_fabrica: v.de_fabrica }));
+  /**
+   * La lista que dibuja los switches. Se arma sólo cuando llegan datos nuevos
+   * y no en un getter: el getter creaba objetos nuevos en cada revisión de la
+   * pantalla, Angular volvía a crear los botones cada vez, y si la revisión
+   * caía entre apretar y soltar el mouse el navegador no contaba el click.
+   */
+  puertosAutoAuth: { puerto: number; auto: boolean; de_fabrica: boolean }[] = [];
+
+  /** Los switches se identifican por puerto: así Angular reutiliza el botón. */
+  readonly porPuerto = (_: number, p: { puerto: number }) => p.puerto;
+
+  private aplicarAutoAuth(puertos: Record<string, { auto: boolean; modo: string; de_fabrica: boolean }> | null | undefined): void {
+    this.autoAuth        = puertos ?? {};
+    this.puertosAutoAuth = Object.entries(this.autoAuth)
+      .map(([p, v]) => ({ puerto: +p, auto: v.auto, de_fabrica: v.de_fabrica }))
+      .sort((a, b) => a.puerto - b.puerto);
   }
 
   cargarAutoAuth(): void {
@@ -85,7 +99,7 @@ export class OltSinAutorizarComponent implements OnInit {
       next: (res) => {
         this.cargandoAutoAuth  = false;
         this.autoAuthSoportado = !!res?.data?.soportado;
-        this.autoAuth          = res?.data?.puertos ?? {};
+        this.aplicarAutoAuth(res?.data?.puertos);
       },
       error: () => { this.cargandoAutoAuth = false; this.autoAuthSoportado = false; },
     });
@@ -101,7 +115,7 @@ export class OltSinAutorizarComponent implements OnInit {
         this.cambiandoPuerto = null;
 
         // Se muestra lo que la OLT dice que quedó, aunque el cambio haya fallado.
-        if (res?.data?.puertos) this.autoAuth = res.data.puertos;
+        if (res?.data?.puertos) this.aplicarAutoAuth(res.data.puertos);
 
         if (res?.status === 0) {
           this.toast.success(res.message);
@@ -152,7 +166,7 @@ export class OltSinAutorizarComponent implements OnInit {
     this.srvProfiles  = [];
     const olt = this.olts.find(o => o.id === this.selectedOltId);
     this.defaultVlan = olt?.default_vlan ?? null;
-    this.autoAuth = {};
+    this.aplicarAutoAuth({});
     this.autoAuthSoportado = false;
     if (this.selectedOltId) {
       this.loadUnauth();
