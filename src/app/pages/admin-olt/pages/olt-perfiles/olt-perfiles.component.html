@@ -2,8 +2,12 @@
   <header class="np-head">
     <div>
       <p class="np-kicker">Red <b>/</b> OLT <b>/</b> Perfiles</p>
-      <h1 class="np-title">Perfiles ONT</h1>
-      <div class="np-ribbon"><span *ngIf="selectedOltId"><span class="np-n">{{ lineProfiles.length }}</span>line profiles · <span class="np-n">{{ srvProfiles.length }}</span>service profiles</span><span *ngIf="lastSynced" class="np-mono np-fine">sincronizado {{ lastSynced | date:'dd/MM/yy HH:mm' }}</span><span *ngIf="!selectedOltId">Line profiles y service profiles configurados en la OLT.</span></div>
+      <h1 class="np-title">Perfiles de ONT</h1>
+      <div class="np-ribbon">
+        <span *ngIf="selectedOltId"><span class="np-n">{{ lineProfiles.length }}</span>de línea <b>·</b> <span class="np-n">{{ srvProfiles.length }}</span>de servicio</span>
+        <span *ngIf="lastSynced" class="np-mono np-fine">sincronizado {{ lastSynced | date:'dd/MM/yy HH:mm' }}</span>
+        <span *ngIf="!selectedOltId">Los perfiles con los que la OLT da de alta cada ONT.</span>
+      </div>
     </div>
     <div class="np-actions">
       <label class="np-pagesize">OLT<select [(ngModel)]="selectedOltId" (ngModelChange)="onOltChange()" [disabled]="loadingOlts"><option [ngValue]="null">{{ loadingOlts ? 'Cargando…' : 'Seleccionar' }}</option><option *ngFor="let olt of olts" [ngValue]="olt.id">{{ olt.name }}</option></select></label>
@@ -11,16 +15,78 @@
     </div>
   </header>
   <div class="np-toolbar"><app-olt-nav></app-olt-nav></div>
+
   <div class="np-scroll">
     <p class="np-empty-block" *ngIf="!selectedOltId && !loadingOlts"><strong>Elegí una OLT para ver sus perfiles.</strong></p>
     <div *ngIf="loadingProfiles" class="np-loading"><span class="np-spinner"></span> Cargando perfiles…</div>
+
     <ng-container *ngIf="!loadingProfiles && selectedOltId">
-      <p class="np-empty-block" *ngIf="lineProfiles.length === 0 && srvProfiles.length === 0"><strong>No hay perfiles sincronizados.</strong><span>Hacé clic en Sincronizar desde OLT.</span></p>
+      <p class="np-empty-block" *ngIf="lineProfiles.length === 0 && srvProfiles.length === 0">
+        <strong>No hay perfiles sincronizados.</strong><span>Traelos con «Sincronizar desde OLT».</span>
+      </p>
+
+      <!-- Qué se va a usar al autorizar: es el dato que importa de esta pantalla -->
+      <section class="np-kpis" *ngIf="lineProfiles.length || srvProfiles.length">
+        <div class="np-kpi" [class.np-kpi--accent]="!lineDefectoHuerfano">
+          <span class="np-kpi-l">Perfil de línea al autorizar</span>
+          <span class="np-kpi-v" [class.np-kpi-v--danger]="lineDefectoHuerfano">{{ lineDefecto ?? '—' }}</span>
+          <span class="np-kpi-s">{{ lineDefectoHuerfano ? 'no existe en la OLT' : (lineDefecto != null ? 'configurado' : 'sin configurar') }}</span>
+        </div>
+        <div class="np-kpi" [class.np-kpi--accent]="!srvDefectoHuerfano">
+          <span class="np-kpi-l">Perfil de servicio al autorizar</span>
+          <span class="np-kpi-v" [class.np-kpi-v--danger]="srvDefectoHuerfano">{{ srvDefecto ?? '—' }}</span>
+          <span class="np-kpi-s">{{ srvDefectoHuerfano ? 'no existe en la OLT' : (srvDefecto != null ? 'configurado' : 'sin configurar') }}</span>
+        </div>
+        <div class="np-kpi">
+          <span class="np-kpi-l">VLAN por defecto</span>
+          <span class="np-kpi-v">{{ oltSeleccionada?.default_vlan ?? '—' }}</span>
+          <span class="np-kpi-s">se aplica al service port</span>
+        </div>
+      </section>
+
+      <div class="olt-aviso is-danger" *ngIf="lineDefectoHuerfano || srvDefectoHuerfano">
+        <strong>Un perfil configurado no existe en la OLT.</strong>
+        <span>El alta de ONT va a fallar con «The profile does not exist». Elegí abajo uno de los que la OLT sí tiene.</span>
+      </div>
+
       <div class="np-grid-2" *ngIf="lineProfiles.length || srvProfiles.length">
-        <section class="np-card"><div class="np-card-h"><h2>Line profiles</h2><span class="np-card-meta"><b>{{ lineProfiles.length }}</b></span></div>
-          <div class="np-tablewrap"><table class="np-table np-table--compact"><thead><tr><th>ID</th><th>Nombre</th></tr></thead><tbody><tr *ngFor="let p of lineProfiles"><td class="np-data np-strong">{{ p.profile_id }}</td><td>{{ p.profile_name }}</td></tr><tr *ngIf="!lineProfiles.length" class="np-empty"><td colspan="2">Sin line profiles.</td></tr></tbody></table></div></section>
-        <section class="np-card"><div class="np-card-h"><h2>Service profiles</h2><span class="np-card-meta"><b>{{ srvProfiles.length }}</b></span></div>
-          <div class="np-tablewrap"><table class="np-table np-table--compact"><thead><tr><th>ID</th><th>Nombre</th></tr></thead><tbody><tr *ngFor="let p of srvProfiles"><td class="np-data np-strong">{{ p.profile_id }}</td><td>{{ p.profile_name }}</td></tr><tr *ngIf="!srvProfiles.length" class="np-empty"><td colspan="2">Sin service profiles.</td></tr></tbody></table></div></section>
+        <section class="np-card">
+          <div class="np-card-h"><h2>Perfiles de línea</h2><span class="np-card-meta"><b>{{ lineProfiles.length }}</b></span></div>
+          <p class="np-hint">Definen el tráfico de la ONT: tcont, gemport y ancho de banda.</p>
+          <div class="np-tablewrap"><table class="np-table np-table--compact">
+            <thead><tr><th>ID</th><th>Nombre</th><th class="np-th-right">Al autorizar</th></tr></thead>
+            <tbody>
+              <tr *ngFor="let p of lineProfiles" [class.is-defecto]="esLineDefecto(p)">
+                <td class="np-data np-strong">{{ p.profile_id }}</td>
+                <td>{{ p.profile_name }}</td>
+                <td class="np-td-right">
+                  <span class="np-pill np-pill--active" *ngIf="esLineDefecto(p)">en uso</span>
+                  <button type="button" class="np-link" *ngIf="!esLineDefecto(p)" [disabled]="guardandoDefecto" (click)="usarPorDefecto('line', p)">usar este</button>
+                </td>
+              </tr>
+              <tr *ngIf="!lineProfiles.length" class="np-empty"><td colspan="3">Sin perfiles de línea.</td></tr>
+            </tbody>
+          </table></div>
+        </section>
+
+        <section class="np-card">
+          <div class="np-card-h"><h2>Perfiles de servicio</h2><span class="np-card-meta"><b>{{ srvProfiles.length }}</b></span></div>
+          <p class="np-hint">Definen los puertos de la ONT y cómo se etiquetan sus VLAN.</p>
+          <div class="np-tablewrap"><table class="np-table np-table--compact">
+            <thead><tr><th>ID</th><th>Nombre</th><th class="np-th-right">Al autorizar</th></tr></thead>
+            <tbody>
+              <tr *ngFor="let p of srvProfiles" [class.is-defecto]="esSrvDefecto(p)">
+                <td class="np-data np-strong">{{ p.profile_id }}</td>
+                <td>{{ p.profile_name }}</td>
+                <td class="np-td-right">
+                  <span class="np-pill np-pill--active" *ngIf="esSrvDefecto(p)">en uso</span>
+                  <button type="button" class="np-link" *ngIf="!esSrvDefecto(p)" [disabled]="guardandoDefecto" (click)="usarPorDefecto('srv', p)">usar este</button>
+                </td>
+              </tr>
+              <tr *ngIf="!srvProfiles.length" class="np-empty"><td colspan="3">Sin perfiles de servicio.</td></tr>
+            </tbody>
+          </table></div>
+        </section>
       </div>
     </ng-container>
   </div>

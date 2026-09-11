@@ -15,6 +15,7 @@
     <ng-container *ngIf="selectedOltId">
       <label class="np-search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg><input type="search" [(ngModel)]="searchTerm" (ngModelChange)="resetPage()" placeholder="Buscar…" /></label>
       <label class="np-pagesize">Puerto<select [(ngModel)]="filterPort" (ngModelChange)="resetPage()"><option value="">Todos</option><option *ngFor="let p of uniquePorts" [value]="p">{{ p }}</option></select></label>
+      <button type="button" class="np-chip" *ngIf="hayMedicionesDeSenal" [attr.aria-pressed]="soloConFalla" (click)="soloConFalla = !soloConFalla; resetPage()">Señal en falla<span class="np-c">{{ cuantasConFalla }}</span></button>
       <span class="np-spacer"></span>
       <label class="np-pagesize">Mostrar<select [(ngModel)]="perPage" (ngModelChange)="changePerPage()"><option *ngFor="let n of perPageOptions" [ngValue]="n">{{ n }}</option></select></label>
     </ng-container>
@@ -22,17 +23,18 @@
   <div class="np-workspace">
     <section class="np-registry">
       <div class="np-registry-wrap"><table class="np-table np-table--registry">
-        <thead><tr><th class="np-th-stripe"></th><th>Puerto</th><th>ID</th><th>Descripción / serial</th><th class="np-col-sp">Service ports</th><th class="np-th-right"></th></tr></thead>
+        <thead><tr><th class="np-th-stripe"></th><th>Puerto</th><th>ID</th><th>Descripción / serial</th><th class="np-th-right">Señal</th><th class="np-col-sp">Service ports</th><th class="np-th-right"></th></tr></thead>
         <tbody>
-          <tr *ngIf="!selectedOltId && !loadingOlts" class="np-empty"><td colspan="6"><strong>Elegí una OLT para ver las ONTs en línea.</strong></td></tr>
-          <tr *ngIf="loadingOnts" class="np-empty"><td colspan="6"><span class="np-spinner"></span></td></tr>
-          <tr *ngIf="!loadingOnts && selectedOltId && lastFetched && filteredOnts.length === 0" class="np-empty"><td colspan="6"><strong>No hay ONTs en línea en este momento.</strong></td></tr>
+          <tr *ngIf="!selectedOltId && !loadingOlts" class="np-empty"><td colspan="7"><strong>Elegí una OLT para ver las ONTs en línea.</strong></td></tr>
+          <tr *ngIf="loadingOnts" class="np-empty"><td colspan="7"><span class="np-spinner"></span></td></tr>
+          <tr *ngIf="!loadingOnts && selectedOltId && lastFetched && filteredOnts.length === 0" class="np-empty"><td colspan="7"><strong>No hay ONTs en línea en este momento.</strong></td></tr>
           <ng-container *ngIf="!loadingOnts && selectedOltId">
             <tr *ngFor="let ont of pagedOnts" class="np-row np-row--on" [attr.aria-selected]="detailModal && detailOnt?.ont_id === ont.ont_id && detailOnt?.fsp === ont.fsp" (click)="openDetail(ont)" tabindex="0" (keydown.enter)="openDetail(ont)">
               <td class="np-stripe"><i></i></td>
               <td class="np-data np-strong">{{ ont.fsp }}</td>
               <td class="np-data">{{ ont.ont_id }}</td>
               <td><div class="np-name">{{ ont.description || '—' }}</div><div class="np-plan" *ngIf="ont.serial"><em>{{ ont.serial }}</em></div></td>
+              <td class="np-data np-td-right" [ngClass]="tonoDeSenal(ont)">{{ potenciaDe(ont) != null ? potenciaDe(ont) + ' dBm' : (cargandoSenal ? '…' : '—') }}</td>
               <td class="np-col-sp"><span class="np-tags" *ngIf="ont.service_ports?.length; else noSp"><span class="np-tag" *ngFor="let sp of ont.service_ports">SP{{ sp.index }} / V{{ sp.vlan }}</span></span><ng-template #noSp><span class="np-muted">Sin SP</span></ng-template></td>
               <td class="np-td-right"><div class="np-rowacts"><button type="button" class="np-icobtn" title="Señal en tiempo real"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12h4l3-8 4 16 3-8h4"/></svg></button></div></td>
             </tr>
@@ -54,10 +56,15 @@
       <div class="np-insp-body" *ngIf="!loadingDetail">
         <section>
           <p class="np-sect">Señal óptica</p>
-          <div class="np-stats" *ngIf="detailInfo; else noInfo">
-            <div class="np-stat"><span class="np-stat-l">Rx ONT</span><span class="np-stat-v" [ngClass]="rxTone(detailInfo?.rx_optical_power_dbm ?? detailInfo?.rx_power)">{{ (detailInfo?.rx_optical_power_dbm ?? detailInfo?.rx_power) != null ? (detailInfo?.rx_optical_power_dbm ?? detailInfo?.rx_power) + ' dBm' : '—' }}</span></div>
-            <div class="np-stat"><span class="np-stat-l">Tx ONT</span><span class="np-stat-v">{{ (detailInfo?.tx_optical_power_dbm ?? detailInfo?.tx_power) != null ? (detailInfo?.tx_optical_power_dbm ?? detailInfo?.tx_power) + ' dBm' : '—' }}</span></div>
-            <div class="np-stat"><span class="np-stat-l">Rx OLT</span><span class="np-stat-v" [ngClass]="rxTone(detailInfo?.olt_rx_power_dbm ?? detailInfo?.olt_rx_power)">{{ (detailInfo?.olt_rx_power_dbm ?? detailInfo?.olt_rx_power) != null ? (detailInfo?.olt_rx_power_dbm ?? detailInfo?.olt_rx_power) + ' dBm' : '—' }}</span></div>
+          <!-- La medición del barrido manda: la consulta individual lee otra
+               columna de la tabla óptica y llegaba a mostrar el voltaje como
+               si fuera potencia. -->
+          <div class="np-stats" *ngIf="senalDe(detailOnt) || detailInfo; else noInfo">
+            <div class="np-stat"><span class="np-stat-l">Potencia recibida</span><span class="np-stat-v" [ngClass]="tonoDeSenal(detailOnt)">{{ potenciaDe(detailOnt) != null ? potenciaDe(detailOnt) + ' dBm' : '—' }}</span></div>
+            <div class="np-stat"><span class="np-stat-l">Clasificación</span><span class="np-stat-v" [ngClass]="tonoDeSenal(detailOnt)">{{ etiquetaDeSenal(detailOnt) }}</span></div>
+            <div class="np-stat"><span class="np-stat-l">Temperatura</span><span class="np-stat-v">{{ senalDe(detailOnt)?.temperatura != null ? senalDe(detailOnt).temperatura + ' °C' : '—' }}</span></div>
+            <div class="np-stat"><span class="np-stat-l">Voltaje</span><span class="np-stat-v">{{ senalDe(detailOnt)?.voltaje != null ? senalDe(detailOnt).voltaje + ' V' : '—' }}</span></div>
+            <div class="np-stat"><span class="np-stat-l">Corriente láser</span><span class="np-stat-v">{{ senalDe(detailOnt)?.corriente != null ? senalDe(detailOnt).corriente + ' mA' : '—' }}</span></div>
           </div>
           <ng-template #noInfo><p class="np-muted">No se pudo obtener la señal óptica.</p></ng-template>
         </section>

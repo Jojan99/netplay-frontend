@@ -1,0 +1,112 @@
+/* Estado de la OLT: histograma de potencia, clases y puertos PON. */
+
+.olt-dash-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+/* Histograma: una columna por tramo de 2 dBm. */
+.olt-hist {
+  display: flex;
+  align-items: flex-end;
+  gap: 6px;
+  height: 150px;
+  padding: 12px 12px 0;
+}
+
+.olt-hist-col {
+  flex: 1 1 0;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  height: 100%;
+  gap: 3px;
+}
+
+.olt-hist-n {
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--text-3);
+  font-variant-numeric: tabular-nums;
+}
+
+.olt-hist-bar {
+  width: 100%;
+  min-height: 2px;
+  border-radius: 2px 2px 0 0;
+  background: var(--surface-3);
+
+  &.is-ok     { background: var(--ok); }
+  &.is-warn   { background: var(--warn); }
+  &.is-danger { background: var(--danger); }
+}
+
+.olt-hist-x {
+  font-size: 9.5px;
+  color: var(--text-3);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+/* Las clases de señal hacen de leyenda y de filtro a la vez. */
+.olt-clases {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(84px, 1fr));
+  gap: 6px;
+  padding: 12px;
+  border-top: 1px solid var(--line);
+}
+
+.olt-clase {
+  display: grid;
+  gap: 1px;
+  padding: 7px 8px;
+  text-align: left;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  cursor: pointer;
+
+  &:hover   { background: var(--surface-2); }
+  &.is-sel  { border-color: var(--text); box-shadow: inset 0 0 0 1px var(--text); }
+
+  /* El número toma el color de la clase; el resto queda neutro. */
+  &.is-ok     .olt-clase-n { color: var(--ok); }
+  &.is-warn   .olt-clase-n { color: var(--warn); }
+  &.is-danger .olt-clase-n { color: var(--danger); }
+  &.is-muted  .olt-clase-n { color: var(--text-3); }
+}
+
+.olt-clase-n { font-size: 17px; font-weight: 800; line-height: 1.1; font-variant-numeric: tabular-nums; }
+.olt-clase-l { font-size: 11px; font-weight: 700; color: var(--text-2); }
+.olt-clase-p { font-size: 10px; color: var(--text-3); font-variant-numeric: tabular-nums; }
+
+/* Tonos reutilizados en celdas y pastillas. */
+.np-data.is-ok, .np-pill.is-ok         { color: var(--ok); }
+.np-data.is-warn, .np-pill.is-warn     { color: var(--warn); }
+.np-data.is-danger, .np-pill.is-danger { color: var(--danger); }
+.np-data.is-muted, .np-pill.is-muted   { color: var(--text-3); }
+
+.np-pill.is-ok     { background: color-mix(in srgb, var(--ok) 14%, transparent); }
+.np-pill.is-warn   { background: color-mix(in srgb, var(--warn) 16%, transparent); }
+.np-pill.is-danger { background: color-mix(in srgb, var(--danger) 14%, transparent); }
+
+.np-card-actions {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+
+  .np-link.is-sel { color: var(--text); text-decoration: underline; }
+}
+
+@media (max-width: 1100px) {
+  .olt-dash-grid { grid-template-columns: minmax(0, 1fr); }
+}
+
+@media (max-width: 640px) {
+  .olt-hist { height: 120px; gap: 3px; }
+  .olt-hist-x { display: none; }
+}

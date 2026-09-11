@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { OltNavComponent } from '../../shared/olt-nav.component';
 import { FormsModule } from '@angular/forms';
+import { ActivatedRoute } from '@angular/router';
 import { OltService } from '../../../../services/olt.service';
 import { ToastService } from '../../../../services/toast.service';
 
@@ -35,12 +36,32 @@ export class OltOnlineComponent implements OnInit {
   detailInfo: any       = null;
   loadingDetail         = false;
 
+  /**
+   * Potencia de cada ONT, indexada por "fsp:id".
+   *
+   * Viene del barrido óptico de la OLT —una sola consulta para toda la red—,
+   * así que la lista puede mostrar la señal de cada cliente sin abrir su
+   * detalle, que es lo que obligaba a entrar de a una.
+   */
+  senalPorOnt: Record<string, any> = {};
+  cargandoSenal = false;
+
+  /** Sólo las ONT cuya señal está por debajo del umbral. */
+  soloConFalla = false;
+
   constructor(
     private oltService: OltService,
     private toast: ToastService,
+    private route: ActivatedRoute,
   ) {}
 
-  ngOnInit(): void { this.loadOlts(); }
+  ngOnInit(): void {
+    // El tab Estado enlaza acá con el puerto ya elegido.
+    const puerto = this.route.snapshot.queryParamMap.get('puerto');
+    if (puerto) this.filterPort = puerto;
+
+    this.loadOlts();
+  }
 
   loadOlts(): void {
     this.loadingOlts = true;
@@ -58,10 +79,11 @@ export class OltOnlineComponent implements OnInit {
   }
 
   onOltChange(): void {
-    this.onts = [];
+    this.onts        = [];
     this.lastFetched = null;
     this.filterPort  = '';
     this.page        = 1;
+    this.senalPorOnt = {};
     if (this.selectedOltId) this.loadOnts();
   }
 
@@ -73,12 +95,59 @@ export class OltOnlineComponent implements OnInit {
         this.loadingOnts = false;
         this.onts        = (res.data ?? []).filter((o: any) => o.status === 'online');
         this.lastFetched = new Date();
+        this.cargarSenal();
       },
       error: (err) => {
         this.loadingOnts = false;
         this.toast.error(err?.error?.message || 'Error al cargar ONTs');
       },
     });
+  }
+
+  /** El barrido óptico de toda la OLT, para la columna de señal. */
+  cargarSenal(refrescar = false): void {
+    if (!this.selectedOltId) return;
+
+    this.cargandoSenal = true;
+
+    this.oltService.getSenal(this.selectedOltId, refrescar).subscribe({
+      next: (res) => {
+        this.cargandoSenal = false;
+        const mapa: Record<string, any> = {};
+
+        for (const o of res?.data?.onts ?? []) mapa[`${o.fsp}:${o.ont_id}`] = o;
+
+        this.senalPorOnt = mapa;
+      },
+      error: () => { this.cargandoSenal = false; },
+    });
+  }
+
+  senalDe(ont: any): any { return this.senalPorOnt[`${ont.fsp}:${ont.ont_id}`] ?? null; }
+
+  potenciaDe(ont: any): number | null { return this.senalDe(ont)?.potencia ?? null; }
+
+  estadoDeSenal(ont: any): string { return this.senalDe(ont)?.estado ?? 'sin_dato'; }
+
+  tonoDeSenal(ont: any): string {
+    return {
+      buena: 'is-ok', regular: 'is-warn', baja: 'is-warn',
+      critica: 'is-danger', saturada: 'is-danger', sin_dato: '',
+    }[this.estadoDeSenal(ont)] ?? '';
+  }
+
+  get hayMedicionesDeSenal(): boolean { return Object.keys(this.senalPorOnt).length > 0; }
+
+  etiquetaDeSenal(ont: any): string {
+    return {
+      buena: 'Buena', regular: 'Regular', baja: 'Baja',
+      critica: 'Crítica', saturada: 'Saturada', sin_dato: 'Sin medir',
+    }[this.estadoDeSenal(ont)] ?? '—';
+  }
+
+  /** Cuántas de las ONT en línea tienen la señal por debajo del umbral. */
+  get cuantasConFalla(): number {
+    return this.onts.filter(o => ['baja', 'critica', 'saturada'].includes(this.estadoDeSenal(o))).length;
   }
 
   // ── Detail: service-ports + señal óptica ─────────────────────────────────
@@ -110,6 +179,9 @@ export class OltOnlineComponent implements OnInit {
   get filteredOnts(): any[] {
     let list = this.onts;
     if (this.filterPort) list = list.filter(o => o.fsp === this.filterPort);
+    if (this.soloConFalla) {
+      list = list.filter(o => ['baja', 'critica', 'saturada'].includes(this.estadoDeSenal(o)));
+    }
     const t = this.searchTerm.toLowerCase();
     if (t) list = list.filter(o =>
       (o.fsp ?? '').toLowerCase().includes(t) ||

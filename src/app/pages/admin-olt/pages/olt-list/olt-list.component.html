@@ -37,65 +37,102 @@
 </div>
 
 <div *ngIf="modal" class="np-overlay" (click)="modal = false">
-  <div class="np-modal np-modal--lg" role="dialog" aria-modal="true" (click)="$event.stopPropagation()">
-    <div class="np-modal-head"><div><p class="np-kicker">OLT <b>/</b> {{ modalMode === 'create' ? 'Nueva' : 'Editar' }}</p><h3>{{ modalMode === 'create' ? 'Nueva OLT' : 'Editar OLT' }}</h3></div>
-      <button type="button" class="np-icobtn" (click)="modal = false" aria-label="Cerrar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div>
-    <div class="np-modal-body np-modal-body--scroll">
-      <div class="np-form">
-        <label class="np-field"><span>Nombre <em>*</em></span><input class="np-input" [(ngModel)]="form.name" placeholder="OLT Principal" /></label>
-        <label class="np-field"><span>Marca <em>*</em></span><select class="np-input" [(ngModel)]="form.brand"><option *ngFor="let m of marcas" [value]="m.valor">{{ m.nombre }}</option></select></label>
-        <label class="np-field"><span>Host / IP <em>*</em></span><input class="np-input np-mono" [(ngModel)]="form.host" placeholder="192.168.1.1" /></label>
-        <label class="np-field"><span>Puerto</span><input type="number" class="np-input np-mono" [(ngModel)]="form.port" /></label>
-        <label class="np-field"><span>Usuario</span><input class="np-input np-mono" [(ngModel)]="form.username" placeholder="admin" /></label>
-        <label class="np-field"><span>Contraseña {{ modalMode === 'edit' ? '(vacío = sin cambio)' : '' }}</span><input type="password" class="np-input" [(ngModel)]="form.password" /></label>
-        <label class="np-field"><span>Enable password</span><input type="password" class="np-input" [(ngModel)]="form.enable_password" /></label>
-        <label class="np-field"><span>Cómo se llega</span><select class="np-input" [(ngModel)]="form.access_mode"><option value="direct">Directo a la OLT</option><option value="jump">Pasando por un jump host</option></select></label>
-        <label class="np-field"><span>VLAN por defecto</span><input type="number" class="np-input np-mono" [(ngModel)]="form.default_vlan" placeholder="100" /></label>
-        <label class="np-field"><span>Line profile ID</span><input type="number" class="np-input np-mono" [(ngModel)]="form.ont_lineprofile_id" placeholder="10" /></label>
-        <label class="np-field"><span>Srv profile ID</span><input type="number" class="np-input np-mono" [(ngModel)]="form.ont_srvprofile_id" placeholder="10" /></label>
+  <div class="np-modal olt-modal" role="dialog" aria-modal="true" (click)="$event.stopPropagation()">
+    <div class="np-modal-head">
+      <div>
+        <p class="np-kicker">OLT <b>/</b> {{ modalMode === 'create' ? 'Nueva' : 'Editar' }}</p>
+        <h3>{{ modalMode === 'create' ? 'Nueva OLT' : (form.name || 'Editar OLT') }}</h3>
       </div>
+      <button type="button" class="np-icobtn" (click)="modal = false" aria-label="Cerrar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
+    </div>
 
-      <!-- Lo que cada marca pide aparte para poder autorizar una ONT -->
-      <section class="np-panel" *ngIf="form.brand === 'zte'">
-        <div class="np-sect">Datos propios de ZTE</div>
-        <p class="np-hint">ZTE exige el tipo de ONU al registrar y toma la velocidad del perfil de tráfico. Los ves en la OLT con <code>show gpon onu-type</code> y <code>show gpon profile tcont</code>.</p>
-        <div class="np-form">
-          <label class="np-field"><span>Tipo de ONU</span><input class="np-input np-mono" [(ngModel)]="form.zte_onu_type" placeholder="ZXHN-F660 · ALL" /></label>
-          <label class="np-field"><span>Perfil de tráfico (tcont)</span><input class="np-input np-mono" [(ngModel)]="form.zte_dba_profile" placeholder="UP-50M" /></label>
-        </div>
-      </section>
+    <!-- Cada grupo en su pestaña: la modal entra en pantalla sin tener que
+         desplazarse por veinte campos seguidos. -->
+    <div class="np-tabs" role="tablist">
+      <button type="button" class="np-tab" *ngFor="let t of pestanas" role="tab"
+              [attr.aria-selected]="pestana === t.id" (click)="pestana = t.id">
+        {{ t.label }}
+        <span class="np-c" *ngIf="t.id === 'acceso' && form.access_mode === 'jump'">·</span>
+        <span class="np-c" *ngIf="t.id === 'marca' && faltaDatoDeMarca">!</span>
+      </button>
+    </div>
 
-      <section class="np-panel" *ngIf="form.brand === 'vsol'">
-        <div class="np-sect">Datos propios de V-SOL</div>
-        <p class="np-hint">V-SOL autoriza la ONU contra un perfil de ONU que tiene que existir en el equipo. Lo creás en la OLT con <code>profile onu id N name …</code>.</p>
+    <div class="np-modal-body olt-modal-body">
+      <ng-container *ngIf="pestana === 'conexion'">
         <div class="np-form">
-          <label class="np-field"><span>Perfil de ONU <em>*</em></span><input class="np-input np-mono" [(ngModel)]="form.vsol_onu_profile" placeholder="gpononu" /></label>
+          <label class="np-field np-field-full"><span>Nombre <em>*</em></span><input class="np-input" [(ngModel)]="form.name" placeholder="OLT Principal" /></label>
+          <label class="np-field np-field-full"><span>Marca <em>*</em></span><select class="np-input" [(ngModel)]="form.brand"><option *ngFor="let m of marcas" [value]="m.valor">{{ m.nombre }}</option></select></label>
+          <label class="np-field"><span>Host / IP <em>*</em></span><input class="np-input np-mono" [(ngModel)]="form.host" placeholder="192.168.1.1" /></label>
+          <label class="np-field"><span>Puerto</span><input type="number" class="np-input np-mono" [(ngModel)]="form.port" /></label>
+          <label class="np-field"><span>Usuario</span><input class="np-input np-mono" [(ngModel)]="form.username" placeholder="admin" /></label>
+          <label class="np-field"><span>Contraseña{{ modalMode === 'edit' ? ' ·  sin cambio si va vacía' : '' }}</span><input type="password" class="np-input" [(ngModel)]="form.password" autocomplete="new-password" /></label>
+          <label class="np-field"><span>Enable password</span><input type="password" class="np-input" [(ngModel)]="form.enable_password" autocomplete="new-password" /></label>
+          <label class="np-field"><span>Cómo se llega</span><select class="np-input" [(ngModel)]="form.access_mode"><option value="direct">Directo</option><option value="jump">Por jump host</option></select></label>
         </div>
-      </section>
-      <section class="np-panel">
-        <button type="button" class="np-sect np-sect--btn" (click)="showAdvanced = !showAdvanced">Jump host (bastión SSH) <span class="np-sect-actions">{{ showAdvanced ? 'ocultar' : 'mostrar' }}</span></button>
-        <div class="np-form" *ngIf="showAdvanced">
-          <label class="np-field"><span>Jump host IP</span><input class="np-input np-mono" [(ngModel)]="form.jump_host" placeholder="10.0.0.1" /></label>
+      </ng-container>
+
+      <ng-container *ngIf="pestana === 'onts'">
+        <p class="np-hint">Con esto se autorizan las ONT cuando no se indica otro valor.</p>
+        <div class="np-form">
+          <label class="np-field"><span>VLAN por defecto</span><input type="number" class="np-input np-mono" [(ngModel)]="form.default_vlan" placeholder="100" /></label>
+          <label class="np-field"><span>Line profile</span><input type="number" class="np-input np-mono" [(ngModel)]="form.ont_lineprofile_id" placeholder="10" /></label>
+          <label class="np-field"><span>Srv profile</span><input type="number" class="np-input np-mono" [(ngModel)]="form.ont_srvprofile_id" placeholder="10" /></label>
+        </div>
+      </ng-container>
+
+      <ng-container *ngIf="pestana === 'marca'">
+        <ng-container *ngIf="form.brand === 'zte'">
+          <p class="np-hint">ZTE pide el tipo de ONU al registrar y toma la velocidad del perfil de tráfico. Los ves con <code>show gpon onu-type</code> y <code>show gpon profile tcont</code>.</p>
+          <div class="np-form">
+            <label class="np-field"><span>Tipo de ONU</span><input class="np-input np-mono" [(ngModel)]="form.zte_onu_type" placeholder="ZXHN-F660 · ALL" /></label>
+            <label class="np-field"><span>Perfil tcont</span><input class="np-input np-mono" [(ngModel)]="form.zte_dba_profile" placeholder="UP-50M" /></label>
+          </div>
+        </ng-container>
+
+        <ng-container *ngIf="form.brand === 'vsol'">
+          <p class="np-hint">V-SOL autoriza contra un perfil de ONU que ya tiene que existir en el equipo: <code>profile onu id N name …</code>.</p>
+          <div class="np-form">
+            <label class="np-field np-field-full"><span>Perfil de ONU <em>*</em></span><input class="np-input np-mono" [(ngModel)]="form.vsol_onu_profile" placeholder="gpononu" /></label>
+          </div>
+        </ng-container>
+
+        <p class="np-hint" *ngIf="form.brand !== 'zte' && form.brand !== 'vsol'">
+          {{ nombreDeMarca(form.brand) }} no necesita datos adicionales: alcanza con los perfiles de la pestaña ONTs.
+        </p>
+      </ng-container>
+
+      <ng-container *ngIf="pestana === 'acceso'">
+        <p class="np-hint" *ngIf="form.access_mode !== 'jump'">La OLT está marcada como acceso directo. Si hay que pasar por un bastión, cambiá «Cómo se llega» en Conexión.</p>
+        <div class="np-form">
+          <label class="np-field"><span>Jump host</span><input class="np-input np-mono" [(ngModel)]="form.jump_host" placeholder="10.0.0.1" /></label>
           <label class="np-field"><span>Puerto SSH</span><input type="number" class="np-input np-mono" [(ngModel)]="form.jump_port" /></label>
-          <label class="np-field"><span>Usuario bastión</span><input class="np-input np-mono" [(ngModel)]="form.jump_user" /></label>
-          <label class="np-field"><span>Contraseña bastión</span><input type="password" class="np-input" [(ngModel)]="form.jump_pass" /></label>
+          <label class="np-field"><span>Usuario</span><input class="np-input np-mono" [(ngModel)]="form.jump_user" /></label>
+          <label class="np-field"><span>Contraseña{{ modalMode === 'edit' ? ' ·  sin cambio si va vacía' : '' }}</span><input type="password" class="np-input" [(ngModel)]="form.jump_pass" autocomplete="new-password" /></label>
         </div>
-      </section>
-      <section class="np-panel">
-        <button type="button" class="np-sect np-sect--btn" (click)="showSnmp = !showSnmp">SNMP <span class="np-sect-actions">{{ showSnmp ? 'ocultar' : 'mostrar' }}</span></button>
-        <div class="np-form" *ngIf="showSnmp">
-          <label class="np-field"><span>SNMP host</span><input class="np-input np-mono" [(ngModel)]="form.snmp_host" placeholder="mismo host de la OLT si vacío" /></label>
+      </ng-container>
+
+      <ng-container *ngIf="pestana === 'snmp'">
+        <p class="np-hint">De acá salen la ficha del equipo y la señal óptica. Sin SNMP la plataforma sólo puede usar la consola.</p>
+        <div class="np-form">
           <label class="np-field"><span>Community</span><input class="np-input np-mono" [(ngModel)]="form.snmp_community" placeholder="public" /></label>
           <label class="np-field"><span>Versión</span><select class="np-input" [(ngModel)]="form.snmp_version"><option value="2c">2c</option><option value="1">1</option></select></label>
-          <label class="np-field"><span>Puerto SNMP</span><input type="number" class="np-input np-mono" [(ngModel)]="form.snmp_port" /></label>
-          <label class="np-field"><span>SNMP jump host</span><input class="np-input np-mono" [(ngModel)]="form.snmp_jump_host" /></label>
-          <label class="np-field"><span>SNMP jump puerto</span><input type="number" class="np-input np-mono" [(ngModel)]="form.snmp_jump_port" /></label>
-          <label class="np-field"><span>SNMP jump usuario</span><input class="np-input np-mono" [(ngModel)]="form.snmp_jump_user" /></label>
-          <label class="np-field"><span>SNMP jump contraseña {{ modalMode === 'edit' ? '(vacío = sin cambio)' : '' }}</span><input type="password" class="np-input" [(ngModel)]="form.snmp_jump_pass" /></label>
+          <label class="np-field"><span>Host <span class="np-fine">· vacío = el de la OLT</span></span><input class="np-input np-mono" [(ngModel)]="form.snmp_host" /></label>
+          <label class="np-field"><span>Puerto</span><input type="number" class="np-input np-mono" [(ngModel)]="form.snmp_port" /></label>
+          <label class="np-field"><span>Jump host SNMP</span><input class="np-input np-mono" [(ngModel)]="form.snmp_jump_host" /></label>
+          <label class="np-field"><span>Puerto</span><input type="number" class="np-input np-mono" [(ngModel)]="form.snmp_jump_port" /></label>
+          <label class="np-field"><span>Usuario</span><input class="np-input np-mono" [(ngModel)]="form.snmp_jump_user" /></label>
+          <label class="np-field"><span>Contraseña{{ modalMode === 'edit' ? ' ·  sin cambio si va vacía' : '' }}</span><input type="password" class="np-input" [(ngModel)]="form.snmp_jump_pass" autocomplete="new-password" /></label>
         </div>
-      </section>
+      </ng-container>
     </div>
-    <div class="np-modal-foot"><button type="button" class="np-btn np-btn--ghost" (click)="modal = false">Cancelar</button><button type="button" class="np-btn np-btn--primary" (click)="saveForm()" [disabled]="saving || !form.name.trim() || !form.host.trim()">{{ saving ? 'Guardando…' : (modalMode === 'create' ? 'Crear OLT' : 'Guardar cambios') }}</button></div>
+
+    <div class="np-modal-foot">
+      <span class="np-fine olt-modal-aviso" *ngIf="avisoDelFormulario">{{ avisoDelFormulario }}</span>
+      <button type="button" class="np-btn np-btn--ghost" (click)="modal = false">Cancelar</button>
+      <button type="button" class="np-btn np-btn--primary" (click)="saveForm()" [disabled]="saving || !puedeGuardar">
+        <span *ngIf="saving" class="np-spinner np-spinner--sm"></span>{{ saving ? 'Guardando…' : (modalMode === 'create' ? 'Crear OLT' : 'Guardar') }}
+      </button>
+    </div>
   </div>
 </div>
 

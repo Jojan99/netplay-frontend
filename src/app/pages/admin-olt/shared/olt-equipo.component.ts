@@ -36,7 +36,7 @@ interface TarjetaOlt {
   standalone: true,
   imports: [CommonModule],
   templateUrl: './olt-equipo.component.html',
-  styleUrl: './olt-equipo.scss',
+  styleUrls: ['./olt.scss', './olt-equipo.scss'],
 })
 export class OltEquipoComponent implements OnChanges {
 

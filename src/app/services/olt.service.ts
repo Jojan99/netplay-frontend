@@ -64,6 +64,22 @@ export class OltService {
     });
   }
 
+  /**
+   * Señal óptica de todas las ONT en un solo barrido: clasificación,
+   * histograma, estado por puerto PON y los peores enlaces.
+   */
+  getSenal(oltId: number, refrescar = false): Observable<any> {
+    const params = new HttpParams().set('refrescar', refrescar ? '1' : '0');
+    return this.http.get<any>(`${this.env.rootUrl}api/management/olt/${oltId}/senal`, { headers: this.getHeaders(), params });
+  }
+
+  /** Fija los perfiles que se usan al autorizar una ONT en esta OLT. */
+  fijarPerfilesPorDefecto(oltId: number, lineProfileId: number | null, srvProfileId: number | null): Observable<any> {
+    return this.http.post<any>(`${this.env.rootUrl}api/management/olt/${oltId}/profiles/default`,
+      JSON.stringify({ ont_lineprofile_id: lineProfileId, ont_srvprofile_id: srvProfileId }),
+      { headers: this.getHeaders() });
+  }
+
   /** Prueba la conexión con la OLT paso por paso. */
   diagnosticoOlt(oltId: number): Observable<any> {
     return this.http.get<any>(`${this.env.rootUrl}api/management/olt/${oltId}/diagnostico`, { headers: this.getHeaders() });

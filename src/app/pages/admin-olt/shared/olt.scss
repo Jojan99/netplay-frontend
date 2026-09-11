@@ -92,3 +92,83 @@
   &[data-estado='falla'] > i   { background: var(--danger-soft); color: var(--danger); }
   &[data-estado='omitido'] > i { background: var(--surface); color: var(--text-3); }
 }
+
+/* ── Modal de OLT ────────────────────────────────────────────────────────
+   Los campos van repartidos en pestañas, así que la modal se queda en un
+   alto fijo: antes crecía hasta veinte campos y había que desplazarla toda
+   para llegar al botón de guardar. */
+.olt-modal {
+  display: flex;
+  flex-direction: column;
+  max-height: calc(100vh - 80px);
+}
+
+.olt-modal-body {
+  /* Alto estable entre pestañas para que el botón no salte al cambiar. */
+  min-height: 232px;
+  align-content: start;
+  overflow-y: auto;
+}
+
+.olt-modal-aviso {
+  margin-right: auto;
+  align-self: center;
+  color: var(--warn);
+  text-align: left;
+}
+
+@media (max-width: 560px) {
+  .olt-modal-body { min-height: 0; }
+}
+
+/* Aviso en línea dentro de una tarjeta: lo usan la ficha del equipo,
+   el estado y los perfiles. */
+.olt-aviso {
+  display: flex; flex-direction: column; gap: 3px;
+  margin: 10px 12px; padding: 10px 12px;
+  border-left: 3px solid var(--warn);
+  background: var(--surface-2);
+  font-size: 12px; color: var(--text-2);
+
+  strong { color: var(--text); font-size: 12.5px; }
+
+  &.is-danger { border-left-color: var(--danger); }
+  &.is-warn   { border-left-color: var(--warn); }
+}
+
+
+/* El perfil que la OLT usa al autorizar queda señalado en la tabla. */
+.np-table tbody tr.is-defecto {
+  background: color-mix(in srgb, var(--accent) 7%, transparent);
+
+  td:first-child { box-shadow: inset 2px 0 0 var(--accent); }
+}
+
+/* Texto de ayuda dentro de una tarjeta o una modal: explica para qué sirve el
+   grupo de campos que viene debajo. */
+.np-hint {
+  margin: 0;
+  padding: 9px 12px 0;
+  font-size: 11.5px;
+  line-height: 1.5;
+  color: var(--text-3);
+
+  code {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    padding: 1px 4px;
+    background: var(--surface-3);
+    color: var(--text-2);
+  }
+}
+
+/* En una modal el texto de ayuda va al ancho del cuerpo, sin sangría extra. */
+.np-modal-body > .np-hint { padding: 0; }
+
+/* Un service port con el índice repetido se marca en rojo: la OLT lo acepta
+   pero el tráfico de uno de los dos clientes sale por el otro. */
+.np-table tbody tr.is-conflicto {
+  background: color-mix(in srgb, var(--danger) 7%, transparent);
+}
+
+.np-warn-text { color: var(--danger); }

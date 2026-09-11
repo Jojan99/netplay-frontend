@@ -2,38 +2,152 @@
   <header class="np-head">
     <div>
       <p class="np-kicker">Red <b>/</b> OLT <b>/</b> Estado</p>
-      <h1 class="np-title">{{ selectedOltId ? selectedOltName() : 'Estado de ONTs' }}</h1>
+      <h1 class="np-title">{{ selectedOltId ? selectedOltName() : 'Estado de la OLT' }}</h1>
       <div class="np-ribbon" *ngIf="lastFetched && selectedOltId">
         <span><span class="np-n">{{ totalOnts }}</span>ONTs</span>
         <span><i class="np-dot" style="background:var(--ok)"></i><span class="np-n">{{ onlineCount }}</span>en línea</span>
-        <span><i class="np-dot" style="background:var(--danger)"></i><span class="np-n">{{ offlineCount }}</span>fuera de línea</span>
+        <span><i class="np-dot" style="background:var(--danger)"></i><span class="np-n">{{ offlineCount }}</span>fuera</span>
+        <span *ngIf="resumen?.con_falla"><i class="np-dot" style="background:var(--warn)"></i><span class="np-n">{{ resumen.con_falla }}</span>con señal en falla</span>
         <span class="np-mono np-fine">consultado {{ lastFetched | date:'HH:mm:ss' }}</span>
       </div>
     </div>
     <div class="np-actions">
       <label class="np-pagesize">OLT<select [(ngModel)]="selectedOltId" (ngModelChange)="onOltChange()" [disabled]="loadingOlts"><option [ngValue]="null">{{ loadingOlts ? 'Cargando…' : 'Seleccionar' }}</option><option *ngFor="let olt of olts" [ngValue]="olt.id">{{ olt.name }}</option></select></label>
-      <button type="button" class="np-btn np-btn--ghost" (click)="loadOnts()" [disabled]="!selectedOltId || loadingOnts"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 12a8 8 0 1 1-2.3-5.7M20 4v5h-5"/></svg>Actualizar</button>
+      <button type="button" class="np-btn np-btn--ghost" (click)="verEquipo = !verEquipo" [disabled]="!selectedOltId">{{ verEquipo ? 'Ocultar equipo' : 'Ver equipo' }}</button>
+      <button type="button" class="np-btn np-btn--ghost" (click)="consultarTodo(true)" [disabled]="!selectedOltId || loadingOnts || cargandoSenal"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 12a8 8 0 1 1-2.3-5.7M20 4v5h-5"/></svg>Actualizar</button>
     </div>
   </header>
   <div class="np-toolbar"><app-olt-nav></app-olt-nav></div>
 
   <div class="np-scroll">
     <p class="np-empty-block" *ngIf="!selectedOltId && !loadingOlts"><strong>Elegí una OLT para ver su estado.</strong></p>
-    <div *ngIf="loadingOnts" class="np-loading"><span class="np-spinner"></span> Consultando ONTs…</div>
-    <ng-container *ngIf="!loadingOnts && selectedOltId && lastFetched">
-      <section class="np-kpis">
-        <div class="np-kpi np-kpi--accent"><span class="np-kpi-l">Disponibilidad</span><span class="np-kpi-v" [class.np-kpi-v--ok]="onlinePct >= 80" [class.np-kpi-v--warn]="onlinePct >= 50 && onlinePct < 80" [class.np-kpi-v--danger]="onlinePct < 50">{{ onlinePct }}%</span><span class="np-kpi-s"><span class="np-meter"><i [style.width.%]="onlinePct" [style.background]="onlinePct >= 80 ? 'var(--ok)' : onlinePct >= 50 ? 'var(--warn)' : 'var(--danger)'"></i></span>{{ onlineCount }} de {{ totalOnts }}</span></div>
-        <div class="np-kpi"><span class="np-kpi-l">En línea</span><span class="np-kpi-v np-kpi-v--ok">{{ onlineCount }}</span><span class="np-kpi-s">{{ onlinePct }}% del total</span></div>
-        <div class="np-kpi"><span class="np-kpi-l">Fuera de línea</span><span class="np-kpi-v np-kpi-v--danger">{{ offlineCount }}</span><span class="np-kpi-s">{{ 100 - onlinePct }}% del total</span></div>
-        <div class="np-kpi"><span class="np-kpi-l">Puertos PON</span><span class="np-kpi-v">{{ byPort.length }}</span><span class="np-kpi-s">con ONTs registradas</span></div>
+
+    <app-olt-equipo *ngIf="selectedOltId && verEquipo" [oltId]="selectedOltId" [marcaConfigurada]="marcaSeleccionada"></app-olt-equipo>
+
+    <ng-container *ngIf="selectedOltId">
+      <div *ngIf="loadingOnts && !lastFetched" class="np-loading"><span class="np-spinner"></span> Consultando ONTs…</div>
+
+      <!-- Lo que hay que mirar primero -->
+      <section class="np-kpis" *ngIf="lastFetched">
+        <div class="np-kpi np-kpi--accent">
+          <span class="np-kpi-l">Disponibilidad</span>
+          <span class="np-kpi-v" [class.np-kpi-v--ok]="onlinePct >= 95" [class.np-kpi-v--warn]="onlinePct >= 85 && onlinePct < 95" [class.np-kpi-v--danger]="onlinePct < 85">{{ onlinePct }}%</span>
+          <span class="np-kpi-s"><span class="np-meter"><i [style.width.%]="onlinePct" [style.background]="onlinePct >= 95 ? 'var(--ok)' : onlinePct >= 85 ? 'var(--warn)' : 'var(--danger)'"></i></span>{{ onlineCount }} de {{ totalOnts }}</span>
+        </div>
+        <div class="np-kpi">
+          <span class="np-kpi-l">Señal en falla</span>
+          <span class="np-kpi-v" [class.np-kpi-v--ok]="(resumen?.con_falla ?? 0) === 0" [class.np-kpi-v--danger]="(resumen?.con_falla ?? 0) > 0">{{ cargandoSenal && !resumen ? '…' : (resumen?.con_falla ?? '—') }}</span>
+          <span class="np-kpi-s">enlaces por debajo de −27 dBm</span>
+        </div>
+        <div class="np-kpi">
+          <span class="np-kpi-l">Potencia mediana</span>
+          <span class="np-kpi-v np-mono">{{ resumen?.mediana != null ? resumen.mediana + ' dBm' : (cargandoSenal ? '…' : '—') }}</span>
+          <span class="np-kpi-s">peor {{ resumen?.peor != null ? resumen.peor + ' dBm' : '—' }} · mejor {{ resumen?.mejor != null ? resumen.mejor + ' dBm' : '—' }}</span>
+        </div>
+        <div class="np-kpi">
+          <span class="np-kpi-l">Fuera de línea</span>
+          <span class="np-kpi-v np-kpi-v--danger">{{ offlineCount }}</span>
+          <span class="np-kpi-s">{{ 100 - onlinePct }}% del total</span>
+        </div>
+        <div class="np-kpi">
+          <span class="np-kpi-l">Puertos PON</span>
+          <span class="np-kpi-v">{{ porPon.length }}</span>
+          <span class="np-kpi-s">con ONTs registradas</span>
+        </div>
       </section>
-      <section class="np-card" *ngIf="byPort.length > 0">
-        <div class="np-card-h"><h2>Distribución por puerto PON</h2></div>
-        <div class="np-tablewrap"><table class="np-table np-table--compact">
-          <thead><tr><th>Puerto</th><th>Disponibilidad</th><th class="np-th-right">En línea</th><th class="np-th-right">Total</th></tr></thead>
-          <tbody><tr *ngFor="let p of byPort"><td class="np-data np-strong">{{ p.fsp }}</td><td><span class="np-meter np-meter--wide"><i [style.width.%]="p.total ? (p.online / p.total * 100) : 0" [style.background]="p.total && p.online / p.total >= .8 ? 'var(--ok)' : p.total && p.online / p.total >= .5 ? 'var(--warn)' : 'var(--danger)'"></i></span></td><td class="np-data np-td-right np-pos">{{ p.online }}</td><td class="np-data np-td-right">{{ p.total }}</td></tr></tbody>
-        </table></div>
+
+      <div class="olt-aviso is-warn" *ngIf="errorSenal">
+        <strong>No hay mediciones ópticas.</strong>
+        <span>{{ errorSenal }}</span>
+        <span class="np-fine">La señal se lee por SNMP; el resto de la pantalla sigue funcionando con los datos de la consola.</span>
+      </div>
+
+      <div class="olt-dash-grid" *ngIf="resumen?.medidas">
+        <!-- Cómo está repartida la potencia de toda la red -->
+        <section class="np-card">
+          <div class="np-card-h">
+            <h2>Potencia óptica de la red</h2>
+            <span class="np-card-meta"><b>{{ resumen.medidas }}</b> de {{ resumen.total }} medidas</span>
+          </div>
+
+          <div class="olt-hist" *ngIf="histograma.length">
+            <div class="olt-hist-col" *ngFor="let t of histograma" [title]="t.total + ' ONT entre ' + t.desde + ' y ' + t.hasta + ' dBm'">
+              <span class="olt-hist-n">{{ t.total || '' }}</span>
+              <span class="olt-hist-bar"
+                    [style.height.%]="altoBarra(t.total)"
+                    [class.is-ok]="t.desde >= -25"
+                    [class.is-warn]="t.desde < -25 && t.desde >= -29"
+                    [class.is-danger]="t.desde < -29"></span>
+              <span class="olt-hist-x">{{ t.desde }}</span>
+            </div>
+          </div>
+
+          <!-- Cada clase es también el filtro de la lista de abajo -->
+          <div class="olt-clases">
+            <button type="button" class="olt-clase" *ngFor="let c of clasesDeSenal"
+                    [class.is-sel]="filtroSenal === c.id"
+                    [ngClass]="tonoDe(c.id)"
+                    [title]="c.ayuda"
+                    (click)="filtroSenal = c.id">
+              <span class="olt-clase-n">{{ cuantas(c.id) }}</span>
+              <span class="olt-clase-l">{{ c.label }}</span>
+              <span class="olt-clase-p">{{ porcentaje(c.id) }}%</span>
+            </button>
+          </div>
+        </section>
+
+        <!-- Un promedio corrido en un puerto es troncal o splitter, no cliente -->
+        <section class="np-card">
+          <div class="np-card-h"><h2>Puertos PON</h2><span class="np-card-meta">promedio y peor enlace</span></div>
+          <div class="np-tablewrap"><table class="np-table np-table--compact">
+            <thead><tr><th>Puerto</th><th>ONTs</th><th>En línea</th><th class="np-th-right">Promedio</th><th class="np-th-right">Peor</th><th class="np-th-right">Falla</th></tr></thead>
+            <tbody>
+              <tr *ngFor="let p of porPon" class="np-row" (click)="verPuerto(p.fsp)" tabindex="0" (keydown.enter)="verPuerto(p.fsp)">
+                <td class="np-data np-strong">{{ p.fsp }}</td>
+                <td class="np-data">{{ p.total }}</td>
+                <td><span class="np-meter"><i [style.width.%]="pctOnline(p)" [style.background]="pctOnline(p) >= 95 ? 'var(--ok)' : pctOnline(p) >= 85 ? 'var(--warn)' : 'var(--danger)'"></i></span><span class="np-fine">{{ p.online }}</span></td>
+                <td class="np-data np-td-right" [ngClass]="tonoDePromedio(p.promedio)">{{ p.promedio != null ? p.promedio : '—' }}</td>
+                <td class="np-data np-td-right" [ngClass]="tonoDePromedio(p.peor)">{{ p.peor != null ? p.peor : '—' }}</td>
+                <td class="np-data np-td-right" [class.is-danger]="p.con_falla > 0">{{ p.con_falla || '—' }}</td>
+              </tr>
+            </tbody>
+          </table></div>
+        </section>
+      </div>
+
+      <!-- A quién hay que visitar -->
+      <section class="np-card" *ngIf="resumen?.medidas">
+        <div class="np-card-h">
+          <h2>{{ filtroSenal === 'falla' ? 'Enlaces a atender' : filtroSenal === 'todas' ? 'Todas las ONT medidas' : 'Señal ' + etiquetaDe(filtroSenal) }}</h2>
+          <div class="np-card-actions">
+            <button type="button" class="np-link" [class.is-sel]="filtroSenal === 'falla'" (click)="filtroSenal = 'falla'">Con falla</button>
+            <button type="button" class="np-link" [class.is-sel]="filtroSenal === 'todas'" (click)="filtroSenal = 'todas'">Todas</button>
+          </div>
+        </div>
+
+        <p class="np-empty-block" *ngIf="listado.length === 0"><strong>Ninguna ONT en esta clasificación.</strong></p>
+
+        <div class="np-tablewrap" *ngIf="listado.length">
+          <table class="np-table np-table--compact">
+            <thead><tr><th>Puerto</th><th>ID</th><th>Cliente</th><th class="np-th-right">Potencia</th><th>Señal</th><th class="np-th-right">Temp.</th><th class="np-th-right">Voltaje</th><th>Estado</th></tr></thead>
+            <tbody>
+              <tr *ngFor="let o of listado">
+                <td class="np-data np-strong">{{ o.fsp }}</td>
+                <td class="np-data">{{ o.ont_id }}</td>
+                <td><div class="np-name">{{ o.description || '—' }}</div><div class="np-plan" *ngIf="o.serial"><em>{{ o.serial }}</em></div></td>
+                <td class="np-data np-td-right" [ngClass]="tonoDe(o.estado)">{{ o.potencia != null ? o.potencia + ' dBm' : '—' }}</td>
+                <td><span class="np-pill" [ngClass]="tonoDe(o.estado)">{{ etiquetaDe(o.estado) }}</span></td>
+                <td class="np-data np-td-right">{{ o.temperatura != null ? o.temperatura + ' °C' : '—' }}</td>
+                <td class="np-data np-td-right">{{ o.voltaje != null ? o.voltaje + ' V' : '—' }}</td>
+                <td><span class="np-pill" [ngClass]="o.status === 'online' ? 'np-pill--active' : 'np-pill--neutral'">{{ o.status === 'online' ? 'en línea' : 'fuera' }}</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <p class="np-hint" *ngIf="listado.length >= 200">Se muestran las 200 peores. Afiná con las clases de arriba.</p>
       </section>
+
+      <div *ngIf="cargandoSenal && !resumen" class="np-loading"><span class="np-spinner"></span> Midiendo la señal de todas las ONT… la primera vez tarda cerca de un minuto.</div>
     </ng-container>
   </div>
 </div>

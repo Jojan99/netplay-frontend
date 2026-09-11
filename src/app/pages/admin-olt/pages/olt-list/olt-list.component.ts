@@ -39,8 +39,16 @@ export class OltListComponent implements OnInit {
   deletingId: number | null = null;
   deletingName    = '';
 
-  showAdvanced    = false;
-  showSnmp        = false;
+  /** Pestañas de la modal: así no queda un formulario de veinte campos seguidos. */
+  readonly pestanas = [
+    { id: 'conexion', label: 'Conexión' },
+    { id: 'onts',     label: 'ONTs' },
+    { id: 'marca',    label: 'Marca' },
+    { id: 'acceso',   label: 'Acceso' },
+    { id: 'snmp',     label: 'SNMP' },
+  ];
+
+  pestana = 'conexion';
 
   constructor(
     private oltService: OltService,
@@ -111,9 +119,8 @@ export class OltListComponent implements OnInit {
     this.modalMode = 'create';
     this.editingId = null;
     this.form = this.formularioVacio();
-    this.showAdvanced = false;
-    this.showSnmp = false;
-    this.modal = true;
+    this.pestana = 'conexion';
+    this.modal   = true;
   }
 
   openEdit(olt: any): void {
@@ -146,13 +153,30 @@ export class OltListComponent implements OnInit {
       zte_dba_profile: olt.zte_dba_profile ?? '',
       vsol_onu_profile: olt.vsol_onu_profile ?? '',
     };
-    this.showAdvanced = !!(olt.jump_host);
-    this.showSnmp = !!(olt.snmp_host || olt.snmp_jump_host);
-    this.modal = true;
+    this.pestana = 'conexion';
+    this.modal   = true;
+  }
+
+  /** Qué falta para poder guardar. Vacío cuando ya se puede. */
+  get avisoDelFormulario(): string {
+    if (!this.form.name.trim())  return 'Falta el nombre.';
+    if (!this.form.host.trim())  return 'Falta el host.';
+    if (this.modalMode === 'create' && !this.form.password) return 'Falta la contraseña de la OLT.';
+    if (this.form.access_mode === 'jump' && !this.form.jump_host.trim()) return 'Falta el jump host.';
+    if (this.form.brand === 'vsol' && !this.form.vsol_onu_profile.trim()) return 'V-SOL necesita el perfil de ONU.';
+
+    return '';
+  }
+
+  get puedeGuardar(): boolean { return this.avisoDelFormulario === ''; }
+
+  /** Marca la pestaña cuando la marca elegida pide un dato que falta. */
+  get faltaDatoDeMarca(): boolean {
+    return this.form.brand === 'vsol' && !this.form.vsol_onu_profile.trim();
   }
 
   saveForm(): void {
-    if (!this.form.name.trim() || !this.form.host.trim()) return;
+    if (!this.puedeGuardar) return;
     this.saving = true;
 
     const payload: any = { ...this.form };

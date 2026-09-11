@@ -25,6 +25,11 @@ export class OltPerfilesComponent implements OnInit {
   syncing               = false;
   lastSynced: string | null = null;
 
+  /** Cuál perfil usa la OLT al autorizar, si no se indica otro. */
+  lineDefecto: number | null = null;
+  srvDefecto: number | null  = null;
+  guardandoDefecto = false;
+
   constructor(
     private oltService: OltService,
     private toast: ToastService,
@@ -40,6 +45,7 @@ export class OltPerfilesComponent implements OnInit {
         this.olts = res.data ?? [];
         if (this.olts.length === 1) {
           this.selectedOltId = this.olts[0].id;
+          this.leerDefectos();
           this.loadProfiles();
         }
       },
@@ -50,7 +56,67 @@ export class OltPerfilesComponent implements OnInit {
   onOltChange(): void {
     this.lineProfiles = [];
     this.srvProfiles  = [];
+    this.leerDefectos();
     if (this.selectedOltId) this.loadProfiles();
+  }
+
+  /** Los predeterminados salen de la configuración de la OLT. */
+  private leerDefectos(): void {
+    const olt = this.olts.find(o => o.id === this.selectedOltId);
+    this.lineDefecto = olt?.ont_lineprofile_id ?? null;
+    this.srvDefecto  = olt?.ont_srvprofile_id ?? null;
+  }
+
+  get oltSeleccionada(): any { return this.olts.find(o => o.id === this.selectedOltId) ?? null; }
+
+  esLineDefecto(p: any): boolean { return this.lineDefecto != null && +p.profile_id === +this.lineDefecto; }
+  esSrvDefecto(p: any): boolean  { return this.srvDefecto  != null && +p.profile_id === +this.srvDefecto; }
+
+  /** ¿El predeterminado apunta a un perfil que la OLT ya no tiene? */
+  get lineDefectoHuerfano(): boolean {
+    return this.lineDefecto != null && this.lineProfiles.length > 0
+      && !this.lineProfiles.some(p => +p.profile_id === +this.lineDefecto!);
+  }
+
+  get srvDefectoHuerfano(): boolean {
+    return this.srvDefecto != null && this.srvProfiles.length > 0
+      && !this.srvProfiles.some(p => +p.profile_id === +this.srvDefecto!);
+  }
+
+  /**
+   * Marca un perfil como el que se usará al autorizar. El backend lo valida
+   * contra los que la OLT tiene de verdad, que es lo que evita el
+   * "The service profile does not exist" recién al registrar un cliente.
+   */
+  usarPorDefecto(tipo: 'line' | 'srv', perfil: any): void {
+    if (!this.selectedOltId || this.guardandoDefecto) return;
+
+    this.guardandoDefecto = true;
+
+    const line = tipo === 'line' ? +perfil.profile_id : null;
+    const srv  = tipo === 'srv'  ? +perfil.profile_id : null;
+
+    this.oltService.fijarPerfilesPorDefecto(this.selectedOltId, line, srv).subscribe({
+      next: (res) => {
+        this.guardandoDefecto = false;
+
+        if (res?.status === 1) { this.toast.error(res.message); return; }
+
+        this.lineDefecto = res?.data?.ont_lineprofile_id ?? this.lineDefecto;
+        this.srvDefecto  = res?.data?.ont_srvprofile_id  ?? this.srvDefecto;
+
+        // La lista de OLTs guarda la configuración; se actualiza en el sitio
+        // para que al volver a esta pantalla se vea lo elegido.
+        const olt = this.oltSeleccionada;
+        if (olt) { olt.ont_lineprofile_id = this.lineDefecto; olt.ont_srvprofile_id = this.srvDefecto; }
+
+        this.toast.success(res?.message || 'Perfil predeterminado actualizado');
+      },
+      error: (err) => {
+        this.guardandoDefecto = false;
+        this.toast.error(err?.error?.message || 'No se pudo fijar el perfil');
+      },
+    });
   }
 
   loadProfiles(): void {

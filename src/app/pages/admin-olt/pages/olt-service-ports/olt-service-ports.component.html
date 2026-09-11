@@ -2,33 +2,82 @@
   <header class="np-head">
     <div>
       <p class="np-kicker">Red <b>/</b> OLT <b>/</b> Service ports</p>
-      <h1 class="np-title">{{ selectedOnt ? ontLabel : 'Service ports' }}</h1>
-      <div class="np-ribbon"><span *ngIf="selectedOnt && !loadingPorts"><span class="np-n">{{ ports.length }}</span>service ports</span><span *ngIf="!selectedOnt">Consultá los service ports asignados a una ONT.</span></div>
+      <h1 class="np-title">Service ports</h1>
+      <div class="np-ribbon">
+        <span *ngIf="consultado"><span class="np-n">{{ ports.length }}</span>service ports <b>·</b> <span class="np-n">{{ vlans.length }}</span>VLAN <b>·</b> <span class="np-n">{{ puertosPon.length }}</span>puertos PON</span>
+        <span *ngIf="repetidos.length" class="np-warn-text"><i class="np-dot" style="background:var(--danger)"></i><span class="np-n">{{ repetidos.length }}</span>índices repetidos</span>
+        <span *ngIf="consultado" class="np-mono np-fine">consultado {{ consultado | date:'HH:mm:ss' }}</span>
+        <span *ngIf="!consultado">Cómo está atado el tráfico de cada ONT a su VLAN.</span>
+      </div>
     </div>
     <div class="np-actions">
       <label class="np-pagesize">OLT<select [(ngModel)]="selectedOltId" (ngModelChange)="onOltChange()" [disabled]="loadingOlts"><option [ngValue]="null">{{ loadingOlts ? 'Cargando…' : 'Seleccionar' }}</option><option *ngFor="let olt of olts" [ngValue]="olt.id">{{ olt.name }}</option></select></label>
-      <label class="np-pagesize">ONT<select [(ngModel)]="selectedOnt" (ngModelChange)="onOntChange()" [disabled]="!selectedOltId || loadingOnts || onts.length === 0"><option [ngValue]="null">{{ !selectedOltId ? 'Elegí una OLT' : loadingOnts ? 'Cargando…' : 'Seleccionar' }}</option><option *ngFor="let o of onts" [ngValue]="o">{{ o.fsp }} · {{ o.description || o.serial || 'ONT ' + o.ont_id }}</option></select></label>
-      <button type="button" class="np-btn np-btn--primary" (click)="loadPorts()" [disabled]="!selectedOnt || loadingPorts"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 12a8 8 0 1 1-2.3-5.7M20 4v5h-5"/></svg>Consultar</button>
+      <button type="button" class="np-btn np-btn--ghost" (click)="cargar()" [disabled]="!selectedOltId || loadingPorts"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 12a8 8 0 1 1-2.3-5.7M20 4v5h-5"/></svg>Actualizar</button>
     </div>
   </header>
-  <div class="np-toolbar"><app-olt-nav></app-olt-nav></div>
+
+  <div class="np-toolbar">
+    <app-olt-nav></app-olt-nav>
+    <ng-container *ngIf="ports.length">
+      <label class="np-search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg><input type="search" [(ngModel)]="busqueda" (ngModelChange)="reiniciarPagina()" placeholder="SP, VLAN, puerto u ONT…" /></label>
+      <label class="np-pagesize">Puerto<select [(ngModel)]="filtroPon" (ngModelChange)="reiniciarPagina()"><option value="">Todos</option><option *ngFor="let p of puertosPon" [value]="p">{{ p }}</option></select></label>
+      <label class="np-pagesize">VLAN<select [(ngModel)]="filtroVlan" (ngModelChange)="reiniciarPagina()"><option value="">Todas</option><option *ngFor="let v of vlans" [value]="v">{{ v }}</option></select></label>
+      <span class="np-spacer"></span>
+      <label class="np-pagesize">Mostrar<select [(ngModel)]="perPage" (ngModelChange)="reiniciarPagina()"><option *ngFor="let n of perPageOptions" [ngValue]="n">{{ n }}</option></select></label>
+    </ng-container>
+  </div>
+
   <div class="np-workspace">
-    <section class="np-registry">
-      <div class="np-registry-wrap"><table class="np-table np-table--registry">
-        <thead><tr><th class="np-th-stripe"></th><th>SP</th><th>VLAN</th><th>FSP</th><th>ONT ID</th><th>Descripción</th><th>Estado</th></tr></thead>
-        <tbody>
-          <tr *ngIf="!selectedOnt" class="np-empty"><td colspan="7"><strong>Elegí una OLT y una ONT para ver sus service ports.</strong></td></tr>
-          <tr *ngIf="loadingPorts" class="np-empty"><td colspan="7"><span class="np-spinner"></span></td></tr>
-          <tr *ngIf="!loadingPorts && selectedOnt && ports?.length === 0" class="np-empty"><td colspan="7"><strong>Esta ONT no tiene service ports asignados.</strong></td></tr>
-          <ng-container *ngIf="!loadingPorts && selectedOnt">
-            <tr *ngFor="let sp of ports" class="np-row np-row--static">
-              <td class="np-stripe"><i [style.background]="(sp.status === 'online' || sp.admin_state === 'up') ? 'var(--ok)' : 'var(--line-strong)'"></i></td>
-              <td class="np-data np-strong">{{ sp.index ?? sp.sp_index ?? '—' }}</td><td class="np-data">{{ sp.vlan ?? '—' }}</td><td class="np-data">{{ sp.fsp ?? selectedOnt?.fsp ?? '—' }}</td><td class="np-data">{{ sp.ont_id ?? selectedOnt?.ont_id }}</td><td>{{ sp.description ?? sp.desc ?? '—' }}</td>
-              <td><span class="np-pill" [ngClass]="(sp.status === 'online' || sp.admin_state === 'up') ? 'np-pill--active' : 'np-pill--neutral'">{{ sp.status ?? sp.admin_state ?? 'activo' }}</span></td>
+    <div class="np-scroll">
+      <p class="np-empty-block" *ngIf="!selectedOltId && !loadingOlts"><strong>Elegí una OLT para ver sus service ports.</strong></p>
+      <div *ngIf="loadingPorts" class="np-loading"><span class="np-spinner"></span> Consultando la OLT puerto por puerto…</div>
+
+      <div class="olt-aviso is-danger" *ngIf="repetidos.length">
+        <strong>Hay índices de service port repetidos.</strong>
+        <span>Los índices {{ repetidos.join(', ') }} figuran más de una vez. La OLT acepta el segundo, pero el tráfico de un cliente termina saliendo por el otro.</span>
+      </div>
+
+      <!-- Reparto por VLAN: también sirve de filtro -->
+      <section class="np-card" *ngIf="porVlan.length">
+        <div class="np-card-h"><h2>Clientes por VLAN</h2><span class="np-card-meta"><b>{{ vlans.length }}</b> VLAN en uso</span></div>
+        <div class="np-chips" style="padding:12px">
+          <button type="button" class="np-chip" *ngFor="let v of porVlan" [attr.aria-pressed]="filtroVlan === (v.vlan + '')" (click)="filtrarVlan(v.vlan)">VLAN {{ v.vlan }}<span class="np-c">{{ v.total }}</span></button>
+          <button type="button" class="np-chip" *ngIf="filtroVlan" (click)="filtroVlan = ''; reiniciarPagina()">Quitar filtro</button>
+        </div>
+      </section>
+
+      <section class="np-registry" *ngIf="ports.length">
+        <div class="np-registry-wrap"><table class="np-table np-table--registry">
+          <thead><tr><th class="np-th-stripe"></th><th>SP</th><th>VLAN</th><th>Puerto</th><th>ONT</th><th>GEM</th><th>Tipo</th><th>Estado</th></tr></thead>
+          <tbody>
+            <tr *ngIf="!loadingPorts && filtrados.length === 0" class="np-empty"><td colspan="8"><strong>Ningún service port con esos filtros.</strong></td></tr>
+            <tr *ngFor="let sp of pagina" class="np-row np-row--static" [class.is-conflicto]="esRepetido(sp)">
+              <td class="np-stripe"><i [style.background]="esRepetido(sp) ? 'var(--danger)' : 'var(--ok)'"></i></td>
+              <td class="np-data np-strong">{{ sp.index ?? sp.sp_index ?? '—' }}</td>
+              <td class="np-data">{{ sp.vlan ?? '—' }}</td>
+              <td class="np-data">{{ sp.fsp ?? '—' }}</td>
+              <td class="np-data">{{ sp.ont_id ?? '—' }}</td>
+              <td class="np-data">{{ sp.gemport ?? '—' }}</td>
+              <td class="np-data">{{ sp.port_type ?? '—' }}</td>
+              <td><span class="np-pill" [ngClass]="sp.state === 'up' ? 'np-pill--active' : 'np-pill--neutral'">{{ sp.state ?? '—' }}</span></td>
             </tr>
-          </ng-container>
-        </tbody>
-      </table></div>
-    </section>
+          </tbody>
+        </table></div>
+
+        <div class="np-pager" *ngIf="filtrados.length > 0">
+          <span class="np-range">{{ (page - 1) * perPage + 1 }}–{{ menor(page * perPage, filtrados.length) }} de {{ filtrados.length }}</span>
+          <div class="np-pages">
+            <button type="button" (click)="paginaAnterior()" [disabled]="page === 1">‹</button>
+            <button type="button" *ngFor="let p of numerosDePagina" (click)="irA(p)" [attr.aria-current]="p === page ? 'page' : null">{{ p }}</button>
+            <button type="button" (click)="paginaSiguiente()" [disabled]="page === totalPaginas">›</button>
+          </div>
+        </div>
+      </section>
+
+      <p class="np-empty-block" *ngIf="consultado && !ports.length && !loadingPorts">
+        <strong>La OLT no devolvió service ports.</strong>
+        <span>Se consultan por puerto PON a partir de las ONT registradas: sincronizá las ONT si la lista está vacía.</span>
+      </p>
+    </div>
   </div>
 </div>
