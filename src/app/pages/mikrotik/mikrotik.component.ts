@@ -3,8 +3,8 @@ import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MikrotikService } from '../../services/mikrotik.service';
-import { OltService } from '../../services/olt.service';
 import { Router } from '@angular/router';
+import { OntEquipoComponent } from '../../components/ont-equipo/ont-equipo.component';
 import { buscarModelo, ModeloMikrotik, Puerto } from './modelos-mikrotik';
 
 type EstadoPuerto = 'up' | 'down' | 'off' | 'na';
@@ -29,14 +29,13 @@ const ESTADOS: Record<EstadoPuerto, string> = {
 @Component({
   selector: 'app-mikrotik',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, OntEquipoComponent],
   templateUrl: './mikrotik.component.html',
   styleUrl: './mikrotik.component.scss',
   host: { class: 'np-console' },
 })
 export class MikrotikComponent implements OnInit {
   private dialog = inject(DialogService);
-  private olt = inject(OltService);
   private router = inject(Router);
   activeTab: 'info' | 'clients' | 'queues' | 'conflicts' | 'pppoe' | 'config' = 'info';
 
@@ -345,56 +344,20 @@ export class MikrotikComponent implements OnInit {
   // ── Credencial: su cliente, su sesión y su ONT ─────────────────────────────
   /** La credencial abierta en el detalle. */
   credencial: any = null;
-  /** La ONT del cliente leída de la OLT ahora. */
-  ontCredencial: any = null;
-  midiendoOntCred = false;
   borrandoCred = false;
 
   abrirCredencial(u: any) {
     this.credencial = u;
-    this.ontCredencial = null;
-    if (u.user_id && u.ont) this.medirOntCredencial();
   }
 
   cerrarCredencial() {
     this.credencial = null;
-    this.ontCredencial = null;
-  }
-
-  medirOntCredencial(refrescar = false) {
-    const u = this.credencial;
-    if (!u?.user_id) return;
-    this.midiendoOntCred = true;
-    this.olt.ontEnVivo(u.user_id, refrescar).subscribe({
-      next: r => {
-        if (this.credencial !== u) return;
-        this.midiendoOntCred = false;
-        this.ontCredencial = r?.data?.vivo ?? { error: r?.message || 'La OLT no respondió.' };
-      },
-      error: () => { this.midiendoOntCred = false; this.ontCredencial = { error: 'La OLT no respondió.' }; },
-    });
   }
 
   /** La ficha del cliente en su módulo; ?q acota la lista y ?cliente la abre. */
   abrirFicha(u: any) {
     if (!u?.user_id) return;
-    this.router.navigate(['/usuario'], { queryParams: { q: u.ficha?.documento ?? u.comentario ?? '', cliente: u.user_id } });
-  }
-
-  /** Estado de la ONT: el medido si la OLT respondió, si no el guardado. */
-  estadoOnt(u: any): string {
-    if (this.credencial === u && this.ontCredencial?.status && !this.ontCredencial.error) return this.ontCredencial.status;
-    return u?.ont?.estado ?? '';
-  }
-
-  etiquetaSenal(estado: string): string {
-    return ({ buena: 'Buena', regular: 'Regular', baja: 'Baja', critica: 'Crítica', saturada: 'Saturada' } as any)[estado] ?? 'Sin dato';
-  }
-
-  /** Dónde cae la potencia en la barra, de -35 dBm (0 %) a -5 dBm (100 %). */
-  posicionSenal(dbm: number | null): number {
-    if (dbm === null || dbm === undefined) return 0;
-    return Math.max(0, Math.min(100, ((dbm + 35) / 30) * 100));
+    this.router.navigate(['/dashboard/usuario'], { queryParams: { q: u.ficha?.documento ?? u.comentario ?? '', cliente: u.user_id, tab: 'servicios' } });
   }
 
   async borrarCredencial(u: any) {

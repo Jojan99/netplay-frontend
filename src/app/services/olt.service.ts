@@ -260,6 +260,28 @@ export class OltService {
     return this.http.get<any>(`${this.env.rootUrl}api/management/olt/ont/by-user/${userId}`, { headers: this.getHeaders() });
   }
 
+  /** Fabricante, modelo, versiones, WiFi y foto del equipo del cliente. */
+  equipoDeCliente(userId: number, refrescar = false): Observable<any> {
+    const q = refrescar ? '?refrescar=1' : '';
+    return this.http.get<any>(`${this.env.rootUrl}api/management/olt/ont/by-user/${userId}/equipo${q}`, { headers: this.getHeaders() });
+  }
+
+  /** Foto de un modelo de ONT: sirve para todas las de ese modelo. */
+  subirFotoDeModelo(fabricante: string, modelo: string, archivo: File): Observable<any> {
+    const cuerpo = new FormData();
+    cuerpo.append('fabricante', fabricante);
+    cuerpo.append('modelo', modelo);
+    cuerpo.append('foto', archivo);
+    return this.http.post<any>(`${this.env.rootUrl}api/management/olt/ont/modelo/foto`, cuerpo, {
+      headers: new HttpHeaders({ Authorization: `Bearer ${this.getAuthToken()}` }),
+    });
+  }
+
+  borrarFotoDeModelo(fabricante: string, modelo: string): Observable<any> {
+    const q = `?fabricante=${encodeURIComponent(fabricante)}&modelo=${encodeURIComponent(modelo)}`;
+    return this.http.delete<any>(`${this.env.rootUrl}api/management/olt/ont/modelo/foto${q}`, { headers: this.getHeaders() });
+  }
+
   /** La ONT del cliente leída de la OLT ahora: estado, señal, temperatura. */
   ontEnVivo(userId: number, refrescar = false): Observable<any> {
     const q = refrescar ? '?refrescar=1' : '';

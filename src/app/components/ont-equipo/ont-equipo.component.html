@@ -1,0 +1,156 @@
+<div class="oe" [style.--oe-marca]="colorMarca">
+
+  <!-- ── El equipo: foto del modelo o dibujo con sus luces ── -->
+  <div class="oe-top">
+    <figure class="oe-figura" [class.is-foto]="equipo?.foto">
+      <img *ngIf="equipo?.foto" [src]="equipo.foto" [alt]="marca + ' ' + modelo" loading="lazy" />
+
+      <svg *ngIf="!equipo?.foto" class="oe-svg" viewBox="0 0 280 176" role="img" [attr.aria-label]="'Equipo ' + (marca || 'ONT') + ' ' + modelo">
+        <defs>
+          <linearGradient [attr.id]="gid" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" class="oe-g1" />
+            <stop offset="1" class="oe-g2" />
+          </linearGradient>
+        </defs>
+        <ellipse cx="140" cy="164" rx="112" ry="7" class="oe-sombra" />
+        <g *ngIf="equipo?.wifi_soportado" class="oe-antena">
+          <rect x="44" y="6" width="9" height="74" rx="4.5" />
+          <rect x="227" y="6" width="9" height="74" rx="4.5" />
+        </g>
+        <rect x="18" y="62" width="244" height="94" rx="16" [attr.fill]="'url(#' + gid + ')'" class="oe-cuerpo" />
+        <rect x="30" y="66" width="220" height="3" rx="1.5" class="oe-brillo" />
+        <rect x="18" y="142" width="244" height="14" rx="7" class="oe-base" />
+        <rect x="34" y="84" width="4" height="36" rx="2" class="oe-franja" />
+        <text x="48" y="100" class="oe-logo">{{ marca || 'ONT' }}</text>
+        <text x="48" y="116" class="oe-modelo-t">{{ modelo || (consultandoEquipo ? '…' : '') }}</text>
+        <g *ngFor="let l of leds; let i = index" [attr.transform]="'translate(' + (160 + i * 26) + ',98)'">
+          <title>{{ l.nombre }}: {{ l.titulo }}</title>
+          <circle r="5" [attr.class]="'oe-led oe-led--' + l.estado" />
+          <text y="18" class="oe-led-t">{{ l.nombre }}</text>
+        </g>
+      </svg>
+
+      <figcaption class="oe-foto-acc" *ngIf="version">
+        <label class="oe-linkbtn" [class.is-busy]="subiendoFoto">
+          <input type="file" accept="image/png,image/jpeg,image/webp" (change)="subirFoto($event)" hidden />
+          {{ subiendoFoto ? 'Subiendo…' : (equipo?.foto ? 'Cambiar foto' : 'Subir foto del modelo') }}
+        </label>
+        <button type="button" class="oe-linkbtn" *ngIf="equipo?.foto" (click)="quitarFoto()">Quitar</button>
+      </figcaption>
+      <p class="oe-error" *ngIf="errorFoto">{{ errorFoto }}</p>
+    </figure>
+
+    <div class="oe-id">
+      <p class="oe-marca"><i></i>{{ marca || 'Equipo ONT' }}</p>
+      <h4>
+        <span class="np-mono">{{ modelo || '—' }}</span>
+        <small *ngIf="version?.comercial">{{ version.comercial }}</small>
+      </h4>
+      <span class="oe-estado" [class.is-on]="enLinea === true" [class.is-off]="enLinea === false">
+        <i></i>{{ enLinea === null ? 'Sin dato' : (enLinea ? 'En línea' : 'Sin conexión') }}
+      </span>
+      <p class="oe-ubic" *ngIf="ont">
+        {{ ont.olt || 'OLT' }} · Puerto <span class="np-mono">{{ ont.fsp }}</span> · ONT <span class="np-mono">{{ ont.ont_id }}</span>
+      </p>
+      <p class="oe-ubic np-mono" *ngIf="ont?.serial">{{ ont?.serial }}</p>
+      <div class="oe-chips" *ngIf="version">
+        <span *ngIf="version.hardware">HW <b>{{ version.hardware }}</b></span>
+        <span *ngIf="version.software">SW <b>{{ version.software }}</b></span>
+        <span *ngIf="vivo?.distancia_m !== null && vivo?.distancia_m !== undefined">A <b>{{ vivo.distancia_m }} m</b></span>
+      </div>
+      <p class="oe-cargando" *ngIf="consultandoEquipo && !version"><span class="np-spinner np-spinner--sm"></span> Consultando el equipo en la OLT…</p>
+    </div>
+  </div>
+
+  <!-- ── Señal óptica ── -->
+  <section class="oe-sec">
+    <div *ngIf="midiendo && !vivo" class="oe-cargando"><span class="np-spinner np-spinner--sm"></span> Midiendo la señal…</div>
+    <p *ngIf="vivo?.error" class="oe-aviso">{{ vivo.error }}</p>
+    <ng-container *ngIf="vivo && !vivo.error">
+      <div class="oe-senal" [attr.data-estado]="vivo.estado">
+        <div class="oe-senal-v">
+          <b class="np-mono">{{ vivo.potencia !== null ? (vivo.potencia | number:'1.2-2') : '—' }}</b><span>dBm recibidos</span>
+          <em>{{ etiquetaSenal(vivo.estado) }}</em>
+        </div>
+        <div class="oe-senal-barra" *ngIf="vivo.potencia !== null" aria-hidden="true"><i [style.left.%]="posicionSenal(vivo.potencia)"></i></div>
+        <div class="oe-senal-escala" aria-hidden="true"><span>-35</span><span>-29</span><span>-25</span><span>-8</span><span>-5</span></div>
+      </div>
+      <dl class="oe-medidas">
+        <div *ngIf="vivo.tx !== null"><dt>Tx ONT</dt><dd>{{ vivo.tx | number:'1.2-2' }} dBm</dd></div>
+        <div *ngIf="vivo.olt_rx !== null"><dt>Rx OLT</dt><dd>{{ vivo.olt_rx | number:'1.2-2' }} dBm</dd></div>
+        <div *ngIf="vivo.temperatura !== null"><dt>Temperatura</dt><dd>{{ vivo.temperatura | number:'1.0-1' }} °C</dd></div>
+        <div *ngIf="vivo.voltaje !== null"><dt>Voltaje</dt><dd>{{ vivo.voltaje | number:'1.2-2' }} V</dd></div>
+        <div *ngIf="vivo.corriente !== null"><dt>Láser</dt><dd>{{ vivo.corriente | number:'1.1-2' }} mA</dd></div>
+      </dl>
+    </ng-container>
+  </section>
+
+  <!-- ── WiFi ── -->
+  <section class="oe-sec">
+    <div class="oe-sec-h">
+      <p class="oe-t">WiFi</p>
+      <span class="oe-fine" *ngIf="wifi">
+        {{ wifi.activo === false ? 'Apagado' : 'Encendido' }}<ng-container *ngIf="wifi.estandar"> · {{ wifi.estandar }}</ng-container><ng-container *ngIf="wifi.ancho"> · {{ wifi.ancho }}</ng-container><ng-container *ngIf="wifi.canal"> · canal {{ wifi.canal }}</ng-container>
+      </span>
+    </div>
+
+    <p class="oe-cargando" *ngIf="consultandoEquipo && !equipo"><span class="np-spinner np-spinner--sm"></span> Leyendo el WiFi del equipo…</p>
+    <p class="oe-aviso" *ngIf="equipo?.error">{{ equipo.error }}</p>
+    <p class="oe-aviso" *ngIf="equipo && !equipo.error && !equipo.wifi_soportado">
+      {{ marca ? 'Este equipo ' + marca : 'Este equipo' }} no le entrega su WiFi a la OLT. Se ve entrando al equipo o desde un servidor TR-069.
+    </p>
+
+    <div class="oe-redes" *ngIf="redesActivas.length">
+      <div class="oe-red" *ngFor="let r of redesActivas">
+        <div class="oe-red-ico" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M2 8.8a15 15 0 0 1 20 0"/><path d="M5 12.5a10 10 0 0 1 14 0"/><path d="M8.5 16.1a5 5 0 0 1 7 0"/><circle cx="12" cy="19.5" r="1" fill="currentColor"/></svg>
+        </div>
+        <div class="oe-red-datos">
+          <div class="oe-campo">
+            <span>Nombre de la red</span>
+            <b>{{ r.nombre }}</b>
+            <button type="button" class="oe-ico" (click)="copiar(r.nombre, 'ssid' + r.id)" [attr.aria-label]="'Copiar el nombre ' + r.nombre">
+              {{ copiado === 'ssid' + r.id ? '✓' : '' }}
+              <svg *ngIf="copiado !== 'ssid' + r.id" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg>
+            </button>
+          </div>
+          <div class="oe-campo">
+            <span>Contraseña</span>
+            <b class="np-mono" *ngIf="r.clave">{{ claveVisible[r.id] ? r.clave : '••••••••••' }}</b>
+            <b class="oe-fine" *ngIf="!r.clave">{{ cifrado(r.cifrado) === 'Abierta' ? 'Red abierta' : 'No informada' }}</b>
+            <ng-container *ngIf="r.clave">
+              <button type="button" class="oe-ico" (click)="claveVisible[r.id] = !claveVisible[r.id]" [attr.aria-label]="claveVisible[r.id] ? 'Ocultar la contraseña' : 'Mostrar la contraseña'">
+                <svg *ngIf="!claveVisible[r.id]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>
+                <svg *ngIf="claveVisible[r.id]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3l18 18M10.6 5.1A10 10 0 0 1 12 5c6.5 0 10 7 10 7a17 17 0 0 1-3.2 4.1M6.6 6.6C3.9 8.3 2 12 2 12s3.5 7 10 7a9.7 9.7 0 0 0 5.4-1.6"/></svg>
+              </button>
+              <button type="button" class="oe-ico" (click)="copiar(r.clave, 'clave' + r.id)" aria-label="Copiar la contraseña">
+                {{ copiado === 'clave' + r.id ? '✓' : '' }}
+                <svg *ngIf="copiado !== 'clave' + r.id" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg>
+              </button>
+            </ng-container>
+          </div>
+          <p class="oe-fine">{{ cifrado(r.cifrado) }}<ng-container *ngIf="!r.visible"> · red oculta</ng-container><ng-container *ngIf="r.max_usuarios"> · máx. {{ r.max_usuarios }} equipos</ng-container></p>
+        </div>
+      </div>
+    </div>
+
+    <ng-container *ngIf="redesApagadas.length">
+      <button type="button" class="oe-linkbtn" (click)="verApagadas = !verApagadas">
+        {{ verApagadas ? 'Ocultar' : 'Ver' }} {{ redesApagadas.length }} {{ redesApagadas.length === 1 ? 'red apagada' : 'redes apagadas' }}
+      </button>
+      <ul class="oe-apagadas" *ngIf="verApagadas">
+        <li *ngFor="let r of redesApagadas"><span class="np-mono">{{ r.nombre }}</span><span class="oe-fine">{{ cifrado(r.cifrado) }}</span></li>
+      </ul>
+    </ng-container>
+  </section>
+
+  <div class="oe-pie">
+    <span class="oe-fine">
+      <ng-container *ngIf="vivo?.medido_en && !vivo?.error">Señal {{ vivo.medido_en | date:'HH:mm:ss' }}</ng-container>
+      <ng-container *ngIf="equipo?.leido_en"> · equipo {{ equipo.leido_en | date:'HH:mm' }}</ng-container>
+    </span>
+    <button type="button" class="np-btn np-btn--ghost np-btn--sm" (click)="cargar(true)" [disabled]="midiendo || consultandoEquipo">
+      {{ midiendo || consultandoEquipo ? 'Consultando…' : 'Actualizar' }}
+    </button>
+  </div>
+</div>

@@ -3,6 +3,7 @@ import { HttpClientModule } from '@angular/common/http';
 import { Component, HostListener, ChangeDetectorRef, OnInit, ViewChild, ElementRef, inject } from '@angular/core';
 import { DialogService } from '../../services/dialog.service';
 import { ActivatedRoute } from '@angular/router';
+import { OntEquipoComponent } from '../../components/ont-equipo/ont-equipo.component';
 import { FormsModule } from '@angular/forms';
 import { LayoutComponent } from '../../components/layout/layout.component';
 import { UserService } from '../../services/user.service';
@@ -29,7 +30,7 @@ export type ClientTab = 'resumen' | 'servicios' | 'facturacion' | 'tickets' | 'h
   selector: 'app-user',
   templateUrl: './user.component.html',
   standalone: true,
-  imports: [CommonModule, FormsModule, HttpClientModule, LayoutComponent, FooterComponent],
+  imports: [CommonModule, FormsModule, HttpClientModule, LayoutComponent, FooterComponent, OntEquipoComponent],
   styleUrls: ['./user.component.scss'],
   host: { class: 'np-console' }
 })
@@ -163,6 +164,8 @@ export class UserComponent implements OnInit {
   }
 
   private abrirAlCargar = 0;
+  /** Pestaña de la ficha abierta por enlace; se aplica cuando llegan sus datos. */
+  private tabAlCargar: ClientTab | null = null;
 
   private abrirPendiente() {
     if (!this.abrirAlCargar) return;
@@ -190,6 +193,8 @@ export class UserComponent implements OnInit {
     const q = (this.route.snapshot.queryParamMap.get('q') || '').trim();
     // ?cliente=<id> abre su ficha en cuanto llega la lista (lo usa PPPoE).
     this.abrirAlCargar = Number(this.route.snapshot.queryParamMap.get('cliente')) || 0;
+    const tab = this.route.snapshot.queryParamMap.get('tab') as ClientTab | null;
+    this.tabAlCargar = this.abrirAlCargar && tab ? tab : null;
     if (q) { this.search = q; this.getSearchUser(); } else { this.getAllUser(); }
     this.companyWaSvc.getConfig().subscribe({
       next: (res) => {
@@ -474,6 +479,8 @@ export class UserComponent implements OnInit {
         this.internet_plan = e.internet_plans_id ?? 0;
         this.data_cortes   = e.data_cortes_id ?? 0;
         this.loadingModal  = false;
+        // Servicios necesita el router del cliente: se abre con los datos ya cargados.
+        if (this.tabAlCargar) { const t = this.tabAlCargar; this.tabAlCargar = null; this.setTab(t); }
       },
       error: () => { this.loadingModal = false; }
     });
@@ -758,44 +765,13 @@ export class UserComponent implements OnInit {
   assignedOnt: any   = null;
   loadingOnt         = false;
 
-  /** Lo que la OLT dice de la ONT ahora; el estado guardado puede tener horas. */
-  ontVivo: any = null;
-  midiendoOnt = false;
-
   loadAssignedOnt(userId: number): void {
     this.loadingOnt  = true;
     this.assignedOnt = null;
-    this.ontVivo     = null;
     this.oltService.getOntByUserId(userId).subscribe({
-      next: (res) => {
-        this.loadingOnt = false;
-        this.assignedOnt = res.data ?? null;
-        if (this.assignedOnt) this.medirOnt(userId);
-      },
+      next: (res) => { this.loadingOnt = false; this.assignedOnt = res.data ?? null; },
       error: () => { this.loadingOnt = false; },
     });
-  }
-
-  medirOnt(userId: number = this.selectedUserId, refrescar = false): void {
-    this.midiendoOnt = true;
-    this.oltService.ontEnVivo(userId, refrescar).subscribe({
-      next: (res) => {
-        // La respuesta puede llegar con otra ficha ya abierta.
-        if (Number(userId) !== Number(this.selectedUserId)) return;
-        this.midiendoOnt = false;
-        this.ontVivo = res.data?.vivo ?? null;
-      },
-      error: () => { this.midiendoOnt = false; },
-    });
-  }
-
-  etiquetaSenal(estado: string): string {
-    return ({ buena: 'Buena', regular: 'Regular', baja: 'Baja', critica: 'Crítica', saturada: 'Saturada' } as any)[estado] ?? 'Sin dato';
-  }
-
-  /** Estado que se muestra: el de la OLT si respondió, si no el guardado. */
-  get estadoOnt(): string {
-    return this.ontVivo?.status && !this.ontVivo?.error ? this.ontVivo.status : (this.assignedOnt?.status ?? '');
   }
 
   openServiciosTab() {

@@ -291,36 +291,11 @@
             <div class="np-panel">
               <div *ngIf="loadingOnt" class="np-loading np-loading--inline"><span class="np-spinner"></span> Consultando equipo…</div>
               <ng-container *ngIf="!loadingOnt && assignedOnt">
-                <div class="np-ont-head">
-                  <div>
-                    <div class="np-name">{{ assignedOnt.olt?.name || 'OLT' }}</div>
-                    <div class="np-meta">{{ assignedOnt.olt?.host }}</div>
-                  </div>
-                  <span class="np-pill" [ngClass]="estadoOnt === 'online' ? 'np-pill--active' : 'np-pill--suspended'">{{ estadoOnt }}</span>
-                </div>
-                <!-- Medido en la OLT ahora, no lo guardado en la última sincronización. -->
-                <div class="np-ont-vivo" *ngIf="ontVivo || midiendoOnt">
-                  <div *ngIf="midiendoOnt && !ontVivo" class="np-loading np-loading--inline"><span class="np-spinner np-spinner--sm"></span> Midiendo en la OLT…</div>
-                  <p *ngIf="ontVivo?.error" class="np-fine">{{ ontVivo.error }}</p>
-                  <ng-container *ngIf="ontVivo && !ontVivo.error">
-                    <div class="np-ont-senal" [attr.data-estado]="ontVivo.estado">
-                      <span>Señal</span>
-                      <b class="np-mono">{{ ontVivo.potencia !== null ? (ontVivo.potencia | number:'1.2-2') + ' dBm' : '—' }}</b>
-                      <em>{{ etiquetaSenal(ontVivo.estado) }}</em>
-                    </div>
-                    <div class="np-ont-medidas">
-                      <span *ngIf="ontVivo.temperatura !== null">{{ ontVivo.temperatura | number:'1.0-1' }} °C</span>
-                      <span *ngIf="ontVivo.tx !== null">Tx {{ ontVivo.tx | number:'1.2-2' }} dBm</span>
-                      <span *ngIf="ontVivo.distancia_m !== null">{{ ontVivo.distancia_m }} m</span>
-                      <span *ngIf="ontVivo.modelo">{{ ontVivo.modelo }}</span>
-                    </div>
-                  </ng-container>
-                  <button type="button" class="np-link" (click)="medirOnt(selectedUserId, true)" [disabled]="midiendoOnt">{{ midiendoOnt ? 'Midiendo…' : 'Medir de nuevo' }}</button>
-                </div>
-                <dl class="np-dl">
-                  <dt>Puerto (FSP)</dt><dd class="np-mono">{{ assignedOnt.fsp }}</dd>
-                  <dt>ONT ID</dt><dd class="np-mono">{{ assignedOnt.ont_id }}</dd>
-                  <ng-container *ngIf="assignedOnt.serial"><dt>Serial</dt><dd class="np-mono">{{ assignedOnt.serial }}</dd></ng-container>
+                <app-ont-equipo
+                  [userId]="selectedUserId"
+                  [ont]="{ olt: assignedOnt.olt?.name, fsp: assignedOnt.fsp, ont_id: assignedOnt.ont_id, serial: assignedOnt.serial, estado: assignedOnt.status }">
+                </app-ont-equipo>
+                <dl class="np-dl np-ont-extra" *ngIf="assignedOnt.description || assignedOnt.service_ports?.length">
                   <ng-container *ngIf="assignedOnt.description"><dt>Descripción</dt><dd>{{ assignedOnt.description }}</dd></ng-container>
                   <ng-container *ngIf="assignedOnt.service_ports?.length">
                     <dt>Service ports</dt>

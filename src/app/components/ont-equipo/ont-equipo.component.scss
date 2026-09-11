@@ -1,0 +1,155 @@
+/* El equipo del cliente. Se usa en la ficha (angosta) y en el detalle de
+   PPPoE (ancho): el diseño se acomoda al ancho que le toca, no a la pantalla. */
+:host { display: block; container-type: inline-size; }
+
+.oe {
+  --oe-g1: color-mix(in srgb, var(--text) 3%, var(--surface));
+  --oe-g2: color-mix(in srgb, var(--text) 13%, var(--surface));
+  display: grid; gap: 14px;
+}
+
+/* ── Arriba: figura + identidad ─────────────────────────────────────── */
+.oe-top { display: grid; grid-template-columns: minmax(0, 1fr); gap: 12px; align-items: center; }
+@container (min-width: 520px) { .oe-top { grid-template-columns: 250px minmax(0, 1fr); gap: 18px; } }
+
+.oe-figura {
+  position: relative; margin: 0; padding: 12px 12px 6px; border-radius: var(--radius-lg);
+  background:
+    radial-gradient(120% 90% at 50% 10%, color-mix(in srgb, var(--oe-marca) 9%, transparent), transparent 70%),
+    var(--surface-2);
+  border: 1px solid var(--line);
+  display: grid; justify-items: center; gap: 4px;
+  img { max-width: 100%; max-height: 170px; object-fit: contain; border-radius: var(--radius); }
+}
+.oe-svg { width: 100%; max-width: 280px; height: auto; display: block; overflow: visible; }
+.oe-g1 { stop-color: var(--oe-g1); }
+.oe-g2 { stop-color: var(--oe-g2); }
+.oe-sombra { fill: color-mix(in srgb, var(--text) 16%, transparent); filter: blur(3px); }
+.oe-antena rect { fill: var(--oe-g2); stroke: color-mix(in srgb, var(--text) 18%, transparent); stroke-width: 1; }
+.oe-cuerpo { stroke: color-mix(in srgb, var(--text) 16%, transparent); stroke-width: 1; }
+.oe-brillo { fill: color-mix(in srgb, #fff 55%, transparent); }
+.oe-base { fill: color-mix(in srgb, var(--text) 10%, transparent); }
+.oe-franja { fill: var(--oe-marca); }
+.oe-logo { font: 800 15px var(--font-display, var(--font-body)); fill: var(--oe-marca); letter-spacing: .2px; }
+.oe-modelo-t { font: 600 11px var(--font-mono); fill: var(--text-2); letter-spacing: .5px; }
+.oe-led { stroke: color-mix(in srgb, var(--text) 22%, transparent); stroke-width: 1; transition: fill .2s; }
+.oe-led--on     { fill: var(--ok);     filter: drop-shadow(0 0 4px var(--ok)); }
+.oe-led--alarma { fill: var(--danger); filter: drop-shadow(0 0 4px var(--danger)); animation: oe-parpadeo 1.2s ease-in-out infinite; }
+.oe-led--off    { fill: color-mix(in srgb, var(--text) 18%, var(--surface)); }
+.oe-led--nada   { fill: color-mix(in srgb, var(--text) 8%, var(--surface)); }
+.oe-led-t { font: 700 7.5px var(--font-mono); fill: var(--text-3); text-anchor: middle; letter-spacing: .4px; }
+@keyframes oe-parpadeo { 50% { opacity: .35; } }
+@media (prefers-reduced-motion: reduce) { .oe-led--alarma { animation: none; } }
+
+.oe-foto-acc { display: flex; gap: 12px; justify-content: center; }
+.oe-linkbtn {
+  padding: 0; border: 0; background: none; cursor: pointer; font: inherit;
+  font-size: 11.5px; font-weight: 700; color: var(--accent);
+  &:hover { text-decoration: underline; }
+  &.is-busy { opacity: .6; pointer-events: none; }
+}
+.oe-error { margin: 0; font-size: 11.5px; color: var(--danger); }
+
+.oe-id { display: grid; gap: 5px; min-width: 0; justify-items: start; }
+.oe-marca {
+  margin: 0; display: inline-flex; align-items: center; gap: 6px;
+  font-size: 11px; font-weight: 800; letter-spacing: .7px; text-transform: uppercase; color: var(--oe-marca);
+  i { width: 8px; height: 8px; border-radius: 2px; background: var(--oe-marca); }
+}
+.oe-id h4 {
+  margin: 0; display: flex; align-items: baseline; flex-wrap: wrap; gap: 4px 8px;
+  font-size: 22px; letter-spacing: -.4px; color: var(--text);
+  small { font-size: 12.5px; font-weight: 600; letter-spacing: 0; color: var(--text-2); }
+}
+.oe-estado {
+  display: inline-flex; align-items: center; gap: 6px; padding: 2px 9px; border-radius: 999px;
+  font-size: 11.5px; font-weight: 800; background: var(--surface-2); color: var(--text-2); border: 1px solid var(--line);
+  i { width: 7px; height: 7px; border-radius: 50%; background: var(--text-3); }
+  &.is-on  { background: var(--ok-soft); color: var(--ok); border-color: transparent; i { background: var(--ok); box-shadow: 0 0 0 3px color-mix(in srgb, var(--ok) 25%, transparent); } }
+  &.is-off { background: var(--danger-soft); color: var(--danger); border-color: transparent; i { background: var(--danger); } }
+}
+.oe-ubic { margin: 0; font-size: 12px; color: var(--text-2); overflow-wrap: anywhere; }
+.oe-chips {
+  display: flex; flex-wrap: wrap; gap: 5px; margin-top: 2px;
+  span { padding: 2px 7px; border-radius: 6px; background: var(--surface-2); border: 1px solid var(--line); font-size: 11px; color: var(--text-3); }
+  b { font-family: var(--font-mono); font-weight: 600; color: var(--text); }
+}
+
+/* ── Secciones ──────────────────────────────────────────────────────── */
+.oe-sec { display: grid; gap: 8px; }
+.oe-sec-h { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
+.oe-t { margin: 0; font-size: 10.5px; font-weight: 800; letter-spacing: .6px; text-transform: uppercase; color: var(--text-3); }
+.oe-fine { font-size: 11.5px; color: var(--text-3); margin: 0; }
+.oe-cargando { margin: 0; display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--text-2); }
+.oe-aviso {
+  margin: 0; padding: 8px 11px; border-radius: var(--radius); font-size: 12px; line-height: 1.45;
+  background: var(--warn-soft); color: var(--text-2); border: 1px solid color-mix(in srgb, var(--warn) 45%, transparent);
+}
+
+/* Señal: la potencia sobre la escala de una red PON. */
+.oe-senal { display: grid; gap: 6px; padding: 12px 14px; border: 1px solid var(--line); border-radius: var(--radius-lg); background: var(--surface-2); }
+.oe-senal-v {
+  display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap;
+  b { font-size: 26px; font-weight: 700; letter-spacing: -.5px; color: var(--text); }
+  span { font-size: 12px; color: var(--text-2); }
+  em { margin-left: auto; font-style: normal; font-size: 11px; font-weight: 800; padding: 2px 9px; border-radius: 999px; background: var(--line); color: var(--text-2); }
+}
+.oe-senal[data-estado="buena"] em   { background: var(--ok-soft); color: var(--ok); }
+.oe-senal[data-estado="regular"] em { background: var(--warn-soft); color: var(--warn); }
+.oe-senal:is([data-estado="baja"], [data-estado="critica"], [data-estado="saturada"]) em { background: var(--danger-soft); color: var(--danger); }
+.oe-senal-barra {
+  position: relative; height: 8px; border-radius: 999px;
+  /* -35…-29 crítica · -29…-27 baja · -27…-25 regular · -25…-8 buena · -8…-5 saturada */
+  background: linear-gradient(90deg,
+    var(--danger) 0 20%, color-mix(in srgb, var(--danger) 55%, var(--warn)) 20% 26.7%,
+    var(--warn) 26.7% 33.3%, var(--ok) 33.3% 90%, var(--danger) 90% 100%);
+  i { position: absolute; top: 50%; width: 14px; height: 14px; border-radius: 50%; transform: translate(-50%, -50%);
+      background: var(--surface); border: 3px solid var(--text); box-shadow: var(--shadow); }
+}
+.oe-senal-escala {
+  position: relative; height: 13px; font: 10px var(--font-mono); color: var(--text-3);
+  span { position: absolute; transform: translateX(-50%); }
+  span:nth-child(1) { left: 0; transform: none; }
+  span:nth-child(2) { left: 20%; }
+  span:nth-child(3) { left: 33.3%; }
+  span:nth-child(4) { left: 90%; }
+  span:nth-child(5) { right: 0; transform: none; }
+}
+.oe-medidas {
+  margin: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); gap: 6px;
+  > div { padding: 7px 9px; border-radius: var(--radius); background: var(--surface-2); border: 1px solid var(--line); min-width: 0; }
+  dt { font-size: 10px; text-transform: uppercase; letter-spacing: .04em; color: var(--text-3); }
+  dd { margin: 1px 0 0; font: 600 13px var(--font-mono); color: var(--text); }
+}
+
+/* WiFi: una tarjeta por red encendida. */
+.oe-redes { display: grid; gap: 8px; }
+.oe-red {
+  display: flex; gap: 12px; padding: 12px; border-radius: var(--radius-lg);
+  border: 1px solid color-mix(in srgb, var(--accent) 28%, var(--line));
+  background: linear-gradient(135deg, color-mix(in srgb, var(--accent) 8%, var(--surface)), var(--surface));
+}
+.oe-red-ico {
+  width: 38px; height: 38px; flex-shrink: 0; border-radius: 10px; display: grid; place-items: center;
+  background: color-mix(in srgb, var(--accent) 14%, var(--surface)); color: var(--accent);
+  svg { width: 22px; height: 22px; }
+}
+.oe-red-datos { display: grid; gap: 6px; min-width: 0; flex: 1; }
+.oe-campo {
+  display: grid; grid-template-columns: minmax(0, 1fr) auto auto; align-items: center; gap: 0 4px;
+  span { grid-column: 1 / -1; font-size: 10px; text-transform: uppercase; letter-spacing: .05em; color: var(--text-3); }
+  b { font-size: 15px; color: var(--text); overflow-wrap: anywhere; min-width: 0; }
+}
+.oe-ico {
+  width: 28px; height: 28px; display: grid; place-items: center; padding: 0; cursor: pointer;
+  border: 1px solid var(--line); border-radius: 8px; background: var(--surface); color: var(--text-2);
+  font-size: 13px; font-weight: 800;
+  svg { width: 15px; height: 15px; }
+  &:hover { color: var(--accent); border-color: var(--accent); }
+}
+.oe-apagadas {
+  list-style: none; margin: 0; padding: 0; display: grid; gap: 4px;
+  li { display: flex; justify-content: space-between; gap: 8px; padding: 6px 10px; border-radius: var(--radius); background: var(--surface-2); font-size: 12px; color: var(--text-2); }
+}
+
+.oe-pie { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding-top: 10px; border-top: 1px solid var(--line); }

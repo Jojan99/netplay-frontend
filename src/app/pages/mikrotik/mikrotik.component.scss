@@ -749,44 +749,8 @@
   width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; flex-shrink: 0;
   background: var(--accent-soft, var(--surface-2)); color: var(--accent); font-weight: 800;
 }
-.np-cred-ont-head { display: flex; align-items: center; flex-wrap: wrap; gap: 6px 12px; font-size: 13px; }
-.np-cred-medido { margin: 0; }
 .np-cred-foot { align-items: center; }
 
-/* La potencia recibida sobre la escala de una red PON: a la izquierda se
-   pierde el enlace, en el centro está sano, a la derecha satura el receptor. */
-.np-senal {
-  display: grid; gap: 6px; padding: 12px 14px; border: 1px solid var(--line); border-radius: var(--radius-lg); background: var(--surface-2);
-}
-.np-senal-v {
-  display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap;
-  b { font-size: 26px; font-weight: 700; letter-spacing: -.5px; color: var(--text); }
-  span { font-size: 12px; color: var(--text-2); }
-  em { margin-left: auto; font-style: normal; font-size: 11px; font-weight: 800; padding: 2px 9px; border-radius: 999px; background: var(--line); color: var(--text-2); }
-}
-.np-senal[data-estado="buena"] .np-senal-v em    { background: var(--ok-soft); color: var(--ok); }
-.np-senal[data-estado="regular"] .np-senal-v em  { background: var(--warn-soft); color: var(--warn); }
-.np-senal:is([data-estado="baja"], [data-estado="critica"], [data-estado="saturada"]) .np-senal-v em { background: var(--danger-soft); color: var(--danger); }
-.np-senal-barra {
-  position: relative; height: 8px; border-radius: 999px;
-  /* -35…-29 crítica · -29…-27 baja · -27…-25 regular · -25…-8 buena · -8…-5 saturada */
-  background: linear-gradient(90deg,
-    var(--danger) 0 20%, color-mix(in srgb, var(--danger) 55%, var(--warn)) 20% 26.7%,
-    var(--warn) 26.7% 33.3%, var(--ok) 33.3% 90%, var(--danger) 90% 100%);
-  i {
-    position: absolute; top: 50%; width: 14px; height: 14px; border-radius: 50%; transform: translate(-50%, -50%);
-    background: var(--surface); border: 3px solid var(--text); box-shadow: var(--shadow);
-  }
-}
-.np-senal-escala {
-  position: relative; height: 14px; font-size: 10px; color: var(--text-3); font-family: var(--font-mono);
-  span { position: absolute; transform: translateX(-50%); }
-  span:nth-child(1) { left: 0; transform: none; }
-  span:nth-child(2) { left: 20%; }
-  span:nth-child(3) { left: 33.3%; }
-  span:nth-child(4) { left: 90%; }
-  span:nth-child(5) { right: 0; left: auto; transform: none; }
-}
 @media (max-width: 560px) {
   .np-cred-foot { flex-wrap: wrap; }
 }

@@ -1364,46 +1364,10 @@
         </div>
       </section>
 
-      <!-- Equipo ONT, medido en la OLT -->
-      <section class="np-cred-sec np-cred-full" *ngIf="c.ont">
-        <div class="np-cred-sec-h">
-          <p class="np-sect">Equipo ONT</p>
-          <button type="button" class="np-btn np-btn--ghost np-btn--sm" (click)="medirOntCredencial(true)" [disabled]="midiendoOntCred">
-            {{ midiendoOntCred ? 'Midiendo…' : 'Medir de nuevo' }}
-          </button>
-        </div>
-        <div class="np-cred-ont-head">
-          <span class="np-cred-ont" [class.is-on]="estadoOnt(c) === 'online'"><i></i>{{ estadoOnt(c) || 'sin dato' }}</span>
-          <b>{{ c.ont.olt }}</b>
-          <span class="np-fine">Puerto <span class="np-mono">{{ c.ont.fsp }}</span> · ONT <span class="np-mono">{{ c.ont.ont_id }}</span> · <span class="np-mono">{{ c.ont.serial }}</span></span>
-        </div>
-
-        <div *ngIf="midiendoOntCred && !ontCredencial" class="np-loading np-loading--inline"><span class="np-spinner np-spinner--sm"></span> Consultando la OLT…</div>
-        <p *ngIf="ontCredencial?.error" class="np-notice np-notice--warn np-notice--inline">{{ ontCredencial.error }}</p>
-
-        <ng-container *ngIf="ontCredencial && !ontCredencial.error">
-          <div class="np-senal" [attr.data-estado]="ontCredencial.estado">
-            <div class="np-senal-v">
-              <b class="np-mono">{{ ontCredencial.potencia !== null ? (ontCredencial.potencia | number:'1.2-2') : '—' }}</b><span>dBm recibidos</span>
-              <em>{{ etiquetaSenal(ontCredencial.estado) }}</em>
-            </div>
-            <div class="np-senal-barra" *ngIf="ontCredencial.potencia !== null" aria-hidden="true">
-              <i [style.left.%]="posicionSenal(ontCredencial.potencia)"></i>
-            </div>
-            <div class="np-senal-escala" aria-hidden="true"><span>-35</span><span>-29</span><span>-25</span><span>-8</span><span>-5</span></div>
-          </div>
-          <div class="np-pm-datos">
-            <div *ngIf="ontCredencial.tx !== null"><span>Tx de la ONT</span><b class="np-mono">{{ ontCredencial.tx | number:'1.2-2' }} dBm</b></div>
-            <div *ngIf="ontCredencial.olt_rx !== null"><span>Rx en la OLT</span><b class="np-mono">{{ ontCredencial.olt_rx | number:'1.2-2' }} dBm</b></div>
-            <div *ngIf="ontCredencial.temperatura !== null"><span>Temperatura</span><b>{{ ontCredencial.temperatura | number:'1.0-1' }} °C</b></div>
-            <div *ngIf="ontCredencial.voltaje !== null"><span>Voltaje</span><b>{{ ontCredencial.voltaje | number:'1.2-2' }} V</b></div>
-            <div *ngIf="ontCredencial.corriente !== null"><span>Corriente láser</span><b>{{ ontCredencial.corriente | number:'1.1-2' }} mA</b></div>
-            <div *ngIf="ontCredencial.distancia_m !== null"><span>Distancia</span><b>{{ ontCredencial.distancia_m }} m</b></div>
-            <div *ngIf="ontCredencial.modelo"><span>Modelo</span><b>{{ ontCredencial.modelo }}</b></div>
-            <div *ngIf="ontCredencial.firmware"><span>Firmware</span><b class="np-mono">{{ ontCredencial.firmware }}</b></div>
-          </div>
-          <p class="np-fine np-cred-medido">Medido {{ ontCredencial.medido_en | date:'HH:mm:ss' }}<ng-container *ngIf="ontCredencial.desde_cache"> · lectura reciente guardada</ng-container></p>
-        </ng-container>
+      <!-- Equipo ONT: foto, señal y WiFi leídos de la OLT -->
+      <section class="np-cred-sec np-cred-full" *ngIf="c.ont && c.user_id">
+        <p class="np-sect">Equipo ONT</p>
+        <app-ont-equipo [userId]="c.user_id" [ont]="c.ont"></app-ont-equipo>
       </section>
       <p class="np-fine np-cred-full" *ngIf="c.user_id && !c.ont">El cliente no tiene una ONT vinculada en Admin OLT.</p>
     </div>
