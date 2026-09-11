@@ -36,7 +36,7 @@
   <div class="np-workspace">
     <section class="np-registry">
       <div class="np-registry-wrap"><table class="np-table np-table--registry">
-        <thead><tr><th class="np-th-stripe"></th><th>Puerto (FSP)</th><th>Serial</th><th>Estado</th><th>Señal Rx</th><th class="np-th-right">Acción</th></tr></thead>
+        <thead><tr><th class="np-th-stripe"></th><th>Puerto (FSP)</th><th>{{ porMac ? 'MAC' : 'Serial' }}</th><th>Estado</th><th>Señal Rx</th><th class="np-th-right">Acción</th></tr></thead>
         <tbody>
           <tr *ngIf="!selectedOltId && !loadingOlts" class="np-empty"><td colspan="6"><strong>Elegí una OLT para ver las ONTs pendientes.</strong></td></tr>
           <tr *ngIf="loadingOnts" class="np-empty"><td colspan="6"><span class="np-spinner"></span></td></tr>
@@ -93,15 +93,16 @@
           </div>
         </div>
 
+        <!-- En equipos sin service-port el reintento sólo verifica la VLAN del puerto -->
         <button type="button" class="np-btn np-btn--warn np-btn--sm" *ngIf="faltaServicePort"
                 [disabled]="completando" (click)="completarServicePort()">
-          {{ completando ? 'Creando…' : 'Crear sólo el service-port' }}
+          {{ completando ? (conServicePort ? 'Creando…' : 'Verificando…') : (conServicePort ? 'Crear sólo el service-port' : 'Volver a verificar la VLAN del puerto') }}
         </button>
       </section>
 
       <div class="np-form">
         <label class="np-field"><span>Puerto FSP <em>*</em></span><input class="np-input np-mono" [(ngModel)]="form.fsp" placeholder="0/0/3" /></label>
-        <label class="np-field"><span>Serial</span><input class="np-input np-mono" [(ngModel)]="form.serial" placeholder="HWTC12345678" /><small class="np-fine">Precargado desde la OLT.</small></label>
+        <label class="np-field"><span>{{ porMac ? 'MAC' : 'Serial' }}</span><input class="np-input np-mono" [(ngModel)]="form.serial" [placeholder]="porMac ? 'AA:BB:CC:DD:EE:FF' : 'HWTC12345678'" /><small class="np-fine">Precargado desde la OLT.{{ porMac ? ' En EPON la ONU se autoriza por MAC.' : '' }}</small></label>
         <!-- A quién se le pone la ONT. La lista aparece al escribir, igual que
              en el alta de tickets: son cientos y mostrarlos todos no sirve. -->
         <div class="np-field np-field-full">
@@ -143,9 +144,13 @@
           <input class="np-input" [(ngModel)]="form.description" placeholder="Se completa con el nombre del cliente" />
         </label>
         <label class="np-field"><span>Line profile</span><select class="np-input" [(ngModel)]="form.line_profile_id" [disabled]="loadingProfiles"><option [ngValue]="null">{{ loadingProfiles ? 'Cargando…' : 'Sin perfil' }}</option><option *ngFor="let p of lineProfiles" [ngValue]="p.profile_id">{{ p.profile_id }} · {{ p.profile_name }}</option></select></label>
-        <label class="np-field"><span>Service profile</span><select class="np-input" [(ngModel)]="form.srv_profile_id" [disabled]="loadingProfiles"><option [ngValue]="null">{{ loadingProfiles ? 'Cargando…' : 'Sin perfil' }}</option><option *ngFor="let p of srvProfiles" [ngValue]="p.profile_id">{{ p.profile_id }} · {{ p.profile_name }}</option></select></label>
+        <!-- En EPON el perfil de servicio no se elige en el alta: lo asigna la
+             OLT. Igual se muestra, porque define cómo pasa la VLAN. -->
+        <label class="np-field"><span>Service profile</span><select class="np-input" [(ngModel)]="form.srv_profile_id" [disabled]="loadingProfiles || !capacidades.perfil_servicio_en_alta"><option [ngValue]="null">{{ loadingProfiles ? 'Cargando…' : 'Sin perfil' }}</option><option *ngFor="let p of srvProfiles" [ngValue]="p.profile_id">{{ p.profile_id }} · {{ p.profile_name }}</option></select>
+          <small class="np-fine" *ngIf="!capacidades.perfil_servicio_en_alta">Lo asigna la OLT al autorizar; en este equipo no se elige en el alta.</small></label>
         <label class="np-field np-field-full"><span>VLAN / segmento de red</span><select class="np-input" [(ngModel)]="selectedSegment" (ngModelChange)="onSegmentChange()" [disabled]="loadingSegments"><option [ngValue]="null">{{ loadingSegments ? 'Cargando VLANs…' : 'Sin VLAN' }}</option><option *ngFor="let seg of lanSegments" [ngValue]="seg">{{ segmentLabel(seg) }}</option></select>
-          <small class="np-fine np-pos" *ngIf="form.vlan">VLAN {{ form.vlan }}: el service port se crea automáticamente.</small>
+          <small class="np-fine np-pos" *ngIf="form.vlan && conServicePort">VLAN {{ form.vlan }}: el service port se crea automáticamente.</small>
+          <small class="np-fine" *ngIf="form.vlan && !conServicePort">VLAN {{ form.vlan }}: al autorizar se verifica que el puerto PON la lleve. {{ capacidades.explicacion_vlan }}</small>
           <small class="np-fine" *ngIf="!form.vlan && !loadingSegments">Sin VLAN la ONT se registra sin service port. Se puede asignar después.</small>
         </label>
       </div>

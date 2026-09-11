@@ -64,6 +64,32 @@ export class OltSinAutorizarComponent implements OnInit {
   ) {}
 
   /**
+   * Qué admite esta OLT al autorizar. Por defecto, lo de Huawei: serial,
+   * service-port y perfil de servicio elegido en el alta.
+   */
+  capacidades: {
+    tecnologia: string; identificador: 'mac' | 'serial'; service_port: boolean;
+    perfil_servicio_en_alta: boolean; vlan: string; explicacion_vlan: string | null;
+  } = {
+    tecnologia: 'gpon', identificador: 'serial', service_port: true,
+    perfil_servicio_en_alta: true, vlan: 'service-port', explicacion_vlan: null,
+  };
+
+  private readonly capacidadesPorDefecto = { ...this.capacidades };
+
+  get porMac(): boolean { return this.capacidades.identificador === 'mac'; }
+  get conServicePort(): boolean { return this.capacidades.service_port; }
+
+  cargarCapacidades(): void {
+    if (!this.selectedOltId) return;
+
+    this.oltService.getCapacidades(this.selectedOltId).subscribe({
+      next: (res) => { this.capacidades = { ...this.capacidadesPorDefecto, ...(res?.data ?? {}) }; },
+      error: () => { this.capacidades = { ...this.capacidadesPorDefecto }; },
+    });
+  }
+
+  /**
    * Autorización automática por puerto PON. Sólo la muestran los equipos que
    * la permiten (hoy, C-Data EPON): en los demás queda oculta.
    */
@@ -153,6 +179,7 @@ export class OltSinAutorizarComponent implements OnInit {
           this.loadUnauth();
           this.loadProfiles();
           this.cargarAutoAuth();
+          this.cargarCapacidades();
         }
       },
       error: () => { this.loadingOlts = false; },
@@ -172,6 +199,7 @@ export class OltSinAutorizarComponent implements OnInit {
       this.loadUnauth();
       this.loadProfiles();
       this.cargarAutoAuth();
+      this.cargarCapacidades();
     }
   }
 
@@ -336,8 +364,15 @@ export class OltSinAutorizarComponent implements OnInit {
   ontRegistrada: any = null;
   completando = false;
 
+  /**
+   * ¿Falló el paso de VLAN? En Huawei es "Crear el service-port"; en los
+   * equipos sin service-port (C-Data EPON) es "VLAN … en el puerto PON …".
+   */
   get faltaServicePort(): boolean {
-    return this.pasos.some(p => !p.ok && p.paso?.toLowerCase().includes('service-port'));
+    return this.pasos.some(p => {
+      const nombre = p.paso?.toLowerCase() ?? '';
+      return !p.ok && (nombre.includes('service-port') || nombre.includes('puerto pon'));
+    });
   }
 
   /**

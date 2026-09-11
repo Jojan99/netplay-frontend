@@ -80,6 +80,11 @@ export class OltService {
       { headers: this.getHeaders() });
   }
 
+  /** Qué admite la OLT al autorizar: MAC o serial, service-port, perfil de servicio. */
+  getCapacidades(oltId: number): Observable<any> {
+    return this.http.get<any>(`${this.env.rootUrl}api/management/olt/${oltId}/capacidades`, { headers: this.getHeaders() });
+  }
+
   /** Qué puertos PON autorizan solos las ONU nuevas (sólo algunos equipos). */
   getAutoAutorizacion(oltId: number): Observable<any> {
     return this.http.get<any>(`${this.env.rootUrl}api/management/olt/${oltId}/auto-autorizacion`, { headers: this.getHeaders() });
