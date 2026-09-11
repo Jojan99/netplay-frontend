@@ -1,64 +1,190 @@
-<div class="np-page np-ontdev">
+<div class="np-page np-acs">
   <header class="np-head">
     <div>
       <p class="np-kicker">Red <b>/</b> Router del cliente <b>/</b> TR-069</p>
-      <h1 class="np-title">{{ ont.model || 'Router del cliente' }}</h1>
-      <div class="np-ribbon">
-        <span><i class="np-dot" [style.background]="ont.status ? 'var(--ok)' : 'var(--danger)'"></i>{{ ont.status ? 'Online' : 'Offline' }}</span>
-        <span class="np-mono">SN {{ ont.serial || '—' }}</span>
-        <span>WAN <span class="np-mono">{{ ont.wanIp || '—' }}</span></span>
-        <span>uptime <span class="np-mono">{{ ont.uptime || '—' }}</span></span>
-        <span class="np-fine">último inform {{ ont.lastInform || '—' }}</span>
+      <h1 class="np-title">Router del cliente</h1>
+      <div class="np-ribbon" *ngIf="estado">
+        <span><b class="np-n">{{ estado.equipos }}</b> equipos</span>
+        <span><i class="np-dot" [style.background]="estado.reportando ? 'var(--ok)' : 'var(--danger)'"></i><b class="np-n">{{ estado.reportando }}</b> reportando</span>
+        <span class="np-fine">último reporte {{ hace(estado.ultimo_reporte) }}</span>
+        <span class="np-acs-url">
+          URL del ACS <span class="np-mono">{{ estado.url_acs }}</span>
+          <button type="button" class="np-acs-ico" (click)="copiar(estado.url_acs, 'url')" aria-label="Copiar la URL del ACS">{{ copiado === 'url' ? '✓' : '⧉' }}</button>
+        </span>
       </div>
     </div>
     <div class="np-actions">
-      <button type="button" class="np-btn np-btn--ghost" (click)="refreshOnt()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 12a8 8 0 1 1-2.3-5.7M20 4v5h-5"/></svg>Sincronizar</button>
-      <button type="button" class="np-btn np-btn--danger" (click)="rebootOnt()">Reiniciar</button>
+      <button type="button" class="np-btn np-btn--ghost" (click)="cargar()" [disabled]="cargando">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 12a8 8 0 1 1-2.3-5.7M20 4v5h-5"/></svg>{{ cargando ? 'Cargando…' : 'Actualizar' }}
+      </button>
     </div>
   </header>
 
-  <div class="np-scroll">
-    <section class="np-kpis">
-      <div class="np-kpi"><span class="np-kpi-l">Rx power</span><span class="np-kpi-v" [class.np-kpi-v--danger]="rxBad()">{{ ont.rxPower }}</span><span class="np-kpi-s">dBm recibido en la ONT</span></div>
-      <div class="np-kpi"><span class="np-kpi-l">Tx power</span><span class="np-kpi-v">{{ ont.txPower }}</span><span class="np-kpi-s">dBm transmitido</span></div>
-      <div class="np-kpi"><span class="np-kpi-l">Temperatura</span><span class="np-kpi-v">{{ ont.temperature }}</span><span class="np-kpi-s">°C del equipo</span></div>
-      <div class="np-kpi np-kpi--accent"><span class="np-kpi-l">Tráfico</span><span class="np-kpi-v">{{ ont.traffic }} <small>GB</small></span><span class="np-kpi-s">{{ getConnectedCount() }} dispositivos conectados</span></div>
-    </section>
+  <div class="np-scroll np-acs-scroll">
+    <!-- Nadie reporta: los datos son viejos y las órdenes quedan en cola. -->
+    <p class="np-notice np-notice--warn" *ngIf="estado && estado.equipos && !estado.reportando">
+      <b>Ningún equipo reporta al servidor TR-069 desde {{ estado.ultimo_reporte | date:'d MMM y, HH:mm' }}.</b>
+      Lo que ves es lo último que mandaron, y los cambios quedan en cola hasta que vuelvan a conectarse.
+      Hay que revisar que los equipos puedan llegar a <span class="np-mono">{{ estado.url_acs }}</span>.
+    </p>
+    <p class="np-notice np-notice--danger" *ngIf="error">{{ error }}</p>
 
-    <div class="np-grid-3">
-      <div class="np-form-col">
-        <section class="np-card">
-          <div class="np-card-h"><h2>Dispositivos conectados</h2><span class="np-card-meta"><b>{{ getConnectedCount() }}</b> activos de {{ devices.length }}</span></div>
-          <div class="np-tablewrap"><table class="np-table np-table--compact">
-            <thead><tr><th>Nombre</th><th>IP</th><th>MAC</th><th>Estado</th></tr></thead>
-            <tbody>
-              <tr *ngFor="let device of devices"><td class="np-strong">{{ device.name }}</td><td class="np-data">{{ device.ip }}</td><td class="np-data">{{ device.mac }}</td><td><span class="np-pill" [ngClass]="device.status === 'Conectado' ? 'np-pill--active' : 'np-pill--neutral'">{{ device.status }}</span></td></tr>
-              <tr *ngIf="devices.length === 0" class="np-empty"><td colspan="4">Sin dispositivos reportados.</td></tr>
-            </tbody>
-          </table></div>
-        </section>
-        <section class="np-card">
-          <div class="np-card-h"><h2>Información del equipo</h2></div>
-          <dl class="np-dl np-dl--2col">
-            <dt>Serial</dt><dd class="np-mono">{{ ont.serial || '—' }}</dd>
-            <dt>Modelo</dt><dd>{{ ont.model || '—' }}</dd>
-            <dt>Fabricante</dt><dd>{{ ont.manufacturer || '—' }}</dd>
-            <dt>Firmware</dt><dd class="np-mono">{{ ont.firmware || '—' }}</dd>
-            <dt>CPU</dt><dd class="np-mono">{{ ont.cpu || '—' }}</dd>
-            <dt>Memoria</dt><dd class="np-mono">{{ ont.memory || '—' }}</dd>
-          </dl>
-        </section>
-      </div>
-      <div class="np-form-col">
-        <section class="np-card">
-          <div class="np-card-h"><h2>WiFi 2.4 GHz</h2><button type="button" class="np-link" (click)="editWifi('2.4')">Cambiar</button></div>
-          <dl class="np-dl"><dt>SSID</dt><dd class="np-strong">{{ ont.wifi24.ssid || '—' }}</dd><dt>Contraseña</dt><dd class="np-mono">{{ showPass24 ? ont.wifi24.password : '••••••••' }} <button type="button" class="np-link" (click)="toggle24()">{{ showPass24 ? 'ocultar' : 'ver' }}</button></dd></dl>
-        </section>
-        <section class="np-card">
-          <div class="np-card-h"><h2>WiFi 5 GHz</h2><button type="button" class="np-link" (click)="editWifi('5')">Cambiar</button></div>
-          <dl class="np-dl"><dt>SSID</dt><dd class="np-strong">{{ ont.wifi5.ssid || '—' }}</dd><dt>Contraseña</dt><dd class="np-mono">{{ showPass5 ? ont.wifi5.password : '••••••••' }} <button type="button" class="np-link" (click)="toggle5()">{{ showPass5 ? 'ocultar' : 'ver' }}</button></dd></dl>
-        </section>
-      </div>
+    <div class="np-acs-grid" [class.is-open]="seleccionado">
+      <!-- ── Lista ── -->
+      <section class="np-card np-acs-lista">
+        <div class="np-acs-buscar">
+          <input type="search" class="np-input" [(ngModel)]="buscar" placeholder="Cliente, documento, IP, serial…" aria-label="Buscar equipo" />
+        </div>
+        <div *ngIf="cargando && !equipos.length" class="np-loading np-loading--inline"><span class="np-spinner np-spinner--sm"></span> Leyendo el servidor TR-069…</div>
+        <p class="np-acs-vacio" *ngIf="!cargando && !error && !equipos.length">
+          Ningún equipo del servidor TR-069 coincide con tus clientes. Un equipo se reconoce por la IP fija del cliente,
+          su usuario PPPoE o el serial de su ONT.
+        </p>
+        <ul class="np-acs-items">
+          <li *ngFor="let e of filtrados">
+            <button type="button" class="np-acs-item" [class.is-sel]="seleccionado?.id === e.id" (click)="abrir(e)">
+              <span class="np-acs-marca" [style.background]="colorMarca(e.fabricante)">{{ (e.fabricante || '?').charAt(0) }}</span>
+              <span class="np-acs-item-txt">
+                <b>{{ e.cliente?.nombre || 'Sin cliente' }}</b>
+                <small>{{ e.fabricante }} {{ e.modelo }} · <span class="np-mono">{{ e.ip_wan || e.pppoe || e.serial }}</span></small>
+              </span>
+              <span class="np-acs-rep" [class.is-on]="e.reportando" [title]="'Último reporte ' + hace(e.ultimo_reporte)">
+                <i></i>{{ e.reportando ? 'Reporta' : hace(e.ultimo_reporte) }}
+              </span>
+            </button>
+          </li>
+        </ul>
+      </section>
+
+      <!-- ── Detalle ── -->
+      <section class="np-card np-acs-detalle" *ngIf="seleccionado as e">
+        <div class="np-acs-det-head">
+          <button type="button" class="np-icobtn np-acs-volver" (click)="cerrar()" aria-label="Volver a la lista">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 6l-6 6 6 6"/></svg>
+          </button>
+          <span class="np-acs-marca np-acs-marca--lg" [style.background]="colorMarca(e.fabricante)">{{ (e.fabricante || '?').charAt(0) }}</span>
+          <div class="np-acs-det-id">
+            <p class="np-kicker">{{ e.fabricante }}</p>
+            <h2>{{ e.modelo }}</h2>
+            <p class="np-fine">SN <span class="np-mono">{{ e.serial }}</span><ng-container *ngIf="detalle?.software"> · SW <span class="np-mono">{{ detalle.software }}</span></ng-container></p>
+          </div>
+          <div class="np-acs-det-acc">
+            <button type="button" class="np-btn np-btn--ghost np-btn--sm" (click)="pedirDatos()" [disabled]="!!trabajando">{{ trabajando === 'datos' ? 'Pidiendo…' : 'Pedir datos' }}</button>
+            <button type="button" class="np-btn np-btn--danger np-btn--sm" (click)="reiniciar()" [disabled]="!!trabajando">{{ trabajando === 'reinicio' ? 'Enviando…' : 'Reiniciar' }}</button>
+          </div>
+        </div>
+
+        <div class="np-acs-cliente" *ngIf="e.cliente">
+          <span>Cliente</span>
+          <button type="button" class="np-link" (click)="abrirFicha()">{{ e.cliente.nombre }}</button>
+          <span class="np-fine">CC <span class="np-mono">{{ e.cliente.documento }}</span> · reconocido por {{ e.vinculo === 'ip' ? 'su IP fija' : e.vinculo === 'pppoe' ? 'su usuario PPPoE' : 'el serial de su ONT' }}</span>
+        </div>
+        <div class="np-acs-cliente" *ngIf="!e.cliente && e.ont">
+          <span>ONT</span><b>{{ e.ont.olt }} · <span class="np-mono">{{ e.ont.fsp }}:{{ e.ont.ont_id }}</span></b><span class="np-fine">sin cliente vinculado</span>
+        </div>
+
+        <p class="np-notice np-notice--inline" *ngIf="aviso" [ngClass]="'np-notice--' + aviso.tipo">{{ aviso.texto }}</p>
+
+        <div *ngIf="cargandoDetalle" class="np-loading np-loading--inline"><span class="np-spinner np-spinner--sm"></span> Leyendo el equipo…</div>
+        <p class="np-notice np-notice--danger np-notice--inline" *ngIf="errorDetalle">{{ errorDetalle }}</p>
+
+        <ng-container *ngIf="detalle as d">
+          <div class="np-acs-kpis">
+            <div [class.is-warn]="!d.reportando"><span>Último reporte</span><b>{{ hace(d.ultimo_reporte) }}</b><small>{{ d.ultimo_reporte | date:'d MMM y, HH:mm' }}</small></div>
+            <div><span>IP de WAN</span><b class="np-mono">{{ d.ip_wan || '—' }}</b><small>{{ d.wan?.[0]?.tipo || '' }} {{ d.wan?.[0]?.estado || '' }}</small></div>
+            <div><span>Encendido</span><b>{{ duracion(d.encendido_hace) }}</b><small>al último reporte</small></div>
+            <div><span>Conectados</span><b>{{ conectados.length }}</b><small>de {{ d.equipos?.length || 0 }} que conoce</small></div>
+            <div *ngIf="d.optica?.rx !== undefined"><span>Señal</span><b class="np-mono">{{ d.optica.rx }} dBm</b><small>según el equipo</small></div>
+          </div>
+
+          <!-- WiFi -->
+          <p class="np-sect">WiFi</p>
+          <p class="np-fine" *ngIf="!redes.length">El equipo no informó redes WiFi. Prueba con «Pedir datos».</p>
+          <div class="np-acs-redes">
+            <article class="np-acs-red" *ngFor="let r of redes" [class.is-off]="r.activo === false">
+              <header>
+                <span class="np-acs-banda">{{ r.banda }}</span>
+                <span class="np-pill" [ngClass]="r.activo === false ? 'np-pill--neutral' : 'np-pill--active'">{{ r.activo === false ? 'Apagada' : 'Encendida' }}</span>
+                <span class="np-fine" *ngIf="r.conectados !== null">{{ r.conectados }} conectados</span>
+              </header>
+
+              <ng-container *ngIf="editando?.indice !== r.indice">
+                <div class="np-acs-campo">
+                  <span>Nombre de la red</span>
+                  <b>{{ r.ssid }}</b>
+                  <button type="button" class="np-acs-ico" (click)="copiar(r.ssid, 's' + r.indice)" aria-label="Copiar el nombre">{{ copiado === 's' + r.indice ? '✓' : '⧉' }}</button>
+                </div>
+                <div class="np-acs-campo">
+                  <span>Contraseña</span>
+                  <ng-container *ngIf="r.clave">
+                    <b class="np-mono">{{ claveVisible[r.indice] ? r.clave : '••••••••••' }}</b>
+                    <button type="button" class="np-acs-ico" (click)="claveVisible[r.indice] = !claveVisible[r.indice]" [attr.aria-label]="claveVisible[r.indice] ? 'Ocultar' : 'Mostrar'">{{ claveVisible[r.indice] ? '◉' : '◎' }}</button>
+                    <button type="button" class="np-acs-ico" (click)="copiar(r.clave, 'c' + r.indice)" aria-label="Copiar la contraseña">{{ copiado === 'c' + r.indice ? '✓' : '⧉' }}</button>
+                  </ng-container>
+                  <b class="np-fine" *ngIf="!r.clave">El equipo no la entrega por TR-069</b>
+                </div>
+                <p class="np-fine">{{ r.estandar || '' }}<ng-container *ngIf="r.canal"> · canal {{ r.canal }}</ng-container><ng-container *ngIf="r.seguridad"> · {{ r.seguridad }}</ng-container></p>
+                <button type="button" class="np-btn np-btn--ghost np-btn--sm" (click)="editar(r)" [disabled]="!!trabajando">Cambiar nombre o contraseña</button>
+              </ng-container>
+
+              <form class="np-acs-form" *ngIf="editando?.indice === r.indice && editando as ed" (ngSubmit)="guardarWifi(r)">
+                <label class="np-field"><span>Nombre de la red</span><input class="np-input" name="ssid" [(ngModel)]="ed.ssid" maxlength="32" /></label>
+                <label class="np-field" *ngIf="r.ruta_clave"><span>Contraseña nueva (vacía = no cambiar)</span><input class="np-input np-mono" name="clave" [(ngModel)]="ed.clave" minlength="8" maxlength="63" autocomplete="off" /></label>
+                <div class="np-btnrow">
+                  <button type="button" class="np-btn np-btn--ghost np-btn--sm" (click)="editando = null">Cancelar</button>
+                  <button type="submit" class="np-btn np-btn--primary np-btn--sm" [disabled]="trabajando === 'wifi'">{{ trabajando === 'wifi' ? 'Enviando…' : 'Guardar' }}</button>
+                </div>
+              </form>
+            </article>
+          </div>
+
+          <!-- Equipos conectados -->
+          <p class="np-sect">Equipos del cliente</p>
+          <p class="np-fine" *ngIf="!d.equipos?.length">El equipo no informó dispositivos conectados.</p>
+          <div class="np-tablewrap" *ngIf="d.equipos?.length">
+            <table class="np-table np-table--compact">
+              <thead><tr><th></th><th>Nombre</th><th>IP</th><th>MAC</th><th>Conexión</th></tr></thead>
+              <tbody>
+                <tr *ngFor="let h of conectados">
+                  <td><i class="np-acs-dot is-on"></i></td>
+                  <td>{{ h.nombre || 'Sin nombre' }}</td>
+                  <td class="np-mono">{{ h.ip || '—' }}</td>
+                  <td class="np-mono">{{ h.mac }}</td>
+                  <td>{{ h.interfaz || '—' }}</td>
+                </tr>
+                <ng-container *ngIf="verInactivos">
+                  <tr *ngFor="let h of inactivos" class="np-acs-inactivo">
+                    <td><i class="np-acs-dot"></i></td>
+                    <td>{{ h.nombre || 'Sin nombre' }}</td>
+                    <td class="np-mono">{{ h.ip || '—' }}</td>
+                    <td class="np-mono">{{ h.mac }}</td>
+                    <td>{{ h.interfaz || '—' }}</td>
+                  </tr>
+                </ng-container>
+              </tbody>
+            </table>
+          </div>
+          <button type="button" class="np-link np-acs-mas" *ngIf="inactivos.length" (click)="verInactivos = !verInactivos">
+            {{ verInactivos ? 'Ocultar' : 'Ver' }} {{ inactivos.length }} que se conectaron antes
+          </button>
+
+          <!-- WAN -->
+          <ng-container *ngIf="d.wan?.length">
+            <p class="np-sect">Conexión a internet</p>
+            <div class="np-acs-wan">
+              <div *ngFor="let w of d.wan">
+                <b>{{ w.tipo }}<ng-container *ngIf="w.nombre"> · {{ w.nombre }}</ng-container></b>
+                <span class="np-mono">{{ w.ip || '—' }}</span>
+                <span class="np-fine">{{ w.estado || '' }}<ng-container *ngIf="w.usuario"> · usuario {{ w.usuario }}</ng-container><ng-container *ngIf="w.mac"> · {{ w.mac }}</ng-container></span>
+              </div>
+            </div>
+          </ng-container>
+
+          <p class="np-fine np-acs-pie">
+            Registrado en el ACS {{ d.registrado | date:'d MMM y' }}<ng-container *ngIf="d.ultimo_arranque"> · último arranque {{ d.ultimo_arranque | date:'d MMM y, HH:mm' }}</ng-container><ng-container *ngIf="d.intervalo"> · reporta cada {{ duracion(d.intervalo) }}</ng-container>
+          </p>
+        </ng-container>
+      </section>
     </div>
   </div>
 </div>

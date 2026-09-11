@@ -1,6 +1,8 @@
 import { Component, Input, OnChanges, SimpleChanges, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { OltService } from '../../services/olt.service';
+import { AcsService } from '../../services/acs.service';
+import { RouterLink } from '@angular/router';
 
 /** Lo que se sabe de la ONT sin preguntarle a la OLT: sale de olt_onts. */
 export interface OntVinculada {
@@ -29,18 +31,21 @@ const COLOR_MARCA: Record<string, string> = {
 @Component({
   selector: 'app-ont-equipo',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, RouterLink],
   templateUrl: './ont-equipo.component.html',
   styleUrl: './ont-equipo.component.scss',
 })
 export class OntEquipoComponent implements OnChanges {
   private olt = inject(OltService);
+  private acsSvc = inject(AcsService);
 
   @Input({ required: true }) userId!: number;
   @Input() ont: OntVinculada | null = null;
 
   vivo: any = null;
   equipo: any = null;
+  /** El mismo equipo visto por el servidor TR-069, si reporta ahí. */
+  acs: any = null;
   midiendo = false;
   consultandoEquipo = false;
   subiendoFoto = false;
@@ -67,6 +72,12 @@ export class OntEquipoComponent implements OnChanges {
     this.olt.ontEnVivo(id, refrescar).subscribe({
       next: r => { if (id !== this.userId) return; this.midiendo = false; this.vivo = r?.data?.vivo ?? { error: r?.message }; },
       error: () => { this.midiendo = false; this.vivo = { error: 'La OLT no respondió.' }; },
+    });
+
+    // Sin permiso al módulo o sin ACS, simplemente no se muestra.
+    this.acsSvc.deCliente(id).subscribe({
+      next: r => { if (id !== this.userId) return; this.acs = r?.error === 0 ? r.data : null; },
+      error: () => { this.acs = null; },
     });
 
     this.olt.equipoDeCliente(id, refrescar).subscribe({
@@ -98,6 +109,12 @@ export class OntEquipoComponent implements OnChanges {
   }
 
   get wifi(): any { return this.equipo?.wifi ?? null; }
+
+  /** WiFi por TR-069: sirve cuando la OLT no lo entrega (Huawei, ZTE…). */
+  get redesAcs(): any[] {
+    if (this.redesActivas.length) return [];
+    return (this.acs?.wifi ?? []).filter((r: any) => r.activo !== false);
+  }
 
   get redesActivas(): any[] { return (this.wifi?.ssids ?? []).filter((s: any) => s.activo); }
   get redesApagadas(): any[] { return (this.wifi?.ssids ?? []).filter((s: any) => !s.activo); }

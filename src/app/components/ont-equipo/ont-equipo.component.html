@@ -96,9 +96,42 @@
 
     <p class="oe-cargando" *ngIf="consultandoEquipo && !equipo"><span class="np-spinner np-spinner--sm"></span> Leyendo el WiFi del equipo…</p>
     <p class="oe-aviso" *ngIf="equipo?.error">{{ equipo.error }}</p>
-    <p class="oe-aviso" *ngIf="equipo && !equipo.error && !equipo.wifi_soportado">
-      {{ marca ? 'Este equipo ' + marca : 'Este equipo' }} no le entrega su WiFi a la OLT. Se ve entrando al equipo o desde un servidor TR-069.
+    <p class="oe-aviso" *ngIf="equipo && !equipo.error && !equipo.wifi_soportado && !redesAcs.length">
+      {{ marca ? 'Este equipo ' + marca : 'Este equipo' }} no le entrega su WiFi a la OLT<ng-container *ngIf="!acs"> y no está reportando al servidor TR-069</ng-container>.
     </p>
+
+    <!-- Lo que el servidor TR-069 sabe del WiFi, cuando la OLT no lo da. -->
+    <ng-container *ngIf="redesAcs.length">
+      <p class="oe-fine">
+        Leído por TR-069 {{ acs.ultimo_reporte | date:'d MMM, HH:mm' }}<ng-container *ngIf="!acs.reportando"> · el equipo no reporta desde entonces</ng-container>
+      </p>
+      <div class="oe-redes">
+        <div class="oe-red" *ngFor="let r of redesAcs">
+          <div class="oe-red-ico" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M2 8.8a15 15 0 0 1 20 0"/><path d="M5 12.5a10 10 0 0 1 14 0"/><path d="M8.5 16.1a5 5 0 0 1 7 0"/><circle cx="12" cy="19.5" r="1" fill="currentColor"/></svg>
+          </div>
+          <div class="oe-red-datos">
+            <div class="oe-campo">
+              <span>Nombre de la red · {{ r.banda }}</span>
+              <b>{{ r.ssid }}</b>
+              <button type="button" class="oe-ico" (click)="copiar(r.ssid, 'as' + r.indice)" [attr.aria-label]="'Copiar el nombre ' + r.ssid">{{ copiado === 'as' + r.indice ? '✓' : '⧉' }}</button>
+            </div>
+            <div class="oe-campo">
+              <span>Contraseña</span>
+              <ng-container *ngIf="r.clave">
+                <b class="np-mono">{{ claveVisible[100 + r.indice] ? r.clave : '••••••••••' }}</b>
+                <button type="button" class="oe-ico" (click)="claveVisible[100 + r.indice] = !claveVisible[100 + r.indice]" aria-label="Mostrar u ocultar la contraseña">{{ claveVisible[100 + r.indice] ? '◉' : '◎' }}</button>
+                <button type="button" class="oe-ico" (click)="copiar(r.clave, 'ac' + r.indice)" aria-label="Copiar la contraseña">{{ copiado === 'ac' + r.indice ? '✓' : '⧉' }}</button>
+              </ng-container>
+              <b class="oe-fine" *ngIf="!r.clave">El equipo no la entrega por TR-069</b>
+            </div>
+          </div>
+        </div>
+      </div>
+    </ng-container>
+    <a class="oe-linkbtn" *ngIf="acs" [routerLink]="['/dashboard/router']" [queryParams]="{ equipo: acs.id }">
+      Ver en Router del cliente{{ acs.equipos?.length ? ' · ' + acs.equipos.length + ' dispositivos que conoce' : '' }}
+    </a>
 
     <div class="oe-redes" *ngIf="redesActivas.length">
       <div class="oe-red" *ngFor="let r of redesActivas">
