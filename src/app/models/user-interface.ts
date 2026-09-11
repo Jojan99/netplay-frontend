@@ -26,6 +26,9 @@ export interface UserInterface {
     router_id?: number | null
     /** 'static' (IP fija) o 'pppoe'. Un cliente PPPoE no tiene IP fija: la recibe al conectarse. */
     connection_type?: string | null
+    pppoe_user?: string | null
+    pppoe_password?: string | null
+    pppoe_profile?: string | null
 
 
 
