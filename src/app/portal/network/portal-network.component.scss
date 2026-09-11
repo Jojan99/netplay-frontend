@@ -1,0 +1,33 @@
+/* ─── Mi WiFi (portal del cliente) ──────────────────────────────────── */
+.pt-red {
+  display: flex; align-items: center; gap: 14px; padding: 14px 0;
+  border-top: 1px solid var(--line);
+  &:first-of-type { border-top: 0; }
+}
+.pt-red-ico {
+  width: 44px; height: 44px; flex-shrink: 0; border-radius: 12px; display: grid; place-items: center;
+  background: color-mix(in srgb, var(--accent) 14%, var(--surface)); color: var(--accent);
+  svg { width: 24px; height: 24px; }
+}
+.pt-red-datos {
+  flex: 1; min-width: 0; display: grid; gap: 2px;
+  b { font-size: 17px; overflow-wrap: anywhere; }
+  p { margin: 0; }
+}
+.pt-red-clave { font-size: 13px; color: var(--text-2); display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; }
+.pt-red-form { flex: 1; min-width: 0; }
+
+.pt-linkbtn {
+  padding: 0; border: 0; background: none; font: inherit; font-size: 12.5px; font-weight: 700;
+  color: var(--accent); cursor: pointer;
+  &:hover { text-decoration: underline; }
+  &.is-danger { color: var(--danger); }
+  &[disabled] { opacity: .5; cursor: default; text-decoration: none; }
+}
+
+.pt-row.is-dim { opacity: .65; }
+.pt-row-ico.is-cable { background: color-mix(in srgb, var(--info) 14%, var(--surface)); color: var(--info); }
+.pt-row-ico.is-danger { background: var(--danger-soft); color: var(--danger); }
+.pt-row-end { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; justify-content: flex-end; }
+
+.pt-pie { text-align: center; margin: 4px 0 0; }

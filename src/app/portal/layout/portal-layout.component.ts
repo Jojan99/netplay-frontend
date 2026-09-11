@@ -22,6 +22,8 @@ export class PortalLayoutComponent implements OnInit {
   companyName = signal('');
   companyLogo = signal('');
   menuOpen    = signal(false);
+  /** El enlace a "Mi WiFi" sale sólo si su equipo está en el sistema. */
+  tieneWifi   = signal(false);
 
   ngOnInit(): void {
     const user = this.auth.getUser();
@@ -29,6 +31,10 @@ export class PortalLayoutComponent implements OnInit {
       this.fullName.set(this.auth.getFullName());
       this.companyName.set(this.auth.getCompanyName());
       this.companyLogo.set(this.auth.getCompanyLogo());
+      this.api.getRouter().subscribe({
+        next: (r: any) => this.tieneWifi.set(r?.error === 0 && !!r?.data?.activo),
+        error: () => this.tieneWifi.set(false),
+      });
     }
   }
 

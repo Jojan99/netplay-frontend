@@ -32,6 +32,27 @@ export class ClientApiService {
     return this.http.get(`${this.baseUrl}/me`, this.headers());
   }
 
+  // ── Mi WiFi (equipo del cliente por TR-069) ─────────────────────────────
+  getRouter(): Observable<any> {
+    return this.http.get(`${this.baseUrl}/router`, this.headers());
+  }
+
+  cambiarWifiCliente(indice: number, nombre: string | null, clave: string | null): Observable<any> {
+    return this.http.post(`${this.baseUrl}/router/wifi`, { indice, nombre, clave }, this.headers());
+  }
+
+  bloquearEquipo(mac: string): Observable<any> {
+    return this.http.post(`${this.baseUrl}/router/bloquear`, { mac }, this.headers());
+  }
+
+  desbloquearEquipo(mac: string): Observable<any> {
+    return this.http.post(`${this.baseUrl}/router/desbloquear`, { mac }, this.headers());
+  }
+
+  refrescarRouter(): Observable<any> {
+    return this.http.post(`${this.baseUrl}/router/refrescar`, {}, this.headers());
+  }
+
   // ── Facturas ─────────────────────────────────────────────────────────────
   getInvoices(): Observable<any> {
     return this.http.get(`${this.baseUrl}/invoices`, this.headers());

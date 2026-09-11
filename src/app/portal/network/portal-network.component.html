@@ -1,0 +1,151 @@
+<div class="pt-head">
+  <div>
+    <p class="pt-kicker">Mi servicio</p>
+    <h1>Mi WiFi</h1>
+    <p>Cambia el nombre y la clave de tu red, y mira qué hay conectado en tu casa.</p>
+  </div>
+  <button type="button" class="pt-btn pt-btn--ghost" *ngIf="panel()?.activo" (click)="actualizar()" [disabled]="!!trabajando()">
+    {{ trabajando() === 'refrescar' ? 'Actualizando…' : 'Actualizar' }}
+  </button>
+</div>
+
+<div class="pt-skel" *ngIf="loading()">Consultando tu equipo…</div>
+<div class="pt-alert pt-alert--danger" *ngIf="error()">{{ error() }}</div>
+
+<!-- Sin equipo conectado al sistema -->
+<section class="pt-card" *ngIf="!loading() && panel() && !panel().activo">
+  <div class="pt-empty">
+    <b>Todavía no podemos mostrarte tu equipo.</b>
+    <p>Tu equipo aún no está conectado a nuestro sistema de gestión. Cuando lo activemos vas a poder cambiar tu WiFi desde aquí.</p>
+  </div>
+</section>
+
+<ng-container *ngIf="!loading() && panel()?.activo">
+  <div class="pt-alert" *ngIf="aviso()" [ngClass]="'pt-alert--' + aviso()!.tipo">{{ aviso()!.texto }}</div>
+
+  <div class="pt-alert pt-alert--warn" *ngIf="!panel().equipo.reportando">
+    Tu equipo no se está comunicando con nosotros ahora mismo (última vez {{ hace(panel().equipo.ultimo_reporte) }}).
+    Puedes hacer los cambios igual: se aplican cuando vuelva a conectarse.
+  </div>
+
+  <!-- Resumen -->
+  <section class="pt-kpis">
+    <div class="pt-kpi is-ok"><b>{{ conectados.length }}</b><small>Equipos conectados</small></div>
+    <div class="pt-kpi"><b>{{ porWifi(conectados) }}</b><small>Por WiFi</small></div>
+    <div class="pt-kpi"><b>{{ porCable(conectados) }}</b><small>Por cable</small></div>
+    <div class="pt-kpi is-info" *ngIf="panel().consumo"><b>{{ datos(panel().consumo.bajada_bytes) }}</b><small>Descargado desde que encendió</small></div>
+  </section>
+
+  <!-- Redes WiFi -->
+  <section class="pt-card">
+    <div class="pt-card-h"><h2>Mis redes WiFi</h2></div>
+
+    <div class="pt-red" *ngFor="let r of redes">
+      <ng-container *ngIf="editando?.indice !== r.indice">
+        <div class="pt-red-ico" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M2 8.8a15 15 0 0 1 20 0"/><path d="M5 12.5a10 10 0 0 1 14 0"/><path d="M8.5 16.1a5 5 0 0 1 7 0"/><circle cx="12" cy="19.5" r="1" fill="currentColor"/></svg>
+        </div>
+        <div class="pt-red-datos">
+          <p class="pt-fine">{{ r.banda }}<ng-container *ngIf="r.conectados"> · {{ r.conectados }} conectados</ng-container></p>
+          <b>{{ r.nombre }}</b>
+          <p class="pt-red-clave" *ngIf="r.clave">
+            Contraseña: <span class="np-mono">{{ claveVisible[r.indice] ? r.clave : '••••••••' }}</span>
+            <button type="button" class="pt-linkbtn" (click)="claveVisible[r.indice] = !claveVisible[r.indice]">{{ claveVisible[r.indice] ? 'Ocultar' : 'Ver' }}</button>
+          </p>
+          <p class="pt-fine" *ngIf="!r.clave">Por seguridad, tu equipo no nos muestra la contraseña. Puedes cambiarla cuando quieras.</p>
+        </div>
+        <button type="button" class="pt-btn pt-btn--ghost" (click)="editar(r)" [disabled]="!!trabajando()">Cambiar</button>
+      </ng-container>
+
+      <form class="pt-form pt-red-form" *ngIf="editando?.indice === r.indice && editando as ed" (ngSubmit)="guardar(r)">
+        <label class="pt-field">
+          <span>Nombre de la red</span>
+          <input class="pt-input" name="nombre" [(ngModel)]="ed.nombre" maxlength="32" autocomplete="off" />
+        </label>
+        <label class="pt-field" *ngIf="r.puede_cambiar_clave">
+          <span>Contraseña nueva</span>
+          <input class="pt-input np-mono" name="clave" [(ngModel)]="ed.clave" minlength="8" maxlength="63" placeholder="Déjala vacía para no cambiarla" autocomplete="off" />
+        </label>
+        <p class="pt-fine">Al guardar, los equipos conectados a esta red se desconectan y hay que volver a conectarlos con los datos nuevos.</p>
+        <div class="pt-btnrow">
+          <button type="button" class="pt-btn pt-btn--ghost" (click)="editando = null">Cancelar</button>
+          <button type="submit" class="pt-btn" [disabled]="trabajando() === 'wifi'">{{ trabajando() === 'wifi' ? 'Guardando…' : 'Guardar' }}</button>
+        </div>
+      </form>
+    </div>
+  </section>
+
+  <!-- Equipos conectados -->
+  <section class="pt-card">
+    <div class="pt-card-h"><h2>Equipos en mi casa</h2></div>
+
+    <p class="pt-empty" *ngIf="!conectados.length && !inactivos.length">Tu equipo todavía no nos informó qué hay conectado.</p>
+
+    <div class="pt-list">
+      <div class="pt-row" *ngFor="let d of conectados">
+        <span class="pt-row-ico" [class.is-cable]="d.conexion === 'cable'">
+          <svg *ngIf="d.conexion === 'wifi'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M2 8.8a15 15 0 0 1 20 0"/><path d="M5 12.5a10 10 0 0 1 14 0"/><path d="M8.5 16.1a5 5 0 0 1 7 0"/><circle cx="12" cy="19.5" r="1" fill="currentColor"/></svg>
+          <svg *ngIf="d.conexion !== 'wifi'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="9" width="16" height="11" rx="2"/><path d="M8 9V5h8v4M9 20v-3M15 20v-3"/></svg>
+        </span>
+        <div class="pt-row-copy">
+          <b>{{ d.nombre }}</b>
+          <small>{{ d.conexion === 'wifi' ? 'Por WiFi' : d.conexion === 'cable' ? 'Por cable' : 'Conectado' }} · <span class="np-mono">{{ d.ip || d.mac }}</span></small>
+        </div>
+        <div class="pt-row-end">
+          <span class="pt-pill is-ok">Conectado</span>
+          <button type="button" class="pt-linkbtn is-danger" *ngIf="panel().puede_bloquear" (click)="bloquear(d)" [disabled]="!!trabajando()">
+            {{ trabajando() === d.mac ? 'Bloqueando…' : 'Bloquear' }}
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <button type="button" class="pt-linkbtn" *ngIf="inactivos.length" (click)="verInactivos = !verInactivos">
+      {{ verInactivos ? 'Ocultar' : 'Ver' }} {{ inactivos.length }} que estuvieron conectados antes
+    </button>
+
+    <div class="pt-list" *ngIf="verInactivos">
+      <div class="pt-row is-dim" *ngFor="let d of inactivos">
+        <span class="pt-row-ico"></span>
+        <div class="pt-row-copy"><b>{{ d.nombre }}</b><small class="np-mono">{{ d.mac }}</small></div>
+        <div class="pt-row-end">
+          <span class="pt-pill">Desconectado</span>
+          <button type="button" class="pt-linkbtn is-danger" *ngIf="panel().puede_bloquear" (click)="bloquear(d)" [disabled]="!!trabajando()">Bloquear</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Bloqueados -->
+  <section class="pt-card" *ngIf="bloqueados.length">
+    <div class="pt-card-h"><h2>Equipos bloqueados</h2></div>
+    <div class="pt-list">
+      <div class="pt-row" *ngFor="let d of bloqueados">
+        <span class="pt-row-ico is-danger" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M5.6 5.6l12.8 12.8"/></svg>
+        </span>
+        <div class="pt-row-copy"><b>{{ d.nombre }}</b><small class="np-mono">{{ d.mac }}</small></div>
+        <div class="pt-row-end">
+          <button type="button" class="pt-btn pt-btn--ghost" (click)="desbloquear(d)" [disabled]="!!trabajando()">
+            {{ trabajando() === d.mac ? 'Quitando…' : 'Desbloquear' }}
+          </button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Consumo -->
+  <section class="pt-card" *ngIf="panel().consumo">
+    <div class="pt-card-h"><h2>Datos usados</h2></div>
+    <div class="pt-dl">
+      <div><span>Descargado</span><b>{{ datos(panel().consumo.bajada_bytes) }}</b></div>
+      <div><span>Subido</span><b>{{ datos(panel().consumo.subida_bytes) }}</b></div>
+      <div><span>Contando desde</span><b>hace {{ duracion(panel().consumo.encendido_hace) }}</b></div>
+    </div>
+    <p class="pt-fine">Es lo que pasó por tu equipo desde la última vez que se encendió. Tu plan no tiene límite de datos: esto es solo informativo.</p>
+  </section>
+
+  <p class="pt-fine pt-pie">
+    {{ panel().equipo.marca }} {{ panel().equipo.modelo }} · última información {{ hace(panel().equipo.ultimo_reporte) }}
+  </p>
+</ng-container>

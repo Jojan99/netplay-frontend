@@ -9,6 +9,7 @@ import { TicketFormComponent }   from './tickets/ticket-form.component';
 import { TicketDetailComponent } from './tickets/ticket-detail.component';
 import { ClientProfileComponent } from './profile/client-profile.component';
 import { PaymentHistoryComponent } from './payments/payment-history.component';
+import { PortalNetworkComponent } from './network/portal-network.component';
 
 export const PORTAL_ROUTES: Routes = [
   {
@@ -26,6 +27,7 @@ export const PORTAL_ROUTES: Routes = [
       { path: 'reportes',        component: TicketListComponent },
       { path: 'reportes/nuevo',  component: TicketFormComponent },
       { path: 'reportes/:id',    component: TicketDetailComponent },
+      { path: 'mi-wifi',         component: PortalNetworkComponent },
       { path: 'perfil',          component: ClientProfileComponent },
       { path: '',                redirectTo: 'home', pathMatch: 'full' },
       { path: '**',              redirectTo: 'home' },
