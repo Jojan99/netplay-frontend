@@ -15,6 +15,27 @@
   <div class="np-scroll np-tr-scroll">
     <p class="np-notice np-notice--danger" *ngIf="error">{{ error }}</p>
 
+    <!-- Semáforo: de un vistazo, si el TR-069 está trabajando -->
+    <section class="np-card np-tr-salud" *ngIf="diag" [attr.data-nivel]="diag.nivel">
+      <div class="np-tr-salud-h">
+        <span class="np-tr-salud-led"></span>
+        <div>
+          <b>{{ diag.nivel === 'ok' ? 'TR-069 funcionando' : diag.resumen }}</b>
+          <small *ngIf="diag.equipos">{{ diag.reportando }} de {{ diag.equipos }} equipos reportando</small>
+          <small *ngIf="!diag.equipos">Todavía no hay equipos configurados</small>
+        </div>
+        <button type="button" class="np-btn np-btn--ghost np-btn--sm" (click)="revisar()" [disabled]="revisando">
+          {{ revisando ? 'Revisando…' : 'Revisar ahora' }}
+        </button>
+      </div>
+      <ul class="np-tr-checks">
+        <li *ngFor="let c of diag.checks" [class.is-mal]="!c.ok">
+          <span class="np-tr-check-ico">{{ c.ok ? '✓' : '!' }}</span>
+          <span><b>{{ c.titulo }}</b><small>{{ c.detalle }}</small></span>
+        </li>
+      </ul>
+    </section>
+
     <!-- Qué falta -->
     <section class="np-card np-tr-pendientes" *ngIf="estado?.pendientes?.length">
       <div class="np-card-h"><h2>Falta poco</h2></div>

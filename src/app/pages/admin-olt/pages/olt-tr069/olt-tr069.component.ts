@@ -25,6 +25,9 @@ export class OltTr069Component implements OnInit {
   private toast = inject(ToastService);
 
   estado: any = null;
+  /** Revisión de punta a punta: servidor, camino, equipos y si aplica al momento. */
+  diag: any = null;
+  revisando = false;
   /** Todas las redes detectadas, de todos los MikroTik de la empresa. */
   redes: any[] = [];
   /** El MikroTik que se está configurando: cada uno lleva su propio túnel. */
@@ -40,7 +43,18 @@ export class OltTr069Component implements OnInit {
 
   form = { modo: 'plataforma', host: '', puerto_cwmp: 7547, url_nbi: '', alcance: 'tunel' };
 
-  ngOnInit() { this.cargar(); }
+  ngOnInit() {
+    this.cargar();
+    this.revisar();
+  }
+
+  revisar() {
+    this.revisando = true;
+    this.api.diagnostico().subscribe({
+      next: (r: any) => { this.revisando = false; this.diag = r?.error === 0 ? r.data : null; },
+      error: () => { this.revisando = false; this.diag = null; },
+    });
+  }
 
   cargar() {
     this.cargando = true;
@@ -143,6 +157,7 @@ export class OltTr069Component implements OnInit {
         if (r?.error !== 0) { this.toast.error(r?.message || 'No se pudo aplicar.'); return; }
         this.aplicarEstado(r.data);
         this.cargarScript();
+        this.revisar();
         this.toast.success('Configuración aplicada');
       },
       error: () => { this.aplicando = false; this.toast.error('No se pudo aplicar.'); },
