@@ -1302,8 +1302,13 @@
 <!-- ══ Velocidades de los planes ═══════════════════════════════════════════ -->
 <ng-container *ngIf="activeTab === 'velocidades'">
   <p class="np-notice np-notice--code">
-    Definí acá cuánta velocidad da cada plan. La plataforma lo traduce a lo que el router entiende:
-    un perfil PPP para los clientes PPPoE y una cola por cliente para los de IP fija.
+    Definí acá cuánta velocidad da cada plan. La plataforma lo traduce a lo que el router entiende, y a cada
+    tipo de cliente por su camino: <b>PPPoE</b> con un perfil PPP —la velocidad viaja con la sesión— e
+    <b>IP fija</b> con una lista de direcciones y PCQ en el árbol de colas, que es el sistema que este router ya usa
+    y el que aguanta cientos de clientes sin cargar el equipo.
+  </p>
+  <p class="np-notice np-notice--warn np-notice--inline">
+    La ráfaga sólo aplica a los clientes PPPoE. En IP fija el reparto lo hace PCQ, que no tiene ráfaga.
   </p>
 
   <div *ngIf="cargandoPlanes" class="np-loading"><span class="np-spinner"></span> Leyendo tus planes…</div>
@@ -1328,6 +1333,14 @@
         <div *ngIf="p.rafaga"><span>Ráfaga</span><b>{{ p.rafaga_bajada }} Mb · {{ p.rafaga_segundos }} s</b></div>
         <div><span>Clientes</span><b>{{ p.clientes.pppoe + p.clientes.ip_fija }}</b><small *ngIf="p.clientes.sin_limite">{{ p.clientes.sin_limite }} sin límite</small></div>
       </div>
+
+      <label class="np-check vel-reconectar" *ngIf="p.clientes.pppoe">
+        <input type="checkbox" [(ngModel)]="reconectarAlAplicar[p.id]" [name]="'rec' + p.id" />
+        <span class="np-check-copy">
+          <b>Reconectar las sesiones al aplicar</b>
+          <small>Un cliente PPPoE conectado sigue con la velocidad vieja hasta que su sesión se reinicia. El corte dura segundos.</small>
+        </span>
+      </label>
 
       <footer>
         <button type="button" class="np-btn np-btn--ghost np-btn--sm" (click)="editarPlan(p)">{{ p.bajada ? 'Cambiar velocidad' : 'Definir velocidad' }}</button>

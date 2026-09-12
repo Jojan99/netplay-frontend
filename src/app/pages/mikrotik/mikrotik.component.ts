@@ -398,6 +398,8 @@ export class MikrotikComponent implements OnInit {
   planEdita: any = null;
   guardandoPlan = false;
   aplicandoPlan = 0;
+  /** Cortar la sesión es lo único que hace que un PPPoE tome la velocidad nueva. */
+  reconectarAlAplicar: Record<number, boolean> = {};
   resultadoPlan: { texto: string; tipo: 'ok' | 'warn' } | null = null;
 
   cargarVelocidades() {
@@ -452,16 +454,21 @@ export class MikrotikComponent implements OnInit {
   }
 
   async aplicarPlan(p: any) {
+    const reconectar = !!this.reconectarAlAplicar[p.id];
+
     const ok = await this.dialog.confirm(
       `¿Aplicar la velocidad de «${p.nombre}» en el router? Alcanza a ${p.clientes.pppoe + p.clientes.ip_fija} clientes.`
-      + (p.clientes.sin_limite ? ` ${p.clientes.sin_limite} quedan fuera por estar sin límite.` : ''),
-      { okLabel: 'Aplicar' },
+      + (p.clientes.sin_limite ? ` ${p.clientes.sin_limite} quedan fuera por estar sin límite.` : '')
+      + (reconectar && p.clientes.pppoe
+        ? ` Se van a cortar ${p.clientes.pppoe} sesiones PPPoE: vuelven solas en segundos y ahí toman la velocidad nueva.`
+        : ''),
+      { okLabel: 'Aplicar', danger: reconectar && p.clientes.pppoe > 0 },
     );
     if (!ok) return;
 
     this.aplicandoPlan = p.id;
     this.resultadoPlan = null;
-    this.svc.aplicarVelocidad(p.id, this.selectedRouterId).subscribe({
+    this.svc.aplicarVelocidad(p.id, this.selectedRouterId, reconectar).subscribe({
       next: (r: any) => {
         this.aplicandoPlan = 0;
         if (r?.error !== 0) { this.toast.error(r?.message || 'No se pudo aplicar.'); return; }

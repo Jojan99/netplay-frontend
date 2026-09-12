@@ -96,8 +96,8 @@ export class MikrotikService {
     return this.http.put(`${this.base}/velocidades/${planId}`, datos, this.h());
   }
 
-  aplicarVelocidad(planId: number, routerId?: number | null): Observable<any> {
-    return this.http.post(`${this.base}/velocidades/${planId}/aplicar`, { router_id: routerId ?? null }, this.h());
+  aplicarVelocidad(planId: number, routerId?: number | null, reconectar = false): Observable<any> {
+    return this.http.post(`${this.base}/velocidades/${planId}/aplicar`, { router_id: routerId ?? null, reconectar }, this.h());
   }
 
   controlDelCliente(userId: number, control: 'plan' | 'sin_limite'): Observable<any> {
