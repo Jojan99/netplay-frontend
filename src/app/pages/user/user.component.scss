@@ -87,3 +87,11 @@
 
 /* ─── Ficha: el equipo ONT ─────────────────────────────────────────── */
 .np-ont-extra { margin-top: 12px; }
+
+/* ─── Control de velocidad del cliente ──────────────────────────────── */
+.np-vel-cliente {
+  display: grid; gap: 6px; padding: 10px 12px; margin-top: 4px;
+  border: 1px solid var(--line); border-radius: var(--radius); background: var(--surface-2);
+  .np-check { display: inline-flex; align-items: center; gap: 7px; font-size: 12.5px; }
+}
+.np-vel-t { font-size: 10.5px; font-weight: 800; letter-spacing: .5px; text-transform: uppercase; color: var(--text-3); }

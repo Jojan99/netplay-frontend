@@ -1298,6 +1298,101 @@
   </div>
 </div>
 
+
+<!-- ══ Velocidades de los planes ═══════════════════════════════════════════ -->
+<ng-container *ngIf="activeTab === 'velocidades'">
+  <p class="np-notice np-notice--code">
+    Definí acá cuánta velocidad da cada plan. La plataforma lo traduce a lo que el router entiende:
+    un perfil PPP para los clientes PPPoE y una cola por cliente para los de IP fija.
+  </p>
+
+  <div *ngIf="cargandoPlanes" class="np-loading"><span class="np-spinner"></span> Leyendo tus planes…</div>
+
+  <p class="np-notice" *ngIf="resultadoPlan" [ngClass]="resultadoPlan.tipo === 'ok' ? 'np-notice--ok' : 'np-notice--warn'">{{ resultadoPlan.texto }}</p>
+
+  <div class="vel-planes">
+    <article class="vel-plan" *ngFor="let p of planes" [class.is-sin]="!p.bajada">
+      <header>
+        <div>
+          <h3>{{ p.nombre }}</h3>
+          <p class="np-fine">{{ p.resumen || 'Todavía sin velocidad definida' }}</p>
+        </div>
+        <span class="np-pill" [ngClass]="p.aplicado_en ? 'np-pill--active' : 'np-pill--neutral'">
+          {{ p.aplicado_en ? 'En el router' : 'Sin aplicar' }}
+        </span>
+      </header>
+
+      <div class="vel-cifras" *ngIf="p.bajada">
+        <div><span>Bajada</span><b>{{ p.bajada }} Mb</b></div>
+        <div><span>Subida</span><b>{{ p.subida }} Mb</b></div>
+        <div *ngIf="p.rafaga"><span>Ráfaga</span><b>{{ p.rafaga_bajada }} Mb · {{ p.rafaga_segundos }} s</b></div>
+        <div><span>Clientes</span><b>{{ p.clientes.pppoe + p.clientes.ip_fija }}</b><small *ngIf="p.clientes.sin_limite">{{ p.clientes.sin_limite }} sin límite</small></div>
+      </div>
+
+      <footer>
+        <button type="button" class="np-btn np-btn--ghost np-btn--sm" (click)="editarPlan(p)">{{ p.bajada ? 'Cambiar velocidad' : 'Definir velocidad' }}</button>
+        <button type="button" class="np-btn np-btn--primary np-btn--sm" (click)="aplicarPlan(p)" [disabled]="!p.bajada || aplicandoPlan === p.id">
+          {{ aplicandoPlan === p.id ? 'Aplicando…' : 'Aplicar en el router' }}
+        </button>
+      </footer>
+    </article>
+  </div>
+</ng-container>
+
+<!-- ══ Velocidad de un plan ════════════════════════════════════════════════ -->
+<div *ngIf="planEdita" class="np-overlay" (click)="planEdita = null">
+  <div class="np-modal" role="dialog" aria-modal="true" (click)="$event.stopPropagation()">
+    <div class="np-modal-head">
+      <div><p class="np-kicker">Velocidad <b>/</b> {{ planEdita.nombre }}</p><h3>¿Qué velocidad da este plan?</h3></div>
+      <button type="button" class="np-icobtn" (click)="planEdita = null" aria-label="Cerrar">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M6 6l12 12M18 6 6 18"/></svg>
+      </button>
+    </div>
+
+    <div class="np-modal-body">
+      <div class="np-form">
+        <label class="np-field"><span>Bajada <em>lo que el cliente descarga</em></span>
+          <span class="vel-mb"><input type="number" class="np-input np-mono" [(ngModel)]="planEdita.bajada" min="1" /><i>Mb</i></span>
+        </label>
+        <label class="np-field"><span>Subida <em>lo que el cliente envía</em></span>
+          <span class="vel-mb"><input type="number" class="np-input np-mono" [(ngModel)]="planEdita.subida" min="1" /><i>Mb</i></span>
+        </label>
+
+        <label class="np-check np-check--stack np-field-full">
+          <input type="checkbox" [(ngModel)]="planEdita.rafaga" />
+          <span class="np-check-copy">
+            <b>Dar ráfaga</b>
+            <small>Los primeros segundos el cliente navega más rápido de lo contratado. Hace que las páginas y los videos arranquen de golpe, sin regalar velocidad sostenida.</small>
+          </span>
+        </label>
+
+        <ng-container *ngIf="planEdita.rafaga">
+          <label class="np-field"><span>Ráfaga de bajada</span>
+            <span class="vel-mb"><input type="number" class="np-input np-mono" [(ngModel)]="planEdita.rafaga_bajada" min="1" /><i>Mb</i></span>
+          </label>
+          <label class="np-field"><span>Ráfaga de subida</span>
+            <span class="vel-mb"><input type="number" class="np-input np-mono" [(ngModel)]="planEdita.rafaga_subida" min="1" /><i>Mb</i></span>
+          </label>
+          <label class="np-field"><span>Cuántos segundos</span>
+            <input type="number" class="np-input np-mono" [(ngModel)]="planEdita.rafaga_segundos" min="1" max="60" />
+          </label>
+        </ng-container>
+
+        <label class="np-field np-field-full"><span>Prioridad <em>1 es la más alta; dejala en 8 salvo que sepas por qué</em></span>
+          <input type="number" class="np-input np-mono" [(ngModel)]="planEdita.prioridad" min="1" max="8" />
+        </label>
+      </div>
+
+      <p class="np-notice np-notice--ok np-notice--inline">{{ vistaPreviaPlan }}</p>
+    </div>
+
+    <div class="np-modal-foot">
+      <button type="button" class="np-btn np-btn--ghost" (click)="planEdita = null">Cancelar</button>
+      <button type="button" class="np-btn np-btn--primary" (click)="guardarPlan()" [disabled]="guardandoPlan">{{ guardandoPlan ? 'Guardando…' : 'Guardar' }}</button>
+    </div>
+  </div>
+</div>
+
 <!-- ══ Detalle de una credencial PPPoE ═════════════════════════════════════ -->
 <div *ngIf="credencial as c" class="np-overlay" (click)="cerrarCredencial()">
   <div class="np-modal np-modal--lg np-cred" role="dialog" aria-modal="true" aria-label="Detalle de la credencial" (click)="$event.stopPropagation()">

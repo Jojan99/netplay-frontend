@@ -87,6 +87,23 @@ export class MikrotikService {
     return this.http.post(`${this.base}/getIpAvalibles`, { vlan, segment, router_id: routerId ?? undefined }, this.h());
   }
 
+  // ── Velocidad de los planes ─────────────────────────────────────────────
+  getVelocidades(): Observable<any> {
+    return this.http.get(`${this.base}/velocidades`, this.h());
+  }
+
+  guardarVelocidad(planId: number, datos: any): Observable<any> {
+    return this.http.put(`${this.base}/velocidades/${planId}`, datos, this.h());
+  }
+
+  aplicarVelocidad(planId: number, routerId?: number | null): Observable<any> {
+    return this.http.post(`${this.base}/velocidades/${planId}/aplicar`, { router_id: routerId ?? null }, this.h());
+  }
+
+  controlDelCliente(userId: number, control: 'plan' | 'sin_limite'): Observable<any> {
+    return this.http.put(`${this.base}/velocidades/cliente/${userId}`, { control }, this.h());
+  }
+
   /** Foto del modelo de equipo, servida por la plataforma. */
   getRouterPhoto(board: string): Observable<any> {
     return this.http.get(`${this.base}/router-photo`, { ...this.h(), params: new HttpParams().set('board', board) });

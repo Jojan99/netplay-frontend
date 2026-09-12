@@ -350,7 +350,10 @@
                   <input type="text" class="np-input np-mono" [(ngModel)]="cambioUsuario" placeholder="Suele ser el documento" />
                 </label>
                 <label class="np-field"><span>Contraseña <em *ngIf="clienteEsPppoe">dejala vacía para no cambiarla</em></span>
-                  <input type="text" class="np-input np-mono" [(ngModel)]="cambioClave" placeholder="Contraseña del cliente" />
+                  <span class="np-input-wrap">
+                    <input type="text" class="np-input np-mono" [(ngModel)]="cambioClave" placeholder="Contraseña del cliente" />
+                    <button type="button" class="np-eye" (click)="generarClaveCambio()" title="Generar una contraseña">GENERAR</button>
+                  </span>
                 </label>
                 <label class="np-field np-field-full"><span>Perfil PPP <em>define la velocidad</em></span>
                   <select class="np-input" [(ngModel)]="cambioPerfil" [disabled]="!pppoePerfilesCliente.length">
@@ -376,6 +379,14 @@
               </ng-container>
 
               <p class="np-notice np-notice--warn np-notice--inline np-field-full" *ngIf="cambioAviso">{{ cambioAviso }}</p>
+
+              <!-- Un cliente puede quedar fuera del control de velocidad del plan. -->
+              <div class="np-vel-cliente np-field-full">
+                <span class="np-vel-t">Control de velocidad</span>
+                <label class="np-check"><input type="radio" name="velctl" value="plan" [(ngModel)]="controlVelocidad" (ngModelChange)="guardarControlVelocidad()" /> El de su plan</label>
+                <label class="np-check"><input type="radio" name="velctl" value="sin_limite" [(ngModel)]="controlVelocidad" (ngModelChange)="guardarControlVelocidad()" /> Sin límite</label>
+                <span class="np-fine">Sin límite queda fuera de las reglas del plan: al aplicar no se le pone cola ni perfil.</span>
+              </div>
 
               <button type="button" class="np-btn np-btn--warn np-field-full"
                       (click)="aplicarConexion()" [disabled]="!puedeAplicarConexion">

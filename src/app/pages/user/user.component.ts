@@ -14,6 +14,7 @@ import { FinanceService } from '../../services/finance.service';
 import { FactureInterface } from '../../models/facture-interface';
 import { Subscription } from 'rxjs';
 import { CompanyWhatsappService } from '../../services/company-whatsapp.service';
+import { MikrotikService } from '../../services/mikrotik.service';
 import { OltService } from '../../services/olt.service';
 
 interface Toast {
@@ -44,6 +45,7 @@ export class UserComponent implements OnInit {
     private cdr: ChangeDetectorRef,
     private companyWaSvc: CompanyWhatsappService,
     private oltService: OltService,
+    private mikrotikSvc: MikrotikService,
     private route: ActivatedRoute,
   ) {}
 
@@ -476,6 +478,7 @@ export class UserComponent implements OnInit {
         this.selectedUserData = e;
         this.sesionPppoe = null;
         if (e?.connection_type === 'pppoe') this.cargarPppoeCliente(e?.router_id ? Number(e.router_id) : null);
+        this.controlVelocidad = e?.control_velocidad === 'sin_limite' ? 'sin_limite' : 'plan';
         this.internet_plan = e.internet_plans_id ?? 0;
         this.data_cortes   = e.data_cortes_id ?? 0;
         this.loadingModal  = false;
@@ -1235,13 +1238,40 @@ export class UserComponent implements OnInit {
     });
   }
 
-  /** Una contraseña que el cliente no tenga que inventar. */
-  generarClavePppoe() {
+  /**
+   * Una contraseña que el cliente no tenga que inventar.
+   *
+   * Sin las letras y números que se confunden al dictarla por teléfono: ni
+   * ele minúscula, ni o, ni cero, ni uno.
+   */
+  private claveNueva(): string {
     const abc = 'abcdefghijkmnpqrstuvwxyz23456789';
     let clave = '';
     for (let i = 0; i < 10; i++) clave += abc[Math.floor(Math.random() * abc.length)];
-    this.newUser.pppoe_password = clave;
+    return clave;
+  }
+
+  generarClavePppoe() {
+    this.newUser.pppoe_password = this.claveNueva();
     this.guardarBorrador();
+  }
+
+  /** 'plan' sigue la velocidad de su plan; 'sin_limite' queda fuera. */
+  controlVelocidad: 'plan' | 'sin_limite' = 'plan';
+
+  guardarControlVelocidad(): void {
+    this.mikrotikSvc.controlDelCliente(this.selectedUserId, this.controlVelocidad).subscribe({
+      next: (r: any) => {
+        if (r?.error !== 0) { this.toast(r?.message || 'No se pudo guardar', 'error'); return; }
+        this.toast(r.message, 'success');
+      },
+      error: () => this.toast('No se pudo guardar', 'error'),
+    });
+  }
+
+  /** La misma ayuda en la ficha: al cambiar la conexión de un cliente. */
+  generarClaveCambio() {
+    this.cambioClave = this.claveNueva();
   }
 
   onCreateRouterChange() {

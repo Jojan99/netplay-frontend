@@ -1,4 +1,5 @@
 import { DialogService } from '../../services/dialog.service';
+import { ToastService } from '../../services/toast.service';
 import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -37,14 +38,15 @@ const ESTADOS: Record<EstadoPuerto, string> = {
 export class MikrotikComponent implements OnInit {
   private dialog = inject(DialogService);
   private router = inject(Router);
-  activeTab: 'info' | 'clients' | 'queues' | 'conflicts' | 'pppoe' | 'config' = 'info';
+  activeTab: 'info' | 'clients' | 'queues' | 'conflicts' | 'pppoe' | 'velocidades' | 'config' = 'info';
 
-  tabs: { key: 'info' | 'clients' | 'queues' | 'conflicts' | 'pppoe' | 'config'; label: string }[] = [
+  tabs: { key: 'info' | 'clients' | 'queues' | 'conflicts' | 'pppoe' | 'velocidades' | 'config'; label: string }[] = [
     { key: 'info', label: 'Info Router' },
     { key: 'clients', label: 'Clientes ARP' },
     { key: 'queues', label: 'Ancho de Banda' },
     { key: 'conflicts', label: 'Conflictos de IP' },
     { key: 'pppoe', label: 'PPPoE' },
+    { key: 'velocidades', label: 'Velocidades' },
     { key: 'config', label: 'Configuración' },
   ];
 
@@ -386,6 +388,91 @@ export class MikrotikComponent implements OnInit {
         this.loadPppoe();
       },
       error: () => { this.borrandoCred = false; this.pppoeError = 'No se pudo eliminar la credencial.'; },
+    });
+  }
+
+  // ── Velocidades ─────────────────────────────────────────────────────────
+  planes: any[] = [];
+  cargandoPlanes = false;
+  /** El plan que se está editando; los demás quedan como están. */
+  planEdita: any = null;
+  guardandoPlan = false;
+  aplicandoPlan = 0;
+  resultadoPlan: { texto: string; tipo: 'ok' | 'warn' } | null = null;
+
+  cargarVelocidades() {
+    this.cargandoPlanes = true;
+    this.svc.getVelocidades().subscribe({
+      next: (r: any) => {
+        this.cargandoPlanes = false;
+        if (r?.error !== 0) { this.toast.error(r?.message || 'No se pudieron leer los planes.'); return; }
+        this.planes = r.data ?? [];
+      },
+      error: () => { this.cargandoPlanes = false; },
+    });
+  }
+
+  editarPlan(p: any) {
+    this.resultadoPlan = null;
+    this.planEdita = {
+      id: p.id,
+      nombre: p.nombre,
+      bajada: p.bajada ?? 100,
+      subida: p.subida ?? 50,
+      rafaga: !!p.rafaga,
+      rafaga_bajada: p.rafaga_bajada ?? Math.round((p.bajada ?? 100) * 1.5),
+      rafaga_subida: p.rafaga_subida ?? Math.round((p.subida ?? 50) * 1.5),
+      rafaga_segundos: p.rafaga_segundos || 8,
+      prioridad: p.prioridad || 8,
+    };
+  }
+
+  /** Lo que va a sentir el cliente, antes de guardar nada. */
+  get vistaPreviaPlan(): string {
+    const e = this.planEdita;
+    if (!e) return '';
+    let t = `Baja a ${e.bajada} Mb y sube a ${e.subida} Mb.`;
+    if (e.rafaga) t += ` Los primeros ${e.rafaga_segundos} segundos puede llegar a ${e.rafaga_bajada} Mb de bajada y ${e.rafaga_subida} de subida.`;
+    return t;
+  }
+
+  guardarPlan() {
+    if (!this.planEdita) return;
+    this.guardandoPlan = true;
+    this.svc.guardarVelocidad(this.planEdita.id, this.planEdita).subscribe({
+      next: (r: any) => {
+        this.guardandoPlan = false;
+        if (r?.error !== 0) { this.toast.error(r?.message || 'No se pudo guardar.'); return; }
+        this.toast.success('Velocidad guardada. Falta aplicarla en el router.');
+        this.planEdita = null;
+        this.cargarVelocidades();
+      },
+      error: () => { this.guardandoPlan = false; this.toast.error('No se pudo guardar.'); },
+    });
+  }
+
+  async aplicarPlan(p: any) {
+    const ok = await this.dialog.confirm(
+      `¿Aplicar la velocidad de «${p.nombre}» en el router? Alcanza a ${p.clientes.pppoe + p.clientes.ip_fija} clientes.`
+      + (p.clientes.sin_limite ? ` ${p.clientes.sin_limite} quedan fuera por estar sin límite.` : ''),
+      { okLabel: 'Aplicar' },
+    );
+    if (!ok) return;
+
+    this.aplicandoPlan = p.id;
+    this.resultadoPlan = null;
+    this.svc.aplicarVelocidad(p.id, this.selectedRouterId).subscribe({
+      next: (r: any) => {
+        this.aplicandoPlan = 0;
+        if (r?.error !== 0) { this.toast.error(r?.message || 'No se pudo aplicar.'); return; }
+        this.resultadoPlan = {
+          texto: r.data?.mensaje ?? 'Aplicado',
+          tipo: (r.data?.avisos ?? []).length ? 'warn' : 'ok',
+        };
+        (r.data?.avisos ?? []).slice(0, 3).forEach((a: string) => this.toast.error(a));
+        this.cargarVelocidades();
+      },
+      error: () => { this.aplicandoPlan = 0; this.toast.error('No se pudo aplicar.'); },
     });
   }
 
@@ -766,6 +853,8 @@ export class MikrotikComponent implements OnInit {
     });
   }
 
+  private toast = inject(ToastService);
+
   constructor(private svc: MikrotikService) {}
 
   ngOnInit() {
@@ -802,13 +891,14 @@ export class MikrotikComponent implements OnInit {
 
   // ── Tabs ──────────────────────────────────────────────────────────────────
 
-  setTab(tab: 'info' | 'clients' | 'queues' | 'conflicts' | 'pppoe' | 'config') {
+  setTab(tab: 'info' | 'clients' | 'queues' | 'conflicts' | 'pppoe' | 'velocidades' | 'config') {
     this.activeTab = tab;
     if (tab === 'info')      { this.loadInfo(); }
     if (tab === 'clients')   { if (!this.clients.length) this.loadClients(); }
     if (tab === 'queues')    { if (!this.queues.length) this.loadQueues(); }
     if (tab === 'conflicts') { if (!this.conflicts.length) this.loadConflicts(); }
     if (tab === 'pppoe')     { this.loadPppoe(); }
+    if (tab === 'velocidades') { this.cargarVelocidades(); }
     if (tab === 'config')    { this.loadRouters(); }
   }
 
