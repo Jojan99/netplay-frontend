@@ -73,8 +73,19 @@
 
     <!-- Paso 2 -->
     <section class="np-card">
+      <!-- Con varios MikroTik se configura de a uno: cada uno lleva su túnel. -->
+      <div class="np-tr-routers" *ngIf="(estado?.routers?.length || 0) > 1">
+        <span class="np-fine">Tus MikroTik</span>
+        <div class="np-seg">
+          <button type="button" *ngFor="let r of estado.routers" [attr.aria-pressed]="routerSel === r.id" (click)="elegirRouter(r.id)">
+            {{ r.nombre }}
+            <i class="np-tr-led" [class.is-on]="r.tunel?.conectado"></i>
+          </button>
+        </div>
+      </div>
+
       <div class="np-card-h">
-        <h2>2 · ¿A qué redes tuyas hay que llegar?</h2>
+        <h2>2 · ¿A qué redes tuyas hay que llegar?<span class="np-fine" *ngIf="routerActual"> · {{ routerActual.nombre }}</span></h2>
         <button type="button" class="np-btn np-btn--ghost np-btn--sm" (click)="detectar()" [disabled]="detectando">
           {{ detectando ? 'Leyendo el router…' : 'Detectar del router' }}
         </button>
@@ -82,11 +93,11 @@
 
       <p class="np-fine" *ngIf="!redes.length">
         Tocá <b>Detectar del router</b> y las buscamos solos: las redes de tus clientes, los rangos que reparte el PPPoE
-        y las de tus OLT. Vos sólo confirmás.
+        y las de tus OLT. Vos sólo confirmás. Si tenés más de un MikroTik, se hace uno por uno.
       </p>
 
       <ng-container *ngIf="redes.length">
-        <p class="np-fine">Marcadas <b>{{ elegidas }}</b> de {{ redes.length }}. Lo que quede marcado es lo que la plataforma va a poder alcanzar.</p>
+        <p class="np-fine">Marcadas <b>{{ elegidas }}</b> de {{ redesDelRouter.length }}. Lo que quede marcado es lo que la plataforma va a poder alcanzar.</p>
 
         <div class="np-tr-grupo" *ngFor="let g of grupos">
           <div class="np-tr-grupo-h">
@@ -136,10 +147,10 @@
         <pre class="olt-script">{{ script.servidor }}</pre>
       </ng-container>
 
-      <p class="np-fine" *ngIf="estado?.tunel">
-        Túnel <b>{{ estado.tunel.nombre }}</b> ·
-        <span [class.np-pos]="estado.tunel.conectado" [class.np-neg]="!estado.tunel.conectado">
-          {{ estado.tunel.conectado ? 'el router está saludando' : 'todavía no saluda' }}
+      <p class="np-fine" *ngIf="routerActual?.tunel">
+        Túnel <b>{{ routerActual.tunel.nombre }}</b> de {{ routerActual.nombre }} ·
+        <span [class.np-pos]="routerActual.tunel.conectado" [class.np-neg]="!routerActual.tunel.conectado">
+          {{ routerActual.tunel.conectado ? 'el router está saludando' : 'todavía no saluda' }}
         </span>
       </p>
     </section>

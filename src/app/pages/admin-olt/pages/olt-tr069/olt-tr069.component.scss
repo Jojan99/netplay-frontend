@@ -32,3 +32,12 @@
 }
 .np-tr-cidr { font-size: 12px; color: var(--text-2); flex-shrink: 0; }
 .np-tr-script-h { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-top: 10px; }
+
+.np-tr-routers {
+  display: grid; gap: 6px; margin-bottom: 12px;
+  .np-seg { flex-wrap: wrap; }
+}
+.np-tr-led {
+  width: 7px; height: 7px; border-radius: 50%; background: var(--line-strong); display: inline-block; margin-left: 6px;
+  &.is-on { background: var(--ok); }
+}

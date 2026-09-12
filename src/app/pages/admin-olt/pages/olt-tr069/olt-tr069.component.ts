@@ -25,7 +25,10 @@ export class OltTr069Component implements OnInit {
   private toast = inject(ToastService);
 
   estado: any = null;
+  /** Todas las redes detectadas, de todos los MikroTik de la empresa. */
   redes: any[] = [];
+  /** El MikroTik que se está configurando: cada uno lleva su propio túnel. */
+  routerSel: number | null = null;
   script: any = null;
 
   cargando = false;
@@ -55,6 +58,9 @@ export class OltTr069Component implements OnInit {
   private aplicarEstado(d: any) {
     this.estado = d;
     this.redes = d?.redes ?? [];
+    if (!this.routerSel || !(d?.routers ?? []).some((r: any) => r.id === this.routerSel)) {
+      this.routerSel = d?.routers?.[0]?.id ?? null;
+    }
     this.agrupar();
     this.form = {
       modo: d?.modo ?? 'plataforma',
@@ -66,7 +72,24 @@ export class OltTr069Component implements OnInit {
   }
 
   cargarScript() {
-    this.api.script().subscribe({ next: (r: any) => { if (r?.error === 0) this.script = r.data; } });
+    this.api.script(this.routerSel).subscribe({ next: (r: any) => { if (r?.error === 0) this.script = r.data; } });
+  }
+
+  /** Cambiar de MikroTik: se muestran sus redes y su script. */
+  elegirRouter(id: number) {
+    this.routerSel = id;
+    this.script = null;
+    this.agrupar();
+    if (this.routerActual?.tunel) this.cargarScript();
+  }
+
+  get routerActual(): any {
+    return (this.estado?.routers ?? []).find((r: any) => r.id === this.routerSel) ?? null;
+  }
+
+  /** Sólo las redes del MikroTik que se está configurando. */
+  get redesDelRouter(): any[] {
+    return this.redes.filter(r => !this.routerSel || r.router_id === this.routerSel);
   }
 
   // ── Pasos ─────────────────────────────────────────────────────────────────
@@ -91,11 +114,15 @@ export class OltTr069Component implements OnInit {
 
   detectar() {
     this.detectando = true;
-    this.api.detectar().subscribe({
+    this.api.detectar(this.routerSel ?? undefined).subscribe({
       next: (r: any) => {
         this.detectando = false;
         if (r?.error !== 0) { this.toast.error(r?.message || 'No se pudo leer el router.'); return; }
-        this.redes = r.data?.redes ?? [];
+        // Lo detectado es de este router; lo de los otros queda como estaba.
+        this.redes = [
+          ...this.redes.filter(x => x.router_id !== r.data?.router_id),
+          ...(r.data?.redes ?? []),
+        ];
         this.agrupar();
         if (r.data?.error) this.toast.error(r.data.error);
         else this.toast.success(`${this.redes.length} redes encontradas en ${r.data?.router ?? 'el router'}`);
@@ -105,12 +132,12 @@ export class OltTr069Component implements OnInit {
   }
 
   aplicar() {
-    const elegidas = this.redes.filter(r => r.elegida).map(r => r.red);
+    const elegidas = this.redesDelRouter.filter(r => r.elegida).map(r => r.red);
 
     if (!elegidas.length) { this.toast.error('Elegí al menos una red.'); return; }
 
     this.aplicando = true;
-    this.api.aplicar(elegidas).subscribe({
+    this.api.aplicar(elegidas, this.routerSel).subscribe({
       next: (r: any) => {
         this.aplicando = false;
         if (r?.error !== 0) { this.toast.error(r?.message || 'No se pudo aplicar.'); return; }
@@ -140,12 +167,14 @@ export class OltTr069Component implements OnInit {
       gestion: 'Otras redes del router',
     };
 
+    const propias = this.redesDelRouter;
+
     this.grupos = Object.keys(titulos)
-      .map(tipo => ({ titulo: titulos[tipo], redes: this.redes.filter(r => r.tipo === tipo) }))
+      .map(tipo => ({ titulo: titulos[tipo], redes: propias.filter(r => r.tipo === tipo) }))
       .filter(g => g.redes.length);
   }
 
-  get elegidas(): number { return this.redes.filter(r => r.elegida).length; }
+  get elegidas(): number { return this.redesDelRouter.filter(r => r.elegida).length; }
 
   marcarTodas(grupo: any[], valor: boolean) { grupo.forEach(r => r.elegida = valor); }
 

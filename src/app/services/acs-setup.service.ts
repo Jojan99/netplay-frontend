@@ -22,7 +22,12 @@ export class AcsSetupService {
     return this.http.post(`${this.base}/detectar`, { router_id: routerId ?? null }, this.h());
   }
 
-  aplicar(redes: string[]): Observable<any> { return this.http.post(`${this.base}/aplicar`, { redes }, this.h()); }
+  aplicar(redes: string[], routerId?: number | null): Observable<any> {
+    return this.http.post(`${this.base}/aplicar`, { redes, router_id: routerId ?? null }, this.h());
+  }
 
-  script(): Observable<any> { return this.http.get(`${this.base}/script`, this.h()); }
+  script(routerId?: number | null): Observable<any> {
+    const q = routerId ? `?router_id=${routerId}` : '';
+    return this.http.get(`${this.base}/script${q}`, this.h());
+  }
 }
