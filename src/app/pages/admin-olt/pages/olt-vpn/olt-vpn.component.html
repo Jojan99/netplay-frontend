@@ -95,7 +95,8 @@
             <td class="np-data">{{ haceCuanto(t.ultimo_saludo) }}<div class="np-fine np-mono" *ngIf="t.endpoint">{{ t.endpoint }}</div></td>
             <td class="np-data np-td-right">↓ {{ transferencia(t.bytes_rx) }}<div class="np-fine">↑ {{ transferencia(t.bytes_tx) }}</div></td>
             <td class="np-td-right"><div class="np-rowacts">
-              <button type="button" class="np-icobtn" (click)="verScript(t)" title="Ver el script del router"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 6 4 12l5 6M15 6l5 6-5 6"/></svg></button>
+              <button type="button" class="np-icobtn" (click)="abrirEdicion(t)" title="Editar el túnel y sus redes"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 20h4L19 9a2.8 2.8 0 0 0-4-4L4 16z"/></svg></button>
+                            <button type="button" class="np-icobtn" (click)="verScript(t)" title="Ver el script del router"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 6 4 12l5 6M15 6l5 6-5 6"/></svg></button>
               <button type="button" class="np-icobtn" (click)="probar(t)" [disabled]="probando" title="Probar alcance por el túnel"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12h4l3-8 4 16 3-8h4"/></svg></button>
               <button type="button" class="np-icobtn" (click)="abrirOlt(t)" title="Usar en una OLT"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="6" width="18" height="12" rx="1"/><path d="M7 10h2M11 10h2M7 14h10"/></svg></button>
               <button type="button" class="np-icobtn" (click)="confirmarBorrado(t)" title="Eliminar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/></svg></button>
@@ -122,11 +123,12 @@
 <div *ngIf="modal" class="np-overlay" (click)="modal = false">
   <div class="np-modal" role="dialog" aria-modal="true" (click)="$event.stopPropagation()">
     <div class="np-modal-head">
-      <div><p class="np-kicker">VPN <b>/</b> Nuevo</p><h3>Nuevo túnel</h3></div>
+      <div><p class="np-kicker">VPN <b>/</b> {{ editando ? 'Editar' : 'Nuevo' }}</p><h3>{{ editando ? editando.nombre : 'Nuevo túnel' }}</h3></div>
       <button type="button" class="np-icobtn" (click)="modal = false" aria-label="Cerrar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
     </div>
     <div class="np-modal-body">
-      <p class="np-hint">Un túnel por nodo. Las redes son las que quedan alcanzables detrás de ese router: la de la OLT, la de administración, las que hagan falta.</p>
+      <p class="np-hint">Un túnel por nodo. Las redes son las que quedan alcanzables detrás de ese router: la de la OLT, la de administración, las de los clientes si querés llegar a sus equipos por TR-069.</p>
+      <p class="np-notice np-notice--info np-notice--inline" *ngIf="editando">Al guardar, el servidor rehace su configuración. No hace falta volver a pegar el script en el router: sólo si agregás redes que necesiten enmascarado nuevo.</p>
       <div class="np-form">
         <label class="np-field np-field-full"><span>Nombre del nodo <em>*</em></span><input class="np-input" [(ngModel)]="form.nombre" placeholder="Nodo Rebolo" /></label>
         <label class="np-field np-field-full"><span>Redes alcanzables <em>*</em></span><input class="np-input np-mono" [(ngModel)]="form.redes_remotas" placeholder="10.11.104.0/24, 192.168.88.0/24" /></label>
@@ -137,7 +139,7 @@
     </div>
     <div class="np-modal-foot">
       <button type="button" class="np-btn np-btn--ghost" (click)="modal = false">Cancelar</button>
-      <button type="button" class="np-btn np-btn--primary" (click)="crear()" [disabled]="!puedeGuardar || guardando"><span *ngIf="guardando" class="np-spinner np-spinner--sm"></span>{{ guardando ? 'Creando…' : 'Crear y generar script' }}</button>
+      <button type="button" class="np-btn np-btn--primary" (click)="guardar()" [disabled]="!puedeGuardar || guardando"><span *ngIf="guardando" class="np-spinner np-spinner--sm"></span>{{ guardando ? 'Guardando…' : (editando ? 'Guardar cambios' : 'Crear y generar script') }}</button>
     </div>
   </div>
 </div>

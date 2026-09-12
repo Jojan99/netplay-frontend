@@ -140,9 +140,62 @@ export class OltVpnComponent implements OnInit {
 
   // ── Túneles ─────────────────────────────────────────────────────────────
 
+  /** El túnel que se está editando; null cuando el modal es para uno nuevo. */
+  editando: any = null;
+
   abrirAlta(): void {
+    this.editando = null;
     this.form  = { nombre: '', redes_remotas: '', keepalive: 25, puerto_router: 13231, notas: '' };
     this.modal = true;
+  }
+
+  /**
+   * Editar un túnel que ya existe: sobre todo para agregarle redes.
+   *
+   * Al guardar, el servidor rehace su configuración de WireGuard, así que las
+   * redes nuevas quedan alcanzables sin tocar el router.
+   */
+  abrirEdicion(t: any): void {
+    this.editando = t;
+    this.form = {
+      nombre:        t.nombre ?? '',
+      redes_remotas: (t.redes_remotas ?? []).join(', '),
+      keepalive:     t.keepalive ?? 25,
+      puerto_router: t.puerto_router ?? 13231,
+      notas:         t.notas ?? '',
+    };
+    this.modal = true;
+  }
+
+  guardar(): void {
+    if (this.editando) { this.actualizar(); return; }
+    this.crear();
+  }
+
+  private actualizar(): void {
+    if (!this.puedeGuardar || this.guardando) return;
+
+    this.guardando = true;
+
+    this.olt.actualizarTunelVpn(this.editando.id, {
+      nombre:        this.form.nombre.trim(),
+      redes_remotas: this.form.redes_remotas.trim(),
+      keepalive:     this.form.keepalive,
+      puerto_router: this.form.puerto_router,
+      notas:         this.form.notas.trim() || null,
+    }).subscribe({
+      next: (res) => {
+        this.guardando = false;
+        if (res?.status === 1) { this.toast.error(res.message); return; }
+        this.modal = false;
+        this.toast.success(res?.message || 'Túnel actualizado');
+        this.cargar();
+      },
+      error: (err) => {
+        this.guardando = false;
+        this.toast.error(err?.error?.message || 'No se pudo guardar el túnel');
+      },
+    });
   }
 
   get puedeGuardar(): boolean {
