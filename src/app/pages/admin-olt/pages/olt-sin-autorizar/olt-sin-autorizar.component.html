@@ -100,6 +100,16 @@
         </button>
       </section>
 
+      <!-- Recién instalada: es el momento de dejarle la gestión puesta. -->
+      <section class="olt-sigue" *ngIf="pasos.length && urlAcs && clienteElegido">
+        <p class="olt-sigue-t">Antes de irte del sitio</p>
+        <p>Cargale al equipo esta dirección en su configuración de gestión (TR-069) y desde el panel vas a poder ver y cambiar su WiFi.</p>
+        <div class="olt-sigue-url">
+          <code class="np-mono">{{ urlAcs }}</code>
+          <button type="button" class="np-btn np-btn--ghost np-btn--sm" (click)="copiar(urlAcs, 'acs')">{{ copiado === 'acs' ? '✓ Copiada' : 'Copiar' }}</button>
+        </div>
+      </section>
+
       <div class="np-form">
         <label class="np-field"><span>Puerto FSP <em>*</em></span><input class="np-input np-mono" [(ngModel)]="form.fsp" placeholder="0/0/3" /></label>
         <label class="np-field"><span>{{ porMac ? 'MAC' : 'Serial' }}</span><input class="np-input np-mono" [(ngModel)]="form.serial" [placeholder]="porMac ? 'AA:BB:CC:DD:EE:FF' : 'HWTC12345678'" /><small class="np-fine">Precargado desde la OLT.{{ porMac ? ' En EPON la ONU se autoriza por MAC.' : '' }}</small></label>
@@ -139,6 +149,10 @@
             </div>
           </label>
         </div>
+
+        <p class="np-notice np-notice--warn np-notice--inline np-field-full" *ngIf="!clienteElegido && !pasos.length">
+          Sin cliente, la ONT queda suelta: no vas a ver su equipo en la ficha ni el cliente su WiFi en el portal.
+        </p>
 
         <label class="np-field np-field-full"><span>Descripción en la OLT <em>es lo que se ve en el equipo</em></span>
           <input class="np-input" [(ngModel)]="form.description" placeholder="Se completa con el nombre del cliente" />

@@ -235,3 +235,16 @@
 
   &.is-auto { color: var(--ok); font-weight: 700; }
 }
+
+/* Lo que queda por hacer en el sitio, justo después de autorizar la ONT. */
+.olt-sigue {
+  display: grid; gap: 8px; padding: 12px 14px; margin-bottom: 14px;
+  border: 1px solid color-mix(in srgb, var(--ok) 40%, var(--line)); border-radius: var(--radius-lg);
+  background: var(--ok-soft);
+  p { margin: 0; font-size: 12.5px; color: var(--text-2); line-height: 1.5; }
+}
+.olt-sigue-t { font-size: 11px !important; font-weight: 800; letter-spacing: .5px; text-transform: uppercase; color: var(--ok) !important; }
+.olt-sigue-url {
+  display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+  code { font-size: 13.5px; font-weight: 600; color: var(--text); overflow-wrap: anywhere; }
+}

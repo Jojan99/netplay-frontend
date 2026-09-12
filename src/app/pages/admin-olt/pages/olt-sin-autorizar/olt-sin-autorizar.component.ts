@@ -6,6 +6,7 @@ import { OltService } from '../../../../services/olt.service';
 import { MikrotikService } from '../../../../services/mikrotik.service';
 import { ToastService } from '../../../../services/toast.service';
 import { DialogService } from '../../../../services/dialog.service';
+import { AcsSetupService } from '../../../../services/acs-setup.service';
 
 @Component({
   selector: 'app-olt-sin-autorizar',
@@ -61,6 +62,7 @@ export class OltSinAutorizarComponent implements OnInit {
     private mikrotikService: MikrotikService,
     private toast: ToastService,
     private dialog: DialogService,
+    private acs: AcsSetupService,
   ) {}
 
   /**
@@ -320,8 +322,29 @@ export class OltSinAutorizarComponent implements OnInit {
     this.cargarClientes();
   }
 
-  confirmRegister(): void {
+  /** La dirección del TR-069, para dejársela cargada al equipo recién instalado. */
+  urlAcs = '';
+
+  private cargarUrlAcs(): void {
+    if (this.urlAcs) return;
+    this.acs.estado().subscribe({ next: (r: any) => this.urlAcs = r?.data?.url_para_onts ?? '' });
+  }
+
+  async confirmRegister(): Promise<void> {
     if (!this.selectedOltId || !this.form.fsp) return;
+
+    // Autorizar sin cliente es lo que dejó cientos de ONT sueltas: se puede,
+    // pero avisando, porque después no se sabe de quién es cada equipo.
+    if (!this.clienteElegido) {
+      const seguir = await this.dialog.confirm(
+        'Vas a autorizar la ONT sin cliente. No vas a ver su equipo en la ficha ni el cliente su WiFi en el portal, '
+        + 'y después hay que vincularla a mano. ¿Seguir igual?',
+        { okLabel: 'Autorizar sin cliente' },
+      );
+
+      if (!seguir) return;
+    }
+
     this.registering = true;
     this.oltService.registerONT(this.selectedOltId, {
       fsp:             this.form.fsp,
@@ -354,10 +377,21 @@ export class OltSinAutorizarComponent implements OnInit {
 
     this.toast.success(res.message || 'ONT autorizada.');
     this.loadUnauth();
+    this.cargarUrlAcs();
 
     // Si algún paso quedó pendiente, el modal se queda abierto para poder
     // reintentarlo: cerrarlo daría por terminado algo que no lo está.
     if (!this.pasos.some(p => !p.ok && !p.omitido)) this.modal = false;
+  }
+
+  copiado = '';
+
+  async copiar(texto: string, que: string): Promise<void> {
+    try {
+      await navigator.clipboard.writeText(texto);
+      this.copiado = que;
+      setTimeout(() => { if (this.copiado === que) this.copiado = ''; }, 1500);
+    } catch { }
   }
 
   /** Lo que devolvió el alta, para poder reintentar un paso suelto. */
