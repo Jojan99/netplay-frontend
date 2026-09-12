@@ -55,6 +55,7 @@ export class OltTr069Component implements OnInit {
   private aplicarEstado(d: any) {
     this.estado = d;
     this.redes = d?.redes ?? [];
+    this.agrupar();
     this.form = {
       modo: d?.modo ?? 'plataforma',
       host: d?.host ?? '',
@@ -95,6 +96,7 @@ export class OltTr069Component implements OnInit {
         this.detectando = false;
         if (r?.error !== 0) { this.toast.error(r?.message || 'No se pudo leer el router.'); return; }
         this.redes = r.data?.redes ?? [];
+        this.agrupar();
         if (r.data?.error) this.toast.error(r.data.error);
         else this.toast.success(`${this.redes.length} redes encontradas en ${r.data?.router ?? 'el router'}`);
       },
@@ -122,14 +124,23 @@ export class OltTr069Component implements OnInit {
 
   // ── Ayudas de pantalla ────────────────────────────────────────────────────
 
-  grupos(): { titulo: string; redes: any[] }[] {
-    const titulos: any = {
+  /**
+   * Los grupos se arman una vez, al llegar las redes.
+   *
+   * Calcularlos en la plantilla devolvía un arreglo nuevo en cada ciclo de
+   * Angular, así que la vista se rehacía sin parar y la pantalla se trababa.
+   */
+  grupos: { titulo: string; redes: any[] }[] = [];
+
+  private agrupar() {
+    const titulos: Record<string, string> = {
       clientes: 'Redes de tus clientes',
       pppoe: 'Rangos que reparte el router (PPPoE)',
       olt: 'Gestión de tus OLT',
       gestion: 'Otras redes del router',
     };
-    return Object.keys(titulos)
+
+    this.grupos = Object.keys(titulos)
       .map(tipo => ({ titulo: titulos[tipo], redes: this.redes.filter(r => r.tipo === tipo) }))
       .filter(g => g.redes.length);
   }
