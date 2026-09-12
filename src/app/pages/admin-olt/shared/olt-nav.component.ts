@@ -25,6 +25,7 @@ export class OltNavComponent {
   readonly links = [
     { path: '/dashboard/olt',               label: 'OLTs',          exact: true },
     { path: '/dashboard/olt/dashboard',     label: 'Estado',        exact: false },
+    { path: '/dashboard/olt/alertas',       label: 'Avisos',        exact: false },
     { path: '/dashboard/olt/autorizadas',   label: 'Autorizadas',   exact: false },
     { path: '/dashboard/olt/sin-autorizar', label: 'Sin autorizar', exact: false },
     { path: '/dashboard/olt/online',        label: 'En línea',      exact: false },

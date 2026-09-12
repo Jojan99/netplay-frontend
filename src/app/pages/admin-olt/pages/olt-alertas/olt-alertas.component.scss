@@ -1,0 +1,18 @@
+/* ─── Avisos de la red ──────────────────────────────────────────────── */
+.ale-scroll { display: grid; gap: 12px; align-content: start; }
+.ale-lista { display: grid; gap: 8px; }
+.ale-item {
+  display: flex; align-items: flex-start; gap: 12px; padding: 12px 14px;
+  border: 1px solid var(--line); border-left: 3px solid var(--warn); border-radius: var(--radius-lg);
+  background: var(--surface); box-shadow: var(--shadow);
+  &[data-nivel="critico"] { border-left-color: var(--danger); }
+  &.is-cerrada { opacity: .55; border-left-color: var(--ok); }
+  &.is-nueva { background: color-mix(in srgb, var(--accent) 4%, var(--surface)); }
+}
+.ale-ico { font-size: 18px; line-height: 1; flex-shrink: 0; }
+.ale-txt {
+  display: grid; gap: 2px; flex: 1; min-width: 0;
+  b { font-size: 13.5px; }
+  small { font-size: 12.5px; color: var(--text-2); line-height: 1.5; }
+}
+.ale-meta { font-size: 11.5px; color: var(--text-3); }

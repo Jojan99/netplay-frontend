@@ -1,0 +1,58 @@
+<div class="np-page ale">
+  <header class="np-head">
+    <div>
+      <p class="np-kicker">Admin OLT <b>/</b> Avisos</p>
+      <h1 class="np-title">Avisos de la red</h1>
+      <p class="np-fine">Lo que hay que mirar antes de que llame el cliente. Se revisa solo cada 15 minutos.</p>
+    </div>
+    <div class="np-actions">
+      <button type="button" class="np-btn np-btn--ghost" (click)="marcarVistas()" *ngIf="resumen?.sin_ver">Marcar vistos</button>
+      <button type="button" class="np-btn np-btn--primary" (click)="revisar()" [disabled]="revisando">{{ revisando ? 'Revisando…' : 'Revisar ahora' }}</button>
+    </div>
+  </header>
+
+  <app-olt-nav />
+
+  <div class="np-scroll ale-scroll">
+    <section class="np-kpis" *ngIf="resumen">
+      <div class="np-kpi" [class.np-kpi--accent]="resumen.criticos"><span class="np-kpi-l">Críticos</span><b class="np-kpi-v">{{ resumen.criticos }}</b><span class="np-kpi-s">hay que ir</span></div>
+      <div class="np-kpi"><span class="np-kpi-l">Avisos</span><b class="np-kpi-v">{{ resumen.avisos }}</b><span class="np-kpi-s">conviene mirar</span></div>
+      <div class="np-kpi"><span class="np-kpi-l">Sin ver</span><b class="np-kpi-v">{{ resumen.sin_ver }}</b><span class="np-kpi-s">nuevos para el equipo</span></div>
+    </section>
+
+    <div class="np-subbar">
+      <div class="np-seg">
+        <button type="button" [attr.aria-pressed]="filtro === 'todo'" (click)="filtro = 'todo'">Todos</button>
+        <button type="button" [attr.aria-pressed]="filtro === 'critico'" (click)="filtro = 'critico'">Críticos</button>
+        <button type="button" [attr.aria-pressed]="filtro === 'senal'" (click)="filtro = 'senal'">Señal</button>
+        <button type="button" [attr.aria-pressed]="filtro === 'corte'" (click)="filtro = 'corte'">Red</button>
+      </div>
+      <span class="np-spacer"></span>
+      <label class="np-check np-check--inline"><input type="checkbox" [(ngModel)]="historial" (ngModelChange)="cargar()" /> Ver también los resueltos</label>
+    </div>
+
+    <div *ngIf="cargando" class="np-loading"><span class="np-spinner"></span> Leyendo avisos…</div>
+
+    <p class="np-empty-block" *ngIf="!cargando && !visibles.length">
+      <strong>Nada que mirar.</strong>
+      <span>Ninguna señal fuera de rango, ningún puerto caído y los túneles saludando.</span>
+    </p>
+
+    <div class="ale-lista">
+      <article class="ale-item" *ngFor="let a of visibles" [attr.data-nivel]="a.nivel" [class.is-cerrada]="a.cerrada_en" [class.is-nueva]="!a.vista_en && !a.cerrada_en">
+        <span class="ale-ico" aria-hidden="true">{{ icono(a.tipo) }}</span>
+        <div class="ale-txt">
+          <b>{{ a.titulo }}</b>
+          <small>{{ a.detalle }}</small>
+          <span class="ale-meta">
+            {{ desde(a.abierta_en) }}
+            <ng-container *ngIf="a.datos?.olt"> · {{ a.datos.olt }}</ng-container>
+            <ng-container *ngIf="a.datos?.fsp"> · puerto {{ a.datos.fsp }}<ng-container *ngIf="a.datos?.ont_id">:{{ a.datos.ont_id }}</ng-container></ng-container>
+            <ng-container *ngIf="a.cerrada_en"> · resuelto {{ desde(a.cerrada_en) }}</ng-container>
+          </span>
+        </div>
+        <button type="button" class="np-btn np-btn--ghost np-btn--sm" *ngIf="a.user_id" (click)="abrirCliente(a)">Ver cliente</button>
+      </article>
+    </div>
+  </div>
+</div>
