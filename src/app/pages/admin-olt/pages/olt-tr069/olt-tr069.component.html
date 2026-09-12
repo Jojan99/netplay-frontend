@@ -171,6 +171,45 @@
       </div>
     </section>
 
+    <!-- ── Equipos pendientes ───────────────────────────────────────── -->
+    <section class="tr-paso" *ngIf="pendResumen" [class.is-listo]="!pendientes.length">
+      <div class="tr-paso-n"><span>4</span></div>
+      <div class="tr-paso-cuerpo">
+        <header>
+          <h2>Equipos por configurar</h2>
+          <p *ngIf="pendientes.length">
+            {{ pendResumen.con }} de {{ pendResumen.total }} equipos ya reportan. A los {{ pendientes.length }} que faltan hay que
+            cargarles la dirección una sola vez, en su gestión: ni la OLT ni el PPPoE se la pueden mandar.
+          </p>
+          <p *ngIf="!pendientes.length">Todos los equipos de tus clientes con ONT ya están reportando.</p>
+        </header>
+
+        <ng-container *ngIf="pendientes.length">
+          <div class="tr-pend-barra">
+            <input type="search" class="np-input np-input--sm" [(ngModel)]="buscarPend" placeholder="Cliente, documento, dirección, serial…" />
+            <span class="np-fine">{{ pendientesVisibles.length }} en la lista</span>
+            <span class="np-spacer"></span>
+            <button type="button" class="np-btn np-btn--ghost np-btn--sm" (click)="descargarPendientes()">Descargar lista</button>
+          </div>
+
+          <div class="np-tablewrap np-tablewrap--scroll tr-pend-tabla">
+            <table class="np-table np-table--compact">
+              <thead><tr><th>Cliente</th><th>Dirección</th><th>Equipo</th><th>Estado</th></tr></thead>
+              <tbody>
+                <tr *ngFor="let p of pendientesVisibles.slice(0, 200)">
+                  <td><b>{{ p.cliente.nombre }}</b><div class="np-fine">CC {{ p.cliente.documento }}</div></td>
+                  <td class="np-fine">{{ p.cliente.direccion || '—' }}</td>
+                  <td><span class="np-mono">{{ p.olt }} · {{ p.fsp }}:{{ p.ont }}</span><div class="np-fine np-mono">{{ p.serial }}</div></td>
+                  <td><span class="np-pill" [ngClass]="p.estado === 'online' ? 'np-pill--active' : 'np-pill--suspended'">{{ p.estado }}</span></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <p class="np-fine" *ngIf="pendientesVisibles.length > 200">Se muestran las primeras 200. Descargá la lista para verlas todas.</p>
+        </ng-container>
+      </div>
+    </section>
+
     <!-- ── Paso 3 ───────────────────────────────────────────────────── -->
     <section class="tr-paso" *ngIf="script" [class.is-listo]="routerActual?.tunel?.conectado">
       <div class="tr-paso-n"><span>3</span></div>

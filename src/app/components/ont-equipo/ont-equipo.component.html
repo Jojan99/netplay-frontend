@@ -96,7 +96,13 @@
 
     <p class="oe-cargando" *ngIf="consultandoEquipo && !equipo"><span class="np-spinner np-spinner--sm"></span> Leyendo el WiFi del equipo…</p>
     <p class="oe-aviso" *ngIf="equipo?.error">{{ equipo.error }}</p>
-    <p class="oe-aviso" *ngIf="equipo && !equipo.error && !equipo.wifi_soportado && !redesAcs.length">
+    <p class="oe-aviso" *ngIf="equipo && !equipo.error && !acs && !consultandoEquipo">
+      Este equipo todavía no está en el servidor TR-069. Cargale la dirección
+      <b class="np-mono">{{ urlAcs }}</b> en su configuración de gestión y desde acá vas a poder ver y cambiar su WiFi.
+      <button type="button" class="oe-linkbtn" (click)="copiar(urlAcs, 'acs')">{{ copiado === 'acs' ? '✓ Copiada' : 'Copiar dirección' }}</button>
+    </p>
+
+    <p class="oe-aviso" *ngIf="equipo && !equipo.error && !equipo.wifi_soportado && !redesAcs.length && acs">
       {{ marca ? 'Este equipo ' + marca : 'Este equipo' }} no le entrega su WiFi a la OLT<ng-container *ngIf="!acs"> y no está reportando al servidor TR-069</ng-container>.
     </p>
 

@@ -26,6 +26,10 @@ export class AcsSetupService {
     return this.http.post(`${this.base}/aplicar`, { redes, router_id: routerId ?? null }, this.h());
   }
 
+  pendientes(): Observable<any> {
+    return this.http.get(`${environment.rootUrl}api/management/acs/pendientes`, this.h());
+  }
+
   diagnostico(): Observable<any> { return this.http.get(`${this.base}/diagnostico`, this.h()); }
 
   script(routerId?: number | null): Observable<any> {

@@ -56,6 +56,9 @@ export class OntEquipoComponent implements OnChanges {
   copiado = '';
   verApagadas = false;
 
+  /** La dirección que hay que cargarle al equipo para que entre al TR-069. */
+  urlAcs = '';
+
   /** Único por instancia: el degradado del dibujo se referencia por id. */
   readonly gid = 'oe' + Math.random().toString(36).slice(2, 8);
 
@@ -76,7 +79,11 @@ export class OntEquipoComponent implements OnChanges {
 
     // Sin permiso al módulo o sin ACS, simplemente no se muestra.
     this.acsSvc.deCliente(id).subscribe({
-      next: r => { if (id !== this.userId) return; this.acs = r?.error === 0 ? r.data : null; },
+      next: r => {
+        if (id !== this.userId) return;
+        this.acs = r?.error === 0 ? r.data : null;
+        if (!this.acs) this.acsSvc.estado().subscribe({ next: (e: any) => this.urlAcs = e?.data?.url_acs ?? '' });
+      },
       error: () => { this.acs = null; },
     });
 

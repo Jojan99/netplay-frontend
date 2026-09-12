@@ -176,3 +176,6 @@
   .tr-paso-n { display: flex; align-items: center; gap: 8px; }
   .tr-salud { padding: 16px; }
 }
+
+.tr-pend-barra { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; input { max-width: 280px; } }
+.tr-pend-tabla { max-height: 420px; }

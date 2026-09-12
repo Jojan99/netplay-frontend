@@ -28,6 +28,11 @@ export class OltTr069Component implements OnInit {
   /** Revisión de punta a punta: servidor, camino, equipos y si aplica al momento. */
   diag: any = null;
   revisando = false;
+  /** Clientes con ONT que todavía no tienen cargada la dirección del ACS. */
+  pendientes: any[] = [];
+  pendResumen: any = null;
+  cargandoPend = false;
+  buscarPend = '';
   /** Todas las redes detectadas, de todos los MikroTik de la empresa. */
   redes: any[] = [];
   /** El MikroTik que se está configurando: cada uno lleva su propio túnel. */
@@ -50,6 +55,47 @@ export class OltTr069Component implements OnInit {
   ngOnInit() {
     this.cargar();
     this.revisar();
+    this.cargarPendientes();
+  }
+
+  cargarPendientes() {
+    this.cargandoPend = true;
+    this.api.pendientes().subscribe({
+      next: (r: any) => {
+        this.cargandoPend = false;
+        if (r?.error !== 0) return;
+        this.pendientes = r.data?.pendientes ?? [];
+        this.pendResumen = { total: r.data?.total ?? 0, con: r.data?.con_tr069 ?? 0 };
+      },
+      error: () => { this.cargandoPend = false; },
+    });
+  }
+
+  get pendientesVisibles(): any[] {
+    const t = this.buscarPend.trim().toLowerCase();
+    if (!t) return this.pendientes;
+    return this.pendientes.filter(p =>
+      [p.cliente.nombre, p.cliente.documento, p.cliente.direccion, p.serial, p.fsp, p.olt]
+        .some(v => (v ?? '').toString().toLowerCase().includes(t)));
+  }
+
+  /** La lista para el técnico, en un archivo que abre Excel. */
+  descargarPendientes() {
+    const filas = [['OLT', 'Puerto', 'ONT', 'Serial', 'Estado', 'Cliente', 'Documento', 'Dirección', 'Teléfono', 'URL del ACS']];
+
+    this.pendientesVisibles.forEach(p => filas.push([
+      p.olt, p.fsp, p.ont, p.serial ?? '', p.estado ?? '',
+      p.cliente.nombre, p.cliente.documento ?? '', p.cliente.direccion ?? '', p.cliente.telefono ?? '',
+      this.estado?.url_para_onts ?? '',
+    ]));
+
+    const csv = filas.map(f => f.map(c => `"${String(c).replace(/"/g, '""')}"`).join(';')).join('\n');
+    const url = URL.createObjectURL(new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8' }));
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `pendientes-tr069-${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
   }
 
   revisar() {
