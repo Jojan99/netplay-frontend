@@ -23,9 +23,20 @@
 <ng-container *ngIf="!loading() && panel()?.activo">
   <div class="pt-alert" *ngIf="aviso()" [ngClass]="'pt-alert--' + aviso()!.tipo">{{ aviso()!.texto }}</div>
 
-  <div class="pt-alert pt-alert--warn" *ngIf="!panel().equipo.reportando">
-    Tu equipo no se está comunicando con nosotros ahora mismo (última vez {{ hace(panel().equipo.ultimo_reporte) }}).
-    Puedes hacer los cambios igual: se aplican cuando vuelva a conectarse.
+  <!-- Lo que se le dice al cliente depende de si el problema es suyo o nuestro. -->
+  <div class="pt-alert pt-alert--danger" *ngIf="panel().estado?.clave === 'sin_servicio'">
+    <div>
+      <b>{{ panel().estado.titulo }}</b>
+      <p>{{ panel().estado.detalle }}</p>
+      <a class="pt-btn pt-btn--light" routerLink="/portal/reportes/nuevo">Reportar una falla</a>
+    </div>
+  </div>
+
+  <div class="pt-alert" *ngIf="panel().estado?.clave === 'actualizando'">
+    <div>
+      <b>{{ panel().estado.titulo }}</b>
+      <p>{{ panel().estado.detalle }} Última lectura {{ hace(panel().equipo.ultimo_reporte) }}.</p>
+    </div>
   </div>
 
   <!-- Resumen -->

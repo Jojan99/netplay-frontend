@@ -1,6 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { RouterLink } from '@angular/router';
 import { ClientApiService } from '../services/client-api.service';
 
 /**
@@ -12,7 +13,7 @@ import { ClientApiService } from '../services/client-api.service';
 @Component({
   selector: 'app-portal-network',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, RouterLink],
   templateUrl: './portal-network.component.html',
   styleUrl: './portal-network.component.scss',
 })
