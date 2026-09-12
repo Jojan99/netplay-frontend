@@ -48,7 +48,7 @@ export class OltVinculosComponent implements OnInit {
         this.resumen = r.data?.resumen ?? null;
         // Las de confianza alta vienen marcadas: son las que casi siempre se aplican.
         this.marcadas = {};
-        this.propuestas.filter(p => p.confianza === 'alta' && !p.cliente.ya_tiene_ont)
+        this.propuestas.filter(p => p.confianza === 'alta' && !p.cliente.ya_tiene_ont && !p.equipo_anterior)
           .forEach(p => this.marcadas[p.ont.id] = true);
       },
       error: () => { this.cargando = false; this.error = 'No se pudieron calcular las propuestas.'; },

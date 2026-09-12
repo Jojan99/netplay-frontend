@@ -59,10 +59,21 @@
               <div class="np-fine np-mono">{{ p.ont.serial }}</div>
             </td>
             <td class="np-data np-mono">{{ p.ont.description || '—' }}</td>
-            <td>
-              <div class="np-name">{{ p.cliente.nombre }}</div>
-              <div class="np-fine">CC {{ p.cliente.documento }}<ng-container *ngIf="p.cliente.plan"> · {{ p.cliente.plan }}</ng-container></div>
+            <td (click)="$event.stopPropagation()">
+              <ng-container *ngIf="(p.candidatos?.length || 0) < 2">
+                <div class="np-name">{{ p.cliente.nombre }}</div>
+                <div class="np-fine">CC {{ p.cliente.documento }}<ng-container *ngIf="p.cliente.plan"> · {{ p.cliente.plan }}</ng-container></div>
+              </ng-container>
+
+              <!-- Varios clientes con el mismo nombre: que elija una persona. -->
+              <select class="np-input np-input--sm vin-elegir" *ngIf="(p.candidatos?.length || 0) > 1"
+                      [(ngModel)]="p.cliente.user_id" [name]="'c' + p.ont.id">
+                <option *ngFor="let c of p.candidatos" [ngValue]="c.user_id">{{ c.nombre }} · CC {{ c.documento }}</option>
+              </select>
+              <div class="np-fine" *ngIf="(p.candidatos?.length || 0) > 1">Mirá la dirección para decidir</div>
+
               <span class="np-pill np-pill--suspended" *ngIf="p.cliente.ya_tiene_ont">Ya tiene otra ONT</span>
+              <span class="np-pill np-pill--noip" *ngIf="p.equipo_anterior">Parece el equipo anterior</span>
             </td>
             <td class="np-data">
               <span class="np-pill" [ngClass]="p.confianza === 'alta' ? 'np-pill--active' : (p.confianza === 'media' ? 'np-pill--info' : 'np-pill--noip')">

@@ -6,3 +6,5 @@
   cursor: pointer;
   &.is-marcada { background: color-mix(in srgb, var(--accent) 7%, var(--surface)); }
 }
+
+.vin-elegir { max-width: 280px; }
