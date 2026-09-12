@@ -1,179 +1,217 @@
-<div class="np-page np-tr">
+<div class="np-page tr">
   <header class="np-head">
     <div>
       <p class="np-kicker">Admin OLT <b>/</b> TR-069</p>
       <h1 class="np-title">Servidor TR-069</h1>
-      <p class="np-fine">Con esto la plataforma administra los equipos de tus clientes: WiFi, equipos conectados y reinicios.</p>
+      <p class="np-fine">Administrá el equipo de cada cliente: WiFi, qué tiene conectado y reinicios.</p>
     </div>
     <div class="np-actions">
-      <button type="button" class="np-btn np-btn--ghost" (click)="cargar()" [disabled]="cargando">Actualizar</button>
+      <button type="button" class="np-btn np-btn--ghost" (click)="cargar(); revisar()" [disabled]="cargando || revisando">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 12a8 8 0 1 1-2.3-5.7M20 4v5h-5"/></svg>
+        {{ cargando || revisando ? 'Revisando…' : 'Revisar ahora' }}
+      </button>
     </div>
   </header>
 
   <app-olt-nav />
 
-  <div class="np-scroll np-tr-scroll">
+  <div class="np-scroll tr-scroll">
     <p class="np-notice np-notice--danger" *ngIf="error">{{ error }}</p>
 
-    <!-- Semáforo: de un vistazo, si el TR-069 está trabajando -->
-    <section class="np-card np-tr-salud" *ngIf="diag" [attr.data-nivel]="diag.nivel">
-      <div class="np-tr-salud-h">
-        <span class="np-tr-salud-led"></span>
-        <div>
-          <b>{{ diag.nivel === 'ok' ? 'TR-069 funcionando' : diag.resumen }}</b>
-          <small *ngIf="diag.equipos">{{ diag.reportando }} de {{ diag.equipos }} equipos reportando</small>
-          <small *ngIf="!diag.equipos">Todavía no hay equipos configurados</small>
+    <!-- ── Estado general ───────────────────────────────────────────── -->
+    <section class="tr-salud" *ngIf="diag" [attr.data-nivel]="diag.nivel">
+      <div class="tr-salud-main">
+        <span class="tr-led" aria-hidden="true"><i></i></span>
+        <div class="tr-salud-txt">
+          <h2>{{ diag.nivel === 'ok' ? 'Todo funcionando' : diag.resumen }}</h2>
+          <p *ngIf="diag.equipos">{{ diag.reportando }} de {{ diag.equipos }} equipos reportando ahora</p>
+          <p *ngIf="!diag.equipos">Todavía no hay equipos configurados</p>
         </div>
-        <button type="button" class="np-btn np-btn--ghost np-btn--sm" (click)="revisar()" [disabled]="revisando">
-          {{ revisando ? 'Revisando…' : 'Revisar ahora' }}
-        </button>
       </div>
-      <ul class="np-tr-checks">
+
+      <div class="tr-url" *ngIf="estado?.url_para_onts">
+        <span>Dirección para los equipos</span>
+        <div>
+          <code class="np-mono">{{ estado.url_para_onts }}</code>
+          <button type="button" class="tr-copy" (click)="copiar(estado.url_para_onts, 'url')" aria-label="Copiar la dirección">
+            {{ copiado === 'url' ? '✓ Copiado' : 'Copiar' }}
+          </button>
+        </div>
+      </div>
+
+      <ul class="tr-checks">
         <li *ngFor="let c of diag.checks" [class.is-mal]="!c.ok">
-          <span class="np-tr-check-ico">{{ c.ok ? '✓' : '!' }}</span>
-          <span><b>{{ c.titulo }}</b><small>{{ c.detalle }}</small></span>
+          <span class="tr-check-ico" aria-hidden="true">
+            <svg *ngIf="c.ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="m5 12 5 5L20 7"/></svg>
+            <svg *ngIf="!c.ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 8v5M12 17h.01"/></svg>
+          </span>
+          <span class="tr-check-txt"><b>{{ c.titulo }}</b><small>{{ c.detalle }}</small></span>
         </li>
       </ul>
     </section>
 
-    <!-- Qué falta -->
-    <section class="np-card np-tr-pendientes" *ngIf="estado?.pendientes?.length">
-      <div class="np-card-h"><h2>Falta poco</h2></div>
-      <ol>
-        <li *ngFor="let p of estado.pendientes">{{ p }}</li>
-      </ol>
-    </section>
+    <!-- ── Paso 1 ───────────────────────────────────────────────────── -->
+    <section class="tr-paso" [class.is-listo]="!!estado?.modo">
+      <div class="tr-paso-n"><span>1</span></div>
+      <div class="tr-paso-cuerpo">
+        <header>
+          <h2>¿Dónde está tu servidor TR-069?</h2>
+          <p>Podés usar el nuestro o conectar el tuyo.</p>
+        </header>
 
-    <section class="np-card np-tr-listo" *ngIf="estado?.configurado && !estado?.pendientes?.length">
-      <b>Todo listo.</b> Configurá en los equipos la dirección <span class="np-mono">{{ estado.url_para_onts }}</span>
-      <button type="button" class="np-btn np-btn--ghost np-btn--sm" (click)="copiar(estado.url_para_onts, 'url')">{{ copiado === 'url' ? 'Copiado' : 'Copiar' }}</button>
-    </section>
-
-    <!-- Paso 1 -->
-    <section class="np-card">
-      <div class="np-card-h"><h2>1 · ¿Dónde está tu servidor TR-069?</h2></div>
-
-      <div class="np-tr-opciones">
-        <label class="np-tr-opcion" [class.is-on]="form.modo === 'plataforma'">
-          <input type="radio" name="modo" value="plataforma" [(ngModel)]="form.modo" />
-          <span>
-            <b>El de la plataforma</b>
-            <small>No instalás nada. Nosotros lo mantenemos y tus equipos quedan separados de los de otras empresas.</small>
-          </span>
-        </label>
-        <label class="np-tr-opcion" [class.is-on]="form.modo === 'propio'">
-          <input type="radio" name="modo" value="propio" [(ngModel)]="form.modo" />
-          <span>
-            <b>Uno mío</b>
-            <small>Tenés tu propio servidor (GenieACS u otro). La plataforma se conecta a él.</small>
-          </span>
-        </label>
-      </div>
-
-      <div class="np-form np-tr-propio" *ngIf="form.modo === 'propio'">
-        <label class="np-field"><span>Dirección de tu servidor</span><input class="np-input np-mono" [(ngModel)]="form.host" placeholder="181.48.150.43 o acs.miempresa.com" /></label>
-        <label class="np-field"><span>Puerto de los equipos</span><input type="number" class="np-input np-mono" [(ngModel)]="form.puerto_cwmp" /></label>
-        <label class="np-field np-field-full"><span>Dirección de su API (opcional)</span><input class="np-input np-mono" [(ngModel)]="form.url_nbi" placeholder="http://10.0.0.5:7557" /></label>
-
-        <div class="np-tr-opciones np-field-full">
-          <label class="np-tr-opcion" [class.is-on]="form.alcance === 'publica'">
-            <input type="radio" name="alcance" value="publica" [(ngModel)]="form.alcance" />
-            <span><b>Tiene IP pública</b><small>Los equipos llegan solos por internet. No se toca el router.</small></span>
+        <div class="tr-elige">
+          <label class="tr-tarjeta" [class.is-on]="form.modo === 'plataforma'">
+            <input type="radio" name="modo" value="plataforma" [(ngModel)]="form.modo" />
+            <span class="tr-tarjeta-ico" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M17.5 19a4.5 4.5 0 0 0 .5-9 6 6 0 0 0-11.6-1.5A4 4 0 0 0 6.5 19z"/></svg>
+            </span>
+            <span class="tr-tarjeta-txt">
+              <b>El de la plataforma</b>
+              <small>No instalás nada. Lo mantenemos nosotros y tus equipos quedan separados de los de otras empresas.</small>
+            </span>
+            <span class="tr-tarjeta-check" aria-hidden="true">✓</span>
           </label>
-          <label class="np-tr-opcion" [class.is-on]="form.alcance === 'tunel'">
-            <input type="radio" name="alcance" value="tunel" [(ngModel)]="form.alcance" />
-            <span><b>Está en una red privada</b><small>Armamos un túnel entre tu router y ese servidor. También hace falta si querés que los cambios se apliquen al instante.</small></span>
+
+          <label class="tr-tarjeta" [class.is-on]="form.modo === 'propio'">
+            <input type="radio" name="modo" value="propio" [(ngModel)]="form.modo" />
+            <span class="tr-tarjeta-ico" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4" width="18" height="7" rx="2"/><rect x="3" y="13" width="18" height="7" rx="2"/><path d="M7 7.5h.01M7 16.5h.01"/></svg>
+            </span>
+            <span class="tr-tarjeta-txt">
+              <b>Uno mío</b>
+              <small>Ya tenés tu servidor (GenieACS u otro) y la plataforma se conecta a él.</small>
+            </span>
+            <span class="tr-tarjeta-check" aria-hidden="true">✓</span>
           </label>
         </div>
-      </div>
 
-      <div class="np-btnrow np-btnrow--end">
-        <button type="button" class="np-btn np-btn--primary" (click)="guardarServidor()" [disabled]="guardando">{{ guardando ? 'Guardando…' : 'Guardar' }}</button>
+        <div class="tr-propio" *ngIf="form.modo === 'propio'">
+          <div class="np-form">
+            <label class="np-field"><span>Dirección de tu servidor</span><input class="np-input np-mono" [(ngModel)]="form.host" placeholder="acs.miempresa.com" /></label>
+            <label class="np-field"><span>Puerto de los equipos</span><input type="number" class="np-input np-mono" [(ngModel)]="form.puerto_cwmp" /></label>
+            <label class="np-field np-field-full"><span>Dirección de su API <em class="np-fine">(opcional)</em></span><input class="np-input np-mono" [(ngModel)]="form.url_nbi" placeholder="http://10.0.0.5:7557" /></label>
+          </div>
+
+          <div class="tr-elige tr-elige--chico">
+            <label class="tr-tarjeta" [class.is-on]="form.alcance === 'publica'">
+              <input type="radio" name="alcance" value="publica" [(ngModel)]="form.alcance" />
+              <span class="tr-tarjeta-txt"><b>Tiene IP pública</b><small>Los equipos llegan solos por internet. No se toca el router.</small></span>
+              <span class="tr-tarjeta-check" aria-hidden="true">✓</span>
+            </label>
+            <label class="tr-tarjeta" [class.is-on]="form.alcance === 'tunel'">
+              <input type="radio" name="alcance" value="tunel" [(ngModel)]="form.alcance" />
+              <span class="tr-tarjeta-txt"><b>Está en una red privada</b><small>Armamos el túnel con tu router. También hace falta para que los cambios se apliquen al instante.</small></span>
+              <span class="tr-tarjeta-check" aria-hidden="true">✓</span>
+            </label>
+          </div>
+        </div>
+
+        <div class="tr-acciones">
+          <button type="button" class="np-btn np-btn--primary" (click)="guardarServidor()" [disabled]="guardando">{{ guardando ? 'Guardando…' : 'Guardar' }}</button>
+        </div>
       </div>
     </section>
 
-    <!-- Paso 2 -->
-    <section class="np-card">
-      <!-- Con varios MikroTik se configura de a uno: cada uno lleva su túnel. -->
-      <div class="np-tr-routers" *ngIf="(estado?.routers?.length || 0) > 1">
-        <span class="np-fine">Tus MikroTik</span>
-        <div class="np-seg">
-          <button type="button" *ngFor="let r of estado.routers" [attr.aria-pressed]="routerSel === r.id" (click)="elegirRouter(r.id)">
-            {{ r.nombre }}
-            <i class="np-tr-led" [class.is-on]="r.tunel?.conectado"></i>
+    <!-- ── Paso 2 ───────────────────────────────────────────────────── -->
+    <section class="tr-paso" [class.is-listo]="!!estado?.aplicado_en">
+      <div class="tr-paso-n"><span>2</span></div>
+      <div class="tr-paso-cuerpo">
+        <header>
+          <h2>¿A qué redes tuyas hay que llegar?</h2>
+          <p>Las leemos de tu router. Vos sólo confirmás.</p>
+        </header>
+
+        <div class="tr-routers" *ngIf="(estado?.routers?.length || 0) > 1">
+          <button type="button" *ngFor="let r of estado.routers" class="tr-router" [class.is-on]="routerSel === r.id" (click)="elegirRouter(r.id)">
+            <i class="tr-router-led" [class.is-up]="r.tunel?.conectado"></i>
+            <span><b>{{ r.nombre }}</b><small>{{ r.tunel?.conectado ? 'túnel arriba' : (r.tunel ? 'sin saludo' : 'sin configurar') }}</small></span>
           </button>
         </div>
+
+        <div class="tr-detectar">
+          <div>
+            <b *ngIf="redesDelRouter.length">{{ elegidas }} de {{ redesDelRouter.length }} redes marcadas</b>
+            <b *ngIf="!redesDelRouter.length">Sin redes todavía</b>
+            <small *ngIf="routerActual"> · {{ routerActual.nombre }}</small>
+          </div>
+          <button type="button" class="np-btn np-btn--ghost np-btn--sm" (click)="detectar()" [disabled]="detectando">
+            {{ detectando ? 'Leyendo el router…' : (redesDelRouter.length ? 'Volver a detectar' : 'Detectar del router') }}
+          </button>
+        </div>
+
+        <p class="tr-vacio" *ngIf="!redesDelRouter.length">
+          Buscamos solas las redes de tus clientes, los rangos que reparte el PPPoE y las de tus OLT.
+          <ng-container *ngIf="(estado?.routers?.length || 0) > 1"> Con varios routers se hace uno por uno.</ng-container>
+        </p>
+
+        <ng-container *ngIf="redesDelRouter.length">
+          <div class="tr-grupo" *ngFor="let g of grupos">
+            <div class="tr-grupo-h">
+              <h3>{{ g.titulo }}</h3>
+              <span>
+                <button type="button" class="tr-mini" (click)="marcarTodas(g.redes, true)">Todas</button>
+                <button type="button" class="tr-mini" (click)="marcarTodas(g.redes, false)">Ninguna</button>
+              </span>
+            </div>
+            <div class="tr-redes">
+              <label class="tr-red" *ngFor="let r of g.redes" [class.is-on]="r.elegida">
+                <input type="checkbox" [(ngModel)]="r.elegida" [name]="'red-' + r.red" />
+                <span class="tr-red-txt"><b>{{ r.nombre }}</b><small>{{ r.origen }}</small></span>
+                <code class="np-mono">{{ r.red }}</code>
+              </label>
+            </div>
+          </div>
+
+          <div class="tr-acciones">
+            <button type="button" class="np-btn np-btn--primary" (click)="aplicar()" [disabled]="aplicando">
+              {{ aplicando ? 'Aplicando…' : 'Aplicar configuración' }}
+            </button>
+          </div>
+        </ng-container>
       </div>
+    </section>
 
-      <div class="np-card-h">
-        <h2>2 · ¿A qué redes tuyas hay que llegar?<span class="np-fine" *ngIf="routerActual"> · {{ routerActual.nombre }}</span></h2>
-        <button type="button" class="np-btn np-btn--ghost np-btn--sm" (click)="detectar()" [disabled]="detectando">
-          {{ detectando ? 'Leyendo el router…' : 'Detectar del router' }}
-        </button>
-      </div>
+    <!-- ── Paso 3 ───────────────────────────────────────────────────── -->
+    <section class="tr-paso" *ngIf="script" [class.is-listo]="routerActual?.tunel?.conectado">
+      <div class="tr-paso-n"><span>3</span></div>
+      <div class="tr-paso-cuerpo">
+        <header>
+          <h2>El script de tu router</h2>
+          <p *ngIf="routerActual?.tunel?.conectado">Tu router ya está conectado: esto sólo hace falta si lo rehacés o montás uno nuevo.</p>
+          <p *ngIf="!routerActual?.tunel?.conectado">Pegá esto en la terminal del router para levantar el túnel.</p>
+        </header>
 
-      <p class="np-fine" *ngIf="!redes.length">
-        Tocá <b>Detectar del router</b> y las buscamos solos: las redes de tus clientes, los rangos que reparte el PPPoE
-        y las de tus OLT. Vos sólo confirmás. Si tenés más de un MikroTik, se hace uno por uno.
-      </p>
+        <p class="np-notice np-notice--info np-notice--inline" *ngFor="let n of script.notas">{{ n }}</p>
 
-      <ng-container *ngIf="redes.length">
-        <p class="np-fine">Marcadas <b>{{ elegidas }}</b> de {{ redesDelRouter.length }}. Lo que quede marcado es lo que la plataforma va a poder alcanzar.</p>
-
-        <div class="np-tr-grupo" *ngFor="let g of grupos">
-          <div class="np-tr-grupo-h">
-            <h3>{{ g.titulo }}</h3>
+        <div class="tr-script" *ngIf="script.router">
+          <div class="tr-script-h">
+            <span>Para el MikroTik<ng-container *ngIf="routerActual"> · {{ routerActual.nombre }}</ng-container></span>
             <span>
-              <button type="button" class="np-link" (click)="marcarTodas(g.redes, true)">Marcar todas</button> ·
-              <button type="button" class="np-link" (click)="marcarTodas(g.redes, false)">Ninguna</button>
+              <button type="button" class="tr-mini" (click)="verScript = !verScript">{{ verScript ? 'Ocultar' : 'Ver' }}</button>
+              <button type="button" class="np-btn np-btn--ghost np-btn--sm" (click)="copiar(script.router, 'router')">{{ copiado === 'router' ? '✓ Copiado' : 'Copiar' }}</button>
             </span>
           </div>
-          <label class="np-tr-red" *ngFor="let r of g.redes" [class.is-on]="r.elegida">
-            <input type="checkbox" [(ngModel)]="r.elegida" [name]="'red-' + r.red" />
+          <pre class="olt-script" *ngIf="verScript">{{ script.router }}</pre>
+        </div>
+
+        <div class="tr-script" *ngIf="script.servidor">
+          <div class="tr-script-h">
+            <span>Para tu servidor TR-069</span>
             <span>
-              <b>{{ r.nombre }}</b>
-              <small>{{ r.origen }}</small>
+              <button type="button" class="tr-mini" (click)="verScriptServidor = !verScriptServidor">{{ verScriptServidor ? 'Ocultar' : 'Ver' }}</button>
+              <button type="button" class="np-btn np-btn--ghost np-btn--sm" (click)="copiar(script.servidor, 'servidor')">{{ copiado === 'servidor' ? '✓ Copiado' : 'Copiar' }}</button>
             </span>
-            <span class="np-mono np-tr-cidr">{{ r.red }}</span>
-          </label>
+          </div>
+          <pre class="olt-script" *ngIf="verScriptServidor">{{ script.servidor }}</pre>
         </div>
 
-        <div class="np-btnrow np-btnrow--end">
-          <button type="button" class="np-btn np-btn--primary" (click)="aplicar()" [disabled]="aplicando">
-            {{ aplicando ? 'Aplicando…' : 'Aplicar configuración' }}
-          </button>
-        </div>
-      </ng-container>
-    </section>
-
-    <!-- Paso 3 -->
-    <section class="np-card" *ngIf="script">
-      <div class="np-card-h"><h2>3 · Pegá esto en tu router</h2></div>
-
-      <p class="np-notice np-notice--info np-notice--inline" *ngFor="let n of script.notas">{{ n }}</p>
-
-      <ng-container *ngIf="script.router">
-        <div class="np-tr-script-h">
-          <span class="np-fine">Script para el MikroTik</span>
-          <button type="button" class="np-btn np-btn--ghost np-btn--sm" (click)="copiar(script.router, 'router')">{{ copiado === 'router' ? 'Copiado' : 'Copiar' }}</button>
-        </div>
-        <pre class="olt-script">{{ script.router }}</pre>
-      </ng-container>
-
-      <ng-container *ngIf="script.servidor">
-        <div class="np-tr-script-h">
-          <span class="np-fine">Configuración para tu servidor TR-069</span>
-          <button type="button" class="np-btn np-btn--ghost np-btn--sm" (click)="copiar(script.servidor, 'servidor')">{{ copiado === 'servidor' ? 'Copiado' : 'Copiar' }}</button>
-        </div>
-        <pre class="olt-script">{{ script.servidor }}</pre>
-      </ng-container>
-
-      <p class="np-fine" *ngIf="routerActual?.tunel">
-        Túnel <b>{{ routerActual.tunel.nombre }}</b> de {{ routerActual.nombre }} ·
-        <span [class.np-pos]="routerActual.tunel.conectado" [class.np-neg]="!routerActual.tunel.conectado">
-          {{ routerActual.tunel.conectado ? 'el router está saludando' : 'todavía no saluda' }}
-        </span>
-      </p>
+        <p class="np-fine" *ngIf="routerActual?.tunel">
+          Túnel <b>{{ routerActual.tunel.nombre }}</b> ·
+          <span [class.np-pos]="routerActual.tunel.conectado" [class.np-neg]="!routerActual.tunel.conectado">
+            {{ routerActual.tunel.conectado ? 'el router está saludando' : 'todavía no saluda' }}
+          </span>
+        </p>
+      </div>
     </section>
   </div>
 </div>

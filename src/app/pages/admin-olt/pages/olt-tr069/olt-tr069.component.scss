@@ -1,74 +1,178 @@
 /* ─── Asistente del servidor TR-069 ─────────────────────────────────── */
-.np-tr-scroll { display: grid; gap: 14px; align-content: start; }
-.np-tr-pendientes ol { margin: 0; padding-left: 20px; display: grid; gap: 6px; font-size: 13px; color: var(--text-2); }
-.np-tr-listo { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; font-size: 13.5px; }
+.tr-scroll { display: grid; gap: 14px; align-content: start; padding-bottom: 20px; }
 
-.np-tr-opciones { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 10px; }
-.np-tr-opcion {
-  display: flex; gap: 10px; align-items: flex-start; padding: 12px; cursor: pointer;
+/* Estado general: lo primero que se mira al entrar. */
+.tr-salud {
+  display: grid; gap: 16px; padding: 18px 20px; border-radius: var(--radius-lg);
+  border: 1px solid var(--line); background: var(--surface); box-shadow: var(--shadow);
+  border-top: 3px solid var(--line-strong);
+  &[data-nivel="ok"]    { border-top-color: var(--ok); }
+  &[data-nivel="warn"]  { border-top-color: var(--warn); }
+  &[data-nivel="error"] { border-top-color: var(--danger); }
+}
+.tr-salud-main { display: flex; align-items: center; gap: 14px; }
+.tr-salud-txt {
+  min-width: 0;
+  h2 { margin: 0; font-size: 19px; letter-spacing: -.3px; }
+  p { margin: 1px 0 0; font-size: 12.5px; color: var(--text-2); }
+}
+.tr-led {
+  width: 34px; height: 34px; flex-shrink: 0; border-radius: 50%; display: grid; place-items: center;
+  background: color-mix(in srgb, var(--text) 6%, transparent);
+  i { width: 12px; height: 12px; border-radius: 50%; background: var(--line-strong); }
+  [data-nivel="ok"] & { background: var(--ok-soft); i { background: var(--ok); animation: tr-latido 2.4s ease-in-out infinite; } }
+  [data-nivel="warn"] & { background: var(--warn-soft); i { background: var(--warn); } }
+  [data-nivel="error"] & { background: var(--danger-soft); i { background: var(--danger); } }
+}
+@keyframes tr-latido { 50% { opacity: .45; transform: scale(.82); } }
+@media (prefers-reduced-motion: reduce) { .tr-led i { animation: none !important; } }
+
+.tr-url {
+  display: grid; gap: 5px; padding: 12px 14px; border-radius: var(--radius);
+  background: var(--surface-2); border: 1px dashed var(--line-strong);
+  > span { font-size: 10.5px; font-weight: 800; letter-spacing: .5px; text-transform: uppercase; color: var(--text-3); }
+  > div { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+  code { font-size: 14px; font-weight: 600; color: var(--text); overflow-wrap: anywhere; }
+}
+.tr-copy {
+  padding: 3px 10px; border-radius: 999px; cursor: pointer; font: inherit; font-size: 11.5px; font-weight: 700;
+  border: 1px solid var(--line-strong); background: var(--surface); color: var(--text-2);
+  &:hover { border-color: var(--accent); color: var(--accent); }
+}
+
+.tr-checks {
+  list-style: none; margin: 0; padding: 0; display: grid; gap: 8px;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  li { display: flex; gap: 9px; align-items: flex-start; }
+}
+.tr-check-ico {
+  width: 20px; height: 20px; flex-shrink: 0; margin-top: 1px; border-radius: 50%; display: grid; place-items: center;
+  background: var(--ok-soft); color: var(--ok);
+  svg { width: 12px; height: 12px; }
+  .is-mal & { background: var(--warn-soft); color: var(--warn); }
+}
+.tr-check-txt {
+  display: grid; gap: 1px; min-width: 0;
+  b { font-size: 12.5px; color: var(--text); }
+  small { font-size: 11.5px; color: var(--text-3); line-height: 1.45; }
+}
+
+/* Cada paso: el número a un lado, el contenido al otro. */
+.tr-paso {
+  display: grid; grid-template-columns: 40px minmax(0, 1fr); gap: 14px;
+  padding: 18px 20px; border-radius: var(--radius-lg);
+  border: 1px solid var(--line); background: var(--surface); box-shadow: var(--shadow);
+}
+.tr-paso-n {
+  span {
+    width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center;
+    background: var(--surface-2); border: 1px solid var(--line-strong);
+    font-weight: 800; font-size: 13px; color: var(--text-2);
+  }
+  .is-listo & span { background: var(--ok-soft); border-color: transparent; color: var(--ok); }
+}
+.tr-paso-cuerpo {
+  display: grid; gap: 14px; min-width: 0;
+  > header {
+    h2 { margin: 0; font-size: 16px; letter-spacing: -.2px; }
+    p { margin: 2px 0 0; font-size: 12.5px; color: var(--text-2); }
+  }
+}
+.tr-acciones { display: flex; justify-content: flex-end; gap: 8px; }
+
+/* Tarjetas para elegir. */
+.tr-elige { display: grid; grid-template-columns: repeat(auto-fit, minmax(270px, 1fr)); gap: 10px; }
+.tr-elige--chico { margin-top: 12px; }
+.tr-tarjeta {
+  position: relative; display: flex; gap: 12px; align-items: flex-start; padding: 14px; cursor: pointer;
   border: 1px solid var(--line-strong); border-radius: var(--radius-lg); background: var(--surface);
-  input { margin-top: 3px; flex-shrink: 0; }
-  span { display: grid; gap: 2px; }
+  transition: border-color .15s, background .15s;
+  input { position: absolute; opacity: 0; pointer-events: none; }
+  &:hover { border-color: color-mix(in srgb, var(--accent) 45%, var(--line-strong)); }
+  &.is-on {
+    border-color: var(--accent); background: color-mix(in srgb, var(--accent) 7%, var(--surface));
+    .tr-tarjeta-check { opacity: 1; transform: none; }
+    .tr-tarjeta-ico { background: var(--accent); color: var(--accent-ink); }
+  }
+}
+.tr-tarjeta-ico {
+  width: 36px; height: 36px; flex-shrink: 0; border-radius: 10px; display: grid; place-items: center;
+  background: var(--surface-2); color: var(--text-2); transition: background .15s, color .15s;
+  svg { width: 20px; height: 20px; }
+}
+.tr-tarjeta-txt {
+  display: grid; gap: 3px; min-width: 0; flex: 1;
   b { font-size: 13.5px; }
-  small { font-size: 12px; color: var(--text-2); line-height: 1.45; }
-  &.is-on { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 8%, var(--surface)); }
+  small { font-size: 12px; color: var(--text-2); line-height: 1.5; }
 }
-.np-tr-propio { margin-top: 12px; }
+.tr-tarjeta-check {
+  position: absolute; top: 10px; right: 12px; width: 20px; height: 20px; border-radius: 50%;
+  display: grid; place-items: center; background: var(--accent); color: var(--accent-ink);
+  font-size: 12px; font-weight: 800; opacity: 0; transform: scale(.6); transition: opacity .15s, transform .15s;
+}
+.tr-propio { display: grid; gap: 0; }
 
-.np-tr-grupo { margin-top: 12px; display: grid; gap: 4px; }
-.np-tr-grupo-h {
-  display: flex; align-items: baseline; justify-content: space-between; gap: 10px; flex-wrap: wrap;
-  h3 { margin: 0; font-size: 11px; font-weight: 800; letter-spacing: .6px; text-transform: uppercase; color: var(--text-3); }
-  span { font-size: 11.5px; color: var(--text-3); }
+/* Selector de MikroTik. */
+.tr-routers { display: flex; gap: 8px; flex-wrap: wrap; }
+.tr-router {
+  display: flex; align-items: center; gap: 9px; padding: 9px 12px; cursor: pointer; font: inherit; text-align: left;
+  border: 1px solid var(--line-strong); border-radius: var(--radius-lg); background: var(--surface); color: var(--text);
+  span { display: grid; gap: 1px; }
+  b { font-size: 12.5px; }
+  small { font-size: 11px; color: var(--text-3); }
+  &.is-on { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 7%, var(--surface)); }
 }
-.np-tr-red {
-  display: flex; align-items: center; gap: 10px; padding: 8px 10px; cursor: pointer;
-  border: 1px solid var(--line); border-radius: var(--radius); background: var(--surface);
-  input { flex-shrink: 0; }
-  > span { display: grid; gap: 1px; flex: 1; min-width: 0; }
+.tr-router-led {
+  width: 8px; height: 8px; border-radius: 50%; background: var(--line-strong); flex-shrink: 0;
+  &.is-up { background: var(--ok); box-shadow: 0 0 0 3px var(--ok-soft); }
+}
+
+/* Redes detectadas. */
+.tr-detectar {
+  display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap;
+  padding: 10px 12px; border-radius: var(--radius); background: var(--surface-2); border: 1px solid var(--line);
   b { font-size: 13px; }
-  small { font-size: 11.5px; color: var(--text-3); }
+  small { font-size: 12px; color: var(--text-3); }
+}
+.tr-vacio { margin: 0; font-size: 12.5px; color: var(--text-2); line-height: 1.55; }
+
+.tr-grupo { display: grid; gap: 6px; }
+.tr-grupo-h {
+  display: flex; align-items: baseline; justify-content: space-between; gap: 10px; flex-wrap: wrap;
+  h3 { margin: 0; font-size: 10.5px; font-weight: 800; letter-spacing: .6px; text-transform: uppercase; color: var(--text-3); }
+  span { display: inline-flex; gap: 6px; }
+}
+.tr-mini {
+  padding: 2px 8px; border-radius: 999px; cursor: pointer; font: inherit; font-size: 11px; font-weight: 700;
+  border: 1px solid var(--line); background: var(--surface); color: var(--text-2);
+  &:hover { border-color: var(--accent); color: var(--accent); }
+}
+.tr-redes { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 6px; }
+.tr-red {
+  display: flex; align-items: center; gap: 10px; padding: 9px 11px; cursor: pointer;
+  border: 1px solid var(--line); border-radius: var(--radius); background: var(--surface);
+  transition: border-color .12s, background .12s;
+  input { flex-shrink: 0; }
+  code { font-size: 11.5px; color: var(--text-2); flex-shrink: 0; }
+  &:hover { border-color: var(--line-strong); }
   &.is-on { border-color: color-mix(in srgb, var(--accent) 45%, var(--line)); background: color-mix(in srgb, var(--accent) 5%, var(--surface)); }
 }
-.np-tr-cidr { font-size: 12px; color: var(--text-2); flex-shrink: 0; }
-.np-tr-script-h { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-top: 10px; }
-
-.np-tr-routers {
-  display: grid; gap: 6px; margin-bottom: 12px;
-  .np-seg { flex-wrap: wrap; }
-}
-.np-tr-led {
-  width: 7px; height: 7px; border-radius: 50%; background: var(--line-strong); display: inline-block; margin-left: 6px;
-  &.is-on { background: var(--ok); }
+.tr-red-txt {
+  display: grid; gap: 1px; flex: 1; min-width: 0;
+  b { font-size: 12.5px; }
+  small { font-size: 11px; color: var(--text-3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 }
 
-/* ─── Semáforo del TR-069 ───────────────────────────────────────────── */
-.np-tr-salud {
-  border-left: 4px solid var(--line-strong);
-  &[data-nivel="ok"]    { border-left-color: var(--ok); }
-  &[data-nivel="warn"]  { border-left-color: var(--warn); }
-  &[data-nivel="error"] { border-left-color: var(--danger); }
+/* Script. */
+.tr-script { display: grid; gap: 8px; }
+.tr-script-h {
+  display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap;
+  > span:first-child { font-size: 11px; font-weight: 800; letter-spacing: .5px; text-transform: uppercase; color: var(--text-3); }
+  > span:last-child { display: inline-flex; align-items: center; gap: 8px; }
 }
-.np-tr-salud-h {
-  display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
-  > div { display: grid; gap: 1px; flex: 1; min-width: 0; }
-  b { font-size: 15px; }
-  small { font-size: 12px; color: var(--text-2); }
-}
-.np-tr-salud-led {
-  width: 12px; height: 12px; border-radius: 50%; flex-shrink: 0; background: var(--line-strong);
-  [data-nivel="ok"] &    { background: var(--ok);     box-shadow: 0 0 0 4px var(--ok-soft); }
-  [data-nivel="warn"] &  { background: var(--warn);   box-shadow: 0 0 0 4px var(--warn-soft); }
-  [data-nivel="error"] & { background: var(--danger); box-shadow: 0 0 0 4px var(--danger-soft); }
-}
-.np-tr-checks {
-  list-style: none; margin: 12px 0 0; padding: 0; display: grid; gap: 6px;
-  li { display: flex; gap: 10px; align-items: flex-start; font-size: 12.5px; }
-  b { display: block; color: var(--text); font-size: 13px; }
-  small { color: var(--text-2); line-height: 1.45; }
-}
-.np-tr-check-ico {
-  width: 20px; height: 20px; flex-shrink: 0; border-radius: 50%; display: grid; place-items: center;
-  background: var(--ok-soft); color: var(--ok); font-weight: 800; font-size: 12px;
-  .is-mal & { background: var(--warn-soft); color: var(--warn); }
+
+@media (max-width: 700px) {
+  .tr-paso { grid-template-columns: minmax(0, 1fr); gap: 10px; padding: 16px; }
+  .tr-paso-n { display: flex; align-items: center; gap: 8px; }
+  .tr-salud { padding: 16px; }
 }

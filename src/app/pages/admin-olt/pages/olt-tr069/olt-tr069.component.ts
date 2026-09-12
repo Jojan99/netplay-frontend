@@ -41,6 +41,10 @@ export class OltTr069Component implements OnInit {
   error = '';
   copiado = '';
 
+  /** El script ocupa pantalla: se muestra sólo si lo piden. */
+  verScript = false;
+  verScriptServidor = false;
+
   form = { modo: 'plataforma', host: '', puerto_cwmp: 7547, url_nbi: '', alcance: 'tunel' };
 
   ngOnInit() {
