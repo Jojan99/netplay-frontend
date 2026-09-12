@@ -38,6 +38,10 @@ export const OLT_ROUTES: Routes = [
     loadComponent: () => import('./pages/olt-vpn/olt-vpn.component').then(m => m.OltVpnComponent),
   },
   {
+    path: 'tr069',
+    loadComponent: () => import('./pages/olt-tr069/olt-tr069.component').then(m => m.OltTr069Component),
+  },
+  {
     path: 'config',
     loadComponent: () => import('./pages/olt-config/olt-config.component').then(m => m.OltConfigComponent),
   },

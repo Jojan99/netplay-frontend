@@ -1,0 +1,147 @@
+<div class="np-page np-tr">
+  <header class="np-head">
+    <div>
+      <p class="np-kicker">Admin OLT <b>/</b> TR-069</p>
+      <h1 class="np-title">Servidor TR-069</h1>
+      <p class="np-fine">Con esto la plataforma administra los equipos de tus clientes: WiFi, equipos conectados y reinicios.</p>
+    </div>
+    <div class="np-actions">
+      <button type="button" class="np-btn np-btn--ghost" (click)="cargar()" [disabled]="cargando">Actualizar</button>
+    </div>
+  </header>
+
+  <app-olt-nav />
+
+  <div class="np-scroll np-tr-scroll">
+    <p class="np-notice np-notice--danger" *ngIf="error">{{ error }}</p>
+
+    <!-- Qué falta -->
+    <section class="np-card np-tr-pendientes" *ngIf="estado?.pendientes?.length">
+      <div class="np-card-h"><h2>Falta poco</h2></div>
+      <ol>
+        <li *ngFor="let p of estado.pendientes">{{ p }}</li>
+      </ol>
+    </section>
+
+    <section class="np-card np-tr-listo" *ngIf="estado?.configurado && !estado?.pendientes?.length">
+      <b>Todo listo.</b> Configurá en los equipos la dirección <span class="np-mono">{{ estado.url_para_onts }}</span>
+      <button type="button" class="np-btn np-btn--ghost np-btn--sm" (click)="copiar(estado.url_para_onts, 'url')">{{ copiado === 'url' ? 'Copiado' : 'Copiar' }}</button>
+    </section>
+
+    <!-- Paso 1 -->
+    <section class="np-card">
+      <div class="np-card-h"><h2>1 · ¿Dónde está tu servidor TR-069?</h2></div>
+
+      <div class="np-tr-opciones">
+        <label class="np-tr-opcion" [class.is-on]="form.modo === 'plataforma'">
+          <input type="radio" name="modo" value="plataforma" [(ngModel)]="form.modo" />
+          <span>
+            <b>El de la plataforma</b>
+            <small>No instalás nada. Nosotros lo mantenemos y tus equipos quedan separados de los de otras empresas.</small>
+          </span>
+        </label>
+        <label class="np-tr-opcion" [class.is-on]="form.modo === 'propio'">
+          <input type="radio" name="modo" value="propio" [(ngModel)]="form.modo" />
+          <span>
+            <b>Uno mío</b>
+            <small>Tenés tu propio servidor (GenieACS u otro). La plataforma se conecta a él.</small>
+          </span>
+        </label>
+      </div>
+
+      <div class="np-form np-tr-propio" *ngIf="form.modo === 'propio'">
+        <label class="np-field"><span>Dirección de tu servidor</span><input class="np-input np-mono" [(ngModel)]="form.host" placeholder="181.48.150.43 o acs.miempresa.com" /></label>
+        <label class="np-field"><span>Puerto de los equipos</span><input type="number" class="np-input np-mono" [(ngModel)]="form.puerto_cwmp" /></label>
+        <label class="np-field np-field-full"><span>Dirección de su API (opcional)</span><input class="np-input np-mono" [(ngModel)]="form.url_nbi" placeholder="http://10.0.0.5:7557" /></label>
+
+        <div class="np-tr-opciones np-field-full">
+          <label class="np-tr-opcion" [class.is-on]="form.alcance === 'publica'">
+            <input type="radio" name="alcance" value="publica" [(ngModel)]="form.alcance" />
+            <span><b>Tiene IP pública</b><small>Los equipos llegan solos por internet. No se toca el router.</small></span>
+          </label>
+          <label class="np-tr-opcion" [class.is-on]="form.alcance === 'tunel'">
+            <input type="radio" name="alcance" value="tunel" [(ngModel)]="form.alcance" />
+            <span><b>Está en una red privada</b><small>Armamos un túnel entre tu router y ese servidor. También hace falta si querés que los cambios se apliquen al instante.</small></span>
+          </label>
+        </div>
+      </div>
+
+      <div class="np-btnrow np-btnrow--end">
+        <button type="button" class="np-btn np-btn--primary" (click)="guardarServidor()" [disabled]="guardando">{{ guardando ? 'Guardando…' : 'Guardar' }}</button>
+      </div>
+    </section>
+
+    <!-- Paso 2 -->
+    <section class="np-card">
+      <div class="np-card-h">
+        <h2>2 · ¿A qué redes tuyas hay que llegar?</h2>
+        <button type="button" class="np-btn np-btn--ghost np-btn--sm" (click)="detectar()" [disabled]="detectando">
+          {{ detectando ? 'Leyendo el router…' : 'Detectar del router' }}
+        </button>
+      </div>
+
+      <p class="np-fine" *ngIf="!redes.length">
+        Tocá <b>Detectar del router</b> y las buscamos solos: las redes de tus clientes, los rangos que reparte el PPPoE
+        y las de tus OLT. Vos sólo confirmás.
+      </p>
+
+      <ng-container *ngIf="redes.length">
+        <p class="np-fine">Marcadas <b>{{ elegidas }}</b> de {{ redes.length }}. Lo que quede marcado es lo que la plataforma va a poder alcanzar.</p>
+
+        <div class="np-tr-grupo" *ngFor="let g of grupos()">
+          <div class="np-tr-grupo-h">
+            <h3>{{ g.titulo }}</h3>
+            <span>
+              <button type="button" class="np-link" (click)="marcarTodas(g.redes, true)">Marcar todas</button> ·
+              <button type="button" class="np-link" (click)="marcarTodas(g.redes, false)">Ninguna</button>
+            </span>
+          </div>
+          <label class="np-tr-red" *ngFor="let r of g.redes" [class.is-on]="r.elegida">
+            <input type="checkbox" [(ngModel)]="r.elegida" [name]="'red-' + r.red" />
+            <span>
+              <b>{{ r.nombre }}</b>
+              <small>{{ r.origen }}</small>
+            </span>
+            <span class="np-mono np-tr-cidr">{{ r.red }}</span>
+          </label>
+        </div>
+
+        <div class="np-btnrow np-btnrow--end">
+          <button type="button" class="np-btn np-btn--primary" (click)="aplicar()" [disabled]="aplicando">
+            {{ aplicando ? 'Aplicando…' : 'Aplicar configuración' }}
+          </button>
+        </div>
+      </ng-container>
+    </section>
+
+    <!-- Paso 3 -->
+    <section class="np-card" *ngIf="script">
+      <div class="np-card-h"><h2>3 · Pegá esto en tu router</h2></div>
+
+      <p class="np-notice np-notice--info np-notice--inline" *ngFor="let n of script.notas">{{ n }}</p>
+
+      <ng-container *ngIf="script.router">
+        <div class="np-tr-script-h">
+          <span class="np-fine">Script para el MikroTik</span>
+          <button type="button" class="np-btn np-btn--ghost np-btn--sm" (click)="copiar(script.router, 'router')">{{ copiado === 'router' ? 'Copiado' : 'Copiar' }}</button>
+        </div>
+        <pre class="olt-script">{{ script.router }}</pre>
+      </ng-container>
+
+      <ng-container *ngIf="script.servidor">
+        <div class="np-tr-script-h">
+          <span class="np-fine">Configuración para tu servidor TR-069</span>
+          <button type="button" class="np-btn np-btn--ghost np-btn--sm" (click)="copiar(script.servidor, 'servidor')">{{ copiado === 'servidor' ? 'Copiado' : 'Copiar' }}</button>
+        </div>
+        <pre class="olt-script">{{ script.servidor }}</pre>
+      </ng-container>
+
+      <p class="np-fine" *ngIf="estado?.tunel">
+        Túnel <b>{{ estado.tunel.nombre }}</b> ·
+        <span [class.np-pos]="estado.tunel.conectado" [class.np-neg]="!estado.tunel.conectado">
+          {{ estado.tunel.conectado ? 'el router está saludando' : 'todavía no saluda' }}
+        </span>
+      </p>
+    </section>
+  </div>
+</div>
