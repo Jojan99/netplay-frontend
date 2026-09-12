@@ -1,0 +1,8 @@
+/* ─── Vincular ONT con clientes ─────────────────────────────────────── */
+.vin-scroll { display: grid; gap: 12px; align-content: start; }
+.vin-buscar { max-width: 260px; }
+.vin-check { width: 40px; text-align: center; }
+.vin-fila {
+  cursor: pointer;
+  &.is-marcada { background: color-mix(in srgb, var(--accent) 7%, var(--surface)); }
+}

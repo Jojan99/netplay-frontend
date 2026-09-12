@@ -260,6 +260,17 @@ export class OltService {
     return this.http.get<any>(`${this.env.rootUrl}api/management/olt/ont/by-user/${userId}`, { headers: this.getHeaders() });
   }
 
+  /** Qué ONT se pueden vincular con qué cliente. */
+  propuestasDeVinculo(oltId?: number): Observable<any> {
+    const q = oltId ? `?olt_id=${oltId}` : '';
+    return this.http.get<any>(`${this.env.rootUrl}api/management/olt/vinculos/propuestas${q}`, { headers: this.getHeaders() });
+  }
+
+  /** Guarda los vínculos confirmados. */
+  aplicarVinculos(pares: { ont: number; user_id: number }[]): Observable<any> {
+    return this.http.post<any>(`${this.env.rootUrl}api/management/olt/vinculos/aplicar`, JSON.stringify({ pares }), { headers: this.getHeaders() });
+  }
+
   /** Fabricante, modelo, versiones, WiFi y foto del equipo del cliente. */
   equipoDeCliente(userId: number, refrescar = false): Observable<any> {
     const q = refrescar ? '?refrescar=1' : '';

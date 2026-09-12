@@ -1,0 +1,78 @@
+<div class="np-page vin">
+  <header class="np-head">
+    <div>
+      <p class="np-kicker">Admin OLT <b>/</b> Vincular</p>
+      <h1 class="np-title">ONT y clientes</h1>
+      <p class="np-fine">Una ONT vinculada muestra su equipo en la ficha del cliente y le habilita "Mi WiFi" en el portal.</p>
+    </div>
+    <div class="np-actions">
+      <button type="button" class="np-btn np-btn--ghost" (click)="cargar()" [disabled]="cargando">{{ cargando ? 'Buscando…' : 'Volver a buscar' }}</button>
+      <button type="button" class="np-btn np-btn--primary" (click)="vincular()" [disabled]="guardando || !cuantasMarcadas">
+        {{ guardando ? 'Vinculando…' : 'Vincular ' + cuantasMarcadas }}
+      </button>
+    </div>
+  </header>
+
+  <app-olt-nav />
+
+  <div class="np-scroll vin-scroll">
+    <p class="np-notice np-notice--danger" *ngIf="error">{{ error }}</p>
+
+    <section class="np-kpis" *ngIf="resumen">
+      <div class="np-kpi"><span class="np-kpi-l">Sin cliente</span><b class="np-kpi-v">{{ resumen.sin_cliente }}</b><span class="np-kpi-s">ONT en tus OLT</span></div>
+      <div class="np-kpi np-kpi--accent"><span class="np-kpi-l">Coinciden</span><b class="np-kpi-v">{{ resumen.alta }}</b><span class="np-kpi-s">nombre igual o contenido</span></div>
+      <div class="np-kpi"><span class="np-kpi-l">Para revisar</span><b class="np-kpi-v">{{ resumen.media + resumen.baja }}</b><span class="np-kpi-s">parecidas o repetidas</span></div>
+      <div class="np-kpi"><span class="np-kpi-l">Sin candidato</span><b class="np-kpi-v">{{ resumen.sin_candidato }}</b><span class="np-kpi-s">sin nombre o sin cliente</span></div>
+    </section>
+
+    <div class="np-subbar">
+      <div class="np-seg">
+        <button type="button" [attr.aria-pressed]="filtro === 'todas'" (click)="filtro = 'todas'">Todas</button>
+        <button type="button" [attr.aria-pressed]="filtro === 'alta'" (click)="filtro = 'alta'">Coinciden</button>
+        <button type="button" [attr.aria-pressed]="filtro === 'revisar'" (click)="filtro = 'revisar'">Para revisar</button>
+      </div>
+      <input type="search" class="np-input np-input--sm vin-buscar" [(ngModel)]="buscar" placeholder="Cliente, documento, serial…" />
+      <span class="np-spacer"></span>
+      <button type="button" class="np-link" (click)="marcarVisibles(true)">Marcar las de la lista</button>
+      <button type="button" class="np-link np-link--muted" (click)="marcarVisibles(false)">Desmarcar</button>
+    </div>
+
+    <div *ngIf="cargando" class="np-loading"><span class="np-spinner"></span> Comparando nombres…</div>
+
+    <p class="np-empty-block" *ngIf="!cargando && !visibles.length">
+      <strong>No hay propuestas para mostrar.</strong>
+      <span>Las ONT sin nombre de cliente en su descripción hay que vincularlas desde la ficha de cada cliente.</span>
+    </p>
+
+    <section class="np-registry" *ngIf="visibles.length">
+      <div class="np-registry-wrap"><table class="np-table np-table--registry">
+        <thead><tr>
+          <th class="np-th-stripe"></th><th>Equipo en la OLT</th><th>Descripción</th><th>Cliente propuesto</th><th>Por qué</th>
+        </tr></thead>
+        <tbody>
+          <tr *ngFor="let p of visibles" class="np-row vin-fila" [class.is-marcada]="marcadas[p.ont.id]" (click)="marcadas[p.ont.id] = !marcadas[p.ont.id]">
+            <td class="np-stripe vin-check">
+              <input type="checkbox" [(ngModel)]="marcadas[p.ont.id]" [name]="'v' + p.ont.id" (click)="$event.stopPropagation()" />
+            </td>
+            <td>
+              <div class="np-name">{{ p.ont.olt }} · <span class="np-mono">{{ p.ont.fsp }}:{{ p.ont.ont_id }}</span></div>
+              <div class="np-fine np-mono">{{ p.ont.serial }}</div>
+            </td>
+            <td class="np-data np-mono">{{ p.ont.description || '—' }}</td>
+            <td>
+              <div class="np-name">{{ p.cliente.nombre }}</div>
+              <div class="np-fine">CC {{ p.cliente.documento }}<ng-container *ngIf="p.cliente.plan"> · {{ p.cliente.plan }}</ng-container></div>
+              <span class="np-pill np-pill--suspended" *ngIf="p.cliente.ya_tiene_ont">Ya tiene otra ONT</span>
+            </td>
+            <td class="np-data">
+              <span class="np-pill" [ngClass]="p.confianza === 'alta' ? 'np-pill--active' : (p.confianza === 'media' ? 'np-pill--info' : 'np-pill--noip')">
+                {{ p.confianza === 'alta' ? 'Coincide' : (p.confianza === 'media' ? 'Probable' : 'Revisar') }}
+              </span>
+              <div class="np-fine">{{ p.motivo }}</div>
+            </td>
+          </tr>
+        </tbody>
+      </table></div>
+    </section>
+  </div>
+</div>
