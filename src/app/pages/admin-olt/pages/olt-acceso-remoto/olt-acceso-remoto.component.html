@@ -1,0 +1,187 @@
+<div class="np-page ar">
+  <header class="np-head">
+    <div>
+      <p class="np-kicker">Admin OLT <b>/</b> Acceso remoto</p>
+      <h1 class="np-title">Acceso remoto a los equipos</h1>
+      <p class="np-fine">Una red aparte para las ONT: piden IP y con ella reciben la dirección del TR-069. Sin eso, cada equipo hay que tocarlo en sitio.</p>
+    </div>
+    <div class="np-actions">
+      <button type="button" class="np-btn np-btn--ghost" (click)="cargar()" [disabled]="cargando">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 12a8 8 0 1 1-2.3-5.7M20 4v5h-5"/></svg>
+        {{ cargando ? 'Leyendo…' : 'Actualizar' }}
+      </button>
+    </div>
+  </header>
+
+  <app-olt-nav />
+
+  <div class="np-scroll ar-scroll">
+    <p class="np-notice np-notice--danger" *ngIf="error">{{ error }}</p>
+
+    <!-- ── Cómo está hoy ────────────────────────────────────────────── -->
+    <section class="ar-estado" *ngIf="estado" [attr.data-on]="estado.activa">
+      <div class="ar-estado-main">
+        <span class="ar-led" aria-hidden="true"><i></i></span>
+        <div>
+          <h2>{{ estado.activa ? 'Acceso remoto activo' : 'Acceso remoto apagado' }}</h2>
+          <p *ngIf="estado.activa">VLAN {{ estado.vlan }} · red {{ estado.red }} · por {{ estado.interfaz }}</p>
+          <p *ngIf="!estado.activa">Los equipos de tus clientes no tienen por dónde reportar al servidor TR-069.</p>
+        </div>
+      </div>
+
+      <div class="ar-cifras" *ngIf="estado.activa">
+        <div><b>{{ estado.equipos.con_gestion }}</b><small>equipos con acceso</small></div>
+        <div><b>{{ estado.equipos.total }}</b><small>equipos en total</small></div>
+      </div>
+
+      <div class="np-actions" *ngIf="estado.activa">
+        <button type="button" class="np-btn np-btn--ghost" (click)="desactivar()" [disabled]="aplicando">Desactivar</button>
+      </div>
+    </section>
+
+    <p class="np-notice np-notice--warn" *ngIf="faltaLaOlt">
+      La red está lista en el MikroTik pero la VLAN todavía no pasa por ninguna OLT: los equipos van a pedir IP y nadie les va a contestar.
+      Volvé a correr el asistente y elegí el puerto de subida de cada OLT.
+    </p>
+
+    <!-- ── Cómo es de punta a punta ─────────────────────────────────── -->
+    <details class="ar-guia" [open]="!estado?.activa">
+      <summary>Cómo funciona, en orden</summary>
+      <ol>
+        <li><b>Se elige una VLAN libre y una red privada.</b> La VLAN es un carril aparte dentro del mismo cable: por ahí viajan sólo los equipos de tus clientes hablando con el servidor, sin mezclarse con el tráfico de internet.</li>
+        <li><b>El MikroTik queda de portero.</b> Se le crea esa VLAN, se le da una dirección en la red nueva y se le pone un DHCP: cuando un equipo pide IP, se la da y en la misma respuesta le dice dónde está el servidor TR-069.</li>
+        <li><b>La OLT deja pasar la VLAN.</b> Se agrega al puerto que va al MikroTik. No se le quita ninguna de las que ya pasaban, así que nadie se queda sin servicio.</li>
+        <li><b>Cada equipo recibe su permiso.</b> Al autorizar una ONT se le crea solo. A los que ya estaban autorizados se les da desde «Poner al día», o de a uno desde Autorizadas → el equipo → <i>Dar acceso remoto</i>.</li>
+        <li><b>El equipo se presenta.</b> Pide IP, recibe la dirección del servidor y aparece en TR-069. Desde ahí se le ve el WiFi, quién está conectado y se le cambian cosas sin ir al sitio.</li>
+      </ol>
+      <p class="np-fine">Del túnel no hay que ocuparse: la red de gestión se agrega sola a las rutas de la VPN cuando se activa.</p>
+    </details>
+
+    <!-- ── El asistente ─────────────────────────────────────────────── -->
+    <section class="ar-paso">
+      <div class="ar-paso-n"><span>1</span></div>
+      <div class="ar-paso-cuerpo">
+        <header>
+          <h2>Mirá qué está libre</h2>
+          <p>Se lee lo que hay puesto hoy en el MikroTik y en cada OLT. Nada se cambia todavía.</p>
+        </header>
+
+        <button type="button" class="np-btn np-btn--primary" (click)="buscar()" [disabled]="buscando">
+          {{ buscando ? 'Leyendo la red… (puede tardar un minuto)' : (sug ? 'Volver a leer' : 'Buscar') }}
+        </button>
+
+        <p class="np-notice" *ngIf="buscando">Hay que preguntarle a cada OLT puerto por puerto. Dejalo abierto.</p>
+      </div>
+    </section>
+
+    <section class="ar-paso" *ngIf="sug && !sug.error">
+      <div class="ar-paso-n"><span>2</span></div>
+      <div class="ar-paso-cuerpo">
+        <header>
+          <h2>Elegí la VLAN y la red</h2>
+          <p>Lo marcado es lo que está libre. Podés poner otro número si en tu red significa algo.</p>
+        </header>
+
+        <div class="ar-campo">
+          <label>Número de VLAN</label>
+          <div class="ar-chips">
+            <button type="button" *ngFor="let v of sug.vlans_libres" class="ar-chip"
+                    [class.is-on]="form.vlan === v" (click)="form.vlan = v">{{ v }}</button>
+            <input type="number" class="np-input ar-chip-input" [(ngModel)]="form.vlan" min="2" max="4094" placeholder="otra" />
+          </div>
+          <small class="np-fine" *ngIf="!vlanOcupada">En uso hoy: {{ sug.vlans_en_uso.join(', ') || 'ninguna' }}</small>
+          <small class="ar-mal" *ngIf="vlanOcupada">Esa VLAN ya está en uso: usarla dejaría sin servicio a esos clientes.</small>
+        </div>
+
+        <div class="ar-campo">
+          <label>Red para los equipos</label>
+          <div class="ar-chips">
+            <button type="button" *ngFor="let r of sug.redes_libres" class="ar-chip"
+                    [class.is-on]="form.red === r" (click)="form.red = r">{{ r }}</button>
+          </div>
+          <small class="np-fine">Son direcciones privadas que no chocan con ninguna de tu router. Alcanzan para 1.000 equipos.</small>
+        </div>
+
+        <div class="ar-campo">
+          <label>Por dónde salen las OLT</label>
+          <select class="np-input" [(ngModel)]="form.interfaz">
+            <option *ngFor="let i of interfaces" [value]="i">{{ i }} — {{ sug.interfaces[i] }} VLAN de clientes</option>
+          </select>
+          <small class="np-fine">La interfaz del MikroTik que va hacia la OLT. Se propone la que ya lleva las VLAN de tus clientes.</small>
+        </div>
+
+        <div class="ar-campo" *ngIf="sug.olts?.length">
+          <label>Puerto de subida de cada OLT</label>
+          <div class="ar-olt" *ngFor="let o of sug.olts">
+            <div class="ar-olt-txt">
+              <b>{{ o.nombre }}</b>
+              <small>{{ o.marca }}</small>
+            </div>
+            <select class="np-input" [(ngModel)]="form.uplinks[o.olt_id]" [ngModelOptions]="{ standalone: true }" *ngIf="o.puertos?.length">
+              <option value="">No tocar esta OLT</option>
+              <option *ngFor="let p of o.puertos" [value]="p.puerto">
+                {{ p.puerto }} — VLAN {{ p.vlans.join(', ') }}
+              </option>
+            </select>
+            <p class="np-fine" *ngIf="!o.puertos?.length">Esta OLT no informa sus puertos de subida: habrá que dejar pasar la VLAN a mano.</p>
+          </div>
+          <small class="np-fine">Es el puerto que va al MikroTik. Sólo se agrega la VLAN nueva: no se quita ninguna de las que ya pasan.</small>
+        </div>
+
+        <div class="ar-resumen" *ngIf="form.vlan && form.red">
+          <b>Qué va a pasar</b>
+          <ul>
+            <li>En el MikroTik: VLAN {{ form.vlan }} sobre {{ form.interfaz }}, la red {{ form.red }} y un DHCP que además entrega la dirección del TR-069.</li>
+            <li>Esa red queda encerrada: sólo habla con el servidor TR-069, no ve a tus clientes ni a tu administración.</li>
+            <li>En cada OLT: se deja pasar la VLAN {{ form.vlan }} por su puerto de subida.</li>
+            <li>Cada equipo que autorices de ahora en más entra solo. A los que ya están, se les da abajo.</li>
+          </ul>
+        </div>
+
+        <button type="button" class="np-btn np-btn--primary" (click)="activar()" [disabled]="!puedeActivar">
+          {{ aplicando ? 'Aplicando…' : (estado?.activa ? 'Volver a aplicar' : 'Activar acceso remoto') }}
+        </button>
+      </div>
+    </section>
+
+    <p class="np-notice np-notice--danger" *ngIf="sug?.error">{{ sug.error }}</p>
+
+    <!-- ── Lo que quedó hecho ───────────────────────────────────────── -->
+    <section class="np-card ar-pasos" *ngIf="pasos.length">
+      <h2 class="np-card-title">Lo que se aplicó</h2>
+      <ul>
+        <li *ngFor="let p of pasos" [class.is-mal]="!p.ok">
+          <span class="ar-tick" aria-hidden="true">{{ p.ok ? '✓' : '!' }}</span>
+          <span><b>{{ p.paso }}</b><small *ngIf="p.detalle">{{ p.detalle }}</small></span>
+        </li>
+      </ul>
+    </section>
+
+    <!-- ── Los equipos que ya estaban ───────────────────────────────── -->
+    <section class="ar-paso" *ngIf="estado?.activa">
+      <div class="ar-paso-n"><span>3</span></div>
+      <div class="ar-paso-cuerpo">
+        <header>
+          <h2>Poné al día los equipos que ya tenías</h2>
+          <p>Los nuevos entran solos al autorizarlos. A los {{ estado.equipos.total - estado.equipos.con_gestion }} que quedan hay que darles el acceso una vez.</p>
+        </header>
+
+        <div class="np-actions">
+          <button type="button" class="np-btn np-btn--primary" (click)="ponerAlDia()" *ngIf="!poniendoAlDia"
+                  [disabled]="estado.equipos.con_gestion >= estado.equipos.total">
+            Poner al día
+          </button>
+          <button type="button" class="np-btn np-btn--ghost" (click)="pararAlDia()" *ngIf="poniendoAlDia">Parar</button>
+          <span class="np-fine" *ngIf="poniendoAlDia">Trabajando… quedan {{ quedan }}</span>
+        </div>
+
+        <ul class="ar-lista" *ngIf="alDia.length">
+          <li *ngFor="let h of alDia" [class.is-mal]="!h.ok">
+            <span class="ar-tick" aria-hidden="true">{{ h.ok ? '✓' : '!' }}</span>
+            <span><b>{{ h.nombre || h.ont }}</b><small>{{ h.ont }} · {{ h.detalle }}</small></span>
+          </li>
+        </ul>
+      </div>
+    </section>
+  </div>
+</div>

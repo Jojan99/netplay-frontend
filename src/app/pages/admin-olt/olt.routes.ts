@@ -46,6 +46,10 @@ export const OLT_ROUTES: Routes = [
     loadComponent: () => import('./pages/olt-vinculos/olt-vinculos.component').then(m => m.OltVinculosComponent),
   },
   {
+    path: 'acceso-remoto',
+    loadComponent: () => import('./pages/olt-acceso-remoto/olt-acceso-remoto.component').then(m => m.OltAccesoRemotoComponent),
+  },
+  {
     path: 'tr069',
     loadComponent: () => import('./pages/olt-tr069/olt-tr069.component').then(m => m.OltTr069Component),
   },

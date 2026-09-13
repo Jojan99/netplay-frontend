@@ -90,7 +90,7 @@
         </section>
         <section>
           <p class="np-sect">Acciones</p>
-          <div class="np-quick"><button type="button" class="np-btn np-btn--ghost" (click)="openAssign(detailOnt)">Asignar cliente</button><button type="button" class="np-btn np-btn--danger" (click)="openDelete(detailOnt)">Eliminar ONT</button></div>
+          <div class="np-quick"><button type="button" class="np-btn np-btn--ghost" (click)="openAssign(detailOnt)">Asignar cliente</button><button type="button" class="np-btn np-btn--ghost" (click)="darAccesoRemoto(detailOnt)" [disabled]="dandoAcceso" title="Le crea en la OLT las reglas para que el equipo hable con el TR-069">{{ dandoAcceso ? 'Dando acceso…' : 'Dar acceso remoto' }}</button><button type="button" class="np-btn np-btn--danger" (click)="openDelete(detailOnt)">Eliminar ONT</button></div>
         </section>
       </div>
     </aside>

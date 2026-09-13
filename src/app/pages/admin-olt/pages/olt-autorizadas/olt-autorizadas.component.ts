@@ -5,6 +5,7 @@ import { FormsModule } from '@angular/forms';
 import { OltService } from '../../../../services/olt.service';
 import { UserService } from '../../../../services/user.service';
 import { ToastService } from '../../../../services/toast.service';
+import { GestionRemotaService } from '../../../../services/gestion-remota.service';
 import { Subject } from 'rxjs';
 import { debounceTime, distinctUntilChanged, switchMap } from 'rxjs/operators';
 
@@ -62,11 +63,37 @@ export class OltAutorizadasComponent implements OnInit {
   assigning             = false;
   private search$       = new Subject<string>();
 
+  /** Se está dando el acceso remoto a este equipo. */
+  dandoAcceso = false;
+
   constructor(
     private oltService: OltService,
     private userService: UserService,
     private toast: ToastService,
+    private gestion: GestionRemotaService,
   ) {}
+
+  /**
+   * Le da acceso remoto a un equipo ya autorizado.
+   *
+   * Los nuevos lo reciben al autorizarlos; esto es para los que venían de
+   * antes, cuando hay que atender a un cliente puntual y no se quiere esperar
+   * a la puesta al día de todos.
+   */
+  darAccesoRemoto(ont: any): void {
+    if (!this.selectedOltId || !ont) return;
+
+    this.dandoAcceso = true;
+    this.gestion.darAcceso(this.selectedOltId, ont.fsp, ont.ont_id).subscribe({
+      next: (r: any) => {
+        this.dandoAcceso = false;
+        r?.error === 0
+          ? this.toast.success('El equipo ya puede reportar al TR-069')
+          : this.toast.error(r?.message ?? 'No se pudo darle acceso');
+      },
+      error: () => { this.dandoAcceso = false; this.toast.error('No se pudo darle acceso'); },
+    });
+  }
 
   ngOnInit(): void {
     this.loadOlts();
