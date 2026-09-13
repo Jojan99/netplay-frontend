@@ -1,38 +1,83 @@
 /* ─── Acceso remoto a los equipos de los clientes ────────────────────── */
 .ar-scroll { display: grid; gap: 14px; align-content: start; padding-bottom: 20px; }
 
-.ar-estado {
-  display: grid; gap: 14px; padding: 18px 20px; border-radius: var(--radius-lg);
+/* Cómo está, en una frase: lo primero que se mira al entrar. */
+.ar-salud {
+  display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 14px;
+  padding: 18px 20px; border-radius: var(--radius-lg);
   border: 1px solid var(--line); background: var(--surface); box-shadow: var(--shadow);
   border-top: 3px solid var(--line-strong);
-  &[data-on="true"] { border-top-color: var(--ok); }
+  &[data-nivel="ok"]    { border-top-color: var(--ok); }
+  &[data-nivel="aviso"] { border-top-color: var(--warn); }
+  &[data-nivel="error"] { border-top-color: var(--danger); }
 }
-.ar-estado-main {
-  display: flex; align-items: center; gap: 14px;
+.ar-salud-main {
+  display: flex; align-items: center; gap: 14px; min-width: 0;
   h2 { margin: 0; font-size: 19px; letter-spacing: -.3px; }
-  p { margin: 1px 0 0; font-size: 12.5px; color: var(--text-2); }
+  p { margin: 2px 0 0; font-size: 12.5px; color: var(--text-2); }
 }
 .ar-led {
   width: 34px; height: 34px; flex-shrink: 0; border-radius: 50%; display: grid; place-items: center;
   background: color-mix(in srgb, var(--text) 6%, transparent);
   i { width: 12px; height: 12px; border-radius: 50%; background: var(--line-strong); }
-  [data-on="true"] & { background: var(--ok-soft); i { background: var(--ok); animation: ar-latido 2.4s ease-in-out infinite; } }
+  [data-nivel="ok"] & { background: var(--ok-soft); i { background: var(--ok); animation: ar-latido 2.4s ease-in-out infinite; } }
+  [data-nivel="aviso"] & { background: var(--warn-soft); i { background: var(--warn); } }
+  [data-nivel="error"] & { background: var(--danger-soft); i { background: var(--danger); } }
 }
 @keyframes ar-latido { 50% { opacity: .45; transform: scale(.82); } }
 @media (prefers-reduced-motion: reduce) { .ar-led i { animation: none !important; } }
 
-.ar-cifras {
-  display: flex; gap: 22px; flex-wrap: wrap;
-  div { display: grid; }
-  b { font-size: 22px; font-weight: 800; letter-spacing: -.5px; }
-  small { font-size: 11.5px; color: var(--text-3); }
+/* Punto por punto: una tarjeta por MikroTik, por OLT y por equipos. */
+.ar-grupos { display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); }
+.ar-grupo {
+  padding: 14px 16px; border-radius: var(--radius-lg); border: 1px solid var(--line); background: var(--surface);
+  > header {
+    display: flex; align-items: baseline; gap: 8px; margin-bottom: 10px;
+    h3 { margin: 0; font-size: 14px; }
+    small { font-size: 10.5px; font-weight: 700; letter-spacing: .4px; text-transform: uppercase; color: var(--text-3); }
+  }
+  ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+  li { display: grid; grid-template-columns: 22px 1fr; gap: 4px 10px; align-items: start; }
+}
+.ar-ico {
+  width: 22px; height: 22px; border-radius: 50%; display: grid; place-items: center; margin-top: 1px;
+  background: var(--warn-soft); color: var(--warn);
+  svg { width: 12px; height: 12px; }
+  [data-estado="ok"] > & { background: var(--ok-soft); color: var(--ok); }
+  [data-estado="error"] > & { background: var(--danger-soft); color: var(--danger); }
+  [data-estado="manual"] > & { background: var(--accent-soft, color-mix(in srgb, var(--accent) 14%, transparent)); color: var(--accent); }
+}
+.ar-item-txt {
+  display: grid; gap: 2px; min-width: 0;
+  b { font-size: 12.5px; color: var(--text); display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+  small { font-size: 11.5px; color: var(--text-2); line-height: 1.5; overflow-wrap: anywhere; }
+}
+.ar-item-btn { grid-column: 2; justify-self: start; padding-block: 4px; font-size: 12px; }
+
+.ar-pill {
+  font-style: normal; font-size: 10px; font-weight: 800; letter-spacing: .3px; text-transform: uppercase;
+  padding: 1px 7px; border-radius: 999px; background: var(--warn-soft); color: var(--warn);
+  &[data-estado="ok"], &[data-estado="listo"], &[data-estado="ya_estaba"] { background: var(--ok-soft); color: var(--ok); }
+  &[data-estado="error"], &[data-estado="no_soportado"] { background: var(--danger-soft); color: var(--danger); }
+  &[data-estado="manual"], &[data-estado="sin_leer"] { background: var(--surface-3); color: var(--text-2); }
+}
+
+/* La explicación de punta a punta: abierta sólo cuando está apagado. */
+.ar-guia {
+  padding: 14px 18px; border-radius: var(--radius-lg); border: 1px solid var(--line); background: var(--surface-2);
+  > summary { cursor: pointer; font-size: 13px; font-weight: 700; color: var(--text); }
+  ol { margin: 12px 0 0; padding-left: 20px; display: grid; gap: 8px; }
+  li { font-size: 12.5px; color: var(--text-2); line-height: 1.55; }
+  b { color: var(--text); }
+  > .np-fine { margin: 12px 0 0; line-height: 1.55; }
 }
 
 /* Cada paso: el número a un lado, el contenido al otro. */
 .ar-paso {
-  display: grid; grid-template-columns: 44px 1fr; gap: 14px; padding: 18px 20px;
+  display: grid; grid-template-columns: 44px 1fr; gap: 14px; padding: 18px 20px; scroll-margin-top: 12px;
   border-radius: var(--radius-lg); border: 1px solid var(--line); background: var(--surface); box-shadow: var(--shadow);
 }
+@media (max-width: 560px) { .ar-paso { grid-template-columns: 1fr; padding: 16px; } .ar-paso-n { display: none; } }
 .ar-paso-n span {
   width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center;
   background: var(--surface-3); color: var(--text-2); font-weight: 800; font-size: 13px;
@@ -41,8 +86,8 @@
   display: grid; gap: 14px; min-width: 0;
   > header { display: grid; gap: 3px; }
   h2 { margin: 0; font-size: 16px; letter-spacing: -.2px; }
-  header p { margin: 0; font-size: 12.5px; color: var(--text-2); }
-  .np-btn { justify-self: start; }
+  header p { margin: 0; font-size: 12.5px; color: var(--text-2); line-height: 1.5; }
+  > .np-btn { justify-self: start; }
 }
 
 .ar-campo {
@@ -70,13 +115,20 @@
   b { font-size: 13px; }
   small { font-size: 11px; color: var(--text-3); text-transform: uppercase; letter-spacing: .4px; }
 }
-
-.ar-resumen {
-  padding: 12px 14px; border-radius: var(--radius); background: var(--surface-2); border: 1px dashed var(--line-strong);
-  b { font-size: 11px; font-weight: 800; letter-spacing: .4px; text-transform: uppercase; color: var(--text-3); }
-  ul { margin: 8px 0 0; padding-left: 18px; display: grid; gap: 5px; }
-  li { font-size: 12.5px; color: var(--text-2); line-height: 1.5; }
+.ar-soporte {
+  flex: 1; min-width: 220px; margin: 0; font-size: 12px; line-height: 1.5; color: var(--text-2);
+  b { color: var(--text); }
 }
+
+/* Perfiles de línea de cada OLT. */
+.ar-perfiles { display: grid; gap: 10px; }
+.ar-perfiles + .ar-perfiles { padding-top: 14px; border-top: 1px solid var(--line); }
+.ar-perfiles-head {
+  display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px;
+  h3 { margin: 0; font-size: 14px; }
+}
+.ar-detalle { font-size: 12px; color: var(--text-2); min-width: 180px; }
+tr.is-mal td { background: var(--danger-soft); }
 
 .ar-pasos ul, .ar-lista { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
 .ar-lista { max-height: 340px; overflow: auto; }
@@ -92,16 +144,14 @@
   .is-mal & { background: var(--danger-soft); color: var(--danger); }
 }
 
-/* La explicación de punta a punta: plegada cuando ya está andando. */
-.ar-guia {
-  padding: 14px 18px; border-radius: var(--radius-lg);
-  border: 1px solid var(--line); background: var(--surface-2);
-  > summary {
-    cursor: pointer; font-size: 13px; font-weight: 700; color: var(--text);
-    &::marker { color: var(--text-3); }
-  }
-  ol { margin: 12px 0 0; padding-left: 20px; display: grid; gap: 8px; }
-  li { font-size: 12.5px; color: var(--text-2); line-height: 1.55; }
-  b { color: var(--text); }
-  > .np-fine { margin: 10px 0 0; }
+/* Confirmación antes de reconfigurar clientes. */
+.ar-confirmar {
+  padding: 22px 22px 18px; display: grid; gap: 12px;
+  h2 { margin: 0; font-size: 17px; }
+  > p { margin: 0; font-size: 13px; color: var(--text-2); line-height: 1.55; }
+}
+.ar-confirmar-lista {
+  list-style: none; margin: 0; padding: 8px 12px; max-height: 220px; overflow: auto;
+  border-radius: var(--radius); background: var(--surface-2); border: 1px solid var(--line);
+  li { display: flex; justify-content: space-between; gap: 12px; padding: 4px 0; font-size: 12.5px; }
 }

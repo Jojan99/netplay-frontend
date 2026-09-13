@@ -140,7 +140,7 @@ export class OntEquipoComponent implements OnChanges {
   }
 
   etiquetaSenal(estado: string): string {
-    return ({ buena: 'Buena', regular: 'Regular', baja: 'Baja', critica: 'Crítica', saturada: 'Saturada' } as any)[estado] ?? 'Sin dato';
+    return ({ buena: 'Buena', regular: 'Regular', baja: 'Baja', critica: 'Crítica', saturada: 'Saturada', sin_senal: 'Sin señal' } as any)[estado] ?? 'Sin dato';
   }
 
   /** Dónde cae la potencia en la barra, de -35 dBm (0 %) a -5 dBm (100 %). */

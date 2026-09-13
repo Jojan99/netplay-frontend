@@ -96,9 +96,11 @@
 
     <p class="oe-cargando" *ngIf="consultandoEquipo && !equipo"><span class="np-spinner np-spinner--sm"></span> Leyendo el WiFi del equipo…</p>
     <p class="oe-aviso" *ngIf="equipo?.error">{{ equipo.error }}</p>
+    <p class="oe-fine" *ngIf="equipo?.aviso">{{ equipo.aviso }}</p>
     <p class="oe-aviso" *ngIf="equipo && !equipo.error && !acs && !consultandoEquipo">
-      Este equipo todavía no está en el servidor TR-069. Cargale la dirección
-      <b class="np-mono">{{ urlAcs }}</b> en su configuración de gestión y desde acá vas a poder ver y cambiar su WiFi.
+      Este equipo todavía no reporta al servidor TR-069. Si la OLT lo permite, dale
+      <b>acceso remoto</b> (Admin OLT → Autorizadas → el equipo) y aparece solo en uno o dos minutos.
+      Si no, cargale a mano la dirección <b class="np-mono">{{ urlAcs }}</b> en su WAN de gestión.
       <button type="button" class="oe-linkbtn" (click)="copiar(urlAcs, 'acs')">{{ copiado === 'acs' ? '✓ Copiada' : 'Copiar dirección' }}</button>
     </p>
 

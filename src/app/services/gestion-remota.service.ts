@@ -31,6 +31,19 @@ export class GestionRemotaService {
 
   desactivar(): Observable<any> { return this.http.post(`${this.base}/desactivar`, {}, this.h()); }
 
+  /** Revisa router, OLT y equipos, y lo cuenta en castellano. */
+  diagnostico(): Observable<any> { return this.http.get(`${this.base}/diagnostico`, this.h()); }
+
+  /** Los perfiles de línea en uso y si dejan salir la gestión. Tarda: lee la OLT. */
+  perfiles(oltId: number, releer = false): Observable<any> {
+    return this.http.get(`${this.base}/olt/${oltId}/perfiles${releer ? '?releer=1' : ''}`, this.h());
+  }
+
+  /** Agrega la gestión a un perfil. La OLT reconfigura a sus equipos. */
+  prepararPerfil(oltId: number, perfil: number): Observable<any> {
+    return this.http.post(`${this.base}/olt/${oltId}/perfiles/${perfil}`, {}, this.h());
+  }
+
   /** Le da acceso a un equipo suelto: el de un cliente que ya estaba. */
   darAcceso(oltId: number, fsp: string, ontId: number): Observable<any> {
     return this.http.post(`${this.base}/olt/${oltId}/ont`, { fsp, ont_id: ontId }, this.h());
