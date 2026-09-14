@@ -18,7 +18,7 @@ import { ToastService } from '../../../../services/toast.service';
   standalone: true,
   imports: [CommonModule, FormsModule, OltNavComponent],
   templateUrl: './olt-vinculos.component.html',
-  styleUrls: ['../../shared/olt.scss', './olt-vinculos.component.scss'],
+  styleUrls: ['../../shared/olt.scss', './olt-vinculos.component.scss', '../../shared/olt-movil.scss'],
   host: { class: 'np-console' },
 })
 export class OltVinculosComponent implements OnInit {

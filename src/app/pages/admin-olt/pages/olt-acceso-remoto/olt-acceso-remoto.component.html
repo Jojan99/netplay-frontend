@@ -197,15 +197,15 @@
           <p class="np-loading" *ngIf="perfiles[oltId].cargando && !perfiles[oltId].perfiles.length"><span class="np-spinner"></span> Leyendo cada perfil en la OLT…</p>
 
           <div class="np-tablewrap" *ngIf="perfiles[oltId].perfiles.length">
-            <table class="np-table np-table--compact">
+            <table class="np-table np-table--compact np-tabla-movil">
               <thead><tr><th>Perfil</th><th>Clientes</th><th>Estado</th><th>Detalle</th><th></th></tr></thead>
               <tbody>
                 <tr *ngFor="let p of perfiles[oltId].perfiles" [class.is-mal]="p.fallo">
-                  <td><b>{{ p.nombre }}</b><small class="np-data"> #{{ p.id }}</small></td>
-                  <td class="np-data">{{ p.equipos }}</td>
-                  <td><em class="ar-pill" [attr.data-estado]="p.estado">{{ etiquetas[p.estado] || p.estado }}</em></td>
-                  <td class="ar-detalle">{{ p.detalle }}</td>
-                  <td>
+                  <td class="es-principal"><b>{{ p.nombre }}</b><small class="np-data"> #{{ p.id }}</small></td>
+                  <td class="np-data" data-label="Clientes">{{ p.equipos }}</td>
+                  <td data-label="Estado"><em class="ar-pill" [attr.data-estado]="p.estado">{{ etiquetas[p.estado] || p.estado }}</em></td>
+                  <td class="ar-detalle es-ancha" data-label="Detalle">{{ p.detalle }}</td>
+                  <td class="es-acciones">
                     <button type="button" class="np-btn np-btn--ghost" *ngIf="p.estado === 'pendiente'"
                             (click)="pedirUno(oltId, p)" [disabled]="!!preparando || enCola">
                       {{ preparando === oltId + ':' + p.id ? 'Preparando…' : 'Preparar' }}
@@ -218,6 +218,17 @@
 
           <p class="np-fine" *ngIf="perfiles[oltId].perfiles.length && !perfiles[oltId].pendientes.length">Todos los perfiles en uso dejan salir la gestión.</p>
         </div>
+      </div>
+    </section>
+
+    <!-- ── Equipos C-Data ────────────────────────────────────────────── -->
+    <section class="ar-paso" *ngIf="estado?.activa">
+      <div class="ar-paso-n"><span>·</span></div>
+      <div class="ar-paso-cuerpo">
+        <header>
+          <h2>Equipos C-Data</h2>
+          <p>Reciben por la OLT la dirección y las credenciales del servidor TR-069 igual que los Huawei, pero <b>las aplican recién al reiniciarse</b>. Los que autorizás de ahora en más se reinician solos al configurarse, porque todavía no le dan servicio a nadie. A los clientes que ya navegan no se los reinicia sin avisar: el resultado dice que falta el reinicio, y lo hacés cuando no moleste (tarda un minuto sin internet).</p>
+        </header>
       </div>
     </section>
 
@@ -234,7 +245,7 @@
           <button type="button" class="np-btn np-btn--primary" (click)="ponerAlDia()" *ngIf="!poniendoAlDia"
                   [disabled]="estado.equipos.con_gestion >= estado.equipos.total">Poner al día</button>
           <button type="button" class="np-btn np-btn--ghost" (click)="pararAlDia()" *ngIf="poniendoAlDia">Parar</button>
-          <span class="np-fine" *ngIf="poniendoAlDia">Trabajando… quedan {{ quedan ?? '…' }}</span>
+          <span class="np-fine" *ngIf="poniendoAlDia">{{ detalleAlDia || ('Trabajando… quedan ' + (quedan ?? '…')) }}</span>
         </div>
 
         <ul class="ar-lista" *ngIf="alDia.length">

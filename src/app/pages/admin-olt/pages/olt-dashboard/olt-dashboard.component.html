@@ -99,16 +99,16 @@
         <!-- Un promedio corrido en un puerto es troncal o splitter, no cliente -->
         <section class="np-card">
           <div class="np-card-h"><h2>Puertos PON</h2><span class="np-card-meta">promedio y peor enlace</span></div>
-          <div class="np-tablewrap"><table class="np-table np-table--compact">
+          <div class="np-tablewrap"><table class="np-table np-table--compact np-tabla-movil">
             <thead><tr><th>Puerto</th><th>ONTs</th><th>En línea</th><th class="np-th-right">Promedio</th><th class="np-th-right">Peor</th><th class="np-th-right">Falla</th></tr></thead>
             <tbody>
               <tr *ngFor="let p of porPon" class="np-row" (click)="verPuerto(p.fsp)" tabindex="0" (keydown.enter)="verPuerto(p.fsp)">
-                <td class="np-data np-strong">{{ p.fsp }}</td>
-                <td class="np-data">{{ p.total }}</td>
-                <td><span class="np-meter"><i [style.width.%]="pctOnline(p)" [style.background]="pctOnline(p) >= 95 ? 'var(--ok)' : pctOnline(p) >= 85 ? 'var(--warn)' : 'var(--danger)'"></i></span><span class="np-fine">{{ p.online }}</span></td>
-                <td class="np-data np-td-right" [ngClass]="tonoDePromedio(p.promedio)">{{ p.promedio != null ? p.promedio : '—' }}</td>
-                <td class="np-data np-td-right" [ngClass]="tonoDePromedio(p.peor)">{{ p.peor != null ? p.peor : '—' }}</td>
-                <td class="np-data np-td-right" [class.is-danger]="p.con_falla > 0">{{ p.con_falla || '—' }}</td>
+                <td class="np-data np-strong es-principal">{{ p.fsp }}</td>
+                <td class="np-data" data-label="ONTs">{{ p.total }}</td>
+                <td data-label="En línea"><span class="np-meter"><i [style.width.%]="pctOnline(p)" [style.background]="pctOnline(p) >= 95 ? 'var(--ok)' : pctOnline(p) >= 85 ? 'var(--warn)' : 'var(--danger)'"></i></span><span class="np-fine">{{ p.online }}</span></td>
+                <td class="np-data np-td-right" data-label="Promedio" [ngClass]="tonoDePromedio(p.promedio)">{{ p.promedio != null ? p.promedio : '—' }}</td>
+                <td class="np-data np-td-right" data-label="Peor" [ngClass]="tonoDePromedio(p.peor)">{{ p.peor != null ? p.peor : '—' }}</td>
+                <td class="np-data np-td-right" data-label="Con falla" [class.is-danger]="p.con_falla > 0">{{ p.con_falla || '—' }}</td>
               </tr>
             </tbody>
           </table></div>
@@ -128,18 +128,18 @@
         <p class="np-empty-block" *ngIf="listado.length === 0"><strong>Ninguna ONT en esta clasificación.</strong></p>
 
         <div class="np-tablewrap" *ngIf="listado.length">
-          <table class="np-table np-table--compact">
+          <table class="np-table np-table--compact np-tabla-movil">
             <thead><tr><th>Puerto</th><th>ID</th><th>Cliente</th><th class="np-th-right">Potencia</th><th>Señal</th><th class="np-th-right">Temp.</th><th class="np-th-right">Voltaje</th><th>Estado</th></tr></thead>
             <tbody>
               <tr *ngFor="let o of listado">
-                <td class="np-data np-strong">{{ o.fsp }}</td>
-                <td class="np-data">{{ o.ont_id }}</td>
-                <td><div class="np-name">{{ o.description || '—' }}</div><div class="np-plan" *ngIf="o.serial"><em>{{ o.serial }}</em></div></td>
-                <td class="np-data np-td-right" [ngClass]="tonoDe(o.estado)">{{ o.potencia != null ? o.potencia + ' dBm' : '—' }}</td>
-                <td><span class="np-pill" [ngClass]="tonoDe(o.estado)">{{ etiquetaDe(o.estado) }}</span></td>
-                <td class="np-data np-td-right">{{ o.temperatura != null ? o.temperatura + ' °C' : '—' }}</td>
-                <td class="np-data np-td-right">{{ o.voltaje != null ? o.voltaje + ' V' : '—' }}</td>
-                <td><span class="np-pill" [ngClass]="o.status === 'online' ? 'np-pill--active' : 'np-pill--neutral'">{{ o.status === 'online' ? 'en línea' : 'fuera' }}</span></td>
+                <td class="np-data np-strong" data-label="Puerto">{{ o.fsp }}</td>
+                <td class="np-data" data-label="ID">{{ o.ont_id }}</td>
+                <td class="es-principal"><div class="np-name">{{ o.description || '—' }}</div><div class="np-plan" *ngIf="o.serial"><em>{{ o.serial }}</em></div></td>
+                <td class="np-data np-td-right" data-label="Potencia" [ngClass]="tonoDe(o.estado)">{{ o.potencia != null ? o.potencia + ' dBm' : '—' }}</td>
+                <td data-label="Señal"><span class="np-pill" [ngClass]="tonoDe(o.estado)">{{ etiquetaDe(o.estado) }}</span></td>
+                <td class="np-data np-td-right" data-label="Temperatura">{{ o.temperatura != null ? o.temperatura + ' °C' : '—' }}</td>
+                <td class="np-data np-td-right" data-label="Voltaje">{{ o.voltaje != null ? o.voltaje + ' V' : '—' }}</td>
+                <td data-label="Estado"><span class="np-pill" [ngClass]="o.status === 'online' ? 'np-pill--active' : 'np-pill--neutral'">{{ o.status === 'online' ? 'en línea' : 'fuera' }}</span></td>
               </tr>
             </tbody>
           </table>

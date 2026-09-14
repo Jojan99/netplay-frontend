@@ -37,7 +37,7 @@ interface TunelVpn {
   standalone: true,
   imports: [CommonModule, FormsModule, OltNavComponent],
   templateUrl: './olt-vpn.component.html',
-  styleUrls: ['../../shared/olt.scss', './olt-vpn.component.scss'],
+  styleUrls: ['../../shared/olt.scss', './olt-vpn.component.scss', '../../shared/olt-movil.scss'],
   host: { class: 'np-console' },
 })
 export class OltVpnComponent implements OnInit {

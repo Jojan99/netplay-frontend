@@ -155,3 +155,16 @@ tr.is-mal td { background: var(--danger-soft); }
   border-radius: var(--radius); background: var(--surface-2); border: 1px solid var(--line);
   li { display: flex; justify-content: space-between; gap: 12px; padding: 4px 0; font-size: 12.5px; }
 }
+
+/* En el teléfono ningún bloque puede exigir más ancho que la pantalla. */
+.ar-grupos { grid-template-columns: repeat(auto-fit, minmax(min(300px, 100%), 1fr)); }
+@media (max-width: 640px) {
+  .ar-olt select, .ar-soporte, .ar-olt-txt, .ar-detalle { min-width: 0; }
+  .ar-olt select { flex-basis: 100%; }
+  .ar-campo select, .ar-campo .np-input { max-width: 100%; }
+  .ar-salud { padding: 14px 16px; }
+  .ar-salud-main h2 { font-size: 17px; }
+  .ar-item-btn { width: 100%; }
+  .ar-perfiles-head .np-actions { width: 100%; }
+}
+

@@ -193,14 +193,14 @@
           </div>
 
           <div class="np-tablewrap np-tablewrap--scroll tr-pend-tabla">
-            <table class="np-table np-table--compact">
+            <table class="np-table np-table--compact np-tabla-movil">
               <thead><tr><th>Cliente</th><th>Dirección</th><th>Equipo</th><th>Estado</th></tr></thead>
               <tbody>
                 <tr *ngFor="let p of pendientesVisibles.slice(0, 200)">
-                  <td><b>{{ p.cliente.nombre }}</b><div class="np-fine">CC {{ p.cliente.documento }}</div></td>
-                  <td class="np-fine">{{ p.cliente.direccion || '—' }}</td>
-                  <td><span class="np-mono">{{ p.olt }} · {{ p.fsp }}:{{ p.ont }}</span><div class="np-fine np-mono">{{ p.serial }}</div></td>
-                  <td><span class="np-pill" [ngClass]="p.estado === 'online' ? 'np-pill--active' : 'np-pill--suspended'">{{ p.estado }}</span></td>
+                  <td class="es-principal"><b>{{ p.cliente.nombre }}</b><div class="np-fine">CC {{ p.cliente.documento }}</div></td>
+                  <td class="np-fine es-ancha" data-label="Dirección">{{ p.cliente.direccion || '—' }}</td>
+                  <td data-label="Equipo"><span class="np-mono">{{ p.olt }} · {{ p.fsp }}:{{ p.ont }}</span><div class="np-fine np-mono">{{ p.serial }}</div></td>
+                  <td data-label="Estado"><span class="np-pill" [ngClass]="p.estado === 'online' ? 'np-pill--active' : 'np-pill--suspended'">{{ p.estado }}</span></td>
                 </tr>
               </tbody>
             </table>

@@ -10,7 +10,7 @@ import { ToastService } from '../../../../services/toast.service';
   standalone: true,
   imports: [CommonModule, FormsModule, OltNavComponent],
   templateUrl: './olt-perfiles.component.html',
-  styleUrl: '../../shared/olt.scss',
+  styleUrls: ['../../shared/olt.scss', '../../shared/olt-movil.scss'],
   host: { class: 'np-console' },
 })
 export class OltPerfilesComponent implements OnInit {

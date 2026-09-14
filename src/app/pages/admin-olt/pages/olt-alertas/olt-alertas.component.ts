@@ -17,7 +17,7 @@ import { ToastService } from '../../../../services/toast.service';
   standalone: true,
   imports: [CommonModule, FormsModule, OltNavComponent],
   templateUrl: './olt-alertas.component.html',
-  styleUrls: ['../../shared/olt.scss', './olt-alertas.component.scss'],
+  styleUrls: ['../../shared/olt.scss', './olt-alertas.component.scss', '../../shared/olt-movil.scss'],
   host: { class: 'np-console' },
 })
 export class OltAlertasComponent implements OnInit {

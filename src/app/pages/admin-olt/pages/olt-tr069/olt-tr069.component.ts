@@ -17,7 +17,7 @@ import { ToastService } from '../../../../services/toast.service';
   standalone: true,
   imports: [CommonModule, FormsModule, OltNavComponent],
   templateUrl: './olt-tr069.component.html',
-  styleUrls: ['../../shared/olt.scss', './olt-tr069.component.scss'],
+  styleUrls: ['../../shared/olt.scss', './olt-tr069.component.scss', '../../shared/olt-movil.scss'],
   host: { class: 'np-console' },
 })
 export class OltTr069Component implements OnInit {

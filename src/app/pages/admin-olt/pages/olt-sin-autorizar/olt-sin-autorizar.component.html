@@ -35,7 +35,7 @@
 
   <div class="np-workspace">
     <section class="np-registry">
-      <div class="np-registry-wrap"><table class="np-table np-table--registry">
+      <div class="np-registry-wrap"><table class="np-table np-table--registry np-tabla-movil">
         <thead><tr><th class="np-th-stripe"></th><th>Puerto (FSP)</th><th>{{ porMac ? 'MAC' : 'Serial' }}</th><th>Estado</th><th>Señal Rx</th><th class="np-th-right">Acción</th></tr></thead>
         <tbody>
           <tr *ngIf="!selectedOltId && !loadingOlts" class="np-empty"><td colspan="6"><strong>Elegí una OLT para ver las ONTs pendientes.</strong></td></tr>
@@ -43,11 +43,11 @@
           <tr *ngIf="!loadingOnts && selectedOltId && onts.length === 0 && lastFetched" class="np-empty"><td colspan="6"><strong>No hay ONTs sin autorizar.</strong></td></tr>
           <tr *ngFor="let ont of pagedOnts" class="np-row" (click)="openRegister(ont)" tabindex="0" (keydown.enter)="openRegister(ont)">
             <td class="np-stripe"><i style="background:var(--warn)"></i></td>
-            <td class="np-data np-strong">{{ ont.fsp }}</td>
-            <td class="np-data">{{ ont.serial || '—' }}</td>
-            <td><span class="np-pill" [ngClass]="(ont.run_state === 'online' || ont.status === 'online') ? 'np-pill--noip' : 'np-pill--neutral'">{{ ont.run_state || ont.status || 'pendiente' }}</span></td>
-            <td class="np-data">{{ ont.rx_power ?? ont.rx ?? '—' }}</td>
-            <td class="np-td-right"><button type="button" class="np-btn np-btn--primary np-btn--sm" (click)="openRegister(ont); $event.stopPropagation()">Autorizar</button></td>
+            <td class="np-data np-strong" data-label="Puerto">{{ ont.fsp }}</td>
+            <td class="np-data" [attr.data-label]="porMac ? 'MAC' : 'Serial'">{{ ont.serial || '—' }}</td>
+            <td data-label="Estado"><span class="np-pill" [ngClass]="(ont.run_state === 'online' || ont.status === 'online') ? 'np-pill--noip' : 'np-pill--neutral'">{{ ont.run_state || ont.status || 'pendiente' }}</span></td>
+            <td class="np-data" data-label="Señal Rx">{{ ont.rx_power ?? ont.rx ?? '—' }}</td>
+            <td class="np-td-right es-acciones"><button type="button" class="np-btn np-btn--primary np-btn--sm" (click)="openRegister(ont); $event.stopPropagation()">Autorizar</button></td>
           </tr>
         </tbody>
       </table></div>

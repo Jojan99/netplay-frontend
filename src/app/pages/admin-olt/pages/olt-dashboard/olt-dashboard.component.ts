@@ -46,7 +46,7 @@ interface PuertoConSenal {
   standalone: true,
   imports: [CommonModule, FormsModule, OltNavComponent, OltEquipoComponent],
   templateUrl: './olt-dashboard.component.html',
-  styleUrls: ['../../shared/olt.scss', './olt-dashboard.component.scss'],
+  styleUrls: ['../../shared/olt.scss', './olt-dashboard.component.scss', '../../shared/olt-movil.scss'],
   host: { class: 'np-console' },
 })
 export class OltDashboardComponent implements OnInit {

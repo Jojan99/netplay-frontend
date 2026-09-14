@@ -30,7 +30,7 @@ interface PerfilesDeOlt {
   standalone: true,
   imports: [CommonModule, FormsModule, OltNavComponent],
   templateUrl: './olt-acceso-remoto.component.html',
-  styleUrls: ['../../shared/olt.scss', './olt-acceso-remoto.component.scss'],
+  styleUrls: ['../../shared/olt.scss', './olt-acceso-remoto.component.scss', '../../shared/olt-movil.scss'],
   host: { class: 'np-console' },
 })
 export class OltAccesoRemotoComponent implements OnInit {
@@ -253,29 +253,40 @@ export class OltAccesoRemotoComponent implements OnInit {
     p.equiposPendientes = p.pendientes.reduce((t, x) => t + (x.equipos ?? 0), 0);
   }
 
-  /** Prepara un perfil. Devuelve una promesa para poder encadenarlos. */
+  /**
+   * Prepara un perfil. Corre en segundo plano en el servidor; la promesa se
+   * resuelve cuando termina, para poder encadenarlos de a uno.
+   */
   prepararPerfil(oltId: number, perfil: any): Promise<boolean> {
     this.preparando = `${oltId}:${perfil.id}`;
+
+    const cerrar = (ok: boolean, detalle: string, estado?: string) => {
+      this.preparando = '';
+      perfil.estado = ok ? 'listo' : (estado === 'no_soportado' ? 'no_soportado' : 'pendiente');
+      perfil.detalle = detalle;
+      perfil.fallo = !ok;
+      this.recontar(oltId);
+      ok ? this.toast.success(`Perfil ${perfil.nombre}: listo`) : this.toast.error(`Perfil ${perfil.nombre}: ${detalle}`);
+    };
 
     return new Promise(resolve => {
       this.api.prepararPerfil(oltId, perfil.id).subscribe({
         next: (r: any) => {
-          this.preparando = '';
-          const d = r?.data ?? {};
-          perfil.estado = d.ok ? 'listo' : (d.estado === 'no_soportado' ? 'no_soportado' : 'pendiente');
-          perfil.detalle = d.detalle ?? r?.message;
-          perfil.fallo = !d.ok;
-          this.recontar(oltId);
-          d.ok ? this.toast.success(`Perfil ${perfil.nombre}: listo`) : this.toast.error(`Perfil ${perfil.nombre}: ${perfil.detalle}`);
-          resolve(!!d.ok);
+          const id = r?.data?.tarea;
+          if (r?.error !== 0 || !id) { cerrar(false, r?.message ?? 'No se pudo iniciar'); resolve(false); return; }
+
+          this.api.esperarTarea(id).subscribe({
+            next: (t: any) => {
+              if (t?.estado === 'en_curso') { perfil.detalle = 'Preparando en la OLT…'; return; }
+              const d = t?.resultado ?? {};
+              const ok = t?.estado === 'listo' && d.ok !== false;
+              cerrar(ok, d.detalle ?? t?.detalle ?? '', d.estado);
+              resolve(ok);
+            },
+            error: () => { cerrar(false, 'Se perdió el seguimiento: volvé a leer los perfiles.'); resolve(false); },
+          });
         },
-        error: () => {
-          this.preparando = '';
-          perfil.detalle = 'La OLT no respondió a tiempo.';
-          perfil.fallo = true;
-          this.toast.error(`Perfil ${perfil.nombre}: la OLT no respondió`);
-          resolve(false);
-        },
+        error: () => { cerrar(false, 'No se pudo iniciar.'); resolve(false); },
       });
     });
   }
@@ -315,38 +326,54 @@ export class OltAccesoRemotoComponent implements OnInit {
 
   // ── Equipos ya autorizados ────────────────────────────────────────────
 
+  /** La puesta al día en curso, para seguirla y poder pararla. */
+  tareaAlDia = '';
+  detalleAlDia = '';
+
   /**
    * Los equipos viejos no pasan por el alta, así que hay que darles el acceso
-   * aparte. Va de a tandas y se puede parar cuando se quiera.
+   * aparte. Son cientos: corre en el servidor hasta terminar, aunque se cierre
+   * la pantalla, y se puede parar cuando se quiera.
    */
   ponerAlDia() {
     this.poniendoAlDia = true;
-    this.alDia = [];
-    this.tanda();
-  }
+    this.detalleAlDia = 'Iniciando…';
 
-  pararAlDia() { this.poniendoAlDia = false; }
-
-  private tanda() {
-    if (!this.poniendoAlDia) return;
-
-    this.api.alDia(3).subscribe({
+    this.api.alDia().subscribe({
       next: (r: any) => {
-        const hechas = r?.data?.hechas ?? [];
-        this.alDia = [...hechas, ...this.alDia].slice(0, 200);
-        this.quedan = r?.data?.pendientes ?? 0;
-
-        if (!hechas.length || this.quedan === 0) {
-          this.poniendoAlDia = false;
-          this.cargar();
-          this.revisar();
-          this.toast.success('Los equipos quedaron al día');
-          return;
-        }
-
-        this.tanda();
+        const id = r?.data?.tarea;
+        if (r?.error !== 0 || !id) { this.poniendoAlDia = false; this.toast.error(r?.message ?? 'No se pudo iniciar'); return; }
+        this.tareaAlDia = id;
+        this.seguirAlDia(id);
       },
-      error: () => { this.poniendoAlDia = false; this.toast.error('Se cortó la puesta al día'); },
+      error: () => { this.poniendoAlDia = false; this.toast.error('No se pudo iniciar la puesta al día'); },
     });
   }
+
+  private seguirAlDia(id: string) {
+    this.api.esperarTarea(id, 4000).subscribe({
+      next: (t: any) => {
+        this.alDia = t?.resultado?.hechas ?? this.alDia;
+        this.quedan = t?.resultado?.quedan ?? this.quedan;
+        this.detalleAlDia = t?.detalle ?? '';
+        if (t?.estado === 'en_curso') return;
+
+        this.poniendoAlDia = false;
+        this.tareaAlDia = '';
+        this.cargar();
+        this.revisar();
+        t?.estado === 'listo' ? this.toast.success(t.detalle || 'Los equipos quedaron al día') : this.toast.error(t?.detalle || 'La puesta al día se detuvo');
+      },
+      error: () => { this.poniendoAlDia = false; this.toast.error('Se perdió el seguimiento; la puesta al día sigue en el servidor'); },
+    });
+  }
+
+  pararAlDia() {
+    if (!this.tareaAlDia) { this.poniendoAlDia = false; return; }
+    this.api.pararTarea(this.tareaAlDia).subscribe({
+      next: () => this.toast.success('Se detiene después del equipo en curso'),
+      error: () => this.toast.error('No se pudo pedir que pare'),
+    });
+  }
+
 }

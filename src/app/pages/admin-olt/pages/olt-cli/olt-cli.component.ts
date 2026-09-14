@@ -16,7 +16,7 @@ interface CliEntry {
   standalone: true,
   imports: [CommonModule, FormsModule, OltNavComponent],
   templateUrl: './olt-cli.component.html',
-  styleUrl: '../../shared/olt.scss',
+  styleUrls: ['../../shared/olt.scss', '../../shared/olt-movil.scss'],
   host: { class: 'np-console' },
 })
 export class OltCliComponent implements OnInit {

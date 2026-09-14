@@ -22,7 +22,7 @@
   </div>
   <div class="np-workspace">
     <section class="np-registry">
-      <div class="np-registry-wrap"><table class="np-table np-table--registry">
+      <div class="np-registry-wrap"><table class="np-table np-table--registry np-tabla-movil">
         <thead><tr><th class="np-th-stripe"></th><th>Puerto</th><th>ID</th><th>Descripción / serial</th><th class="np-th-right">Señal</th><th class="np-col-sp">Service ports</th><th class="np-th-right"></th></tr></thead>
         <tbody>
           <tr *ngIf="!selectedOltId && !loadingOlts" class="np-empty"><td colspan="7"><strong>Elegí una OLT para ver las ONTs en línea.</strong></td></tr>
@@ -31,12 +31,12 @@
           <ng-container *ngIf="!loadingOnts && selectedOltId">
             <tr *ngFor="let ont of pagedOnts" class="np-row np-row--on" [attr.aria-selected]="detailModal && detailOnt?.ont_id === ont.ont_id && detailOnt?.fsp === ont.fsp" (click)="openDetail(ont)" tabindex="0" (keydown.enter)="openDetail(ont)">
               <td class="np-stripe"><i></i></td>
-              <td class="np-data np-strong">{{ ont.fsp }}</td>
-              <td class="np-data">{{ ont.ont_id }}</td>
-              <td><div class="np-name">{{ ont.description || '—' }}</div><div class="np-plan" *ngIf="ont.serial"><em>{{ ont.serial }}</em></div></td>
-              <td class="np-data np-td-right" [ngClass]="tonoDeSenal(ont)">{{ potenciaDe(ont) != null ? potenciaDe(ont) + ' dBm' : (cargandoSenal ? '…' : '—') }}</td>
-              <td class="np-col-sp"><span class="np-tags" *ngIf="ont.service_ports?.length; else noSp"><span class="np-tag" *ngFor="let sp of ont.service_ports">SP{{ sp.index }} / V{{ sp.vlan }}</span></span><ng-template #noSp><span class="np-muted">Sin SP</span></ng-template></td>
-              <td class="np-td-right"><div class="np-rowacts"><button type="button" class="np-icobtn" title="Señal en tiempo real"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12h4l3-8 4 16 3-8h4"/></svg></button></div></td>
+              <td class="np-data np-strong" data-label="Puerto">{{ ont.fsp }}</td>
+              <td class="np-data" data-label="ID">{{ ont.ont_id }}</td>
+              <td class="es-principal"><div class="np-name">{{ ont.description || '—' }}</div><div class="np-plan" *ngIf="ont.serial"><em>{{ ont.serial }}</em></div></td>
+              <td class="np-data np-td-right" data-label="Señal" [ngClass]="tonoDeSenal(ont)">{{ potenciaDe(ont) != null ? potenciaDe(ont) + ' dBm' : (cargandoSenal ? '…' : '—') }}</td>
+              <td class="np-col-sp es-ancha" data-label="Service ports"><span class="np-tags" *ngIf="ont.service_ports?.length; else noSp"><span class="np-tag" *ngFor="let sp of ont.service_ports">SP{{ sp.index }} / V{{ sp.vlan }}</span></span><ng-template #noSp><span class="np-muted">Sin SP</span></ng-template></td>
+              <td class="np-td-right es-acciones"><div class="np-rowacts"><button type="button" class="np-icobtn" title="Señal en tiempo real"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12h4l3-8 4 16 3-8h4"/></svg></button></div></td>
             </tr>
           </ng-container>
         </tbody>

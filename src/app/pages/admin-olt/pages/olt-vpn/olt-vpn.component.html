@@ -77,7 +77,7 @@
     </div>
 
     <section class="np-registry" *ngIf="tuneles.length">
-      <div class="np-registry-wrap"><table class="np-table np-table--registry">
+      <div class="np-registry-wrap"><table class="np-table np-table--registry np-tabla-movil">
         <thead><tr>
           <th class="np-th-stripe"></th><th>Túnel</th><th>IP en el túnel</th><th>Redes alcanzables</th>
           <th>Estado</th><th>Último saludo</th><th class="np-th-right">Tráfico</th><th class="np-th-right">Acciones</th>
@@ -85,16 +85,16 @@
         <tbody>
           <tr *ngFor="let t of tuneles" class="np-row np-row--static" [ngClass]="t.conectado ? 'np-row--on' : 'np-row--off'">
             <td class="np-stripe"><i></i></td>
-            <td><div class="np-name">{{ t.nombre }}</div><div class="np-plan" *ngIf="t.notas">{{ t.notas }}</div></td>
-            <td class="np-data">{{ t.ip_tunel }}</td>
-            <td><span class="np-tags"><span class="np-tag" *ngFor="let r of t.redes_remotas">{{ r }}</span></span></td>
-            <td>
+            <td class="es-principal"><div class="np-name">{{ t.nombre }}</div><div class="np-plan" *ngIf="t.notas">{{ t.notas }}</div></td>
+            <td class="np-data" data-label="IP en el túnel">{{ t.ip_tunel }}</td>
+            <td class="es-ancha" data-label="Redes alcanzables"><span class="np-tags"><span class="np-tag" *ngFor="let r of t.redes_remotas">{{ r }}</span></span></td>
+            <td data-label="Estado">
               <span class="np-pill" [ngClass]="t.conectado ? 'np-pill--active' : 'np-pill--suspended'">{{ t.conectado ? 'conectado' : 'sin saludo' }}</span>
               <div class="np-fine" *ngIf="!t.en_servidor && instalado">no está cargado en el servidor</div>
             </td>
-            <td class="np-data">{{ haceCuanto(t.ultimo_saludo) }}<div class="np-fine np-mono" *ngIf="t.endpoint">{{ t.endpoint }}</div></td>
-            <td class="np-data np-td-right">↓ {{ transferencia(t.bytes_rx) }}<div class="np-fine">↑ {{ transferencia(t.bytes_tx) }}</div></td>
-            <td class="np-td-right"><div class="np-rowacts">
+            <td class="np-data" data-label="Último saludo">{{ haceCuanto(t.ultimo_saludo) }}<div class="np-fine np-mono" *ngIf="t.endpoint">{{ t.endpoint }}</div></td>
+            <td class="np-data np-td-right" data-label="Tráfico">↓ {{ transferencia(t.bytes_rx) }}<div class="np-fine">↑ {{ transferencia(t.bytes_tx) }}</div></td>
+            <td class="np-td-right es-acciones"><div class="np-rowacts">
               <button type="button" class="np-icobtn" (click)="abrirEdicion(t)" title="Editar el túnel y sus redes"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 20h4L19 9a2.8 2.8 0 0 0-4-4L4 16z"/></svg></button>
                             <button type="button" class="np-icobtn" (click)="verScript(t)" title="Ver el script del router"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 6 4 12l5 6M15 6l5 6-5 6"/></svg></button>
               <button type="button" class="np-icobtn" (click)="probar(t)" [disabled]="probando" title="Probar alcance por el túnel"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12h4l3-8 4 16 3-8h4"/></svg></button>

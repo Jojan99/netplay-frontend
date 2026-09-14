@@ -13,7 +13,7 @@ import { AcsSetupService } from '../../../../services/acs-setup.service';
   standalone: true,
   imports: [CommonModule, FormsModule, OltNavComponent],
   templateUrl: './olt-sin-autorizar.component.html',
-  styleUrl: '../../shared/olt.scss',
+  styleUrls: ['../../shared/olt.scss', '../../shared/olt-movil.scss'],
   host: { class: 'np-console' },
 })
 export class OltSinAutorizarComponent implements OnInit {

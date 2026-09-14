@@ -47,19 +47,19 @@
       </section>
 
       <section class="np-registry" *ngIf="ports.length">
-        <div class="np-registry-wrap"><table class="np-table np-table--registry">
+        <div class="np-registry-wrap"><table class="np-table np-table--registry np-tabla-movil">
           <thead><tr><th class="np-th-stripe"></th><th>SP</th><th>VLAN</th><th>Puerto</th><th>ONT</th><th>GEM</th><th>Tipo</th><th>Estado</th></tr></thead>
           <tbody>
             <tr *ngIf="!loadingPorts && filtrados.length === 0" class="np-empty"><td colspan="8"><strong>Ningún service port con esos filtros.</strong></td></tr>
             <tr *ngFor="let sp of pagina" class="np-row np-row--static" [class.is-conflicto]="esRepetido(sp)">
               <td class="np-stripe"><i [style.background]="esRepetido(sp) ? 'var(--danger)' : 'var(--ok)'"></i></td>
-              <td class="np-data np-strong">{{ sp.index ?? sp.sp_index ?? '—' }}</td>
-              <td class="np-data">{{ sp.vlan ?? '—' }}</td>
-              <td class="np-data">{{ sp.fsp ?? '—' }}</td>
-              <td class="np-data">{{ sp.ont_id ?? '—' }}</td>
-              <td class="np-data">{{ sp.gemport ?? '—' }}</td>
-              <td class="np-data">{{ sp.port_type ?? '—' }}</td>
-              <td><span class="np-pill" [ngClass]="sp.state === 'up' ? 'np-pill--active' : 'np-pill--neutral'">{{ sp.state ?? '—' }}</span></td>
+              <td class="np-data np-strong" data-label="SP">{{ sp.index ?? sp.sp_index ?? '—' }}</td>
+              <td class="np-data" data-label="VLAN">{{ sp.vlan ?? '—' }}</td>
+              <td class="np-data" data-label="Puerto">{{ sp.fsp ?? '—' }}</td>
+              <td class="np-data" data-label="ONT">{{ sp.ont_id ?? '—' }}</td>
+              <td class="np-data" data-label="GEM">{{ sp.gemport ?? '—' }}</td>
+              <td class="np-data" data-label="Tipo">{{ sp.port_type ?? '—' }}</td>
+              <td data-label="Estado"><span class="np-pill" [ngClass]="sp.state === 'up' ? 'np-pill--active' : 'np-pill--neutral'">{{ sp.state ?? '—' }}</span></td>
             </tr>
           </tbody>
         </table></div>

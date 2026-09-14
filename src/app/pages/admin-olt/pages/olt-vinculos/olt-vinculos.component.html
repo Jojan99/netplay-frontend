@@ -45,7 +45,7 @@
     </p>
 
     <section class="np-registry" *ngIf="visibles.length">
-      <div class="np-registry-wrap"><table class="np-table np-table--registry">
+      <div class="np-registry-wrap"><table class="np-table np-table--registry np-tabla-movil">
         <thead><tr>
           <th class="np-th-stripe"></th><th>Equipo en la OLT</th><th>Descripción</th><th>Cliente propuesto</th><th>Por qué</th>
         </tr></thead>
@@ -54,12 +54,12 @@
             <td class="np-stripe vin-check">
               <input type="checkbox" [(ngModel)]="marcadas[p.ont.id]" [name]="'v' + p.ont.id" (click)="$event.stopPropagation()" />
             </td>
-            <td>
+            <td class="es-principal">
               <div class="np-name">{{ p.ont.olt }} · <span class="np-mono">{{ p.ont.fsp }}:{{ p.ont.ont_id }}</span></div>
               <div class="np-fine np-mono">{{ p.ont.serial }}</div>
             </td>
-            <td class="np-data np-mono">{{ p.ont.description || '—' }}</td>
-            <td (click)="$event.stopPropagation()">
+            <td class="np-data np-mono es-ancha" data-label="Descripción">{{ p.ont.description || '—' }}</td>
+            <td class="es-ancha" data-label="Cliente propuesto" (click)="$event.stopPropagation()">
               <ng-container *ngIf="(p.candidatos?.length || 0) < 2">
                 <div class="np-name">{{ p.cliente.nombre }}</div>
                 <div class="np-fine">CC {{ p.cliente.documento }}<ng-container *ngIf="p.cliente.plan"> · {{ p.cliente.plan }}</ng-container></div>
@@ -75,7 +75,7 @@
               <span class="np-pill np-pill--suspended" *ngIf="p.cliente.ya_tiene_ont">Ya tiene otra ONT</span>
               <span class="np-pill np-pill--noip" *ngIf="p.equipo_anterior">Parece el equipo anterior</span>
             </td>
-            <td class="np-data">
+            <td class="np-data es-ancha" data-label="Por qué">
               <span class="np-pill" [ngClass]="p.confianza === 'alta' ? 'np-pill--active' : (p.confianza === 'media' ? 'np-pill--info' : 'np-pill--noip')">
                 {{ p.confianza === 'alta' ? 'Coincide' : (p.confianza === 'media' ? 'Probable' : 'Revisar') }}
               </span>

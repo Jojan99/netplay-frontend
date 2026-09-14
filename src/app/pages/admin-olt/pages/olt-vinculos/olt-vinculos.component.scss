@@ -8,3 +8,11 @@
 }
 
 .vin-elegir { max-width: 280px; }
+
+@media (max-width: 640px) {
+  .vin-buscar, .vin-elegir { max-width: 100%; width: 100%; }
+  /* La casilla va en la franja de la tarjeta, arriba a la derecha. */
+  .np-tabla-movil td.vin-check { position: absolute; inset: 12px 12px auto auto; width: auto; background: none;
+    input { width: 22px; height: 22px; } }
+  .np-tabla-movil td.es-principal { padding-right: 36px !important; }
+}

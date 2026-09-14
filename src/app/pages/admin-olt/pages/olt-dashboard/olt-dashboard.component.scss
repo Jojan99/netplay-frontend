@@ -110,3 +110,8 @@
   .olt-hist { height: 120px; gap: 3px; }
   .olt-hist-x { display: none; }
 }
+
+@media (max-width: 640px) {
+  .olt-clases { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .np-card-actions { flex-wrap: wrap; }
+}

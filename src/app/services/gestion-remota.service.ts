@@ -1,6 +1,6 @@
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { Observable } from 'rxjs';
+import { Observable, map, switchMap, takeWhile, timer } from 'rxjs';
 import { environment } from '../../environments/environment';
 
 /**
@@ -49,8 +49,32 @@ export class GestionRemotaService {
     return this.http.post(`${this.base}/olt/${oltId}/ont`, { fsp, ont_id: ontId }, this.h());
   }
 
+  /** Reinicia un equipo desde la OLT (en segundo plano). Le corta internet un minuto. */
+  reiniciar(oltId: number, fsp: string, ontId: number): Observable<any> {
+    return this.http.post(`${this.base}/olt/${oltId}/ont/reiniciar`, { fsp, ont_id: ontId }, this.h());
+  }
+
+  /** Cómo va una tarea que corre en segundo plano. */
+  tarea(id: string): Observable<any> { return this.http.get(`${this.base}/tareas/${id}`, this.h()); }
+
+  /** Pide parar una tarea: termina el equipo en curso y se detiene. */
+  pararTarea(id: string): Observable<any> { return this.http.post(`${this.base}/tareas/${id}/parar`, {}, this.h()); }
+
+  /**
+   * Sigue una tarea hasta que termina: emite cada estado y el último es el
+   * final. Los trabajos contra la OLT corren en segundo plano porque tardan
+   * más de lo que aguanta una petición web.
+   */
+  esperarTarea(id: string, cadaMs = 3000): Observable<any> {
+    return timer(0, cadaMs).pipe(
+      switchMap(() => this.tarea(id)),
+      map((r: any) => (r?.error === 0 ? r.data : { estado: 'error', detalle: r?.message ?? 'No se encontró la tarea' })),
+      takeWhile((t: any) => t?.estado === 'en_curso', true),
+    );
+  }
+
   /** Le da acceso a los equipos que ya estaban autorizados, de a tandas. */
-  alDia(cuantas = 10, oltId?: number | null): Observable<any> {
-    return this.http.post(`${this.base}/al-dia`, { cuantas, olt_id: oltId ?? null }, this.h());
+  alDia(oltId?: number | null): Observable<any> {
+    return this.http.post(`${this.base}/al-dia`, { olt_id: oltId ?? null }, this.h());
   }
 }

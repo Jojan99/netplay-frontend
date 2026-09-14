@@ -179,3 +179,13 @@
 
 .tr-pend-barra { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; input { max-width: 280px; } }
 .tr-pend-tabla { max-height: 420px; }
+
+/* En el teléfono ningún bloque puede exigir más ancho que la pantalla. */
+.tr-checks { grid-template-columns: repeat(auto-fit, minmax(min(240px, 100%), 1fr)); }
+.tr-elige { grid-template-columns: repeat(auto-fit, minmax(min(270px, 100%), 1fr)); }
+.tr-redes { grid-template-columns: repeat(auto-fit, minmax(min(320px, 100%), 1fr)); }
+@media (max-width: 640px) {
+  .tr-salud { padding: 14px 16px; }
+  .tr-pend-barra input { max-width: 100%; flex: 1 1 100%; }
+  .tr-acciones { flex-wrap: wrap; .np-btn { flex: 1 1 auto; } }
+}

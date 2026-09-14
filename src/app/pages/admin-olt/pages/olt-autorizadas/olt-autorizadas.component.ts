@@ -14,7 +14,7 @@ import { debounceTime, distinctUntilChanged, switchMap } from 'rxjs/operators';
   standalone: true,
   imports: [CommonModule, FormsModule, OltNavComponent],
   templateUrl: './olt-autorizadas.component.html',
-  styleUrl: '../../shared/olt.scss',
+  styleUrls: ['../../shared/olt.scss', '../../shared/olt-movil.scss'],
   host: { class: 'np-console' },
 })
 export class OltAutorizadasComponent implements OnInit {
@@ -65,6 +65,8 @@ export class OltAutorizadasComponent implements OnInit {
 
   /** Se está dando el acceso remoto a este equipo. */
   dandoAcceso = false;
+  /** Se está reiniciando este equipo. */
+  reiniciando = false;
 
   constructor(
     private oltService: OltService,
@@ -80,18 +82,63 @@ export class OltAutorizadasComponent implements OnInit {
    * antes, cuando hay que atender a un cliente puntual y no se quiere esperar
    * a la puesta al día de todos.
    */
+  /**
+   * Reinicia el equipo desde la OLT. Le corta internet al cliente un minuto,
+   * así que se pide confirmación. Sirve, por ejemplo, para que un C-Data tome
+   * el servidor TR-069 que le mandó la OLT.
+   */
+  reiniciarEquipo(ont: any): void {
+    if (!this.selectedOltId || !ont) return;
+    if (!confirm(`¿Reiniciar el equipo de ${ont.description || ont.serial || 'este cliente'}? Se queda sin internet alrededor de un minuto.`)) return;
+
+    this.reiniciando = true;
+    this.gestion.reiniciar(this.selectedOltId, ont.fsp, ont.ont_id).subscribe({
+      next: (r: any) => {
+        const id = r?.data?.tarea;
+        if (r?.error !== 0 || !id) { this.reiniciando = false; this.toast.error(r?.message ?? 'No se pudo reiniciar'); return; }
+
+        this.gestion.esperarTarea(id).subscribe({
+          next: (t: any) => {
+            if (t?.estado === 'en_curso') return;
+            this.reiniciando = false;
+            t?.estado === 'listo'
+              ? this.toast.success('El equipo se está reiniciando: vuelve en un minuto')
+              : this.toast.error(t?.detalle || 'No se pudo reiniciar');
+          },
+          error: () => { this.reiniciando = false; this.toast.error('Se perdió el seguimiento del reinicio'); },
+        });
+      },
+      error: () => { this.reiniciando = false; this.toast.error('No se pudo reiniciar'); },
+    });
+  }
+
   darAccesoRemoto(ont: any): void {
     if (!this.selectedOltId || !ont) return;
 
     this.dandoAcceso = true;
     this.gestion.darAcceso(this.selectedOltId, ont.fsp, ont.ont_id).subscribe({
       next: (r: any) => {
-        this.dandoAcceso = false;
-        r?.error === 0
-          ? this.toast.success('El equipo ya puede reportar al TR-069')
-          : this.toast.error(r?.message ?? 'No se pudo darle acceso');
+        const id = r?.data?.tarea;
+        if (r?.error !== 0 || !id) {
+          this.dandoAcceso = false;
+          this.toast.error(r?.message ?? 'No se pudo iniciar');
+          return;
+        }
+
+        // Corre en segundo plano: la OLT tarda más de lo que aguanta la petición.
+        this.toast.success('Configurando el acceso remoto… puede tardar un par de minutos');
+        this.gestion.esperarTarea(id).subscribe({
+          next: (t: any) => {
+            if (t?.estado === 'en_curso') return;
+            this.dandoAcceso = false;
+            t?.estado === 'listo'
+              ? this.toast.success('El equipo ya puede reportar al TR-069')
+              : this.toast.error(t?.detalle || 'No se pudo darle acceso');
+          },
+          error: () => { this.dandoAcceso = false; this.toast.error('Se perdió el seguimiento; revisá el diagnóstico en Acceso remoto'); },
+        });
       },
-      error: () => { this.dandoAcceso = false; this.toast.error('No se pudo darle acceso'); },
+      error: () => { this.dandoAcceso = false; this.toast.error('No se pudo iniciar'); },
     });
   }
 
