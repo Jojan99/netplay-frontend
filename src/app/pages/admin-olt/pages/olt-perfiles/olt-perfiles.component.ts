@@ -4,6 +4,7 @@ import { OltNavComponent } from '../../shared/olt-nav.component';
 import { FormsModule } from '@angular/forms';
 import { OltService } from '../../../../services/olt.service';
 import { ToastService } from '../../../../services/toast.service';
+import { OltElegida } from '../../shared/olt-elegida';
 
 @Component({
   selector: 'app-olt-perfiles',
@@ -43,8 +44,9 @@ export class OltPerfilesComponent implements OnInit {
       next: (res) => {
         this.loadingOlts = false;
         this.olts = res.data ?? [];
-        if (this.olts.length === 1) {
-          this.selectedOltId = this.olts[0].id;
+        // La OLT elegida en cualquier pestaña del módulo (o la primera).
+        this.selectedOltId = OltElegida.de(this.olts);
+        if (this.selectedOltId) {
           this.leerDefectos();
           this.loadProfiles();
         }
@@ -54,6 +56,7 @@ export class OltPerfilesComponent implements OnInit {
   }
 
   onOltChange(): void {
+    OltElegida.guardar(this.selectedOltId);
     this.lineProfiles = [];
     this.srvProfiles  = [];
     this.leerDefectos();

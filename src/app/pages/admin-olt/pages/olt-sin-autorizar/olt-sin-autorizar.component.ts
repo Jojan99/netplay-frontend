@@ -1,4 +1,6 @@
-import { Component, ElementRef, HostListener, OnInit, ViewChild } from '@angular/core';
+import { Component, ElementRef, HostListener, OnInit, ViewChild, inject } from '@angular/core';
+import { OltElegida } from '../../shared/olt-elegida';
+import { TareasEnSegundoPlanoService } from '../../../../services/tareas-en-segundo-plano.service';
 import { CommonModule } from '@angular/common';
 import { OltNavComponent } from '../../shared/olt-nav.component';
 import { FormsModule } from '@angular/forms';
@@ -175,9 +177,11 @@ export class OltSinAutorizarComponent implements OnInit {
       next: (res) => {
         this.loadingOlts = false;
         this.olts = res.data ?? [];
-        if (this.olts.length === 1) {
-          this.selectedOltId = this.olts[0].id;
-          this.defaultVlan   = this.olts[0].default_vlan ?? null;
+        // La OLT elegida en cualquier pestaña del módulo (o la primera).
+        const elegida = OltElegida.objeto(this.olts);
+        if (elegida) {
+          this.selectedOltId = elegida.id;
+          this.defaultVlan   = elegida.default_vlan ?? null;
           this.loadUnauth();
           this.loadProfiles();
           this.cargarAutoAuth();
@@ -189,6 +193,7 @@ export class OltSinAutorizarComponent implements OnInit {
   }
 
   onOltChange(): void {
+    OltElegida.guardar(this.selectedOltId);
     this.onts = [];
     this.page = 1;
     this.lineProfiles = [];
@@ -365,10 +370,18 @@ export class OltSinAutorizarComponent implements OnInit {
     });
   }
 
+  private tareas = inject(TareasEnSegundoPlanoService);
+
   private trasProvisionar(res: any): void {
     this.registering = false;
     this.pasos = res?.data?.pasos ?? [];
     this.ontRegistrada = res?.data ?? null;
+
+    // El acceso remoto del equipo nuevo sigue en segundo plano: a la ventana.
+    const acceso: any = this.pasos.find((p: any) => p?.tarea);
+    if (acceso) {
+      this.tareas.seguir(acceso.tarea, `Dando acceso remoto · ${this.form.description || this.form.serial} (${this.form.fsp})`, 'dar_acceso');
+    }
 
     if (res?.error !== 0) {
       this.toast.error(res?.message || 'La OLT no autorizó la ONT.');

@@ -1,0 +1,65 @@
+@if (svc.tareas().length) {
+  @if (svc.minimizado()) {
+    <button type="button" class="tf-pastilla" (click)="svc.alternarMinimizado()"
+            [attr.aria-label]="svc.enCurso() ? svc.enCurso() + ' tareas en curso, abrir' : 'Tareas terminadas, abrir'">
+      @if (svc.enCurso()) {
+        <span class="tf-giro" aria-hidden="true"></span>
+        <span>{{ svc.enCurso() }} en curso</span>
+      } @else {
+        <span class="tf-ico is-listo" aria-hidden="true">✓</span>
+        <span>Tareas listas</span>
+      }
+    </button>
+  } @else {
+    <section class="tf-panel" role="status" aria-live="polite" aria-label="Tareas en segundo plano">
+      <header class="tf-cab">
+        <div>
+          <b>Tareas en segundo plano</b>
+          <small>{{ svc.enCurso() ? svc.enCurso() + ' en curso' : 'Todas terminadas' }}</small>
+        </div>
+        <div class="tf-acciones">
+          @if (terminadas) {
+            <button type="button" class="tf-btn" (click)="svc.limpiarTerminadas()" title="Quitar las terminadas">Limpiar</button>
+          }
+          <button type="button" class="tf-icobtn" (click)="svc.alternarMinimizado()" title="Minimizar" aria-label="Minimizar">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 12h12"/></svg>
+          </button>
+        </div>
+      </header>
+
+      <ul class="tf-lista">
+        @for (t of svc.tareas(); track t.id) {
+          <li class="tf-item" [class.is-listo]="t.estado === 'listo'" [class.is-error]="t.estado === 'error'">
+            @if (t.estado === 'en_curso') {
+              <span class="tf-giro" aria-hidden="true"></span>
+            } @else if (t.estado === 'listo') {
+              <span class="tf-ico is-listo" aria-hidden="true">✓</span>
+            } @else {
+              <span class="tf-ico is-error" aria-hidden="true">!</span>
+            }
+
+            <div class="tf-texto">
+              <b>{{ t.titulo }}</b>
+              <span class="tf-paso">{{ paso(t) }}</span>
+              <span class="tf-tiempo">{{ t.estado === 'en_curso' ? 'Lleva' : 'Tardó' }} {{ duracion(t) }}</span>
+            </div>
+
+            @if (t.estado === 'en_curso') {
+              @if (t.puedeParar) {
+                <button type="button" class="tf-btn" (click)="svc.parar(t.id)">Detener</button>
+              }
+            } @else {
+              <button type="button" class="tf-icobtn" (click)="svc.quitar(t.id)" title="Quitar" aria-label="Quitar">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg>
+              </button>
+            }
+
+            @if (t.estado === 'en_curso') {
+              <span class="tf-barra" aria-hidden="true"></span>
+            }
+          </li>
+        }
+      </ul>
+    </section>
+  }
+}

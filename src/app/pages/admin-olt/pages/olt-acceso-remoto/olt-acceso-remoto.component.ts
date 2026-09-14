@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { OltNavComponent } from '../../shared/olt-nav.component';
 import { GestionRemotaService } from '../../../../services/gestion-remota.service';
 import { ToastService } from '../../../../services/toast.service';
+import { TareasEnSegundoPlanoService } from '../../../../services/tareas-en-segundo-plano.service';
 
 /** Lo leído de los perfiles de línea de una OLT. */
 interface PerfilesDeOlt {
@@ -36,6 +37,8 @@ interface PerfilesDeOlt {
 export class OltAccesoRemotoComponent implements OnInit {
   private api = inject(GestionRemotaService);
   private toast = inject(ToastService);
+  /** Las tareas lanzadas desde acá también se ven en la ventana flotante del panel. */
+  private tareas = inject(TareasEnSegundoPlanoService);
 
   estado: any = null;
   sug: any = null;
@@ -275,7 +278,7 @@ export class OltAccesoRemotoComponent implements OnInit {
           const id = r?.data?.tarea;
           if (r?.error !== 0 || !id) { cerrar(false, r?.message ?? 'No se pudo iniciar'); resolve(false); return; }
 
-          this.api.esperarTarea(id).subscribe({
+          this.tareas.seguir(id, `Preparando el perfil ${perfil.nombre}`, 'preparar_perfil').subscribe({
             next: (t: any) => {
               if (t?.estado === 'en_curso') { perfil.detalle = 'Preparando en la OLT…'; return; }
               const d = t?.resultado ?? {};
@@ -351,7 +354,7 @@ export class OltAccesoRemotoComponent implements OnInit {
   }
 
   private seguirAlDia(id: string) {
-    this.api.esperarTarea(id, 4000).subscribe({
+    this.tareas.seguir(id, 'Poniendo al día los equipos', 'al_dia', 4000).subscribe({
       next: (t: any) => {
         this.alDia = t?.resultado?.hechas ?? this.alDia;
         this.quedan = t?.resultado?.quedan ?? this.quedan;

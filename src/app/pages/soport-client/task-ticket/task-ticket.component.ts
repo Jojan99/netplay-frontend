@@ -5,6 +5,7 @@ import { FormsModule } from '@angular/forms';
 import { UserService } from '../../../services/user.service';
 import { AuthService } from '../../../services/auth.service';
 import { TicketInterface, TicketNote, TicketStats } from '../../../models/ticket-interface';
+import { TareasEnSegundoPlanoService } from '../../../services/tareas-en-segundo-plano.service';
 
 @Component({
   selector: 'app-task-ticket',
@@ -191,34 +192,47 @@ export class TaskTicketComponent implements OnInit, OnDestroy {
    * El diagnóstico corre en el servidor (OLT y MikroTik tardan) y se guarda
    * como novedad: se recargan las novedades hasta que aparece.
    */
+  private tareas = inject(TareasEnSegundoPlanoService);
+
   diagnosticar() {
     const ticket = this.selectedTicket;
     if (!ticket?.id || this.diagnosticando) return;
 
     const antes = this.notes.filter(n => n.note?.startsWith('🩺')).length;
+    const tareaId = `diag-${ticket.id}`;
+    const cliente = [(ticket as any).name, (ticket as any).last_name].filter(Boolean).join(' ');
     this.diagnosticando = true;
+
+    // También en la ventana de tareas: el resultado llega aunque se cambie de ticket.
+    this.tareas.iniciar(tareaId, `Diagnosticando ticket #${ticket.id}${cliente ? ' · ' + cliente : ''}`, 'diagnostico', 'Revisando cuenta, ONT, MikroTik y TR-069…');
+
+    const fin = (ok: boolean, detalle: string) => {
+      if (this.selectedTicket?.id === ticket.id) this.diagnosticando = false;
+      this.tareas.terminar(tareaId, ok, detalle);
+    };
 
     this.userService.diagnosticarTicket(ticket.id).subscribe({
       next: () => {
         let intentos = 0;
         const revisar = () => {
-          if (this.selectedTicket?.id !== ticket.id) { this.diagnosticando = false; return; }
           this.userService.getTicketNotes(ticket.id!).subscribe({
             next: (res) => {
               const notas = res.data || [];
-              if (notas.filter((n: any) => n.note?.startsWith('🩺')).length > antes || ++intentos >= 12) {
-                this.notes = notas;
-                this.diagnosticando = false;
+              if (notas.filter((n: any) => n.note?.startsWith('🩺')).length > antes) {
+                if (this.selectedTicket?.id === ticket.id) this.notes = notas;
+                fin(true, 'Listo: quedó como novedad del ticket.');
+              } else if (++intentos >= 12) {
+                fin(false, 'No llegó a tiempo: revisá las novedades del ticket en un rato.');
               } else {
                 setTimeout(revisar, 5000);
               }
             },
-            error: () => { this.diagnosticando = false; }
+            error: () => fin(false, 'No se pudieron leer las novedades del ticket.')
           });
         };
         setTimeout(revisar, 5000);
       },
-      error: () => { this.diagnosticando = false; }
+      error: () => fin(false, 'No se pudo iniciar el diagnóstico.')
     });
   }
 

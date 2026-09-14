@@ -4,6 +4,7 @@ import { OltNavComponent } from '../../shared/olt-nav.component';
 import { FormsModule } from '@angular/forms';
 import { OltService } from '../../../../services/olt.service';
 import { ToastService } from '../../../../services/toast.service';
+import { OltElegida } from '../../shared/olt-elegida';
 
 /**
  * Service ports de la OLT.
@@ -53,16 +54,16 @@ export class OltServicePortsComponent implements OnInit {
       next: (res) => {
         this.loadingOlts = false;
         this.olts = res.data ?? [];
-        if (this.olts.length === 1) {
-          this.selectedOltId = this.olts[0].id;
-          this.cargar();
-        }
+        // La OLT elegida en cualquier pestaña del módulo (o la primera).
+        this.selectedOltId = OltElegida.de(this.olts);
+        if (this.selectedOltId) this.cargar();
       },
       error: () => { this.loadingOlts = false; },
     });
   }
 
   onOltChange(): void {
+    OltElegida.guardar(this.selectedOltId);
     this.ports      = [];
     this.consultado = null;
     this.filtroPon  = '';

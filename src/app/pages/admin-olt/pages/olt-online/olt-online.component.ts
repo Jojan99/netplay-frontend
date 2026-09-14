@@ -1,4 +1,6 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
+import { OltElegida } from '../../shared/olt-elegida';
+import { TareasEnSegundoPlanoService } from '../../../../services/tareas-en-segundo-plano.service';
 import { CommonModule } from '@angular/common';
 import { OltNavComponent } from '../../shared/olt-nav.component';
 import { FormsModule } from '@angular/forms';
@@ -69,16 +71,16 @@ export class OltOnlineComponent implements OnInit {
       next: (res) => {
         this.loadingOlts = false;
         this.olts = res.data ?? [];
-        if (this.olts.length === 1) {
-          this.selectedOltId = this.olts[0].id;
-          this.loadOnts();
-        }
+        // La OLT elegida en cualquier pestaña del módulo (o la primera).
+        this.selectedOltId = OltElegida.de(this.olts);
+        if (this.selectedOltId) this.loadOnts();
       },
       error: () => { this.loadingOlts = false; },
     });
   }
 
   onOltChange(): void {
+    OltElegida.guardar(this.selectedOltId);
     this.onts        = [];
     this.lastFetched = null;
     this.filterPort  = '';
@@ -107,6 +109,7 @@ export class OltOnlineComponent implements OnInit {
   /** El barrido óptico de toda la OLT, para la columna de señal. */
   /** Vuelve a preguntar por la señal mientras el servidor mide. */
   private reintentoSenal: any = null;
+  private tareas = inject(TareasEnSegundoPlanoService);
 
   cargarSenal(refrescar = false): void {
     if (!this.selectedOltId) return;
@@ -124,6 +127,8 @@ export class OltOnlineComponent implements OnInit {
         if (data?.midiendo) {
           clearTimeout(this.reintentoSenal);
           this.reintentoSenal = setTimeout(() => this.cargarSenal(), 20000);
+          // A la ventana de tareas: sigue aunque se cambie de pestaña.
+          this.tareas.seguirMedicion(olt, this.olts.find(o => o.id === olt)?.name ?? 'OLT', () => this.oltService.getSenal(olt));
         }
 
         this.cargandoSenal = !!data?.midiendo && !data?.onts?.length;

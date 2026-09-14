@@ -5,6 +5,7 @@ import { OltEquipoComponent } from '../../shared/olt-equipo.component';
 import { FormsModule } from '@angular/forms';
 import { OltService } from '../../../../services/olt.service';
 import { ToastService } from '../../../../services/toast.service';
+import { OltElegida } from '../../shared/olt-elegida';
 
 @Component({
   selector: 'app-olt-config',
@@ -68,9 +69,11 @@ export class OltConfigComponent implements OnInit {
       next: (res) => {
         this.loadingOlts = false;
         this.olts = res.data ?? [];
-        if (this.olts.length === 1) {
-          this.selectedOltId = this.olts[0].id;
-          this.fillForm(this.olts[0]);
+        // La OLT elegida en cualquier pestaña del módulo (o la primera).
+        const elegida = OltElegida.objeto(this.olts);
+        if (elegida) {
+          this.selectedOltId = elegida.id;
+          this.fillForm(elegida);
         }
       },
       error: () => { this.loadingOlts = false; },
@@ -78,6 +81,7 @@ export class OltConfigComponent implements OnInit {
   }
 
   onOltChange(): void {
+    OltElegida.guardar(this.selectedOltId);
     const olt = this.olts.find(o => o.id === this.selectedOltId);
     if (olt) this.fillForm(olt);
   }

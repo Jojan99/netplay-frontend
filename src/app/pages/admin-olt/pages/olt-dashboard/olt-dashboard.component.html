@@ -56,10 +56,6 @@
         </div>
       </section>
 
-      <div class="olt-aviso" *ngIf="senal?.midiendo && senal?.onts?.length">
-        <span class="np-spinner np-spinner--sm"></span>
-        <span>Midiendo de nuevo en segundo plano. Se muestra la medición de las <b class="np-mono">{{ senal.medido_en | date:'HH:mm' }}</b>.</span>
-      </div>
       <div class="olt-aviso is-warn" *ngIf="errorSenal">
         <strong>No hay mediciones ópticas.</strong>
         <span>{{ errorSenal }}</span>

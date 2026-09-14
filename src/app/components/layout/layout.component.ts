@@ -29,6 +29,7 @@ import { AuthService }               from '../../services/auth.service';
 import { CompanyService }            from '../../services/company.service';
 import { ToastService }             from '../../services/toast.service';
 import { OauthService }             from '../../services/oauth.service';
+import { TareasFlotantesComponent } from '../tareas-flotantes/tareas-flotantes.component';
 
 @Component({
   selector: 'app-layout',
@@ -37,7 +38,7 @@ import { OauthService }             from '../../services/oauth.service';
     CommonModule, RouterOutlet, RouterModule,
     SidebarComponent, SidebarItemGroupComponent, SidebarItemComponent,
     DarkThemeToggleComponent, NavbarComponent, FooterComponent, CrmWidgetComponent, DialogHostComponent, TeamPanelComponent,
-    SanitizeHtmlPipe,
+    SanitizeHtmlPipe, TareasFlotantesComponent,
   ],
   templateUrl: './layout.component.html',
   styleUrl: './layout.component.scss',

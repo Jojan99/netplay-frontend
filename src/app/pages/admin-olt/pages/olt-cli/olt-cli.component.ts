@@ -4,6 +4,7 @@ import { OltNavComponent } from '../../shared/olt-nav.component';
 import { FormsModule } from '@angular/forms';
 import { OltService } from '../../../../services/olt.service';
 import { ToastService } from '../../../../services/toast.service';
+import { OltElegida } from '../../shared/olt-elegida';
 
 interface CliEntry {
   type: 'cmd' | 'out' | 'err';
@@ -46,15 +47,14 @@ export class OltCliComponent implements OnInit {
       next: (res) => {
         this.loadingOlts = false;
         this.olts = res.data ?? [];
-        if (this.olts.length === 1) {
-          this.selectedOltId = this.olts[0].id;
-        }
+        // La OLT elegida en cualquier pestaña del módulo (o la primera).
+        this.selectedOltId = OltElegida.de(this.olts);
       },
       error: () => { this.loadingOlts = false; },
     });
   }
 
-  onOltChange(): void { this.history = []; this.command = ''; }
+  onOltChange(): void { OltElegida.guardar(this.selectedOltId); this.history = []; this.command = ''; }
 
   runCommand(): void {
     const cmd = this.command.trim();

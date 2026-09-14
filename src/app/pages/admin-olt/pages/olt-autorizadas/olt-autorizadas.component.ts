@@ -1,4 +1,4 @@
-import { Component, HostListener, OnInit } from '@angular/core';
+import { Component, HostListener, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { OltNavComponent } from '../../shared/olt-nav.component';
 import { FormsModule } from '@angular/forms';
@@ -6,6 +6,8 @@ import { OltService } from '../../../../services/olt.service';
 import { UserService } from '../../../../services/user.service';
 import { ToastService } from '../../../../services/toast.service';
 import { GestionRemotaService } from '../../../../services/gestion-remota.service';
+import { TareasEnSegundoPlanoService } from '../../../../services/tareas-en-segundo-plano.service';
+import { OltElegida } from '../../shared/olt-elegida';
 import { Subject } from 'rxjs';
 import { debounceTime, distinctUntilChanged, switchMap } from 'rxjs/operators';
 
@@ -97,7 +99,7 @@ export class OltAutorizadasComponent implements OnInit {
         const id = r?.data?.tarea;
         if (r?.error !== 0 || !id) { this.reiniciando = false; this.toast.error(r?.message ?? 'No se pudo reiniciar'); return; }
 
-        this.gestion.esperarTarea(id).subscribe({
+        this.seguirTarea(id, ont).subscribe({
           next: (t: any) => {
             if (t?.estado === 'en_curso') return;
             this.reiniciando = false;
@@ -110,6 +112,17 @@ export class OltAutorizadasComponent implements OnInit {
       },
       error: () => { this.reiniciando = false; this.toast.error('No se pudo reiniciar'); },
     });
+  }
+
+  private tareas = inject(TareasEnSegundoPlanoService);
+
+  /** Sigue la tarea también en la ventana flotante del panel. */
+  private seguirTarea(id: string, ont: any) {
+    const quien = `${ont.description || ont.serial || 'equipo'} (${ont.fsp}:${ont.ont_id})`;
+
+    return this.dandoAcceso
+      ? this.tareas.seguir(id, `Dando acceso remoto · ${quien}`, 'dar_acceso')
+      : this.tareas.seguir(id, `Reiniciando · ${quien}`, 'reiniciar');
   }
 
   darAccesoRemoto(ont: any): void {
@@ -127,7 +140,7 @@ export class OltAutorizadasComponent implements OnInit {
 
         // Corre en segundo plano: la OLT tarda más de lo que aguanta la petición.
         this.toast.success('Configurando el acceso remoto… puede tardar un par de minutos');
-        this.gestion.esperarTarea(id).subscribe({
+        this.seguirTarea(id, ont).subscribe({
           next: (t: any) => {
             if (t?.estado === 'en_curso') return;
             this.dandoAcceso = false;
@@ -166,16 +179,16 @@ export class OltAutorizadasComponent implements OnInit {
       next: (res) => {
         this.loadingOlts = false;
         this.olts = res.data ?? [];
-        if (this.olts.length === 1) {
-          this.selectedOltId = this.olts[0].id;
-          this.loadOnts();
-        }
+        // La OLT elegida en cualquier pestaña del módulo (o la primera).
+        this.selectedOltId = OltElegida.de(this.olts);
+        if (this.selectedOltId) this.loadOnts();
       },
       error: () => { this.loadingOlts = false; },
     });
   }
 
   onOltChange(): void {
+    OltElegida.guardar(this.selectedOltId);
     this.onts = [];
     this.lastFetched = null;
     this.filterPort  = '';
@@ -429,6 +442,8 @@ export class OltAutorizadasComponent implements OnInit {
         if (data?.midiendo) {
           clearTimeout(this.reintentoSenal);
           this.reintentoSenal = setTimeout(() => this.cargarSenal(), 20000);
+          // A la ventana de tareas: sigue aunque se cambie de pestaña.
+          this.tareas.seguirMedicion(olt, this.olts.find(o => o.id === olt)?.name ?? 'OLT', () => this.oltService.getSenal(olt));
         }
 
         this.cargandoSenal = !!data?.midiendo && !data?.onts?.length;

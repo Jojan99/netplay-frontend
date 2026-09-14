@@ -1,4 +1,6 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
+import { OltElegida } from '../../shared/olt-elegida';
+import { TareasEnSegundoPlanoService } from '../../../../services/tareas-en-segundo-plano.service';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -91,16 +93,16 @@ export class OltDashboardComponent implements OnInit {
       next: (res) => {
         this.loadingOlts = false;
         this.olts = res.data ?? [];
-        if (this.olts.length === 1) {
-          this.selectedOltId = this.olts[0].id;
-          this.consultarTodo();
-        }
+        // La OLT elegida en cualquier pestaña del módulo (o la primera).
+        this.selectedOltId = OltElegida.de(this.olts);
+        if (this.selectedOltId) this.consultarTodo();
       },
       error: () => { this.loadingOlts = false; },
     });
   }
 
   onOltChange(): void {
+    OltElegida.guardar(this.selectedOltId);
     this.onts  = [];
     this.senal = null;
     this.puertos = {};
@@ -119,6 +121,7 @@ export class OltDashboardComponent implements OnInit {
 
   /** Vuelve a preguntar por la señal mientras el servidor mide. */
   private reintentoSenal: any = null;
+  private tareas = inject(TareasEnSegundoPlanoService);
 
   cargarPuertos(): void {
     if (!this.selectedOltId) return;
@@ -180,6 +183,8 @@ export class OltDashboardComponent implements OnInit {
           this.cargandoSenal = !data.onts?.length;
           clearTimeout(this.reintentoSenal);
           this.reintentoSenal = setTimeout(() => this.cargarSenal(), 20000);
+          // A la ventana de tareas: sigue aunque se cambie de pestaña.
+          this.tareas.seguirMedicion(olt, this.selectedOltName() || 'OLT', () => this.oltService.getSenal(olt));
           return;
         }
 
