@@ -56,6 +56,10 @@
         </div>
       </section>
 
+      <div class="olt-aviso" *ngIf="senal?.midiendo && senal?.onts?.length">
+        <span class="np-spinner np-spinner--sm"></span>
+        <span>Midiendo de nuevo en segundo plano. Se muestra la medición de las <b class="np-mono">{{ senal.medido_en | date:'HH:mm' }}</b>.</span>
+      </div>
       <div class="olt-aviso is-warn" *ngIf="errorSenal">
         <strong>No hay mediciones ópticas.</strong>
         <span>{{ errorSenal }}</span>
@@ -98,17 +102,28 @@
 
         <!-- Un promedio corrido en un puerto es troncal o splitter, no cliente -->
         <section class="np-card">
-          <div class="np-card-h"><h2>Puertos PON</h2><span class="np-card-meta">promedio y peor enlace</span></div>
+          <div class="np-card-h"><h2>Puertos PON</h2><span class="np-card-meta">señal, ocupación, mora y alertas</span></div>
           <div class="np-tablewrap"><table class="np-table np-table--compact np-tabla-movil">
-            <thead><tr><th>Puerto</th><th>ONTs</th><th>En línea</th><th class="np-th-right">Promedio</th><th class="np-th-right">Peor</th><th class="np-th-right">Falla</th></tr></thead>
+            <thead><tr><th>Puerto</th><th>Ocupación</th><th>En línea</th><th class="np-th-right">Promedio</th><th class="np-th-right">Peor</th><th class="np-th-right">Falla</th><th class="np-th-right">En mora</th><th class="np-th-right">Alertas</th></tr></thead>
             <tbody>
               <tr *ngFor="let p of porPon" class="np-row" (click)="verPuerto(p.fsp)" tabindex="0" (keydown.enter)="verPuerto(p.fsp)">
                 <td class="np-data np-strong es-principal">{{ p.fsp }}</td>
-                <td class="np-data" data-label="ONTs">{{ p.total }}</td>
+                <td data-label="Ocupación">
+                  <ng-container *ngIf="datosDelPuerto(p.fsp) as d; else soloTotal">
+                    <span class="np-meter" [title]="d.ocupacion + ' % de ' + capacidadPuerto"><i [style.width.%]="d.ocupacion" [style.background]="tonoDeOcupacion(d.ocupacion)"></i></span><span class="np-fine">{{ d.onts }} / {{ capacidadPuerto }}</span>
+                  </ng-container>
+                  <ng-template #soloTotal><span class="np-data">{{ p.total }}</span></ng-template>
+                </td>
                 <td data-label="En línea"><span class="np-meter"><i [style.width.%]="pctOnline(p)" [style.background]="pctOnline(p) >= 95 ? 'var(--ok)' : pctOnline(p) >= 85 ? 'var(--warn)' : 'var(--danger)'"></i></span><span class="np-fine">{{ p.online }}</span></td>
                 <td class="np-data np-td-right" data-label="Promedio" [ngClass]="tonoDePromedio(p.promedio)">{{ p.promedio != null ? p.promedio : '—' }}</td>
                 <td class="np-data np-td-right" data-label="Peor" [ngClass]="tonoDePromedio(p.peor)">{{ p.peor != null ? p.peor : '—' }}</td>
                 <td class="np-data np-td-right" data-label="Con falla" [class.is-danger]="p.con_falla > 0">{{ p.con_falla || '—' }}</td>
+                <td class="np-data np-td-right" data-label="En mora" [title]="(datosDelPuerto(p.fsp)?.suspendidos || 0) + ' suspendidos'">
+                  {{ datosDelPuerto(p.fsp)?.en_mora ?? '—' }}<span class="np-fine" *ngIf="datosDelPuerto(p.fsp)?.suspendidos"> · {{ datosDelPuerto(p.fsp)?.suspendidos }} susp.</span>
+                </td>
+                <td class="np-data np-td-right" data-label="Alertas" [class.is-danger]="datosDelPuerto(p.fsp)?.criticas > 0">
+                  {{ datosDelPuerto(p.fsp)?.corte ? '🚨 corte' : (datosDelPuerto(p.fsp)?.alertas || '—') }}<span class="np-fine" *ngIf="!datosDelPuerto(p.fsp)?.corte && datosDelPuerto(p.fsp)?.criticas"> · {{ datosDelPuerto(p.fsp)?.criticas }} crít.</span>
+                </td>
               </tr>
             </tbody>
           </table></div>

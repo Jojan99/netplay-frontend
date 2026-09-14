@@ -133,11 +133,16 @@
         </section>
 
         <section>
-          <p class="np-sect">Novedades</p>
+          <div class="np-notes-head">
+            <p class="np-sect">Novedades</p>
+            <button type="button" class="np-btn np-btn--ghost np-btn--sm" (click)="diagnosticar()" [disabled]="diagnosticando" title="Revisa cuenta, ONT, MikroTik y TR-069 del cliente">
+              <span *ngIf="diagnosticando" class="np-spinner np-spinner--sm"></span>{{ diagnosticando ? 'Diagnosticando…' : '🩺 Diagnosticar' }}
+            </button>
+          </div>
           <div *ngIf="notesLoading" class="np-loading np-loading--inline"><span class="np-spinner"></span> Cargando…</div>
           <p class="np-muted" *ngIf="!notesLoading && notes.length === 0">Aún no hay novedades registradas.</p>
           <div class="np-notes" *ngIf="!notesLoading && notes.length">
-            <article class="np-note-item" *ngFor="let note of notes" [class.is-close]="note.note?.startsWith('✅')" [class.is-reopen]="note.note?.startsWith('🔁')">
+            <article class="np-note-item" *ngFor="let note of notes" [class.is-close]="note.note?.startsWith('✅')" [class.is-reopen]="note.note?.startsWith('🔁')" [class.is-diag]="note.note?.startsWith('🩺')">
               <header><b>{{ note.author_names }} {{ note.author_lastname }}</b><span class="np-data">{{ note.created_at }}</span></header>
               <p>{{ note.note }}</p>
               <div class="np-note-photos" *ngIf="note.photos?.length"><a *ngFor="let photo of note.photos" [href]="photo" target="_blank" rel="noopener"><img [src]="photo" alt="Foto adjunta"></a></div>

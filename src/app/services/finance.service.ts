@@ -28,6 +28,12 @@ export class FinanceService {
     return localStorage.getItem('token'); // Recupera el token desde localStorage
   }
 
+  /** Tablero de cartera y cobranza: mora, antigüedad, recaudo y deudores. */
+  getCartera(): Observable<any> {
+    const url = this.env.rootUrl + 'api/cartera/resumen';
+    return this.http.get<any>(url, { headers: this.getHeaders() });
+  }
+
   getDataInfoPenddingFacture(){
 
     const url = this.env.rootUrl + 'api/facturation/getDataInfoPenddingFacture'

@@ -103,12 +103,45 @@ export class OltDashboardComponent implements OnInit {
   onOltChange(): void {
     this.onts  = [];
     this.senal = null;
+    this.puertos = {};
     if (this.selectedOltId) this.consultarTodo();
   }
 
   consultarTodo(refrescar = false): void {
     this.loadOnts();
     this.cargarSenal(refrescar);
+    this.cargarPuertos();
+  }
+
+  /** Lo que sabe el sistema de cada puerto, por fsp: ocupación, mora y alertas. */
+  puertos: Record<string, any> = {};
+  capacidadPuerto = 0;
+
+  /** Vuelve a preguntar por la señal mientras el servidor mide. */
+  private reintentoSenal: any = null;
+
+  cargarPuertos(): void {
+    if (!this.selectedOltId) return;
+    const olt = this.selectedOltId;
+
+    this.oltService.getPuertos(olt).subscribe({
+      next: (res) => {
+        if (olt !== this.selectedOltId) return;
+        this.capacidadPuerto = res?.data?.capacidad ?? 0;
+        this.puertos = Object.fromEntries((res?.data?.puertos ?? []).map((p: any) => [p.fsp, p]));
+      },
+      // Sin estos datos la tabla sigue mostrando la señal: no hace falta avisar.
+      error: () => { this.puertos = {}; },
+    });
+  }
+
+  /** Datos del sistema para un puerto de la tabla (el fsp de la señal puede venir sin el marco). */
+  datosDelPuerto(fsp: string): any | null {
+    return this.puertos[fsp] ?? this.puertos['0/' + fsp] ?? null;
+  }
+
+  tonoDeOcupacion(pct: number): string {
+    return pct >= 90 ? 'var(--danger)' : pct >= 75 ? 'var(--warn)' : 'var(--ok)';
   }
 
   loadOnts(): void {
@@ -133,10 +166,25 @@ export class OltDashboardComponent implements OnInit {
     this.cargandoSenal = true;
     this.errorSenal    = null;
 
-    this.oltService.getSenal(this.selectedOltId, refrescar).subscribe({
+    const olt = this.selectedOltId;
+
+    this.oltService.getSenal(olt, refrescar).subscribe({
       next: (res) => {
+        if (olt !== this.selectedOltId) return;
+        const data = res?.data ?? null;
+
+        // El barrido corre en el servidor; mientras mide se muestra la última
+        // medición (si hay) y se vuelve a preguntar en un rato.
+        if (data?.midiendo) {
+          this.senal = data.onts?.length ? data : this.senal;
+          this.cargandoSenal = !data.onts?.length;
+          clearTimeout(this.reintentoSenal);
+          this.reintentoSenal = setTimeout(() => this.cargarSenal(), 20000);
+          return;
+        }
+
         this.cargandoSenal = false;
-        this.senal         = res?.data ?? null;
+        this.senal         = data;
 
         if (res?.status === 1) this.errorSenal = this.senal?.error || res?.message || 'Sin mediciones ópticas';
       },

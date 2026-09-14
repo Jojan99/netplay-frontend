@@ -90,18 +90,16 @@ export class PortalNetworkComponent implements OnInit {
 
   editar(r: any) { this.editando = { indice: r.indice, nombre: r.nombre ?? '', clave: '', todas: true }; this.aviso.set(null); }
 
+  /** Sólo la contraseña: el nombre de la red lo define la empresa. */
   guardar(r: any) {
     const ed = this.editando;
     if (!ed) return;
-    const nombre = ed.nombre.trim() !== (r.nombre ?? '') ? ed.nombre.trim() : '';
-    const clave  = ed.clave.trim();
+    const clave = ed.clave.trim();
 
-    if (!nombre && !clave) { this.editando = null; return; }
-    if (nombre && (nombre.length < 1 || nombre.length > 32)) { this.aviso.set({ texto: 'El nombre admite hasta 32 caracteres.', tipo: 'danger' }); return; }
-    if (clave && (clave.length < 8 || clave.length > 63)) { this.aviso.set({ texto: 'La contraseña debe tener entre 8 y 63 caracteres.', tipo: 'danger' }); return; }
+    if (clave.length < 8 || clave.length > 63) { this.aviso.set({ texto: 'La contraseña debe tener entre 8 y 63 caracteres.', tipo: 'danger' }); return; }
 
     this.trabajando.set('wifi');
-    this.api.cambiarWifiCliente(r.indice, nombre || null, clave || null, !!clave && ed.todas && this.redesConClave > 1).subscribe({
+    this.api.cambiarWifiCliente(r.indice, null, clave, ed.todas && this.redesConClave > 1).subscribe({
       next: (res: any) => {
         this.trabajando.set('');
         if (res?.error !== 0) { this.aviso.set({ texto: res?.message || 'No se pudo guardar.', tipo: 'danger' }); return; }
@@ -134,6 +132,60 @@ export class PortalNetworkComponent implements OnInit {
     if (r?.error !== 0) { this.aviso.set({ texto: r?.message || 'No se pudo hacer el cambio.', tipo: 'danger' }); return; }
     this.aviso.set({ texto: `${d.nombre}: ${r.data?.mensaje ?? 'listo'}`, tipo: r.data?.ok === false ? 'warn' : 'ok' });
     setTimeout(() => this.cargar(true), 4000);
+  }
+
+  // ── Canal ─────────────────────────────────────────────────────────────────
+
+  /** 'auto' o el número de canal elegido, mientras se edita una red. */
+  canalEditando: { indice: number; valor: string } | null = null;
+
+  /** "Canal 11 · automático", "Canal 6", "Canal automático". */
+  textoCanal(r: any): string {
+    if (r.canal_auto && r.canal) return `Canal ${r.canal} (automático)`;
+    if (r.canal_auto) return 'Canal automático';
+    return r.canal ? `Canal ${r.canal}` : '';
+  }
+
+  editarCanal(r: any) {
+    this.editando = null;
+    this.aviso.set(null);
+    this.canalEditando = { indice: r.indice, valor: r.canal_auto || !r.canal ? 'auto' : String(r.canal) };
+  }
+
+  guardarCanal(r: any) {
+    const ed = this.canalEditando;
+    if (!ed) return;
+    const canal = ed.valor === 'auto' ? null : Number(ed.valor);
+
+    this.trabajando.set('canal');
+    this.api.cambiarCanalCliente(r.indice, canal).subscribe({
+      next: (res: any) => {
+        this.trabajando.set('');
+        if (res?.error !== 0) { this.aviso.set({ texto: res?.message || 'No se pudo cambiar el canal.', tipo: 'danger' }); return; }
+        this.aviso.set({ texto: res.data?.mensaje ?? 'Guardado.', tipo: res.data?.hecha ? 'ok' : 'warn' });
+        this.canalEditando = null;
+        setTimeout(() => this.cargar(true), 5000);
+      },
+      error: () => { this.trabajando.set(''); this.aviso.set({ texto: 'No se pudo cambiar el canal.', tipo: 'danger' }); },
+    });
+  }
+
+  // ── Reinicio ──────────────────────────────────────────────────────────────
+
+  /** Reiniciar corta internet unos minutos: se pide confirmar antes. */
+  confirmarReinicio = false;
+
+  reiniciar() {
+    this.trabajando.set('reiniciar');
+    this.api.reiniciarRouter().subscribe({
+      next: (res: any) => {
+        this.trabajando.set('');
+        this.confirmarReinicio = false;
+        if (res?.error !== 0) { this.aviso.set({ texto: res?.message || 'No se pudo reiniciar el equipo.', tipo: 'danger' }); return; }
+        this.aviso.set({ texto: res.data?.mensaje ?? 'Tu equipo se está reiniciando.', tipo: res.data?.hecha ? 'ok' : 'warn' });
+      },
+      error: () => { this.trabajando.set(''); this.aviso.set({ texto: 'No se pudo reiniciar el equipo.', tipo: 'danger' }); },
+    });
   }
 
   actualizar() {

@@ -141,6 +141,18 @@ export const components: RouteProps[] = [
         },
       },
       {
+        title: 'Cartera y cobranza',
+        icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8"/><path d="M12 8v4l2.5 2.5"/></svg>`,
+        href: 'cartera',
+        module: 'finanzas',
+        group: false,
+        roles: [2, 4],
+        card: {
+          className: 'w-56',
+          images: { light: 'alerts-light.svg', dark: 'alerts-dark.svg' },
+        },
+      },
+      {
         title: 'Auditoría de pagos',
         icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="6"/><path d="m20 20-4.5-4.5M9 11l1.5 1.5L13 9.5"/></svg>`,
         href: 'payment-proof-audit',

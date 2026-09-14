@@ -54,6 +54,15 @@ export class ClientApiService {
     return this.http.post(`${this.baseUrl}/router/refrescar`, {}, this.headers());
   }
 
+  /** `canal` null vuelve la red a canal automático. */
+  cambiarCanalCliente(indice: number, canal: number | null): Observable<any> {
+    return this.http.post(`${this.baseUrl}/router/canal`, { indice, canal }, this.headers());
+  }
+
+  reiniciarRouter(): Observable<any> {
+    return this.http.post(`${this.baseUrl}/router/reiniciar`, {}, this.headers());
+  }
+
   // ── Facturas ─────────────────────────────────────────────────────────────
   getInvoices(): Observable<any> {
     return this.http.get(`${this.baseUrl}/invoices`, this.headers());

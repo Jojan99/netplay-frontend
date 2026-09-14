@@ -185,6 +185,43 @@ export class TaskTicketComponent implements OnInit, OnDestroy {
     });
   }
 
+  diagnosticando = false;
+
+  /**
+   * El diagnóstico corre en el servidor (OLT y MikroTik tardan) y se guarda
+   * como novedad: se recargan las novedades hasta que aparece.
+   */
+  diagnosticar() {
+    const ticket = this.selectedTicket;
+    if (!ticket?.id || this.diagnosticando) return;
+
+    const antes = this.notes.filter(n => n.note?.startsWith('🩺')).length;
+    this.diagnosticando = true;
+
+    this.userService.diagnosticarTicket(ticket.id).subscribe({
+      next: () => {
+        let intentos = 0;
+        const revisar = () => {
+          if (this.selectedTicket?.id !== ticket.id) { this.diagnosticando = false; return; }
+          this.userService.getTicketNotes(ticket.id!).subscribe({
+            next: (res) => {
+              const notas = res.data || [];
+              if (notas.filter((n: any) => n.note?.startsWith('🩺')).length > antes || ++intentos >= 12) {
+                this.notes = notas;
+                this.diagnosticando = false;
+              } else {
+                setTimeout(revisar, 5000);
+              }
+            },
+            error: () => { this.diagnosticando = false; }
+          });
+        };
+        setTimeout(revisar, 5000);
+      },
+      error: () => { this.diagnosticando = false; }
+    });
+  }
+
   // ── Selection ─────────────────────────────────────────────────────────────
 
   selectTicket(ticket: TicketInterface) {

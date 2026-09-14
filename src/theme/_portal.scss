@@ -6,8 +6,11 @@
 .pt-app { min-height: 100vh; background: var(--bg); color: var(--text); font-family: var(--font-body); font-size: 14px; line-height: 1.5; -webkit-font-smoothing: antialiased;
   --pt-radius: var(--radius-lg); --pt-max: 1040px; font-size: 13.5px; }
 .pt-app * { box-sizing: border-box; }
-.pt-app button { font: inherit; cursor: pointer; color: inherit; background: none; border: 0; padding: 0; }
-.pt-app a { color: inherit; text-decoration: none; }
+/* Resets con :where() para que no le ganen a las clases: con ".pt-app button"
+   (clase + elemento) le borraban fondo, borde y relleno a todos los .pt-btn, y
+   los botones del portal se veían como texto plano. */
+:where(.pt-app) button { font: inherit; cursor: pointer; color: inherit; background: none; border: 0; padding: 0; }
+:where(.pt-app) a { color: inherit; text-decoration: none; }
 .pt-app :is(button, input, select, textarea, a, [tabindex]):focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 .pt-app .np-mono { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
 .pt-app svg { width: 18px; height: 18px; flex-shrink: 0; }

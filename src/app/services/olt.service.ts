@@ -73,6 +73,11 @@ export class OltService {
     return this.http.get<any>(`${this.env.rootUrl}api/management/olt/${oltId}/senal`, { headers: this.getHeaders(), params });
   }
 
+  /** Cada puerto PON: ocupación, clientes en mora o suspendidos y alertas abiertas. */
+  getPuertos(oltId: number): Observable<any> {
+    return this.http.get<any>(`${this.env.rootUrl}api/management/olt/${oltId}/puertos`, { headers: this.getHeaders() });
+  }
+
   /** Fija los perfiles que se usan al autorizar una ONT en esta OLT. */
   fijarPerfilesPorDefecto(oltId: number, lineProfileId: number | null, srvProfileId: number | null): Observable<any> {
     return this.http.post<any>(`${this.env.rootUrl}api/management/olt/${oltId}/profiles/default`,

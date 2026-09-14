@@ -105,17 +105,33 @@ export class OltOnlineComponent implements OnInit {
   }
 
   /** El barrido óptico de toda la OLT, para la columna de señal. */
+  /** Vuelve a preguntar por la señal mientras el servidor mide. */
+  private reintentoSenal: any = null;
+
   cargarSenal(refrescar = false): void {
     if (!this.selectedOltId) return;
 
     this.cargandoSenal = true;
+    const olt = this.selectedOltId;
 
-    this.oltService.getSenal(this.selectedOltId, refrescar).subscribe({
+    this.oltService.getSenal(olt, refrescar).subscribe({
       next: (res) => {
-        this.cargandoSenal = false;
+        if (olt !== this.selectedOltId) return;
+        const data = res?.data;
+
+        // El barrido corre en el servidor: mientras mide se muestra la última
+        // medición (si hay) y se vuelve a preguntar en un rato.
+        if (data?.midiendo) {
+          clearTimeout(this.reintentoSenal);
+          this.reintentoSenal = setTimeout(() => this.cargarSenal(), 20000);
+        }
+
+        this.cargandoSenal = !!data?.midiendo && !data?.onts?.length;
+        if (!data?.onts?.length && data?.midiendo) return;
+
         const mapa: Record<string, any> = {};
 
-        for (const o of res?.data?.onts ?? []) mapa[`${o.fsp}:${o.ont_id}`] = o;
+        for (const o of data?.onts ?? []) mapa[`${o.fsp}:${o.ont_id}`] = o;
 
         this.senalPorOnt = mapa;
       },

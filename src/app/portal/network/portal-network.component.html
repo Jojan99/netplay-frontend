@@ -2,7 +2,7 @@
   <div>
     <p class="pt-kicker">Mi servicio</p>
     <h1>Mi WiFi</h1>
-    <p>Cambia el nombre y la clave de tu red, y mira qué hay conectado en tu casa.</p>
+    <p>Cambia la contraseña de tu WiFi, mira qué hay conectado en tu casa y reinicia tu equipo si hace falta.</p>
   </div>
   <button type="button" class="pt-btn pt-btn--ghost" *ngIf="panel()?.activo" (click)="actualizar()" [disabled]="!!trabajando()">
     {{ trabajando() === 'refrescar' ? 'Actualizando…' : 'Actualizar' }}
@@ -51,13 +51,16 @@
   <section class="pt-card">
     <div class="pt-card-h"><h2>Mis redes WiFi</h2></div>
 
-    <div class="pt-red" *ngFor="let r of redes">
-      <ng-container *ngIf="editando?.indice !== r.indice">
+    <div class="pt-red" *ngFor="let r of redes" [class.is-apagada]="r.estado === 'apagada'">
+      <ng-container *ngIf="editando?.indice !== r.indice && canalEditando?.indice !== r.indice">
         <div class="pt-red-ico" aria-hidden="true">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M2 8.8a15 15 0 0 1 20 0"/><path d="M5 12.5a10 10 0 0 1 14 0"/><path d="M8.5 16.1a5 5 0 0 1 7 0"/><circle cx="12" cy="19.5" r="1" fill="currentColor"/></svg>
         </div>
         <div class="pt-red-datos">
-          <p class="pt-fine">{{ r.banda }}<ng-container *ngIf="r.conectados"> · {{ r.conectados }} conectados</ng-container></p>
+          <p class="pt-fine">
+            <span class="pt-pill is-ok" *ngIf="r.estado === 'encendida'">Encendida</span>
+            {{ r.banda }}<ng-container *ngIf="textoCanal(r)"> · {{ textoCanal(r) }}</ng-container><ng-container *ngIf="r.conectados"> · {{ r.conectados }} conectados</ng-container>
+          </p>
           <b>{{ r.nombre }}</b>
           <p class="pt-red-clave" *ngIf="r.clave">
             Contraseña: <span class="np-mono">{{ claveVisible[r.indice] ? r.clave : '••••••••' }}</span>
@@ -65,17 +68,16 @@
           </p>
           <p class="pt-fine" *ngIf="!r.clave">Por seguridad, tu equipo no nos muestra la contraseña. Puedes cambiarla cuando quieras.</p>
         </div>
-        <button type="button" class="pt-btn pt-btn--ghost" (click)="editar(r)" [disabled]="!!trabajando()">Cambiar</button>
+        <div class="pt-red-acciones">
+          <button type="button" class="pt-btn pt-btn--ghost" *ngIf="r.puede_cambiar_clave" (click)="editar(r)" [disabled]="!!trabajando()">Cambiar contraseña</button>
+          <button type="button" class="pt-linkbtn" *ngIf="r.puede_cambiar_canal && r.activa" (click)="editarCanal(r)" [disabled]="!!trabajando()">Canal</button>
+        </div>
       </ng-container>
 
       <form class="pt-form pt-red-form" *ngIf="editando?.indice === r.indice && editando as ed" (ngSubmit)="guardar(r)">
         <label class="pt-field">
-          <span>Nombre de la red</span>
-          <input class="pt-input" name="nombre" [(ngModel)]="ed.nombre" maxlength="32" autocomplete="off" />
-        </label>
-        <label class="pt-field" *ngIf="r.puede_cambiar_clave">
-          <span>Contraseña nueva</span>
-          <input class="pt-input np-mono" name="clave" [(ngModel)]="ed.clave" minlength="8" maxlength="63" placeholder="Déjala vacía para no cambiarla" autocomplete="off" />
+          <span>Contraseña nueva de «{{ r.nombre }}»</span>
+          <input class="pt-input np-mono" name="clave" [(ngModel)]="ed.clave" minlength="8" maxlength="63" placeholder="Mínimo 8 caracteres" autocomplete="off" required />
         </label>
         <label class="pt-check" *ngIf="r.puede_cambiar_clave && redesConClave > 1">
           <input type="checkbox" name="todas" [(ngModel)]="ed.todas" />
@@ -84,9 +86,37 @@
         <p class="pt-fine">Al guardar, los equipos conectados {{ ed.todas && ed.clave && redesConClave > 1 ? 'a tus redes' : 'a esta red' }} se desconectan y hay que volver a conectarlos con los datos nuevos.</p>
         <div class="pt-btnrow">
           <button type="button" class="pt-btn pt-btn--ghost" (click)="editando = null">Cancelar</button>
-          <button type="submit" class="pt-btn" [disabled]="trabajando() === 'wifi'">{{ trabajando() === 'wifi' ? 'Guardando…' : 'Guardar' }}</button>
+          <button type="submit" class="pt-btn pt-btn--primary" [disabled]="trabajando() === 'wifi'">{{ trabajando() === 'wifi' ? 'Guardando…' : 'Guardar' }}</button>
         </div>
       </form>
+
+      <form class="pt-form pt-red-form" *ngIf="canalEditando?.indice === r.indice && canalEditando as ce" (ngSubmit)="guardarCanal(r)">
+        <label class="pt-field">
+          <span>Canal de «{{ r.nombre }}» ({{ r.banda }})</span>
+          <select class="pt-input" name="canal" [(ngModel)]="ce.valor">
+            <option value="auto">Automático (recomendado)</option>
+            <option *ngFor="let c of r.canales_posibles ?? []" [value]="'' + c">Canal {{ c }}</option>
+          </select>
+        </label>
+        <p class="pt-fine">Cambiá el canal si tu WiFi anda lento o se corta: puede haber otras redes cercanas en el mismo. Tus equipos se desconectan unos segundos al guardar.</p>
+        <div class="pt-btnrow">
+          <button type="button" class="pt-btn pt-btn--ghost" (click)="canalEditando = null">Cancelar</button>
+          <button type="submit" class="pt-btn pt-btn--primary" [disabled]="trabajando() === 'canal'">{{ trabajando() === 'canal' ? 'Guardando…' : 'Guardar' }}</button>
+        </div>
+      </form>
+    </div>
+  </section>
+
+  <!-- Reiniciar el equipo -->
+  <section class="pt-card">
+    <div class="pt-card-h"><h2>Reiniciar mi equipo</h2></div>
+    <div class="pt-reinicio">
+      <p class="pt-fine">Si internet anda lento o no conecta, reiniciar suele resolverlo. Se corta el servicio 2 o 3 minutos mientras el equipo vuelve a encender.</p>
+      <button type="button" class="pt-btn pt-btn--ghost" *ngIf="!confirmarReinicio" (click)="confirmarReinicio = true" [disabled]="!!trabajando()">Reiniciar</button>
+      <div class="pt-reinicio-confirmar" *ngIf="confirmarReinicio">
+        <button type="button" class="pt-btn pt-btn--ghost" (click)="confirmarReinicio = false" [disabled]="trabajando() === 'reiniciar'">Cancelar</button>
+        <button type="button" class="pt-btn pt-btn--primary" (click)="reiniciar()" [disabled]="trabajando() === 'reiniciar'">{{ trabajando() === 'reiniciar' ? 'Reiniciando…' : 'Sí, reiniciar ahora' }}</button>
+      </div>
     </div>
   </section>
 

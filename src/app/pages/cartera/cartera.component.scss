@@ -1,0 +1,67 @@
+// Tablero de cartera. Lo compartido (np-kpis, np-card, np-table…) viene del
+// sistema del panel; acá sólo los gráficos y la grilla propia.
+//
+// Gráficos de una sola serie en el azul de referencia del sistema de
+// visualización, validado contra las superficies del panel: #2a78d6 sobre
+// #ffffff y #3987e5 sobre #142229 (banda de luminosidad, croma y contraste ≥ 3:1).
+
+:host {
+  --viz-serie: #2a78d6;
+  --viz-grilla: var(--line);
+}
+
+:host-context([data-theme='dark']),
+:host-context(.dark) {
+  --viz-serie: #3987e5;
+}
+
+.np-cartera-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin-top: 12px;
+  @media (max-width: 900px) { grid-template-columns: 1fr; } }
+
+.np-cartera > .np-scroll > * + * { margin-top: 12px; }
+section.np-card { margin-top: 12px; }
+
+.np-cartera-nota { margin: 0 0 10px; font-size: 12px; }
+.np-cartera-error { color: var(--danger); margin: 0 0 12px; }
+.np-cartera-buscar { min-width: min(280px, 100%); }
+.np-cartera-nowrap { white-space: nowrap; }
+.np-cartera-refrescando { opacity: .55; transition: opacity .15s; }
+
+// Estado del servicio: punto + palabra, el color nunca va solo.
+.np-cartera-estado { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; color: var(--text-2); white-space: nowrap;
+  &::before { content: ''; width: 8px; height: 8px; border-radius: 50%; background: var(--ok); }
+  &.is-suspendido::before { background: var(--danger); } }
+
+// Lista de valores (misma que en Resumen).
+.np-ledger-dl { margin: 0; display: grid; grid-template-columns: 1fr auto; column-gap: 16px; font-size: 13px;
+  dt, dd { margin: 0; padding: 8px 0; border-bottom: 1px solid var(--line); }
+  dt { color: var(--text-2); }
+  dt:last-of-type, dd:last-of-type { border-bottom: 0; } }
+
+// ── Barras horizontales (antigüedad) ───────────────────────────────────────
+.np-viz-hbars { display: grid; gap: 10px; }
+.np-viz-hbar { position: relative; display: grid; grid-template-columns: 96px minmax(0, 1fr) 72px; align-items: center; gap: 10px; padding: 4px 0; outline: none; border-radius: 4px;
+  &:hover .np-viz-fill, &:focus-visible .np-viz-fill { filter: brightness(1.12); }
+  &:hover .np-viz-tip, &:focus-visible .np-viz-tip { opacity: 1; transform: translateY(0); }
+  &:focus-visible { box-shadow: 0 0 0 2px var(--accent); } }
+.np-viz-track { height: 20px; border-left: 1px solid var(--viz-grilla); display: flex; align-items: center; }
+.np-viz-hbar .np-viz-fill { display: block; height: 20px; min-width: 2px; background: var(--viz-serie); border-radius: 0 4px 4px 0; }
+
+// ── Columnas (recaudo) ─────────────────────────────────────────────────────
+.np-viz-cols { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 2px; align-items: end; }
+.np-viz-col { position: relative; display: grid; grid-template-rows: auto 150px auto; justify-items: center; gap: 4px; outline: none; border-radius: 4px; padding-top: 4px;
+  &:hover .np-viz-fill, &:focus-visible .np-viz-fill { filter: brightness(1.12); }
+  &:hover .np-viz-tip, &:focus-visible .np-viz-tip { opacity: 1; transform: translateY(0); }
+  &:focus-visible { box-shadow: 0 0 0 2px var(--accent); } }
+.np-viz-colarea { width: 100%; height: 150px; display: flex; align-items: flex-end; justify-content: center; border-bottom: 1px solid var(--viz-grilla); }
+.np-viz-col .np-viz-fill { display: block; width: 24px; max-width: 70%; min-height: 1px; background: var(--viz-serie); border-radius: 4px 4px 0 0; }
+
+// ── Rótulos: siempre en tinta de texto, nunca en el color de la serie ──────
+.np-viz-cat { font-size: 11.5px; color: var(--text-2); white-space: nowrap; }
+.np-viz-val { font-family: var(--font-mono); font-size: 11.5px; color: var(--text); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.np-viz-hbar .np-viz-val { text-align: right; }
+
+// ── Tooltip: el valor manda, la etiqueta acompaña ───────────────────────────
+.np-viz-tip { position: absolute; z-index: 5; left: 50%; bottom: calc(100% + 4px); translate: -50% 0; transform: translateY(4px); opacity: 0; pointer-events: none; transition: opacity .12s, transform .12s;
+  display: grid; gap: 2px; padding: 6px 9px; min-width: max-content; background: var(--surface); color: var(--text-2); border: 1px solid var(--line); border-radius: 6px; box-shadow: var(--shadow); font-size: 11.5px;
+  b { color: var(--text); font-size: 12.5px; } }

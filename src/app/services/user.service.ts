@@ -461,6 +461,12 @@ getIpzonebyZone(vlan: string, segment: string, routerId?: number | null) {
     return this.http.get<any>(url, { headers: this.getHeaders() });
   }
 
+  /** Revisa cuenta, ONT, MikroTik y TR-069 del cliente; el resultado llega como novedad. */
+  diagnosticarTicket(ticketId: number): Observable<any> {
+    const url = `${this.env.rootUrl}api/ticket/${ticketId}/diagnosticar`;
+    return this.http.post<any>(url, {}, { headers: this.getHeaders() });
+  }
+
   addTicketNote(ticketId: number, formData: FormData): Observable<any> {
     const headers = this.getHeaders().delete('Content-Type');
     const url = `${this.env.rootUrl}api/ticket/${ticketId}/notes`;

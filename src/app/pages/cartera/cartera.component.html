@@ -1,0 +1,182 @@
+<div class="np-page np-cartera">
+  <header class="np-head">
+    <div>
+      <p class="np-kicker">Operación <b>/</b> Finanzas <b>/</b> Cartera</p>
+      <h1 class="np-title">Cartera y cobranza</h1>
+      <div class="np-ribbon" *ngIf="datos() as d">
+        <span>En mora: facturas con más de <span class="np-mono">{{ d.dias_para_mora }}</span> días sin pagar</span>
+        <span>Calculado <span class="np-mono">{{ d.calculado_en | date:'dd/MM HH:mm' }}</span></span>
+      </div>
+    </div>
+    <div class="np-actions">
+      <button type="button" class="np-btn np-btn--ghost" (click)="cargar()" [disabled]="cargando()">
+        <span *ngIf="cargando()" class="np-spinner np-spinner--sm"></span>{{ cargando() ? 'Calculando…' : 'Actualizar' }}
+      </button>
+    </div>
+  </header>
+
+  <div class="np-scroll">
+    <p class="np-cartera-error" *ngIf="error() as e" role="alert">{{ e }}</p>
+    <div *ngIf="cargando() && !datos()" class="np-loading"><span class="np-spinner"></span> Calculando la cartera…</div>
+
+    <ng-container *ngIf="datos() as d">
+      <div [class.np-cartera-refrescando]="cargando()">
+
+        <section class="np-kpis">
+          <div class="np-kpi">
+            <span class="np-kpi-l">Cartera en mora</span>
+            <span class="np-kpi-v">$ {{ miles(d.indicadores.cartera_en_mora) }}</span>
+            <span class="np-kpi-s">{{ d.indicadores.clientes_en_mora }} clientes activos · {{ d.indicadores.suspendidos_en_mora }} suspendidos</span>
+          </div>
+          <div class="np-kpi">
+            <span class="np-kpi-l">Clientes al día</span>
+            <span class="np-kpi-v">{{ d.indicadores.porcentaje_al_dia ?? '—' }} %</span>
+            <span class="np-kpi-s">de {{ d.indicadores.clientes_activos }} activos · <span class="np-cartera-nowrap">del mes: $ {{ miles(d.indicadores.pendiente_del_mes) }}</span></span>
+          </div>
+          <div class="np-kpi">
+            <span class="np-kpi-l">Recaudado este mes</span>
+            <span class="np-kpi-v">$ {{ miles(d.indicadores.recaudado_mes) }}</span>
+            <span class="np-kpi-s">$ {{ miles(d.indicadores.recuperado_mes) }} de facturas en mora</span>
+          </div>
+          <div class="np-kpi">
+            <span class="np-kpi-l">Retirados con deuda</span>
+            <span class="np-kpi-v">$ {{ miles(d.indicadores.deuda_retirados) }}</span>
+            <span class="np-kpi-s">{{ d.indicadores.retirados_con_deuda }} clientes dados de baja</span>
+          </div>
+        </section>
+
+        <section class="np-cartera-grid">
+          <!-- Antigüedad de la mora: barras horizontales, un solo color -->
+          <div class="np-card">
+            <div class="np-card-h">
+              <h2>Mora por antigüedad</h2>
+              <button type="button" class="np-btn np-btn--ghost np-btn--sm" (click)="tablaAntiguedad.set(!tablaAntiguedad())">{{ tablaAntiguedad() ? 'Ver gráfico' : 'Ver tabla' }}</button>
+            </div>
+            <p class="np-muted np-cartera-nota">Según la factura más vieja sin pagar de cada cliente activo.</p>
+
+            <div class="np-viz-hbars" *ngIf="!tablaAntiguedad()" role="list">
+              <div class="np-viz-hbar" *ngFor="let b of antiguedad()" role="listitem" tabindex="0" [attr.aria-label]="b.etiqueta + ': $ ' + miles(b.valor) + ', ' + b.detalle">
+                <span class="np-viz-cat">{{ b.etiqueta }}</span>
+                <span class="np-viz-track"><span class="np-viz-fill" [style.width.%]="b.alto"></span></span>
+                <span class="np-viz-val">{{ compacto(b.valor) }}</span>
+                <span class="np-viz-tip" role="tooltip"><b>$ {{ miles(b.valor) }}</b><span>{{ b.etiqueta }} · {{ b.detalle }}</span></span>
+              </div>
+            </div>
+
+            <div class="np-tablewrap" *ngIf="tablaAntiguedad()">
+              <table class="np-table np-table--compact">
+                <thead><tr><th>Antigüedad</th><th class="np-th-right">Clientes</th><th class="np-th-right">Deuda en mora</th></tr></thead>
+                <tbody><tr *ngFor="let t of d.antiguedad"><td>{{ t.tramo }}</td><td class="np-data np-td-right">{{ t.clientes }}</td><td class="np-money">$ {{ miles(t.monto) }}</td></tr></tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Recaudo por mes: columnas, un solo color -->
+          <div class="np-card">
+            <div class="np-card-h">
+              <h2>Recaudo de los últimos 6 meses</h2>
+              <button type="button" class="np-btn np-btn--ghost np-btn--sm" (click)="tablaRecaudo.set(!tablaRecaudo())">{{ tablaRecaudo() ? 'Ver gráfico' : 'Ver tabla' }}</button>
+            </div>
+            <p class="np-muted np-cartera-nota">Pagos registrados en el sistema por mes.</p>
+
+            <div class="np-viz-cols" *ngIf="!tablaRecaudo()" role="list">
+              <div class="np-viz-col" *ngFor="let b of recaudo()" role="listitem" tabindex="0" [attr.aria-label]="b.etiqueta + ': $ ' + miles(b.valor)">
+                <span class="np-viz-val">{{ b.valor ? compacto(b.valor) : '—' }}</span>
+                <span class="np-viz-colarea"><span class="np-viz-fill" [style.height.%]="b.alto"></span></span>
+                <span class="np-viz-cat">{{ b.etiqueta }}</span>
+                <span class="np-viz-tip" role="tooltip"><b>$ {{ miles(b.valor) }}</b><span>{{ b.etiqueta }} · {{ b.detalle }}</span></span>
+              </div>
+            </div>
+
+            <div class="np-tablewrap" *ngIf="tablaRecaudo()">
+              <table class="np-table np-table--compact">
+                <thead><tr><th>Mes</th><th class="np-th-right">Recaudado</th><th class="np-th-right">De facturas en mora</th></tr></thead>
+                <tbody><tr *ngFor="let m of d.recaudo_meses"><td class="np-data">{{ m.mes }}</td><td class="np-money">$ {{ miles(m.total) }}</td><td class="np-money">$ {{ miles(m.de_mora) }}</td></tr></tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <section class="np-cartera-grid">
+          <div class="np-card">
+            <div class="np-card-h"><h2>Recordatorios de WhatsApp</h2><span class="np-card-meta">últimos 30 días</span></div>
+            <div class="np-tablewrap" *ngIf="d.recordatorios.length; else sinAvisos">
+              <table class="np-table np-table--compact">
+                <thead><tr><th>Aviso</th><th class="np-th-right">Enviados</th><th class="np-th-right">Pagaron en {{ d.recordatorios[0].dias }} días</th><th class="np-th-right">Cobrado</th></tr></thead>
+                <tbody>
+                  <tr *ngFor="let r of d.recordatorios">
+                    <td>{{ nombreEvento(r.evento) }}</td>
+                    <td class="np-data np-td-right">{{ r.enviados }}</td>
+                    <td class="np-data np-td-right">{{ r.pagaron }} <span class="np-muted">({{ porcentaje(r.pagaron, r.enviados) }} %)</span></td>
+                    <td class="np-money">$ {{ miles(r.cobrado) }}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <ng-template #sinAvisos>
+              <p class="np-muted np-cartera-nota">
+                Todavía no hay avisos registrados.
+                <ng-container *ngIf="d.registro_avisos_desde; else desdeHoy">El registro empezó el {{ d.registro_avisos_desde | date:'dd/MM/yyyy' }}.</ng-container>
+                <ng-template #desdeHoy>Se registran desde ahora: cuando salgan recordatorios automáticos, acá se verá cuántos clientes pagaron después.</ng-template>
+              </p>
+            </ng-template>
+          </div>
+
+          <div class="np-card">
+            <div class="np-card-h"><h2>Compromisos y cortes</h2></div>
+            <dl class="np-ledger-dl">
+              <dt>Compromisos de pago pendientes</dt><dd class="np-data">{{ d.compromisos?.pending?.n || 0 }} · $ {{ miles(d.compromisos?.pending?.monto || 0) }}</dd>
+              <dt>Compromisos cumplidos</dt><dd class="np-data">{{ d.compromisos?.fulfilled?.n || 0 }}</dd>
+              <dt>Compromisos incumplidos</dt><dd class="np-data">{{ d.compromisos?.broken?.n || 0 }}</dd>
+              <dt>Suspendidos (30 días)</dt><dd class="np-data">{{ d.suspensiones?.suspended || 0 }}</dd>
+              <dt>Reactivados (30 días)</dt><dd class="np-data">{{ d.suspensiones?.reactivated || 0 }}</dd>
+            </dl>
+          </div>
+        </section>
+
+        <section class="np-card">
+          <div class="np-subbar">
+            <div class="np-seg" role="group" aria-label="Lista de deudores">
+              <button type="button" [attr.aria-pressed]="lista() === 'en_mora'" (click)="lista.set('en_mora')">En mora<span class="np-c">{{ d.en_mora.length }}</span></button>
+              <button type="button" [attr.aria-pressed]="lista() === 'retirados'" (click)="lista.set('retirados')">Retirados<span class="np-c">{{ d.retirados.length }}</span></button>
+            </div>
+            <span class="np-spacer"></span>
+            <input type="search" class="np-input np-input--sm np-cartera-buscar" placeholder="Buscar nombre, documento o teléfono" [ngModel]="buscar()" (ngModelChange)="buscar.set($event)" />
+          </div>
+
+          <div class="np-tablewrap">
+            <table class="np-table np-table--compact">
+              <thead>
+                <tr>
+                  <th>Cliente</th><th>Teléfono</th><th>Servicio</th>
+                  <th class="np-th-right">{{ lista() === 'en_mora' ? 'Facturas en mora' : 'Facturas' }}</th>
+                  <th class="np-th-right">{{ lista() === 'en_mora' ? 'Deuda en mora' : 'Deuda' }}</th>
+                  <th class="np-th-right">Deuda total</th>
+                  <th class="np-th-right">Días</th>
+                  <th>Compromiso</th><th>Último aviso</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let c of deudores()">
+                  <td><span class="np-strong">{{ c.nombre }}</span><br><span class="np-data np-muted">{{ c.documento || '—' }}</span></td>
+                  <td class="np-data">{{ c.telefono || '—' }}</td>
+                  <td>
+                    <span class="np-cartera-estado" [class.is-suspendido]="c.suspendido">{{ c.suspendido ? 'Suspendido' : 'Activo' }}</span>
+                  </td>
+                  <td class="np-data np-td-right">{{ c.facturas_en_mora }}</td>
+                  <td class="np-money">$ {{ miles(lista() === 'en_mora' ? c.deuda_en_mora : c.deuda_total) }}</td>
+                  <td class="np-money">$ {{ miles(c.deuda_total) }}</td>
+                  <td class="np-data np-td-right">{{ c.dias }}</td>
+                  <td class="np-data">{{ c.compromiso ? (c.compromiso | date:'dd/MM/yy') : '—' }}</td>
+                  <td class="np-data">{{ c.ultimo_aviso ? (c.ultimo_aviso | date:'dd/MM HH:mm') : '—' }}</td>
+                </tr>
+                <tr *ngIf="!deudores().length"><td colspan="9" class="np-muted">No hay clientes en esta lista.</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+      </div>
+    </ng-container>
+  </div>
+</div>
