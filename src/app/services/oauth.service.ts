@@ -30,4 +30,9 @@ export class OauthService {
     return this.http.post<SignInInterface>(url, parameter, { headers: this.headers })
   }
 
+
+  /** Datos de quien inició sesión (nombre incluido). */
+  getMe(): Observable<any> {
+    return this.http.get(this.env.rootUrl + 'api/oauth/me', { headers: this.headers });
+  }
 }

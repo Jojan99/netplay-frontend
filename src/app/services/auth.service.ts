@@ -9,6 +9,8 @@ export interface AuthUser {
   email: string;
   company_name: string;
   company_logo: string;
+  /** Nombre de la persona, para mostrar. El usuario es la cédula. */
+  nombre?: string;
 }
 
 @Injectable({ providedIn: 'root' })
@@ -35,6 +37,7 @@ export class AuthService {
       email:        data.user?.email  ?? '',
       company_name: data.company_name ?? '',
       company_logo: data.company_logo ?? '',
+      nombre:       data.nombre       ?? '',
     };
     localStorage.setItem(this.USER_KEY, JSON.stringify(user));
     localStorage.setItem('employee_id', (data.employee_id ?? '').toString());
@@ -80,6 +83,31 @@ export class AuthService {
   getUsername(): string    { return this.getUser()?.username     ?? ''; }
 
   isAdmin():    boolean { return this.getProfileName() === 'ADMIN'; }
+
+  /** Nombre completo para mostrar ("Jojanny Manuel Pombo"); si no hay, la cédula. */
+  getNombre(): string {
+    const u = this.getUser();
+    return AuthService.formatear(u?.nombre ?? '') || u?.username || '';
+  }
+
+  /** Sólo el primer nombre, para el saludo. */
+  getPrimerNombre(): string {
+    const n = AuthService.formatear(this.getUser()?.nombre ?? '');
+    return n ? n.split(' ')[0] : (this.getUser()?.username ?? '');
+  }
+
+  /** Guarda el nombre en la sesión (las sesiones viejas no lo traían). */
+  setNombre(nombre: string): void {
+    const u = this.getUser();
+    if (!u) return;
+    localStorage.setItem(this.USER_KEY, JSON.stringify({ ...u, nombre }));
+  }
+
+  /** De "JOJANNY MANUEL POMBO" a "Jojanny Manuel Pombo". */
+  static formatear(nombre: string): string {
+    return nombre.trim().toLocaleLowerCase('es').replace(/\s+/g, ' ')
+      .split(' ').map(p => p ? p.charAt(0).toLocaleUpperCase('es') + p.slice(1) : p).join(' ');
+  }
   isTecnico():  boolean { return this.getProfileName() === 'TECNICO'; }
   isContador(): boolean { return this.getProfileName() === 'CONTADOR'; }
 

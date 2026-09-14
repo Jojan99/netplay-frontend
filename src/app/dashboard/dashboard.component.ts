@@ -25,6 +25,13 @@ export class DashboardComponent implements OnInit, OnDestroy {
   role        = '';
   companyName = '';
   username    = '';
+
+  /**
+   * Primer nombre para el saludo; la cédula si no hay. Se lee de la sesión en
+   * cada vuelta: en sesiones viejas el nombre llega un momento después, cuando
+   * la barra superior lo pide, y así el saludo se actualiza solo.
+   */
+  get nombre(): string { return this.authService.getPrimerNombre(); }
   today       = '';
 
   selectedYear  = new Date().getFullYear();

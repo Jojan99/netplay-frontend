@@ -33,9 +33,9 @@
           <span class="app-shell-notification-dot"></span>
         </button>
         <button #dropdownButton type="button" (click)="toggleDropdown()" class="app-shell-profile" [attr.aria-expanded]="isDropdownVisible">
-          <div class="app-shell-user-monogram">{{ username?.charAt(0)?.toUpperCase() || 'U' }}</div>
+          <div class="app-shell-user-monogram">{{ (nombre || username)?.charAt(0)?.toUpperCase() || 'U' }}</div>
           <div class="app-shell-profile-copy">
-            <span class="app-shell-user">{{ username || 'Usuario' }}</span>
+            <span class="app-shell-user">{{ nombre || username || 'Usuario' }}</span>
             <span class="app-shell-user-role">{{ roleName || 'Sin rol' }}</span>
           </div>
           <svg class="app-shell-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
@@ -43,9 +43,9 @@
 
         <div #dropdownMenu *ngIf="isDropdownVisible" [style.top.px]="dropdownPosition.top" [style.left.px]="dropdownPosition.left" class="app-shell-dropdown">
           <div class="app-shell-dropdown-head">
-            <div class="app-shell-user-monogram app-shell-user-monogram--lg">{{ username?.charAt(0)?.toUpperCase() || 'U' }}</div>
+            <div class="app-shell-user-monogram app-shell-user-monogram--lg">{{ (nombre || username)?.charAt(0)?.toUpperCase() || 'U' }}</div>
             <div class="app-shell-dropdown-copy">
-              <p class="app-shell-dropdown-user">{{ username || 'Usuario' }}</p>
+              <p class="app-shell-dropdown-user">{{ nombre || username || 'Usuario' }}</p>
               <p class="app-shell-role">{{ roleName || 'Sin rol' }} · {{ companyName }}</p>
             </div>
           </div>

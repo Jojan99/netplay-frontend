@@ -28,6 +28,7 @@ import { components, RouteProps }    from '../../common/components';
 import { AuthService }               from '../../services/auth.service';
 import { CompanyService }            from '../../services/company.service';
 import { ToastService }             from '../../services/toast.service';
+import { OauthService }             from '../../services/oauth.service';
 
 @Component({
   selector: 'app-layout',
@@ -47,6 +48,7 @@ export class LayoutComponent implements OnInit {
   @ViewChild('dropdownButton') dropdownButton!: ElementRef;
 
   private platformId = inject(PLATFORM_ID);
+  private oauth = inject(OauthService);
 
   selectedItem: any;
   isDropdownVisible = false;
@@ -56,6 +58,8 @@ export class LayoutComponent implements OnInit {
   companyName = '';
   companyLogo = '';
   username    = '';
+  /** Nombre de la persona para mostrar; la cédula si no hay. */
+  nombre      = '';
   roleName    = '';
   filteredComponents: RouteProps[] = [];
   /** El widget flotante de WhatsApp sólo para quienes tienen el módulo CRM en el menú. */
@@ -115,6 +119,21 @@ export class LayoutComponent implements OnInit {
     this.companyName = user.company_name || '';
     this.companyLogo = user.company_logo || '';
     this.username    = user.username || '';
+    this.nombre      = this.authService.getNombre();
+
+    // Las sesiones abiertas antes de este cambio no traían el nombre: se pide
+    // una vez y queda guardado.
+    if (!user.nombre) {
+      this.oauth.getMe().subscribe({
+        next: (r: any) => {
+          const n = `${r?.data?.names ?? ''} ${r?.data?.lastname ?? ''}`.trim();
+          if (!n) return;
+          this.authService.setNombre(n);
+          this.nombre = this.authService.getNombre();
+          this.cdr.detectChanges();
+        },
+      });
+    }
     this.roleName    = this.authService.getRoleName();
 
     // Siempre cargar módulos desde el backend (no confiar en cache entre sesiones)

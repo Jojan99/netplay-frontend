@@ -6,7 +6,7 @@
   <header class="np-head">
     <div>
       <p class="np-kicker">Operación <b>/</b> Centro de control</p>
-      <h1 class="np-title">Hola, {{ username || 'operador' }}</h1>
+      <h1 class="np-title">Hola, {{ nombre || username || 'operador' }}</h1>
       <div class="np-ribbon">
         <span class="np-mono">{{ today }}</span>
         <span><i class="np-dot" style="background:var(--accent)"></i>{{ companyName || 'Netplay' }}</span>
