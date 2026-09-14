@@ -63,6 +63,17 @@ export class ClientApiService {
     return this.http.post(`${this.baseUrl}/router/reiniciar`, {}, this.headers());
   }
 
+  // ── Consumo de datos y velocidad ─────────────────────────────────────────
+  /** Últimos 30 días, total del mes y velocidad del plan. */
+  getConsumo(): Observable<any> {
+    return this.http.get(`${this.baseUrl}/consumo`, this.headers());
+  }
+
+  /** Mide unos segundos la velocidad real en la red de la empresa. */
+  medirVelocidad(): Observable<any> {
+    return this.http.post(`${this.baseUrl}/velocidad`, {}, this.headers());
+  }
+
   // ── Facturas ─────────────────────────────────────────────────────────────
   getInvoices(): Observable<any> {
     return this.http.get(`${this.baseUrl}/invoices`, this.headers());

@@ -30,7 +30,59 @@ export class PortalNetworkComponent implements OnInit {
   editando: { indice: number; nombre: string; clave: string; todas: boolean } | null = null;
   verInactivos = false;
 
-  ngOnInit() { this.cargar(); }
+  ngOnInit() { this.cargar(); this.cargarConsumo(); }
+
+  // ── Consumo y velocidad ───────────────────────────────────────────────────
+  // No dependen de que el equipo reporte al TR-069: la velocidad se mide en
+  // la red de la empresa y el consumo aparece cuando hay lecturas.
+
+  consumo = signal<any>(null);
+  velocidad = signal<any>(null);
+  midiendo = signal(false);
+  errorVelocidad = signal('');
+
+  cargarConsumo() {
+    this.api.getConsumo().subscribe({
+      next: (r: any) => { if (r?.error === 0) this.consumo.set(r.data); },
+      error: () => this.consumo.set(null),
+    });
+  }
+
+  medirVelocidad() {
+    this.midiendo.set(true);
+    this.errorVelocidad.set('');
+    this.api.medirVelocidad().subscribe({
+      next: (r: any) => {
+        this.midiendo.set(false);
+        if (r?.error !== 0) { this.errorVelocidad.set(r?.message || 'No pudimos medir tu conexión ahora.'); return; }
+        this.velocidad.set(r.data);
+      },
+      error: (e: any) => {
+        this.midiendo.set(false);
+        this.errorVelocidad.set(e?.error?.message || 'No pudimos medir tu conexión ahora. Intenta en un momento.');
+      },
+    });
+  }
+
+  get diasConsumo(): any[] { return this.consumo()?.dias ?? []; }
+  get hayConsumo(): boolean { return this.diasConsumo.some(d => d.bajada + d.subida > 0); }
+  private get picoConsumo(): number { return Math.max(1, ...this.diasConsumo.map(d => d.bajada + d.subida)); }
+
+  altoDia(d: any): number { return Math.round((d.bajada + d.subida) / this.picoConsumo * 100); }
+
+  /** Qué parte de la velocidad del plan se está usando (para la barra). */
+  pctDelPlan(mbps: number | null | undefined, plan: number | null | undefined): number {
+    return mbps && plan ? Math.min(100, Math.round(mbps / plan * 100)) : 0;
+  }
+
+  /** "2026-09-14" → "14 sept" */
+  fechaCorta(f: string): string {
+    return new Date(f + 'T12:00:00').toLocaleDateString('es-CO', { day: 'numeric', month: 'short' });
+  }
+
+  tituloDia(d: any): string {
+    return `${this.fechaCorta(d.fecha)}: ${this.datos(d.bajada)} descargado, ${this.datos(d.subida)} subido`;
+  }
 
   cargar(silencioso = false) {
     if (!silencioso) this.loading.set(true);

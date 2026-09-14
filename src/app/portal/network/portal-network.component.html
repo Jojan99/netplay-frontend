@@ -44,7 +44,8 @@
     <div class="pt-kpi is-ok"><b>{{ conectados.length }}</b><small>Equipos conectados</small></div>
     <div class="pt-kpi"><b>{{ porWifi(conectados) }}</b><small>Por WiFi</small></div>
     <div class="pt-kpi"><b>{{ porCable(conectados) }}</b><small>Por cable</small></div>
-    <div class="pt-kpi is-info" *ngIf="panel().consumo"><b>{{ datos(panel().consumo.bajada_bytes) }}</b><small>Descargado desde que encendió</small></div>
+    <div class="pt-kpi is-info" *ngIf="hayConsumo"><b>{{ datos(consumo().mes.bajada) }}</b><small>Descargado este mes</small></div>
+    <div class="pt-kpi is-info" *ngIf="!hayConsumo && panel().consumo"><b>{{ datos(panel().consumo.bajada_bytes) }}</b><small>Descargado desde que encendió</small></div>
   </section>
 
   <!-- Redes WiFi -->
@@ -179,18 +180,72 @@
     </div>
   </section>
 
-  <!-- Consumo -->
-  <section class="pt-card" *ngIf="panel().consumo">
-    <div class="pt-card-h"><h2>Datos usados</h2></div>
-    <div class="pt-dl">
-      <div><span>Descargado</span><b>{{ datos(panel().consumo.bajada_bytes) }}</b></div>
-      <div><span>Subido</span><b>{{ datos(panel().consumo.subida_bytes) }}</b></div>
-      <div><span>Contando desde</span><b>hace {{ duracion(panel().consumo.encendido_hace) }}</b></div>
-    </div>
-    <p class="pt-fine">Es lo que pasó por tu equipo desde la última vez que se encendió. Tu plan no tiene límite de datos: esto es solo informativo.</p>
-  </section>
-
   <p class="pt-fine pt-pie">
     {{ panel().equipo.marca }} {{ panel().equipo.modelo }} · última información {{ hace(panel().equipo.ultimo_reporte) }}
   </p>
+</ng-container>
+
+<!-- Consumo y velocidad: para todos los clientes, reporte o no su equipo al sistema. -->
+<ng-container *ngIf="!loading()">
+  <section class="pt-card" aria-labelledby="pt-vel-titulo">
+    <div class="pt-card-h"><h2 id="pt-vel-titulo">Uso de tu conexión ahora</h2></div>
+
+    <div class="pt-vel">
+      <div class="pt-vel-med">
+        <span>Bajada</span>
+        <b>{{ velocidad() ? (velocidad().bajada_mbps | number:'1.0-1') : '—' }}<small>Mbps</small></b>
+        <div class="pt-medidor" *ngIf="consumo()?.plan?.bajada_mbps" aria-hidden="true">
+          <i [style.width.%]="pctDelPlan(velocidad()?.bajada_mbps, consumo().plan.bajada_mbps)"></i>
+        </div>
+        <small *ngIf="consumo()?.plan?.bajada_mbps">de {{ consumo().plan.bajada_mbps }} Mbps de tu plan</small>
+      </div>
+      <div class="pt-vel-med">
+        <span>Subida</span>
+        <b>{{ velocidad() ? (velocidad().subida_mbps | number:'1.0-1') : '—' }}<small>Mbps</small></b>
+        <div class="pt-medidor" *ngIf="consumo()?.plan?.subida_mbps" aria-hidden="true">
+          <i [style.width.%]="pctDelPlan(velocidad()?.subida_mbps, consumo().plan.subida_mbps)"></i>
+        </div>
+        <small *ngIf="consumo()?.plan?.subida_mbps">de {{ consumo().plan.subida_mbps }} Mbps de tu plan</small>
+      </div>
+      <button type="button" class="pt-btn pt-btn--primary pt-vel-btn" (click)="medirVelocidad()" [disabled]="midiendo()">
+        {{ midiendo() ? 'Midiendo…' : (velocidad() ? 'Medir de nuevo' : 'Medir ahora') }}
+      </button>
+    </div>
+
+    <div class="pt-alert pt-alert--warn" *ngIf="errorVelocidad()">{{ errorVelocidad() }}</div>
+    <p class="pt-fine">
+      Mide durante {{ velocidad()?.segundos || 3 }} segundos lo que tu casa está usando en este momento, no la velocidad máxima:
+      si nadie está navegando va a dar poco. Para ver cuánto llega, pon un video o una descarga y mide otra vez.
+    </p>
+  </section>
+
+  <section class="pt-card" aria-labelledby="pt-consumo-titulo">
+    <div class="pt-card-h"><h2 id="pt-consumo-titulo">Consumo de datos</h2></div>
+
+    <ng-container *ngIf="hayConsumo; else sinConsumo">
+      <div class="pt-mes">
+        <div><span>Descargado este mes</span><b>{{ datos(consumo().mes.bajada) }}</b></div>
+        <div><span>Subido este mes</span><b>{{ datos(consumo().mes.subida) }}</b></div>
+        <div><span>Total del mes</span><b>{{ datos(consumo().mes.bajada + consumo().mes.subida) }}</b></div>
+      </div>
+
+      <div class="pt-barras" role="img"
+           [attr.aria-label]="'Consumo diario de los últimos 30 días; este mes ' + datos(consumo().mes.bajada + consumo().mes.subida)">
+        <span class="pt-barra" *ngFor="let d of diasConsumo" [class.is-cero]="!(d.bajada + d.subida)"
+              [style.height.%]="altoDia(d)" [title]="tituloDia(d)"></span>
+      </div>
+      <div class="pt-barras-eje">
+        <span>{{ fechaCorta(diasConsumo[0].fecha) }}</span>
+        <span>Hoy</span>
+      </div>
+      <p class="pt-fine">Tu plan no tiene límite de datos: esto es solo informativo. Pasa el cursor por una barra para ver ese día.</p>
+    </ng-container>
+
+    <ng-template #sinConsumo>
+      <p class="pt-fine">
+        Todavía no tenemos mediciones de tu consumo. Lo contamos a partir de los datos que tu equipo nos envía cada hora;
+        si tu equipo está conectado a nuestro sistema, en unas horas empieza a aparecer aquí.
+      </p>
+    </ng-template>
+  </section>
 </ng-container>

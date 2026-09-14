@@ -43,6 +43,36 @@
 
 .pt-pie { text-align: center; margin: 4px 0 0; }
 
+/* Uso de la conexión ahora: dos medidas contra la velocidad del plan. */
+.pt-vel { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)) auto; gap: 18px; align-items: end; }
+.pt-vel-med { display: grid; gap: 5px; min-width: 0;
+  > span { font-size: 12px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; color: var(--text-3, var(--text-2)); }
+  > b { font-size: 30px; line-height: 1; font-variant-numeric: tabular-nums; small { margin-left: 5px; font-size: 13px; font-weight: 600; color: var(--text-2); } }
+  > small { font-size: 12px; color: var(--text-2); } }
+.pt-medidor { height: 6px; border-radius: 999px; background: var(--surface-2, var(--line)); overflow: hidden;
+  i { display: block; height: 100%; border-radius: inherit; background: var(--accent); transition: width .4s ease; } }
+@media (max-width: 560px) {
+  .pt-vel { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .pt-vel-btn { grid-column: 1 / -1; }
+}
+
+.pt-vel + .pt-alert, .pt-vel ~ .pt-fine { margin-top: 14px; }
+
+/* Totales del mes: tres cifras con su etiqueta encima. */
+.pt-mes { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px;
+  > div { display: grid; gap: 3px; min-width: 0; }
+  span { font-size: 12px; color: var(--text-2); }
+  b { font-size: 20px; font-variant-numeric: tabular-nums; } }
+@media (max-width: 560px) { .pt-mes { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+
+/* Consumo diario: 30 barras, la más alta llega arriba. */
+.pt-barras { display: grid; grid-template-columns: repeat(30, minmax(0, 1fr)); gap: 3px; align-items: end; height: 120px; margin-top: 16px; padding-bottom: 2px; border-bottom: 1px solid var(--line); }
+.pt-barra { display: block; min-height: 3px; border-radius: 3px 3px 0 0; background: var(--accent); opacity: .85; transition: opacity .15s;
+  &:hover { opacity: 1; }
+  &.is-cero { background: var(--line); opacity: 1; } }
+.pt-barras-eje { display: flex; justify-content: space-between; margin-top: 6px; font-size: 11.5px; color: var(--text-3, var(--text-2)); }
+@media (prefers-reduced-motion: reduce) { .pt-medidor i { transition: none; } }
+
 /* Usar la misma contraseña en todas las redes. */
 .pt-check {
   display: flex; gap: 10px; align-items: center; cursor: pointer;
