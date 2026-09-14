@@ -30,6 +30,9 @@ import { CompanyService }            from '../../services/company.service';
 import { ToastService }             from '../../services/toast.service';
 import { OauthService }             from '../../services/oauth.service';
 import { TareasFlotantesComponent } from '../tareas-flotantes/tareas-flotantes.component';
+import { AtajosService, ICONOS }    from '../../services/atajos.service';
+import { BuscadorRapidoComponent }  from '../atajos/buscador-rapido.component';
+import { VentanasRapidasComponent, MenuDeVentanasComponent } from '../atajos/ventanas-rapidas.component';
 
 @Component({
   selector: 'app-layout',
@@ -39,6 +42,7 @@ import { TareasFlotantesComponent } from '../tareas-flotantes/tareas-flotantes.c
     SidebarComponent, SidebarItemGroupComponent, SidebarItemComponent,
     DarkThemeToggleComponent, NavbarComponent, FooterComponent, CrmWidgetComponent, DialogHostComponent, TeamPanelComponent,
     SanitizeHtmlPipe, TareasFlotantesComponent,
+    BuscadorRapidoComponent, VentanasRapidasComponent, MenuDeVentanasComponent,
   ],
   templateUrl: './layout.component.html',
   styleUrl: './layout.component.scss',
@@ -50,6 +54,15 @@ export class LayoutComponent implements OnInit {
 
   private platformId = inject(PLATFORM_ID);
   private oauth = inject(OauthService);
+  /** Favoritos, buscador Ctrl+K y ventanas rápidas (sólo en pantallas grandes). */
+  readonly atajos = inject(AtajosService);
+  readonly iconos = ICONOS;
+
+  alternarFavorito(item: RouteProps): void {
+    if (!item.href) return;
+    const quedo = this.atajos.alternarFavorito(item.href);
+    this.toastService.info(quedo ? `${item.title} quedó en tus atajos` : `${item.title} salió de tus atajos`);
+  }
 
   selectedItem: any;
   isDropdownVisible = false;
@@ -157,6 +170,7 @@ export class LayoutComponent implements OnInit {
   private buildMenu(allowedModules: string[]): void {
     if (!allowedModules || allowedModules.length === 0) {
       this.filteredComponents = [];
+      this.atajos.ponerMenu([]);
       return;
     }
 
@@ -184,6 +198,7 @@ export class LayoutComponent implements OnInit {
       .filter((item): item is RouteProps => item !== null);
 
     this.filteredComponents = filtered;
+    this.atajos.ponerMenu(filtered);
     this.updateSection(this.router.url);
 
     // Auto-expandir el grupo de la ruta activa

@@ -1,0 +1,23 @@
+.br-fondo { position: fixed; inset: 0; z-index: 90; display: grid; align-items: start; justify-items: center; padding-block: 12vh 16px; padding-inline: 16px; background: var(--overlay); }
+.br-caja { width: min(620px, 100%); display: flex; flex-direction: column; max-height: 76vh; background: var(--surface); border: 1px solid var(--line-strong); border-radius: 12px; box-shadow: var(--shadow-lg); overflow: hidden; animation: br-entrar .14s ease-out; }
+
+.br-entrada { display: flex; align-items: center; gap: 10px; padding: 0 14px; border-bottom: 1px solid var(--line);
+  input { flex: 1; min-width: 0; height: 52px; border: 0; background: none; color: var(--text); font: 500 16px var(--font-body); outline: none; box-shadow: none; }
+  input::placeholder { color: var(--text-3); } }
+.br-lupa { display: grid; color: var(--text-3); ::ng-deep svg { width: 18px; height: 18px; } }
+.br-cargando { font: 500 11px var(--font-mono); color: var(--text-3); }
+
+.br-lista { overflow-y: auto; padding: 6px; }
+.br-grupo { padding: 8px 10px 4px; font: 500 10px var(--font-mono); letter-spacing: .1em; text-transform: uppercase; color: var(--text-3); }
+.br-res { width: 100%; display: grid; grid-template-columns: 24px minmax(0, 1fr) auto; gap: 10px; align-items: center; padding: 7px 10px; border: 0; border-radius: 7px; background: none; color: var(--text); text-align: left; cursor: pointer;
+  &.is-sel { background: var(--accent-soft); }
+  &.is-sel .br-ir { opacity: 1; } }
+.br-txt { min-width: 0;
+  b { display: block; font-size: 13.5px; font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  small { display: block; color: var(--text-3); font-size: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; } }
+.br-ir { opacity: 0; font: 500 11px var(--font-mono); color: var(--accent); }
+
+.br-pie { display: flex; gap: 14px; flex-wrap: wrap; padding: 8px 14px; border-top: 1px solid var(--line); background: var(--surface-2); font-size: 11.5px; color: var(--text-3); }
+
+@keyframes br-entrar { from { opacity: 0; transform: translateY(6px) scale(.99); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) { .br-caja { animation: none; } }

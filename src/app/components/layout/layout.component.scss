@@ -79,6 +79,37 @@ main {
 @media (max-width: 640px) { .app-shell-profile-copy, .app-shell-chevron { display: none; } .app-shell-product { display: none; } }
 
 .app-shell-body { background: var(--bg); }
+
+/* ── Atajos: buscador del encabezado, estrellas del menú y "Mis atajos" ──
+   Todo esto se pinta sólo desde 768 px (el servicio lo decide); las reglas
+   de abajo son el respaldo por si el ancho cambia antes de que llegue. */
+.app-shell-search { display: inline-flex; align-items: center; gap: 8px; height: 34px; min-width: 200px; padding: 0 6px 0 10px; margin-right: 2px; border: 1px solid var(--line); border-radius: 999px; background: var(--surface-2); color: var(--text-3); font: 600 12.5px var(--font-body); cursor: pointer; transition: border-color .15s, color .15s;
+  &:hover { border-color: var(--line-strong); color: var(--text-2); }
+  &:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+  kbd { margin-left: auto; font: 500 10.5px var(--font-mono); padding: 1px 5px; border: 1px solid var(--line-strong); border-bottom-width: 2px; border-radius: 4px; background: var(--surface); color: var(--text-2); } }
+.app-shell-search-ico { display: grid; }
+:host ::ng-deep .app-shell-search-ico svg { width: 15px; height: 15px; }
+/* Por debajo de 1536 px no hay lugar para el campo junto a la marca y el contexto: queda el ícono. */
+@media (max-width: 1535px) { .app-shell-search { min-width: 0; width: 34px; padding: 0; justify-content: center; border-radius: var(--radius); } .app-shell-search-txt, .app-shell-search kbd { display: none; } }
+@media (max-width: 767px) { .app-shell-search, app-menu-de-ventanas, .sb-star, .app-atajos { display: none !important; } }
+
+.sb-fav { position: relative; }
+.sb-star { position: absolute; top: 50%; right: 4px; transform: translateY(-50%); z-index: 1; width: 26px; height: 26px; display: grid; place-items: center; border: 0; border-radius: 5px; background: var(--surface-2); color: var(--text-3); cursor: pointer; opacity: 0; transition: opacity .12s, color .12s;
+  &:hover { color: var(--warn); background: var(--surface-3); }
+  &:focus-visible { opacity: 1; outline: 2px solid var(--accent); }
+  &.is-on { opacity: 1; color: var(--warn); background: transparent; } }
+:host ::ng-deep .sb-star svg { width: 14px; height: 14px; }
+.sb-fav:hover .sb-star { opacity: 1; }
+.sb-fav:hover .sb-star.is-on, .sb-star.is-on { background: transparent; }
+
+.app-atajos { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; margin: -8px 0 14px; }
+.app-atajos-label { margin-right: 4px; color: var(--text-3); font: 500 10px var(--font-mono); letter-spacing: .1em; text-transform: uppercase; }
+.app-atajos-chip { display: inline-flex; align-items: center; gap: 6px; height: 28px; padding: 0 10px 0 8px; border: 1px solid var(--line); border-radius: 999px; background: var(--surface); color: var(--text-2); font: 700 12px var(--font-body); text-decoration: none; white-space: nowrap; transition: border-color .15s, color .15s;
+  &:hover { border-color: var(--accent-line); color: var(--accent); }
+  &.is-active { border-color: var(--accent-line); background: var(--accent-soft); color: var(--accent); }
+  &:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; } }
+.app-atajos-ico { display: grid; color: currentColor; }
+:host ::ng-deep .app-atajos-ico svg { width: 14px; height: 14px; }
 @media (max-width: 767px) {
     main {
         justify-content: initial;

@@ -1,0 +1,188 @@
+@switch (ventana.tipo) {
+
+  <!-- ── Cliente ─────────────────────────────────────────────────────── -->
+  @case ('cliente') {
+    <app-selector-de-cliente [cliente]="ventana.cliente" (elegido)="elegirCliente($event)"></app-selector-de-cliente>
+    @if (cargando) { <p class="at-muted">Leyendo el cliente…</p> }
+    @if (error) { <p class="at-error">{{ error }}</p> }
+    @if (ficha) {
+      <div class="vr-ficha">
+        <div class="vr-top">
+          <div><b>{{ ficha.nombre }}</b><small class="at-mono">CC {{ ficha.dni }}{{ ficha.telefono ? ' · ' + ficha.telefono : '' }}</small></div>
+          <span class="at-pill" [ngClass]="'at-pill--' + tonoEstado(ficha.estado)">{{ ficha.estado || 'Sin estado' }}</span>
+        </div>
+        <dl class="vr-dl">
+          <dt>Plan</dt><dd>{{ ficha.plan || '—' }}</dd>
+          @if (ficha.ip) { <dt>IP</dt><dd class="at-mono">{{ ficha.ip }}</dd> }
+          @if (ficha.pppoe) { <dt>PPPoE</dt><dd class="at-mono">{{ ficha.pppoe }}</dd> }
+          <dt>Dirección</dt><dd>{{ ficha.direccion || '—' }}</dd>
+          @if (ficha.deuda) {
+            <dt>Deuda</dt>
+            <dd [class.vr-rojo]="ficha.deuda.vencidas > 0">
+              @if (ficha.deuda.saldo > 0) { {{ dinero(ficha.deuda.saldo) }} · {{ ficha.deuda.facturas.length }} {{ ficha.deuda.facturas.length === 1 ? 'factura' : 'facturas' }} }
+              @else { Al día }
+            </dd>
+          }
+          <dt>ONT</dt>
+          <dd class="at-mono">{{ ficha.ont ? ficha.ont.olt + ' · ' + ficha.ont.fsp + ' · ' + ficha.ont.ont_id : 'Sin ONT vinculada' }}</dd>
+        </dl>
+        <div class="vr-acciones">
+          @if (atajos.tieneModulo('usuario')) { <button type="button" class="at-btn" (click)="verFicha()">Ver ficha</button> }
+          @if (ficha.ont && atajos.puedeAbrir('equipo')) { <button type="button" class="at-btn" (click)="abrir('equipo')">Equipo</button> }
+          @if (atajos.puedeAbrir('ticket')) { <button type="button" class="at-btn" (click)="abrir('ticket')">Crear ticket</button> }
+          @if (ficha.deuda && atajos.puedeAbrir('facturas')) { <button type="button" class="at-btn" (click)="abrir('facturas')">Facturas</button> }
+        </div>
+      </div>
+    }
+  }
+
+  <!-- ── Equipo ──────────────────────────────────────────────────────── -->
+  @case ('equipo') {
+    <app-selector-de-cliente [cliente]="ventana.cliente" (elegido)="elegirCliente($event)"></app-selector-de-cliente>
+    @if (cargando) { <p class="at-muted">Consultando la OLT… puede tardar unos segundos.</p> }
+    @if (error) { <p class="at-error">{{ error }}</p> }
+    @if (equipo && !cargando) {
+      <div class="vr-top">
+        <div>
+          <b class="at-mono">{{ equipo.olt?.name }} · {{ equipo.fsp }} · {{ equipo.ont_id }}</b>
+          <small>{{ equipo.vivo?.modelo || equipo.serial || 'Modelo sin leer' }}</small>
+        </div>
+        <span class="at-pill" [ngClass]="enLinea ? 'at-pill--ok' : 'at-pill--danger'">{{ enLinea ? 'En línea' : (equipo.vivo?.status || 'Sin dato') }}</span>
+      </div>
+      @if (equipo.vivo?.error) { <p class="at-error">{{ equipo.vivo.error }}</p> }
+      <div class="vr-senal">
+        <div class="vr-senal-txt">
+          <span>Señal recibida</span>
+          <span class="at-mono">
+            {{ equipo.vivo?.potencia !== null && equipo.vivo?.potencia !== undefined ? (equipo.vivo.potencia | number:'1.1-2') + ' dBm' : '—' }}
+            · {{ etiquetaSenal(equipo.vivo?.estado) }}
+          </span>
+        </div>
+        <div class="vr-medidor" aria-hidden="true"><i [ngClass]="'is-' + tonoSenal(equipo.vivo?.estado)" [style.width.%]="anchoSenal(equipo.vivo?.potencia)"></i></div>
+      </div>
+      <dl class="vr-dl">
+        <dt>Serial</dt><dd class="at-mono">{{ equipo.serial || '—' }}</dd>
+        @if (equipo.vivo?.temperatura !== null && equipo.vivo?.temperatura !== undefined) { <dt>Temperatura</dt><dd class="at-mono">{{ equipo.vivo.temperatura }} °C</dd> }
+        @if (equipo.vivo?.distancia_m) { <dt>Distancia</dt><dd class="at-mono">{{ equipo.vivo.distancia_m | number }} m</dd> }
+        @if (equipo.vivo?.olt_rx !== null && equipo.vivo?.olt_rx !== undefined) { <dt>Rx en la OLT</dt><dd class="at-mono">{{ equipo.vivo.olt_rx | number:'1.1-2' }} dBm</dd> }
+        @if (equipo.vivo?.medido_en) { <dt>Medido</dt><dd>{{ equipo.vivo.medido_en | date:'HH:mm:ss' }}</dd> }
+      </dl>
+      <div class="vr-acciones">
+        <button type="button" class="at-btn at-btn--primary" (click)="medir(true)">Medir de nuevo</button>
+        <button type="button" class="at-btn" (click)="verPuerto(equipo.fsp)">Ver puerto</button>
+        @if (atajos.tieneModulo('usuario')) { <button type="button" class="at-btn" (click)="verFicha()">Ver ficha</button> }
+      </div>
+    }
+  }
+
+  <!-- ── Ticket ──────────────────────────────────────────────────────── -->
+  @case ('ticket') {
+    <app-selector-de-cliente [cliente]="ventana.cliente" (elegido)="elegirCliente($event)"></app-selector-de-cliente>
+    @if (error) { <p class="at-error">{{ error }}</p> }
+    @if (cargando) { <p class="at-muted">Leyendo el cliente…</p> }
+    @if (ficha) { <p class="at-muted">{{ ficha.direccion || 'Sin dirección' }} · {{ ficha.plan || 'sin plan' }}</p> }
+    <div class="vr-fila">
+      <label class="at-field" [attr.for]="'vr-tipo-' + ventana.id"><span>Tipo</span>
+        <select class="at-input" [id]="'vr-tipo-' + ventana.id" [(ngModel)]="ticket.tipo">
+          <option [ngValue]="0" disabled>Elegir…</option>
+          @for (t of tipos; track t.id) { <option [ngValue]="t.id">{{ t.name }}</option> }
+        </select>
+      </label>
+      <label class="at-field" [attr.for]="'vr-prioridad-' + ventana.id"><span>Prioridad</span>
+        <select class="at-input" [id]="'vr-prioridad-' + ventana.id" [(ngModel)]="ticket.prioridad">
+          <option [ngValue]="0" disabled>Elegir…</option>
+          @for (p of prioridades; track p.id) { <option [ngValue]="p.id">{{ p.name }}</option> }
+        </select>
+      </label>
+    </div>
+    <div class="vr-fila">
+      <label class="at-field" [attr.for]="'vr-tecnico-' + ventana.id"><span>Técnico</span>
+        <select class="at-input" [id]="'vr-tecnico-' + ventana.id" [(ngModel)]="ticket.tecnico">
+          <option [ngValue]="0" disabled>Elegir…</option>
+          @for (t of tecnicos; track t.user_id) { <option [ngValue]="t.user_id">{{ t.names }} {{ t.lastname }}</option> }
+        </select>
+      </label>
+      <label class="at-field" [attr.for]="'vr-fecha-' + ventana.id"><span>Fecha</span>
+        <input class="at-input" type="date" [id]="'vr-fecha-' + ventana.id" [(ngModel)]="ticket.fecha">
+      </label>
+    </div>
+    <label class="at-field" [attr.for]="'vr-obs-' + ventana.id"><span>Qué pasa</span>
+      <textarea class="at-input" [id]="'vr-obs-' + ventana.id" [(ngModel)]="ticket.observacion" placeholder="Lo que cuenta el cliente"></textarea>
+    </label>
+    <label class="vr-check" [attr.for]="'vr-avisar-' + ventana.id">
+      <input type="checkbox" [id]="'vr-avisar-' + ventana.id" [(ngModel)]="ticket.avisar"> Avisar al grupo de técnicos
+    </label>
+    <div class="vr-acciones">
+      <button type="button" class="at-btn at-btn--primary" [disabled]="!ticketListo || creando" (click)="crearTicket()">
+        {{ creando ? 'Creando…' : 'Crear ticket' }}
+      </button>
+      @if (!ficha) { <span class="at-muted">Elegí un cliente primero.</span> }
+    </div>
+  }
+
+  <!-- ── Facturas ────────────────────────────────────────────────────── -->
+  @case ('facturas') {
+    <app-selector-de-cliente [cliente]="ventana.cliente" (elegido)="elegirCliente($event)"></app-selector-de-cliente>
+    @if (cargando) { <p class="at-muted">Leyendo facturas…</p> }
+    @if (error) { <p class="at-error">{{ error }}</p> }
+    @if (ficha && !ficha.deuda) { <p class="at-vacio">Tu perfil no ve la cartera de los clientes.</p> }
+    @if (ficha?.deuda) {
+      <div class="vr-top">
+        <div>
+          <b>{{ ficha.deuda.saldo > 0 ? dinero(ficha.deuda.saldo) : 'Al día' }}</b>
+          <small>{{ ficha.deuda.facturas.length }} pendientes · {{ ficha.deuda.vencidas }} vencidas</small>
+        </div>
+        <span class="at-pill" [ngClass]="ficha.deuda.vencidas ? 'at-pill--danger' : (ficha.deuda.saldo > 0 ? 'at-pill--warn' : 'at-pill--ok')">
+          {{ ficha.deuda.vencidas ? 'En mora' : (ficha.deuda.saldo > 0 ? 'Pendiente' : 'Al día') }}
+        </span>
+      </div>
+      <ul class="vr-lista">
+        @for (f of ficha.deuda.facturas; track f.id) {
+          <li>
+            <div>
+              <b class="at-mono">{{ f.numero }}</b>
+              <small>
+                @if (f.estado === 'overdue') { vencida hace {{ diasVencida(f.vence) }} días }
+                @else if (f.estado === 'partial') { abonada · vence {{ f.vence | date:'d MMM' }} }
+                @else { vence {{ f.vence | date:'d MMM' }} }
+              </small>
+            </div>
+            <span class="at-mono" [class.vr-rojo]="f.estado === 'overdue'">{{ dinero(f.saldo) }}</span>
+            <button type="button" class="at-btn" (click)="abrirPdf(f.pdf_url)" [attr.aria-label]="'Ver factura ' + f.numero">PDF</button>
+          </li>
+        } @empty { <li class="vr-li-vacio">Sin facturas pendientes.</li> }
+      </ul>
+      <div class="vr-acciones">
+        <button type="button" class="at-btn at-btn--primary" (click)="copiar(ficha.deuda.enlace, 'Enlace del estado de cuenta copiado')">Copiar estado de cuenta</button>
+        <button type="button" class="at-btn" (click)="ir('/dashboard/finanzas')">Ir a finanzas</button>
+      </div>
+    }
+  }
+
+  <!-- ── Alertas ─────────────────────────────────────────────────────── -->
+  @case ('alertas') {
+    @if (resumenAlertas) {
+      <p class="at-muted">{{ resumenAlertas.criticos || 0 }} críticas · {{ resumenAlertas.avisos || 0 }} avisos</p>
+    }
+    @if (error) { <p class="at-error">{{ error }}</p> }
+    @if (cargando && !alertas.length) { <p class="at-muted">Leyendo alertas…</p> }
+    <ul class="vr-lista vr-lista--alertas">
+      @for (a of alertas; track a.clave) {
+        <li>
+          <div>
+            <b>{{ a.titulo }}</b>
+            <small>{{ a.detalle }}{{ a.abierta_en ? ' · desde ' + (a.abierta_en | date:'d MMM HH:mm') : '' }}</small>
+          </div>
+          <span class="at-pill" [ngClass]="'at-pill--' + tonoAlerta(a.nivel)">{{ a.nivel }}</span>
+          @if (a.user_id) {
+            <button type="button" class="at-btn" (click)="atajos.abrirVentana('cliente', { id: a.user_id, nombre: a.datos?.cliente || a.titulo })">Cliente</button>
+          }
+        </li>
+      } @empty { @if (!cargando) { <li class="vr-li-vacio">No hay alertas abiertas.</li> } }
+    </ul>
+    <div class="vr-acciones">
+      <button type="button" class="at-btn" (click)="cargarAlertas()" [disabled]="cargando">{{ cargando ? 'Actualizando…' : 'Actualizar' }}</button>
+      <button type="button" class="at-btn" (click)="ir('/dashboard/olt/alertas')">Ver todas</button>
+    </div>
+  }
+}

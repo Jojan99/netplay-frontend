@@ -26,6 +26,14 @@
       </div>
 
       <div class="app-shell-actions">
+        <ng-container *ngIf="atajos.grande()">
+          <button type="button" class="app-shell-search" (click)="atajos.abrirBuscador()" aria-label="Buscar (Ctrl K)" title="Buscar cliente, equipo o módulo">
+            <span class="app-shell-search-ico" [innerHTML]="iconos.buscar | sanitizeHtml"></span>
+            <span class="app-shell-search-txt">Buscar</span>
+            <kbd>Ctrl K</kbd>
+          </button>
+          <app-menu-de-ventanas></app-menu-de-ventanas>
+        </ng-container>
         <flowbite-dark-theme-toggle></flowbite-dark-theme-toggle>
         <app-team-panel></app-team-panel>
         <button type="button" class="np-icobtn app-shell-notification" aria-label="Notificaciones">
@@ -72,11 +80,14 @@
 
       <!-- Item simple (sin hijos) -->
       <ng-container *ngIf="!item.group">
-        <flowbite-sidebar-item
-          [icon]="item.icon"
-          [link]="item.href">
-          {{ item.title }}
-        </flowbite-sidebar-item>
+        <div class="sb-fav">
+          <flowbite-sidebar-item
+            [icon]="item.icon"
+            [link]="item.href">
+            {{ item.title }}
+          </flowbite-sidebar-item>
+          <ng-container *ngTemplateOutlet="estrella; context: { $implicit: item }"></ng-container>
+        </div>
       </ng-container>
 
       <!-- Grupo con hijos -->
@@ -102,14 +113,16 @@
 
         <div [class.expanded]="selectedItem === item" class="sidebar-content">
 
-          <flowbite-sidebar-item
-            *ngFor="let child of item.children"
-            [icon]="child.icon"
-            [link]="child.href">
+          <div class="sb-fav" *ngFor="let child of item.children">
+            <flowbite-sidebar-item
+              [icon]="child.icon"
+              [link]="child.href">
 
-            {{ child.title }}
+              {{ child.title }}
 
-          </flowbite-sidebar-item>
+            </flowbite-sidebar-item>
+            <ng-container *ngTemplateOutlet="estrella; context: { $implicit: child }"></ng-container>
+          </div>
 
         </div>
 
@@ -119,8 +132,28 @@
 
   </flowbite-sidebar>
 
+  <!-- Estrella para agregar un módulo a "Mis atajos" (sólo con el menú abierto y pantalla grande). -->
+  <ng-template #estrella let-it>
+    <button
+      *ngIf="it.href && atajos.grande() && (sidebarService.$collapsed | async) === false"
+      type="button"
+      class="sb-star"
+      [class.is-on]="atajos.esFavorito(it.href)"
+      [attr.aria-pressed]="atajos.esFavorito(it.href)"
+      [attr.aria-label]="(atajos.esFavorito(it.href) ? 'Quitar de mis atajos: ' : 'Agregar a mis atajos: ') + it.title"
+      [title]="atajos.esFavorito(it.href) ? 'Quitar de mis atajos' : 'Agregar a mis atajos'"
+      (click)="$event.stopPropagation(); alternarFavorito(it)"
+      [innerHTML]="(atajos.esFavorito(it.href) ? iconos.estrella : iconos.estrellaV) | sanitizeHtml"></button>
+  </ng-template>
+
   <!-- CONTENIDO -->
   <main class="app-platform flex-1 overflow-auto p-6">
+    <nav *ngIf="atajos.grande() && atajos.misAtajos().length" class="app-atajos" aria-label="Mis atajos">
+      <span class="app-atajos-label">Mis atajos</span>
+      <a *ngFor="let m of atajos.misAtajos()" class="app-atajos-chip" [routerLink]="['/dashboard', m.href]" routerLinkActive="is-active">
+        <span class="app-atajos-ico" *ngIf="m.icono" [innerHTML]="m.icono | sanitizeHtml"></span>{{ m.titulo }}
+      </a>
+    </nav>
     <router-outlet></router-outlet>
   </main>
 
@@ -130,6 +163,8 @@
 <app-crm-widget *ngIf="hasCrm"></app-crm-widget>
 <app-dialog-host></app-dialog-host>
 <app-tareas-flotantes></app-tareas-flotantes>
+<app-ventanas-rapidas></app-ventanas-rapidas>
+<app-buscador-rapido></app-buscador-rapido>
 
 <!-- ═══ TOASTS ═══════════════════════════════════════════════════════════════ -->
 <div class="app-shell-toasts" aria-live="polite">

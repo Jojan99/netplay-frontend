@@ -1,0 +1,38 @@
+@if (atajos.buscadorAbierto() && atajos.grande()) {
+  <div class="br-fondo" (click)="atajos.cerrarBuscador()">
+    <div class="br-caja" role="dialog" aria-modal="true" aria-label="Buscar en el panel" (click)="$event.stopPropagation()">
+      <div class="br-entrada">
+        <span class="br-lupa" [innerHTML]="iconos.buscar | sanitizeHtml"></span>
+        <input #campo id="buscador-rapido-texto" type="text" autocomplete="off" spellcheck="false"
+               [(ngModel)]="texto" (ngModelChange)="alEscribir()"
+               placeholder="Cliente, cédula, teléfono, IP, puerto PON o módulo"
+               aria-controls="buscador-rapido-lista">
+        @if (buscandoClientes) { <span class="br-cargando">buscando…</span> }
+        <kbd>Esc</kbd>
+      </div>
+
+      <div #lista class="br-lista" id="buscador-rapido-lista" role="listbox">
+        @for (r of resultados; track r.grupo + r.titulo + r.sub; let i = $index) {
+          @if (empiezaGrupo(i)) { <div class="br-grupo">{{ r.grupo }}</div> }
+          <button type="button" class="br-res" role="option" [class.is-sel]="i === sel" [attr.aria-selected]="i === sel"
+                  (click)="elegir(i)" (mousemove)="sel = i">
+            <span class="at-ico" [innerHTML]="r.icono | sanitizeHtml"></span>
+            <span class="br-txt"><b>{{ r.titulo }}</b><small>{{ r.sub }}</small></span>
+            <span class="br-ir">Enter ↵</span>
+          </button>
+        } @empty {
+          <p class="at-vacio">
+            @if (buscandoClientes) { Buscando clientes… }
+            @else { Nada con ese texto. Probá con un apellido, una cédula o un puerto como 0/0/5. }
+          </p>
+        }
+      </div>
+
+      <div class="br-pie">
+        <span><kbd>↑</kbd> <kbd>↓</kbd> moverse</span>
+        <span><kbd>Enter</kbd> abrir</span>
+        <span><kbd>Ctrl</kbd> <kbd>K</kbd> desde cualquier pantalla</span>
+      </div>
+    </div>
+  </div>
+}
