@@ -15,6 +15,22 @@
 .wa-chat-pane { min-height: 0; min-width: 0; display: flex; flex-direction: column; background: var(--wa-chat); position: relative; }
 .wa-chat-host { display: flex; flex-direction: column; flex: 1; min-height: 0; }
 
+/* Escritorio: la barra es de una sola línea. Los proveedores se partían en dos
+   renglones y "WhatsApp Web" quedaba montado sobre la lista. */
+@media (min-width: 768px) {
+  .wa-topbar { min-width: 0; }
+  .wa-topbar > * { flex-shrink: 0; }
+  .wa-topbar-brand { flex-shrink: 1; min-width: 0; strong, .wa-topbar-kicker { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; } }
+  .wa-topbar .np-chips { flex-wrap: nowrap; }
+  .wa-topbar .np-chip { white-space: nowrap; }
+}
+/* Laptop y tablet horizontal: no entra en una línea; pasa a dos renglones
+   ordenados en vez de cortar "Difusión" y "Nuevo chat" por la derecha. */
+@media (min-width: 768px) and (max-width: 1280px) {
+  .wa-topbar-kicker { display: none; }
+  .wa-topbar { flex-wrap: wrap; height: auto; padding-block: 8px; row-gap: 8px; }
+}
+
 @media (max-width: 1100px) { .wa-layout { grid-template-columns: 320px minmax(0, 1fr); } }
 @media (max-width: 767px) {
   .wa-root { margin: -16px; height: calc(100% + 32px); }

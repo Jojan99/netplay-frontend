@@ -75,6 +75,8 @@ main {
 .app-shell-menu-item--danger { color: var(--danger); } .app-shell-menu-item--danger:hover { background: var(--danger-soft); color: var(--danger); }
 .app-shell-backdrop { position: fixed; inset: 56px 0 0; z-index: 30; background: var(--overlay); }
 @media (min-width: 768px) { .app-shell-backdrop { display: none; } }
+/* Con el buscador en el encabezado no entra el contexto completo: queda sólo la ruta. */
+@media (max-width: 1279px) { .app-shell-live, .app-shell-clock, .app-shell-context-divider { display: none; } }
 @media (max-width: 900px) { .app-shell-context { display: none; } .app-shell-nav-inner { grid-template-columns: minmax(0, 1fr) auto; } }
 @media (max-width: 640px) { .app-shell-profile-copy, .app-shell-chevron { display: none; } .app-shell-product { display: none; } }
 
@@ -102,7 +104,11 @@ main {
 .sb-fav:hover .sb-star { opacity: 1; }
 .sb-fav:hover .sb-star.is-on, .sb-star.is-on { background: transparent; }
 
-.app-atajos { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; margin: -8px 0 14px; }
+.app-content { display: flex; flex-direction: column; flex: 1; min-width: 0; min-height: 0; }
+.app-content > main { min-height: 0; }
+/* Franja fija sobre el contenido: una sola línea que se desliza si hay muchos atajos. */
+.app-atajos { flex-shrink: 0; display: flex; align-items: center; gap: 6px; padding-block: 10px 8px; padding-inline: 24px; border-bottom: 1px solid var(--line); background: var(--bg); overflow-x: auto; scrollbar-width: none; &::-webkit-scrollbar { display: none; } }
+.app-atajos-chip, .app-atajos-label { flex-shrink: 0; }
 .app-atajos-label { margin-right: 4px; color: var(--text-3); font: 500 10px var(--font-mono); letter-spacing: .1em; text-transform: uppercase; }
 .app-atajos-chip { display: inline-flex; align-items: center; gap: 6px; height: 28px; padding: 0 10px 0 8px; border: 1px solid var(--line); border-radius: 999px; background: var(--surface); color: var(--text-2); font: 700 12px var(--font-body); text-decoration: none; white-space: nowrap; transition: border-color .15s, color .15s;
   &:hover { border-color: var(--accent-line); color: var(--accent); }

@@ -147,15 +147,20 @@
   </ng-template>
 
   <!-- CONTENIDO -->
-  <main class="app-platform flex-1 overflow-auto p-6">
+  <!-- La barra de atajos va fuera del <main>: hay pantallas (la bandeja del CRM)
+       que se estiran con margen negativo hasta los bordes del main y la tapaban. -->
+  <div class="app-content">
     <nav *ngIf="atajos.grande() && atajos.misAtajos().length" class="app-atajos" aria-label="Mis atajos">
       <span class="app-atajos-label">Mis atajos</span>
-      <a *ngFor="let m of atajos.misAtajos()" class="app-atajos-chip" [routerLink]="'/dashboard/' + m.href" routerLinkActive="is-active">
+      <a *ngFor="let m of atajos.misAtajos()" class="app-atajos-chip" [routerLink]="'/dashboard/' + m.href"
+         routerLinkActive="is-active" [routerLinkActiveOptions]="{ exact: true }">
         <span class="app-atajos-ico" *ngIf="m.icono" [innerHTML]="m.icono | sanitizeHtml"></span>{{ m.titulo }}
       </a>
     </nav>
-    <router-outlet></router-outlet>
-  </main>
+    <main class="app-platform flex-1 overflow-auto p-6">
+      <router-outlet></router-outlet>
+    </main>
+  </div>
 
 </div>
 
