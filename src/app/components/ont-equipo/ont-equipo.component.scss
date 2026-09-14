@@ -153,3 +153,22 @@
 }
 
 .oe-pie { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding-top: 10px; border-top: 1px solid var(--line); }
+
+/* Cambio de contraseña WiFi desde la ficha. */
+.oe-cambiar { justify-self: start; margin-top: 2px; }
+.oe-clave-form {
+  display: grid; gap: 8px; margin-top: 6px; padding: 10px 12px;
+  border-radius: var(--radius); background: var(--surface-2); border: 1px solid var(--line);
+}
+.oe-clave-campo {
+  display: grid; gap: 4px;
+  > span { font-size: 11px; font-weight: 700; color: var(--text-3); }
+  > div { display: flex; gap: 8px; flex-wrap: wrap; }
+  input { flex: 1; min-width: 160px; }
+}
+.oe-clave-todas {
+  display: flex; gap: 8px; align-items: center; font-size: 12.5px; color: var(--text); cursor: pointer;
+  input { accent-color: var(--accent); width: 16px; height: 16px; }
+}
+.oe-clave-botones { display: flex; gap: 8px; justify-content: flex-end; flex-wrap: wrap; }
+.oe-aviso--ok { border-color: var(--ok); background: var(--ok-soft); color: var(--text); }

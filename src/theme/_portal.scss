@@ -159,3 +159,11 @@ textarea.pt-input { height: auto; min-height: 110px; padding: 10px 12px; resize:
 .pt-fine { color: var(--text-3); font-size: 12px; }
 .pt-spinner { width: 16px; height: 16px; border: 2px solid currentColor; border-right-color: transparent; border-radius: 50%; animation: pt-spin .7s linear infinite; display: inline-block; }
 @keyframes pt-spin { to { transform: rotate(360deg); } }
+
+/* Mantener la sesión abierta (login del portal). */
+.pt-recordar {
+  display: flex; gap: 10px; align-items: flex-start; cursor: pointer; margin: 4px 0 6px;
+  font-size: 14px; color: var(--text);
+  input { width: 18px; height: 18px; margin-top: 1px; accent-color: var(--accent); flex-shrink: 0; }
+  small { display: block; font-size: 12px; color: var(--text-3); }
+}

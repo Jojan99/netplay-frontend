@@ -27,7 +27,7 @@ export class PortalNetworkComponent implements OnInit {
   trabajando = signal('');
 
   claveVisible: Record<number, boolean> = {};
-  editando: { indice: number; nombre: string; clave: string } | null = null;
+  editando: { indice: number; nombre: string; clave: string; todas: boolean } | null = null;
   verInactivos = false;
 
   ngOnInit() { this.cargar(); }
@@ -81,7 +81,14 @@ export class PortalNetworkComponent implements OnInit {
 
   // ── Acciones ──────────────────────────────────────────────────────────────
 
-  editar(r: any) { this.editando = { indice: r.indice, nombre: r.nombre ?? '', clave: '' }; this.aviso.set(null); }
+  /**
+   * Redes encendidas cuya contraseña se puede cambiar: con más de una, se
+   * ofrece usar la misma en todas. Sólo cuentan las que el equipo confirmó
+   * encendidas; las secundarias de estado desconocido no reciben la clave.
+   */
+  get redesConClave(): number { return (this.redes ?? []).filter((r: any) => r.puede_cambiar_clave && r.confirmada).length; }
+
+  editar(r: any) { this.editando = { indice: r.indice, nombre: r.nombre ?? '', clave: '', todas: true }; this.aviso.set(null); }
 
   guardar(r: any) {
     const ed = this.editando;
@@ -94,7 +101,7 @@ export class PortalNetworkComponent implements OnInit {
     if (clave && (clave.length < 8 || clave.length > 63)) { this.aviso.set({ texto: 'La contraseña debe tener entre 8 y 63 caracteres.', tipo: 'danger' }); return; }
 
     this.trabajando.set('wifi');
-    this.api.cambiarWifiCliente(r.indice, nombre || null, clave || null).subscribe({
+    this.api.cambiarWifiCliente(r.indice, nombre || null, clave || null, !!clave && ed.todas && this.redesConClave > 1).subscribe({
       next: (res: any) => {
         this.trabajando.set('');
         if (res?.error !== 0) { this.aviso.set({ texto: res?.message || 'No se pudo guardar.', tipo: 'danger' }); return; }

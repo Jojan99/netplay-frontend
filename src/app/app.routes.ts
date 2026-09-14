@@ -1,6 +1,7 @@
 import { Routes } from '@angular/router';
 import { authGuard } from './guards/auth.guard';
 import { roleGuard } from './guards/role.guard';
+import { panelYaConectadoGuard } from './guards/ya-conectado.guard';
 
 import { SignInComponent }            from './pages/sign-in/sign-in/sign-in.component';
 import { RegisterCompanyComponent }   from './pages/register-company/register-company.component';
@@ -107,8 +108,10 @@ export const routes: Routes = [
     path: 'p',
     loadChildren: () => import('./landing/landing.routes').then(m => m.LANDING_ROUTES),
   },
-  { path: 'login',         component: SignInComponent },
-  { path: 'inicio',        component: SignInComponent },
+  // Con sesión vigente se sigue de largo al panel: la raíz lleva a "inicio", que
+  // es este mismo login, y parecía que había que entrar de nuevo cada vez.
+  { path: 'login',         component: SignInComponent, canActivate: [panelYaConectadoGuard] },
+  { path: 'inicio',        component: SignInComponent, canActivate: [panelYaConectadoGuard] },
   { path: 'register',      component: RegisterCompanyComponent },
   { path: 'confirm-email', component: ConfirmEmailComponent },
   { path: 'politica-de-privacidad', component: PrivacyPolicyComponent },

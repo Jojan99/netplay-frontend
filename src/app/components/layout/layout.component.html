@@ -82,18 +82,23 @@
       <!-- Grupo con hijos -->
       <ng-container *ngIf="item.group">
 
-        <flowbite-sidebar-item
+        <!-- Un botón de verdad: el toque se dispara igual en cualquier teléfono.
+             Antes era un item de enlace sin destino y en celular no siempre
+             respondía. -->
+        <button
           *ngIf="item.children?.length"
-          (click)="selectItem(item)"
-          [icon]="item.icon"
-          [link]="item.href">
-
-          <span class="sidebar-group-label">
+          type="button"
+          class="sidebar-group-btn"
+          [class.is-open]="selectedItem === item"
+          [attr.aria-expanded]="selectedItem === item"
+          [title]="item.title"
+          (click)="selectItem(item)">
+          <span class="sidebar-group-icon" *ngIf="item.icon" [innerHTML]="item.icon | sanitizeHtml"></span>
+          <span class="sidebar-group-label" *ngIf="(sidebarService.$collapsed | async) === false">
             <span>{{ item.title }}</span>
             <svg class="sidebar-chevron" [class.is-open]="selectedItem === item" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 6 6 6-6 6"/></svg>
           </span>
-
-        </flowbite-sidebar-item>
+        </button>
 
         <div [class.expanded]="selectedItem === item" class="sidebar-content">
 

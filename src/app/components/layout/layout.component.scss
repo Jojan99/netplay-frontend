@@ -16,6 +16,17 @@ main {
     width: 100%;
 }
 
+/* Encabezado de grupo del menú: botón nativo, se ve igual que los ítems. */
+.sidebar-group-btn { position: relative; display: flex; align-items: center; width: 100%; min-height: 38px; padding: 0 10px; margin: 0 0 2px; border: 1px solid transparent; border-radius: var(--radius); background: none; color: var(--text-2); font-family: var(--font-body); font-size: 12.5px; font-weight: 700; text-align: left; cursor: pointer; transition: background .15s, color .15s; -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
+.sidebar-group-btn:hover { background: var(--surface-2); color: var(--accent); }
+.sidebar-group-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+.sidebar-group-btn.is-open { color: var(--text); }
+.sidebar-group-icon { display: grid; width: 20px; height: 20px; place-items: center; flex-shrink: 0; color: currentColor; }
+:host ::ng-deep .sidebar-group-icon :is(svg, i) { width: 17px; height: 17px; }
+.sidebar-group-label { display: flex; align-items: center; justify-content: space-between; flex: 1; min-width: 0; margin-left: 10px; overflow: hidden; white-space: nowrap; }
+.sidebar-chevron { width: 13px; height: 13px; flex-shrink: 0; color: var(--text-3); transition: transform .2s; }
+.sidebar-chevron.is-open { transform: rotate(90deg); }
+
 .sidebar-content { max-height: 0; overflow: hidden; transition: max-height .25s ease-in-out; margin-left: 10px; padding-left: 8px; border-left: 1px dashed var(--line); }
 .sidebar-content.expanded { max-height: 600px; margin-bottom: 6px; }
 :host ::ng-deep .sidebar-content .sidebar-nav-item { min-height: 32px; font-size: 12px; font-weight: 600; }

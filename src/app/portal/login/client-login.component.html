@@ -23,6 +23,10 @@
         <small>Si es tu primera vez, tu contraseña es tu número de documento.</small>
       </label>
 
+      <label class="pt-recordar">
+        <input type="checkbox" name="recordar" [(ngModel)]="recordar" />
+        <span>Mantener la sesión abierta <small>durante 30 días en este dispositivo</small></span>
+      </label>
       <button type="submit" class="pt-btn pt-btn--primary pt-btn--block" [disabled]="loading()"><span class="pt-spinner" *ngIf="loading()"></span>{{ loading() ? 'Verificando…' : 'Ingresar' }}</button>
 
       <div class="pt-login-foot"><span>¿Problemas para entrar? Escribinos por WhatsApp.</span><a routerLink="/login">Soy del equipo</a></div>

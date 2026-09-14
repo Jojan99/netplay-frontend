@@ -1,5 +1,6 @@
 import { Routes } from '@angular/router';
 import { clientAuthGuard }       from './guards/client-auth.guard';
+import { portalYaConectadoGuard } from '../guards/ya-conectado.guard';
 import { PortalLayoutComponent } from './layout/portal-layout.component';
 import { ClientLoginComponent }  from './login/client-login.component';
 import { PortalHomeComponent }   from './home/portal-home.component';
@@ -15,6 +16,8 @@ export const PORTAL_ROUTES: Routes = [
   {
     path: 'login',
     component: ClientLoginComponent,
+    // Con sesión de cliente vigente, directo al portal.
+    canActivate: [portalYaConectadoGuard],
   },
   {
     path: '',

@@ -38,6 +38,11 @@
                [(ngModel)]="SignInInterfaces.password" placeholder="••••••••" required />
       </label>
 
+      <label class="np-login-recordar">
+        <input type="checkbox" name="recordar" [(ngModel)]="SignInInterfaces.recordar" />
+        <span>Mantener la sesión abierta <small>durante 30 días en este dispositivo</small></span>
+      </label>
+
       <button type="submit" class="np-btn np-btn--primary np-login-submit" [disabled]="isLoading">
         <span *ngIf="isLoading" class="np-spinner np-spinner--sm"></span>
         {{ isLoading ? 'Ingresando…' : 'Ingresar' }}

@@ -25,7 +25,7 @@ export class SignInComponent {
   resendMsg = '';
   resending = false;
 
-  public SignInInterfaces: SignInInterface = { user: '', password: '' };
+  public SignInInterfaces: SignInInterface = { user: '', password: '', recordar: true };
 
   constructor(
     private OauthService:       OauthService,

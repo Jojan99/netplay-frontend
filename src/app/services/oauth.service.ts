@@ -23,6 +23,7 @@ export class OauthService {
     var parameter = JSON.stringify({
       user: signin.user,
       password: signin.password,
+      recordar: !!signin.recordar,
     });
 
     const url = this.env.rootUrl + 'api/oauth/signin'

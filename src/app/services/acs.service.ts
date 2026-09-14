@@ -31,7 +31,8 @@ export class AcsService {
 
   reiniciar(id: string): Observable<any> { return this.http.post(`${this.base}/equipos/reiniciar`, { id }, this.h()); }
 
-  cambiarWifi(id: string, indice: number, ssid: string | null, clave: string | null): Observable<any> {
-    return this.http.post(`${this.base}/equipos/wifi`, { id, indice, ssid: ssid || null, clave: clave || null }, this.h());
+  /** Con `todas`, la contraseña queda igual en todas las redes del equipo (2.4 y 5 GHz). */
+  cambiarWifi(id: string, indice: number, ssid: string | null, clave: string | null, todas = false): Observable<any> {
+    return this.http.post(`${this.base}/equipos/wifi`, { id, indice, ssid: ssid || null, clave: clave || null, todas }, this.h());
   }
 }

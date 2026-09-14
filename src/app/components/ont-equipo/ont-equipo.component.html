@@ -133,9 +133,33 @@
               </ng-container>
               <b class="oe-fine" *ngIf="!r.clave">El equipo no la entrega por TR-069</b>
             </div>
+
+            <button type="button" class="oe-linkbtn oe-cambiar" *ngIf="r.ruta_clave && cambiandoClave?.indice !== r.indice" (click)="empezarCambioClave(r)" [disabled]="guardandoClave">
+              Cambiar contraseña
+            </button>
+
+            <form class="oe-clave-form" *ngIf="cambiandoClave?.indice === r.indice && cambiandoClave as c" (ngSubmit)="guardarClave()">
+              <label class="oe-clave-campo">
+                <span>Contraseña nueva</span>
+                <div>
+                  <input class="np-input np-mono" name="clave" [(ngModel)]="c.clave" minlength="8" maxlength="63" autocomplete="off" placeholder="Entre 8 y 63 caracteres" />
+                  <button type="button" class="np-btn np-btn--ghost" (click)="generarClave()">Generar</button>
+                </div>
+              </label>
+              <label class="oe-clave-todas" *ngIf="redesConClave > 1">
+                <input type="checkbox" name="todas" [(ngModel)]="c.todas" />
+                <span>Aplicar a todas las redes del equipo (2.4 y 5 GHz)</span>
+              </label>
+              <p class="oe-fine">Los equipos conectados {{ c.todas && redesConClave > 1 ? 'a sus redes' : 'a esta red' }} se desconectan y hay que volver a conectarlos con la contraseña nueva.</p>
+              <div class="oe-clave-botones">
+                <button type="button" class="np-btn np-btn--ghost" (click)="cambiandoClave = null">Cancelar</button>
+                <button type="submit" class="np-btn np-btn--primary" [disabled]="guardandoClave || c.clave.trim().length < 8">{{ guardandoClave ? 'Guardando…' : 'Guardar' }}</button>
+              </div>
+            </form>
           </div>
         </div>
       </div>
+      <p class="oe-aviso" *ngIf="avisoClave" [class.oe-aviso--ok]="avisoClave.tipo === 'ok'">{{ avisoClave.texto }}</p>
     </ng-container>
     <a class="oe-linkbtn" *ngIf="acs" [routerLink]="['/dashboard/router']" [queryParams]="{ equipo: acs.id }">
       Ver en Router del cliente{{ acs.equipos?.length ? ' · ' + acs.equipos.length + ' dispositivos que conoce' : '' }}

@@ -26,8 +26,10 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
       const status = err?.status;
       const router = inject(Router);
 
-      // Token expirado o inválido → desloguear y mandar al login
-      if (status === 401 || status === 403) {
+      // Sólo un 401 (token vencido o inválido) cierra la sesión. Un 403 es
+      // "no tenés permiso para esto": antes también sacaba al usuario del
+      // panel aunque su sesión siguiera vigente.
+      if (status === 401) {
         localStorage.removeItem('token');
         localStorage.removeItem('auth_user');
         localStorage.removeItem('allowed_modules');

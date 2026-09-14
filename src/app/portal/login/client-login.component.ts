@@ -18,6 +18,8 @@ export class ClientLoginComponent {
 
   username  = '';
   password  = '';
+  /** Mantener la sesión abierta: el token dura 30 días. */
+  recordar  = true;
   loading   = signal(false);
   showPw    = false;
   errorMsg  = signal('');
@@ -30,7 +32,7 @@ export class ClientLoginComponent {
     this.loading.set(true);
     this.errorMsg.set('');
 
-    this.api.login(this.username, this.password).subscribe({
+    this.api.login(this.username, this.password, this.recordar).subscribe({
       next: (res) => {
         this.loading.set(false);
         if (res.data?.access_token) {

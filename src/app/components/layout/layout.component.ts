@@ -21,6 +21,7 @@ import { SidebarComponent }          from '../../common/sidebar.component';
 import { SidebarItemGroupComponent } from '../../common/sidebar-item-group.component';
 import { SidebarItemComponent }      from '../../common/sidebar-item.component';
 import { DarkThemeToggleComponent }  from '../../common/dark-theme-toggle.component';
+import { SanitizeHtmlPipe }          from '../../common/pipes';
 import { NavbarComponent }           from '../../common/navbar.component';
 import { SidebarService }            from '../../common/services/sidebar';
 import { components, RouteProps }    from '../../common/components';
@@ -35,6 +36,7 @@ import { ToastService }             from '../../services/toast.service';
     CommonModule, RouterOutlet, RouterModule,
     SidebarComponent, SidebarItemGroupComponent, SidebarItemComponent,
     DarkThemeToggleComponent, NavbarComponent, FooterComponent, CrmWidgetComponent, DialogHostComponent, TeamPanelComponent,
+    SanitizeHtmlPipe,
   ],
   templateUrl: './layout.component.html',
   styleUrl: './layout.component.scss',
@@ -87,7 +89,14 @@ export class LayoutComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    this.router.events.pipe(filter(e => e instanceof NavigationEnd)).subscribe((e: any) => this.updateSection(e.urlAfterRedirects || e.url));
+    this.router.events.pipe(filter(e => e instanceof NavigationEnd)).subscribe((e: any) => {
+      this.updateSection(e.urlAfterRedirects || e.url);
+      // En celular el menú tapa toda la pantalla: al elegir una opción se
+      // cierra. Si quedaba abierto, la página nueva cargaba debajo sin verse.
+      if (isPlatformBrowser(this.platformId) && window.innerWidth < 768) {
+        this.sidebarService.setCollapsed(true);
+      }
+    });
     if (isPlatformBrowser(this.platformId)) this.clockTimer = setInterval(() => { this.now = new Date(); }, 30000);
     if (!isPlatformBrowser(this.platformId)) return;
     // Los técnicos comparten ubicación mientras tengan el panel abierto (también al recargar, no sólo al iniciar sesión)

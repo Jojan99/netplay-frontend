@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { OltService } from '../../services/olt.service';
 import { AcsService } from '../../services/acs.service';
 import { RouterLink } from '@angular/router';
+import { FormsModule } from '@angular/forms';
 
 /** Lo que se sabe de la ONT sin preguntarle a la OLT: sale de olt_onts. */
 export interface OntVinculada {
@@ -31,7 +32,7 @@ const COLOR_MARCA: Record<string, string> = {
 @Component({
   selector: 'app-ont-equipo',
   standalone: true,
-  imports: [CommonModule, RouterLink],
+  imports: [CommonModule, RouterLink, FormsModule],
   templateUrl: './ont-equipo.component.html',
   styleUrl: './ont-equipo.component.scss',
 })
@@ -59,11 +60,65 @@ export class OntEquipoComponent implements OnChanges {
   /** La dirección que hay que cargarle al equipo para que entre al TR-069. */
   urlAcs = '';
 
+  /** La red a la que se le está cambiando la contraseña. */
+  cambiandoClave: { indice: number; clave: string; todas: boolean } | null = null;
+  guardandoClave = false;
+  avisoClave: { texto: string; tipo: 'ok' | 'error' } | null = null;
+
   /** Único por instancia: el degradado del dibujo se referencia por id. */
   readonly gid = 'oe' + Math.random().toString(36).slice(2, 8);
 
   ngOnChanges(c: SimpleChanges) {
     if (c['userId'] && this.userId) this.cargar();
+  }
+
+  /**
+   * Redes encendidas cuya contraseña se puede cambiar. Sólo las confirmadas
+   * activas: hay equipos con redes secundarias de estado desconocido que no
+   * tienen por qué recibir la contraseña.
+   */
+  get redesConClave(): number { return this.redesAcs.filter((r: any) => !!r.ruta_clave && r.activo === true).length; }
+
+  empezarCambioClave(r: any) {
+    this.cambiandoClave = { indice: r.indice, clave: '', todas: true };
+    this.avisoClave = null;
+  }
+
+  /** Una contraseña fácil de dictar por teléfono: sin 0/O ni 1/l. */
+  generarClave() {
+    if (!this.cambiandoClave) return;
+    const letras = 'abcdefghijkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+    const azar = new Uint32Array(12);
+    crypto.getRandomValues(azar);
+    this.cambiandoClave.clave = Array.from(azar, n => letras[n % letras.length]).join('');
+  }
+
+  guardarClave() {
+    const c = this.cambiandoClave;
+    if (!c || !this.acs?.id) return;
+
+    const clave = c.clave.trim();
+    if (clave.length < 8 || clave.length > 63) {
+      this.avisoClave = { texto: 'La contraseña debe tener entre 8 y 63 caracteres.', tipo: 'error' };
+      return;
+    }
+
+    const todas = c.todas && this.redesConClave > 1;
+    this.guardandoClave = true;
+    this.acsSvc.cambiarWifi(this.acs.id, c.indice, null, clave, todas).subscribe({
+      next: (r: any) => {
+        this.guardandoClave = false;
+        if (r?.error !== 0) { this.avisoClave = { texto: r?.message || 'No se pudo cambiar la contraseña.', tipo: 'error' }; return; }
+        this.cambiandoClave = null;
+        this.avisoClave = {
+          texto: (todas ? 'Contraseña cambiada en todas las redes.' : 'Contraseña cambiada.') + ' Los equipos del cliente tienen que volver a conectarse con la nueva.',
+          tipo: 'ok',
+        };
+        // El equipo tarda unos segundos en aplicarlo y reportarlo.
+        setTimeout(() => this.acsSvc.deCliente(this.userId).subscribe({ next: (x: any) => { if (x?.error === 0) this.acs = x.data; } }), 5000);
+      },
+      error: () => { this.guardandoClave = false; this.avisoClave = { texto: 'No se pudo cambiar la contraseña.', tipo: 'error' }; },
+    });
   }
 
   cargar(refrescar = false) {

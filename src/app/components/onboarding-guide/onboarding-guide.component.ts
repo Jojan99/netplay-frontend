@@ -37,7 +37,9 @@ export class OnboardingGuideComponent implements OnInit {
 
   /** El primero sin hacer: es el que se destaca como "seguí por acá". */
   siguiente = computed<PasoGuia | null>(
-    () => this.guia()?.pasos.find(p => !p.hecho) ?? null
+    // Si la respuesta llega sin pasos no se rompe: un error acá frena la
+    // actualización de toda la pantalla, menú incluido.
+    () => this.guia()?.pasos?.find(p => !p.hecho) ?? null
   );
 
   completa = computed(() => {
@@ -55,6 +57,10 @@ export class OnboardingGuideComponent implements OnInit {
   ngOnInit(): void {
     // Durante el prerender no hay navegador ni sesión: la guía se arma en el cliente.
     if (!this.esNavegador) { this.cargando.set(false); return; }
+
+    // Sólo para administradores: arma la empresa y a técnicos o contadores no
+    // les corresponde. El servidor tampoco se la entrega a otros perfiles.
+    if (!this.auth.isAdmin()) { this.cargando.set(false); return; }
 
     // Al venir de confirmar el correo se fuerza a mostrarla aunque estuviera oculta.
     let forzar = false;

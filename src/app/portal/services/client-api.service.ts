@@ -20,8 +20,8 @@ export class ClientApiService {
   }
 
   // ── Auth ────────────────────────────────────────────────────────────────
-  login(username: string, password: string): Observable<any> {
-    return this.http.post(`${this.baseUrl}/login`, { username, password });
+  login(username: string, password: string, recordar = false): Observable<any> {
+    return this.http.post(`${this.baseUrl}/login`, { username, password, recordar });
   }
 
   logout(): Observable<any> {
@@ -37,8 +37,9 @@ export class ClientApiService {
     return this.http.get(`${this.baseUrl}/router`, this.headers());
   }
 
-  cambiarWifiCliente(indice: number, nombre: string | null, clave: string | null): Observable<any> {
-    return this.http.post(`${this.baseUrl}/router/wifi`, { indice, nombre, clave }, this.headers());
+  /** Con `todas`, la contraseña queda igual en todas sus redes (2.4 y 5 GHz). */
+  cambiarWifiCliente(indice: number, nombre: string | null, clave: string | null, todas = false): Observable<any> {
+    return this.http.post(`${this.baseUrl}/router/wifi`, { indice, nombre, clave, todas }, this.headers());
   }
 
   bloquearEquipo(mac: string): Observable<any> {

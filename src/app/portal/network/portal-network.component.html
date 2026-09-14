@@ -77,7 +77,11 @@
           <span>Contraseña nueva</span>
           <input class="pt-input np-mono" name="clave" [(ngModel)]="ed.clave" minlength="8" maxlength="63" placeholder="Déjala vacía para no cambiarla" autocomplete="off" />
         </label>
-        <p class="pt-fine">Al guardar, los equipos conectados a esta red se desconectan y hay que volver a conectarlos con los datos nuevos.</p>
+        <label class="pt-check" *ngIf="r.puede_cambiar_clave && redesConClave > 1">
+          <input type="checkbox" name="todas" [(ngModel)]="ed.todas" />
+          <span>Usar esta contraseña en todas mis redes (2.4 y 5 GHz)</span>
+        </label>
+        <p class="pt-fine">Al guardar, los equipos conectados {{ ed.todas && ed.clave && redesConClave > 1 ? 'a tus redes' : 'a esta red' }} se desconectan y hay que volver a conectarlos con los datos nuevos.</p>
         <div class="pt-btnrow">
           <button type="button" class="pt-btn pt-btn--ghost" (click)="editando = null">Cancelar</button>
           <button type="submit" class="pt-btn" [disabled]="trabajando() === 'wifi'">{{ trabajando() === 'wifi' ? 'Guardando…' : 'Guardar' }}</button>

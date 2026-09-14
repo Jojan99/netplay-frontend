@@ -31,3 +31,10 @@
 .pt-row-end { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; justify-content: flex-end; }
 
 .pt-pie { text-align: center; margin: 4px 0 0; }
+
+/* Usar la misma contraseña en todas las redes. */
+.pt-check {
+  display: flex; gap: 10px; align-items: center; cursor: pointer;
+  font-size: 14px; color: var(--text);
+  input { width: 18px; height: 18px; accent-color: var(--accent); flex-shrink: 0; }
+}
