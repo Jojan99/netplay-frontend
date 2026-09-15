@@ -15,6 +15,8 @@ type Step = 1 | 2 | 3;
   styleUrls: ['../sign-in/sign-in/sign-in.component.scss', './register-company.component.scss'],
 })
 export class RegisterCompanyComponent {
+  /** El dominio desde el que se abre (netplay.com.co o netvula.com). */
+  readonly sitio = typeof window !== 'undefined' && window.location?.hostname ? window.location.hostname : 'netplay.com.co';
   isLoading = false;
   errorMsg  = '';
   successMsg = '';

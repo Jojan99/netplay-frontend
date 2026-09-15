@@ -1,18 +1,26 @@
+/**
+ * El sitio desde el que se abre el panel (ver environment.ts): el mismo build
+ * sirve en netplay.com.co y en netvula.com.
+ */
+const SITIO = typeof window !== 'undefined' && /^https:\/\//.test(window.location?.origin ?? '')
+  ? window.location.origin
+  : 'https://netplay.com.co';
+
 export const environment = {
   production: true,
 
-  rootUrl: "https://netplay.com.co/",
-  rootUrlWeb: "https://netplay.com.co/",
-  urlVerificateUser: 'https://netplay.com.co/verificate/user',
-  urlReset: "https://netplay.com.co/reset-password",
-  urlRegister: "https://netplay.com.co/sign-up",
+  rootUrl: `${SITIO}/`,
+  rootUrlWeb: `${SITIO}/`,
+  urlVerificateUser: `${SITIO}/verificate/user`,
+  urlReset: `${SITIO}/reset-password`,
+  urlRegister: `${SITIO}/sign-up`,
   urlTickets: "/ticket-detail",
   urlPurchaseDetail: "/purchase-request-detail",
   urlPurchaseDetailUser: "/purchase-history-detail",
   urlUserVerification: "/verification",
   urlAdminVerification: "/admin-verification-detail",
-  urlSocket: "https://netplay.com.co/Notify/notify",
-  urlTerms: "https://netplay.com.co/show-terms",
+  urlSocket: `${SITIO}/Notify/notify`,
+  urlTerms: `${SITIO}/show-terms`,
   urlWithdrawarlRequest:"/withdrawal-request-detail",
   urlWithdrawarlUser:"/withdrawal",
   urlNotiPayment:"/user-payments-history",
@@ -20,5 +28,5 @@ export const environment = {
     key: '662198edb36cb2ef784d',
     cluster: 'us2'
   },
-  apiUrl: 'https://netplay.com.co'
+  apiUrl: SITIO
 };

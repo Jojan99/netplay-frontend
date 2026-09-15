@@ -10,4 +10,6 @@ import { CommonModule } from '@angular/common';
 })
 export class FooterComponent {
   readonly year = new Date().getFullYear();
+  /** El dominio desde el que se abre el panel (netplay.com.co o netvula.com). */
+  readonly sitio = typeof window !== 'undefined' && window.location?.hostname ? window.location.hostname : 'netplay.com.co';
 }

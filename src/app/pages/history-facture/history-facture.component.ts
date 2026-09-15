@@ -5,6 +5,7 @@ import { UserService } from '../../services/user.service';
 import { UserInterface } from '../../models/user-interface';
 import { CommonModule } from '@angular/common';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { environment } from '../../../environments/environment';
 @Component({
   selector: 'app-history-facture',
   standalone: true,
@@ -88,7 +89,8 @@ export class HistoryFactureComponent  implements OnInit{
     const headers = new HttpHeaders({ 'Content-Type': 'application/json',
       'Authorization': `Bearer ${this.getAuthToken()}`
      });
-    const url = `https://netplay.com.co/netplay/public/api/dni/downloadFiles/${name}`;
+    // Al mismo dominio del panel (la ruta vieja /netplay/public ya no existe).
+    const url = `${environment.rootUrl}api/dni/downloadFiles/${name}`;
     this.http.get(url, { headers, responseType: 'blob' }).subscribe(
       (data) => {
         const blob = new Blob([data], { type: 'application/octet-stream' });

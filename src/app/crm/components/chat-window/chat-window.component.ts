@@ -13,6 +13,7 @@ import {
   HostBinding, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { environment } from '../../../../environments/environment';
 
 import { ChatHeaderComponent } from '../chat-header/chat-header.component';
 import { MessageBubbleComponent } from '../message-bubble/message-bubble.component';
@@ -619,7 +620,8 @@ export class ChatWindowComponent implements OnChanges, OnDestroy {
    */
   static secureMediaUrl(url: string | null | undefined): string | null {
     if (!url) return null;
-    return url.replace(/^http:\/\/181\.48\.150\.43:3001\/uploads\//, 'https://netplay.com.co/storage/wa-media/uploads/');
+    // Al dominio desde el que se abre el panel: sirve igual tras cambiar de dominio.
+    return url.replace(/^http:\/\/181\.48\.150\.43:3001\/uploads\//, `${environment.rootUrl}storage/wa-media/uploads/`);
   }
   private secure(url: string | null | undefined): string | null { return ChatWindowComponent.secureMediaUrl(url); }
   /** Stickers que quedaron guardados como texto con la URL del webp (antes del arreglo) se muestran como sticker. */

@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { CompanyWhatsappService } from '../../../../services/company-whatsapp.service';
+import { environment } from '../../../../../environments/environment';
 
 @Component({
   selector: 'app-wa-meta-panel',
@@ -26,7 +27,7 @@ import { CompanyWhatsappService } from '../../../../services/company-whatsapp.se
         </section>
         <section class="np-card">
           <div class="np-card-h"><h2>Webhook</h2></div>
-          <p class="np-notice np-notice--code np-mono">https://netplay.com.co/api/webhooks/whatsapp-meta</p>
+          <p class="np-notice np-notice--code np-mono">{{ webhookUrl }}</p>
           <p class="np-fine">Registrá esta URL en la configuración de webhooks de tu app de Meta.</p>
         </section>
       </div></div>
@@ -35,6 +36,8 @@ import { CompanyWhatsappService } from '../../../../services/company-whatsapp.se
   `
 })
 export class WaMetaPanelComponent implements OnInit {
+  /** La del dominio en uso: cambia sola si el panel se abre desde otro dominio. */
+  readonly webhookUrl = `${environment.rootUrl}api/webhooks/whatsapp-meta`;
   phoneNumberId = '';
   businessId = '';
   accessToken = '';

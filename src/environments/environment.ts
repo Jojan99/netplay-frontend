@@ -2,6 +2,17 @@
 // `ng build --prod` replaces `environment.ts` with `environment.prod.ts`.
 // The list of file replacements can be found in `angular.json`.
 
+/**
+ * El sitio desde el que se abre el panel. La compilación de producción usa
+ * este archivo (angular.json no reemplaza por environment.prod.ts), así que el
+ * mismo build sirve igual en netplay.com.co y en netvula.com: la API se pide al
+ * mismo dominio de la página. Fuera de https (desarrollo en localhost o el
+ * prerender del servidor) se usa el dominio de producción.
+ */
+const SITIO = typeof window !== 'undefined' && /^https:\/\//.test(window.location?.origin ?? '')
+  ? window.location.origin
+  : 'https://netplay.com.co';
+
 export const environment = {
   production: false,
   // rootUrl: "https://bitllionaire.live/API/",
@@ -9,7 +20,7 @@ export const environment = {
  //rootUrl: "https://globalinfinet.co/netplay/public/",
   // rootUrlWeb: "http://localhost:4200/",
 
- rootUrl: "https://netplay.com.co/",
+ rootUrl: `${SITIO}/`,
   //  rootUrl: "http://192.168.2.6:44364/",
   // rootUrl: "http://192.168.2.6:1743/",
  
@@ -42,7 +53,7 @@ export const environment = {
     cluster: 'us2'
   },
   //apiUrl: 'https://netplay.com.co/netplay/public/'
-  apiUrl: 'https://netplay.com.co'
+  apiUrl: SITIO
 };
 
 
