@@ -244,7 +244,7 @@
           </div>
           <label class="np-field np-field-full" *ngIf="aprovForm.wifi"><span>Inicio del nombre del WiFi <em>cuando no se escribe uno al autorizar</em></span>
             <input class="np-input" [(ngModel)]="aprovForm.wifi_prefijo" maxlength="20" [placeholder]="aprov.prefijo_sugerido" />
-            <small class="np-fine">Queda «{{ aprovForm.wifi_prefijo || aprov.prefijo_sugerido }}_APELLIDO» con una clave de 10 caracteres; en 5 GHz se agrega «-5G».</small>
+            <small class="np-fine">Queda «{{ aprovForm.wifi_prefijo || aprov.prefijo_sugerido }}_APELLIDO» con una clave de 10 caracteres, con el mismo nombre y la misma clave en 2.4 y 5 GHz.</small>
           </label>
           <ng-container *ngIf="aprovForm.admin">
             <label class="np-field"><span>Usuario administrador</span><input class="np-input" [(ngModel)]="aprovForm.admin_usuario" maxlength="32" autocomplete="off" /></label>
