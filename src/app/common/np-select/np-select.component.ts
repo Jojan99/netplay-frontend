@@ -148,7 +148,14 @@ export class NpSelectComponent implements ControlValueAccessor, OnChanges, OnDes
   get inhabilitado(): boolean { return this.deshabilitado || this.deshabilitadoPorFormulario; }
   get todas(): any[] { return this.opciones ?? []; }
   get conBuscador(): boolean { return this.buscable === 'auto' ? this.todas.length > 7 : !!this.buscable; }
-  get hayPrefijos(): boolean { return !!this.presentacion?.prefijo; }
+  /**
+   * La columna de prefijos sólo si alguna opción tiene uno: una presentación
+   * que lo define pero lo deja vacío (estados de pago) mostraba "—" en todas.
+   */
+  get hayPrefijos(): boolean {
+    const prefijo = this.presentacion?.prefijo;
+    return !!prefijo && this.todas.some(o => !!prefijo(o));
+  }
   get haySeleccion(): boolean { return !this.esVacio(this.valor); }
   /** Opciones que quedan con la búsqueda (sin contar los títulos de grupo). */
   get cantidadVisible(): number { return this.filas.filter(f => f.grupo === undefined).length; }
