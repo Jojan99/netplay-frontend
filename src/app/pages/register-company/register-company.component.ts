@@ -145,7 +145,12 @@ export class RegisterCompanyComponent implements OnInit, OnDestroy {
 
   alEscribirSubdominio(campo: HTMLInputElement): void {
     const limpio = this.limpiarSubdominio(campo.value);
-    if (campo.value !== limpio) campo.value = limpio;
+    if (campo.value !== limpio) {
+      // Sin esto el cursor saltaba al final al corregir una letra en el medio.
+      const cursor = Math.min(campo.selectionStart ?? limpio.length, limpio.length);
+      campo.value = limpio;
+      campo.setSelectionRange(cursor, cursor);
+    }
     // Si la borra, vuelve a seguir al nombre.
     this.subdominioTocado = limpio !== '';
     this.ponerSubdominio(limpio || this.sugerirSubdominio(this.form.name));

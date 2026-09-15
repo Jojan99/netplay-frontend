@@ -109,7 +109,12 @@ export class PlataformaComponent implements OnInit, OnDestroy {
       .replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '')
       .slice(0, 40);
 
-    if (campo.value !== limpio) campo.value = limpio;
+    if (campo.value !== limpio) {
+      // Sin esto el cursor saltaba al final al corregir una letra en el medio.
+      const cursor = Math.min(campo.selectionStart ?? limpio.length, limpio.length);
+      campo.value = limpio;
+      campo.setSelectionRange(cursor, cursor);
+    }
 
     this.deseado = limpio;
     this.resultado.set(null);
