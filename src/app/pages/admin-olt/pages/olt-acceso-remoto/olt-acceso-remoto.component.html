@@ -267,6 +267,8 @@
                 <small *ngFor="let p of a.pasos">{{ p.ok ? '✓' : (p.omitido ? '–' : '✗') }} {{ p.paso }}: {{ p.detalle }}</small>
               </ng-container>
             </span>
+            <button type="button" class="np-btn np-btn--ghost np-btn--sm" *ngIf="esMalo(a.estado)"
+                    (click)="reintentarAprov(a, $event)" [disabled]="reintentando === a.id">{{ reintentando === a.id ? 'Pidiendo…' : 'Reintentar' }}</button>
           </li>
         </ul>
       </div>

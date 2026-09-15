@@ -108,6 +108,22 @@ export class OltAccesoRemotoComponent implements OnInit {
 
   esMalo(estado: string): boolean { return ['con_errores', 'vencido', 'error'].includes(estado); }
 
+  reintentando: number | null = null;
+
+  reintentarAprov(a: any, ev: Event) {
+    ev.stopPropagation();
+    this.reintentando = a.id;
+    this.api.reintentarAprovisionamiento(a.id).subscribe({
+      next: (r: any) => {
+        this.reintentando = null;
+        if (r?.error !== 0) { this.toast.error(r?.message ?? 'No se pudo reintentar'); return; }
+        this.aprovUltimos = r.data ?? this.aprovUltimos;
+        this.toast.success('Se reintenta en menos de un minuto. Tocá "Actualizar lista" para ver cómo va.');
+      },
+      error: (e: any) => { this.reintentando = null; this.toast.error(e?.error?.message ?? 'No se pudo reintentar'); },
+    });
+  }
+
   cargarAprov() {
     this.api.aprovisionamiento().subscribe({
       next: (r: any) => {

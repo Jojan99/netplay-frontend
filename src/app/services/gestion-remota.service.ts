@@ -83,6 +83,11 @@ export class GestionRemotaService {
     return this.http.put(`${this.base}/aprovisionamiento`, datos, this.h());
   }
 
+  /** Vuelve a aplicar un aprovisionamiento que terminó con fallas (lo toma la tarea de cada minuto). */
+  reintentarAprovisionamiento(id: number): Observable<any> {
+    return this.http.post(`${this.base}/aprovisionamiento/${id}/reintentar`, {}, this.h());
+  }
+
   /** Le da acceso a los equipos que ya estaban autorizados, de a tandas. */
   alDia(oltId?: number | null): Observable<any> {
     return this.http.post(`${this.base}/al-dia`, { olt_id: oltId ?? null }, this.h());
