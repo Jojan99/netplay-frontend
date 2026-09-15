@@ -21,7 +21,7 @@
 
   <div class="np-toolbar">
     <div class="np-chips" role="group" aria-label="Estado">
-      <button type="button" class="np-chip" [attr.aria-pressed]="filterStatus === null" (click)="filterStatus = null; applyFilter()">Todos<span class="np-c">{{ tickets.length }}</span></button>
+      <button type="button" class="np-chip" [attr.aria-pressed]="filterStatus === null" (click)="filterStatus = null; applyFilter()">Todos<span class="np-c">{{ conteos.todos }}</span></button>
       <button type="button" class="np-chip" [attr.aria-pressed]="filterStatus === 1" (click)="filterStatus = 1; applyFilter()">Pendientes<span class="np-c">{{ pendingCount }}</span></button>
       <button type="button" class="np-chip" [attr.aria-pressed]="filterStatus === 2" (click)="filterStatus = 2; applyFilter()">En proceso<span class="np-c">{{ inProgressCount }}</span></button>
       <button type="button" class="np-chip" [attr.aria-pressed]="filterStatus === 3" (click)="filterStatus = 3; applyFilter()">Cerrados<span class="np-c">{{ closedCount }}</span></button>
@@ -32,7 +32,7 @@
       </label>
       <label class="np-search">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg>
-        <input type="search" [(ngModel)]="filterSearch" (keydown.enter)="applyFilter()" placeholder="Nombre o cédula… (Enter)" aria-label="Buscar ticket" />
+        <input type="search" [(ngModel)]="filterSearch" (keydown.enter)="applyFilter()" placeholder="Nombre, cédula, teléfono o N°… (Enter)" aria-label="Buscar ticket" />
       </label>
       <button type="button" class="np-link np-link--muted" (click)="clearFilters()">Limpiar</button>
     </ng-container>
@@ -68,6 +68,11 @@
             </tr>
           </tbody>
         </table>
+      </div>
+      <div class="np-pager" *ngIf="!loading && total > 0">
+        <span class="np-range">{{ (page - 1) * perPage + 1 }}–{{ page * perPage > total ? total : page * perPage }} de {{ total | number }}</span>
+        <label class="np-pagesize">Mostrar<np-select [(ngModel)]="perPage" (ngModelChange)="changePerPage()" [opciones]="perPageOptions" [presentacion]="presPorPagina" tamano="sm" style="min-width: 140px" ariaLabel="Tickets por página"></np-select></label>
+        <div class="np-pages" *ngIf="lastPage > 1"><button type="button" (click)="goToPage(page - 1)" [disabled]="page === 1" aria-label="Página anterior">‹</button><button type="button" *ngFor="let p of pages" (click)="goToPage(p)" [attr.aria-current]="p === page ? 'page' : null">{{ p }}</button><button type="button" (click)="goToPage(page + 1)" [disabled]="page === lastPage" aria-label="Página siguiente">›</button></div>
       </div>
     </section>
 

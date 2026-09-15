@@ -7,7 +7,7 @@ import { AuthService } from '../../../services/auth.service';
 import { TicketInterface, TicketNote, TicketStats } from '../../../models/ticket-interface';
 import { TareasEnSegundoPlanoService } from '../../../services/tareas-en-segundo-plano.service';
 import { NpSelectComponent, PresentacionSelect } from '../../../common/np-select/np-select.component';
-import { PRESENTACION_PERSONAS, conValor } from '../../../common/np-select/presentaciones';
+import { PRESENTACION_PERSONAS, PRESENTACION_POR_PAGINA, conValor } from '../../../common/np-select/presentaciones';
 import { ActivatedRoute, Router } from '@angular/router';
 import { NuevoTicketComponent } from '../nuevo-ticket/nuevo-ticket.component';
 
@@ -57,6 +57,18 @@ export class TaskTicketComponent implements OnInit, OnDestroy {
   filterStatus:  number | null = null;
   filterTechId:  number | null = null;
   filterSearch   = '';
+
+  // ── Paginación (en la base) ───────────────────────────────────────────────
+  page     = 1;
+  perPage  = 25;
+  total    = 0;
+  lastPage = 1;
+  readonly perPageOptions = [10, 25, 50, 100];
+  readonly presPorPagina  = PRESENTACION_POR_PAGINA;
+  /** Por estado con técnico y búsqueda aplicados: no cambian al pasar de una pestaña a otra. */
+  conteos = { todos: 0, pendientes: 0, en_proceso: 0, cerrados: 0 };
+  /** Si se cambia rápido de pestaña, sólo cuenta la última respuesta. */
+  private cargaActual = 0;
 
   // ── Close-ticket modal ────────────────────────────────────────────────────
   showCloseModal   = false;
@@ -152,19 +164,37 @@ export class TaskTicketComponent implements OnInit, OnDestroy {
     });
   }
 
-  loadTickets() {
-    this.loading = true;
-    this.timers.forEach(t => clearInterval(t));
-    this.timers = [];
+  /**
+   * Una página de tickets. Al cambiar de pestaña, filtro o página se vacía la
+   * tabla (antes quedaban debajo del spinner las filas de la pestaña anterior);
+   * el sondeo y las acciones recargan en silencio, sin parpadeo.
+   */
+  loadTickets(silencioso = false) {
+    const carga = ++this.cargaActual;
+    if (!silencioso) {
+      this.loading = true;
+      this.tickets = [];
+      this.timers.forEach(t => clearInterval(t));
+      this.timers = [];
+    }
 
-    const filters: any = {};
+    const filters: any = { page: this.page, per_page: this.perPage };
     if (this.filterStatus)  filters.status_id    = this.filterStatus;
     if (this.filterTechId)  filters.technical_id  = this.filterTechId;
-    if (this.filterSearch)  filters.search        = this.filterSearch;
+    if (this.filterSearch)  filters.search        = this.filterSearch.trim();
 
     this.userService.getAllTickets(filters).subscribe({
       next: (res) => {
-        this.tickets = (res.data || []).map((e: any) => {
+        if (carga !== this.cargaActual) return;
+        const d = res.data ?? {};
+        this.total    = d.total ?? 0;
+        this.page     = d.page ?? 1;
+        this.lastPage = d.last_page ?? 1;
+        if (d.conteos) this.conteos = d.conteos;
+
+        this.timers.forEach(t => clearInterval(t));
+        this.timers = [];
+        this.tickets = (d.items || []).map((e: any) => {
           const t: TicketInterface = {
             id:             e.id,
             name:           e.user_names,
@@ -194,14 +224,16 @@ export class TaskTicketComponent implements OnInit, OnDestroy {
           if (t.status_id === 2 && t.started_at) this.startTimer(t);
           return t;
         });
-        // Sincronizar el ticket abierto en el modal con los datos frescos
+        // Sincronizar el ticket abierto con los datos frescos; si ya no está en
+        // la pestaña o página elegida, la ficha se cierra en vez de quedar colgada.
         if (this.selectedTicket) {
           const fresh = this.tickets.find(t => t.id === this.selectedTicket!.id);
           if (fresh) this.selectedTicket = fresh;
+          else if (!silencioso) this.closeDetail();
         }
         this.loading = false;
       },
-      error: () => { this.loading = false; }
+      error: () => { if (carga === this.cargaActual) this.loading = false; }
     });
   }
 
@@ -389,55 +421,23 @@ export class TaskTicketComponent implements OnInit, OnDestroy {
     });
   }
 
+  /**
+   * Cada 20 s. Antes metía arriba de la lista cualquier ticket cambiado, fuera
+   * del estado que fuera, y en "Pendientes" aparecían cerrados. Ahora, si algo
+   * cambió, se recarga la página actual con la pestaña y los filtros elegidos.
+   */
   private pollUpdates() {
+    if (this.loading) return;
     this.userService.getTicketsSince(this.lastPollTime).subscribe({
       next: (res) => {
         const updated: any[] = res.data || [];
         if (updated.length === 0) return;
 
         this.lastPollTime = new Date().toISOString();
-
-        updated.forEach((e: any) => {
-          const idx = this.tickets.findIndex(t => t.id === e.id);
-          const mapped: TicketInterface = {
-            id:             e.id,
-            name:           e.user_names,
-            last_name:      e.user_lastname,
-            user_id:        e.user_id,
-            technical_id:   e.technical_id,
-            tech_names:     e.tech_names,
-            tech_lastname:  e.tech_lastname,
-            name_priority:  e.prioritys,
-            priority_id:    e.priority_id,
-            name_service:   e.service,
-            service_id:     e.service_id,
-            address:        e.address,
-            date:           e.date,
-            phone:          e.phone,
-            cedula:         e.cedula,
-            created_at:     e.created_at,
-            started_at:     e.started_at,
-            finished_at:    e.finished_at,
-            closed_at:      e.closed_at,
-            reopened_count: e.reopened_count || 0,
-            observation:    e.observation,
-            name_status:    e.status,
-            status_id:      e.status_id,
-            elapsedSeconds: 0,
-          };
-          if (idx >= 0) {
-            Object.assign(this.tickets[idx], mapped);
-          } else {
-            this.tickets.unshift(mapped);
-          }
-          if (mapped.status_id === 2 && mapped.started_at) this.startTimer(mapped);
-          // Refresh notes if this is the open ticket
-          if (this.selectedTicket?.id === e.id) {
-            this.selectedTicket = { ...this.selectedTicket!, ...mapped };
-            this.loadNotes(e.id);
-          }
-        });
-
+        this.loadTickets(true);
+        if (this.selectedTicket && updated.some(e => e.id === this.selectedTicket!.id)) {
+          this.loadNotes(this.selectedTicket.id!);
+        }
         if (this.isAdmin) this.loadStats();
       }
     });
@@ -469,7 +469,7 @@ export class TaskTicketComponent implements OnInit, OnDestroy {
   }
 
   private reload() {
-    this.loadTickets();
+    this.loadTickets(true);
     if (this.isAdmin) this.loadStats();
   }
 
@@ -555,10 +555,25 @@ export class TaskTicketComponent implements OnInit, OnDestroy {
 
   // ── Filters ───────────────────────────────────────────────────────────────
 
-  applyFilter()  { this.loadTickets(); }
+  applyFilter()  { this.page = 1; this.loadTickets(); }
   clearFilters() {
     this.filterStatus = null; this.filterTechId = null; this.filterSearch = '';
+    this.page = 1;
     this.loadTickets();
+  }
+
+  goToPage(p: number) {
+    if (p < 1 || p > this.lastPage || p === this.page) return;
+    this.page = p;
+    this.loadTickets();
+  }
+
+  changePerPage() { this.page = 1; this.loadTickets(); }
+
+  get pages(): number[] {
+    const desde = Math.max(1, this.page - 2);
+    const hasta = Math.min(this.lastPage, this.page + 2);
+    return Array.from({ length: hasta - desde + 1 }, (_, i) => desde + i);
   }
 
   // ── Helpers ───────────────────────────────────────────────────────────────
@@ -592,7 +607,7 @@ export class TaskTicketComponent implements OnInit, OnDestroy {
     return 'np-pill--neutral';
   }
 
-  get pendingCount()    { return this.tickets.filter(t => t.status_id === 1).length; }
-  get inProgressCount() { return this.tickets.filter(t => t.status_id === 2).length; }
-  get closedCount()     { return this.tickets.filter(t => t.status_id === 3).length; }
+  get pendingCount()    { return this.conteos.pendientes; }
+  get inProgressCount() { return this.conteos.en_proceso; }
+  get closedCount()     { return this.conteos.cerrados; }
 }

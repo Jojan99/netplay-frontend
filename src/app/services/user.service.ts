@@ -445,11 +445,14 @@ getIpzonebyZone(vlan: string, segment: string, routerId?: number | null) {
     return this.http.get<any>(url, { headers: this.getHeaders() });
   }
 
-  getAllTickets(filters: { status_id?: number; technical_id?: number; search?: string } = {}): Observable<any> {
+  /** Con `page` responde { items, total, page, per_page, last_page, conteos }; sin ella, la lista completa. */
+  getAllTickets(filters: { status_id?: number; technical_id?: number; search?: string; page?: number; per_page?: number } = {}): Observable<any> {
     const params: any = {};
     if (filters.status_id)   params['status_id']   = filters.status_id;
     if (filters.technical_id) params['technical_id'] = filters.technical_id;
     if (filters.search)      params['search']      = filters.search;
+    if (filters.page)        params['page']        = filters.page;
+    if (filters.per_page)    params['per_page']    = filters.per_page;
     const url = this.env.rootUrl + 'api/ticket/all';
     return this.http.get<any>(url, { headers: this.getHeaders(), params });
   }
