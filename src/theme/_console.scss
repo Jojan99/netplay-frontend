@@ -183,6 +183,12 @@
   &:disabled { opacity: .5; }
   &::placeholder { color: var(--text-3); } }
 select.np-input { padding-right: 28px; }
+/* Los <input> con type llevan también la regla de formularios de Tailwind
+   ([type='text'], [type='password']…) con fondo blanco. Pesa lo mismo que
+   .np-input y va después, así que ganaba: dentro del panel lo tapa el puente
+   con !important, pero en el login y el registro, en modo oscuro, el texto
+   claro quedaba sobre fondo blanco y no se veía lo que se escribía. */
+input.np-input { color: var(--text); background-color: var(--surface); border-color: var(--line-strong); }
 
 /* Opciones del desplegable nativo.
    Con color-scheme ya declarado en :root el navegador dibuja el popup con el
