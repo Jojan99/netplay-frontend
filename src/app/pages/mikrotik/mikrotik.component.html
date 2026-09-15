@@ -1226,8 +1226,9 @@
         <label class="np-field np-field-full"><span>Nombre</span>
           <input type="text" class="np-input np-mono" [(ngModel)]="edita.nombre" placeholder="plan-200mg" />
         </label>
-        <label class="np-field"><span>Velocidad <em>subida/bajada</em></span>
+        <label class="np-field"><span>Velocidad <em>subida/bajada en megas</em></span>
           <input type="text" class="np-input np-mono" [(ngModel)]="edita.velocidad" placeholder="200M/200M" />
+          <small class="np-fine">Se guarda en megas: si escribís <b>200</b> o <b>200/200</b> queda 200M/200M. Vacío es sin límite.</small>
         </label>
         <label class="np-field"><span>Puerta de enlace</span>
           <input type="text" class="np-input np-mono" [(ngModel)]="edita.gateway" placeholder="10.20.0.1" />
