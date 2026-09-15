@@ -174,36 +174,35 @@ export class UserComponent implements OnInit {
     return s === 'active' ? 'Activo' : s === 'suspended' ? 'Suspendido' : 'Sin IP';
   }
 
-  get countActive()    { return this.UserInterfaces.filter(u => u.internet_status === 'ACTIVE').length; }
-  get countSuspended() { return this.UserInterfaces.filter(u => u.internet_status !== 'ACTIVE').length; }
-  get countNoIp()      { return this.UserInterfaces.filter(u => this.sinIp(u)).length; }
-  get countNoWa()      { return this.UserInterfaces.filter(u => !u.whatsapp_enabled).length; }
-
-  get filteredUsers(): UserInterface[] {
-    switch (this.statusFilter) {
-      case 'active':    return this.UserInterfaces.filter(u => u.internet_status === 'ACTIVE');
-      case 'suspended': return this.UserInterfaces.filter(u => u.internet_status !== 'ACTIVE');
-      case 'noip':      return this.UserInterfaces.filter(u => this.sinIp(u));
-      case 'nowa':      return this.UserInterfaces.filter(u => !u.whatsapp_enabled);
-      default:          return this.UserInterfaces;
-    }
-  }
+  /**
+   * Conteos del servidor con la búsqueda aplicada y sin el filtro de estado.
+   * Antes se contaba sobre la lista cargada, y "Sin WhatsApp" daba todos: la
+   * lista no traía ese dato.
+   */
+  conteos = { todos: 0, activos: 0, suspendidos: 0, sin_ip: 0, sin_wa: 0 };
+  get countActive()    { return this.conteos.activos; }
+  get countSuspended() { return this.conteos.suspendidos; }
+  get countNoIp()      { return this.conteos.sin_ip; }
+  get countNoWa()      { return this.conteos.sin_wa; }
 
   setStatusFilter(f: ClientStatusFilter) {
+    if (f === this.statusFilter) return;
     this.statusFilter = f;
     this.currentPage = 1;
+    this.cargarClientes();
   }
 
-  get pagedUsers(): UserInterface[] {
-    return this.filteredUsers.slice(this.startIndex, this.endIndex);
-  }
+  /** La página la arma el servidor: UserInterfaces ya es la página actual. */
+  get pagedUsers(): UserInterface[] { return this.UserInterfaces; }
 
-  // Pagination
+  // Pagination (en la base)
   currentPage = 1;
   entriesPerPage = 12;
-  get totalEntries() { return this.filteredUsers.length; }
+  totalEntries = 0;
+  totalPages = 1;
+  /** Si se escribe o cambia de filtro rápido, sólo cuenta la última respuesta. */
+  private cargaActual = 0;
 
-  get totalPages() { return Math.max(1, Math.ceil(this.totalEntries / this.entriesPerPage)); }
   get startIndex() { return (this.currentPage - 1) * this.entriesPerPage; }
   get endIndex()   { return Math.min(this.currentPage * this.entriesPerPage, this.totalEntries); }
   get isLastPage() { return this.currentPage >= this.totalPages; }
@@ -258,9 +257,17 @@ export class UserComponent implements OnInit {
 
   private abrirPendiente() {
     if (!this.abrirAlCargar) return;
-    const u = this.UserInterfaces.find(x => Number(x.id_user) === this.abrirAlCargar);
+    const id = this.abrirAlCargar;
     this.abrirAlCargar = 0;
-    if (u) this.openRow(u);
+    const u = this.UserInterfaces.find(x => Number(x.id_user) === id);
+    if (u) { this.openRow(u); return; }
+    // Con paginación puede no estar en la primera página: se pide ese cliente solo.
+    this.userSvc.getClientesPagina({ page: 1, per_page: 5, cliente_id: id }).subscribe({
+      next: r => {
+        const fila = r?.data?.items?.[0];
+        if (fila) this.openRow(this.aCliente(fila));
+      },
+    });
   }
 
   openRow(u: UserInterface) {
@@ -284,7 +291,8 @@ export class UserComponent implements OnInit {
     this.abrirAlCargar = Number(this.route.snapshot.queryParamMap.get('cliente')) || 0;
     const tab = this.route.snapshot.queryParamMap.get('tab') as ClientTab | null;
     this.tabAlCargar = this.abrirAlCargar && tab ? tab : null;
-    if (q) { this.search = q; this.getSearchUser(); } else { this.getAllUser(); }
+    if (q) this.search = q;
+    this.cargarClientes();
     this.companyWaSvc.getConfig().subscribe({
       next: (res) => {
         const d = res?.data ?? res;
@@ -347,59 +355,61 @@ export class UserComponent implements OnInit {
   }
 
   // ── User list ─────────────────────────────────────────────────────────────
-  getAllUser() {
-    this.skeletor = true;
-    this.userSvc.getAllUser().subscribe({
+  /** Recarga la página actual sin esqueleto (la llaman las acciones tras guardar). */
+  getAllUser() { this.cargarClientes(true); }
+
+  /** Una página de clientes con el estado y la búsqueda elegidos. */
+  cargarClientes(silencioso = false) {
+    const carga = ++this.cargaActual;
+    if (!silencioso) this.skeletor = true;
+    this.userSvc.getClientesPagina({
+      page: this.currentPage,
+      per_page: this.entriesPerPage,
+      estado: this.statusFilter,
+      q: this.search.trim(),
+    }).subscribe({
       next: r => {
-        this.UserInterfaces = r.data.map((e: any) => ({
-          id_user: e.id,
-          names: e.names,
-          lastname: e.lastname,
-          address: e.address,
-          dni: e.dni,
-          phone: e.phone,
-          email: e.email,
-          internet_status: e.internet_status,
-          plan_name: e.plan_name,
-          ip: e.ip,
-          id_cab: e.id_cab,
-          date_create: e.date_create,
-          alias: e.alias,
-          whatsapp_enabled: e.whatsapp_enabled ?? false,
-          router_id: e.router_id ?? null,
-          connection_type: e.connection_type ?? 'static',
-        }));
-        if (this.currentPage > this.totalPages) this.currentPage = 1;
+        if (carga !== this.cargaActual) return;
+        const d = r?.data ?? {};
+        this.UserInterfaces = (d.items ?? []).map((e: any) => this.aCliente(e));
+        this.totalEntries = d.total ?? 0;
+        this.totalPages   = d.last_page ?? 1;
+        this.currentPage  = d.page ?? 1;
+        if (d.conteos) this.conteos = d.conteos;
         this.skeletor = false;
         this.abrirPendiente();
       },
-      error: () => { this.skeletor = false; }
+      error: () => { if (carga === this.cargaActual) this.skeletor = false; }
     });
   }
 
+  private aCliente(e: any): UserInterface {
+    return {
+      id_user: e.id,
+      names: e.names,
+      lastname: e.lastname,
+      address: e.address,
+      dni: e.dni,
+      phone: e.phone,
+      email: e.email,
+      internet_status: e.internet_status,
+      plan_name: e.plan_name,
+      ip: e.ip,
+      id_cab: e.id_cab,
+      date_create: e.date_create,
+      alias: e.alias,
+      whatsapp_enabled: !!Number(e.whatsapp_enabled ?? 1),
+      router_id: e.router_id ?? null,
+      connection_type: e.connection_type ?? 'static',
+    };
+  }
+
+  /** La búsqueda va a la base (nombre, documento, teléfono, correo, IP o usuario). */
   getSearchUser() {
     clearTimeout(this.timer);
-    if (!this.search.trim()) { this.getAllUser(); return; }
     this.timer = setTimeout(() => {
-      const term = this.search.trim();
-      if (!term) { this.getAllUser(); return; }
-      this.skeletor = true;
-      this.userSvc.getSearchUser(term).subscribe({
-        next: r => {
-          if (this.search.trim() !== term) return;
-          this.UserInterfaces = (r.data ?? []).map((e: any) => ({
-            id_user: e.id, names: e.names, lastname: e.lastname, address: e.address,
-            dni: e.dni, phone: e.phone, email: e.email, internet_status: e.internet_status,
-            plan_name: e.plan_name, ip: e.ip, id_cab: e.id_cab, date_create: e.date_create, alias: e.alias,
-            router_id: e.router_id ?? null,
-            connection_type: e.connection_type ?? 'static',
-          }));
-          this.currentPage = 1;
-          this.skeletor = false;
-          this.abrirPendiente();
-        },
-        error: () => { this.skeletor = false; }
-      });
+      this.currentPage = 1;
+      this.cargarClientes();
     }, 400);
   }
 
@@ -407,19 +417,29 @@ export class UserComponent implements OnInit {
   onEntriesPerPageChange(cantidad: number | string) {
     this.entriesPerPage = Number(cantidad);
     this.currentPage = 1;
+    this.cargarClientes();
   }
 
-  prevPage() { if (this.currentPage > 1) { this.currentPage--; } }
-  nextPage() { if (!this.isLastPage) { this.currentPage++; } }
-  goToPage(p: number) { this.currentPage = p; }
+  prevPage() { if (this.currentPage > 1) { this.currentPage--; this.cargarClientes(); } }
+  nextPage() { if (!this.isLastPage) { this.currentPage++; this.cargarClientes(); } }
+  goToPage(p: number) {
+    if (p === this.currentPage) return;
+    this.currentPage = p;
+    this.cargarClientes();
+  }
 
   toggleDetails(user: UserInterface) { user.expanded = !user.expanded; }
 
   toggleWhatsapp(user: UserInterface) {
     const val = !user.whatsapp_enabled;
     user.whatsapp_enabled = val;
+    this.conteos.sin_wa += val ? -1 : 1;
     this.companyWaSvc.toggleUserWhatsapp(user.id_user!, val).subscribe({
-      error: () => { user.whatsapp_enabled = !val; this.toast('Error al actualizar WhatsApp', 'error'); }
+      error: () => {
+        user.whatsapp_enabled = !val;
+        this.conteos.sin_wa += val ? 1 : -1;
+        this.toast('Error al actualizar WhatsApp', 'error');
+      }
     });
   }
 

@@ -12,7 +12,7 @@
       <p class="np-kicker">Operación <b>/</b> Clientes</p>
       <h1 class="np-title">Registro de clientes</h1>
       <div class="np-ribbon" *ngIf="!skeletor">
-        <span><span class="np-n">{{ UserInterfaces.length | number }}</span>en total</span>
+        <span><span class="np-n">{{ conteos.todos | number }}</span>{{ search.trim() ? 'encontrados' : 'en total' }}</span>
         <span><i class="np-dot" style="background:var(--ok)"></i><span class="np-n">{{ countActive | number }}</span>activos</span>
         <span><i class="np-dot" style="background:var(--danger)"></i><span class="np-n">{{ countSuspended | number }}</span>suspendidos</span>
         <span><i class="np-dot" style="background:var(--warn)"></i><span class="np-n">{{ countNoIp | number }}</span>sin IP asignada</span>
@@ -35,12 +35,12 @@
   <div class="np-toolbar">
     <label class="np-search">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg>
-      <input #searchInput type="search" placeholder="Nombre, DNI, teléfono o IP…" aria-label="Buscar cliente"
+      <input #searchInput type="search" placeholder="Nombre, DNI, teléfono, correo o IP…" aria-label="Buscar cliente"
              [(ngModel)]="search" (input)="getSearchUser()" />
       <kbd>/</kbd>
     </label>
     <div class="np-chips" role="group" aria-label="Filtrar por estado">
-      <button type="button" class="np-chip" [attr.aria-pressed]="statusFilter === 'all'" (click)="setStatusFilter('all')">Todos</button>
+      <button type="button" class="np-chip" [attr.aria-pressed]="statusFilter === 'all'" (click)="setStatusFilter('all')">Todos<span class="np-c">{{ conteos.todos }}</span></button>
       <button type="button" class="np-chip" [attr.aria-pressed]="statusFilter === 'active'" (click)="setStatusFilter('active')">Activos<span class="np-c">{{ countActive }}</span></button>
       <button type="button" class="np-chip" [attr.aria-pressed]="statusFilter === 'suspended'" (click)="setStatusFilter('suspended')">Suspendidos<span class="np-c">{{ countSuspended }}</span></button>
       <button type="button" class="np-chip" [attr.aria-pressed]="statusFilter === 'noip'" (click)="setStatusFilter('noip')">Sin IP<span class="np-c">{{ countNoIp }}</span></button>
@@ -126,7 +126,7 @@
                 </td>
               </tr>
 
-              <tr *ngIf="filteredUsers.length === 0" class="np-empty">
+              <tr *ngIf="UserInterfaces.length === 0" class="np-empty">
                 <td colspan="7">
                   <strong>No hay clientes que coincidan.</strong>
                   <span *ngIf="search">Probá con otro nombre, documento o IP.</span>

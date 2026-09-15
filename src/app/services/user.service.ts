@@ -106,6 +106,15 @@ export class UserService {
     return this.http.get<any>(url, { headers: this.getHeaders() })
   }
 
+  /** Registro de clientes paginado en la base: { items, total, page, per_page, last_page, conteos }. */
+  getClientesPagina(filtros: { page: number; per_page: number; estado?: string; q?: string; cliente_id?: number }): Observable<any> {
+    const params: any = { page: filtros.page, per_page: filtros.per_page };
+    if (filtros.estado && filtros.estado !== 'all') params['estado'] = filtros.estado;
+    if (filtros.q)          params['q']          = filtros.q;
+    if (filtros.cliente_id) params['cliente_id'] = filtros.cliente_id;
+    return this.http.get<any>(this.env.rootUrl + 'api/user/lista', { headers: this.getHeaders(), params });
+  }
+
   searchClients(query: string): Observable<any> {
     const url = this.env.rootUrl + 'api/user/search?q=' + encodeURIComponent(query);
     return this.http.get<any>(url, { headers: this.getHeaders() });
