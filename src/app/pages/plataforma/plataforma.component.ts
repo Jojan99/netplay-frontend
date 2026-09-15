@@ -10,6 +10,7 @@ interface Plan {
   nombre: string;
   para: string;
   precio_mensual: number | null;
+  precio_anual?: number | null;
   clientes: number | null;
   destacado: boolean;
   incluye: string[];
@@ -42,6 +43,10 @@ export class PlataformaComponent implements OnInit, OnDestroy {
   planes       = signal<Plan[]>([]);
   modulos      = signal<GrupoDeModulos[]>([]);
   planesListos = signal(false);
+  /** Todos los planes traen todas las funciones: esto va una sola vez, debajo. */
+  incluyeTodos = signal<string[]>([]);
+  pruebaDias   = signal(0);
+  notaPrecios  = signal('');
   private moneda = 'COP';
 
   deseado   = '';
@@ -81,6 +86,9 @@ export class PlataformaComponent implements OnInit, OnDestroy {
       next: d => {
         this.planes.set(d?.planes ?? []);
         this.modulos.set(d?.modulos ?? []);
+        this.incluyeTodos.set(d?.incluye_todos ?? []);
+        this.pruebaDias.set(Number(d?.prueba_dias) || 0);
+        this.notaPrecios.set(d?.nota_precios ?? '');
         this.moneda = d?.moneda || 'COP';
         this.planesListos.set(true);
       },
@@ -135,8 +143,15 @@ export class PlataformaComponent implements OnInit, OnDestroy {
   }
 
   precio(plan: Plan): string {
-    if (plan.precio_mensual == null) return '';
-    return new Intl.NumberFormat('es-CO', { style: 'currency', currency: this.moneda, maximumFractionDigits: 0 }).format(plan.precio_mensual);
+    return plan.precio_mensual == null ? '' : this.pesos(plan.precio_mensual);
+  }
+
+  precioAnual(plan: Plan): string {
+    return plan.precio_anual == null ? '' : this.pesos(plan.precio_anual);
+  }
+
+  private pesos(valor: number): string {
+    return new Intl.NumberFormat('es-CO', { style: 'currency', currency: this.moneda, maximumFractionDigits: 0 }).format(valor);
   }
 
   clientes(plan: Plan): string {

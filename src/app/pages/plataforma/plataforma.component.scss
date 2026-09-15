@@ -96,6 +96,14 @@
   b { font: 600 32px var(--font-display); letter-spacing: -0.03em; }
   b.is-consulta { font-size: 24px; }
   small { color: var(--text-3); font-size: 13px; } }
+.nv-sec-sub { margin: 12px 0 0; font-size: 15px; color: var(--text-2); b { color: var(--accent); } }
+.nv-plan-anual { margin: 2px 0 0; font-size: 12.5px; color: var(--text-2); }
+.nv-incluye { margin-top: 28px; padding: 24px; background: var(--surface); border: 1px solid var(--line); border-radius: 10px;
+  h3 { margin: 0 0 14px; font: 600 17px var(--font-display); }
+  ul { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 10px 24px; }
+  li { display: flex; gap: 8px; align-items: flex-start; font-size: 13.5px; color: var(--text-2); line-height: 1.45;
+    svg { width: 15px; height: 15px; margin-top: 2px; color: var(--ok); flex-shrink: 0; } } }
+.nv-nota { margin: 14px 0 0; font-size: 12.5px; color: var(--text-3); }
 .nv-plan-clientes { margin: 4px 0 0; font: 500 12px var(--font-mono); color: var(--text-3); }
 .nv-plan-btn { width: 100%; justify-content: center; }
 

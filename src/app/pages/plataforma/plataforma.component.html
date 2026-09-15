@@ -138,7 +138,10 @@
     <div class="nv-wrap">
       <header class="nv-sec-head">
         <p class="nv-kicker">Planes</p>
-        <h2>Pagás según el tamaño de tu red.</h2>
+        <h2>Todas las funciones en todos los planes. Pagás según cuántos clientes tenés.</h2>
+        @if (pruebaDias()) {
+          <p class="nv-sec-sub"><b>{{ pruebaDias() }} días de prueba gratis</b> en cualquier plan.</p>
+        }
       </header>
 
       @if (!planesListos()) {
@@ -159,6 +162,9 @@
                   <b class="is-consulta">Consultanos</b>
                 }
               </p>
+              @if (precioAnual(plan)) {
+                <p class="nv-plan-anual">o {{ precioAnual(plan) }} al año</p>
+              }
               <p class="nv-plan-clientes">{{ clientes(plan) }}</p>
               <ul>
                 @for (item of plan.incluye; track item) {
@@ -169,6 +175,20 @@
             </article>
           }
         </div>
+
+        @if (incluyeTodos().length) {
+          <div class="nv-incluye">
+            <h3>Todos los planes incluyen</h3>
+            <ul>
+              @for (item of incluyeTodos(); track item) {
+                <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="m5 12 5 5L20 7"/></svg>{{ item }}</li>
+              }
+            </ul>
+          </div>
+        }
+        @if (notaPrecios()) {
+          <p class="nv-nota">{{ notaPrecios() }}</p>
+        }
       }
     </div>
   </section>
