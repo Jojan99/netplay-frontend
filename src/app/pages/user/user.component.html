@@ -712,11 +712,15 @@
           <np-select [(ngModel)]="selectedRouterId" (ngModelChange)="onCreateRouterChange()" [opciones]="routers" [presentacion]="presRouters"
                      [cargando]="loadingRouters" textoCargando="Cargando routers…" placeholder="Seleccione router…" [deshabilitado]="loadingRouters" ariaLabel="Router"></np-select>
         </label>
-        <label class="np-field" *ngIf="!esPppoe"><span>VLAN</span>
+        <!-- div y no label: dentro de un label, tocar "VLAN" activaba el botón "Ver todas". -->
+        <div class="np-field" *ngIf="!esPppoe">
+          <span class="np-field-cab">VLAN
+            <button type="button" class="np-field-accion" (click)="alternarTodasLasRedes()"
+                    [title]="todasLasRedes ? 'Mostrando todas las redes del router' : 'Mostrando sólo las redes que dan internet'">{{ todasLasRedes ? 'Sólo de clientes' : 'Ver todas' }}</button>
+          </span>
           <np-select [(ngModel)]="selectedVlan" (ngModelChange)="onInterfaceChange($event)" [opciones]="interfaces" [presentacion]="redes"
                      [cargando]="loadingIfaces" textoCargando="Leyendo el router…" placeholder="Seleccione VLAN…" ariaLabel="VLAN"></np-select>
-          <small class="np-fine" *ngIf="!loadingIfaces">{{ todasLasRedes ? 'Todas las redes del router.' : 'Sólo las redes que dan internet.' }} <button type="button" class="np-link" (click)="alternarTodasLasRedes()">{{ todasLasRedes ? 'Ver sólo las de clientes' : 'Ver todas' }}</button></small>
-        </label>
+        </div>
         <label class="np-field" *ngIf="!esPppoe"><span>Segmento</span>
           <np-select [(ngModel)]="selectedSeg" (ngModelChange)="onSegmentChange($event)" [opciones]="segments" [presentacion]="presSegmentos"
                      placeholder="Seleccione segmento…" [deshabilitado]="!segments.length" ariaLabel="Segmento"></np-select>
