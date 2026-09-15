@@ -29,7 +29,6 @@
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v4M12 17v4M3 12h4M17 12h4M6 6l3 3M15 15l3 3M18 6l-3 3M9 15l-3 3"/></svg>
         {{ pppoe?.disponible ? 'Revisar configuración' : 'Configurar servidor PPPoE' }}
       </button>
-      <button type="button" class="np-btn np-btn--primary" *ngIf="activeTab === 'queues'" (click)="openCreateQueue()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M12 5v14M5 12h14"/></svg>Nueva cola</button>
     </div>
   </header>
 
@@ -60,7 +59,15 @@
     <!-- ══ INFO ══ -->
     <ng-container *ngIf="activeTab === 'info'">
       <div *ngIf="loadingInfo" class="np-loading"><span class="np-spinner"></span> Consultando router…</div>
-      <p class="np-notice np-notice--danger" *ngIf="!loadingInfo && !routerInfo">No se pudo cargar. Verificá la configuración del router. <button type="button" class="np-link" (click)="setTab('config')">Ir a configuración</button></p>
+      <div class="np-notice np-notice--danger" role="alert" *ngIf="!loadingInfo && !routerInfo">
+        <b>{{ selectedRouterLabel }} no está respondiendo</b><span class="np-mono" *ngIf="selectedRouterHost"> ({{ selectedRouterHost }})</span>.
+        {{ infoError || 'No se pudo consultar el router.' }}
+        <button type="button" class="np-link" (click)="setTab('config')">Revisar la conexión</button>
+      </div>
+      <div class="np-notice np-notice--warn" role="alert" *ngIf="routerInfo?.mismo_equipo?.length">
+        <b>Esta conexión llega al mismo equipo que {{ routerInfo.mismo_equipo.join(', ') }}</b> (serie <span class="np-mono">{{ routerInfo.serie }}</span>).
+        Si esperabas ver otro MikroTik, ese equipo no está respondiendo en <span class="np-mono">{{ selectedRouterHost }}</span>: revisá la IP en <button type="button" class="np-link" (click)="setTab('config')">Routers</button>.
+      </div>
       <ng-container *ngIf="routerInfo">
         <!-- Ficha del equipo: la foto del modelo y sus puertos con el estado
              real, que es lo que una foto sola no puede mostrar. -->
@@ -191,28 +198,6 @@
               <td><span class="np-pill" [ngClass]="c.disabled ? 'np-pill--suspended' : 'np-pill--active'">{{ c.disabled ? 'Suspendido' : 'Activo' }}</span></td>
             </tr>
             <tr *ngIf="!filteredClients.length" class="np-empty"><td colspan="8">Sin resultados.</td></tr>
-          </tbody>
-        </table></div>
-      </section>
-    </ng-container>
-
-    <!-- ══ COLAS ══ -->
-    <ng-container *ngIf="activeTab === 'queues'">
-      <div *ngIf="loadingQueues" class="np-loading"><span class="np-spinner"></span> Cargando colas…</div>
-      <section class="np-registry" *ngIf="!loadingQueues">
-        <div class="np-registry-wrap"><table class="np-table np-table--registry">
-          <thead><tr><th class="np-th-stripe"></th><th>Nombre</th><th>Target</th><th>Límite</th><th>Burst</th><th>Comentario</th><th>Estado</th><th class="np-th-right">Acciones</th></tr></thead>
-          <tbody>
-            <tr *ngFor="let q of queues" class="np-row" (click)="openEditQueue(q)">
-              <td class="np-stripe"><i [style.background]="q.disabled !== 'true' ? 'var(--ok)' : 'var(--line-strong)'"></i></td>
-              <td class="np-data np-strong">{{ q.name }}</td><td class="np-data">{{ q.target }}</td><td class="np-data">{{ q['max-limit'] }}</td><td class="np-data">{{ q['burst-limit'] || '—' }}</td><td>{{ q.comment || '—' }}</td>
-              <td><span class="np-pill" [ngClass]="q.disabled !== 'true' ? 'np-pill--active' : 'np-pill--neutral'">{{ q.disabled === 'true' ? 'Inactiva' : 'Activa' }}</span></td>
-              <td class="np-td-right"><div class="np-rowacts" (click)="$event.stopPropagation()">
-                <button type="button" class="np-icobtn" (click)="openEditQueue(q)" title="Editar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 20h4L18 10l-4-4L4 16v4zM13 7l4 4"/></svg></button>
-                <button type="button" class="np-icobtn" (click)="deleteQueue(q['.id'])" title="Eliminar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/></svg></button>
-              </div></td>
-            </tr>
-            <tr *ngIf="!queues.length" class="np-empty"><td colspan="8"><strong>No hay colas configuradas.</strong></td></tr>
           </tbody>
         </table></div>
       </section>
@@ -598,27 +583,6 @@
         </article>
       </div>
     </ng-container>
-  </div>
-</div>
-
-<!-- ══ Cola ═════════════════════════════════════════════════════════════════ -->
-<div *ngIf="showQueueForm" class="np-overlay" (click)="showQueueForm = false">
-  <div class="np-modal" role="dialog" aria-modal="true" (click)="$event.stopPropagation()">
-    <div class="np-modal-head"><div><p class="np-kicker">MikroTik <b>/</b> Colas</p><h3>{{ editingQueue ? 'Editar cola' : 'Nueva cola de ancho de banda' }}</h3></div>
-      <button type="button" class="np-icobtn" (click)="showQueueForm = false" aria-label="Cerrar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div>
-    <div class="np-modal-body">
-      <div class="np-form">
-        <label class="np-field"><span>Nombre <em>*</em></span><input class="np-input np-mono" [(ngModel)]="queueForm.name" placeholder="Cliente-001" /></label>
-        <label class="np-field"><span>Target <em>*</em> (IP/32)</span><input class="np-input np-mono" [(ngModel)]="queueForm.target" placeholder="192.168.1.10/32" /></label>
-        <label class="np-field np-field-full"><span>Límite máximo <em>*</em> (subida/bajada)</span><input class="np-input np-mono" [(ngModel)]="queueForm.max_limit" placeholder="2M/10M" /></label>
-        <label class="np-field"><span>Burst limit</span><input class="np-input np-mono" [(ngModel)]="queueForm.burst_limit" placeholder="4M/20M" /></label>
-        <label class="np-field"><span>Burst threshold</span><input class="np-input np-mono" [(ngModel)]="queueForm.burst_threshold" placeholder="1M/5M" /></label>
-        <label class="np-field"><span>Burst time (s)</span><input class="np-input np-mono" [(ngModel)]="queueForm.burst_time" placeholder="8/8" /></label>
-        <label class="np-field"><span>Comentario</span><input class="np-input" [(ngModel)]="queueForm.comment" placeholder="Nombre del cliente" /></label>
-      </div>
-      <p *ngIf="queueMsg" class="np-notice" [ngClass]="queueError ? 'np-notice--danger' : 'np-notice--ok'">{{ queueMsg }}</p>
-      <div class="np-btnrow np-btnrow--end"><button type="button" class="np-btn np-btn--ghost" (click)="showQueueForm = false">Cancelar</button><button type="button" class="np-btn np-btn--primary" (click)="saveQueue()" [disabled]="savingQueue || !queueForm.name || !queueForm.target || !queueForm.max_limit">{{ savingQueue ? 'Guardando…' : 'Guardar' }}</button></div>
-    </div>
   </div>
 </div>
 

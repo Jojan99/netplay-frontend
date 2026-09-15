@@ -38,16 +38,15 @@ const ESTADOS: Record<EstadoPuerto, string> = {
 export class MikrotikComponent implements OnInit {
   private dialog = inject(DialogService);
   private router = inject(Router);
-  activeTab: 'info' | 'clients' | 'queues' | 'conflicts' | 'pppoe' | 'velocidades' | 'config' = 'info';
+  activeTab: 'info' | 'clients' | 'conflicts' | 'pppoe' | 'velocidades' | 'config' = 'info';
 
-  tabs: { key: 'info' | 'clients' | 'queues' | 'conflicts' | 'pppoe' | 'velocidades' | 'config'; label: string }[] = [
+  tabs: { key: 'info' | 'clients' | 'conflicts' | 'pppoe' | 'velocidades' | 'config'; label: string }[] = [
     { key: 'info', label: 'Info Router' },
     { key: 'clients', label: 'Clientes ARP' },
-    { key: 'queues', label: 'Ancho de Banda' },
     { key: 'conflicts', label: 'Conflictos de IP' },
     { key: 'pppoe', label: 'PPPoE' },
     { key: 'velocidades', label: 'Velocidades' },
-    { key: 'config', label: 'Configuración' },
+    { key: 'config', label: 'Routers' },
   ];
 
   // ── Multi-router ──────────────────────────────────────────────────────────
@@ -58,6 +57,8 @@ export class MikrotikComponent implements OnInit {
   // ── Router info ───────────────────────────────────────────────────────────
   routerInfo: any = null;
   loadingInfo = false;
+  /** Por qué no cargó: el router no contesta, rechazó el usuario, etc. */
+  infoError = '';
 
   // ── Clients ───────────────────────────────────────────────────────────────
   clients: any[] = [];
@@ -68,16 +69,6 @@ export class MikrotikComponent implements OnInit {
   suspending = false;
   suspendResult: string | null = null;
   suspendError = false;
-
-  // ── Queues ────────────────────────────────────────────────────────────────
-  queues: any[] = [];
-  loadingQueues = false;
-  showQueueForm = false;
-  editingQueue: any = null;
-  queueForm = { name: '', target: '', max_limit: '', comment: '', burst_limit: '', burst_threshold: '', burst_time: '' };
-  savingQueue = false;
-  queueMsg = '';
-  queueError = false;
 
   // ── Config: lista de routers ──────────────────────────────────────────────
   showRouterForm = false;
@@ -885,6 +876,11 @@ export class MikrotikComponent implements OnInit {
     });
   }
 
+  get selectedRouterHost(): string {
+    const r = this.routers.find(x => x.id === this.selectedRouterId);
+    return r ? `${r.host}:${r.port}` : '';
+  }
+
   get selectedRouterLabel(): string {
     const r = this.routers.find(x => x.id === this.selectedRouterId);
     return r ? (r.name || r.host) : 'Router';
@@ -893,16 +889,14 @@ export class MikrotikComponent implements OnInit {
   onRouterChange() {
     if (this.activeTab === 'info') this.loadInfo();
     else if (this.activeTab === 'clients') this.loadClients();
-    else if (this.activeTab === 'queues') this.loadQueues();
   }
 
   // ── Tabs ──────────────────────────────────────────────────────────────────
 
-  setTab(tab: 'info' | 'clients' | 'queues' | 'conflicts' | 'pppoe' | 'velocidades' | 'config') {
+  setTab(tab: 'info' | 'clients' | 'conflicts' | 'pppoe' | 'velocidades' | 'config') {
     this.activeTab = tab;
     if (tab === 'info')      { this.loadInfo(); }
     if (tab === 'clients')   { if (!this.clients.length) this.loadClients(); }
-    if (tab === 'queues')    { if (!this.queues.length) this.loadQueues(); }
     if (tab === 'conflicts') { if (!this.conflicts.length) this.loadConflicts(); }
     if (tab === 'pppoe')     { this.loadPppoe(); }
     if (tab === 'velocidades') { this.cargarVelocidades(); }
@@ -912,7 +906,6 @@ export class MikrotikComponent implements OnInit {
   refresh() {
     if (this.activeTab === 'info')    this.loadInfo();
     else if (this.activeTab === 'clients') this.loadClients();
-    else if (this.activeTab === 'queues')  this.loadQueues();
     else if (this.activeTab === 'conflicts') this.loadConflicts();
     else if (this.activeTab === 'pppoe') this.loadPppoe();
   }
@@ -1143,9 +1136,18 @@ export class MikrotikComponent implements OnInit {
   loadInfo() {
     this.loadingInfo = true;
     this.routerInfo = null;
+    this.infoError = '';
     this.svc.getRouterInfo(this.selectedRouterId).subscribe({
-      next: r => { this.routerInfo = r.data; this.loadingInfo = false; this.cargarFicha(); },
-      error: () => { this.loadingInfo = false; },
+      next: r => {
+        this.loadingInfo = false;
+        // Cuando el router no contesta el backend responde 200 sin datos y con
+        // el motivo: antes se tomaba igual y sólo salía un aviso genérico.
+        const fallo = !r?.data || r?.error === 1 || r?.error === true || (r?.status !== undefined && r.status !== 0);
+        if (fallo) { this.infoError = r?.message || 'No se pudo consultar el router.'; return; }
+        this.routerInfo = r.data;
+        this.cargarFicha();
+      },
+      error: e => { this.loadingInfo = false; this.infoError = e?.error?.message || 'No se pudo consultar el router.'; },
     });
   }
 
@@ -1215,69 +1217,6 @@ export class MikrotikComponent implements OnInit {
         this.suspending = false;
       },
     });
-  }
-
-  // ── Queues ────────────────────────────────────────────────────────────────
-
-  loadQueues() {
-    this.loadingQueues = true;
-    this.svc.getQueues(this.selectedRouterId).subscribe({
-      next: r => { this.queues = r.data ?? []; this.loadingQueues = false; },
-      error: () => { this.loadingQueues = false; },
-    });
-  }
-
-  openCreateQueue() {
-    this.editingQueue = null;
-    this.queueForm = { name: '', target: '', max_limit: '', comment: '', burst_limit: '', burst_threshold: '', burst_time: '' };
-    this.queueMsg = '';
-    this.showQueueForm = true;
-  }
-
-  openEditQueue(q: any) {
-    this.editingQueue = q;
-    this.queueForm = {
-      name: q.name ?? '',
-      target: q.target ?? '',
-      max_limit: q['max-limit'] ?? '',
-      comment: q.comment ?? '',
-      burst_limit: q['burst-limit'] ?? '',
-      burst_threshold: q['burst-threshold'] ?? '',
-      burst_time: q['burst-time'] ?? '',
-    };
-    this.queueMsg = '';
-    this.showQueueForm = true;
-  }
-
-  saveQueue() {
-    if (!this.queueForm.name || !this.queueForm.target || !this.queueForm.max_limit) return;
-    this.savingQueue = true;
-    const obs = this.editingQueue
-      ? this.svc.updateQueue(this.editingQueue['.id'], this.queueForm, this.selectedRouterId)
-      : this.svc.createQueue(this.queueForm, this.selectedRouterId);
-
-    obs.subscribe({
-      next: r => {
-        this.savingQueue = false;
-        if (!r.error && r.status === 0) {
-          this.showQueueForm = false;
-          this.loadQueues();
-        } else {
-          this.queueMsg = r.message;
-          this.queueError = true;
-        }
-      },
-      error: e => {
-        this.savingQueue = false;
-        this.queueMsg = e.error?.message ?? 'Error al guardar';
-        this.queueError = true;
-      },
-    });
-  }
-
-  async deleteQueue(id: string) {
-    if (!await this.dialog.confirm('¿Eliminar esta cola de ancho de banda?')) return;
-    this.svc.deleteQueue(id, this.selectedRouterId).subscribe({ next: () => this.loadQueues() });
   }
 
   // ── Config: CRUD de routers ───────────────────────────────────────────────
