@@ -1,7 +1,7 @@
 <div class="pt-app pt-login">
   <aside class="pt-login-side">
-    <p class="pt-kicker">Portal <b style="color:var(--accent)">/</b> clientes</p>
-    <h2>Tu servicio de internet, en un solo lugar.</h2>
+    <p class="pt-kicker">{{ empresaNombre() || 'Portal' }} <b style="color:var(--accent)">/</b> clientes</p>
+    <h2>{{ empresaNombre() ? 'Tu servicio de internet con ' + empresaNombre() + ', en un solo lugar.' : 'Tu servicio de internet, en un solo lugar.' }}</h2>
     <p>Consultá tu saldo, pagá en línea, descargá facturas y reportá fallas sin llamar ni esperar.</p>
     <ul>
       <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="6" width="18" height="12" rx="2"/><path d="M3 10h18M7 15h3"/></svg>Pagos en línea con tarjeta, PSE o Bre-B</li>
@@ -12,10 +12,24 @@
 
   <main class="pt-login-main">
     <form class="pt-login-card" (ngSubmit)="login()" autocomplete="on">
-      <div class="pt-login-brand"><span class="pt-brand-mono">N</span><div><b>Netplay</b><small>Portal de clientes</small></div></div>
+      <div class="pt-login-brand">
+        <img *ngIf="empresaLogo()" [src]="empresaLogo()" [alt]="'Logo de ' + empresaNombre()" (error)="logoRoto.set(true)" />
+        <span *ngIf="!empresaLogo()" class="pt-brand-mono" aria-hidden="true">{{ inicial() }}</span>
+        <div><b>{{ empresaNombre() || 'Portal de clientes' }}</b><small>{{ empresaNombre() ? 'Portal de clientes' : 'Tu proveedor de internet' }}</small></div>
+      </div>
       <div class="pt-login-title"><h1>Hola de nuevo</h1><p>Ingresá con tu número de documento y tu contraseña.</p></div>
 
+      <div class="pt-alert pt-alert--danger" *ngIf="desconocida()" role="alert"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 8v4M12 16h.01"/></svg><span>Esta dirección no corresponde a ninguna empresa. Revisá el enlace que te envió tu proveedor.</span></div>
+
       <div class="pt-alert pt-alert--danger" *ngIf="errorMsg()" role="alert"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 8v4M12 16h.01"/></svg><span>{{ errorMsg() }}</span></div>
+
+      <div class="pt-alert" *ngIf="elegir().length" role="alert">
+        <span>Tenés servicio con más de una empresa. ¿Cuál querés consultar?
+          <span style="display:flex; flex-wrap:wrap; gap:6px; margin-top:8px">
+            <button type="button" *ngFor="let e of elegir()" class="pt-btn pt-btn--ghost" (click)="elegirEmpresa(e.subdominio)" [disabled]="loading()">{{ e.nombre }}</button>
+          </span>
+        </span>
+      </div>
 
       <label class="pt-field"><span>Documento o usuario</span><input class="pt-input np-mono" type="text" inputmode="numeric" name="username" [(ngModel)]="username" placeholder="Ej: 1234567890" autocomplete="username" autofocus /></label>
       <label class="pt-field"><span>Contraseña</span>

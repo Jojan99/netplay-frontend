@@ -36,7 +36,11 @@
       <!-- Paso 1: empresa -->
       <ng-container *ngIf="step === 1">
         <div class="np-form">
-          <label class="np-field np-field-full"><span>Nombre de la empresa <em>*</em></span><input type="text" class="np-input" [(ngModel)]="form.name" name="name" placeholder="Netplay S.A.S." autofocus /></label>
+          <label class="np-field np-field-full"><span>Nombre de la empresa <em>*</em></span><input type="text" class="np-input" [ngModel]="form.name" (ngModelChange)="alCambiarNombre($event)" name="name" placeholder="Netplay S.A.S." autofocus /></label>
+          <label class="np-field np-field-full"><span>Dirección de tu empresa</span>
+            <span class="np-subdominio"><input #campoSub type="text" class="np-input np-mono" [value]="form.subdomain" (input)="alEscribirSubdominio(campoSub)" name="subdomain" placeholder="tuempresa" maxlength="40" autocomplete="off" spellcheck="false" autocapitalize="off" /><span class="np-subdominio-dom">.{{ dominio }}</span></span>
+            <small class="np-fine" [class.is-libre]="subdominioEstado === 'libre'" [class.is-ocupado]="subdominioEstado === 'ocupado'">{{ subdominioMensaje }}</small>
+          </label>
           <label class="np-field"><span>NIT <em>*</em></span><input type="text" class="np-input np-mono" [(ngModel)]="form.nit" name="nit" placeholder="900123456-1" /></label>
           <label class="np-field"><span>Teléfono <em>*</em></span><input type="tel" class="np-input np-mono" [(ngModel)]="form.phone" name="phone" placeholder="+57 300 000 0000" /><small class="np-fine" *ngIf="form.phone && !phoneOk">Escribí un teléfono válido.</small></label>
           <label class="np-field np-field-full"><span>Correo corporativo <em>*</em></span><input type="email" class="np-input" [(ngModel)]="form.email" name="email" placeholder="empresa@correo.com" /><small class="np-fine" *ngIf="form.email && !emailOk">Ese correo no parece válido.</small><small class="np-fine" *ngIf="!form.email || emailOk">Acá llega el enlace para activar la cuenta.</small></label>

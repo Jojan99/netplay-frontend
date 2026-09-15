@@ -3,8 +3,8 @@
 
   <aside class="np-login-side" aria-hidden="true">
     <div class="np-login-side-inner">
-      <p class="np-kicker">Netplay <b>/</b> Plataforma de operación</p>
-      <h2 class="np-login-claim">La red, la cartera y el soporte en una sola consola.</h2>
+      <p class="np-kicker">{{ enEmpresa ? empresaNombre : marca }} <b>/</b> Plataforma de operación</p>
+      <h2 class="np-login-claim">{{ enEmpresa ? 'El panel de ' + empresaNombre + ': red, cartera y soporte en una sola consola.' : 'La red, la cartera y el soporte en una sola consola.' }}</h2>
       <dl class="np-login-facts">
         <div><dt>Clientes</dt><dd>Registro, servicios, facturación y tickets por cliente.</dd></div>
         <div><dt>Recaudo</dt><dd>Cartera por meses de mora, pagos, abonos y compromisos.</dd></div>
@@ -16,9 +16,26 @@
 
   <main class="np-login-main">
     <form class="np-login-card" (ngSubmit)="signin()" novalidate>
+      <div class="np-login-empresa" *ngIf="enEmpresa">
+        <img *ngIf="empresaLogo" [src]="empresaLogo" [alt]="'Logo de ' + empresaNombre" (error)="logoRoto = true" />
+        <span *ngIf="!empresaLogo" class="np-login-empresa-ini" aria-hidden="true">{{ iniciales }}</span>
+        <div><b>{{ empresaNombre }}</b><small>Acceso del equipo</small></div>
+      </div>
+
       <p class="np-kicker">Acceso <b>/</b> Operadores</p>
       <h1 class="np-title np-login-title">Iniciar sesión</h1>
       <p class="np-login-help">Ingresá con tu documento y contraseña.</p>
+
+      <p *ngIf="desconocida" class="np-notice np-notice--danger" role="alert">
+        Esta dirección no corresponde a ninguna empresa registrada. Revisá el enlace<ng-container *ngIf="raiz"> o entrá desde <a [href]="raiz + '/login'">{{ info?.plataforma?.dominio }}</a></ng-container>.
+      </p>
+
+      <div *ngIf="empresasParaElegir.length" class="np-notice np-notice--info" role="alert">
+        Tu usuario está en más de una empresa. ¿A cuál querés entrar?
+        <div class="np-btnrow" style="margin-top:8px; flex-wrap:wrap">
+          <button type="button" *ngFor="let e of empresasParaElegir" class="np-btn np-btn--ghost np-btn--sm" (click)="elegirEmpresa(e.subdominio)" [disabled]="isLoading">{{ e.nombre }}</button>
+        </div>
+      </div>
 
       <p *ngIf="Islogin && !needsConfirmation" class="np-notice np-notice--danger" role="alert">{{ errorMsg || 'Documento o contraseña incorrectos. Revisá los datos e intentá de nuevo.' }}</p>
       <div *ngIf="Islogin && needsConfirmation" class="np-notice np-notice--info" role="alert">
@@ -48,7 +65,8 @@
         {{ isLoading ? 'Ingresando…' : 'Ingresar' }}
       </button>
 
-      <p class="np-login-alt">¿Todavía no tenés empresa? <a routerLink="/register">Registrá tu empresa</a></p>
+      <p class="np-login-alt" *ngIf="enEmpresa">¿Sos cliente de {{ empresaNombre }}? <a routerLink="/portal/login">Entrá al portal de clientes</a></p>
+      <p class="np-login-alt" *ngIf="!enEmpresa">¿Todavía no tenés empresa? <a routerLink="/register">Registrá tu empresa</a></p>
     </form>
   </main>
 </div>

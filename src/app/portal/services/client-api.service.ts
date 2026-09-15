@@ -20,8 +20,9 @@ export class ClientApiService {
   }
 
   // ── Auth ────────────────────────────────────────────────────────────────
-  login(username: string, password: string, recordar = false): Observable<any> {
-    return this.http.post(`${this.baseUrl}/login`, { username, password, recordar });
+  /** @param empresa subdominio de la empresa cuando no se entra desde el suyo (o se eligió de la lista). */
+  login(username: string, password: string, recordar = false, empresa = ''): Observable<any> {
+    return this.http.post(`${this.baseUrl}/login`, { username, password, recordar, ...(empresa ? { empresa } : {}) });
   }
 
   logout(): Observable<any> {

@@ -2,6 +2,7 @@ import { Routes } from '@angular/router';
 import { authGuard } from './guards/auth.guard';
 import { roleGuard } from './guards/role.guard';
 import { panelYaConectadoGuard } from './guards/ya-conectado.guard';
+import { raizDelSitioGuard, soloEnLaRaizGuard } from './guards/sitio.guard';
 
 import { SignInComponent }            from './pages/sign-in/sign-in/sign-in.component';
 import { RegisterCompanyComponent }   from './pages/register-company/register-company.component';
@@ -114,10 +115,19 @@ export const routes: Routes = [
   // es este mismo login, y parecía que había que entrar de nuevo cada vez.
   { path: 'login',         component: SignInComponent, canActivate: [panelYaConectadoGuard] },
   { path: 'inicio',        component: SignInComponent, canActivate: [panelYaConectadoGuard] },
-  { path: 'register',      component: RegisterCompanyComponent },
+  // El registro es de netvula.com: desde el subdominio de una empresa se manda a la raíz.
+  { path: 'register',      component: RegisterCompanyComponent, canActivate: [soloEnLaRaizGuard] },
   { path: 'confirm-email', component: ConfirmEmailComponent },
+  // Llegada al subdominio después de iniciar sesión en la raíz (canjea el vale).
+  { path: 'entrar',        loadComponent: () => import('./pages/entrar/entrar.component').then(m => m.EntrarComponent) },
   { path: 'politica-de-privacidad', component: PrivacyPolicyComponent },
-  { path: '',              redirectTo: 'inicio', pathMatch: 'full' },
+  // netvula.com: la página pública. En el subdominio de una empresa, su login.
+  {
+    path: '',
+    pathMatch: 'full',
+    canActivate: [raizDelSitioGuard],
+    loadComponent: () => import('./pages/plataforma/plataforma.component').then(m => m.PlataformaComponent),
+  },
 
   /**
    * Rescate de los links de pago que salieron sin la ruta.

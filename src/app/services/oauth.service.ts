@@ -24,6 +24,8 @@ export class OauthService {
       user: signin.user,
       password: signin.password,
       recordar: !!signin.recordar,
+      // El subdominio de la empresa cuando se entra desde la raíz o se eligió de la lista.
+      ...(signin.empresa ? { empresa: signin.empresa } : {}),
     });
 
     const url = this.env.rootUrl + 'api/oauth/signin'
