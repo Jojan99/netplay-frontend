@@ -23,7 +23,7 @@
 
   <div class="nps-buscar" *ngIf="conBuscador">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
-    <input #buscador type="text" role="searchbox" placeholder="Buscar…" autocomplete="off" spellcheck="false"
+    <input #buscador type="text" role="searchbox" [placeholder]="textoBuscar" autocomplete="off" spellcheck="false"
            [value]="busqueda" (input)="buscar($any($event.target).value)"
            [attr.aria-controls]="id + '-lista'" [attr.aria-activedescendant]="activa >= 0 ? id + '-op-' + activa : null" />
     <span class="nps-conteo" *ngIf="busqueda">{{ cantidadVisible }}</span>
@@ -36,7 +36,7 @@
 
       <li *ngIf="f.grupo === undefined" class="nps-opcion" role="option"
           [id]="id + '-op-' + f.indice" [attr.aria-selected]="esSeleccionada(f.opcion)"
-          [class.is-activa]="f.indice === activa" [class.is-atenuada]="atenuadaDe(f.opcion)" [class.is-vacio]="f.opcion === vacio"
+          [class.is-activa]="f.indice === activa" [class.is-atenuada]="atenuadaDe(f.opcion)" [class.is-vacio]="f.opcion === vacio" [class.is-deshabilitada]="deshabilitadaDe(f.opcion)" [attr.aria-disabled]="deshabilitadaDe(f.opcion) || null"
           (mousemove)="activa = f.indice" (click)="elegir(f.opcion, $event)">
         <span class="nps-prefijo" *ngIf="hayPrefijos" [class.is-sin]="!prefijoDe(f.opcion)">{{ prefijoDe(f.opcion) || '—' }}</span>
         <span class="nps-textos">

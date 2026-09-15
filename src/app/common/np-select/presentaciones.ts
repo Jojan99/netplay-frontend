@@ -25,3 +25,64 @@ export const PRESENTACION_REDES: PresentacionSelect = {
     return { texto: `${n} ${n === 1 ? 'cliente' : 'clientes'}`, tono: 'ok', proporcion: n / mayor };
   },
 };
+
+/**
+ * Las IP de un segmento (getIpAvalibles): las libres con su último número
+ * destacado; las ocupadas sólo al buscar, con quién las tiene y sin poder
+ * elegirlas. En el ngModel queda la IP en texto, como en el select anterior.
+ */
+export const PRESENTACION_IPS: PresentacionSelect = {
+  valor: o => o?.ip,
+  etiqueta: o => o?.ip ?? '',
+  prefijo: o => '.' + String(o?.ip ?? '').split('.').pop(),
+  detalle: o => (o?.estado === 'libre' ? null : o?.detalle),
+  insignia: o => {
+    switch (o?.estado) {
+      case 'libre':   return { texto: 'Libre', tono: 'ok' };
+      case 'cliente': return { texto: 'Asignada', tono: 'warn' };
+      case 'arp':     return { texto: 'En uso', tono: 'warn' };
+      default:        return { texto: 'Gateway', tono: 'neutral' };
+    }
+  },
+  grupo: o => (o?.estado === 'libre' ? 'Libres' : 'Ocupadas'),
+  deshabilitada: o => o?.estado !== 'libre',
+  soloAlBuscar: o => o?.estado !== 'libre',
+  buscarEn: o => `${o?.ip ?? ''} ${o?.detalle ?? ''}`,
+  relevancia: (o, q) => {
+    const ip = String(o?.ip ?? '');
+    const b = q.replace(/^\./, '');
+    if (ip === b) return 4;
+    if (ip.endsWith('.' + b)) return 3;
+    if (ip.split('.').pop()!.startsWith(b)) return 2;
+    return o?.estado === 'libre' ? 1 : 0;
+  },
+};
+
+/**
+ * Arma las opciones de IP a partir de la lista de libres que ya usa la
+ * pantalla, recordando las ocupadas que llegaron con ella. Se guarda por
+ * referencia: mientras la lista no cambie, el selector recibe el mismo arreglo.
+ */
+export class OpcionesDeIps {
+  private ocupadas = new WeakMap<object, any[]>();
+  private cache = new WeakMap<object, any[]>();
+
+  /** Guarda las ocupadas de esta respuesta y devuelve la misma lista de libres. */
+  recordar<T extends object>(libres: T, ocupadas: any[] | null | undefined): T {
+    this.ocupadas.set(libres, ocupadas ?? []);
+    return libres;
+  }
+
+  de(libres: any[] | null | undefined): any[] {
+    if (!libres) return [];
+    let opciones = this.cache.get(libres);
+    if (!opciones) {
+      opciones = [
+        ...libres.map(i => ({ ip: typeof i === 'string' ? i : (i?.id ?? i?.ip), estado: 'libre' })),
+        ...(this.ocupadas.get(libres) ?? []),
+      ];
+      this.cache.set(libres, opciones);
+    }
+    return opciones;
+  }
+}

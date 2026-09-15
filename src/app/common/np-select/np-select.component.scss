@@ -29,7 +29,8 @@
 
 /* Etiqueta corta: el número de VLAN, un código */
 .nps-prefijo {
-  flex-shrink: 0; min-width: 34px; height: 22px; padding: 0 6px;
+  // 44 px: ".150" o "103" caben igual y los textos quedan en columna.
+  flex-shrink: 0; min-width: 44px; height: 22px; padding: 0 6px;
   display: inline-grid; place-items: center;
   font: 600 11px var(--font-mono); letter-spacing: -.01em;
   color: var(--accent); background: var(--accent-soft); border: 1px solid var(--accent-line); border-radius: 5px;
@@ -104,3 +105,9 @@
   .nps-insignia { min-width: 0; }
   .nps-barra { width: 48px; }
 }
+
+/* Se ve pero no se elige (una IP ocupada): se busca para saber quién la tiene */
+.nps-opcion.is-deshabilitada { cursor: not-allowed;
+  &.is-activa { background: var(--surface-2); }
+  .nps-textos b { color: var(--text-2); font-weight: 500; }
+  .nps-prefijo { color: var(--text-3); background: var(--surface-2); border-color: var(--line); } }

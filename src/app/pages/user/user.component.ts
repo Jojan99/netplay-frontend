@@ -6,7 +6,7 @@ import { ActivatedRoute } from '@angular/router';
 import { OntEquipoComponent } from '../../components/ont-equipo/ont-equipo.component';
 import { FormsModule } from '@angular/forms';
 import { NpSelectComponent } from '../../common/np-select/np-select.component';
-import { PRESENTACION_REDES } from '../../common/np-select/presentaciones';
+import { OpcionesDeIps, PRESENTACION_IPS, PRESENTACION_REDES } from '../../common/np-select/presentaciones';
 import { LayoutComponent } from '../../components/layout/layout.component';
 import { UserService } from '../../services/user.service';
 import { UserInterface } from '../../models/user-interface';
@@ -40,6 +40,9 @@ export type ClientTab = 'resumen' | 'servicios' | 'facturacion' | 'tickets' | 'h
 export class UserComponent implements OnInit {
   /** Cómo se ven las redes en el selector de VLAN: número de VLAN, segmento y clientes. */
   readonly redes = PRESENTACION_REDES;
+  /** Selector de IP: todas las libres y, al buscar, las ocupadas con quién las tiene. */
+  readonly ipsPresentacion = PRESENTACION_IPS;
+  readonly opcionesIp = new OpcionesDeIps();
 
 
   private dialog = inject(DialogService);
@@ -713,7 +716,7 @@ export class UserComponent implements OnInit {
     if (!iface) return;
 
     this.userSvc.getIpzonebyZone(iface.names, iface.network, this.selectedRouterId).subscribe({
-      next: r => { this.migrIpzone = r?.error === 0 && r.data?.ips ? r.data.ips.map((e: any) => ({ id: e.ip, names: e.ip })) : []; },
+      next: r => { this.migrIpzone = r?.error === 0 && r.data?.ips ? this.opcionesIp.recordar(r.data.ips.map((e: any) => ({ id: e.ip, names: e.ip })), r.data.ocupadas) : []; },
       error: () => { this.migrIpzone = []; },
     });
   }
@@ -1393,7 +1396,7 @@ export class UserComponent implements OnInit {
         }
 
         this.loadingIps = false;
-        this.Ipzone = (r?.data?.ips ?? []).map((e: any) => ({ id: e.ip, names: e.ip }));
+        this.Ipzone = this.opcionesIp.recordar((r?.data?.ips ?? []).map((e: any) => ({ id: e.ip, names: e.ip })), r?.data?.ocupadas);
         this.ipsError = this.Ipzone.length ? null : 'No quedan IPs libres en este segmento.';
 
         // Si la IP que traía el borrador ya se la dieron a otro, se descarta.

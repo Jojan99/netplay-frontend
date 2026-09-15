@@ -368,10 +368,7 @@
                   <np-select [(ngModel)]="cambioVlan" (ngModelChange)="onCambioVlanChange($event)" [opciones]="interfaces" [presentacion]="redes" placeholder="Seleccione VLAN…" ariaLabel="VLAN"></np-select>
                 </label>
                 <label class="np-field"><span>IP <em>({{ migrIpzone.length }} disponibles)</em></span>
-                  <select class="np-input np-mono" [(ngModel)]="cambioIp" [disabled]="!migrIpzone.length">
-                    <option value="" disabled>Seleccione IP…</option>
-                    <option *ngFor="let ip of migrIpzone" [value]="ip.id">{{ ip.names }}</option>
-                  </select>
+                  <np-select [ngModel]="cambioIp || null" (ngModelChange)="cambioIp = $event || ''" [opciones]="opcionesIp.de(migrIpzone)" [presentacion]="ipsPresentacion" placeholder="Seleccione IP…" textoBuscar="Buscar IP: 50, .150, 192.168…" [buscable]="true" [deshabilitado]="!migrIpzone.length" ariaLabel="IP"></np-select>
                 </label>
               </ng-container>
 
@@ -758,11 +755,9 @@
           <em *ngIf="!loadingIps">({{ Ipzone.length }} disponibles)</em>
           <em *ngIf="loadingIps">consultando el router…</em>
         </span>
-          <select class="np-input np-mono" [(ngModel)]="newUser.ip" (ngModelChange)="guardarBorrador()"
-                  [disabled]="loadingIps || !Ipzone.length">
-            <option [value]="0" disabled>{{ loadingIps ? 'Buscando IPs libres…' : 'Seleccione IP…' }}</option>
-            <option *ngFor="let ip of Ipzone" [value]="ip.id">{{ ip.names }}</option>
-          </select>
+          <np-select [ngModel]="newUser.ip || null" (ngModelChange)="newUser.ip = $event || 0; guardarBorrador()" [opciones]="opcionesIp.de(Ipzone)" [presentacion]="ipsPresentacion"
+                     [cargando]="loadingIps" textoCargando="Buscando IPs libres…" placeholder="Seleccione IP…" textoBuscar="Buscar IP: 50, .150, 192.168…"
+                     [buscable]="true" [deshabilitado]="!loadingIps && !Ipzone.length" ariaLabel="IP"></np-select>
         </label>
         <ng-container *ngIf="esPppoe">
           <label class="np-field"><span>Usuario PPPoE</span>

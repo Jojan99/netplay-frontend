@@ -4,7 +4,7 @@ import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { NpSelectComponent } from '../../common/np-select/np-select.component';
-import { PRESENTACION_REDES } from '../../common/np-select/presentaciones';
+import { OpcionesDeIps, PRESENTACION_IPS, PRESENTACION_REDES } from '../../common/np-select/presentaciones';
 import { MikrotikService } from '../../services/mikrotik.service';
 import { Router } from '@angular/router';
 import { OntEquipoComponent } from '../../components/ont-equipo/ont-equipo.component';
@@ -40,6 +40,8 @@ const ESTADOS: Record<EstadoPuerto, string> = {
 export class MikrotikComponent implements OnInit {
   /** Cómo se ven las redes en el selector de VLAN: número de VLAN, segmento y clientes. */
   readonly redes = PRESENTACION_REDES;
+  readonly ipsPresentacion = PRESENTACION_IPS;
+  readonly opcionesIp = new OpcionesDeIps();
 
   private dialog = inject(DialogService);
   private router = inject(Router);
@@ -815,7 +817,7 @@ export class MikrotikComponent implements OnInit {
           return;
         }
         this.loadingFixIps = false;
-        this.fixIps = (r.data?.ips ?? []).map((e: any) => e.ip);
+        this.fixIps = this.opcionesIp.recordar((r.data?.ips ?? []).map((e: any) => e.ip), r.data?.ocupadas);
         if (!this.fixIps.length) this.fixError = 'No quedan IPs libres en esta VLAN.';
       },
       error: () => {

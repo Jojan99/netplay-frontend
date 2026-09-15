@@ -636,10 +636,7 @@
           <em *ngIf="loadingFixIps">buscando…</em>
           <em *ngIf="!loadingFixIps && fixIps.length">({{ fixIps.length }} disponibles)</em>
         </span>
-          <select class="np-input np-mono" [(ngModel)]="fixIp" [disabled]="loadingFixIps || !fixIps.length">
-            <option value="" disabled>{{ loadingFixIps ? 'Consultando el router…' : 'Seleccione IP…' }}</option>
-            <option *ngFor="let ip of fixIps" [value]="ip">{{ ip }}</option>
-          </select>
+          <np-select [ngModel]="fixIp || null" (ngModelChange)="fixIp = $event || ''" [opciones]="opcionesIp.de(fixIps)" [presentacion]="ipsPresentacion" [cargando]="loadingFixIps" textoCargando="Buscando IPs libres…" placeholder="Seleccione IP…" textoBuscar="Buscar IP: 50, .150, 192.168…" [buscable]="true" [deshabilitado]="!loadingFixIps && !fixIps.length" ariaLabel="IP libre"></np-select>
         </label>
       </div>
 

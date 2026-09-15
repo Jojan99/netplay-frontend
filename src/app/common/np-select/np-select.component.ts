@@ -28,6 +28,14 @@ export interface PresentacionSelect<T = any> {
    * tuviera los mismos datos.
    */
   clave?: (opcion: T) => unknown;
+  /** Lo que se guarda en el ngModel (por defecto, la opción entera): la IP en texto, un id. */
+  valor?: (opcion: T) => unknown;
+  /** Se ve pero no se puede elegir: una IP ocupada. */
+  deshabilitada?: (opcion: T) => boolean;
+  /** Sólo aparece al buscar: las IP ocupadas se buscan para saber quién las tiene. */
+  soloAlBuscar?: (opcion: T) => boolean;
+  /** Orden al buscar, más alto más arriba: la IP exacta antes que las que la contienen. */
+  relevancia?: (opcion: T, busqueda: string) => number;
 }
 
 interface Fila {
@@ -82,6 +90,7 @@ export class NpSelectComponent implements ControlValueAccessor, OnChanges, OnDes
   @Input() textoVacio = 'Ninguno';
   @Input() deshabilitado = false;
   @Input() ariaLabel = '';
+  @Input() textoBuscar = 'Buscar…';
   @Output() cambio = new EventEmitter<any>();
 
   @ViewChild('disparador') private disparador?: ElementRef<HTMLButtonElement>;
@@ -138,34 +147,51 @@ export class NpSelectComponent implements ControlValueAccessor, OnChanges, OnDes
   /** La opción de la lista que corresponde al valor (o el valor mismo si la lista todavía no llegó). */
   get seleccionada(): any {
     if (this.valor == null) return null;
-    return this.todas.find(o => this.igual(o, this.valor)) ?? this.valor;
+    const enLista = this.todas.find(o => this.coincide(o, this.valor));
+    if (enLista !== undefined) return enLista;
+    // Con valor() el ngModel guarda un dato suelto (la IP): si todavía no está
+    // en la lista, se muestra tal cual.
+    return this.presentacion?.valor ? { __suelto: this.valor } : this.valor;
   }
 
   etiquetaDe(o: any): string {
     if (o === VACIO) return this.textoVacio;
+    if (o?.__suelto !== undefined) return String(o.__suelto);
     const f = this.presentacion?.etiqueta;
     return f ? f(o) : String(o?.label ?? o?.nombre ?? o?.name ?? o ?? '');
   }
 
-  detalleDe(o: any): string | null { return o === VACIO ? null : (this.presentacion?.detalle?.(o) || null); }
-  prefijoDe(o: any): string | null { return o === VACIO ? null : (this.presentacion?.prefijo?.(o) || null); }
-  insigniaDe(o: any): InsigniaSelect | null { return o === VACIO ? null : (this.presentacion?.insignia?.(o, this.todas) || null); }
-  atenuadaDe(o: any): boolean { return o !== VACIO && !!this.presentacion?.atenuada?.(o); }
+  detalleDe(o: any): string | null { return this.especial(o) ? null : (this.presentacion?.detalle?.(o) || null); }
+  prefijoDe(o: any): string | null { return this.especial(o) ? null : (this.presentacion?.prefijo?.(o) || null); }
+  insigniaDe(o: any): InsigniaSelect | null { return this.especial(o) ? null : (this.presentacion?.insignia?.(o, this.todas) || null); }
+  atenuadaDe(o: any): boolean { return !this.especial(o) && !!this.presentacion?.atenuada?.(o); }
+  deshabilitadaDe(o: any): boolean { return !this.especial(o) && !!this.presentacion?.deshabilitada?.(o); }
 
   esSeleccionada(o: any): boolean {
-    return o === VACIO ? this.valor == null : this.valor != null && this.igual(o, this.valor);
+    return o === VACIO ? this.valor == null : this.valor != null && this.coincide(o, this.valor);
   }
 
-  private igual(a: any, b: any): boolean {
-    const clave = this.presentacion?.clave;
-    return clave ? clave(a) === clave(b) : a === b;
+  private especial(o: any): boolean {
+    return o === VACIO || o?.__suelto !== undefined;
+  }
+
+  /** Si la opción corresponde al valor del ngModel. */
+  private coincide(opcion: any, valor: any): boolean {
+    const p = this.presentacion;
+    if (p?.valor) return p.valor(opcion) === valor;
+    return p?.clave ? p.clave(opcion) === p.clave(valor) : opcion === valor;
   }
 
   // ── Lista filtrada y agrupada ─────────────────────────────────────────
   recalcular(): void {
     const q = this.normalizar(this.busqueda);
     const texto = (o: any) => this.presentacion?.buscarEn?.(o) ?? `${this.etiquetaDe(o)} ${this.detalleDe(o) ?? ''}`;
-    const coinciden = this.todas.filter(o => !q || this.normalizar(texto(o)).includes(q));
+    const coinciden = this.todas.filter(o => q
+      ? this.normalizar(texto(o)).includes(q)
+      : !this.presentacion?.soloAlBuscar?.(o));
+
+    const relevancia = this.presentacion?.relevancia;
+    if (q && relevancia) coinciden.sort((a, b) => relevancia(b, q) - relevancia(a, q));
 
     const grupoDe = this.presentacion?.grupo;
     const grupos = grupoDe ? [...new Set(coinciden.map(o => grupoDe(o) ?? ''))] : [];
@@ -247,8 +273,11 @@ export class NpSelectComponent implements ControlValueAccessor, OnChanges, OnDes
     // Dentro de un <label>, el clic también "activa" el botón y lo volvía a abrir.
     evento?.preventDefault();
 
-    const nuevo = o === VACIO ? null : o;
-    const igualQueAntes = nuevo === null ? this.valor == null : this.valor != null && this.igual(nuevo, this.valor);
+    if (this.deshabilitadaDe(o)) return;
+
+    const p = this.presentacion;
+    const nuevo = o === VACIO ? null : (p?.valor ? p.valor(o) : o);
+    const igualQueAntes = o === VACIO ? this.valor == null : this.valor != null && this.coincide(o, this.valor);
 
     this.valor = nuevo;
     if (!igualQueAntes) {
