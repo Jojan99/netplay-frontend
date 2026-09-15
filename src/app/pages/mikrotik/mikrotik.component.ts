@@ -1240,6 +1240,7 @@ export class MikrotikComponent implements OnInit {
     if (!this.editingRouter && !this.routerForm.pass) return;
     this.savingRouter = true;
     this.routerFormMsg = '';
+    this.routerFormError = false;
 
     const obs = this.editingRouter
       ? this.svc.editRouter(this.editingRouter.id, this.routerForm)
@@ -1248,7 +1249,10 @@ export class MikrotikComponent implements OnInit {
     obs.subscribe({
       next: r => {
         this.savingRouter = false;
-        if (r.status === 0) {
+        // El backend responde { error: 0 } si salió bien (standardApiReponse):
+        // se preguntaba por r.status, que no viene, y "Router actualizado"
+        // salía en rojo como si hubiera fallado.
+        if (r?.error === 0 || r?.status === 0) {
           this.showRouterForm = false;
           this.loadRouters();
         } else {
