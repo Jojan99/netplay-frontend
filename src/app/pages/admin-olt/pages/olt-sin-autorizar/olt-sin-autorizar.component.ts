@@ -4,8 +4,8 @@ import { TareasEnSegundoPlanoService } from '../../../../services/tareas-en-segu
 import { CommonModule } from '@angular/common';
 import { OltNavComponent } from '../../shared/olt-nav.component';
 import { FormsModule } from '@angular/forms';
-import { NpSelectComponent } from '../../../../common/np-select/np-select.component';
-import { PRESENTACION_REDES } from '../../../../common/np-select/presentaciones';
+import { NpSelectComponent, PresentacionSelect } from '../../../../common/np-select/np-select.component';
+import { PRESENTACION_OLTS, PRESENTACION_POR_PAGINA, PRESENTACION_REDES, conValor } from '../../../../common/np-select/presentaciones';
 import { OltService } from '../../../../services/olt.service';
 import { MikrotikService } from '../../../../services/mikrotik.service';
 import { ToastService } from '../../../../services/toast.service';
@@ -24,6 +24,26 @@ export class OltSinAutorizarComponent implements OnInit {
   /** Cómo se ven las redes en el selector de VLAN: número de VLAN, segmento y clientes. */
   readonly redes = PRESENTACION_REDES;
 
+  /** Marca, modelo, IP y acceso de cada OLT; en el modelo queda el id, como antes. */
+  readonly presOlts = conValor(PRESENTACION_OLTS, o => o.id);
+  readonly presPorPagina = PRESENTACION_POR_PAGINA;
+
+  /** Perfiles: el número a la izquierda, el nombre y cuál usa la OLT si no se elige otro. */
+  private presPerfil(defecto: () => unknown): PresentacionSelect {
+    return {
+      valor: p => p?.profile_id,
+      etiqueta: p => p?.profile_name || `Perfil ${p?.profile_id}`,
+      prefijo: p => (p?.profile_id != null ? String(p.profile_id) : null),
+      insignia: p => {
+        const d = defecto();
+        return d != null && +p?.profile_id === +(d as number) ? { texto: 'Predeterminado', tono: 'info' } : null;
+      },
+      buscarEn: p => `${p?.profile_id ?? ''} ${p?.profile_name ?? ''}`,
+    };
+  }
+
+  readonly presPerfilLinea = this.presPerfil(() => this.olts.find(o => o.id === this.selectedOltId)?.ont_lineprofile_id);
+  readonly presPerfilServicio = this.presPerfil(() => this.olts.find(o => o.id === this.selectedOltId)?.ont_srvprofile_id);
 
   // OLT selector
   olts: any[]          = [];

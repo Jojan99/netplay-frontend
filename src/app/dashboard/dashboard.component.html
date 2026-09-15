@@ -15,9 +15,8 @@
     </div>
     <div class="np-actions" *ngIf="isAdmin || isContador">
       <label class="np-pagesize">Año
-        <select [(ngModel)]="selectedYear" (ngModelChange)="onYearChange()" aria-label="Año de los gráficos">
-          <option *ngFor="let y of availableYears" [ngValue]="y">{{ y }}</option>
-        </select>
+        <np-select [(ngModel)]="selectedYear" (ngModelChange)="onYearChange()" [opciones]="availableYears" [presentacion]="presAnios"
+                   tamano="sm" style="min-width: 150px" ariaLabel="Año de los gráficos"></np-select>
       </label>
     </div>
   </header>

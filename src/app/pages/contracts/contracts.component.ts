@@ -6,6 +6,9 @@ import { UserService } from '../../services/user.service';
 import { DomSanitizer, SafeResourceUrl, SafeHtml } from '@angular/platform-browser';
 import { environment } from '../../../environments/environment';
 import * as pdfjsLib from 'pdfjs-dist';
+import { NpSelectComponent, PresentacionSelect } from '../../common/np-select/np-select.component';
+
+const PESOS = new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 });
 
 // Configurar worker de pdfjs (requerido en producción)
 const PDFJS_VERSION = (pdfjsLib as any).version || '4.5.136';
@@ -52,7 +55,7 @@ type Tab = 'templates' | 'assigned';
 @Component({
   selector: 'app-contracts',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, NpSelectComponent],
   templateUrl: './contracts.component.html',
   styleUrl: './contracts.component.scss',
   host: { class: 'np-console' },
@@ -190,6 +193,32 @@ export class ContractsComponent implements OnInit {
     { label: 'ID Contrato',       code: '{{contrato_id}}' },
   ];
 
+  /** Variables del editor de PDF: la etiqueta, la clave debajo y agrupadas (son casi 30). Guarda el code, como [value]. */
+  readonly presVariablesPdf: PresentacionSelect = {
+    valor: v => v?.code,
+    etiqueta: v => v?.label ?? '',
+    detalle: v => v?.code,
+    grupo: v => {
+      const code = String(v?.code ?? '');
+      if (/^\{\{(fecha|dia|mes|anio)\}\}$/.test(code)) return 'Fecha';
+      if (/^\{\{check/.test(code)) return 'Casillas';
+      if (/^\{\{(plan_|promocion_|valor_instalacion|plazo)/.test(code)) return 'Plan y valores';
+      if (/^\{\{(firma|contrato_id)\}\}$/.test(code)) return 'Firma y contrato';
+      return 'Cliente';
+    },
+  };
+
+  /** Páginas del PDF: guarda el número (antes [ngValue]="p.page") y muestra orientación y tamaño. */
+  readonly presPaginasPdf: PresentacionSelect = {
+    valor: p => p?.page,
+    etiqueta: p => `Página ${p?.page}`,
+    detalle: p => {
+      const orientacion = ({ portrait: 'Vertical', landscape: 'Horizontal' } as Record<string, string>)[p?.orientation] ?? p?.orientation;
+      const tamano = p?.width && p?.height ? `${Math.round(p.width)} × ${Math.round(p.height)}` : null;
+      return [orientacion, tamano].filter(Boolean).join(' · ') || null;
+    },
+  };
+
   // ── Asignación ────────────────────────────────────────────────────────────
   assignedContracts: ClientContract[] = [];
   isLoadingAssigned                   = false;
@@ -201,6 +230,18 @@ export class ContractsComponent implements OnInit {
   selectedClient: Client | null       = null;
   selectedContractId                  = 0;
   requireDocuments                    = false;
+
+  /**
+   * Plantillas al asignar: el valor de instalación y si es un PDF. Guarda el id
+   * como número, igual que openAssign (el select viejo lo pasaba a texto al cambiar).
+   */
+  readonly presContratos: PresentacionSelect<Contract> = {
+    valor: c => c.id,
+    etiqueta: c => c.title ?? '',
+    detalle: c => (c.installation_value ? `Instalación ${PESOS.format(Number(c.installation_value))}` : null),
+    insignia: c => (c.pdf_path ? { texto: 'PDF', tono: 'info' } : null),
+    atenuada: c => (c.active as unknown) === false || (c.active as unknown) === 0,
+  };
 
   // ── Documentos ────────────────────────────────────────────────────────────
   showDocumentsModal: ClientContract | null = null;

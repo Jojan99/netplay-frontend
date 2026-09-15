@@ -202,9 +202,7 @@
       </p>
       <div class="np-form">
         <label class="np-field np-field-full"><span>OLT</span>
-          <select class="np-input" [(ngModel)]="oltElegida">
-            <option *ngFor="let o of olts" [ngValue]="o.id">{{ o.name }} · {{ o.host }} ({{ o.access_mode === 'jump' ? 'jump host' : 'directo' }})</option>
-          </select>
+          <np-select [(ngModel)]="oltElegida" [opciones]="olts" [presentacion]="presOlts" placeholder="Elegí la OLT…" ariaLabel="OLT"></np-select>
         </label>
       </div>
       <div class="olt-aviso is-warn" *ngIf="!tunelParaOlt?.conectado">

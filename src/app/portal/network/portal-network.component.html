@@ -94,10 +94,7 @@
       <form class="pt-form pt-red-form" *ngIf="canalEditando?.indice === r.indice && canalEditando as ce" (ngSubmit)="guardarCanal(r)">
         <label class="pt-field">
           <span>Canal de «{{ r.nombre }}» ({{ r.banda }})</span>
-          <select class="pt-input" name="canal" [(ngModel)]="ce.valor">
-            <option value="auto">Automático (recomendado)</option>
-            <option *ngFor="let c of r.canales_posibles ?? []" [value]="'' + c">Canal {{ c }}</option>
-          </select>
+          <np-select name="canal" [(ngModel)]="ce.valor" [opciones]="opcionesCanal(r)" [presentacion]="presCanal" [ariaLabel]="'Canal de ' + r.nombre" textoBuscar="Buscar canal…"></np-select>
         </label>
         <p class="pt-fine">Cambiá el canal si tu WiFi anda lento o se corta: puede haber otras redes cercanas en el mismo. Tus equipos se desconectan unos segundos al guardar.</p>
         <div class="pt-btnrow">

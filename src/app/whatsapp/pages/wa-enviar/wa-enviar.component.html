@@ -14,7 +14,9 @@
         <div class="np-card-h"><h2>Mensaje de {{ msgType === 'text' ? 'texto' : msgType === 'image' ? 'imagen' : msgType === 'video' ? 'video' : msgType === 'document' ? 'documento' : 'audio' }}</h2></div>
         <div class="np-form">
           <label class="np-field"><span>Instancia</span>
-            <select class="np-input" [(ngModel)]="selectedInstance"><option value="">Seleccionar instancia…</option><option *ngFor="let inst of connectedInstances" [value]="inst.instanceId">{{ inst.name }} · {{ inst.phone || inst.instanceId }}</option></select>
+            <np-select [(ngModel)]="selectedInstance" [opciones]="connectedInstances" [presentacion]="presLineas"
+                       placeholder="Seleccionar instancia…" [valorVacio]="''" textoSinOpciones="No hay instancias conectadas."
+                       ariaLabel="Instancia"></np-select>
             <small class="np-fine np-neg" *ngIf="instances.length && !connectedInstances.length">No hay instancias conectadas.</small>
           </label>
           <label class="np-field"><span>Número destinatario</span><input class="np-input np-mono" [(ngModel)]="number" type="text" placeholder="573001234567 o 3001234567" /><small class="np-fine">Con o sin código de país, se normaliza solo.</small></label>

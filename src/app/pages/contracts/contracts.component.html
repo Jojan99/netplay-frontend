@@ -223,18 +223,15 @@
           <div class="flex flex-wrap items-center gap-3">
             <div>
               <label class="text-xs font-medium text-slate-600 dark:text-slate-300">Variable</label>
-              <select [(ngModel)]="pdfPickerVariable" class="mt-1 block w-40 text-sm border-gray-300 dark:border-slate-600/60 rounded-md dark:bg-slate-800">
-                <option value="">— Elegir —</option>
-                <option *ngFor="let v of quickVars" [value]="v.code">{{ v.label }}</option>
-                <option [value]="'{{contrato_id}}'">ID Contrato</option>
-              </select>
+              <!-- "ID Contrato" ya está en quickVars: el <option> suelto que lo repetía no hace falta. -->
+              <np-select [(ngModel)]="pdfPickerVariable" [opciones]="quickVars" [presentacion]="presVariablesPdf"
+                         [permitirVacio]="true" textoVacio="— Elegir —" [valorVacio]="''" textoBuscar="Buscar variable…"
+                         tamano="sm" style="width: 220px; margin-top: 4px" ariaLabel="Variable"></np-select>
             </div>
             <div *ngIf="pdfDimensions && pdfDimensions.pageCount > 1">
               <label class="text-xs font-medium text-slate-600 dark:text-slate-300">Página</label>
-              <select [(ngModel)]="pdfPickerPage" (change)="renderPdfPage()"
-                class="mt-1 block w-20 text-sm border-gray-300 dark:border-slate-600/60 rounded-md dark:bg-slate-800">
-                <option *ngFor="let p of pdfDimensions.pages" [ngValue]="p.page">{{ p.page }}</option>
-              </select>
+              <np-select [(ngModel)]="pdfPickerPage" (cambio)="renderPdfPage()" [opciones]="pdfDimensions.pages" [presentacion]="presPaginasPdf"
+                         tamano="sm" style="width: 130px; margin-top: 4px" ariaLabel="Página"></np-select>
             </div>
             <div>
               <button (click)="pdfPreviewMode = !pdfPreviewMode; renderPdfPage();"
@@ -481,10 +478,8 @@
       </div>
       <p class="np-notice np-notice--ok" *ngIf="selectedClient">Cliente: <strong>{{ selectedClient.names }} {{ selectedClient.lastname }}</strong> · CC {{ selectedClient.dni }}</p>
       <label class="np-field"><span>Plantilla de contrato</span>
-        <select class="np-input" [(ngModel)]="selectedContractId">
-          <option [value]="0" disabled>Seleccione…</option>
-          <option *ngFor="let c of contracts" [value]="c.id">{{ c.title }}</option>
-        </select>
+        <np-select [(ngModel)]="selectedContractId" [opciones]="contracts" [presentacion]="presContratos"
+                   placeholder="Seleccione…" [valorVacio]="0" ariaLabel="Plantilla de contrato"></np-select>
       </label>
       <label class="np-check np-check--box"><input type="checkbox" [(ngModel)]="requireDocuments" /><span>Solicitar fotos del documento de identidad al firmar.</span></label>
       <div class="np-btnrow np-btnrow--end">

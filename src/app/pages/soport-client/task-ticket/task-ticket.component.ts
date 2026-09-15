@@ -6,11 +6,13 @@ import { UserService } from '../../../services/user.service';
 import { AuthService } from '../../../services/auth.service';
 import { TicketInterface, TicketNote, TicketStats } from '../../../models/ticket-interface';
 import { TareasEnSegundoPlanoService } from '../../../services/tareas-en-segundo-plano.service';
+import { NpSelectComponent, PresentacionSelect } from '../../../common/np-select/np-select.component';
+import { PRESENTACION_PERSONAS, conValor } from '../../../common/np-select/presentaciones';
 
 @Component({
   selector: 'app-task-ticket',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, NpSelectComponent],
   templateUrl: './task-ticket.component.html',
   styleUrls: ['./task-ticket.component.scss'],
   host: { class: 'np-console' },
@@ -28,6 +30,14 @@ export class TaskTicketComponent implements OnInit, OnDestroy {
   notes: TicketNote[]         = [];
   selectedTicket: TicketInterface | null = null;
   technicians: any[] = [];
+  readonly presTecnicos = conValor(PRESENTACION_PERSONAS, t => t.id);
+  /** Al reasignar, marca quién tiene el ticket ahora (se evalúa al abrir la lista). */
+  readonly presReasignar: PresentacionSelect = {
+    ...this.presTecnicos,
+    insignia: t => (this.selectedTicket && +t.id === +(this.selectedTicket.technical_id ?? 0)
+      ? { texto: 'Asignado ahora', tono: 'info' }
+      : null),
+  };
 
   loading        = true;
   notesLoading   = false;
@@ -111,7 +121,9 @@ export class TaskTicketComponent implements OnInit, OnDestroy {
   loadTechnicians() {
     this.userService.getTechnicaAll().subscribe({
       next: (res) => {
+        // Se conserva el resto de la fila (correo, cédula): el selector la muestra debajo del nombre.
         this.technicians = (res.data || []).map((e: any) => ({
+          ...e,
           id: e.user_id,
           name: `${e.names} ${e.lastname}`,
         }));

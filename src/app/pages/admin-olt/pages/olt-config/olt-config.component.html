@@ -6,7 +6,7 @@
       <div class="np-ribbon"><span>Parámetros de conexión, valores por defecto para ONTs, bastión SSH y SNMP.</span></div>
     </div>
     <div class="np-actions">
-      <label class="np-pagesize">OLT<select [(ngModel)]="selectedOltId" (ngModelChange)="onOltChange()" [disabled]="loadingOlts"><option [ngValue]="null">{{ loadingOlts ? 'Cargando…' : 'Seleccionar' }}</option><option *ngFor="let olt of olts" [ngValue]="olt.id">{{ olt.name }}</option></select></label>
+      <label class="np-pagesize">OLT<np-select [(ngModel)]="selectedOltId" (ngModelChange)="onOltChange()" [opciones]="olts" [presentacion]="presOlts" [cargando]="loadingOlts" [deshabilitado]="loadingOlts" placeholder="Seleccionar" ariaLabel="OLT" style="min-width: 220px"></np-select></label>
       <button type="button" class="np-btn np-btn--primary" *ngIf="selectedOltId" (click)="saveForm()" [disabled]="saving || !form.name.trim() || !form.host.trim()"><span *ngIf="saving" class="np-spinner np-spinner--sm"></span>{{ saving ? 'Guardando…' : 'Guardar cambios' }}</button>
     </div>
   </header>
@@ -20,11 +20,11 @@
         <div class="np-card-h"><h2>Conexión principal</h2></div>
         <div class="np-form">
           <label class="np-field"><span>Nombre <em>*</em></span><input class="np-input" [(ngModel)]="form.name" /></label>
-          <label class="np-field"><span>Marca <em>*</em></span><select class="np-input" [(ngModel)]="form.brand"><option *ngFor="let m of marcas" [value]="m.valor">{{ m.nombre }}</option></select></label>
+          <label class="np-field"><span>Marca <em>*</em></span><np-select [(ngModel)]="form.brand" [opciones]="marcas" [presentacion]="presMarcas" placeholder="Elegí la marca…" ariaLabel="Marca"></np-select></label>
           <label class="np-field"><span>Host / IP <em>*</em></span><input class="np-input np-mono" [(ngModel)]="form.host" /></label>
           <label class="np-field"><span>Puerto</span><input type="number" class="np-input np-mono" [(ngModel)]="form.port" /></label>
           <label class="np-field"><span>Usuario</span><input class="np-input np-mono" [(ngModel)]="form.username" /></label>
-          <label class="np-field"><span>Cómo se llega</span><select class="np-input" [(ngModel)]="form.access_mode"><option value="direct">Directo a la OLT</option><option value="jump">Pasando por un jump host</option></select></label>
+          <label class="np-field"><span>Cómo se llega</span><np-select [(ngModel)]="form.access_mode" [opciones]="opcionesAcceso" [presentacion]="presSimple" ariaLabel="Cómo se llega"></np-select></label>
           <label class="np-field"><span>Nueva contraseña (vacío = sin cambio)</span><input type="password" class="np-input" [(ngModel)]="form.password" /></label>
           <label class="np-field"><span>Enable password</span><input type="password" class="np-input" [(ngModel)]="form.enable_password" /></label>
         </div>
@@ -70,7 +70,7 @@
           <div class="np-form" *ngIf="showSnmp">
             <label class="np-field"><span>SNMP host</span><input class="np-input np-mono" [(ngModel)]="form.snmp_host" placeholder="vacío = mismo host" /></label>
             <label class="np-field"><span>Community</span><input class="np-input np-mono" [(ngModel)]="form.snmp_community" /></label>
-            <label class="np-field"><span>Versión</span><select class="np-input" [(ngModel)]="form.snmp_version"><option value="2c">2c</option><option value="1">1</option></select></label>
+            <label class="np-field"><span>Versión</span><np-select [(ngModel)]="form.snmp_version" [opciones]="opcionesSnmp" [presentacion]="presSimple" ariaLabel="Versión SNMP"></np-select></label>
             <label class="np-field"><span>Puerto SNMP</span><input type="number" class="np-input np-mono" [(ngModel)]="form.snmp_port" /></label>
             <label class="np-field"><span>SNMP jump host</span><input class="np-input np-mono" [(ngModel)]="form.snmp_jump_host" /></label>
             <label class="np-field"><span>SNMP jump puerto</span><input type="number" class="np-input np-mono" [(ngModel)]="form.snmp_jump_port" /></label>

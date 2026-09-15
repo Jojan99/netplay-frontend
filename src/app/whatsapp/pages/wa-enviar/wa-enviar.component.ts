@@ -2,6 +2,8 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { WhatsappService } from '../../services/whatsapp.service';
+import { NpSelectComponent } from '../../../common/np-select/np-select.component';
+import { PRESENTACION_LINEAS_WA, conValor } from '../../../common/np-select/presentaciones';
 
 type MsgType = 'text' | 'image' | 'document' | 'audio' | 'video';
 
@@ -15,7 +17,7 @@ interface HistoryItem {
 @Component({
   selector: 'app-wa-enviar',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, NpSelectComponent],
   templateUrl: './wa-enviar.component.html',
   styleUrl: './wa-enviar.component.scss',
   host: { class: 'np-console' },
@@ -43,9 +45,21 @@ export class WaEnviarComponent implements OnInit {
     { value: 'video',    label: 'Video',     icon: '🎬' }
   ];
 
-  // ✅ Filtra por status === 'connected'
+  /** Número y estado de cada línea; en el modelo queda el instanceId en texto, como con [value]. */
+  readonly presLineas = conValor(PRESENTACION_LINEAS_WA, i => String(i?.instanceId ?? ''));
+
+  private conectadasDe: any[] | null = null;
+  private conectadas: any[] = [];
+
+  // ✅ Filtra por status === 'connected'.
+  // Se recuerda mientras no cambie la lista: un arreglo nuevo en cada ciclo
+  // hacía que el np-select rearmara sus opciones todo el tiempo.
   get connectedInstances(): any[] {
-    return this.instances.filter(i => i.status === 'connected');
+    if (this.conectadasDe !== this.instances) {
+      this.conectadasDe = this.instances;
+      this.conectadas = this.instances.filter(i => i.status === 'connected');
+    }
+    return this.conectadas;
   }
 
   get canSend(): boolean {

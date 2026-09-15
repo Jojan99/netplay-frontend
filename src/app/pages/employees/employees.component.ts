@@ -2,13 +2,15 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { EmployeeService } from '../../services/employee.service';
+import { NpSelectComponent } from '../../common/np-select/np-select.component';
+import { OpcionSimple, PRESENTACION_PERSONAS, PRESENTACION_SIMPLE, conValor } from '../../common/np-select/presentaciones';
 
 type Tab = 'profile' | 'contract' | 'affiliations' | 'bank' | 'equipment' | 'disciplinary' | 'payroll';
 
 @Component({
   selector: 'app-employees',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, NpSelectComponent],
   templateUrl: './employees.component.html',
   styleUrl: './employees.component.scss',
   host: { class: 'np-console' },
@@ -63,6 +65,36 @@ export class EmployeesComponent implements OnInit {
   showPayModal          = false;
   isEditingPay          = false;
   deletePayId: number | null = null;
+
+  // ── Selectores ────────────────────────────────────────────────────────────
+  readonly presSimple = PRESENTACION_SIMPLE;
+  readonly opcionesTipoContrato: OpcionSimple[] = [
+    { valor: 'indefinido',           etiqueta: 'Indefinido',              detalle: 'Sin fecha de fin' },
+    { valor: 'fijo',                 etiqueta: 'Término fijo',            detalle: 'Con fecha de fin' },
+    { valor: 'obra_labor',           etiqueta: 'Obra o labor',            detalle: 'Termina al acabar la obra' },
+    { valor: 'prestacion_servicios', etiqueta: 'Prestación de servicios', detalle: 'Sin vínculo laboral' },
+  ];
+  readonly opcionesTipoCuenta: OpcionSimple[] = [
+    { valor: 'ahorros', etiqueta: 'Ahorros' },
+    { valor: 'corriente', etiqueta: 'Corriente' },
+  ];
+  readonly opcionesCondicion: OpcionSimple[] = [
+    { valor: 'nuevo',   etiqueta: 'Nuevo',   detalle: 'Sin uso previo' },
+    { valor: 'bueno',   etiqueta: 'Bueno',   detalle: 'Funciona sin problemas' },
+    { valor: 'regular', etiqueta: 'Regular', detalle: 'Con desgaste o fallas menores' },
+    { valor: 'malo',    etiqueta: 'Malo',    detalle: 'Hay que reparar o reemplazar' },
+  ];
+  readonly opcionesMetodoNomina: OpcionSimple[] = [
+    { valor: 'transferencia', etiqueta: 'Transferencia' },
+    { valor: 'efectivo', etiqueta: 'Efectivo' },
+    { valor: 'cheque', etiqueta: 'Cheque' },
+  ];
+  /** Cuentas del sistema sin empleado: el rol como insignia y correo/cédula debajo. Guarda el id numérico ([ngValue]). */
+  readonly presStaff = conValor({
+    ...PRESENTACION_PERSONAS,
+    detalle: (s: any) => [s?.email, s?.dni ? `CC ${s.dni}` : null].filter(Boolean).join(' · ') || null,
+    insignia: (s: any) => (s?.profile ? { texto: s.profile, tono: 'neutral' as const } : null),
+  }, s => s.id);
 
   inspectorWide = false;
   readonly tabs: { id: Tab; label: string }[] = [

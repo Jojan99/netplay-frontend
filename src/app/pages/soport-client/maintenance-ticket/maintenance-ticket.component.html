@@ -45,24 +45,15 @@
         <form *ngIf="selectedUser" [formGroup]="ticketForm" (ngSubmit)="submit()" class="np-form">
           <label class="np-field"><span>Fecha</span><input formControlName="date" type="date" class="np-input" [class.is-invalid]="isInvalid('date')" /></label>
           <label class="np-field"><span>Tipo de servicio <em>*</em></span>
-            <select formControlName="type_service" class="np-input" [class.is-invalid]="isInvalid('type_service')">
-              <option [value]="0" disabled>Seleccionar…</option>
-              <option *ngFor="let s of ServiceTicket" [value]="s.id">{{ s.names }}</option>
-            </select>
+            <np-select formControlName="type_service" [class.is-invalid]="isInvalid('type_service')" [opciones]="ServiceTicket" [presentacion]="presServicios" [valorVacio]="0" placeholder="Seleccionar…" ariaLabel="Tipo de servicio"></np-select>
             <small class="np-fine np-neg" *ngIf="isInvalid('type_service')">Campo requerido</small>
           </label>
           <label class="np-field"><span>Prioridad <em>*</em></span>
-            <select formControlName="priority" class="np-input" [class.is-invalid]="isInvalid('priority')">
-              <option [value]="0" disabled>Seleccionar…</option>
-              <option *ngFor="let p of PriorityTicket" [value]="p.id">{{ p.names }}</option>
-            </select>
+            <np-select formControlName="priority" [class.is-invalid]="isInvalid('priority')" [opciones]="PriorityTicket" [presentacion]="presPrioridades" [valorVacio]="0" placeholder="Seleccionar…" ariaLabel="Prioridad"></np-select>
             <small class="np-fine np-neg" *ngIf="isInvalid('priority')">Campo requerido</small>
           </label>
           <label class="np-field"><span>Técnico responsable <em>*</em></span>
-            <select formControlName="tecnichal" class="np-input" [class.is-invalid]="isInvalid('tecnichal')">
-              <option [value]="0" disabled>Seleccionar…</option>
-              <option *ngFor="let t of UserInterfacesTecni" [value]="t.id_user">{{ t.names }} {{ t.lastname }}</option>
-            </select>
+            <np-select formControlName="tecnichal" [class.is-invalid]="isInvalid('tecnichal')" [opciones]="UserInterfacesTecni" [presentacion]="presTecnicos" [valorVacio]="0" placeholder="Seleccionar…" ariaLabel="Técnico responsable"></np-select>
             <small class="np-fine np-neg" *ngIf="isInvalid('tecnichal')">Campo requerido</small>
           </label>
           <label class="np-field np-field-full"><span>Observaciones <em>*</em></span>

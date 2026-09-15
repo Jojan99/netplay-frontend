@@ -4,13 +4,15 @@ import { FormsModule } from '@angular/forms';
 import { Subject } from 'rxjs';
 import { debounceTime, distinctUntilChanged, takeUntil } from 'rxjs/operators';
 import { FinanceService } from '../../services/finance.service';
+import { NpSelectComponent } from '../../common/np-select/np-select.component';
+import { PRESENTACION_METODOS_PAGO, PRESENTACION_POR_PAGINA, PRESENTACION_TEXTOS, conValor } from '../../common/np-select/presentaciones';
 
 const CATEGORIES = ['General', 'Servicios', 'Nómina', 'Arriendo', 'Mantenimiento', 'Suministros', 'Impuestos', 'Otros'];
 
 @Component({
   selector: 'app-egresos',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, NpSelectComponent],
   templateUrl: './egresos.component.html',
   styleUrl: './egresos.component.scss',
   host: { class: 'np-console' },
@@ -47,6 +49,11 @@ export class EgresosComponent implements OnInit, OnDestroy {
 
   // Payment methods
   activePaymentMethods: any[] = [];
+
+  readonly presCategorias = PRESENTACION_TEXTOS;
+  readonly presPorPagina = PRESENTACION_POR_PAGINA;
+  /** Guarda el id numérico, como hacía [ngValue]="pm.id". */
+  readonly presMetodos = conValor(PRESENTACION_METODOS_PAGO, m => m.id);
 
   // ── Delete confirm ──────────────────────────────────────────────────────
   deleteModal = false;

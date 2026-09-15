@@ -17,7 +17,9 @@
       <section class="np-card">
         <div class="np-card-h"><h2>Cliente y destino</h2></div>
         <label class="np-field"><span>Cliente <em>*</em></span>
-          <select class="np-input" (change)="onClientChange($event)"><option value="">Seleccionar…</option><option *ngFor="let c of clients" [value]="c.id">{{ c.names }} {{ c.lastname }} · CC {{ c.dni }}</option></select>
+          <!-- selectClient/clearClient ya dejan form.user_data_id en el id en texto o en '': sirve de valor mostrado. -->
+          <np-select [ngModel]="form.user_data_id" (ngModelChange)="onClientChange($event)" [opciones]="clients" [presentacion]="presClientes"
+                     [permitirVacio]="true" textoVacio="Seleccionar…" [valorVacio]="''" textoBuscar="Nombre, cédula, teléfono o dirección…" ariaLabel="Cliente"></np-select>
         </label>
         <div class="np-route" *ngIf="selectedClient">
           <div class="np-route-stop"><span class="np-fine">Actual</span><b>{{ selectedClient.address }}</b><span class="np-data">IP {{ selectedClient.ip_assignment_id || '—' }}</span></div>
@@ -27,7 +29,7 @@
           <label class="np-field np-field-full"><span>Nueva dirección <em>*</em></span><input type="text" class="np-input" [(ngModel)]="form.new_address" /></label>
           <label class="np-field"><span>Nuevo barrio</span><input type="text" class="np-input" [(ngModel)]="form.new_neighborhood" /></label>
           <label class="np-field"><span>Nueva IP</span><input type="text" class="np-input np-mono" [(ngModel)]="form.new_ip" placeholder="IP asignada" /></label>
-          <label class="np-field np-field-full"><span>Nuevo router</span><select class="np-input" [(ngModel)]="form.new_router_id"><option value="">Seleccionar…</option><option *ngFor="let r of routers" [value]="r.id">{{ r.name }} · {{ r.ip_address }}</option></select></label>
+          <label class="np-field np-field-full"><span>Nuevo router</span><np-select [(ngModel)]="form.new_router_id" [opciones]="routers" [presentacion]="presRouters" [permitirVacio]="true" textoVacio="Seleccionar…" [valorVacio]="''" ariaLabel="Nuevo router"></np-select></label>
         </div>
       </section>
       <div class="np-form-col">
@@ -43,8 +45,8 @@
           <div class="np-form">
             <label class="np-field"><span>Costo del traslado</span><input type="number" class="np-input np-mono" [(ngModel)]="form.transfer_cost" /></label>
             <label class="np-field"><span>Comisión total</span><input type="number" class="np-input np-mono" [(ngModel)]="form.commission_amount" /></label>
-            <label class="np-field"><span>Técnico 1</span><select class="np-input" [(ngModel)]="form.technician_1_id"><option value="">Seleccionar…</option><option *ngFor="let t of technicians" [value]="t.id">{{ t.first_name }} {{ t.last_name }}</option></select></label>
-            <label class="np-field"><span>Técnico 2</span><select class="np-input" [(ngModel)]="form.technician_2_id"><option value="">Seleccionar…</option><option *ngFor="let t of technicians" [value]="t.id">{{ t.first_name }} {{ t.last_name }}</option></select></label>
+            <label class="np-field"><span>Técnico 1</span><np-select [(ngModel)]="form.technician_1_id" [opciones]="technicians" [presentacion]="presTecnicos" [permitirVacio]="true" textoVacio="Seleccionar…" [valorVacio]="''" textoBuscar="Buscar técnico…" ariaLabel="Técnico 1"></np-select></label>
+            <label class="np-field"><span>Técnico 2</span><np-select [(ngModel)]="form.technician_2_id" [opciones]="technicians" [presentacion]="presTecnicos" [permitirVacio]="true" textoVacio="Seleccionar…" [valorVacio]="''" textoBuscar="Buscar técnico…" ariaLabel="Técnico 2"></np-select></label>
             <label class="np-field np-field-full"><span>Observaciones</span><textarea class="np-input np-textarea" [(ngModel)]="form.observations" rows="3"></textarea></label>
           </div>
         </section>

@@ -27,7 +27,7 @@
     <label class="np-field np-field--inline"><span>Factura</span><input type="text" class="np-input np-input--sm np-mono" [(ngModel)]="filters.number_facture" (ngModelChange)="onFilterChange()" placeholder="NT308…" /></label>
     <button type="button" class="np-link np-link--muted" (click)="clearFilters()">Limpiar</button>
     <span class="np-spacer"></span>
-    <label class="np-pagesize">Mostrar<select [(ngModel)]="perPage" (ngModelChange)="changePerPage()"><option *ngFor="let n of perPageOptions" [ngValue]="n">{{ n }}</option></select></label>
+    <label class="np-pagesize">Mostrar<np-select [(ngModel)]="perPage" (ngModelChange)="changePerPage()" [opciones]="perPageOptions" [presentacion]="presPorPagina" tamano="sm" style="min-width: 140px" ariaLabel="Registros por página"></np-select></label>
   </div>
 
   <div class="np-workspace">

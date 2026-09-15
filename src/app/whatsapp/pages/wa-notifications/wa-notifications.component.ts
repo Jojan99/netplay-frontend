@@ -3,6 +3,7 @@ import { CommonModule }      from '@angular/common';
 import { FormsModule }       from '@angular/forms';
 import { CompanyWhatsappService } from '../../../services/company-whatsapp.service';
 import { ToastService }           from '../../../services/toast.service';
+import { NpSelectComponent, PresentacionSelect } from '../../../common/np-select/np-select.component';
 
 interface Route {
   id: number;
@@ -15,7 +16,7 @@ interface Route {
 @Component({
   selector: 'app-wa-notifications',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, NpSelectComponent],
   templateUrl: './wa-notifications.component.html',
 })
 export class WaNotificationsComponent implements OnInit {
@@ -28,6 +29,21 @@ export class WaNotificationsComponent implements OnInit {
   // Add form
   addForm = { event_type: '', destination: '', label: '' };
   saving  = false;
+
+  /**
+   * Eventos del formulario: el nombre y a dónde ya se manda cada uno, para no
+   * duplicar un destino. En el modelo queda la clave del evento, como con [value].
+   */
+  readonly presEventos: PresentacionSelect<string> = {
+    valor: k => k,
+    etiqueta: k => this.eventTypes[k] ?? k,
+    detalle: k => this.routesByEvent(k).map(r => r.label || this.formatDest(r.destination)).join(', ') || 'Sin destinos todavía',
+    insignia: k => {
+      const n = this.routesByEvent(k).length;
+      return n ? { texto: `${n} ${n === 1 ? 'destino' : 'destinos'}`, tono: 'ok' } : null;
+    },
+    buscarEn: k => `${this.eventTypes[k] ?? ''} ${k}`,
+  };
 
   constructor(
     private waService: CompanyWhatsappService,
@@ -106,7 +122,17 @@ export class WaNotificationsComponent implements OnInit {
     return this.routes.filter(r => r.event_type === eventType);
   }
 
-  get eventKeys(): string[] { return Object.keys(this.eventTypes); }
+  private clavesDe: Record<string, string> | null = null;
+  private claves: string[] = [];
+
+  /** Se recuerda mientras no cambie eventTypes: el np-select recibe siempre el mismo arreglo. */
+  get eventKeys(): string[] {
+    if (this.clavesDe !== this.eventTypes) {
+      this.clavesDe = this.eventTypes;
+      this.claves = Object.keys(this.eventTypes);
+    }
+    return this.claves;
+  }
 
   formatDest(dest: string): string {
     if (dest.includes('@g.us')) return '👥 ' + dest.replace('@g.us', '');

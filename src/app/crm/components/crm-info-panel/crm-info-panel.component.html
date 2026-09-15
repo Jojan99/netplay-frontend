@@ -71,9 +71,9 @@
         <p class="wa-info-k">Soporte</p>
         <button type="button" class="np-btn np-btn--primary" *ngIf="!showTicketForm" (click)="openTicketForm()">Crear ticket desde el chat</button>
         <div class="np-form np-form--single" *ngIf="showTicketForm">
-          <label class="np-field"><span>Tipo de servicio <em>*</em></span><select class="np-input" [(ngModel)]="ticketServiceId"><option [value]="0" disabled>Seleccionar…</option><option *ngFor="let s of ticketServices" [value]="s.id">{{ s.name }}</option></select></label>
-          <label class="np-field"><span>Prioridad <em>*</em></span><select class="np-input" [(ngModel)]="ticketPriorityId"><option [value]="0" disabled>Seleccionar…</option><option *ngFor="let p of ticketPriorities" [value]="p.id">{{ p.name }}</option></select></label>
-          <label class="np-field"><span>Técnico <em>*</em></span><select class="np-input" [(ngModel)]="ticketTechId"><option [value]="0" disabled>Seleccionar…</option><option *ngFor="let t of ticketTechs" [value]="t.id">{{ t.names }} {{ t.lastname }}</option></select></label>
+          <label class="np-field"><span>Tipo de servicio <em>*</em></span><np-select [(ngModel)]="ticketServiceId" [opciones]="ticketServices" [presentacion]="presServicios" [valorVacio]="0" placeholder="Seleccionar…" ariaLabel="Tipo de servicio"></np-select></label>
+          <label class="np-field"><span>Prioridad <em>*</em></span><np-select [(ngModel)]="ticketPriorityId" [opciones]="ticketPriorities" [presentacion]="presPrioridades" [valorVacio]="0" placeholder="Seleccionar…" ariaLabel="Prioridad"></np-select></label>
+          <label class="np-field"><span>Técnico <em>*</em></span><np-select [(ngModel)]="ticketTechId" [opciones]="ticketTechs" [presentacion]="presTecnicos" [valorVacio]="0" placeholder="Seleccionar…" ariaLabel="Técnico"></np-select></label>
           <label class="np-field"><span>Observación <em>*</em></span><textarea class="np-input np-textarea" rows="3" [(ngModel)]="ticketObs" placeholder="Describí el problema…"></textarea></label>
           <!-- Los datos del cliente salen de su ficha, como en el módulo de
                tickets. Antes se pedían a mano y podían quedar en blanco o mal. -->

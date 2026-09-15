@@ -6,7 +6,7 @@
       <div class="np-ribbon"><span *ngIf="selectedOltId"><i class="np-dot" [style.background]="running ? 'var(--warn)' : 'var(--ok)'"></i>{{ selectedOltName() }} · Telnet · {{ running ? 'ejecutando…' : 'lista' }}</span><span *ngIf="!selectedOltId">Ejecutá comandos directamente en la OLT vía Telnet.</span></div>
     </div>
     <div class="np-actions">
-      <label class="np-pagesize">OLT<select [(ngModel)]="selectedOltId" (ngModelChange)="onOltChange()" [disabled]="loadingOlts"><option [ngValue]="null">{{ loadingOlts ? 'Cargando…' : 'Seleccionar' }}</option><option *ngFor="let olt of olts" [ngValue]="olt.id">{{ olt.name }}</option></select></label>
+      <label class="np-pagesize">OLT<np-select [(ngModel)]="selectedOltId" (ngModelChange)="onOltChange()" [opciones]="olts" [presentacion]="presOlts" [cargando]="loadingOlts" [deshabilitado]="loadingOlts" placeholder="Seleccionar" ariaLabel="OLT" style="min-width: 220px"></np-select></label>
       <button type="button" class="np-btn np-btn--ghost" *ngIf="history.length > 0" (click)="clearHistory()">Limpiar</button>
     </div>
   </header>

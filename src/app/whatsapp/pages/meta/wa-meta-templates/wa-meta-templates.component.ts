@@ -4,6 +4,8 @@ import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MetaWhatsappService } from '../../../services/meta-whatsapp.service';
+import { NpSelectComponent, PresentacionSelect } from '../../../../common/np-select/np-select.component';
+import { OpcionSimple, PRESENTACION_SIMPLE } from '../../../../common/np-select/presentaciones';
 
 interface TemplateComponent {
   type: 'HEADER' | 'BODY' | 'FOOTER' | 'BUTTONS';
@@ -44,7 +46,7 @@ interface Variable { key: string; label: string; example: string; }
 @Component({
   selector: 'app-wa-meta-templates',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, NpSelectComponent],
   templateUrl: './wa-meta-templates.component.html',
   styleUrl: './wa-meta-templates.component.scss',
   host: { class: 'np-console' },
@@ -83,6 +85,65 @@ export class WaMetaTemplatesComponent implements OnInit {
    * está editando.
    */
   expandido: string | null = null;
+
+  // ── Selectores ─────────────────────────────────────────────────────────────
+  readonly presSimple = PRESENTACION_SIMPLE;
+
+  /** Idioma a la izquierda; debajo, categoría, cuántos espacios pide y cómo empieza. En el modelo queda el nombre. */
+  readonly presPlantillas: PresentacionSelect = {
+    valor: t => t?.name,
+    etiqueta: t => t?.name ?? '',
+    prefijo: t => t?.language ?? null,
+    detalle: t => {
+      const n = this.slotsOf(t);
+      const cuerpo = this.bodyOf(t).replace(/\s+/g, ' ').trim();
+      return [
+        this.categoryLabel(t?.category),
+        n ? `${n} ${n === 1 ? 'variable' : 'variables'}` : null,
+        cuerpo.length > 60 ? cuerpo.slice(0, 60).trimEnd() + '…' : cuerpo,
+      ].filter(Boolean).join(' · ');
+    },
+    buscarEn: t => [t?.name, t?.language, this.bodyOf(t)].filter(Boolean).join(' '),
+  };
+
+  /** Cada variable con su valor de ejemplo, el mismo que usa la vista previa. */
+  readonly presVariables: PresentacionSelect<Variable> = {
+    valor: v => v?.key,
+    etiqueta: v => v?.label ?? v?.key ?? '',
+    detalle: v => (v?.example ? `ej: ${v.example}` : null),
+  };
+
+  readonly presReferencias: PresentacionSelect<{ key: string; label: string; description: string }> = {
+    valor: r => r?.key,
+    etiqueta: r => r?.label ?? r?.key ?? '',
+    detalle: r => r?.description,
+  };
+
+  readonly opcionesCategoria: OpcionSimple[] = [
+    { valor: 'UTILITY',        etiqueta: 'Utilidad',      detalle: 'Avisos de facturas, pagos y del servicio' },
+    { valor: 'MARKETING',      etiqueta: 'Marketing',     detalle: 'Promociones y novedades' },
+    { valor: 'AUTHENTICATION', etiqueta: 'Autenticación', detalle: 'Códigos de verificación' },
+  ];
+
+  readonly opcionesIdioma: OpcionSimple[] = [
+    { valor: 'es_CO', etiqueta: 'Español (Colombia)', prefijo: 'es_CO' },
+    { valor: 'es',    etiqueta: 'Español',            prefijo: 'es' },
+    { valor: 'en',    etiqueta: 'Inglés',             prefijo: 'en' },
+    { valor: 'pt_BR', etiqueta: 'Portugués (Brasil)', prefijo: 'pt_BR' },
+  ];
+
+  readonly opcionesFormato: OpcionSimple[] = [
+    { valor: 'TEXT',     etiqueta: 'Texto',     detalle: 'Título en negrita arriba del mensaje' },
+    { valor: 'IMAGE',    etiqueta: 'Imagen',    detalle: 'Una imagen desde una URL' },
+    { valor: 'VIDEO',    etiqueta: 'Video',     detalle: 'Un video desde una URL' },
+    { valor: 'DOCUMENT', etiqueta: 'Documento', detalle: 'Un archivo desde una URL' },
+  ];
+
+  readonly opcionesBoton: OpcionSimple[] = [
+    { valor: 'QUICK_REPLY',  etiqueta: 'Respuesta rápida', detalle: 'El cliente responde con un toque' },
+    { valor: 'URL',          etiqueta: 'Enlace',           detalle: 'Abre una página web' },
+    { valor: 'PHONE_NUMBER', etiqueta: 'Teléfono',         detalle: 'Llama a un número' },
+  ];
 
   alternar(evento: string): void {
     this.expandido = this.expandido === evento ? null : evento;
@@ -215,8 +276,16 @@ export class WaMetaTemplatesComponent implements OnInit {
 
   // ── Plantillas de Meta ─────────────────────────────────────────────────────
 
+  private aprobadasDe: any[] | null = null;
+  private aprobadas: any[] = [];
+
+  /** Se recuerda mientras no cambie la lista: el np-select recibe siempre el mismo arreglo. */
   get approvedTemplates(): any[] {
-    return this.templates.filter(t => t.status === 'APPROVED');
+    if (this.aprobadasDe !== this.templates) {
+      this.aprobadasDe = this.templates;
+      this.aprobadas = this.templates.filter(t => t.status === 'APPROVED');
+    }
+    return this.aprobadas;
   }
 
   hasTemplate(name: string): boolean {

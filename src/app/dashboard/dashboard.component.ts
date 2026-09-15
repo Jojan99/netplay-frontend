@@ -9,6 +9,7 @@ import { FinanceService } from '../services/finance.service';
 import { forkJoin, Subscription } from 'rxjs';
 import { ThemeService } from '../common/services/theme/theme.service';
 import { OnboardingGuideComponent } from '../components/onboarding-guide/onboarding-guide.component';
+import { NpSelectComponent, PresentacionSelect } from '../common/np-select/np-select.component';
 
 Chart.register(...registerables, ChartDataLabels);
 
@@ -16,7 +17,7 @@ Chart.register(...registerables, ChartDataLabels);
   selector: 'app-dashboard',
   templateUrl: './dashboard.component.html',
   standalone: true,
-  imports: [CommonModule, FormsModule, OnboardingGuideComponent],
+  imports: [CommonModule, FormsModule, OnboardingGuideComponent, NpSelectComponent],
   styleUrls: ['./dashboard.component.scss'],
   host: { class: 'np-console' },
 })
@@ -36,6 +37,11 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
   selectedYear  = new Date().getFullYear();
   availableYears: number[] = [];
+  readonly presAnios: PresentacionSelect<number> = {
+    valor: y => y,
+    etiqueta: y => String(y),
+    insignia: y => (y === new Date().getFullYear() ? { texto: 'Año actual', tono: 'info' } : null),
+  };
 
   isLoading        = false;
   isLoadingTickets = false;

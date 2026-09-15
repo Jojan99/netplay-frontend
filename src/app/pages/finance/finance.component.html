@@ -34,10 +34,8 @@
     </label>
     <span class="np-spacer"></span>
     <label class="np-pagesize">Mostrar
-      <select [(ngModel)]="perPage" (ngModelChange)="changePerPage()" aria-label="Registros por página">
-        <option *ngFor="let n of perPageOptions" [ngValue]="n">{{ n }}</option>
-      </select>
-      por página
+      <np-select [(ngModel)]="perPage" (ngModelChange)="changePerPage()" [opciones]="perPageOptions" [presentacion]="presPorPagina"
+                 tamano="sm" style="min-width: 140px" ariaLabel="Registros por página"></np-select>
     </label>
   </div>
 
@@ -249,10 +247,8 @@
         <dt>A pagar</dt><dd class="np-money np-money--lg">{{ formatCurrency(invoiceBalance(payingInvoice)) }}</dd>
       </dl>
       <label class="np-field" *ngIf="activePaymentMethods.length > 0"><span>Método de pago <em>*</em></span>
-        <select class="np-input" [(ngModel)]="payMethodId">
-          <option [ngValue]="null">Seleccionar…</option>
-          <option *ngFor="let pm of activePaymentMethods" [ngValue]="pm.id">{{ pm.name }}</option>
-        </select>
+        <np-select [(ngModel)]="payMethodId" [opciones]="activePaymentMethods" [presentacion]="presMetodos"
+                   [permitirVacio]="true" textoVacio="Seleccionar…" placeholder="Seleccionar…" ariaLabel="Método de pago"></np-select>
       </label>
       <div class="np-btnrow np-btnrow--end">
         <button type="button" class="np-btn np-btn--ghost" (click)="payModal = false">Cancelar</button>
@@ -271,10 +267,8 @@
       <div class="np-form">
         <label class="np-field"><span>Monto del abono</span><input type="number" class="np-input np-mono" [(ngModel)]="abonarAmount" min="1" placeholder="0" /></label>
         <label class="np-field" *ngIf="activePaymentMethods.length > 0"><span>Método de pago <em>*</em></span>
-          <select class="np-input" [(ngModel)]="abonarMethodId">
-            <option [ngValue]="null">Seleccionar…</option>
-            <option *ngFor="let pm of activePaymentMethods" [ngValue]="pm.id">{{ pm.name }}</option>
-          </select>
+          <np-select [(ngModel)]="abonarMethodId" [opciones]="activePaymentMethods" [presentacion]="presMetodos"
+                     [permitirVacio]="true" textoVacio="Seleccionar…" placeholder="Seleccionar…" ariaLabel="Método de pago"></np-select>
         </label>
       </div>
       <div class="np-btnrow np-btnrow--end">
@@ -299,10 +293,8 @@
         <p class="np-muted" *ngIf="liquidateInvoices.length === 0">No hay facturas pendientes.</p>
       </div>
       <label class="np-field" *ngIf="activePaymentMethods.length > 0"><span>Método de pago <em>*</em></span>
-        <select class="np-input" [(ngModel)]="liquidateMethodId">
-          <option [ngValue]="null">Seleccionar…</option>
-          <option *ngFor="let pm of activePaymentMethods" [ngValue]="pm.id">{{ pm.name }}</option>
-        </select>
+        <np-select [(ngModel)]="liquidateMethodId" [opciones]="activePaymentMethods" [presentacion]="presMetodos"
+                   [permitirVacio]="true" textoVacio="Seleccionar…" placeholder="Seleccionar…" ariaLabel="Método de pago"></np-select>
       </label>
       <div class="np-btnrow np-btnrow--end">
         <button type="button" class="np-btn np-btn--ghost" (click)="liquidateModal = false">Cancelar</button>

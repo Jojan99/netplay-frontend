@@ -48,12 +48,8 @@
     </div>
     <span class="np-spacer"></span>
     <label class="np-pagesize">Mostrar
-      <select [value]="entriesPerPage" (change)="onEntriesPerPageChange($event)" aria-label="Registros por página">
-        <option value="12">12</option>
-        <option value="25">25</option>
-        <option value="50">50</option>
-      </select>
-      por página
+      <np-select [ngModel]="entriesPerPage" (ngModelChange)="onEntriesPerPageChange($event)" [opciones]="porPagina" [presentacion]="presPorPagina"
+                 tamano="sm" style="width: 140px" ariaLabel="Registros por página"></np-select>
     </label>
   </div>
 
@@ -228,16 +224,14 @@
               <dt>Plan</dt>
               <dd>
                 <ng-container *ngIf="!isEditing">{{ selectedUserData.plan_name || '—' }}</ng-container>
-                <select *ngIf="isEditing" class="np-input" [(ngModel)]="internet_plan">
-                  <option *ngFor="let p of PlanInternet" [value]="p.id">{{ p.names }}</option>
-                </select>
+                <np-select *ngIf="isEditing" [ngModel]="comoTexto(internet_plan)" (ngModelChange)="internet_plan = $event"
+                           [opciones]="PlanInternet" [presentacion]="presPlanes" [valorVacio]="'0'" placeholder="Seleccione plan…" ariaLabel="Plan"></np-select>
               </dd>
               <dt>Corte</dt>
               <dd>
                 <ng-container *ngIf="!isEditing">{{ dataCorteLabel }}</ng-container>
-                <select *ngIf="isEditing" class="np-input" [(ngModel)]="data_cortes">
-                  <option *ngFor="let d of DataCortes" [value]="d.id">{{ d.names }}</option>
-                </select>
+                <np-select *ngIf="isEditing" [ngModel]="comoTexto(data_cortes)" (ngModelChange)="data_cortes = $event"
+                           [opciones]="DataCortes" [presentacion]="presCortes" [valorVacio]="'0'" placeholder="Seleccione corte…" ariaLabel="Corte"></np-select>
               </dd>
               <dt>Mensualidad</dt><dd class="np-mono">{{ selectedUserData.monthly_price ? ('$ ' + (selectedUserData.monthly_price | number:'1.0-0')) : '—' }}</dd>
               <dt>Alta</dt><dd class="np-mono">{{ selectedUserData.date_create ? (selectedUserData.date_create | date:'dd/MM/yyyy') : '—' }}</dd>
@@ -280,10 +274,8 @@
         <ng-container *ngIf="modalTab === 'servicios'">
           <section *ngIf="routers.length > 1 || loadingRouters">
             <p class="np-sect">Router</p>
-            <select class="np-input" [(ngModel)]="selectedRouterId" (ngModelChange)="onServiceRouterChange()" [disabled]="loadingRouters">
-              <option [ngValue]="null" disabled>{{ loadingRouters ? 'Cargando routers…' : 'Seleccione router…' }}</option>
-              <option *ngFor="let r of routers" [ngValue]="r.id">{{ r.name || r.host || ('Router ' + r.id) }}</option>
-            </select>
+            <np-select [(ngModel)]="selectedRouterId" (ngModelChange)="onServiceRouterChange()" [opciones]="routers" [presentacion]="presRouters"
+                       [cargando]="loadingRouters" textoCargando="Cargando routers…" placeholder="Seleccione router…" [deshabilitado]="loadingRouters" ariaLabel="Router"></np-select>
           </section>
 
           <section>
@@ -356,10 +348,10 @@
                   </span>
                 </label>
                 <label class="np-field np-field-full"><span>Perfil PPP <em>define la velocidad</em></span>
-                  <select class="np-input" [(ngModel)]="cambioPerfil" [disabled]="!pppoePerfilesCliente.length">
-                    <option value="" disabled>{{ pppoePerfilesCliente.length ? 'Seleccione perfil…' : 'Sin perfiles en el router' }}</option>
-                    <option *ngFor="let p of pppoePerfilesCliente" [value]="p.nombre">{{ p.nombre }}{{ p.velocidad ? ' · ' + p.velocidad : '' }}</option>
-                  </select>
+                  <np-select [(ngModel)]="cambioPerfil" [opciones]="pppoePerfilesCliente" [presentacion]="presPerfiles" [valorVacio]="''"
+                             [cargando]="cargandoSesionPppoe" textoCargando="Leyendo el router…"
+                             [placeholder]="pppoePerfilesCliente.length ? 'Seleccione perfil…' : 'Sin perfiles en el router'"
+                             [deshabilitado]="!pppoePerfilesCliente.length" ariaLabel="Perfil PPP"></np-select>
                 </label>
               </ng-container>
 
@@ -466,22 +458,16 @@
             <p class="np-sect">Crear ticket</p>
             <div class="np-form">
               <label class="np-field"><span>Tipo de servicio <em>*</em></span>
-                <select class="np-input" [(ngModel)]="ticketForm.type_service">
-                  <option [value]="0" disabled>Seleccione…</option>
-                  <option *ngFor="let s of serviceTypes" [value]="s.id">{{ s.name }}</option>
-                </select>
+                <np-select [(ngModel)]="ticketForm.type_service" [opciones]="serviceTypes" [presentacion]="presTiposServicio"
+                           [valorVacio]="0" placeholder="Seleccione…" ariaLabel="Tipo de servicio"></np-select>
               </label>
               <label class="np-field"><span>Prioridad <em>*</em></span>
-                <select class="np-input" [(ngModel)]="ticketForm.priority">
-                  <option [value]="0" disabled>Seleccione…</option>
-                  <option *ngFor="let p of priorities" [value]="p.id">{{ p.name }}</option>
-                </select>
+                <np-select [(ngModel)]="ticketForm.priority" [opciones]="priorities" [presentacion]="presPrioridades"
+                           [valorVacio]="0" placeholder="Seleccione…" ariaLabel="Prioridad"></np-select>
               </label>
               <label class="np-field"><span>Técnico <em>*</em></span>
-                <select class="np-input" [(ngModel)]="ticketForm.tecnichal">
-                  <option [value]="0" disabled>Seleccione…</option>
-                  <option *ngFor="let t of technicians" [value]="t.id_user">{{ t.names }} {{ t.lastname }}</option>
-                </select>
+                <np-select [(ngModel)]="ticketForm.tecnichal" [opciones]="technicians" [presentacion]="presTecnicos"
+                           [valorVacio]="0" placeholder="Seleccione…" textoSinOpciones="No hay técnicos cargados." ariaLabel="Técnico"></np-select>
               </label>
               <label class="np-field"><span>Fecha</span><input type="datetime-local" class="np-input" [(ngModel)]="ticketForm.date" /></label>
               <label class="np-field np-field-full"><span>Dirección</span><input type="text" class="np-input" [(ngModel)]="ticketForm.address" [placeholder]="selectedUserData?.address || ''" /></label>
@@ -706,10 +692,8 @@
                  (ngModelChange)="guardarBorrador()" [placeholder]="f.ph" />
         </label>
         <label class="np-field"><span>Periodo de facturación</span>
-          <select class="np-input" [(ngModel)]="newUser.periode_facturation" (ngModelChange)="guardarBorrador()">
-            <option [value]="0" disabled>Seleccione…</option>
-            <option *ngFor="let d of DataCortes" [value]="d.id">{{ d.names }}</option>
-          </select>
+          <np-select [ngModel]="comoTexto(newUser.periode_facturation)" (ngModelChange)="newUser.periode_facturation = $event; guardarBorrador()"
+                     [opciones]="DataCortes" [presentacion]="presCortes" [valorVacio]="'0'" placeholder="Seleccione…" ariaLabel="Periodo de facturación"></np-select>
         </label>
       </div>
 
@@ -725,10 +709,8 @@
         </div>
 
         <label class="np-field np-field-full" *ngIf="routers.length > 1 || loadingRouters"><span>Router</span>
-          <select class="np-input" [(ngModel)]="selectedRouterId" (ngModelChange)="onCreateRouterChange()" [disabled]="loadingRouters">
-            <option [ngValue]="null" disabled>{{ loadingRouters ? 'Cargando routers…' : 'Seleccione router…' }}</option>
-            <option *ngFor="let r of routers" [ngValue]="r.id">{{ r.name || r.host || ('Router ' + r.id) }}</option>
-          </select>
+          <np-select [(ngModel)]="selectedRouterId" (ngModelChange)="onCreateRouterChange()" [opciones]="routers" [presentacion]="presRouters"
+                     [cargando]="loadingRouters" textoCargando="Cargando routers…" placeholder="Seleccione router…" [deshabilitado]="loadingRouters" ariaLabel="Router"></np-select>
         </label>
         <label class="np-field" *ngIf="!esPppoe"><span>VLAN</span>
           <np-select [(ngModel)]="selectedVlan" (ngModelChange)="onInterfaceChange($event)" [opciones]="interfaces" [presentacion]="redes"
@@ -736,10 +718,8 @@
           <small class="np-fine" *ngIf="!loadingIfaces">{{ todasLasRedes ? 'Todas las redes del router.' : 'Sólo las redes que dan internet.' }} <button type="button" class="np-link" (click)="alternarTodasLasRedes()">{{ todasLasRedes ? 'Ver sólo las de clientes' : 'Ver todas' }}</button></small>
         </label>
         <label class="np-field" *ngIf="!esPppoe"><span>Segmento</span>
-          <select class="np-input" [(ngModel)]="selectedSeg" (ngModelChange)="onSegmentChange($event)" [disabled]="!segments.length">
-            <option [ngValue]="null" disabled>Seleccione segmento…</option>
-            <option *ngFor="let s of segments" [ngValue]="s">{{ s.network }}</option>
-          </select>
+          <np-select [(ngModel)]="selectedSeg" (ngModelChange)="onSegmentChange($event)" [opciones]="segments" [presentacion]="presSegmentos"
+                     placeholder="Seleccione segmento…" [deshabilitado]="!segments.length" ariaLabel="Segmento"></np-select>
         </label>
 
         <!-- Aviso de router caído: antes el select de IP quedaba vacío sin
@@ -774,23 +754,18 @@
           </label>
 
           <label class="np-field np-field-full"><span>Perfil PPP <em>define la velocidad</em></span>
-            <select class="np-input" [(ngModel)]="newUser.pppoe_profile" (ngModelChange)="guardarBorrador()"
-                    [disabled]="!pppoePerfiles.length">
-              <option value="" disabled>{{ pppoePerfiles.length ? 'Seleccione perfil…' : 'Sin perfiles en el router' }}</option>
-              <option *ngFor="let p of pppoePerfiles" [value]="p.nombre">
-                {{ p.nombre }}{{ p.velocidad ? ' · ' + p.velocidad : '' }}
-              </option>
-            </select>
+            <np-select [(ngModel)]="newUser.pppoe_profile" (ngModelChange)="guardarBorrador()" [opciones]="pppoePerfiles" [presentacion]="presPerfiles"
+                       [valorVacio]="''" [placeholder]="pppoePerfiles.length ? 'Seleccione perfil…' : 'Sin perfiles en el router'"
+                       [deshabilitado]="!pppoePerfiles.length" ariaLabel="Perfil PPP"></np-select>
           </label>
 
           <p class="np-notice np-notice--warn np-notice--inline np-field-full" *ngIf="pppoeAviso">{{ pppoeAviso }}</p>
         </ng-container>
 
         <label class="np-field"><span>Plan de internet</span>
-          <select class="np-input" [(ngModel)]="newUser.plan_id" (ngModelChange)="guardarBorrador()">
-            <option [value]="0" disabled>Seleccione plan…</option>
-            <option *ngFor="let p of PlanInternet" [value]="p.id">{{ p.names }}</option>
-          </select>
+          <np-select [ngModel]="comoTexto(newUser.plan_id)" (ngModelChange)="newUser.plan_id = $event; guardarBorrador()"
+                     [opciones]="PlanInternet" [presentacion]="presPlanes" [valorVacio]="'0'" placeholder="Seleccione plan…"
+                     textoBuscar="Buscar plan, velocidad o precio…" ariaLabel="Plan de internet"></np-select>
         </label>
       </div>
 

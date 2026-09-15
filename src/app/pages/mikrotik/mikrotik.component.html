@@ -10,7 +10,7 @@
       </div>
     </div>
     <div class="np-actions">
-      <label class="np-pagesize" *ngIf="routers.length > 1 && activeTab !== 'config'">Router<select [(ngModel)]="selectedRouterId" (ngModelChange)="onRouterChange()"><option *ngFor="let r of routers" [value]="r.id">{{ r.name || r.host }}</option></select></label>
+      <label class="np-pagesize" *ngIf="routers.length > 1 && activeTab !== 'config'">Router<np-select [ngModel]="selectedRouterId" (ngModelChange)="selectedRouterId = $event; onRouterChange()" [opciones]="routers" [presentacion]="presRouters" tamano="sm" style="width: 220px" ariaLabel="Router"></np-select></label>
       <button type="button" class="np-btn np-btn--ghost" *ngIf="activeTab !== 'config'" (click)="refresh()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 12a8 8 0 1 1-2.3-5.7M20 4v5h-5"/></svg>Actualizar</button>
       <button type="button" class="np-btn np-btn--primary" *ngIf="activeTab === 'config'" (click)="openAddRouter()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M12 5v14M5 12h14"/></svg>Agregar MikroTik</button>
       <button type="button" class="np-btn np-btn--ghost" *ngIf="activeTab === 'conflicts' && conflicts.length" [disabled]="separando" (click)="simularSeparar()">
@@ -1021,10 +1021,8 @@
             a la OLT o a la antena. No es la de internet.
           </p>
           <label class="np-field np-field-full"><span>Interfaz</span>
-            <select class="np-input" [(ngModel)]="form.interfaz">
-              <option value="" disabled>Seleccione interfaz…</option>
-              <option *ngFor="let i of interfacesParaPppoe" [value]="i.nombre">{{ i.nombre }} · {{ i.tipo }}</option>
-            </select>
+            <np-select [(ngModel)]="form.interfaz" [opciones]="interfacesParaPppoe" [presentacion]="presInterfaces" [valorVacio]="''"
+                       placeholder="Seleccione interfaz…" ariaLabel="Interfaz"></np-select>
           </label>
         </div>
 
@@ -1085,10 +1083,8 @@
             el tráfico a internet — si tenés una lista de interfaces WAN, es esa.
           </p>
           <label class="np-field np-field-full"><span>Salida a internet</span>
-            <select class="np-input" [(ngModel)]="form.salida">
-              <option value="">No tocar el NAT (ya lo tengo configurado)</option>
-              <option *ngFor="let sal of opcionesPppoe.salidas" [value]="sal.nombre">{{ sal.nombre }} · {{ sal.tipo }}</option>
-            </select>
+            <np-select [(ngModel)]="form.salida" [opciones]="opcionesPppoe.salidas" [presentacion]="presSalidas"
+                       [permitirVacio]="true" textoVacio="No tocar el NAT (ya lo tengo configurado)" [valorVacio]="''" ariaLabel="Salida a internet"></np-select>
           </label>
 
           <div class="np-wiz-resumen np-field-full">
@@ -1237,10 +1233,8 @@
           <input type="text" class="np-input np-mono" [(ngModel)]="edita.gateway" placeholder="10.20.0.1" />
         </label>
         <label class="np-field"><span>Reparte de</span>
-          <select class="np-input" [(ngModel)]="edita.pool">
-            <option value="">sin rango</option>
-            <option *ngFor="let p of pppoePools" [value]="p.nombre">{{ p.nombre }} · {{ p.rangos }}</option>
-          </select>
+          <np-select [(ngModel)]="edita.pool" [opciones]="pppoePools" [presentacion]="presPools"
+                     [permitirVacio]="true" textoVacio="Sin rango" [valorVacio]="''" ariaLabel="Rango de IP"></np-select>
         </label>
         <label class="np-field"><span>DNS <em>opcional</em></span>
           <input type="text" class="np-input np-mono" [(ngModel)]="edita.dns" placeholder="8.8.8.8" />
@@ -1271,15 +1265,12 @@
           <input type="text" class="np-input np-mono" [(ngModel)]="edita.servicio" placeholder="pppoe-netplay" />
         </label>
         <label class="np-field"><span>Interfaz <em>por donde llegan</em></span>
-          <select class="np-input" [(ngModel)]="edita.interfaz">
-            <option value="" disabled>Seleccione…</option>
-            <option *ngFor="let i of pppoeInterfaces" [value]="i.nombre">{{ i.nombre }} · {{ i.tipo }}</option>
-          </select>
+          <np-select [(ngModel)]="edita.interfaz" [opciones]="pppoeInterfaces" [presentacion]="presInterfaces" [valorVacio]="''"
+                     placeholder="Seleccione…" ariaLabel="Interfaz"></np-select>
         </label>
         <label class="np-field"><span>Perfil por defecto</span>
-          <select class="np-input" [(ngModel)]="edita.perfil">
-            <option *ngFor="let p of pppoe?.perfiles" [value]="p.nombre">{{ p.nombre }}</option>
-          </select>
+          <np-select [(ngModel)]="edita.perfil" [opciones]="pppoe?.perfiles ?? null" [presentacion]="presPerfiles"
+                     placeholder="Seleccione perfil…" ariaLabel="Perfil por defecto"></np-select>
         </label>
         <label class="np-check np-field-full">
           <input type="checkbox" [(ngModel)]="edita.una_sesion" />

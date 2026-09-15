@@ -35,11 +35,9 @@
         </div>
 
         <label class="mb-1.5 block text-sm font-medium text-slate-700 dark:text-slate-300">Plantilla</label>
-        <select [ngModel]="plantilla" (ngModelChange)="elegirPlantilla($event)"
-                class="mb-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 dark:border-slate-600 dark:bg-slate-900 dark:text-white">
-          <option value="">Elige una plantilla aprobada…</option>
-          <option *ngFor="let t of templates" [value]="t.name">{{ t.name }} ({{ t.language }})</option>
-        </select>
+        <np-select [ngModel]="plantilla" (ngModelChange)="elegirPlantilla($event)" [opciones]="templates" [presentacion]="presPlantillas"
+                   placeholder="Elige una plantilla aprobada…" [valorVacio]="''" [cargando]="cargando"
+                   textoSinOpciones="No hay plantillas aprobadas." ariaLabel="Plantilla"></np-select>
         <p *ngIf="!cargando && !templates.length" class="text-xs text-amber-600 dark:text-amber-400">
           No hay plantillas aprobadas todavía. Meta debe aprobarlas antes de poder usarlas.
         </p>
@@ -66,17 +64,12 @@
                   {{ etiquetaSlot(i) }}
                 </span>
 
-                <select [(ngModel)]="s.tipo" (ngModelChange)="cambioContenido()"
-                        class="rounded-lg border border-slate-300 bg-white px-2 py-1 text-xs dark:border-slate-600 dark:bg-slate-900 dark:text-white">
-                  <option value="variable">Dato del cliente</option>
-                  <option value="fijo">Texto que yo escribo</option>
-                </select>
+                <np-select [(ngModel)]="s.tipo" (ngModelChange)="cambioContenido()" [opciones]="opcionesTipoSlot" [presentacion]="presSimple"
+                           ariaLabel="Qué va en el espacio" tamano="sm" style="width: 220px"></np-select>
               </div>
 
-              <select *ngIf="s.tipo === 'variable'" [(ngModel)]="s.variable" (ngModelChange)="cambioContenido()"
-                      class="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-900 dark:text-white">
-                <option *ngFor="let v of variables" [value]="v.key">{{ v.label }} — ej: {{ v.example }}</option>
-              </select>
+              <np-select *ngIf="s.tipo === 'variable'" [(ngModel)]="s.variable" (ngModelChange)="cambioContenido()"
+                         [opciones]="variables" [presentacion]="presVariables" ariaLabel="Dato del cliente"></np-select>
 
               <textarea *ngIf="s.tipo === 'fijo'" [(ngModel)]="s.valor" (ngModelChange)="cambioContenido()" rows="3"
                         placeholder="Escribe aquí el mensaje que verán todos los clientes…"
@@ -105,22 +98,14 @@
 
           <div>
             <label class="mb-1.5 block text-sm font-medium text-slate-700 dark:text-slate-300">Servicio</label>
-            <select [(ngModel)]="filtros.servicio" (ngModelChange)="contar()"
-                    class="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-900 dark:text-white">
-              <option value="todos">Activos y suspendidos</option>
-              <option value="activo">Solo con servicio</option>
-              <option value="suspendido">Solo suspendidos</option>
-            </select>
+            <np-select [(ngModel)]="filtros.servicio" (ngModelChange)="contar()" [opciones]="opcionesServicio" [presentacion]="presSimple"
+                       ariaLabel="Servicio"></np-select>
           </div>
 
           <div>
             <label class="mb-1.5 block text-sm font-medium text-slate-700 dark:text-slate-300">Facturas</label>
-            <select [(ngModel)]="filtros.deuda" (ngModelChange)="contar()"
-                    class="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-900 dark:text-white">
-              <option value="todos">Deban o no</option>
-              <option value="con">Solo los que deben</option>
-              <option value="sin">Solo los que están al día</option>
-            </select>
+            <np-select [(ngModel)]="filtros.deuda" (ngModelChange)="contar()" [opciones]="opcionesDeuda" [presentacion]="presSimple"
+                       ariaLabel="Facturas"></np-select>
           </div>
         </div>
 

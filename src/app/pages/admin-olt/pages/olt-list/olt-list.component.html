@@ -61,13 +61,13 @@
       <ng-container *ngIf="pestana === 'conexion'">
         <div class="np-form">
           <label class="np-field np-field-full"><span>Nombre <em>*</em></span><input class="np-input" [(ngModel)]="form.name" placeholder="OLT Principal" /></label>
-          <label class="np-field np-field-full"><span>Marca <em>*</em></span><select class="np-input" [(ngModel)]="form.brand"><option *ngFor="let m of marcas" [value]="m.valor">{{ m.nombre }}</option></select></label>
+          <label class="np-field np-field-full"><span>Marca <em>*</em></span><np-select [(ngModel)]="form.brand" [opciones]="marcas" [presentacion]="presMarcas" placeholder="Elegí la marca…" ariaLabel="Marca"></np-select></label>
           <label class="np-field"><span>Host / IP <em>*</em></span><input class="np-input np-mono" [(ngModel)]="form.host" placeholder="192.168.1.1" /></label>
           <label class="np-field"><span>Puerto</span><input type="number" class="np-input np-mono" [(ngModel)]="form.port" /></label>
           <label class="np-field"><span>Usuario</span><input class="np-input np-mono" [(ngModel)]="form.username" placeholder="admin" /></label>
           <label class="np-field"><span>Contraseña{{ modalMode === 'edit' ? ' ·  sin cambio si va vacía' : '' }}</span><input type="password" class="np-input" [(ngModel)]="form.password" autocomplete="new-password" /></label>
           <label class="np-field"><span>Enable password</span><input type="password" class="np-input" [(ngModel)]="form.enable_password" autocomplete="new-password" /></label>
-          <label class="np-field"><span>Cómo se llega</span><select class="np-input" [(ngModel)]="form.access_mode"><option value="direct">Directo</option><option value="jump">Por jump host</option></select></label>
+          <label class="np-field"><span>Cómo se llega</span><np-select [(ngModel)]="form.access_mode" [opciones]="opcionesAcceso" [presentacion]="presSimple" ariaLabel="Cómo se llega"></np-select></label>
         </div>
       </ng-container>
 
@@ -117,10 +117,7 @@
             <!-- Un router lleva un solo túnel: si ya tiene uno, la red se suma ahí.
                  Crear otro y correr su script pisaba el anterior. -->
             <label class="np-field np-field-full" *ngIf="tuneles.length"><span>¿Detrás de qué router está?</span>
-              <select class="np-input" [(ngModel)]="form.tunel_id">
-                <option [ngValue]="null">Un router nuevo: crear su túnel</option>
-                <option *ngFor="let t of tuneles" [ngValue]="t.id">{{ t.nombre }} · {{ t.redes_remotas.join(', ') }}</option>
-              </select>
+              <np-select [(ngModel)]="form.tunel_id" [opciones]="tuneles" [presentacion]="presTuneles" [permitirVacio]="true" textoVacio="Un router nuevo: crear su túnel" ariaLabel="Router del túnel"></np-select>
             </label>
             <label class="np-field" *ngIf="!form.tunel_id"><span>Nombre del nodo</span><input class="np-input" [(ngModel)]="form.tunel_nombre" [placeholder]="'Nodo ' + (form.name || '…')" /></label>
             <label class="np-field" [class.np-field-full]="form.tunel_id"><span>{{ form.tunel_id ? 'Red de esta OLT' : 'Redes alcanzables' }}</span><input class="np-input np-mono" [(ngModel)]="form.tunel_redes" [placeholder]="redSugerida || '10.11.104.0/24'" /></label>
@@ -157,7 +154,7 @@
         <p class="np-hint">De acá salen la ficha del equipo y la señal óptica. Sin SNMP la plataforma sólo puede usar la consola.</p>
         <div class="np-form">
           <label class="np-field"><span>Community</span><input class="np-input np-mono" [(ngModel)]="form.snmp_community" placeholder="public" /></label>
-          <label class="np-field"><span>Versión</span><select class="np-input" [(ngModel)]="form.snmp_version"><option value="2c">2c</option><option value="1">1</option></select></label>
+          <label class="np-field"><span>Versión</span><np-select [(ngModel)]="form.snmp_version" [opciones]="opcionesSnmp" [presentacion]="presSimple" ariaLabel="Versión SNMP"></np-select></label>
           <label class="np-field"><span>Host <span class="np-fine">· vacío = el de la OLT</span></span><input class="np-input np-mono" [(ngModel)]="form.snmp_host" /></label>
           <label class="np-field"><span>Puerto</span><input type="number" class="np-input np-mono" [(ngModel)]="form.snmp_port" /></label>
           <label class="np-field"><span>Jump host SNMP</span><input class="np-input np-mono" [(ngModel)]="form.snmp_jump_host" /></label>

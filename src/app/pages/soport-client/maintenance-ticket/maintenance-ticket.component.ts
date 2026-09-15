@@ -8,11 +8,36 @@ import { ReactiveFormsModule, FormsModule } from '@angular/forms';
 import { GenericInterface } from '../../../models/generic-interface';
 import { Router } from '@angular/router';
 import { Subscription } from 'rxjs';
+import { NpSelectComponent, PresentacionSelect } from '../../../common/np-select/np-select.component';
+import { PRESENTACION_PERSONAS, conValor } from '../../../common/np-select/presentaciones';
+
+// Los tres guardan el id en texto, como hacía [value] en el select anterior.
+
+/** Tipos de servicio: el catálogo sólo trae id y nombre. */
+const PRESENTACION_SERVICIOS: PresentacionSelect = {
+  valor: s => String(s?.id),
+  etiqueta: s => s?.names ?? '',
+};
+
+/**
+ * Prioridades: sólo id y nombre, así que el tono sale del nombre, con el mismo
+ * criterio que las píldoras de la lista de tickets.
+ */
+const PRESENTACION_PRIORIDADES: PresentacionSelect = {
+  valor: p => String(p?.id),
+  etiqueta: p => p?.names ?? '',
+  insignia: p => {
+    const n = String(p?.names ?? '').toLowerCase();
+    if (n.includes('alta') || n.includes('urgente')) return { texto: '●', tono: 'warn' };
+    if (n.includes('media')) return { texto: '●', tono: 'info' };
+    return { texto: '●', tono: 'neutral' };
+  },
+};
 
 @Component({
   selector: 'app-maintenance-ticket',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, FormsModule],
+  imports: [CommonModule, ReactiveFormsModule, FormsModule, NpSelectComponent],
   templateUrl: './maintenance-ticket.component.html',
   styleUrls: ['./maintenance-ticket.component.scss'],
   host: { class: 'np-console' }
@@ -27,6 +52,9 @@ export class MaintenanceTicketComponent implements OnInit {
   ServiceTicket: GenericInterface[]  = [];
   PriorityTicket: GenericInterface[] = [];
   UserInterfacesTecni: any[]         = [];
+  readonly presServicios   = PRESENTACION_SERVICIOS;
+  readonly presPrioridades = PRESENTACION_PRIORIDADES;
+  readonly presTecnicos    = conValor(PRESENTACION_PERSONAS, t => String(t.id_user));
 
   // User search
   allUsers: any[]      = [];
@@ -73,7 +101,9 @@ export class MaintenanceTicketComponent implements OnInit {
     });
     this.userService.getTechnicaAll().subscribe({
       next: (res) => {
+        // Se conserva el resto de la fila (correo, cédula): el selector la muestra debajo del nombre.
         this.UserInterfacesTecni = (res.data || []).map((e: any) => ({
+          ...e,
           id_user: e.user_id,
           names:   e.names,
           lastname: e.lastname,

@@ -40,13 +40,13 @@
     <div class="np-modal-body">
       <div class="np-form">
         <label class="np-field"><span>Nombre (referencia)</span><input class="np-input" [(ngModel)]="form.name" type="text" placeholder="Recordatorio diario" /></label>
-        <label class="np-field"><span>Instancia</span><select class="np-input" [(ngModel)]="form.instanceId"><option value="">Seleccionar…</option><option *ngFor="let inst of instances" [value]="inst.instanceId">{{ inst.name }}</option></select></label>
+        <label class="np-field"><span>Instancia</span><np-select [(ngModel)]="form.instanceId" [opciones]="instances" [presentacion]="presLineas" placeholder="Seleccionar…" [valorVacio]="''" textoSinOpciones="No hay instancias." ariaLabel="Instancia"></np-select></label>
         <label class="np-field"><span>Número destinatario</span><input class="np-input np-mono" [(ngModel)]="form.number" type="text" placeholder="573001234567" /></label>
-        <label class="np-field"><span>Tipo de mensaje</span><select class="np-input" [(ngModel)]="form.messageType"><option *ngFor="let t of msgTypes" [value]="t.value">{{ t.label }}</option></select></label>
+        <label class="np-field"><span>Tipo de mensaje</span><np-select [(ngModel)]="form.messageType" [opciones]="opcionesTipo" [presentacion]="presSimple" ariaLabel="Tipo de mensaje"></np-select></label>
         <label class="np-field np-field-full" *ngIf="form.messageType === 'text'"><span>Mensaje</span><textarea class="np-input np-textarea" [(ngModel)]="form.content" rows="3"></textarea></label>
         <label class="np-field np-field-full" *ngIf="form.messageType !== 'text'"><span>URL del archivo</span><input class="np-input np-mono" [(ngModel)]="form.mediaUrl" type="url" placeholder="https://…" /></label>
         <label class="np-field np-field-full" *ngIf="form.messageType === 'image' || form.messageType === 'video' || form.messageType === 'document'"><span>Descripción (opcional)</span><input class="np-input" [(ngModel)]="form.caption" type="text" /></label>
-        <label class="np-field"><span>Programación</span><select class="np-input" [(ngModel)]="form.scheduleType"><option value="once">Una vez</option><option value="daily">Diario</option><option value="weekly">Semanal</option></select></label>
+        <label class="np-field"><span>Programación</span><np-select [(ngModel)]="form.scheduleType" [opciones]="opcionesProgramacion" [presentacion]="presSimple" ariaLabel="Programación"></np-select></label>
         <label class="np-field"><span>Fecha y hora</span><input class="np-input" [(ngModel)]="form.scheduledAt" type="datetime-local" /></label>
         <label class="np-field" *ngIf="form.scheduleType !== 'once'"><span>Hora de repetición</span><input class="np-input np-mono" [(ngModel)]="form.repeatTime" type="time" /></label>
         <div class="np-field np-field-full" *ngIf="form.scheduleType === 'weekly'"><span>Días de la semana</span><div class="np-chips"><button type="button" class="np-chip" *ngFor="let d of weekDays" [attr.aria-pressed]="isDaySelected(d.value)" (click)="toggleDay(d.value)">{{ d.label }}</button></div></div>

@@ -3,6 +3,11 @@ import { Component, OnInit, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { ClientApiService } from '../services/client-api.service';
+import { NpSelectComponent } from '../../common/np-select/np-select.component';
+import { OpcionSimple, PRESENTACION_SIMPLE } from '../../common/np-select/presentaciones';
+
+/** En 2.4 GHz sólo estos tres canales no se superponen entre sí. */
+const CANALES_SIN_SUPERPOSICION = [1, 6, 11];
 
 /**
  * "Mi WiFi": el cliente ve y cambia lo suyo sin llamar al soporte.
@@ -13,7 +18,7 @@ import { ClientApiService } from '../services/client-api.service';
 @Component({
   selector: 'app-portal-network',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink],
+  imports: [CommonModule, FormsModule, RouterLink, NpSelectComponent],
   templateUrl: './portal-network.component.html',
   styleUrl: './portal-network.component.scss',
 })
@@ -190,6 +195,35 @@ export class PortalNetworkComponent implements OnInit {
 
   /** 'auto' o el número de canal elegido, mientras se edita una red. */
   canalEditando: { indice: number; valor: string } | null = null;
+
+  readonly presCanal = PRESENTACION_SIMPLE;
+  private canalesPorRed = new WeakMap<object, OpcionSimple[]>();
+
+  /**
+   * Opciones del canal de una red. Se guardan por red (cada lectura del equipo
+   * trae objetos nuevos): la plantilla las pide en cada ciclo y el selector
+   * tiene que recibir el mismo arreglo. Los valores siguen siendo texto.
+   */
+  opcionesCanal(r: any): OpcionSimple[] {
+    let opciones = this.canalesPorRed.get(r);
+    if (!opciones) {
+      const en24 = /2[.,]4/.test(String(r.banda ?? ''));
+      opciones = [
+        { valor: 'auto', etiqueta: 'Automático (recomendado)', detalle: r.canal_auto && r.canal ? `Ahora está en el canal ${r.canal}` : null },
+        ...(r.canales_posibles ?? []).map((c: any): OpcionSimple => {
+          const otros = CANALES_SIN_SUPERPOSICION.filter(x => x !== +c);
+          return {
+            valor: '' + c,
+            etiqueta: `Canal ${c}`,
+            detalle: en24 && otros.length === 2 ? `No se pisa con los canales ${otros[0]} y ${otros[1]}` : null,
+            insignia: !r.canal_auto && +r.canal === +c ? { texto: 'Actual', tono: 'ok' } : null,
+          };
+        }),
+      ];
+      this.canalesPorRed.set(r, opciones);
+    }
+    return opciones;
+  }
 
   /** "Canal 11 · automático", "Canal 6", "Canal automático". */
   textoCanal(r: any): string {

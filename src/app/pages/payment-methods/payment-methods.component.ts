@@ -2,6 +2,8 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { FinanceService } from '../../services/finance.service';
+import { NpSelectComponent } from '../../common/np-select/np-select.component';
+import { PRESENTACION_POR_PAGINA } from '../../common/np-select/presentaciones';
 
 interface PaymentMethodSummary {
   name: string;
@@ -28,7 +30,7 @@ interface PaymentsResponse {
 @Component({
   selector: 'app-payment-methods',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, NpSelectComponent],
   templateUrl: './payment-methods.component.html',
   styleUrls: ['./payment-methods.component.scss'],
   host: { class: 'np-console' },
@@ -47,6 +49,7 @@ export class PaymentMethodsComponent implements OnInit {
   page = 1;
   perPage = 15;
   perPageOptions = [15, 25, 50, 100];
+  readonly presPorPagina = PRESENTACION_POR_PAGINA;
 
   total = 0;
   totalAmount = 0;

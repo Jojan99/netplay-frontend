@@ -6,11 +6,13 @@ import { Subject } from 'rxjs';
 import { debounceTime, distinctUntilChanged, takeUntil } from 'rxjs/operators';
 import { FinanceService } from '../../services/finance.service';
 import { ToastService }   from '../../services/toast.service';
+import { NpSelectComponent } from '../../common/np-select/np-select.component';
+import { PRESENTACION_METODOS_PAGO, PRESENTACION_POR_PAGINA, conValor } from '../../common/np-select/presentaciones';
 
 @Component({
   selector: 'app-finance',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, NpSelectComponent],
   templateUrl: './finance.component.html',
   styleUrl: './finance.component.scss',
   host: { class: 'np-console' },
@@ -69,6 +71,9 @@ export class FinanceComponent implements OnInit, OnDestroy {
 
   // Active payment methods
   activePaymentMethods: any[] = [];
+  readonly presPorPagina = PRESENTACION_POR_PAGINA;
+  /** Guarda el id numérico, como hacía [ngValue]="pm.id". */
+  readonly presMetodos = conValor(PRESENTACION_METODOS_PAGO, m => m.id);
 
   // Pay modal
   payModal = false;

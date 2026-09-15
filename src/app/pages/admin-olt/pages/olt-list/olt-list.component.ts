@@ -5,16 +5,60 @@ import { OltEquipoComponent } from '../../shared/olt-equipo.component';
 import { FormsModule } from '@angular/forms';
 import { OltService } from '../../../../services/olt.service';
 import { ToastService } from '../../../../services/toast.service';
+import { NpSelectComponent, PresentacionSelect } from '../../../../common/np-select/np-select.component';
+import { OpcionSimple, PRESENTACION_SIMPLE } from '../../../../common/np-select/presentaciones';
+
+/** Qué pide cada marca además de la conexión (lo mismo que dice la pestaña Marca). */
+const PIDE_LA_MARCA: Record<string, string> = {
+  zte: 'Pide tipo de ONU y perfil tcont',
+  vsol: 'Pide el perfil de ONU',
+};
+
+const CODIGO_DE_MARCA: Record<string, string> = { huawei: 'HW', zte: 'ZTE', cdata: 'CD', vsol: 'VS' };
 
 @Component({
   selector: 'app-olt-list',
   standalone: true,
-  imports: [CommonModule, FormsModule, OltNavComponent, OltEquipoComponent],
+  imports: [CommonModule, FormsModule, NpSelectComponent, OltNavComponent, OltEquipoComponent],
   templateUrl: './olt-list.component.html',
   styleUrls: ['../../shared/olt.scss', '../../shared/olt-movil.scss'],
   host: { class: 'np-console' },
 })
 export class OltListComponent implements OnInit {
+
+  readonly presSimple = PRESENTACION_SIMPLE;
+
+  /**
+   * El backend manda "Huawei (MA5600T / MA5608T / MA5800)": arriba la marca,
+   * abajo los modelos y qué datos extra pide. En el modelo queda el valor en texto.
+   */
+  readonly presMarcas: PresentacionSelect<{ valor: string; nombre: string }> = {
+    valor: m => m.valor,
+    etiqueta: m => (m.nombre ?? '').replace(/\s*\(.*\)\s*$/, '') || m.valor,
+    prefijo: m => CODIGO_DE_MARCA[m.valor] ?? m.valor?.slice(0, 3).toUpperCase(),
+    detalle: m => [(m.nombre ?? '').match(/\((.*)\)/)?.[1], PIDE_LA_MARCA[m.valor] ?? 'Sin datos adicionales'].filter(Boolean).join(' · '),
+    buscarEn: m => `${m.nombre} ${m.valor}`,
+  };
+
+  readonly opcionesAcceso: OpcionSimple[] = [
+    { valor: 'direct', etiqueta: 'Directo a la OLT', detalle: 'IP pública o alcanzable por un túnel VPN' },
+    { valor: 'jump', etiqueta: 'Por jump host', detalle: 'Sesión SSH en un bastión: pide SSH abierto y guarda su contraseña' },
+  ];
+
+  readonly opcionesSnmp: OpcionSimple[] = [
+    { valor: '2c', etiqueta: '2c', detalle: 'La más usada' },
+    { valor: '1', etiqueta: '1', detalle: 'Sólo para equipos que no aceptan 2c' },
+  ];
+
+  /** Túneles: nombre, redes que ya lleva y si el router está saludando. En el modelo queda el id. */
+  readonly presTuneles: PresentacionSelect = {
+    valor: t => t?.id,
+    etiqueta: t => t?.nombre ?? '',
+    detalle: t => (t?.redes_remotas ?? []).join(', ') || null,
+    insignia: t => (t?.conectado === true ? { texto: 'Conectado', tono: 'ok' }
+      : t?.conectado === false ? { texto: 'Sin saludo', tono: 'neutral' } : null),
+    buscarEn: t => [t?.nombre, ...(t?.redes_remotas ?? [])].filter(Boolean).join(' '),
+  };
 
   olts: any[]   = [];
   loading        = false;

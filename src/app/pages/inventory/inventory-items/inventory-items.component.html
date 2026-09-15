@@ -22,10 +22,10 @@
       <input type="search" [(ngModel)]="searchQuery" (keyup.enter)="applyFilters()" placeholder="Nombre, SKU o código… (Enter)" aria-label="Buscar ítem" />
     </label>
     <label class="np-pagesize">Categoría
-      <select [(ngModel)]="selectedCategoryId" (change)="applyFilters()"><option value="">Todas</option><option *ngFor="let cat of categories" [value]="cat.id">{{ cat.name }}</option></select>
+      <np-select [(ngModel)]="selectedCategoryId" (cambio)="applyFilters()" [opciones]="categories" [presentacion]="presCategoriaFiltro" [permitirVacio]="true" textoVacio="Todas" [valorVacio]="''" tamano="sm" ariaLabel="Categoría" style="min-width: 160px"></np-select>
     </label>
     <label class="np-pagesize">Ubicación
-      <select [(ngModel)]="selectedLocation" (change)="applyFilters()"><option value="">Todas</option><option *ngFor="let loc of locations" [value]="loc">{{ loc }}</option></select>
+      <np-select [(ngModel)]="selectedLocation" (cambio)="applyFilters()" [opciones]="locations" [presentacion]="presUbicaciones" [permitirVacio]="true" textoVacio="Todas" [valorVacio]="''" tamano="sm" ariaLabel="Ubicación" style="min-width: 160px"></np-select>
     </label>
     <button type="button" class="np-chip" [attr.aria-pressed]="showLowStockOnly" (click)="showLowStockOnly = !showLowStockOnly; applyFilters()">Sólo stock bajo</button>
   </div>
@@ -84,7 +84,7 @@
         <label class="np-field"><span>SKU</span><input type="text" class="np-input np-mono" [(ngModel)]="itemForm.sku" /></label>
         <label class="np-field"><span>Código interno</span><input type="text" class="np-input np-mono" [(ngModel)]="itemForm.code" /></label>
         <label class="np-field np-field-full"><span>Descripción</span><textarea class="np-input np-textarea" [(ngModel)]="itemForm.description" rows="2"></textarea></label>
-        <label class="np-field"><span>Categoría</span><select class="np-input" [(ngModel)]="itemForm.category_id"><option [ngValue]="undefined">Sin categoría</option><option *ngFor="let cat of categories" [value]="cat.id">{{ cat.name }}</option></select></label>
+        <label class="np-field"><span>Categoría</span><np-select [(ngModel)]="itemForm.category_id" [opciones]="categories" [presentacion]="presCategoria" [permitirVacio]="true" textoVacio="Sin categoría" [valorVacio]="undefined" ariaLabel="Categoría"></np-select></label>
         <label class="np-field" *ngIf="!isEditing"><span>Stock inicial</span><input type="number" class="np-input np-mono" [(ngModel)]="itemForm.quantity" min="0" /></label>
         <label class="np-field"><span>Unidad</span><input type="text" class="np-input" [(ngModel)]="itemForm.unit" placeholder="unidad, kg, m" /></label>
         <label class="np-field"><span>Stock mínimo</span><input type="number" class="np-input np-mono" [(ngModel)]="itemForm.stock_min" min="0" /></label>
@@ -110,10 +110,7 @@
         <div class="np-panel" *ngIf="!selectedItemForMovement">
           <span class="np-fine">Escaneá la referencia (REF / SKU) o elegilo a mano.</span>
           <app-barcode-scanner mode="ref" (scanned)="onRefScanned($event)"></app-barcode-scanner>
-          <select class="np-input" [(ngModel)]="movementForm.inventory_id" (change)="onMovementItemChange()">
-            <option [value]="0">Seleccionar un ítem…</option>
-            <option *ngFor="let item of items" [value]="item.id">{{ item.name }}{{ item.sku ? ' · ' + item.sku : '' }} (stock {{ item.quantity || 0 }})</option>
-          </select>
+          <np-select [(ngModel)]="movementForm.inventory_id" (cambio)="onMovementItemChange()" [opciones]="items" [presentacion]="presItems" [valorVacio]="0" placeholder="Seleccionar un ítem…" ariaLabel="Ítem" textoBuscar="Nombre, SKU o ubicación…" textoSinOpciones="No hay ítems con estos filtros."></np-select>
           <p class="np-notice np-notice--danger" *ngIf="barcodeError">{{ barcodeError }}</p>
         </div>
       </section>
@@ -131,7 +128,7 @@
       <section>
         <p class="np-sect">3 · Detalle</p>
         <div class="np-form">
-          <label class="np-field"><span>Tipo <em>*</em></span><select class="np-input" [(ngModel)]="movementForm.type"><option value="entrada">Entrada</option><option value="salida">Salida</option><option value="ajuste">Ajuste</option></select></label>
+          <label class="np-field"><span>Tipo <em>*</em></span><np-select [(ngModel)]="movementForm.type" [opciones]="tiposDeMovimiento" [presentacion]="presTipoMovimiento" ariaLabel="Tipo de movimiento"></np-select></label>
           <label class="np-field"><span>Cantidad <em>*</em></span><input type="number" class="np-input np-mono" [(ngModel)]="movementForm.quantity" min="1" /><small class="np-fine" *ngIf="movementForm.type === 'salida' && selectedItemForMovement">Disponible: {{ selectedItemForMovement.quantity || 0 }} {{ selectedItemForMovement.unit || '' }}</small></label>
           <label class="np-field"><span>Precio unitario</span><input type="number" class="np-input np-mono" [(ngModel)]="movementForm.unit_price" min="0" /></label>
           <label class="np-field"><span>N° de lote</span><input type="text" class="np-input np-mono" [(ngModel)]="movementForm.batch_number" /></label>

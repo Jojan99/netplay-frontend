@@ -8,12 +8,35 @@ import { AlertasService } from '../../services/alertas.service';
 import { UserService } from '../../services/user.service';
 import { ToastService } from '../../services/toast.service';
 import { SelectorDeClienteComponent } from './selector-de-cliente.component';
+import { NpSelectComponent, PresentacionSelect } from '../../common/np-select/np-select.component';
+import { PRESENTACION_PERSONAS, conValor } from '../../common/np-select/presentaciones';
+
+/** Tipos de servicio: el catálogo sólo trae id y nombre. Guarda el id numérico, como el [ngValue] anterior. */
+const PRESENTACION_TIPOS: PresentacionSelect = {
+  valor: t => t?.id,
+  etiqueta: t => t?.name ?? '',
+};
+
+/**
+ * Prioridades: sólo id y nombre, así que el tono sale del nombre, con el mismo
+ * criterio que las píldoras de la lista de tickets.
+ */
+const PRESENTACION_PRIORIDADES: PresentacionSelect = {
+  valor: p => p?.id,
+  etiqueta: p => p?.name ?? '',
+  insignia: p => {
+    const n = String(p?.name ?? '').toLowerCase();
+    if (n.includes('alta') || n.includes('urgente')) return { texto: '●', tono: 'warn' };
+    if (n.includes('media')) return { texto: '●', tono: 'info' };
+    return { texto: '●', tono: 'neutral' };
+  },
+};
 
 /** El contenido de una ventana rápida según su tipo. */
 @Component({
   selector: 'app-ventana-rapida',
   standalone: true,
-  imports: [CommonModule, FormsModule, SelectorDeClienteComponent],
+  imports: [CommonModule, FormsModule, SelectorDeClienteComponent, NpSelectComponent],
   templateUrl: './ventana-rapida.component.html',
   styleUrls: ['./atajos.scss', './ventana-rapida.component.scss'],
 })
@@ -38,6 +61,9 @@ export class VentanaRapidaComponent implements OnInit, OnChanges {
   tipos: any[] = [];
   prioridades: any[] = [];
   tecnicos: any[] = [];
+  readonly presTipos = PRESENTACION_TIPOS;
+  readonly presPrioridades = PRESENTACION_PRIORIDADES;
+  readonly presTecnicos = conValor(PRESENTACION_PERSONAS, t => t.user_id);
   ticket = { tipo: 0, prioridad: 0, tecnico: 0, fecha: '', observacion: '', avisar: true };
   creando = false;
 

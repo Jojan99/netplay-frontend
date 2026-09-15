@@ -22,9 +22,9 @@
     </label>
     <label class="np-field np-field--inline"><span>Desde</span><input type="date" class="np-input np-input--sm" [(ngModel)]="filterFrom" (ngModelChange)="onFilterChange()" /></label>
     <label class="np-field np-field--inline"><span>Hasta</span><input type="date" class="np-input np-input--sm" [(ngModel)]="filterTo" (ngModelChange)="onFilterChange()" /></label>
-    <label class="np-pagesize">Categoría<select [(ngModel)]="filterCategory" (ngModelChange)="onFilterChange()"><option value="">Todas</option><option *ngFor="let cat of categories" [value]="cat">{{ cat }}</option></select></label>
+    <label class="np-pagesize">Categoría<np-select [(ngModel)]="filterCategory" (ngModelChange)="onFilterChange()" [opciones]="categories" [presentacion]="presCategorias" [permitirVacio]="true" textoVacio="Todas" [valorVacio]="''" placeholder="Todas" tamano="sm" style="min-width: 150px" ariaLabel="Categoría"></np-select></label>
     <span class="np-spacer"></span>
-    <label class="np-pagesize">Mostrar<select [(ngModel)]="perPage" (ngModelChange)="changePerPage()"><option *ngFor="let n of perPageOptions" [ngValue]="n">{{ n }}</option></select>por página</label>
+    <label class="np-pagesize">Mostrar<np-select [(ngModel)]="perPage" (ngModelChange)="changePerPage()" [opciones]="perPageOptions" [presentacion]="presPorPagina" tamano="sm" style="min-width: 140px" ariaLabel="Registros por página"></np-select></label>
   </div>
 
   <div class="np-workspace">
@@ -69,9 +69,9 @@
     <div class="np-modal-body">
       <div class="np-form">
         <label class="np-field np-field-full"><span>Concepto <em>*</em></span><input type="text" class="np-input" [(ngModel)]="form.concept" placeholder="Descripción del gasto" /></label>
-        <label class="np-field"><span>Categoría</span><select class="np-input" [(ngModel)]="form.category"><option *ngFor="let cat of categories" [value]="cat">{{ cat }}</option></select></label>
+        <label class="np-field"><span>Categoría</span><np-select [(ngModel)]="form.category" [opciones]="categories" [presentacion]="presCategorias" textoBuscar="Buscar categoría…" ariaLabel="Categoría"></np-select></label>
         <label class="np-field"><span>Valor <em>*</em></span><input type="number" class="np-input np-mono" [(ngModel)]="form.value" min="1" /></label>
-        <label class="np-field np-field-full" *ngIf="activePaymentMethods.length > 0"><span>Método de pago</span><select class="np-input" [(ngModel)]="form.payment_method_id"><option [ngValue]="null">Sin especificar</option><option *ngFor="let pm of activePaymentMethods" [ngValue]="pm.id">{{ pm.name }}</option></select></label>
+        <label class="np-field np-field-full" *ngIf="activePaymentMethods.length > 0"><span>Método de pago</span><np-select [(ngModel)]="form.payment_method_id" [opciones]="activePaymentMethods" [presentacion]="presMetodos" [permitirVacio]="true" textoVacio="Sin especificar" placeholder="Sin especificar" ariaLabel="Método de pago"></np-select></label>
       </div>
       <div class="np-btnrow np-btnrow--end"><button type="button" class="np-btn np-btn--ghost" (click)="modal = false">Cancelar</button><button type="button" class="np-btn np-btn--primary" (click)="saveForm()" [disabled]="!form.concept.trim() || form.value <= 0">{{ modalMode === 'create' ? 'Guardar' : 'Actualizar' }}</button></div>
     </div>

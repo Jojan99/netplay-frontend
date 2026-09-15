@@ -5,11 +5,13 @@ import { Subject } from 'rxjs';
 import { debounceTime, distinctUntilChanged, takeUntil } from 'rxjs/operators';
 import { FinanceService } from '../../services/finance.service';
 import { ToastService } from '../../services/toast.service';
+import { NpSelectComponent } from '../../common/np-select/np-select.component';
+import { PRESENTACION_POR_PAGINA } from '../../common/np-select/presentaciones';
 
 @Component({
   selector: 'app-send-logs',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, NpSelectComponent],
   templateUrl: './send-logs.component.html',
   styleUrl: './send-logs.component.scss',
   host: { class: 'np-console' },
@@ -25,6 +27,7 @@ export class SendLogsComponent implements OnInit, OnDestroy {
   page = 1;
   perPage = 25;
   perPageOptions = [10, 25, 50, 100];
+  readonly presPorPagina = PRESENTACION_POR_PAGINA;
 
   // Filtros
   filters = {

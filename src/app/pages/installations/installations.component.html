@@ -25,9 +25,8 @@
       <button type="button" class="np-chip" *ngFor="let opt of STATUS_OPTIONS" [attr.aria-pressed]="statusFilter === opt.value" (click)="statusFilter = opt.value; filter()">{{ opt.label }}</button>
     </div>
     <label class="np-pagesize">Pago
-      <select [(ngModel)]="paymentStatusFilter" (change)="filter()" aria-label="Estado de pago">
-        <option *ngFor="let opt of PAYMENT_STATUS_OPTIONS" [value]="opt.value">{{ opt.label }}</option>
-      </select>
+      <np-select [(ngModel)]="paymentStatusFilter" (cambio)="filter()" [opciones]="opcionesEstadoPago" [presentacion]="presSimple"
+                 [permitirVacio]="true" textoVacio="Todos" [valorVacio]="''" tamano="sm" style="width: 170px" ariaLabel="Estado de pago"></np-select>
     </label>
     <label class="np-field np-field--inline"><span>Desde</span><input type="date" class="np-input np-input--sm" [(ngModel)]="dateFrom" (change)="filter()" /></label>
     <label class="np-field np-field--inline"><span>Hasta</span><input type="date" class="np-input np-input--sm" [(ngModel)]="dateTo" (change)="filter()" /></label>
@@ -179,17 +178,13 @@
       <dl class="np-dl"><dt>Costo</dt><dd class="np-money np-money--lg">{{ formatPrice(selected.installation_cost) }}</dd></dl>
       <div class="np-form">
         <label class="np-field"><span>Estado del pago</span>
-          <select class="np-input" [(ngModel)]="paymentForm.payment_status">
-            <option value="pending">Pendiente</option><option value="paid">Pagado</option><option value="verified">Verificado</option><option value="rejected">Rechazado</option>
-          </select>
+          <np-select [(ngModel)]="paymentForm.payment_status" [opciones]="opcionesEstadoPago" [presentacion]="presSimple" ariaLabel="Estado del pago"></np-select>
         </label>
         <label class="np-field"><span>Monto</span><input type="number" class="np-input np-mono" [(ngModel)]="paymentForm.payment_amount" placeholder="0" /></label>
         <label class="np-field"><span>Referencia</span><input type="text" class="np-input np-mono" [(ngModel)]="paymentForm.payment_reference" placeholder="Número de referencia" /></label>
         <label class="np-field"><span>Método de pago</span>
-          <select class="np-input" [(ngModel)]="paymentForm.payment_method_id">
-            <option value="">Seleccionar…</option>
-            <option *ngFor="let pm of paymentMethods" [value]="pm.id">{{ pm.name }}</option>
-          </select>
+          <np-select [(ngModel)]="paymentForm.payment_method_id" [opciones]="paymentMethods" [presentacion]="presMetodosPago"
+                     [permitirVacio]="true" textoVacio="Seleccionar…" [valorVacio]="''" ariaLabel="Método de pago"></np-select>
         </label>
       </div>
       <div class="np-btnrow np-btnrow--end">

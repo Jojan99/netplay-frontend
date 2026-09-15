@@ -55,7 +55,7 @@
       <p *ngIf="errorMsg" class="np-notice np-notice--danger">{{ errorMsg }}</p>
       <div class="np-form">
         <label class="np-field np-field-full"><span>Nombre del plan <em>*</em></span><input class="np-input" [(ngModel)]="form.plan_name" placeholder="Fibra 300 Mb" /></label>
-        <label class="np-field"><span>Tecnología</span><select class="np-input" [(ngModel)]="form.type"><option *ngFor="let t of TYPES" [value]="t.value">{{ t.label }}</option></select></label>
+        <label class="np-field"><span>Tecnología</span><np-select [(ngModel)]="form.type" [opciones]="TYPES" [presentacion]="presTipos" ariaLabel="Tecnología"></np-select></label>
         <label class="np-field"><span>Mensualidad (COP) <em>*</em></span><input class="np-input np-mono" [(ngModel)]="form.monthly_price" type="number" min="0" /></label>
         <label class="np-field"><span>Bajada (Mbps) <em>*</em></span><input class="np-input np-mono" [(ngModel)]="form.download_speed" type="number" min="0" /></label>
         <label class="np-field"><span>Subida (Mbps) <em>*</em></span><input class="np-input np-mono" [(ngModel)]="form.upload_speed" type="number" min="0" /></label>

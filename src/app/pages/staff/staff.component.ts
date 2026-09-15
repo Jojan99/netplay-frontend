@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { CompanyService } from '../../services/company.service';
+import { NpSelectComponent, PresentacionSelect } from '../../common/np-select/np-select.component';
 
 interface StaffUser {
   id: number;
@@ -57,7 +58,7 @@ const MODULE_LABELS: Record<string, { label: string; group: string }> = {
 @Component({
   selector: 'app-staff',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, NpSelectComponent],
   templateUrl: './staff.component.html',
   styleUrl: './staff.component.scss',
   host: { class: 'np-console' },
@@ -81,6 +82,16 @@ export class StaffComponent implements OnInit {
 
   form = {
     names: '', lastname: '', email: '', username: '', password: '', profile_id: 0,
+  };
+
+  /** Roles al crear un usuario: cuántos del equipo ya lo tienen (de la lista cargada). Guarda el id numérico. */
+  readonly presPerfiles: PresentacionSelect<Profile> = {
+    valor: p => p.id,
+    etiqueta: p => p.name ?? '',
+    insignia: p => {
+      const n = this.staff.filter(s => s.profile_name === p.name).length;
+      return n ? { texto: `${n} ${n === 1 ? 'usuario' : 'usuarios'}`, tono: 'neutral' } : null;
+    },
   };
 
   get activeModulesCount(): number { return this.moduleItems.filter(m => m.active).length; }

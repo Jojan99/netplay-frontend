@@ -5,8 +5,11 @@ import { DialogService } from '../../services/dialog.service';
 import { ActivatedRoute } from '@angular/router';
 import { OntEquipoComponent } from '../../components/ont-equipo/ont-equipo.component';
 import { FormsModule } from '@angular/forms';
-import { NpSelectComponent } from '../../common/np-select/np-select.component';
-import { OpcionesDeIps, PRESENTACION_IPS, PRESENTACION_REDES } from '../../common/np-select/presentaciones';
+import { NpSelectComponent, PresentacionSelect } from '../../common/np-select/np-select.component';
+import {
+  OpcionesDeIps, PRESENTACION_IPS, PRESENTACION_REDES, PRESENTACION_PLANES, PRESENTACION_ROUTERS,
+  PRESENTACION_SEGMENTOS, PRESENTACION_PERSONAS, PRESENTACION_POR_PAGINA, conValor,
+} from '../../common/np-select/presentaciones';
 import { LayoutComponent } from '../../components/layout/layout.component';
 import { UserService } from '../../services/user.service';
 import { UserInterface } from '../../models/user-interface';
@@ -43,6 +46,82 @@ export class UserComponent implements OnInit {
   /** Selector de IP: todas las libres y, al buscar, las ocupadas con quién las tiene. */
   readonly ipsPresentacion = PRESENTACION_IPS;
   readonly opcionesIp = new OpcionesDeIps();
+
+  readonly porPagina = [12, 25, 50];
+  readonly presPorPagina = PRESENTACION_POR_PAGINA;
+  /** Planes con velocidad, tipo y precio. El select guardaba el id en texto ([value]): se sigue guardando así. */
+  readonly presPlanes = conValor(PRESENTACION_PLANES, p => String(p.id));
+  /** Routers con IP y puerto. Guarda el id numérico, como hacía [ngValue]. */
+  readonly presRouters = conValor(PRESENTACION_ROUTERS, r => r.id);
+
+  /** Grupos de corte: el backend manda "Grupo 2 – Día 5 a las 08:00"; arriba el grupo, abajo cuándo se factura. */
+  readonly presCortes: PresentacionSelect = {
+    valor: d => String(d?.id),
+    etiqueta: d => String(d?.names ?? '').split(/\s[–-]\s/)[0],
+    detalle: d => String(d?.names ?? '').split(/\s[–-]\s/).slice(1).join(' – ') || null,
+    buscarEn: d => String(d?.names ?? ''),
+  };
+
+  /** Segmento de la VLAN: red, máscara y gateway, más la VLAN y cuántos clientes tiene. */
+  readonly presSegmentos: PresentacionSelect = {
+    ...PRESENTACION_SEGMENTOS,
+    detalle: s => [s?.gateway ? `Puerta de enlace ${s.gateway}` : null, s?.vlan_id ? `VLAN ${s.vlan_id}` : null, s?.names]
+      .filter(Boolean).join(' · ') || null,
+    insignia: s => {
+      if (s?.clientes == null) return null;
+      const n = Number(s.clientes);
+      return n ? { texto: `${n} ${n === 1 ? 'cliente' : 'clientes'}`, tono: 'ok' } : { texto: 'Sin clientes aún', tono: 'neutral' };
+    },
+  };
+
+  /** Perfiles PPP del router: velocidad (rate-limit), de qué rango reparte y cuántas credenciales lo usan. */
+  readonly presPerfiles: PresentacionSelect = {
+    valor: p => p?.nombre,
+    etiqueta: p => p?.nombre ?? '',
+    detalle: p => [p?.velocidad ? `Velocidad ${p.velocidad}` : null, p?.pool ? `Reparte de ${p.pool}` : null].filter(Boolean).join(' · ') || null,
+    insignia: (p, todos) => {
+      if (p?.del_sistema) return { texto: 'Del sistema', tono: 'neutral' };
+      if (p?.en_uso == null) return null;
+      const n = Number(p.en_uso);
+      const mayor = Math.max(1, ...todos.map(x => Number(x?.en_uso ?? 0)));
+      return n ? { texto: `${n} en uso`, tono: 'ok', proporcion: n / mayor } : { texto: 'Sin usar', tono: 'neutral' };
+    },
+    atenuada: p => !!p?.del_sistema,
+    buscarEn: p => [p?.nombre, p?.velocidad, p?.pool].filter(Boolean).join(' '),
+  };
+
+  readonly presTiposServicio: PresentacionSelect = { valor: s => String(s?.id), etiqueta: s => s?.name ?? '' };
+
+  /** Prioridad con el mismo tono que la píldora de la tabla de tickets. */
+  readonly presPrioridades: PresentacionSelect = {
+    valor: p => String(p?.id),
+    etiqueta: p => p?.name ?? '',
+    insignia: p => {
+      switch (String(p?.name ?? '').toUpperCase()) {
+        case 'ALTA':  return { texto: 'Urgente', tono: 'warn', proporcion: 1 };
+        case 'MEDIA': return { texto: 'Normal', tono: 'info', proporcion: 0.6 };
+        case 'BAJA':  return { texto: 'Puede esperar', tono: 'neutral', proporcion: 0.3 };
+        default:      return null;
+      }
+    },
+  };
+
+  /** Técnicos con iniciales y teléfono. Guarda el id en texto, como el [value] anterior. */
+  readonly presTecnicos: PresentacionSelect = {
+    ...PRESENTACION_PERSONAS,
+    valor: t => String(t?.id_user),
+    detalle: t => t?.phone || t?.email || null,
+  };
+
+  /**
+   * Los <select> con [value] guardaban el id en texto, pero el modelo arranca
+   * con el número que manda el backend (o 0). np-select compara estricto:
+   * se le pasa en texto para que se vea elegido, y al cambiar recibe texto
+   * como antes.
+   */
+  comoTexto(v: unknown): string | null {
+    return v == null ? null : String(v);
+  }
 
 
   private dialog = inject(DialogService);
@@ -237,7 +316,8 @@ export class UserComponent implements OnInit {
     this.userSvc.getDataCorteAll().subscribe(r =>
       this.DataCortes = r.data.map((e: any) => ({ id: e.id, names: e.data_cortes })));
     this.userSvc.getInternetPlanAll().subscribe(r =>
-      this.PlanInternet = r.data.map((e: any) => ({ id: e.id, names: e.plan_name })));
+      // Se conserva el plan entero: el selector muestra velocidad, tipo y precio.
+      this.PlanInternet = r.data.map((e: any) => ({ ...e, id: e.id, names: e.plan_name })));
     this.userSvc.getServiceTicket().subscribe(r => this.serviceTypes = r.data ?? []);
     this.userSvc.getPriorityTicket().subscribe(r => this.priorities = r.data ?? []);
     this.userSvc.getTechnicaAll().subscribe(r => {
@@ -245,6 +325,9 @@ export class UserComponent implements OnInit {
         id_user:  e.user_id,
         names:    e.names,
         lastname: e.lastname,
+        // Para distinguir técnicos en el selector.
+        phone:    e.phone,
+        email:    e.email,
       }));
     });
   }
@@ -320,8 +403,9 @@ export class UserComponent implements OnInit {
     }, 400);
   }
 
-  onEntriesPerPageChange(event: Event) {
-    this.entriesPerPage = Number((event.target as HTMLSelectElement).value);
+  /** Recibe la cantidad elegida en el np-select (antes leía el evento del <select>). */
+  onEntriesPerPageChange(cantidad: number | string) {
+    this.entriesPerPage = Number(cantidad);
     this.currentPage = 1;
   }
 

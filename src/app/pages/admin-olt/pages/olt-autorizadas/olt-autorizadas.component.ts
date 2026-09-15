@@ -8,18 +8,38 @@ import { ToastService } from '../../../../services/toast.service';
 import { GestionRemotaService } from '../../../../services/gestion-remota.service';
 import { TareasEnSegundoPlanoService } from '../../../../services/tareas-en-segundo-plano.service';
 import { OltElegida } from '../../shared/olt-elegida';
+import { NpSelectComponent, PresentacionSelect } from '../../../../common/np-select/np-select.component';
+import { PRESENTACION_OLTS, PRESENTACION_POR_PAGINA, conValor } from '../../../../common/np-select/presentaciones';
 import { Subject } from 'rxjs';
 import { debounceTime, distinctUntilChanged, switchMap } from 'rxjs/operators';
 
 @Component({
   selector: 'app-olt-autorizadas',
   standalone: true,
-  imports: [CommonModule, FormsModule, OltNavComponent],
+  imports: [CommonModule, FormsModule, NpSelectComponent, OltNavComponent],
   templateUrl: './olt-autorizadas.component.html',
   styleUrls: ['../../shared/olt.scss', '../../shared/olt-movil.scss'],
   host: { class: 'np-console' },
 })
 export class OltAutorizadasComponent implements OnInit {
+
+  /** Marca, modelo, IP y acceso de cada OLT; en el modelo queda el id, como antes. */
+  readonly presOlts = conValor(PRESENTACION_OLTS, o => o.id);
+  readonly presPorPagina = PRESENTACION_POR_PAGINA;
+
+  /** Puertos PON: cuántas ONT tiene cada uno (con barra frente al más cargado) y cuántas están en línea. */
+  readonly presPuertos: PresentacionSelect<string> = {
+    valor: p => p,
+    etiqueta: p => p,
+    prefijo: () => 'PON',
+    detalle: p => `${this.puertos().online[p] ?? 0} en línea`,
+    insignia: p => {
+      const { total } = this.puertos();
+      const n = total[p] ?? 0;
+      return { texto: `${n} ONT`, tono: 'neutral', proporcion: n / Math.max(1, ...Object.values(total)) };
+    },
+    buscarEn: p => p,
+  };
 
   olts: any[]           = [];
   selectedOltId: number | null = null;
@@ -214,12 +234,27 @@ export class OltAutorizadasComponent implements OnInit {
   }
 
   // ── Unique ports for filter dropdown ─────────────────────────────────────
-  get uniquePorts(): string[] {
-    const set = new Set<string>();
-    for (const o of this.onts) {
-      if (o.fsp) set.add(o.fsp);
+  get uniquePorts(): string[] { return this.puertos().lista; }
+
+  /**
+   * Puertos y conteos, armados una vez por lista de ONT: con un arreglo nuevo
+   * en cada revisión el selector recalculaba sus opciones sin parar.
+   */
+  private puertosDe: { onts: any[] | null; lista: string[]; total: Record<string, number>; online: Record<string, number> } =
+    { onts: null, lista: [], total: {}, online: {} };
+
+  private puertos() {
+    if (this.puertosDe.onts !== this.onts) {
+      const total: Record<string, number> = {};
+      const online: Record<string, number> = {};
+      for (const o of this.onts) {
+        if (!o.fsp) continue;
+        total[o.fsp] = (total[o.fsp] ?? 0) + 1;
+        if (o.status === 'online') online[o.fsp] = (online[o.fsp] ?? 0) + 1;
+      }
+      this.puertosDe = { onts: this.onts, lista: Object.keys(total).sort(), total, online };
     }
-    return Array.from(set).sort();
+    return this.puertosDe;
   }
 
   get filteredOnts(): any[] {

@@ -67,7 +67,7 @@
     <div class="np-modal-body">
       <p class="np-notice np-notice--code" *ngIf="item">Stock actual <strong class="np-mono">{{ item.quantity || 0 }}</strong> {{ item.unit || '' }}</p>
       <div class="np-form">
-        <label class="np-field"><span>Tipo <em>*</em></span><select class="np-input" [(ngModel)]="movementForm.type"><option value="entrada">Entrada</option><option value="salida">Salida</option><option value="ajuste">Ajuste</option></select></label>
+        <label class="np-field"><span>Tipo <em>*</em></span><np-select [(ngModel)]="movementForm.type" [opciones]="tiposDeMovimiento" [presentacion]="presTipoMovimiento" ariaLabel="Tipo de movimiento"></np-select></label>
         <label class="np-field"><span>Cantidad <em>*</em></span><input type="number" class="np-input np-mono" [(ngModel)]="movementForm.quantity" min="1" /></label>
         <label class="np-field"><span>Precio unitario</span><input type="number" class="np-input np-mono" [(ngModel)]="movementForm.unit_price" min="0" /></label>
         <label class="np-field"><span>N° de lote</span><input type="text" class="np-input np-mono" [(ngModel)]="movementForm.batch_number" /></label>

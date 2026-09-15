@@ -5,6 +5,8 @@ import { FormsModule } from '@angular/forms';
 import { OltService } from '../../../../services/olt.service';
 import { ToastService } from '../../../../services/toast.service';
 import { OltElegida } from '../../shared/olt-elegida';
+import { NpSelectComponent } from '../../../../common/np-select/np-select.component';
+import { PRESENTACION_OLTS, conValor } from '../../../../common/np-select/presentaciones';
 
 interface CliEntry {
   type: 'cmd' | 'out' | 'err';
@@ -15,7 +17,7 @@ interface CliEntry {
 @Component({
   selector: 'app-olt-cli',
   standalone: true,
-  imports: [CommonModule, FormsModule, OltNavComponent],
+  imports: [CommonModule, FormsModule, NpSelectComponent, OltNavComponent],
   templateUrl: './olt-cli.component.html',
   styleUrls: ['../../shared/olt.scss', '../../shared/olt-movil.scss'],
   host: { class: 'np-console' },
@@ -23,6 +25,9 @@ interface CliEntry {
 export class OltCliComponent implements OnInit {
 
   @ViewChild('termOutput') termOutput!: ElementRef<HTMLElement>;
+
+  /** Marca, modelo, IP y acceso de cada OLT; en el modelo queda el id, como antes. */
+  readonly presOlts = conValor(PRESENTACION_OLTS, o => o.id);
 
   olts: any[]           = [];
   selectedOltId: number | null = null;

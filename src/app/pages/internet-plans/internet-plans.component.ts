@@ -2,11 +2,20 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { InternetPlanService } from '../../services/internet-plan.service';
+import { NpSelectComponent, PresentacionSelect } from '../../common/np-select/np-select.component';
+
+/** Qué red es cada tecnología, para no confundir cable con fibra. */
+const DETALLE_TIPO: Record<string, string> = {
+  fibra: 'FTTH / GPON',
+  wireless: 'Enlace por antena',
+  cable: 'Red HFC',
+  dsl: 'Por la línea telefónica',
+};
 
 @Component({
   selector: 'app-internet-plans',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, NpSelectComponent],
   templateUrl: './internet-plans.component.html',
   styleUrl: './internet-plans.component.scss',
   host: { class: 'np-console' },
@@ -36,6 +45,17 @@ export class InternetPlansComponent implements OnInit {
     { value: 'dsl',      label: 'DSL / ADSL' },
     { value: 'otro',     label: 'Otro' },
   ];
+
+  /** Tecnología con cuántos planes de la lista ya la usan. */
+  readonly presTipos: PresentacionSelect<{ value: string; label: string }> = {
+    valor: t => t.value,
+    etiqueta: t => t.label,
+    detalle: t => DETALLE_TIPO[t.value],
+    insignia: t => {
+      const n = this.plans.filter(p => p?.type === t.value).length;
+      return n ? { texto: `${n} ${n === 1 ? 'plan' : 'planes'}`, tono: 'neutral' } : null;
+    },
+  };
 
   constructor(private svc: InternetPlanService) {}
 

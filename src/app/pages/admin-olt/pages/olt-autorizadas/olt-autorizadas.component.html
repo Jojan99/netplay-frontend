@@ -11,7 +11,7 @@
       </div>
     </div>
     <div class="np-actions">
-      <label class="np-pagesize">OLT<select [(ngModel)]="selectedOltId" (ngModelChange)="onOltChange()" [disabled]="loadingOlts"><option [ngValue]="null">{{ loadingOlts ? 'Cargando…' : 'Seleccionar' }}</option><option *ngFor="let olt of olts" [ngValue]="olt.id">{{ olt.name }}</option></select></label>
+      <label class="np-pagesize">OLT<np-select [(ngModel)]="selectedOltId" (ngModelChange)="onOltChange()" [opciones]="olts" [presentacion]="presOlts" [cargando]="loadingOlts" [deshabilitado]="loadingOlts" placeholder="Seleccionar" ariaLabel="OLT" style="min-width: 220px"></np-select></label>
       <button type="button" class="np-btn np-btn--primary" (click)="loadOnts(true)" [disabled]="!selectedOltId || loadingOnts"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 12a8 8 0 1 1-2.3-5.7M20 4v5h-5"/></svg>Sincronizar desde OLT</button>
     </div>
   </header>
@@ -19,10 +19,10 @@
     <app-olt-nav></app-olt-nav>
     <ng-container *ngIf="selectedOltId">
       <label class="np-search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg><input type="search" [(ngModel)]="searchTerm" (ngModelChange)="resetPage()" placeholder="Serial o descripción…" /></label>
-      <label class="np-pagesize">Puerto<select [(ngModel)]="filterPort" (ngModelChange)="resetPage()"><option value="">Todos</option><option *ngFor="let p of uniquePorts" [value]="p">{{ p }}</option></select></label>
+      <label class="np-pagesize">Puerto<np-select [(ngModel)]="filterPort" (ngModelChange)="resetPage()" [opciones]="uniquePorts" [presentacion]="presPuertos" [permitirVacio]="true" textoVacio="Todos" [valorVacio]="''" tamano="sm" ariaLabel="Puerto PON" style="min-width: 170px"></np-select></label>
       <button type="button" class="np-chip" *ngIf="hayMedicionesDeSenal" [attr.aria-pressed]="soloConFalla" (click)="soloConFalla = !soloConFalla; resetPage()">Señal en falla<span class="np-c">{{ cuantasConFalla }}</span></button>
       <span class="np-spacer"></span>
-      <label class="np-pagesize">Mostrar<select [(ngModel)]="perPage" (ngModelChange)="changePerPage()"><option *ngFor="let n of perPageOptions" [ngValue]="n">{{ n }}</option></select></label>
+      <label class="np-pagesize">Mostrar<np-select [(ngModel)]="perPage" (ngModelChange)="changePerPage()" [opciones]="perPageOptions" [presentacion]="presPorPagina" tamano="sm" ariaLabel="Cantidad por página" style="width: 150px"></np-select></label>
     </ng-container>
   </div>
 

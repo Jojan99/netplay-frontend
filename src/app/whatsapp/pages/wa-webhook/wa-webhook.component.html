@@ -57,7 +57,7 @@
     <section class="np-card">
       <div class="np-card-h">
         <h2>Por línea</h2>
-        <label class="np-pagesize">Instancia<select [(ngModel)]="selectedInstance" (change)="onInstanceChange()"><option value="">Seleccionar…</option><option *ngFor="let inst of instances" [value]="inst.instanceId">{{ inst.name }}</option></select></label>
+        <label class="np-pagesize">Instancia<np-select [(ngModel)]="selectedInstance" (cambio)="onInstanceChange()" [opciones]="instances" [presentacion]="presLineas" placeholder="Seleccionar…" [valorVacio]="''" textoSinOpciones="No hay instancias." ariaLabel="Instancia" tamano="sm" style="width: 220px"></np-select></label>
       </div>
       <p class="np-fine" *ngIf="!selectedInstance">Elegí una línea para ver sus envíos al CRM y su límite de mensajes.</p>
     </section>

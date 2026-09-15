@@ -3,11 +3,13 @@ import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { PaymentProofService } from '../../services/payment-proof.service';
+import { NpSelectComponent } from '../../common/np-select/np-select.component';
+import { PRESENTACION_TEXTOS } from '../../common/np-select/presentaciones';
 
 @Component({
   selector: 'app-payment-proof-audit',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink],
+  imports: [CommonModule, FormsModule, RouterLink, NpSelectComponent],
   templateUrl: './payment-proof-audit.component.html',
   styleUrl: './payment-proof-audit.component.scss',
   host: { class: 'np-console' },
@@ -26,6 +28,7 @@ export class PaymentProofAuditComponent implements OnInit {
   selectedItem: any = null;
   searchFilters = { client: '', amount: '', reference: '', bank: '' };
   readonly banks = ['Bancolombia', 'Nequi', 'Daviplata', 'Davivienda', 'Banco de Bogotá', 'BBVA'];
+  readonly presBancos = PRESENTACION_TEXTOS;
   readonly filters = [
     { value: 'pending', label: 'Pendientes' }, { value: 'approved', label: 'Aprobados' },
     { value: 'suspicious', label: 'Sospechosos' }, { value: 'rejected', label: 'Rechazados' }, { value: 'reverted', label: 'Revertidos' }

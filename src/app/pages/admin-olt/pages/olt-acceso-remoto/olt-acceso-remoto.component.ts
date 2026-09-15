@@ -5,6 +5,7 @@ import { OltNavComponent } from '../../shared/olt-nav.component';
 import { GestionRemotaService } from '../../../../services/gestion-remota.service';
 import { ToastService } from '../../../../services/toast.service';
 import { TareasEnSegundoPlanoService } from '../../../../services/tareas-en-segundo-plano.service';
+import { NpSelectComponent, PresentacionSelect } from '../../../../common/np-select/np-select.component';
 
 /** Lo leído de los perfiles de línea de una OLT. */
 interface PerfilesDeOlt {
@@ -29,7 +30,7 @@ interface PerfilesDeOlt {
 @Component({
   selector: 'app-olt-acceso-remoto',
   standalone: true,
-  imports: [CommonModule, FormsModule, OltNavComponent],
+  imports: [CommonModule, FormsModule, NpSelectComponent, OltNavComponent],
   templateUrl: './olt-acceso-remoto.component.html',
   styleUrls: ['../../shared/olt.scss', './olt-acceso-remoto.component.scss', '../../shared/olt-movil.scss'],
   host: { class: 'np-console' },
@@ -165,7 +166,36 @@ export class OltAccesoRemotoComponent implements OnInit {
     });
   }
 
-  get interfaces(): string[] { return Object.keys(this.sug?.interfaces ?? {}); }
+  /** Se arma una vez por lectura: un arreglo nuevo en cada revisión hacía recalcular el selector sin parar. */
+  private interfacesDe: { mapa: any; lista: string[] } = { mapa: null, lista: [] };
+
+  get interfaces(): string[] {
+    const mapa = this.sug?.interfaces ?? null;
+    if (this.interfacesDe.mapa !== mapa) this.interfacesDe = { mapa, lista: Object.keys(mapa ?? {}) };
+    return this.interfacesDe.lista;
+  }
+
+  /** Interfaces del MikroTik: cuántas VLAN cuelgan de cada una, con barra, y cuál se propone. */
+  readonly presInterfaces: PresentacionSelect<string> = {
+    valor: i => i,
+    etiqueta: i => i,
+    detalle: i => (i === this.sug?.interfaz ? 'La propuesta: la que más VLAN lleva' : null),
+    insignia: (i, todas) => {
+      const n = Number(this.sug?.interfaces?.[i] ?? 0);
+      const mayor = Math.max(1, ...todas.map(x => Number(this.sug?.interfaces?.[x] ?? 0)));
+      return { texto: `${n} VLAN de clientes`, tono: n ? 'ok' : 'neutral', proporcion: n / mayor };
+    },
+  };
+
+  /** Puertos de subida de una OLT: sus VLAN y cuál coincide con el MikroTik. [value] guardaba texto. */
+  readonly presUplinks: PresentacionSelect = {
+    valor: p => String(p?.puerto),
+    etiqueta: p => String(p?.puerto ?? ''),
+    detalle: p => (p?.vlans?.length ? `VLAN ${p.vlans.join(', ')}` : 'Sin VLAN'),
+    insignia: p => ((this.sug?.olts ?? []).some((o: any) => o.sugerido === p?.puerto && o.puertos?.includes(p))
+      ? { texto: 'Sugerido', tono: 'ok' } : null),
+    buscarEn: p => [p?.puerto, ...(p?.vlans ?? [])].join(' '),
+  };
 
   /**
    * Una VLAN ocupada rompe el servicio de esos clientes: se avisa antes.

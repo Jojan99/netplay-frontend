@@ -11,11 +11,32 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
 import { CrmService } from '../../../services/crm.service';
+import { NpSelectComponent, PresentacionSelect } from '../../../common/np-select/np-select.component';
+import { PRESENTACION_PERSONAS, conValor } from '../../../common/np-select/presentaciones';
+
+/** Tipos de servicio del ticket: el catálogo sólo trae id y nombre. */
+const PRESENTACION_SERVICIOS: PresentacionSelect = {
+  etiqueta: s => s?.name ?? '',
+};
+
+/**
+ * Prioridades: también sólo id y nombre, así que el tono sale del nombre, con
+ * el mismo criterio que las píldoras de la lista de tickets.
+ */
+const PRESENTACION_PRIORIDADES: PresentacionSelect = {
+  etiqueta: p => p?.name ?? '',
+  insignia: p => {
+    const n = String(p?.name ?? '').toLowerCase();
+    if (n.includes('alta') || n.includes('urgente')) return { texto: '●', tono: 'warn' };
+    if (n.includes('media')) return { texto: '●', tono: 'info' };
+    return { texto: '●', tono: 'neutral' };
+  },
+};
 
 @Component({
   selector: 'app-crm-info-panel',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterModule],
+  imports: [CommonModule, FormsModule, RouterModule, NpSelectComponent],
   templateUrl: './crm-info-panel.component.html',
   styleUrl: './crm-info-panel.component.scss'
 })
@@ -191,6 +212,12 @@ export class CrmInfoPanelComponent implements OnChanges {
   ticketPriorities: any[] = [];
   ticketTechs:      any[] = [];
   ticketMetaLoaded  = false;
+
+  // Guardan el id numérico: openTicketForm ya elige el primero con número y
+  // con [value] el select nativo lo pasaba a texto recién al tocarlo.
+  readonly presServicios   = conValor(PRESENTACION_SERVICIOS, s => s.id);
+  readonly presPrioridades = conValor(PRESENTACION_PRIORIDADES, p => p.id);
+  readonly presTecnicos    = conValor(PRESENTACION_PERSONAS, t => t.id);
 
   // Ticket form
   showTicketForm   = false;

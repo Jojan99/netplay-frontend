@@ -6,11 +6,13 @@ import { InventoryService }          from '../../../services/inventory.service';
 import { ToastService }               from '../../../services/toast.service';
 import { InventoryItemInterface }    from '../../../models/inventory-item.interface';
 import { InventoryMovementInterface } from '../../../models/inventory-movement.interface';
+import { NpSelectComponent } from '../../../common/np-select/np-select.component';
+import { OpcionSimple, PRESENTACION_SIMPLE } from '../../../common/np-select/presentaciones';
 
 @Component({
   selector: 'app-item-detail',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink],
+  imports: [CommonModule, FormsModule, RouterLink, NpSelectComponent],
   templateUrl: './item-detail.component.html',
   styleUrl: './item-detail.component.scss',
   host: { class: 'np-console' },
@@ -30,6 +32,13 @@ export class ItemDetailComponent implements OnInit {
   movementLastPage = 1;
   movementTotal = 0;
   movementPerPage = 15;
+
+  readonly presTipoMovimiento = PRESENTACION_SIMPLE;
+  readonly tiposDeMovimiento: OpcionSimple[] = [
+    { valor: 'entrada', etiqueta: 'Entrada', prefijo: '+', detalle: 'Suma al stock' },
+    { valor: 'salida',  etiqueta: 'Salida',  prefijo: '−', detalle: 'Resta del stock' },
+    { valor: 'ajuste',  etiqueta: 'Ajuste',  prefijo: '=', detalle: 'Corrige el conteo' },
+  ];
 
   movementForm = {
     inventory_id: 0,

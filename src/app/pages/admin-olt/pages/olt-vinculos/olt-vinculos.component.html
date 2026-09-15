@@ -66,10 +66,10 @@
               </ng-container>
 
               <!-- Varios clientes con el mismo nombre: que elija una persona. -->
-              <select class="np-input np-input--sm vin-elegir" *ngIf="(p.candidatos?.length || 0) > 1"
-                      [(ngModel)]="p.cliente.user_id" [name]="'c' + p.ont.id">
-                <option *ngFor="let c of p.candidatos" [ngValue]="c.user_id">{{ c.nombre }} · CC {{ c.documento }}</option>
-              </select>
+              <np-select class="vin-elegir" *ngIf="(p.candidatos?.length || 0) > 1"
+                         [(ngModel)]="p.cliente.user_id" [name]="'c' + p.ont.id"
+                         [opciones]="p.candidatos" [presentacion]="presCandidatos" tamano="sm"
+                         placeholder="Elegí el cliente…" ariaLabel="Cliente propuesto"></np-select>
               <div class="np-fine" *ngIf="(p.candidatos?.length || 0) > 1">Mirá la dirección para decidir</div>
 
               <span class="np-pill np-pill--suspended" *ngIf="p.cliente.ya_tiene_ont">Ya tiene otra ONT</span>

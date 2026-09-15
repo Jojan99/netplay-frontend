@@ -13,7 +13,7 @@
     <label class="np-search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg><input name="client" type="search" [(ngModel)]="searchFilters.client" placeholder="Cliente o cédula…" /></label>
     <label class="np-field np-field--inline"><span>Monto</span><input name="amount" class="np-input np-input--sm np-mono" [(ngModel)]="searchFilters.amount" inputmode="numeric" placeholder="18900" /></label>
     <label class="np-field np-field--inline"><span>Referencia</span><input name="reference" class="np-input np-input--sm np-mono" [(ngModel)]="searchFilters.reference" /></label>
-    <label class="np-pagesize">Entidad<select name="bank" [(ngModel)]="searchFilters.bank"><option value="">Todas</option><option *ngFor="let bank of banks" [value]="bank">{{ bank }}</option></select></label>
+    <label class="np-pagesize">Entidad<np-select name="bank" [(ngModel)]="searchFilters.bank" [opciones]="banks" [presentacion]="presBancos" [permitirVacio]="true" textoVacio="Todas" [valorVacio]="''" placeholder="Todas" tamano="sm" style="min-width: 150px" ariaLabel="Entidad"></np-select></label>
     <button type="submit" class="np-btn np-btn--primary np-btn--sm">Buscar</button>
     <button type="button" class="np-link np-link--muted" (click)="clearSearch()">Limpiar</button>
   </form>

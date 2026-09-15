@@ -2,13 +2,15 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { WhatsappService } from '../../services/whatsapp.service';
+import { NpSelectComponent } from '../../../common/np-select/np-select.component';
+import { PRESENTACION_LINEAS_WA, conValor } from '../../../common/np-select/presentaciones';
 
 type ActiveTab = 'logs' | 'queue';
 
 @Component({
   selector: 'app-wa-logs',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, NpSelectComponent],
   templateUrl: './wa-logs.component.html',
   styleUrl: './wa-logs.component.scss',
   host: { class: 'np-console' },
@@ -18,6 +20,8 @@ export class WaLogsComponent implements OnInit {
   // Instancias
   instances: any[]      = [];
   selectedInstance      = '';
+  /** Número y estado de cada línea; en el modelo queda el instanceId en texto, como con [value]. */
+  readonly presLineas   = conValor(PRESENTACION_LINEAS_WA, i => String(i?.instanceId ?? ''));
 
   // Datos
   logs: any[]           = [];

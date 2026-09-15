@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { OltNavComponent } from '../../shared/olt-nav.component';
 import { OltService } from '../../../../services/olt.service';
 import { ToastService } from '../../../../services/toast.service';
+import { NpSelectComponent, PresentacionSelect } from '../../../../common/np-select/np-select.component';
 
 /**
  * Vincular en tanda las ONT con sus clientes.
@@ -16,7 +17,7 @@ import { ToastService } from '../../../../services/toast.service';
 @Component({
   selector: 'app-olt-vinculos',
   standalone: true,
-  imports: [CommonModule, FormsModule, OltNavComponent],
+  imports: [CommonModule, FormsModule, NpSelectComponent, OltNavComponent],
   templateUrl: './olt-vinculos.component.html',
   styleUrls: ['../../shared/olt.scss', './olt-vinculos.component.scss', '../../shared/olt-movil.scss'],
   host: { class: 'np-console' },
@@ -34,6 +35,17 @@ export class OltVinculosComponent implements OnInit {
   filtro: 'todas' | 'alta' | 'revisar' = 'todas';
   buscar = '';
   marcadas: Record<number, boolean> = {};
+
+  /**
+   * Clientes con el mismo nombre: la dirección es lo que los distingue (el
+   * aviso de abajo pide mirarla y antes no se veía). En el modelo queda el user_id.
+   */
+  readonly presCandidatos: PresentacionSelect = {
+    valor: c => c?.user_id,
+    etiqueta: c => c?.nombre ?? '',
+    detalle: c => [c?.documento ? `CC ${c.documento}` : null, c?.direccion].filter(Boolean).join(' · ') || null,
+    buscarEn: c => [c?.nombre, c?.documento, c?.direccion].filter(Boolean).join(' '),
+  };
 
   ngOnInit() { this.cargar(); }
 

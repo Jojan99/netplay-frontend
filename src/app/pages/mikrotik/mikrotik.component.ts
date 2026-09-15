@@ -3,8 +3,8 @@ import { ToastService } from '../../services/toast.service';
 import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { NpSelectComponent } from '../../common/np-select/np-select.component';
-import { OpcionesDeIps, PRESENTACION_IPS, PRESENTACION_REDES } from '../../common/np-select/presentaciones';
+import { NpSelectComponent, PresentacionSelect } from '../../common/np-select/np-select.component';
+import { OpcionesDeIps, PRESENTACION_IPS, PRESENTACION_REDES, PRESENTACION_ROUTERS, conValor } from '../../common/np-select/presentaciones';
 import { MikrotikService } from '../../services/mikrotik.service';
 import { Router } from '@angular/router';
 import { OntEquipoComponent } from '../../components/ont-equipo/ont-equipo.component';
@@ -42,6 +42,70 @@ export class MikrotikComponent implements OnInit {
   readonly redes = PRESENTACION_REDES;
   readonly ipsPresentacion = PRESENTACION_IPS;
   readonly opcionesIp = new OpcionesDeIps();
+
+  /** Routers con IP y puerto. El select guardaba el id en texto ([value]): se sigue guardando así. */
+  // El id queda como número: el título busca el router con r.id === selectedRouterId
+  // y con texto no lo encontraba (decía "Router" en vez del nombre).
+  readonly presRouters = conValor(PRESENTACION_ROUTERS, r => r.id);
+
+  /** Interfaces del router: tipo abreviado a la izquierda y si ya tienen un servidor PPPoE escuchando. */
+  readonly presInterfaces: PresentacionSelect = {
+    valor: i => i?.nombre,
+    etiqueta: i => i?.nombre ?? '',
+    prefijo: i => ({ ether: 'ETH', vlan: 'VLAN', bridge: 'BR' } as Record<string, string>)[i?.tipo] ?? (i?.tipo ? String(i.tipo).slice(0, 4).toUpperCase() : null),
+    detalle: i => ({ ether: 'Puerto físico', vlan: 'VLAN', bridge: 'Bridge' } as Record<string, string>)[i?.tipo] ?? i?.tipo ?? null,
+    insignia: i => {
+      // En el asistente, los servidores que leyó el asistente; en el modal de servidor, los del estado.
+      const servidores = (this.editando === 'servidor' ? this.pppoe?.servidores : this.opcionesPppoe?.servidores) ?? [];
+      return servidores.some((s: any) => s?.interfaz === i?.nombre) ? { texto: 'Con servidor PPPoE', tono: 'info' } : null;
+    },
+    buscarEn: i => [i?.nombre, i?.tipo].filter(Boolean).join(' '),
+  };
+
+  /** Salidas a internet: listas de interfaces (lo habitual, la WAN) e interfaces sueltas. */
+  readonly presSalidas: PresentacionSelect = {
+    valor: s => s?.nombre,
+    etiqueta: s => s?.nombre ?? '',
+    detalle: s => (s?.tipo === 'lista' ? 'Lista de interfaces' : s?.tipo === 'interfaz' ? 'Interfaz' : s?.tipo ?? null),
+    grupo: s => (s?.tipo === 'lista' ? 'Listas de interfaces' : 'Interfaces'),
+  };
+
+  /** Rangos de IP con sus direcciones y cuántos perfiles reparten de cada uno. */
+  readonly presPools: PresentacionSelect = {
+    valor: p => p?.nombre,
+    etiqueta: p => p?.nombre ?? '',
+    detalle: p => p?.rangos || null,
+    insignia: p => {
+      const n = (this.pppoe?.perfiles ?? []).filter((x: any) => x?.pool === p?.nombre).length;
+      return n ? { texto: `${n} ${n === 1 ? 'perfil' : 'perfiles'}`, tono: 'neutral' } : null;
+    },
+    buscarEn: p => [p?.nombre, p?.rangos].filter(Boolean).join(' '),
+  };
+
+  /** Perfiles PPP: velocidad (rate-limit), de qué rango reparten y cuántas credenciales los usan. */
+  readonly presPerfiles: PresentacionSelect = {
+    valor: p => p?.nombre,
+    etiqueta: p => p?.nombre ?? '',
+    detalle: p => [p?.velocidad ? `Velocidad ${p.velocidad}` : null, p?.pool ? `Reparte de ${p.pool}` : null].filter(Boolean).join(' · ') || null,
+    insignia: (p, todos) => {
+      if (p?.del_sistema) return { texto: 'Del sistema', tono: 'neutral' };
+      if (p?.en_uso == null) return null;
+      const n = Number(p.en_uso);
+      const mayor = Math.max(1, ...todos.map(x => Number(x?.en_uso ?? 0)));
+      return n ? { texto: `${n} en uso`, tono: 'ok', proporcion: n / mayor } : { texto: 'Sin usar', tono: 'neutral' };
+    },
+    atenuada: p => !!p?.del_sistema,
+    buscarEn: p => [p?.nombre, p?.velocidad, p?.pool].filter(Boolean).join(' '),
+  };
+
+  /**
+   * El select de router guardaba el id en texto, pero selectedRouterId arranca
+   * con el número del backend. np-select compara estricto: se le pasa en texto
+   * para que se vea elegido, y al cambiar recibe texto como antes.
+   */
+  comoTexto(v: unknown): string | null {
+    return v == null ? null : String(v);
+  }
 
   private dialog = inject(DialogService);
   private router = inject(Router);
@@ -184,10 +248,19 @@ export class MikrotikComponent implements OnInit {
     });
   }
 
+  private interfacesPppoeDe: any[] | null = null;
+  private interfacesPppoe: any[] = [];
+
   /** Sólo las interfaces por donde tiene sentido escuchar clientes. */
   get interfacesParaPppoe(): any[] {
-    return (this.opcionesPppoe?.interfaces ?? [])
-      .filter((i: any) => ['ether', 'vlan', 'bridge'].includes(i.tipo));
+    // Mismo arreglo mientras no cambien las opciones: el np-select recalcula
+    // su lista cada vez que recibe uno nuevo, y el getter corre en cada ciclo.
+    const todas = this.opcionesPppoe?.interfaces ?? null;
+    if (todas !== this.interfacesPppoeDe) {
+      this.interfacesPppoeDe = todas;
+      this.interfacesPppoe = (todas ?? []).filter((i: any) => ['ether', 'vlan', 'bridge'].includes(i.tipo));
+    }
+    return this.interfacesPppoe;
   }
 
   async montarPppoe() {

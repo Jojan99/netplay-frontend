@@ -124,9 +124,7 @@
 
         <div class="ar-campo">
           <label>Por dónde salen las OLT</label>
-          <select class="np-input" [(ngModel)]="form.interfaz">
-            <option *ngFor="let i of interfaces" [value]="i">{{ i }} — {{ sug.interfaces[i] }} VLAN de clientes</option>
-          </select>
+          <np-select [(ngModel)]="form.interfaz" [opciones]="interfaces" [presentacion]="presInterfaces" placeholder="Elegí la interfaz…" ariaLabel="Interfaz hacia las OLT" style="max-width: 460px"></np-select>
           <small class="np-fine">La interfaz del MikroTik que va hacia la OLT. Se propone la que ya lleva las VLAN de tus clientes.</small>
         </div>
 
@@ -137,11 +135,11 @@
               <b>{{ o.nombre }}</b>
               <small>{{ o.marca }}</small>
             </div>
-            <select class="np-input" [(ngModel)]="form.uplinks[o.olt_id]" [ngModelOptions]="{ standalone: true }"
-                    *ngIf="o.puertos?.length && o.soporte?.nivel === 'completo'">
-              <option value="">No tocar esta OLT</option>
-              <option *ngFor="let p of o.puertos" [value]="p.puerto">{{ p.puerto }} — VLAN {{ p.vlans.join(', ') }}</option>
-            </select>
+            <np-select [(ngModel)]="form.uplinks[o.olt_id]" [ngModelOptions]="{ standalone: true }"
+                       *ngIf="o.puertos?.length && o.soporte?.nivel === 'completo'"
+                       [opciones]="o.puertos" [presentacion]="presUplinks"
+                       [permitirVacio]="true" textoVacio="No tocar esta OLT" [valorVacio]="''"
+                       [ariaLabel]="'Puerto de subida de ' + o.nombre" style="flex: 1; min-width: 220px"></np-select>
             <p class="ar-soporte" *ngIf="o.soporte?.nivel !== 'completo'" [attr.data-nivel]="o.soporte?.nivel">
               <b>{{ o.soporte?.titulo }}.</b> {{ o.soporte?.detalle }}
             </p>

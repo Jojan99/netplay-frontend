@@ -47,7 +47,7 @@
       <div class="np-insp-body">
         <div class="np-subbar">
           <label class="np-search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg><input type="search" [(ngModel)]="searchTerm" (input)="onSearchInput($event)" placeholder="Cliente…" aria-label="Buscar cliente" /></label>
-          <label class="np-pagesize">Mostrar<select [(ngModel)]="perPage" (ngModelChange)="changePerPage()"><option *ngFor="let n of perPageOptions" [ngValue]="n">{{ n }}</option></select></label>
+          <label class="np-pagesize">Mostrar<np-select [(ngModel)]="perPage" (ngModelChange)="changePerPage()" [opciones]="perPageOptions" [presentacion]="presPorPagina" tamano="sm" style="min-width: 140px" ariaLabel="Registros por página"></np-select></label>
         </div>
         <div *ngIf="paymentsLoading" class="np-loading"><span class="np-spinner"></span> Cargando pagos…</div>
         <p class="np-muted" *ngIf="!paymentsLoading && payments.length === 0">No hay pagos registrados.</p>

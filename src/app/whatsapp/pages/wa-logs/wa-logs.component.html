@@ -7,7 +7,7 @@
       <div class="np-ribbon" *ngIf="!stats"><span>Historial de mensajes y cola por instancia.</span></div>
     </div>
     <div class="np-actions">
-      <label class="np-pagesize">Instancia<select [(ngModel)]="selectedInstance" (change)="onInstanceChange()"><option value="">Seleccionar…</option><option *ngFor="let inst of instances" [value]="inst.instanceId">{{ inst.name }}</option></select></label>
+      <label class="np-pagesize">Instancia<np-select [(ngModel)]="selectedInstance" (cambio)="onInstanceChange()" [opciones]="instances" [presentacion]="presLineas" placeholder="Seleccionar…" [valorVacio]="''" textoSinOpciones="No hay instancias." ariaLabel="Instancia" tamano="sm" style="width: 220px"></np-select></label>
       <button type="button" class="np-btn np-btn--ghost" (click)="load()" [disabled]="!selectedInstance"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 12a8 8 0 1 1-2.3-5.7M20 4v5h-5"/></svg>Actualizar</button>
     </div>
   </header>

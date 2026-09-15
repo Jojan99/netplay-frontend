@@ -8,11 +8,46 @@ import { ToastService }               from '../../../services/toast.service';
 import { InventoryItemInterface }     from '../../../models/inventory-item.interface';
 import { InventoryCategoryInterface } from '../../../models/inventory-category.interface';
 import { BarcodeScannerComponent }    from '../../../components/barcode-scanner/barcode-scanner.component';
+import { NpSelectComponent, PresentacionSelect } from '../../../common/np-select/np-select.component';
+import { OpcionSimple, PRESENTACION_SIMPLE, PRESENTACION_TEXTOS, conValor } from '../../../common/np-select/presentaciones';
+
+/** Categorías: la descripción debajo y cuántos ítems tiene, cuando el backend lo manda. */
+const PRESENTACION_CATEGORIAS: PresentacionSelect<InventoryCategoryInterface> = {
+  etiqueta: c => c?.name ?? '',
+  detalle: c => c?.description || null,
+  insignia: c => (c?.inventories_count != null
+    ? { texto: `${c.inventories_count} ${c.inventories_count === 1 ? 'ítem' : 'ítems'}`, tono: 'neutral' }
+    : null),
+};
+
+/**
+ * Ítems del movimiento: SKU (o código) y ubicación debajo; a la derecha el
+ * stock, en ámbar si está en el mínimo, como en la tabla.
+ */
+const PRESENTACION_ITEMS: PresentacionSelect<InventoryItemInterface> = {
+  // El id numérico, como lo dejan openMovementModal y el escáner: con [value]
+  // el select nativo lo pasaba a texto y un ítem escaneado no se veía elegido.
+  valor: i => i?.id,
+  etiqueta: i => i?.name ?? '',
+  detalle: i => [i?.sku || i?.code, i?.location].filter(Boolean).join(' · ') || null,
+  insignia: i => {
+    const q = i?.quantity || 0;
+    const min = i?.stock_min || 0;
+    return { texto: `Stock ${q}${i?.unit ? ' ' + i.unit : ''}`, tono: min > 0 && q <= min ? 'warn' : q > 0 ? 'ok' : 'neutral' };
+  },
+  buscarEn: i => [i?.name, i?.sku, i?.code, i?.location].filter(Boolean).join(' '),
+};
+
+const TIPOS_DE_MOVIMIENTO: OpcionSimple[] = [
+  { valor: 'entrada', etiqueta: 'Entrada', prefijo: '+', detalle: 'Suma al stock' },
+  { valor: 'salida',  etiqueta: 'Salida',  prefijo: '−', detalle: 'Resta del stock' },
+  { valor: 'ajuste',  etiqueta: 'Ajuste',  prefijo: '=', detalle: 'Corrige el conteo' },
+];
 
 @Component({
   selector: 'app-inventory-items',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink, BarcodeScannerComponent],
+  imports: [CommonModule, FormsModule, RouterLink, BarcodeScannerComponent, NpSelectComponent],
   templateUrl: './inventory-items.component.html',
   styleUrl: './inventory-items.component.scss',
   host: { class: 'np-console' },
@@ -44,6 +79,16 @@ export class InventoryItemsComponent implements OnInit {
   selectedCategoryId: number | '' = '';
   selectedLocation = '';
   showLowStockOnly = false;
+
+  // El filtro guarda el id en texto, como el <option [value]> anterior.
+  readonly presCategoriaFiltro = conValor(PRESENTACION_CATEGORIAS, c => String(c.id));
+  // El formulario guarda el id como llega del backend: al editar, el ítem trae
+  // el número y con texto la categoría no se vería elegida.
+  readonly presCategoria = conValor(PRESENTACION_CATEGORIAS, c => c.id);
+  readonly presUbicaciones = PRESENTACION_TEXTOS;
+  readonly presItems = PRESENTACION_ITEMS;
+  readonly presTipoMovimiento = PRESENTACION_SIMPLE;
+  readonly tiposDeMovimiento = TIPOS_DE_MOVIMIENTO;
 
   isEditing = false;
   itemForm: InventoryItemInterface = {};

@@ -69,6 +69,7 @@ let secuencia = 0;
   host: {
     '[class.is-open]': 'abierto',
     '[class.is-disabled]': 'inhabilitado',
+    '[class.is-sm]': "tamano === 'sm'",
     '(keydown)': 'tecla($event)',
   },
 })
@@ -91,6 +92,14 @@ export class NpSelectComponent implements ControlValueAccessor, OnChanges, OnDes
   @Input() deshabilitado = false;
   @Input() ariaLabel = '';
   @Input() textoBuscar = 'Buscar…';
+  /**
+   * Qué guarda la opción vacía (permitirVacio) y qué valor cuenta como "sin
+   * elegir". Un <option value="">Todos</option> guardaba '': con '' acá, el
+   * filtro recibe exactamente lo mismo que antes.
+   */
+  @Input() valorVacio: any = null;
+  /** 'sm': más bajo, para barras de filtros y paginación. */
+  @Input() tamano: 'md' | 'sm' = 'md';
   @Output() cambio = new EventEmitter<any>();
 
   @ViewChild('disparador') private disparador?: ElementRef<HTMLButtonElement>;
@@ -140,13 +149,13 @@ export class NpSelectComponent implements ControlValueAccessor, OnChanges, OnDes
   get todas(): any[] { return this.opciones ?? []; }
   get conBuscador(): boolean { return this.buscable === 'auto' ? this.todas.length > 7 : !!this.buscable; }
   get hayPrefijos(): boolean { return !!this.presentacion?.prefijo; }
-  get haySeleccion(): boolean { return this.valor != null; }
+  get haySeleccion(): boolean { return !this.esVacio(this.valor); }
   /** Opciones que quedan con la búsqueda (sin contar los títulos de grupo). */
   get cantidadVisible(): number { return this.filas.filter(f => f.grupo === undefined).length; }
 
   /** La opción de la lista que corresponde al valor (o el valor mismo si la lista todavía no llegó). */
   get seleccionada(): any {
-    if (this.valor == null) return null;
+    if (this.esVacio(this.valor)) return null;
     const enLista = this.todas.find(o => this.coincide(o, this.valor));
     if (enLista !== undefined) return enLista;
     // Con valor() el ngModel guarda un dato suelto (la IP): si todavía no está
@@ -168,7 +177,11 @@ export class NpSelectComponent implements ControlValueAccessor, OnChanges, OnDes
   deshabilitadaDe(o: any): boolean { return !this.especial(o) && !!this.presentacion?.deshabilitada?.(o); }
 
   esSeleccionada(o: any): boolean {
-    return o === VACIO ? this.valor == null : this.valor != null && this.coincide(o, this.valor);
+    return o === VACIO ? this.esVacio(this.valor) : !this.esVacio(this.valor) && this.coincide(o, this.valor);
+  }
+
+  private esVacio(v: any): boolean {
+    return v == null || v === this.valorVacio;
   }
 
   private especial(o: any): boolean {
@@ -178,8 +191,16 @@ export class NpSelectComponent implements ControlValueAccessor, OnChanges, OnDes
   /** Si la opción corresponde al valor del ngModel. */
   private coincide(opcion: any, valor: any): boolean {
     const p = this.presentacion;
-    if (p?.valor) return p.valor(opcion) === valor;
-    return p?.clave ? p.clave(opcion) === p.clave(valor) : opcion === valor;
+    if (p?.valor) return this.mismo(p.valor(opcion), valor);
+    return p?.clave ? this.mismo(p.clave(opcion), p.clave(valor)) : opcion === valor;
+  }
+
+  /**
+   * 3 y "3" son el mismo id: el <select> nativo con [value] pasaba los números
+   * a texto al elegir, y el valor inicial del formulario suele venir como número.
+   */
+  private mismo(a: any, b: any): boolean {
+    return a === b || (a != null && b != null && typeof a !== 'object' && typeof b !== 'object' && String(a) === String(b));
   }
 
   // ── Lista filtrada y agrupada ─────────────────────────────────────────
@@ -276,8 +297,8 @@ export class NpSelectComponent implements ControlValueAccessor, OnChanges, OnDes
     if (this.deshabilitadaDe(o)) return;
 
     const p = this.presentacion;
-    const nuevo = o === VACIO ? null : (p?.valor ? p.valor(o) : o);
-    const igualQueAntes = o === VACIO ? this.valor == null : this.valor != null && this.coincide(o, this.valor);
+    const nuevo = o === VACIO ? this.valorVacio : (p?.valor ? p.valor(o) : o);
+    const igualQueAntes = o === VACIO ? this.esVacio(this.valor) : !this.esVacio(this.valor) && this.coincide(o, this.valor);
 
     this.valor = nuevo;
     if (!igualQueAntes) {

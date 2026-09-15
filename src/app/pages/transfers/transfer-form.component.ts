@@ -4,11 +4,13 @@ import { FormsModule } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
 import { TransferService } from '../../services/transfer.service';
 import { UserService } from '../../services/user.service';
+import { NpSelectComponent } from '../../common/np-select/np-select.component';
+import { PRESENTACION_PERSONAS, PRESENTACION_ROUTERS, conValor } from '../../common/np-select/presentaciones';
 
 @Component({
   selector: 'app-transfer-form',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterModule],
+  imports: [CommonModule, FormsModule, RouterModule, NpSelectComponent],
   templateUrl: './transfer-form.component.html',
   styleUrl: './transfer-form.component.scss',
   host: { class: 'np-console' },
@@ -25,6 +27,16 @@ export class TransferFormComponent implements OnInit {
 
   selectedClient: any = null;
   form = this.emptyForm();
+
+  // Los select anteriores guardaban el id en texto ([value]); save() lo pasa por parseInt.
+  // Clientes: la cédula y la dirección actual para distinguir homónimos.
+  readonly presClientes = conValor({
+    ...PRESENTACION_PERSONAS,
+    detalle: (c: any) => [c?.dni ? `CC ${c.dni}` : null, c?.address].filter(Boolean).join(' · ') || null,
+    buscarEn: (c: any) => [c?.names, c?.lastname, c?.dni, c?.phone, c?.address].filter(Boolean).join(' '),
+  }, c => String(c.id));
+  readonly presRouters = conValor(PRESENTACION_ROUTERS, r => String(r.id));
+  readonly presTecnicos = conValor(PRESENTACION_PERSONAS, t => String(t.id));
 
   constructor(
     private svc: TransferService,
@@ -55,7 +67,8 @@ export class TransferFormComponent implements OnInit {
 
   loadOptions(): void {
     this.svc.getRouters().subscribe(r => this.routers = r.data || []);
-    this.svc.getTechnicians().subscribe(r => this.technicians = r.data || []);
+    // El backend devuelve la lista sin envolver en data: con r.data quedaba siempre vacía.
+    this.svc.getTechnicians().subscribe(r => this.technicians = Array.isArray(r) ? r : (r?.data ?? []));
     this.userSvc.getAllUser().subscribe((r: any) => {
       this.clients = r.data || r || [];
     });
@@ -74,8 +87,8 @@ export class TransferFormComponent implements OnInit {
     this.form = this.emptyForm();
   }
 
-  onClientChange(event: any): void {
-    const clientId = event.target.value;
+  /** Recibe el id en texto que emite el np-select ('' al elegir la opción vacía), como antes event.target.value. */
+  onClientChange(clientId: string): void {
     if (!clientId) {
       this.clearClient();
       return;

@@ -4,11 +4,13 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
 import { TransferService, TransferOrder } from '../../services/transfer.service';
+import { InsigniaSelect, NpSelectComponent } from '../../common/np-select/np-select.component';
+import { OpcionSimple, PRESENTACION_PERSONAS, PRESENTACION_SIMPLE, conValor } from '../../common/np-select/presentaciones';
 
 @Component({
   selector: 'app-transfers',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterModule],
+  imports: [CommonModule, FormsModule, RouterModule, NpSelectComponent],
   templateUrl: './transfers.component.html',
   styleUrl: './transfers.component.scss',
   host: { class: 'np-console' },
@@ -55,6 +57,22 @@ export class TransfersComponent implements OnInit {
     { value: 'rejected', label: 'Rechazado' },
   ];
 
+  // En el filtro, cada estado lleva su tono: lo que falta cobrar o verificar resalta.
+  private readonly INSIGNIA_PAGO: Record<string, InsigniaSelect> = {
+    not_required: { texto: 'Sin cobro', tono: 'neutral' },
+    pending:      { texto: 'Por cobrar', tono: 'warn' },
+    paid:         { texto: 'Por verificar', tono: 'info' },
+    verified:     { texto: 'Confirmado', tono: 'ok' },
+    rejected:     { texto: 'No válido', tono: 'neutral' },
+  };
+  /** Los mismos estados de PAYMENT_STATUS_OPTIONS, sin "Todos" (el filtro lo agrega como opción vacía). */
+  readonly opcionesEstadoPago: OpcionSimple[] = this.PAYMENT_STATUS_OPTIONS
+    .filter(o => o.value)
+    .map(o => ({ valor: o.value, etiqueta: o.label, insignia: this.INSIGNIA_PAGO[o.value] }));
+  readonly presSimple = PRESENTACION_SIMPLE;
+  // [value]="t.id" guardaba el id en texto: saveAssign lo pasa por parseInt. El detalle es el cargo.
+  readonly presTecnicos = conValor(PRESENTACION_PERSONAS, t => String(t.id));
+
   constructor(private svc: TransferService) {}
 
   ngOnInit(): void {
@@ -63,7 +81,8 @@ export class TransfersComponent implements OnInit {
   }
 
   loadOptions(): void {
-    this.svc.getTechnicians().subscribe(r => this.technicians = r.data || []);
+    // El backend devuelve la lista sin envolver en data: con r.data quedaba siempre vacía.
+    this.svc.getTechnicians().subscribe(r => this.technicians = Array.isArray(r) ? r : (r?.data ?? []));
     this.svc.getRouters().subscribe(r => this.routers = r.data || []);
   }
 

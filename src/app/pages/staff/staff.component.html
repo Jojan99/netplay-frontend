@@ -86,7 +86,7 @@
         <label class="np-field np-field-full"><span>Correo electrónico</span><input type="email" class="np-input" [(ngModel)]="form.email" name="email" required placeholder="usuario@empresa.com" /></label>
         <label class="np-field"><span>Usuario</span><input type="text" class="np-input np-mono" [(ngModel)]="form.username" name="username" required placeholder="jperez" /></label>
         <label class="np-field"><span>Contraseña</span><input type="password" class="np-input" [(ngModel)]="form.password" name="password" required placeholder="Mínimo 6 caracteres" /></label>
-        <label class="np-field np-field-full"><span>Rol</span><select class="np-input" [(ngModel)]="form.profile_id" name="profile_id" required><option *ngFor="let p of profiles" [ngValue]="p.id">{{ p.name }}</option></select></label>
+        <label class="np-field np-field-full"><span>Rol</span><np-select [(ngModel)]="form.profile_id" name="profile_id" required [opciones]="profiles" [presentacion]="presPerfiles" placeholder="Seleccioná un rol…" [valorVacio]="0" ariaLabel="Rol"></np-select></label>
       </div>
       <div class="np-btnrow np-btnrow--end">
         <button type="button" class="np-btn np-btn--ghost" (click)="closeModal()">Cancelar</button>

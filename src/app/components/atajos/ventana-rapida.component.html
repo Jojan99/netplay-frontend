@@ -82,25 +82,18 @@
     @if (cargando) { <p class="at-muted">Leyendo el cliente…</p> }
     @if (ficha) { <p class="at-muted">{{ ficha.direccion || 'Sin dirección' }} · {{ ficha.plan || 'sin plan' }}</p> }
     <div class="vr-fila">
-      <label class="at-field" [attr.for]="'vr-tipo-' + ventana.id"><span>Tipo</span>
-        <select class="at-input" [id]="'vr-tipo-' + ventana.id" [(ngModel)]="ticket.tipo">
-          <option [ngValue]="0" disabled>Elegir…</option>
-          @for (t of tipos; track t.id) { <option [ngValue]="t.id">{{ t.name }}</option> }
-        </select>
+      <!-- Sin for/id: np-select no es un control "etiquetable" y un for que
+           apunta a otro elemento dejaba el clic en la etiqueta sin efecto. -->
+      <label class="at-field"><span>Tipo</span>
+        <np-select [(ngModel)]="ticket.tipo" [opciones]="tipos" [presentacion]="presTipos" [valorVacio]="0" placeholder="Elegir…" ariaLabel="Tipo"></np-select>
       </label>
-      <label class="at-field" [attr.for]="'vr-prioridad-' + ventana.id"><span>Prioridad</span>
-        <select class="at-input" [id]="'vr-prioridad-' + ventana.id" [(ngModel)]="ticket.prioridad">
-          <option [ngValue]="0" disabled>Elegir…</option>
-          @for (p of prioridades; track p.id) { <option [ngValue]="p.id">{{ p.name }}</option> }
-        </select>
+      <label class="at-field"><span>Prioridad</span>
+        <np-select [(ngModel)]="ticket.prioridad" [opciones]="prioridades" [presentacion]="presPrioridades" [valorVacio]="0" placeholder="Elegir…" ariaLabel="Prioridad"></np-select>
       </label>
     </div>
     <div class="vr-fila">
-      <label class="at-field" [attr.for]="'vr-tecnico-' + ventana.id"><span>Técnico</span>
-        <select class="at-input" [id]="'vr-tecnico-' + ventana.id" [(ngModel)]="ticket.tecnico">
-          <option [ngValue]="0" disabled>Elegir…</option>
-          @for (t of tecnicos; track t.user_id) { <option [ngValue]="t.user_id">{{ t.names }} {{ t.lastname }}</option> }
-        </select>
+      <label class="at-field"><span>Técnico</span>
+        <np-select [(ngModel)]="ticket.tecnico" [opciones]="tecnicos" [presentacion]="presTecnicos" [valorVacio]="0" placeholder="Elegir…" ariaLabel="Técnico"></np-select>
       </label>
       <label class="at-field" [attr.for]="'vr-fecha-' + ventana.id"><span>Fecha</span>
         <input class="at-input" type="date" [id]="'vr-fecha-' + ventana.id" [(ngModel)]="ticket.fecha">

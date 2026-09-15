@@ -7,10 +7,12 @@ import { GenericInterface } from '../../../models/generic-interface';
 import { Router } from '@angular/router';
 import { OltService } from '../../../services/olt.service';
 import { OltOntDetailInterface } from '../../../models/olt-ont-detailt';
+import { NpSelectComponent } from '../../../common/np-select/np-select.component';
+import { PRESENTACION_POR_PAGINA } from '../../../common/np-select/presentaciones';
 @Component({
   selector: 'app-ont-details',
   standalone: true,
-  imports: [CommonModule,FormsModule],
+  imports: [CommonModule,FormsModule, NpSelectComponent],
   templateUrl: './ont-details.component.html',
   styleUrls: ['./ont-details.component.scss']
 })
@@ -37,6 +39,10 @@ export class OntDetailsComponent implements OnInit {
   onusOver = 0;
   totalEntries = 1000;
   entriesPerPage = 10;
+  /** El selector de la maqueta no estaba atado a nada: arranca en la primera opción, como el nativo. */
+  readonly opcionesPorPagina = [15, 30, 50];
+  readonly presPorPagina = PRESENTACION_POR_PAGINA;
+  porPagina = 15;
   startIndex: number = 0;
   endIndex: number = 0;
   constructor(private fb: FormBuilder, private oltService: OltService, private router: Router) {

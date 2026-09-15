@@ -115,14 +115,12 @@
         <!-- configuración -->
         <div class="space-y-4">
           <div>
-            <label class="mb-1.5 block text-sm font-medium text-slate-700 dark:text-slate-300" [attr.for]="'tpl-' + b.event">
+            <label class="mb-1.5 block text-sm font-medium text-slate-700 dark:text-slate-300">
               Plantilla que se envía
             </label>
-            <select [id]="'tpl-' + b.event" [(ngModel)]="b.template_name" (ngModelChange)="onTemplateChange(b)"
-                    class="w-full rounded-lg border border-slate-300 bg-white p-2.5 text-sm text-slate-900 focus:border-emerald-500 focus:ring-emerald-500 dark:border-slate-600 dark:bg-slate-700 dark:text-white">
-              <option [ngValue]="null">— Sin plantilla —</option>
-              <option *ngFor="let t of approvedTemplates" [ngValue]="t.name">{{ t.name }} ({{ t.language }})</option>
-            </select>
+            <np-select [(ngModel)]="b.template_name" (ngModelChange)="onTemplateChange(b)" [opciones]="approvedTemplates" [presentacion]="presPlantillas"
+                       [permitirVacio]="true" textoVacio="Sin plantilla" textoSinOpciones="No hay plantillas aprobadas."
+                       ariaLabel="Plantilla que se envía"></np-select>
             <p *ngIf="approvedTemplates.length === 0" class="mt-1.5 text-xs text-amber-600 dark:text-amber-400">
               Todavía no tienes plantillas aprobadas por Meta. Mientras estén en revisión no se pueden usar.
             </p>
@@ -141,10 +139,8 @@
                 <span class="w-14 shrink-0 rounded bg-slate-100 py-1.5 text-center font-mono text-xs font-semibold text-slate-600 dark:bg-slate-700 dark:text-slate-300">
                   {{ slotLabel(i) }}
                 </span>
-                <select [(ngModel)]="b.params[i]" (ngModelChange)="markDirty(b)"
-                        class="w-full rounded-lg border border-slate-300 bg-white p-2 text-sm text-slate-900 focus:border-emerald-500 focus:ring-emerald-500 dark:border-slate-600 dark:bg-slate-700 dark:text-white">
-                  <option *ngFor="let v of variables" [ngValue]="v.key">{{ v.label }}</option>
-                </select>
+                <np-select class="min-w-0 flex-1" [(ngModel)]="b.params[i]" (ngModelChange)="markDirty(b)" [opciones]="variables" [presentacion]="presVariables"
+                           [ariaLabel]="'Qué va en el espacio ' + (i + 1)"></np-select>
               </div>
             </div>
           </div>
@@ -156,10 +152,8 @@
             <div class="grid gap-3 sm:grid-cols-2">
               <div class="sm:col-span-2">
                 <label class="mb-1 block text-xs text-slate-500 dark:text-slate-400">Contar los días desde</label>
-                <select [(ngModel)]="b.config.referencia" (ngModelChange)="markDirty(b)"
-                        class="w-full rounded-lg border border-slate-300 bg-white p-2 text-sm dark:border-slate-600 dark:bg-slate-700 dark:text-white">
-                  <option *ngFor="let r of referencias" [ngValue]="r.key">{{ r.label }}</option>
-                </select>
+                <np-select [(ngModel)]="b.config.referencia" (ngModelChange)="markDirty(b)" [opciones]="referencias" [presentacion]="presReferencias"
+                           ariaLabel="Contar los días desde"></np-select>
                 <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">
                   <span *ngFor="let r of referencias">
                     <span *ngIf="r.key === b.config.referencia">{{ r.description }}</span>
@@ -271,23 +265,12 @@
 
         <div class="grid grid-cols-2 gap-4">
           <div>
-            <label class="mb-1.5 block text-sm font-medium text-slate-700 dark:text-slate-300" for="tpl-cat">Categoría</label>
-            <select id="tpl-cat" [(ngModel)]="newTemplate.category"
-                    class="w-full rounded-lg border border-slate-300 p-2.5 text-sm dark:border-slate-600 dark:bg-slate-700 dark:text-white">
-              <option value="UTILITY">Utilidad</option>
-              <option value="MARKETING">Marketing</option>
-              <option value="AUTHENTICATION">Autenticación</option>
-            </select>
+            <label class="mb-1.5 block text-sm font-medium text-slate-700 dark:text-slate-300">Categoría</label>
+            <np-select [(ngModel)]="newTemplate.category" [opciones]="opcionesCategoria" [presentacion]="presSimple" ariaLabel="Categoría"></np-select>
           </div>
           <div>
-            <label class="mb-1.5 block text-sm font-medium text-slate-700 dark:text-slate-300" for="tpl-lang">Idioma</label>
-            <select id="tpl-lang" [(ngModel)]="newTemplate.language"
-                    class="w-full rounded-lg border border-slate-300 p-2.5 text-sm dark:border-slate-600 dark:bg-slate-700 dark:text-white">
-              <option value="es_CO">Español (Colombia)</option>
-              <option value="es">Español</option>
-              <option value="en">Inglés</option>
-              <option value="pt_BR">Portugués (Brasil)</option>
-            </select>
+            <label class="mb-1.5 block text-sm font-medium text-slate-700 dark:text-slate-300">Idioma</label>
+            <np-select [(ngModel)]="newTemplate.language" [opciones]="opcionesIdioma" [presentacion]="presSimple" ariaLabel="Idioma"></np-select>
           </div>
         </div>
 
@@ -310,12 +293,7 @@
             </div>
 
             <div *ngIf="comp.type === 'HEADER'" class="space-y-2">
-              <select [(ngModel)]="comp.format" class="w-full rounded-md border border-slate-300 p-2 text-sm dark:border-slate-600 dark:bg-slate-700 dark:text-white">
-                <option value="TEXT">Texto</option>
-                <option value="IMAGE">Imagen</option>
-                <option value="VIDEO">Video</option>
-                <option value="DOCUMENT">Documento</option>
-              </select>
+              <np-select [(ngModel)]="comp.format" [opciones]="opcionesFormato" [presentacion]="presSimple" ariaLabel="Formato del encabezado"></np-select>
               <textarea *ngIf="comp.format === 'TEXT'" [(ngModel)]="comp.text" rows="2" (ngModelChange)="onBodyChange()"
                         class="w-full rounded-md border border-slate-300 p-2 text-sm dark:border-slate-600 dark:bg-slate-700 dark:text-white"></textarea>
               <input *ngIf="comp.format !== 'TEXT'" type="text" [ngModel]="comp.example?.header_handle?.[0]"
@@ -359,11 +337,8 @@
 
             <div *ngIf="comp.type === 'BUTTONS'" class="space-y-2">
               <div *ngFor="let btn of comp.buttons; let bi = index" class="flex flex-wrap items-center gap-2">
-                <select [(ngModel)]="btn.type" (ngModelChange)="updatePreview()" class="rounded-md border border-slate-300 p-1.5 text-sm dark:border-slate-600 dark:bg-slate-700 dark:text-white">
-                  <option value="QUICK_REPLY">Respuesta rápida</option>
-                  <option value="URL">Enlace</option>
-                  <option value="PHONE_NUMBER">Teléfono</option>
-                </select>
+                <np-select [(ngModel)]="btn.type" (ngModelChange)="updatePreview()" [opciones]="opcionesBoton" [presentacion]="presSimple"
+                           ariaLabel="Tipo de botón" tamano="sm" style="width: 180px"></np-select>
                 <input type="text" [(ngModel)]="btn.text" (ngModelChange)="updatePreview()" placeholder="Texto"
                        class="min-w-0 flex-1 rounded-md border border-slate-300 p-1.5 text-sm dark:border-slate-600 dark:bg-slate-700 dark:text-white">
                 <input *ngIf="btn.type === 'URL'" type="text" [(ngModel)]="btn.url" placeholder="https://…"

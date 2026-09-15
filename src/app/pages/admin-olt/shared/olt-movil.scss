@@ -18,6 +18,8 @@
   .np-pagesize {
     display: flex; flex: 1 1 150px; min-width: 0;
     select { flex: 1; min-width: 0; height: 42px !important; font-size: 16px; }
+    // np-select (el selector propio) ocupa el lugar que dejó el select nativo.
+    np-select { flex: 1; min-width: 0; width: auto !important; }
   }
 
   .np-actions { flex-wrap: wrap; > * { flex: 1 1 auto; } }

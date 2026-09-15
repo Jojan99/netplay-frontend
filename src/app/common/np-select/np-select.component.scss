@@ -111,3 +111,20 @@
   &.is-activa { background: var(--surface-2); }
   .nps-textos b { color: var(--text-2); font-weight: 500; }
   .nps-prefijo { color: var(--text-3); background: var(--surface-2); border-color: var(--line); } }
+
+/* Compacto: barras de filtros y paginación */
+:host(.is-sm) .nps-disparador { height: 30px; padding: 0 6px 0 8px; font-size: 12.5px; gap: 6px; }
+:host(.is-sm) .nps-disparador .nps-prefijo { height: 18px; min-width: 26px; font-size: 10.5px; }
+
+/* Campo inválido: la misma señal que .np-input.is-invalid */
+:host(.is-invalid) .nps-disparador { border-color: var(--danger); }
+:host(.is-invalid) .nps-disparador:focus-visible,
+:host(.is-invalid.is-open) .nps-disparador { box-shadow: 0 0 0 3px color-mix(in srgb, var(--danger) 16%, transparent); }
+
+/* Teléfono: más fácil de tocar, y el buscador en 16 px para que iOS no haga zoom al escribir */
+@media (max-width: 600px) {
+  .nps-disparador { height: 40px; }
+  :host(.is-sm) .nps-disparador { height: 36px; }
+  .nps-buscar input { font-size: 16px; }
+  .nps-opcion { min-height: 46px; }
+}

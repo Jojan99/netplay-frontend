@@ -1,4 +1,4 @@
-import { PresentacionSelect } from './np-select.component';
+import { InsigniaSelect, PresentacionSelect } from './np-select.component';
 
 /**
  * Las redes del router (getLanSegments) en un np-select: el número de VLAN a
@@ -86,3 +86,135 @@ export class OpcionesDeIps {
     return opciones;
   }
 }
+
+// ── Genéricas ──────────────────────────────────────────────────────────────
+
+/** La misma presentación, pero guardando otro dato en el ngModel (por ejemplo el id en texto, como hacía [value]). */
+export function conValor<T = any>(p: PresentacionSelect<T>, valor: (o: T) => unknown): PresentacionSelect<T> {
+  return { ...p, valor };
+}
+
+/** Opción escrita en el componente (listas fijas): { valor, etiqueta, detalle?, prefijo?, insignia?, grupo?, deshabilitada? }. */
+export interface OpcionSimple {
+  valor: unknown;
+  etiqueta: string;
+  detalle?: string | null;
+  prefijo?: string | null;
+  insignia?: string | InsigniaSelect | null;
+  grupo?: string | null;
+  deshabilitada?: boolean;
+}
+
+export const PRESENTACION_SIMPLE: PresentacionSelect<OpcionSimple> = {
+  valor: o => o?.valor,
+  etiqueta: o => o?.etiqueta ?? String(o?.valor ?? ''),
+  detalle: o => o?.detalle,
+  prefijo: o => o?.prefijo,
+  insignia: o => (typeof o?.insignia === 'string' ? { texto: o.insignia, tono: 'neutral' } : (o?.insignia ?? null)),
+  grupo: o => o?.grupo,
+  deshabilitada: o => !!o?.deshabilitada,
+  buscarEn: o => [o?.etiqueta, o?.detalle, o?.valor].filter(v => v != null).join(' '),
+};
+
+/** Cantidad por página: 25 → "25 por página". Guarda el número. */
+export const PRESENTACION_POR_PAGINA: PresentacionSelect<number> = {
+  valor: n => n,
+  etiqueta: n => `${n} por página`,
+};
+
+/** Textos sueltos (categorías, bancos, puertos): la opción es el texto y se guarda tal cual. */
+export const PRESENTACION_TEXTOS: PresentacionSelect<string | number> = {
+  valor: t => t,
+  etiqueta: t => String(t ?? ''),
+};
+
+// ── De la plataforma ───────────────────────────────────────────────────────
+
+const PESOS = new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 });
+const capital = (t: string) => (t ? t.charAt(0).toUpperCase() + t.slice(1) : t);
+const nombreDePersona = (o: any) =>
+  [o?.names ?? o?.first_name ?? o?.name ?? o?.nombre ?? '', o?.lastname ?? o?.last_name ?? ''].join(' ').replace(/\s+/g, ' ').trim();
+const iniciales = (t: string) => t.split(/\s+/).filter(Boolean).slice(0, 2).map(p => p[0]).join('').toUpperCase();
+
+/**
+ * Planes de internet: velocidad, tipo y precio mensual. Sirve con el plan
+ * completo (plan_name, download_speed, monthly_price…) o sólo { id, names }.
+ */
+export const PRESENTACION_PLANES: PresentacionSelect = {
+  clave: p => p?.id,
+  etiqueta: p => p?.plan_name ?? p?.names ?? p?.name ?? '',
+  prefijo: p => (p?.download_speed ? `${p.download_speed}M` : null),
+  detalle: p => {
+    const bajada = p?.bajada_mbps ?? p?.download_speed;
+    const subida = p?.subida_mbps ?? p?.upload_speed;
+    const velocidad = bajada ? `${bajada}↓ ${subida ?? bajada}↑ Mb` : null;
+    // "200MB" en la descripción repite la velocidad: sólo se muestra si dice otra cosa.
+    const descripcion = p?.description && !/^\s*\d+\s*m?b?\s*$/i.test(p.description) ? p.description : null;
+    return [velocidad, p?.type ? capital(p.type) : null, descripcion].filter(Boolean).join(' · ') || null;
+  },
+  insignia: p => (p?.monthly_price != null && p.monthly_price !== ''
+    ? { texto: `${PESOS.format(Number(p.monthly_price))}/mes`, tono: 'info' }
+    : null),
+  grupo: p => (p?.type ? capital(p.type) : null),
+  atenuada: p => p?.active === 0 || p?.active === false,
+  buscarEn: p => [p?.plan_name ?? p?.names, p?.download_speed, p?.type, p?.description, p?.monthly_price].filter(Boolean).join(' '),
+};
+
+/** Routers MikroTik (conection_routers): nombre, IP y puerto de la API. */
+export const PRESENTACION_ROUTERS: PresentacionSelect = {
+  clave: r => r?.id,
+  etiqueta: r => r?.name || r?.host || (r?.id ? `Router ${r.id}` : ''),
+  detalle: r => (r?.host ? `${r.host}${r?.port ? ':' + r.port : ''}` : (r?.ip_address ?? null)),
+  buscarEn: r => [r?.name, r?.host, r?.ip_address].filter(Boolean).join(' '),
+};
+
+const MARCAS: Record<string, string> = { huawei: 'HW', zte: 'ZTE', 'c-data': 'CD', cdata: 'CD', vsol: 'VS', fiberhome: 'FH', nokia: 'NK' };
+
+/** OLT: marca abreviada, modelo, IP y si se entra por jump host. */
+export const PRESENTACION_OLTS: PresentacionSelect = {
+  clave: o => o?.id,
+  etiqueta: o => o?.name ?? '',
+  prefijo: o => (o?.brand ? (MARCAS[String(o.brand).toLowerCase()] ?? String(o.brand).slice(0, 3).toUpperCase()) : null),
+  detalle: o => [o?.model, o?.host].filter(Boolean).join(' · ') || null,
+  insignia: o => (o?.access_mode === 'jump' ? { texto: 'Por jump host', tono: 'neutral' } : null),
+  buscarEn: o => [o?.name, o?.brand, o?.model, o?.host].filter(Boolean).join(' '),
+};
+
+/** Personas (técnicos, staff, empleados, clientes): iniciales, nombre y un dato para distinguirlas. */
+export const PRESENTACION_PERSONAS: PresentacionSelect = {
+  clave: o => o?.user_id ?? o?.id,
+  etiqueta: o => nombreDePersona(o) || o?.email || '',
+  prefijo: o => iniciales(nombreDePersona(o) || o?.email || '?'),
+  detalle: o => o?.job_title ?? o?.cargo ?? o?.profile_name ?? o?.email ?? (o?.dni ? `CC ${o.dni}` : null),
+  buscarEn: o => [nombreDePersona(o), o?.email, o?.dni, o?.phone, o?.job_title].filter(Boolean).join(' '),
+};
+
+/** Métodos de pago. */
+export const PRESENTACION_METODOS_PAGO: PresentacionSelect = {
+  clave: m => m?.id,
+  etiqueta: m => m?.name ?? '',
+  insignia: m => (m?.active === false || m?.active === 0 ? { texto: 'Inactivo', tono: 'neutral' } : null),
+  atenuada: m => m?.active === false || m?.active === 0,
+};
+
+/** Líneas de WhatsApp Web: número y si está conectada. */
+export const PRESENTACION_LINEAS_WA: PresentacionSelect = {
+  clave: i => i?.instanceId ?? i?.id,
+  etiqueta: i => i?.name ?? i?.instanceId ?? '',
+  detalle: i => i?.phone ?? i?.instanceId ?? null,
+  insignia: i => {
+    const estado = i?.connected === true ? 'connected' : i?.status;
+    if (estado === 'connected') return { texto: 'Conectada', tono: 'ok' };
+    if (estado === 'waiting_qr' || i?.hasQR) return { texto: 'Esperando QR', tono: 'warn' };
+    return { texto: 'Desconectada', tono: 'neutral' };
+  },
+  buscarEn: i => [i?.name, i?.phone, i?.instanceId].filter(Boolean).join(' '),
+};
+
+/** Segmentos de red: la red, la máscara y la puerta de enlace. */
+export const PRESENTACION_SEGMENTOS: PresentacionSelect = {
+  clave: s => s?.network,
+  etiqueta: s => s?.network ?? '',
+  prefijo: s => s?.mask ?? (s?.network?.includes('/') ? '/' + s.network.split('/')[1] : null),
+  detalle: s => (s?.gateway ? `Puerta de enlace ${s.gateway}` : null),
+};

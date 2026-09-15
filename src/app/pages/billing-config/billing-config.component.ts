@@ -11,6 +11,8 @@ import { FinanceService } from '../../services/finance.service';
 import { InvoiceTemplateEditorComponent } from '../../components/invoice-template-editor/invoice-template-editor.component';
 import { InvoiceTemplate, InvoiceTemplateService } from '../../services/invoice-template.service';
 import { environment } from '../../../environments/environment';
+import { NpSelectComponent, PresentacionSelect } from '../../common/np-select/np-select.component';
+import { OpcionSimple, PRESENTACION_PERSONAS, PRESENTACION_SIMPLE, conValor } from '../../common/np-select/presentaciones';
 
 const GW_API = environment.rootUrl + 'api/payment-gateway/';
 
@@ -24,7 +26,7 @@ interface Schedule {
 @Component({
   selector: 'app-billing-config',
   standalone: true,
-  imports: [CommonModule, FormsModule, InvoiceTemplateEditorComponent],
+  imports: [CommonModule, FormsModule, InvoiceTemplateEditorComponent, NpSelectComponent],
   templateUrl: './billing-config.component.html',
   styleUrl: './billing-config.component.scss',
   host: { class: 'np-console' },
@@ -58,6 +60,70 @@ export class BillingConfigComponent implements OnInit {
     { v: 10, l: 'Octubre' }, { v: 11, l: 'Noviembre' }, { v: 12, l: 'Diciembre' },
   ];
   readonly years = Array.from({ length: 5 }, (_, i) => new Date().getFullYear() - 2 + i);
+
+  // ── Selectores (np-select) ────────────────────────────────
+  readonly presSimple = PRESENTACION_SIMPLE;
+
+  /** Sólo se imprime como "Régimen" en la factura: no cambia ningún cálculo. */
+  readonly opcionesIva: OpcionSimple[] = [
+    { valor: 'No Aplica', etiqueta: 'No Aplica', detalle: 'Sin régimen que declarar' },
+    { valor: 'Responsable de IVA', etiqueta: 'Responsable de IVA', detalle: 'Inscrito en el RUT como responsable' },
+    { valor: 'No responsable de IVA', etiqueta: 'No responsable de IVA', detalle: 'No cobra IVA (antes régimen simplificado)' },
+    { valor: 'Gran Contribuyente', etiqueta: 'Gran Contribuyente', detalle: 'Calificado así por la DIAN' },
+  ];
+
+  readonly presDias: PresentacionSelect<number> = {
+    valor: d => d,
+    etiqueta: d => `Día ${d}`,
+    insignia: d => (d === new Date().getDate() ? { texto: 'Hoy', tono: 'info' } : null),
+  };
+  /** Cortes: el select anterior usaba [value] y guardaba el día en texto. */
+  readonly presDiasTexto = conValor(this.presDias, d => String(d));
+
+  readonly presHoras: PresentacionSelect<number> = {
+    valor: h => h,
+    etiqueta: h => this.hourLabel(h),
+    detalle: h => `${h % 12 || 12}:00 ${h < 12 ? 'a. m.' : 'p. m.'}`,
+  };
+
+  readonly presMeses: PresentacionSelect<{ v: number; l: string }> = {
+    valor: m => m.v,
+    etiqueta: m => m.l,
+    prefijo: m => String(m.v).padStart(2, '0'),
+    insignia: m => (m.v === new Date().getMonth() + 1 ? { texto: 'Mes actual', tono: 'info' } : null),
+  };
+
+  readonly presAnios: PresentacionSelect<number> = {
+    valor: y => y,
+    etiqueta: y => String(y),
+    insignia: y => (y === new Date().getFullYear() ? { texto: 'Año actual', tono: 'info' } : null),
+  };
+
+  /** Sucursales de EfiPay: el id va en texto, como hacía [value]; se marca la que ya está guardada. */
+  readonly presSucursales: PresentacionSelect = {
+    valor: o => String(o?.id),
+    etiqueta: o => o?.name ?? '',
+    prefijo: o => String(o?.id ?? ''),
+    insignia: o => (this.gwConfig?.office_id != null && String(o?.id) === String(this.gwConfig.office_id)
+      ? { texto: 'Guardada', tono: 'ok' }
+      : null),
+    buscarEn: o => `${o?.id ?? ''} ${o?.name ?? ''}`,
+  };
+
+  /** Clientes de prueba (id, nombre, correo): el id en texto, como hacía [value]. */
+  readonly presClientesPrueba = conValor(PRESENTACION_PERSONAS, u => String(u.id));
+
+  readonly presGruposDestino: PresentacionSelect<Schedule> = {
+    valor: s => s.grupo,
+    etiqueta: s => `Grupo ${s.grupo}`,
+    detalle: s => `Factura el día ${s.billing_day} a las ${this.hourLabel(s.billing_hour)}${s.active ? '' : ' · Inactivo'}`,
+    atenuada: s => !s.active,
+    insignia: (s, todas) => {
+      const n = this.groupUserCounts[s.grupo] ?? 0;
+      const mayor = Math.max(1, ...todas.map(x => this.groupUserCounts[x.grupo] ?? 0));
+      return { texto: `${n} ${n === 1 ? 'usuario' : 'usuarios'}`, tono: n ? 'ok' : 'neutral', proporcion: n / mayor };
+    },
+  };
 
   // ── Tabs ──────────────────────────────────────────────────
   activeTab: 'billing' | 'invoice' | 'payment-methods' | 'gateway' | 'cortes' = 'billing';
@@ -151,6 +217,8 @@ export class BillingConfigComponent implements OnInit {
   transferModal   = false;
   transferFrom    = 0;
   transferTo: number | null = null;
+  /** Destinos del traslado: se arman al abrir el modal para no pasarle al selector un arreglo nuevo en cada ciclo. */
+  transferGroups: Schedule[] = [];
   isTransferBusy  = false;
   pendingRemoveIndex = -1;
 
@@ -280,6 +348,7 @@ export class BillingConfigComponent implements OnInit {
       // Has users — must transfer first
       this.transferFrom        = s.grupo;
       this.transferTo          = null;
+      this.transferGroups      = this.otherGroups(s.grupo);
       this.pendingRemoveIndex  = index;
       this.transferModal       = true;
       return;

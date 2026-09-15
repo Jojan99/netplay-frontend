@@ -83,7 +83,7 @@
         <section *ngIf="activeTab === 'contract'">
           <p class="np-sect">Contrato laboral</p>
           <div class="np-form">
-            <label class="np-field"><span>Tipo</span><select class="np-input" [(ngModel)]="contractForm.type"><option value="indefinido">Indefinido</option><option value="fijo">Término fijo</option><option value="obra_labor">Obra o labor</option><option value="prestacion_servicios">Prestación de servicios</option></select></label>
+            <label class="np-field"><span>Tipo</span><np-select [(ngModel)]="contractForm.type" [opciones]="opcionesTipoContrato" [presentacion]="presSimple" ariaLabel="Tipo de contrato"></np-select></label>
             <label class="np-field"><span>Duración (meses)</span><input class="np-input np-mono" [(ngModel)]="contractForm.duration_months" type="number" placeholder="Sólo si es fijo" /></label>
             <label class="np-field"><span>Salario base</span><input class="np-input np-mono" [(ngModel)]="contractForm.salary" type="number" placeholder="0" /></label>
             <label class="np-field"><span>Inicio</span><input class="np-input" [(ngModel)]="contractForm.start_date" type="date" /></label>
@@ -107,7 +107,7 @@
           <p class="np-sect">Cuenta bancaria</p>
           <div class="np-form">
             <label class="np-field"><span>Banco</span><input class="np-input" [(ngModel)]="bankForm.bank_name" /></label>
-            <label class="np-field"><span>Tipo de cuenta</span><select class="np-input" [(ngModel)]="bankForm.account_type"><option value="ahorros">Ahorros</option><option value="corriente">Corriente</option></select></label>
+            <label class="np-field"><span>Tipo de cuenta</span><np-select [(ngModel)]="bankForm.account_type" [opciones]="opcionesTipoCuenta" [presentacion]="presSimple" ariaLabel="Tipo de cuenta"></np-select></label>
             <label class="np-field np-field-full"><span>Número de cuenta</span><input class="np-input np-mono" [(ngModel)]="bankForm.account_number" /></label>
             <div class="np-field-full np-btnrow np-btnrow--end"><button type="button" class="np-btn np-btn--primary" (click)="saveBankAccount()" [disabled]="isSaving">{{ isSaving ? 'Guardando…' : 'Guardar cuenta' }}</button></div>
           </div>
@@ -176,10 +176,8 @@
     <div class="np-modal-body">
       <p *ngIf="errorMsg" class="np-notice np-notice--danger">{{ errorMsg }}</p>
       <label class="np-field" *ngIf="!isEditing"><span>Vincular con cuenta del sistema</span>
-        <select class="np-input" [(ngModel)]="selectedStaffId" (ngModelChange)="onStaffSelected()">
-          <option [ngValue]="null">Empleado nuevo, sin cuenta de sistema</option>
-          <option *ngFor="let s of availableStaff" [ngValue]="s.id">{{ s.names }} {{ s.lastname }} · {{ s.profile }}</option>
-        </select>
+        <np-select [(ngModel)]="selectedStaffId" (ngModelChange)="onStaffSelected()" [opciones]="availableStaff" [presentacion]="presStaff"
+                   [permitirVacio]="true" textoVacio="Empleado nuevo, sin cuenta de sistema" textoBuscar="Nombre, correo o cédula…" ariaLabel="Cuenta del sistema"></np-select>
         <small class="np-fine" *ngIf="availableStaff.length === 0">Todos los técnicos y administradores ya tienen perfil de empleado.</small>
       </label>
       <div class="np-form">
@@ -207,7 +205,7 @@
       <div class="np-form">
         <label class="np-field"><span>Nombre <em>*</em></span><input class="np-input" [(ngModel)]="eqForm.name" placeholder="Laptop, casco, herramienta…" /></label>
         <label class="np-field"><span>Serial</span><input class="np-input np-mono" [(ngModel)]="eqForm.serial" /></label>
-        <label class="np-field"><span>Condición</span><select class="np-input" [(ngModel)]="eqForm.condition"><option value="nuevo">Nuevo</option><option value="bueno">Bueno</option><option value="regular">Regular</option><option value="malo">Malo</option></select></label>
+        <label class="np-field"><span>Condición</span><np-select [(ngModel)]="eqForm.condition" [opciones]="opcionesCondicion" [presentacion]="presSimple" ariaLabel="Condición"></np-select></label>
         <label class="np-field"><span>Asignación <em>*</em></span><input class="np-input" [(ngModel)]="eqForm.assigned_at" type="date" /></label>
         <label class="np-field"><span>Devolución</span><input class="np-input" [(ngModel)]="eqForm.returned_at" type="date" /></label>
         <label class="np-field np-field-full"><span>Descripción</span><textarea class="np-input np-textarea" [(ngModel)]="eqForm.description" rows="2"></textarea></label>
@@ -240,7 +238,7 @@
     <div class="np-modal-body">
       <div class="np-form">
         <label class="np-field"><span>Período <em>*</em></span><input class="np-input np-mono" [(ngModel)]="payForm.period" placeholder="2026-09" /></label>
-        <label class="np-field"><span>Método</span><select class="np-input" [(ngModel)]="payForm.payment_method"><option value="transferencia">Transferencia</option><option value="efectivo">Efectivo</option><option value="cheque">Cheque</option></select></label>
+        <label class="np-field"><span>Método</span><np-select [(ngModel)]="payForm.payment_method" [opciones]="opcionesMetodoNomina" [presentacion]="presSimple" ariaLabel="Método de pago"></np-select></label>
         <label class="np-field"><span>Salario base</span><input class="np-input np-mono" [(ngModel)]="payForm.base_salary" type="number" /></label>
         <label class="np-field"><span>Bonificaciones</span><input class="np-input np-mono" [(ngModel)]="payForm.bonuses" type="number" /></label>
         <label class="np-field"><span>Deducciones</span><input class="np-input np-mono" [(ngModel)]="payForm.deductions" type="number" /></label>

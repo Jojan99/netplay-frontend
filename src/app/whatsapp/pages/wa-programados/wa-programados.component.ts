@@ -3,6 +3,8 @@ import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { WhatsappService } from '../../services/whatsapp.service';
+import { NpSelectComponent } from '../../../common/np-select/np-select.component';
+import { OpcionSimple, PRESENTACION_LINEAS_WA, PRESENTACION_SIMPLE, conValor } from '../../../common/np-select/presentaciones';
 
 type MsgType     = 'text' | 'image' | 'document' | 'audio' | 'video';
 type ScheduleType = 'once' | 'daily' | 'weekly';
@@ -10,7 +12,7 @@ type ScheduleType = 'once' | 'daily' | 'weekly';
 @Component({
   selector: 'app-wa-programados',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, NpSelectComponent],
   templateUrl: './wa-programados.component.html',
   styleUrl: './wa-programados.component.scss',
   host: { class: 'np-console' },
@@ -56,6 +58,27 @@ export class WaProgramadosComponent implements OnInit {
     { value: 'document', label: 'Documento', icon: '📄' },
     { value: 'audio',    label: 'Audio',     icon: '🎵' },
     { value: 'video',    label: 'Video',     icon: '🎬' }
+  ];
+
+  // ── Selectores del formulario ────────────────────────────────
+  readonly presSimple = PRESENTACION_SIMPLE;
+  /** Número y estado de cada línea; en el modelo queda el instanceId en texto, como con [value]. */
+  readonly presLineas = conValor(PRESENTACION_LINEAS_WA, i => String(i?.instanceId ?? ''));
+
+  /** Qué pide cada tipo más abajo en el formulario. */
+  private readonly detalleTipo: Record<MsgType, string> = {
+    text:     'Escribís el texto',
+    image:    'URL de la imagen y descripción opcional',
+    document: 'URL del archivo y descripción opcional',
+    audio:    'URL del audio',
+    video:    'URL del video y descripción opcional',
+  };
+  readonly opcionesTipo: OpcionSimple[] = this.msgTypes.map(t => ({ valor: t.value, etiqueta: t.label, detalle: this.detalleTipo[t.value] }));
+
+  readonly opcionesProgramacion: OpcionSimple[] = [
+    { valor: 'once',   etiqueta: 'Una vez', detalle: 'Sale sólo en la fecha y hora elegidas' },
+    { valor: 'daily',  etiqueta: 'Diario',  detalle: 'Todos los días a la hora de repetición' },
+    { valor: 'weekly', etiqueta: 'Semanal', detalle: 'Los días de la semana que elijas' },
   ];
 
   constructor(private wa: WhatsappService) {}

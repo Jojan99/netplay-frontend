@@ -4,6 +4,8 @@ import { FormsModule } from '@angular/forms';
 import { OltNavComponent } from '../../shared/olt-nav.component';
 import { OltService } from '../../../../services/olt.service';
 import { ToastService } from '../../../../services/toast.service';
+import { NpSelectComponent, PresentacionSelect } from '../../../../common/np-select/np-select.component';
+import { PRESENTACION_OLTS } from '../../../../common/np-select/presentaciones';
 
 interface TunelVpn {
   id: number;
@@ -35,7 +37,7 @@ interface TunelVpn {
 @Component({
   selector: 'app-olt-vpn',
   standalone: true,
-  imports: [CommonModule, FormsModule, OltNavComponent],
+  imports: [CommonModule, FormsModule, NpSelectComponent, OltNavComponent],
   templateUrl: './olt-vpn.component.html',
   styleUrls: ['../../shared/olt.scss', './olt-vpn.component.scss', '../../shared/olt-movil.scss'],
   host: { class: 'np-console' },
@@ -68,6 +70,20 @@ export class OltVpnComponent implements OnInit {
   tunelParaOlt: TunelVpn | null = null;
   oltElegida: number | null = null;
   moviendo = false;
+
+  /**
+   * OLT para pasar al túnel: modelo, IP y cómo se llega hoy. La insignia marca
+   * las que caen dentro de las redes del túnel, que son las que pueden pasar.
+   * En el modelo queda el id, como antes.
+   */
+  readonly presOlts: PresentacionSelect = {
+    ...PRESENTACION_OLTS,
+    valor: o => o?.id,
+    detalle: o => [o?.model, o?.host, o?.access_mode === 'jump' ? 'por jump host' : 'directo'].filter(Boolean).join(' · '),
+    insignia: o => (this.caeEn(o?.host ?? null, this.tunelParaOlt?.redes_remotas ?? [])
+      ? { texto: 'En las redes del túnel', tono: 'ok' }
+      : (o?.access_mode === 'jump' ? { texto: 'Por jump host', tono: 'neutral' } : null)),
+  };
 
   // Prueba de alcance
   probando = false;

@@ -2,6 +2,16 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MetaWhatsappService } from '../../../services/meta-whatsapp.service';
+import { NpSelectComponent, PresentacionSelect } from '../../../../common/np-select/np-select.component';
+import { OpcionSimple, PRESENTACION_SIMPLE } from '../../../../common/np-select/presentaciones';
+
+const CATEGORIAS: Record<string, string> = { UTILITY: 'Utilidad', MARKETING: 'Marketing', AUTHENTICATION: 'Autenticación' };
+
+/** El comienzo del cuerpo de la plantilla, para reconocerla sin abrirla. */
+function extractoCuerpo(t: any, largo = 70): string {
+  const texto = String((t?.components ?? []).find((c: any) => c.type === 'BODY')?.text ?? '').replace(/\s+/g, ' ').trim();
+  return texto.length > largo ? texto.slice(0, largo).trimEnd() + '…' : texto;
+}
 
 /** Un espacio {{n}} de la plantilla: o lo llena el sistema, o lo escribe el operador. */
 interface Slot {
@@ -44,7 +54,7 @@ interface Campaign {
 @Component({
   selector: 'app-wa-meta-comunicados',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, NpSelectComponent],
   templateUrl: './wa-meta-comunicados.component.html',
   styleUrl: './wa-meta-comunicados.component.scss',
   host: { class: 'np-console' },
@@ -86,6 +96,42 @@ export class WaMetaComunicadosComponent implements OnInit {
 
   /** Detalle de un envío ya hecho. */
   detalle: any = null;
+
+  // ── Selectores ──────────────────────────────────────────────────────────────
+  readonly presSimple = PRESENTACION_SIMPLE;
+
+  /** Idioma a la izquierda y, debajo, la categoría y cómo empieza el mensaje. En el modelo queda el nombre. */
+  readonly presPlantillas: PresentacionSelect = {
+    valor: t => String(t?.name ?? ''),
+    etiqueta: t => t?.name ?? '',
+    prefijo: t => t?.language ?? null,
+    detalle: t => [CATEGORIAS[t?.category] ?? t?.category, extractoCuerpo(t)].filter(Boolean).join(' · ') || null,
+    buscarEn: t => [t?.name, t?.language, extractoCuerpo(t, 400)].filter(Boolean).join(' '),
+  };
+
+  /** Cada dato del cliente con su ejemplo, como decía el texto de la opción anterior. */
+  readonly presVariables: PresentacionSelect<Variable> = {
+    valor: v => v?.key,
+    etiqueta: v => v?.label ?? v?.key ?? '',
+    detalle: v => (v?.example ? `ej: ${v.example}` : null),
+  };
+
+  readonly opcionesTipoSlot: OpcionSimple[] = [
+    { valor: 'variable', etiqueta: 'Dato del cliente',     detalle: 'Cambia en cada cliente' },
+    { valor: 'fijo',     etiqueta: 'Texto que yo escribo', detalle: 'El mismo para todos' },
+  ];
+
+  readonly opcionesServicio: OpcionSimple[] = [
+    { valor: 'todos',      etiqueta: 'Activos y suspendidos', detalle: 'Con el servicio funcionando o cortado' },
+    { valor: 'activo',     etiqueta: 'Solo con servicio',     detalle: 'Deja fuera a los suspendidos' },
+    { valor: 'suspendido', etiqueta: 'Solo suspendidos',      detalle: 'Solo a los que tienen el servicio cortado' },
+  ];
+
+  readonly opcionesDeuda: OpcionSimple[] = [
+    { valor: 'todos', etiqueta: 'Deban o no',                detalle: 'No mira las facturas' },
+    { valor: 'con',   etiqueta: 'Solo los que deben',        detalle: 'Con alguna factura sin pagar' },
+    { valor: 'sin',   etiqueta: 'Solo los que están al día', detalle: 'Sin facturas pendientes' },
+  ];
 
   constructor(private meta: MetaWhatsappService) {}
 

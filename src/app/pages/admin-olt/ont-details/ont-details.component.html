@@ -24,11 +24,7 @@
       
       <!-- Select + Icono -->
       <div class="flex items-center gap-3">
-        <select class="w-28 border rounded px-3 py-2 text-lg">
-          <option>15</option>
-          <option>30</option>
-          <option>50</option>
-        </select>
+        <np-select [(ngModel)]="porPagina" [opciones]="opcionesPorPagina" [presentacion]="presPorPagina" tamano="sm" ariaLabel="Registros por página" style="width: 160px"></np-select>
         <button class="p-3 border rounded hover:bg-gray-100">
           <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16m-7 6h7"/>

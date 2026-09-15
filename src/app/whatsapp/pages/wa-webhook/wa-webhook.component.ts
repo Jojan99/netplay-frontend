@@ -4,6 +4,8 @@ import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { WhatsappService } from '../../services/whatsapp.service';
+import { NpSelectComponent } from '../../../common/np-select/np-select.component';
+import { PRESENTACION_LINEAS_WA, conValor } from '../../../common/np-select/presentaciones';
 
 interface InstanciaRecepcion {
   id: string;
@@ -28,7 +30,7 @@ interface InstanciaRecepcion {
 @Component({
   selector: 'app-wa-webhook',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, NpSelectComponent],
   templateUrl: './wa-webhook.component.html',
   styleUrl: './wa-webhook.component.scss',
   host: { class: 'np-console' },
@@ -48,6 +50,8 @@ export class WaWebhookComponent implements OnInit {
   // Instancias
   instances: any[]    = [];
   selectedInstance    = '';
+  /** Número y estado de cada línea; en el modelo queda el instanceId en texto, como con [value]. */
+  readonly presLineas = conValor(PRESENTACION_LINEAS_WA, i => String(i?.instanceId ?? ''));
 
   // Webhook logs
   webhookLogs: any[]  = [];
