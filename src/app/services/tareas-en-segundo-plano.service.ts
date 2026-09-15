@@ -2,6 +2,7 @@ import { Injectable, PLATFORM_ID, computed, inject, signal } from '@angular/core
 import { isPlatformBrowser } from '@angular/common';
 import { Observable, finalize, shareReplay, tap } from 'rxjs';
 import { GestionRemotaService } from './gestion-remota.service';
+import { AuthService } from './auth.service';
 
 export type EstadoTarea = 'en_curso' | 'listo' | 'error';
 
@@ -16,7 +17,11 @@ export interface TareaSeguida {
   puedeParar: boolean;
 }
 
-const CLAVE = 'np_tareas_segundo_plano';
+/**
+ * Las tareas se guardan por empresa y usuario. Con una sola clave, quien entraba
+ * con otra empresa en el mismo navegador veía las tareas de la anterior.
+ */
+const CLAVE_BASE = 'np_tareas_segundo_plano';
 
 /** Las que se pueden detener a mitad de camino (terminan el equipo en curso). */
 const SE_PUEDEN_PARAR = ['al_dia'];
@@ -32,6 +37,7 @@ const SE_PUEDEN_PARAR = ['al_dia'];
 @Injectable({ providedIn: 'root' })
 export class TareasEnSegundoPlanoService {
   private gestion = inject(GestionRemotaService);
+  private auth = inject(AuthService);
   private enNavegador = isPlatformBrowser(inject(PLATFORM_ID));
 
   readonly tareas = signal<TareaSeguida[]>([]);
@@ -39,20 +45,55 @@ export class TareasEnSegundoPlanoService {
   readonly enCurso = computed(() => this.tareas().filter(t => t.estado === 'en_curso').length);
 
   private flujos = new Map<string, Observable<any>>();
+  /** La clave de la sesión cuyas tareas están cargadas. */
+  private claveCargada = '';
 
   constructor() {
     if (!this.enNavegador) return;
 
+    // La clave vieja, compartida por todas las empresas del navegador.
+    try { localStorage.removeItem(CLAVE_BASE); } catch { /* bloqueado */ }
+
+    this.recargarSesion();
+  }
+
+  /**
+   * Carga las tareas de la sesión actual (empresa + usuario). Se llama al
+   * abrir el panel después de iniciar sesión: el servicio vive mientras la
+   * pestaña esté abierta, así que sin esto seguía mostrando las de la sesión
+   * anterior.
+   */
+  recargarSesion(): void {
+    if (!this.enNavegador) return;
+
+    const clave = this.clave();
+    if (clave === this.claveCargada) return;
+    this.claveCargada = clave;
+
+    // Los seguimientos de la sesión anterior dejan de actualizar la lista.
+    this.flujos.clear();
+    this.medicionesActivas.clear();
+    this.tareas.set([]);
+    this.minimizado.set(false);
+
+    if (!clave) return;
+
     try {
-      const guardado = JSON.parse(localStorage.getItem(CLAVE) || '{}');
+      const guardado = JSON.parse(localStorage.getItem(clave) || '{}');
       this.tareas.set(Array.isArray(guardado.tareas) ? guardado.tareas : []);
       this.minimizado.set(!!guardado.minimizado);
     } catch { /* sin datos guardados */ }
 
     // Las que seguían corriendo cuando se cerró o recargó la página.
     for (const t of this.tareas()) {
-      if (t.estado === 'en_curso') this.seguir(t.id, t.titulo, t.tipo);
+      if (t.estado === 'en_curso' && t.tipo !== 'senal' && t.tipo !== 'diagnostico') this.seguir(t.id, t.titulo, t.tipo);
     }
+  }
+
+  /** Sin sesión no se guarda nada: vacía para que no se mezcle. */
+  private clave(): string {
+    const u = this.auth.getUser();
+    return u?.company_id ? `${CLAVE_BASE}:${u.company_id}:${u.username ?? ''}` : '';
   }
 
   /**
@@ -187,9 +228,12 @@ export class TareasEnSegundoPlanoService {
   }
 
   private guardar(): void {
-    if (!this.enNavegador) return;
+    if (!this.enNavegador || !this.claveCargada) return;
+    // Si la sesión cambió sin pasar por recargarSesion, no se escribe en la
+    // clave de otra empresa.
+    if (this.clave() !== this.claveCargada) return;
     try {
-      localStorage.setItem(CLAVE, JSON.stringify({ tareas: this.tareas(), minimizado: this.minimizado() }));
+      localStorage.setItem(this.claveCargada, JSON.stringify({ tareas: this.tareas(), minimizado: this.minimizado() }));
     } catch { /* almacenamiento lleno o bloqueado */ }
   }
 }

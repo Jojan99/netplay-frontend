@@ -49,6 +49,7 @@ export const ICONOS = {
 
 /** Desde el iPad mini en vertical: en teléfono las ventanas no tienen dónde vivir. */
 const PANTALLA_GRANDE = '(min-width: 768px)';
+/** Por empresa y usuario: las ventanas guardan clientes abiertos y no se deben ver desde otra empresa. */
 const CLAVE_VENTANAS = 'np_ventanas_rapidas';
 
 /**
@@ -85,10 +86,25 @@ export class AtajosService {
       if (!e.matches) this.buscadorAbierto.set(false);
     });
 
+    // La clave vieja, compartida por todas las empresas del navegador.
+    try { localStorage.removeItem(CLAVE_VENTANAS); } catch { /* bloqueado */ }
+
+    this.recargarSesion();
+  }
+
+  /**
+   * Favoritos y ventanas de la sesión actual (empresa + usuario). El servicio
+   * vive mientras la pestaña esté abierta: sin esto, al entrar con otra
+   * empresa seguían a la vista las ventanas con los clientes de la anterior.
+   */
+  recargarSesion(): void {
+    if (!this.navegador) return;
+
     this.favoritos.set(this.leer(this.claveFavoritos(), []));
-    const guardadas = this.leer<VentanaRapida[]>(CLAVE_VENTANAS, []);
+    const guardadas = this.leer<VentanaRapida[]>(this.claveVentanas(), []);
     this.ventanas.set(guardadas.filter(v => TIPOS_DE_VENTANA[v.tipo]).map(v => this.dentroDeLaPantalla(v)));
     this.siguienteId = Math.max(0, ...this.ventanas().map(v => v.id)) + 1;
+    this.buscadorAbierto.set(false);
   }
 
   // ── Menú y favoritos ────────────────────────────────────────────────
@@ -105,8 +121,8 @@ export class AtajosService {
       }
     }
     this.modulos.set(planos);
-    // La lista de favoritos es por persona: al entrar con otra cuenta cambia.
-    this.favoritos.set(this.leer(this.claveFavoritos(), []));
+    // Favoritos y ventanas son por persona y empresa: al entrar con otra cuenta cambian.
+    this.recargarSesion();
   }
 
   esFavorito(href?: string): boolean { return !!href && this.favoritos().includes(href); }
@@ -183,7 +199,15 @@ export class AtajosService {
     return { ...v, x: Math.min(Math.max(8, v.x), window.innerWidth - 120), y: Math.min(Math.max(60, v.y), window.innerHeight - 60) };
   }
 
-  private guardarVentanas(): void { this.escribir(CLAVE_VENTANAS, this.ventanas()); }
+  private guardarVentanas(): void {
+    const clave = this.claveVentanas();
+    if (clave) this.escribir(clave, this.ventanas());
+  }
+
+  private claveVentanas(): string {
+    const u = this.auth.getUser();
+    return u?.company_id ? `${CLAVE_VENTANAS}:${u.company_id}:${u.username ?? ''}` : '';
+  }
 
   // ── Datos ───────────────────────────────────────────────────────────
 

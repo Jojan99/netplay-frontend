@@ -31,6 +31,7 @@ import { ToastService }             from '../../services/toast.service';
 import { OauthService }             from '../../services/oauth.service';
 import { TareasFlotantesComponent } from '../tareas-flotantes/tareas-flotantes.component';
 import { AtajosService, ICONOS }    from '../../services/atajos.service';
+import { TareasEnSegundoPlanoService } from '../../services/tareas-en-segundo-plano.service';
 import { BuscadorRapidoComponent }  from '../atajos/buscador-rapido.component';
 import { VentanasRapidasComponent, MenuDeVentanasComponent } from '../atajos/ventanas-rapidas.component';
 
@@ -56,6 +57,7 @@ export class LayoutComponent implements OnInit {
   private oauth = inject(OauthService);
   /** Favoritos, buscador Ctrl+K y ventanas rápidas (sólo en pantallas grandes). */
   readonly atajos = inject(AtajosService);
+  private tareasSegundoPlano = inject(TareasEnSegundoPlanoService);
   readonly iconos = ICONOS;
 
   alternarFavorito(item: RouteProps): void {
@@ -129,6 +131,11 @@ export class LayoutComponent implements OnInit {
       this.router.navigate(['/login']);
       return;
     }
+
+    // Las tareas en segundo plano y las ventanas rápidas son de cada empresa y
+    // usuario: al entrar con otra cuenta se cargan las suyas, no las anteriores.
+    this.tareasSegundoPlano.recargarSesion();
+    this.atajos.recargarSesion();
 
     this.companyName = user.company_name || '';
     this.companyLogo = user.company_logo || '';
