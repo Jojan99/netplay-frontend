@@ -60,6 +60,9 @@
   input { width: 16px; height: 16px; accent-color: var(--accent); } }
 .nt-falta { font-size: 12px; color: var(--text-3); }
 
+/* .np-input fija 34 px de alto: sin esto la observación se veía de una línea. */
+textarea.np-input { height: auto; min-height: 96px; padding: 8px 10px; resize: vertical; line-height: 1.5; }
+
 @media (max-width: 600px) {
   .nt-cliente { flex-wrap: wrap; .np-btn { width: 100%; justify-content: center; } }
   .nt-falta { display: none; }
