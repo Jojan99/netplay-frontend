@@ -631,7 +631,7 @@
         <label class="np-field"><span>VLAN</span>
           <select class="np-input" [(ngModel)]="fixVlan" (ngModelChange)="onFixVlanChange($event)">
             <option [ngValue]="null" disabled>Seleccione VLAN…</option>
-            <option *ngFor="let v of fixVlans" [ngValue]="v">{{ v.names }}</option>
+            <option *ngFor="let v of fixVlans" [ngValue]="v">{{ v.names }}{{ v.clientes ? ' · ' + v.clientes + ' clientes' : '' }}</option>
           </select>
         </label>
 

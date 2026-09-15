@@ -248,9 +248,10 @@ export class UserService {
 
   }
 
-  getneighborhoodAll(routerId?: number | null){
-    let url = this.env.rootUrl + 'api/management/getLanSegments';
-    if (routerId) url += `?router_id=${routerId}`;
+  /** Redes del router que dan internet; con todas, también WAN, servidor, OLT y gestión. */
+  getneighborhoodAll(routerId?: number | null, todas = false){
+    const params = [routerId ? `router_id=${routerId}` : '', todas ? 'todas=1' : ''].filter(Boolean).join('&');
+    const url = this.env.rootUrl + 'api/management/getLanSegments' + (params ? `?${params}` : '');
     return this.http.get<any>(url, { headers: this.getHeaders() });
   }
 

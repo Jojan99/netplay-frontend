@@ -1284,12 +1284,20 @@ export class UserComponent implements OnInit {
     this.guardarBorrador();
   }
 
+  /** El selector muestra sólo las redes que dan internet; con esto, todas las del router. */
+  todasLasRedes = false;
+
+  alternarTodasLasRedes() {
+    this.todasLasRedes = !this.todasLasRedes;
+    this.cargarInterfaces();
+  }
+
   /** VLAN del router elegido, con aviso si el router no responde. */
   cargarInterfaces() {
     this.loadingIfaces = true;
     this.ifacesError = null;
 
-    this.userSvc.getneighborhoodAll(this.selectedRouterId).subscribe({
+    this.userSvc.getneighborhoodAll(this.selectedRouterId, this.todasLasRedes).subscribe({
       next: r => {
         this.loadingIfaces = false;
         this.interfaces = r?.error === 0 && r.data ? Object.values(r.data) : [];
