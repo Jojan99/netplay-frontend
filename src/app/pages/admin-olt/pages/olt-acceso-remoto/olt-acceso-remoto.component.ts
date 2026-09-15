@@ -89,6 +89,55 @@ export class OltAccesoRemotoComponent implements OnInit {
   ngOnInit() {
     this.cargar();
     this.revisar();
+    this.cargarAprov();
+  }
+
+  // ── Aprovisionamiento automático al autorizar ─────────────────────────
+
+  aprov: any = null;
+  aprovForm = { aprovisionar: false, wan: true, wifi: true, admin: false, wifi_prefijo: '', admin_usuario: '', admin_clave: '' };
+  aprovUltimos: any[] = [];
+  guardandoAprov = false;
+  /** El aprovisionamiento con los pasos a la vista. */
+  abiertoAprov: number | null = null;
+
+  readonly estadosAprov: Record<string, string> = {
+    esperando: 'Esperando al equipo', aplicando: 'Aplicando', listo: 'Listo', con_errores: 'Con fallas',
+    vencido: 'No apareció', error: 'Falla', reemplazado: 'Reemplazado',
+  };
+
+  esMalo(estado: string): boolean { return ['con_errores', 'vencido', 'error'].includes(estado); }
+
+  cargarAprov() {
+    this.api.aprovisionamiento().subscribe({
+      next: (r: any) => {
+        if (r?.error !== 0) return;
+        this.aprov = r.data.ajustes;
+        this.aprovUltimos = r.data.ultimos ?? [];
+        this.aprovForm = {
+          aprovisionar: !!this.aprov.aprovisionar, wan: !!this.aprov.wan, wifi: !!this.aprov.wifi, admin: !!this.aprov.admin,
+          wifi_prefijo: this.aprov.wifi_prefijo ?? '', admin_usuario: this.aprov.admin_usuario ?? '', admin_clave: '',
+        };
+      },
+    });
+  }
+
+  guardarAprov() {
+    this.guardandoAprov = true;
+    this.api.guardarAprovisionamiento(this.aprovForm).subscribe({
+      next: (r: any) => {
+        this.guardandoAprov = false;
+        if (r?.error !== 0) { this.toast.error(r?.message ?? 'No se pudo guardar'); return; }
+        this.aprov = r.data;
+        this.aprovForm.admin_clave = '';
+        this.toast.success(this.aprovForm.aprovisionar ? 'Aprovisionamiento automático guardado' : 'Aprovisionamiento automático apagado');
+      },
+      error: (e: any) => {
+        this.guardandoAprov = false;
+        this.toast.error(e?.error?.message ?? 'No se pudo guardar');
+        this.cargarAprov();
+      },
+    });
   }
 
   cargar() {

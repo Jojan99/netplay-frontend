@@ -219,6 +219,59 @@
       </div>
     </section>
 
+    <!-- ── Aprovisionamiento automático al autorizar ────────────────── -->
+    <section class="ar-paso" id="ar-aprov" *ngIf="aprov">
+      <div class="ar-paso-n"><span>·</span></div>
+      <div class="ar-paso-cuerpo">
+        <header>
+          <h2>Aprovisionamiento automático al autorizar</h2>
+          <p>Cuando autorizás una ONT con su cliente, apenas el equipo aparece en el TR-069 se le carga la conexión a internet del cliente (IP fija o PPPoE, en la VLAN elegida), el WiFi y la cuenta de administración. Cada paso queda anotado abajo.</p>
+        </header>
+
+        <div class="np-actions">
+          <button type="button" class="np-switch" role="switch" [attr.aria-checked]="aprovForm.aprovisionar" aria-label="Aprovisionamiento automático"
+                  [disabled]="guardandoAprov" (click)="aprovForm.aprovisionar = !aprovForm.aprovisionar; guardarAprov()"></button>
+          <b>{{ aprovForm.aprovisionar ? 'Encendido' : 'Apagado' }}</b>
+        </div>
+        <p class="np-notice np-notice--warn np-notice--inline" *ngIf="aprovForm.aprovisionar && !aprov.gestion_activa">El acceso remoto está apagado: sin él los equipos no llegan al TR-069 y el aprovisionamiento no se aplica.</p>
+
+        <div class="np-form" *ngIf="aprovForm.aprovisionar">
+          <div class="np-field np-field-full">
+            <span>Qué se configura</span>
+            <label class="np-check"><input type="checkbox" [(ngModel)]="aprovForm.wan" /> Conexión a internet del cliente <small class="np-fine">· por ahora en equipos Huawei</small></label>
+            <label class="np-check"><input type="checkbox" [(ngModel)]="aprovForm.wifi" /> WiFi: nombre y clave</label>
+            <label class="np-check"><input type="checkbox" [(ngModel)]="aprovForm.admin" /> Cuenta de administración del equipo</label>
+          </div>
+          <label class="np-field np-field-full" *ngIf="aprovForm.wifi"><span>Inicio del nombre del WiFi <em>cuando no se escribe uno al autorizar</em></span>
+            <input class="np-input" [(ngModel)]="aprovForm.wifi_prefijo" maxlength="20" [placeholder]="aprov.prefijo_sugerido" />
+            <small class="np-fine">Queda «{{ aprovForm.wifi_prefijo || aprov.prefijo_sugerido }}_APELLIDO» con una clave de 10 caracteres; en 5 GHz se agrega «-5G».</small>
+          </label>
+          <ng-container *ngIf="aprovForm.admin">
+            <label class="np-field"><span>Usuario administrador</span><input class="np-input" [(ngModel)]="aprovForm.admin_usuario" maxlength="32" autocomplete="off" /></label>
+            <label class="np-field"><span>Clave administrador</span><input class="np-input" type="password" [(ngModel)]="aprovForm.admin_clave" maxlength="64" autocomplete="new-password" [placeholder]="aprov.admin_con_clave ? 'Guardada · escribí para cambiarla' : ''" /></label>
+          </ng-container>
+        </div>
+
+        <div class="np-actions">
+          <button type="button" class="np-btn np-btn--primary" *ngIf="aprovForm.aprovisionar" (click)="guardarAprov()" [disabled]="guardandoAprov">{{ guardandoAprov ? 'Guardando…' : 'Guardar' }}</button>
+          <button type="button" class="np-btn np-btn--ghost" (click)="cargarAprov()">Actualizar lista</button>
+        </div>
+
+        <ul class="ar-lista" *ngIf="aprovUltimos.length">
+          <li *ngFor="let a of aprovUltimos" [class.is-mal]="esMalo(a.estado)" (click)="abiertoAprov = abiertoAprov === a.id ? null : a.id" style="cursor: pointer">
+            <span class="ar-tick" aria-hidden="true">{{ a.estado === 'listo' ? '✓' : (esMalo(a.estado) ? '!' : '…') }}</span>
+            <span>
+              <b>{{ a.cliente || a.serial }} · {{ estadosAprov[a.estado] || a.estado }}</b>
+              <small>{{ a.ont }} · {{ a.serial }}<ng-container *ngIf="a.wifi_ssid"> · WiFi «{{ a.wifi_ssid }}» clave <span class="np-mono">{{ a.wifi_clave }}</span></ng-container> · {{ a.detalle }}</small>
+              <ng-container *ngIf="abiertoAprov === a.id">
+                <small *ngFor="let p of a.pasos">{{ p.ok ? '✓' : (p.omitido ? '–' : '✗') }} {{ p.paso }}: {{ p.detalle }}</small>
+              </ng-container>
+            </span>
+          </li>
+        </ul>
+      </div>
+    </section>
+
     <!-- ── Equipos C-Data ────────────────────────────────────────────── -->
     <section class="ar-paso" *ngIf="estado?.activa">
       <div class="ar-paso-n"><span>·</span></div>

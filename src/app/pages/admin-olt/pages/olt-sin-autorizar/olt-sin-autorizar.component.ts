@@ -12,6 +12,8 @@ import { ToastService } from '../../../../services/toast.service';
 import { DialogService } from '../../../../services/dialog.service';
 import { AcsSetupService } from '../../../../services/acs-setup.service';
 
+import { GestionRemotaService } from '../../../../services/gestion-remota.service';
+
 @Component({
   selector: 'app-olt-sin-autorizar',
   standalone: true,
@@ -350,6 +352,8 @@ export class OltSinAutorizarComponent implements OnInit {
     this.mostrarLista = false;
     this.verificarSiYaExiste();
     this.cargarClientes();
+    this.wifi = { ssid: '', clave: '' };
+    this.cargarAprov();
   }
 
   /** La dirección del TR-069, para dejársela cargada al equipo recién instalado. */
@@ -375,6 +379,14 @@ export class OltSinAutorizarComponent implements OnInit {
       if (!seguir) return;
     }
 
+    const aprovisionar = this.aprov?.aprovisionar;
+    const claveWifi = this.wifi.clave.trim();
+
+    if (aprovisionar && claveWifi && (claveWifi.length < 8 || claveWifi.length > 63)) {
+      this.toast.error('La clave del WiFi debe tener entre 8 y 63 caracteres (o dejala vacía para generarla).');
+      return;
+    }
+
     this.registering = true;
     this.oltService.registerONT(this.selectedOltId, {
       fsp:             this.form.fsp,
@@ -384,6 +396,13 @@ export class OltSinAutorizarComponent implements OnInit {
       srv_profile_id:  this.form.srv_profile_id,
       vlan:            this.form.vlan,
       user_data_id:    this.clienteElegido?.id ?? undefined,
+      // La red elegida (gateway y máscara) arma la IP fija del cliente en el equipo.
+      aprovisionar:    aprovisionar ? {
+        gateway:    this.selectedSegment?.gateway ?? null,
+        mascara:    this.selectedSegment?.mask ?? null,
+        wifi_ssid:  this.wifi.ssid.trim() || null,
+        wifi_clave: claveWifi || null,
+      } : undefined,
     }).subscribe({
       // El backend responde 200 aunque la OLT haya rechazado: el resultado
       // viene dentro. Antes se mostraba en verde el texto del error.
@@ -396,6 +415,18 @@ export class OltSinAutorizarComponent implements OnInit {
   }
 
   private tareas = inject(TareasEnSegundoPlanoService);
+  private gestion = inject(GestionRemotaService);
+
+  /** Si la empresa aprovisiona al autorizar: entonces el alta pide el WiFi. */
+  aprov: any = null;
+  wifi = { ssid: '', clave: '' };
+
+  private cargarAprov(): void {
+    this.gestion.aprovisionamiento().subscribe({
+      next: (r: any) => this.aprov = r?.error === 0 ? r.data.ajustes : null,
+      error: () => this.aprov = null,
+    });
+  }
 
   private trasProvisionar(res: any): void {
     this.registering = false;

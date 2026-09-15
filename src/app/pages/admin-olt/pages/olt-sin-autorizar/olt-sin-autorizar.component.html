@@ -167,6 +167,21 @@
           <small class="np-fine" *ngIf="form.vlan && !conServicePort">VLAN {{ form.vlan }}: al autorizar se verifica que el puerto PON la lleve. {{ capacidades.explicacion_vlan }}</small>
           <small class="np-fine" *ngIf="!form.vlan && !loadingSegments">Sin VLAN la ONT se registra sin service port. Se puede asignar después.</small>
         </label>
+
+        <!-- Aprovisionamiento: si la empresa lo tiene encendido en Acceso remoto -->
+        <ng-container *ngIf="aprov?.aprovisionar && !pasos.length">
+          <p class="np-fine np-field-full">
+            Al aparecer en el TR-069 se le carga<ng-container *ngIf="aprov.wan"> la conexión a internet del cliente{{ form.vlan ? ' en la VLAN ' + form.vlan : '' }}</ng-container><ng-container *ngIf="aprov.wifi">{{ aprov.wan ? ',' : '' }} el WiFi</ng-container><ng-container *ngIf="aprov.admin"> y la cuenta de administración</ng-container>.
+          </p>
+          <ng-container *ngIf="aprov.wifi">
+            <label class="np-field"><span>Nombre del WiFi <em>vacío = {{ aprov.wifi_prefijo || aprov.prefijo_sugerido }}_APELLIDO</em></span>
+              <input class="np-input" [(ngModel)]="wifi.ssid" maxlength="32" autocomplete="off" />
+            </label>
+            <label class="np-field"><span>Clave del WiFi <em>vacío = se genera</em></span>
+              <input class="np-input np-mono" [(ngModel)]="wifi.clave" maxlength="63" autocomplete="off" placeholder="Mínimo 8 caracteres" />
+            </label>
+          </ng-container>
+        </ng-container>
       </div>
       <p class="np-notice np-notice--warn" *ngIf="!loadingProfiles && lineProfiles.length === 0 && srvProfiles.length === 0">No hay perfiles sincronizados. En <strong>Perfiles</strong> hacé clic en Sincronizar desde OLT.</p>
       <div class="np-btnrow np-btnrow--end"><button type="button" class="np-btn np-btn--ghost" (click)="modal = false">Cancelar</button><button type="button" class="np-btn np-btn--primary" (click)="confirmRegister()" [disabled]="registering || !form.fsp || !!yaExiste" [title]="yaExiste ? 'Primero hay que quitarla del puerto donde está' : ''">{{ registering ? 'Autorizando…' : 'Confirmar autorización' }}</button></div>

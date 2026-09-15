@@ -73,6 +73,16 @@ export class GestionRemotaService {
     );
   }
 
+  /** Ajustes del aprovisionamiento automático y los últimos equipos programados. */
+  aprovisionamiento(): Observable<any> { return this.http.get(`${this.base}/aprovisionamiento`, this.h()); }
+
+  guardarAprovisionamiento(datos: {
+    aprovisionar: boolean; wan: boolean; wifi: boolean; admin: boolean;
+    wifi_prefijo?: string; admin_usuario?: string; admin_clave?: string;
+  }): Observable<any> {
+    return this.http.put(`${this.base}/aprovisionamiento`, datos, this.h());
+  }
+
   /** Le da acceso a los equipos que ya estaban autorizados, de a tandas. */
   alDia(oltId?: number | null): Observable<any> {
     return this.http.post(`${this.base}/al-dia`, { olt_id: oltId ?? null }, this.h());
