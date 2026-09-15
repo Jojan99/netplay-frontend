@@ -365,10 +365,7 @@
 
               <ng-container *ngIf="cambioTipo === 'static'">
                 <label class="np-field"><span>VLAN</span>
-                  <select class="np-input" [(ngModel)]="cambioVlan" (ngModelChange)="onCambioVlanChange($event)">
-                    <option [ngValue]="null" disabled>Seleccione VLAN…</option>
-                    <option *ngFor="let iface of interfaces" [ngValue]="iface">{{ iface.names }}{{ iface.network ? ' · ' + iface.network : '' }}{{ iface.clientes ? ' · ' + iface.clientes + ' clientes' : '' }}</option>
-                  </select>
+                  <np-select [(ngModel)]="cambioVlan" (ngModelChange)="onCambioVlanChange($event)" [opciones]="interfaces" [presentacion]="redes" placeholder="Seleccione VLAN…" ariaLabel="VLAN"></np-select>
                 </label>
                 <label class="np-field"><span>IP <em>({{ migrIpzone.length }} disponibles)</em></span>
                   <select class="np-input np-mono" [(ngModel)]="cambioIp" [disabled]="!migrIpzone.length">
@@ -737,11 +734,8 @@
           </select>
         </label>
         <label class="np-field" *ngIf="!esPppoe"><span>VLAN</span>
-          <select class="np-input" [(ngModel)]="selectedVlan" (ngModelChange)="onInterfaceChange($event)"
-                  [disabled]="loadingIfaces">
-            <option [ngValue]="null" disabled>{{ loadingIfaces ? 'Leyendo el router…' : 'Seleccione VLAN…' }}</option>
-            <option *ngFor="let iface of interfaces" [ngValue]="iface">{{ iface.names }}{{ iface.clientes ? ' · ' + iface.clientes + ' clientes' : (iface.tipo === 'clientes' ? ' · sin clientes aún' : '') }}</option>
-          </select>
+          <np-select [(ngModel)]="selectedVlan" (ngModelChange)="onInterfaceChange($event)" [opciones]="interfaces" [presentacion]="redes"
+                     [cargando]="loadingIfaces" textoCargando="Leyendo el router…" placeholder="Seleccione VLAN…" ariaLabel="VLAN"></np-select>
           <small class="np-fine" *ngIf="!loadingIfaces">{{ todasLasRedes ? 'Todas las redes del router.' : 'Sólo las redes que dan internet.' }} <button type="button" class="np-link" (click)="alternarTodasLasRedes()">{{ todasLasRedes ? 'Ver sólo las de clientes' : 'Ver todas' }}</button></small>
         </label>
         <label class="np-field" *ngIf="!esPppoe"><span>Segmento</span>

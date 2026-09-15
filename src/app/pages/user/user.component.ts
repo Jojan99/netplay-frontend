@@ -5,6 +5,8 @@ import { DialogService } from '../../services/dialog.service';
 import { ActivatedRoute } from '@angular/router';
 import { OntEquipoComponent } from '../../components/ont-equipo/ont-equipo.component';
 import { FormsModule } from '@angular/forms';
+import { NpSelectComponent } from '../../common/np-select/np-select.component';
+import { PRESENTACION_REDES } from '../../common/np-select/presentaciones';
 import { LayoutComponent } from '../../components/layout/layout.component';
 import { UserService } from '../../services/user.service';
 import { UserInterface } from '../../models/user-interface';
@@ -31,11 +33,14 @@ export type ClientTab = 'resumen' | 'servicios' | 'facturacion' | 'tickets' | 'h
   selector: 'app-user',
   templateUrl: './user.component.html',
   standalone: true,
-  imports: [CommonModule, FormsModule, HttpClientModule, LayoutComponent, FooterComponent, OntEquipoComponent],
+  imports: [CommonModule, FormsModule, NpSelectComponent, HttpClientModule, LayoutComponent, FooterComponent, OntEquipoComponent],
   styleUrls: ['./user.component.scss'],
   host: { class: 'np-console' }
 })
 export class UserComponent implements OnInit {
+  /** Cómo se ven las redes en el selector de VLAN: número de VLAN, segmento y clientes. */
+  readonly redes = PRESENTACION_REDES;
+
 
   private dialog = inject(DialogService);
 

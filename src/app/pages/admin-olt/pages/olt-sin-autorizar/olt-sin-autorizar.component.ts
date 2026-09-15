@@ -4,6 +4,8 @@ import { TareasEnSegundoPlanoService } from '../../../../services/tareas-en-segu
 import { CommonModule } from '@angular/common';
 import { OltNavComponent } from '../../shared/olt-nav.component';
 import { FormsModule } from '@angular/forms';
+import { NpSelectComponent } from '../../../../common/np-select/np-select.component';
+import { PRESENTACION_REDES } from '../../../../common/np-select/presentaciones';
 import { OltService } from '../../../../services/olt.service';
 import { MikrotikService } from '../../../../services/mikrotik.service';
 import { ToastService } from '../../../../services/toast.service';
@@ -13,12 +15,15 @@ import { AcsSetupService } from '../../../../services/acs-setup.service';
 @Component({
   selector: 'app-olt-sin-autorizar',
   standalone: true,
-  imports: [CommonModule, FormsModule, OltNavComponent],
+  imports: [CommonModule, FormsModule, NpSelectComponent, OltNavComponent],
   templateUrl: './olt-sin-autorizar.component.html',
   styleUrls: ['../../shared/olt.scss', '../../shared/olt-movil.scss'],
   host: { class: 'np-console' },
 })
 export class OltSinAutorizarComponent implements OnInit {
+  /** Cómo se ven las redes en el selector de VLAN: número de VLAN, segmento y clientes. */
+  readonly redes = PRESENTACION_REDES;
+
 
   // OLT selector
   olts: any[]          = [];

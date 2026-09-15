@@ -1,0 +1,106 @@
+/* ─── np-select: selector propio del panel ──────────────────────────────
+   Mismo alto, borde y foco que .np-input. El panel sale con position: fixed
+   para no quedar recortado por contenedores con scroll ni por modales. */
+:host { display: block; position: relative; min-width: 0; }
+
+.nps-disparador {
+  width: 100%; height: 34px; display: flex; align-items: center; gap: 8px;
+  padding: 0 8px 0 10px; margin: 0;
+  font: 13px var(--font-body); color: var(--text); text-align: left;
+  background: var(--surface); border: 1px solid var(--line-strong); border-radius: var(--radius);
+  cursor: pointer; transition: border-color .12s, box-shadow .12s;
+
+  &:hover:not(:disabled) { border-color: var(--text-3); }
+  &:focus-visible { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 16%, transparent); }
+  :host(.is-open) & { border-color: var(--accent); box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 16%, transparent); }
+  &:disabled { opacity: .55; cursor: not-allowed; }
+}
+
+.nps-valor { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 600; }
+.nps-placeholder { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--text-3);
+  &.is-vacio { color: var(--text-2); } }
+.nps-insignia-corta { flex-shrink: 0; font: 600 11px var(--font-mono); color: var(--text-3); white-space: nowrap;
+  &[data-tono='ok'] { color: var(--ok); }
+  &[data-tono='warn'] { color: var(--warn); }
+  &[data-tono='info'] { color: var(--info); } }
+
+.nps-chevron { width: 16px; height: 16px; flex-shrink: 0; color: var(--text-3); transition: transform .15s, color .15s;
+  :host(.is-open) & { transform: rotate(180deg); color: var(--accent); } }
+
+/* Etiqueta corta: el número de VLAN, un código */
+.nps-prefijo {
+  flex-shrink: 0; min-width: 34px; height: 22px; padding: 0 6px;
+  display: inline-grid; place-items: center;
+  font: 600 11px var(--font-mono); letter-spacing: -.01em;
+  color: var(--accent); background: var(--accent-soft); border: 1px solid var(--accent-line); border-radius: 5px;
+  &.is-sin { color: var(--text-3); background: var(--surface-2); border-color: var(--line); }
+}
+.nps-disparador .nps-prefijo { height: 20px; min-width: 30px; }
+
+/* ── Panel ─────────────────────────────────────────────────────────── */
+.nps-panel {
+  position: fixed; z-index: 95;
+  display: flex; flex-direction: column; overflow: hidden;
+  background: var(--surface); border: 1px solid var(--line-strong); border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+  animation: nps-entra .12s ease-out;
+  &.is-arriba { translate: 0 -100%; animation-name: nps-entra-arriba; }
+}
+@keyframes nps-entra { from { opacity: 0; transform: translateY(-4px); } }
+@keyframes nps-entra-arriba { from { opacity: 0; transform: translateY(4px); } }
+@media (prefers-reduced-motion: reduce) { .nps-panel { animation: none; } }
+
+.nps-buscar {
+  display: flex; align-items: center; gap: 8px; padding: 0 10px; border-bottom: 1px solid var(--line);
+  svg { width: 15px; height: 15px; flex-shrink: 0; color: var(--text-3); }
+  input {
+    flex: 1; min-width: 0; height: 40px; padding: 0; margin: 0;
+    border: 0 !important; outline: none !important; box-shadow: none !important; background: transparent !important;
+    font: 13px var(--font-body); color: var(--text);
+    &::placeholder { color: var(--text-3); }
+  }
+}
+.nps-conteo { font: 600 11px var(--font-mono); color: var(--text-3); }
+
+.nps-lista { list-style: none; margin: 0; padding: 4px; overflow-y: auto; overscroll-behavior: contain; outline: none; }
+
+.nps-grupo {
+  padding: 10px 8px 4px; font: 600 10.5px var(--font-mono);
+  text-transform: uppercase; letter-spacing: .06em; color: var(--text-3);
+  &:first-child { padding-top: 6px; }
+}
+
+.nps-opcion {
+  display: flex; align-items: center; gap: 10px; min-height: 42px; padding: 6px 8px;
+  border-radius: var(--radius); cursor: pointer; user-select: none;
+
+  &.is-activa { background: var(--surface-2); }
+  &[aria-selected='true'] { background: var(--accent-soft); .nps-textos b { color: var(--accent); } }
+  &[aria-selected='true'].is-activa { background: color-mix(in srgb, var(--accent-soft) 80%, var(--surface-3)); }
+  &.is-atenuada { .nps-textos, .nps-prefijo { opacity: .6; } }
+  &.is-vacio .nps-textos b { font-weight: 500; color: var(--text-2); }
+}
+
+.nps-textos { flex: 1; min-width: 0; display: grid; gap: 1px;
+  b { font-weight: 600; font-size: 13px; color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  small { font: 11.5px var(--font-mono); color: var(--text-3); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; } }
+
+/* Insignia a la derecha: cantidad y barra proporcional */
+.nps-insignia { flex-shrink: 0; display: grid; justify-items: end; gap: 5px; min-width: 84px;
+  span { font: 600 11.5px var(--font-mono); color: var(--text-2); white-space: nowrap; }
+  &[data-tono='ok'] span { color: var(--ok); }
+  &[data-tono='warn'] span { color: var(--warn); font-weight: 500; }
+  &[data-tono='info'] span { color: var(--info); }
+  &[data-tono='neutral'] span { color: var(--text-3); font-weight: 500; } }
+
+.nps-barra { display: block; width: 72px; height: 4px; border-radius: 2px; background: var(--surface-3); overflow: hidden;
+  i { display: block; height: 100%; min-width: 3px; border-radius: 2px; background: var(--ok); } }
+
+.nps-check { width: 15px; height: 15px; flex-shrink: 0; color: var(--accent); }
+
+.nps-nada { display: flex; align-items: center; justify-content: center; gap: 8px; padding: 16px 10px; color: var(--text-3); font-size: 12.5px; text-align: center; }
+
+@media (max-width: 480px) {
+  .nps-insignia { min-width: 0; }
+  .nps-barra { width: 48px; }
+}

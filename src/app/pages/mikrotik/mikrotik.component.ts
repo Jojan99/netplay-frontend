@@ -3,6 +3,8 @@ import { ToastService } from '../../services/toast.service';
 import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { NpSelectComponent } from '../../common/np-select/np-select.component';
+import { PRESENTACION_REDES } from '../../common/np-select/presentaciones';
 import { MikrotikService } from '../../services/mikrotik.service';
 import { Router } from '@angular/router';
 import { OntEquipoComponent } from '../../components/ont-equipo/ont-equipo.component';
@@ -30,12 +32,15 @@ const ESTADOS: Record<EstadoPuerto, string> = {
 @Component({
   selector: 'app-mikrotik',
   standalone: true,
-  imports: [CommonModule, FormsModule, OntEquipoComponent],
+  imports: [CommonModule, FormsModule, NpSelectComponent, OntEquipoComponent],
   templateUrl: './mikrotik.component.html',
   styleUrl: './mikrotik.component.scss',
   host: { class: 'np-console' },
 })
 export class MikrotikComponent implements OnInit {
+  /** Cómo se ven las redes en el selector de VLAN: número de VLAN, segmento y clientes. */
+  readonly redes = PRESENTACION_REDES;
+
   private dialog = inject(DialogService);
   private router = inject(Router);
   activeTab: 'info' | 'clients' | 'conflicts' | 'pppoe' | 'velocidades' | 'config' = 'info';

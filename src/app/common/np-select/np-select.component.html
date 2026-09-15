@@ -1,0 +1,59 @@
+<button #disparador type="button" class="nps-disparador" role="combobox" aria-haspopup="listbox"
+        [attr.aria-expanded]="abierto" [attr.aria-controls]="id + '-lista'" [attr.aria-label]="ariaLabel || null"
+        [attr.aria-activedescendant]="abierto && activa >= 0 && !conBuscador ? id + '-op-' + activa : null"
+        [disabled]="inhabilitado" (click)="alternar($event)">
+
+  <ng-container *ngIf="haySeleccion; else sinValor">
+    <span class="nps-prefijo" *ngIf="prefijoDe(seleccionada) as p">{{ p }}</span>
+    <span class="nps-valor">{{ etiquetaDe(seleccionada) }}</span>
+    <span class="nps-insignia-corta" *ngIf="insigniaDe(seleccionada) as i" [attr.data-tono]="i.tono || 'neutral'">{{ i.texto }}</span>
+  </ng-container>
+
+  <ng-template #sinValor>
+    <span class="np-spinner np-spinner--sm" *ngIf="cargando"></span>
+    <span class="nps-placeholder" [class.is-vacio]="permitirVacio && !cargando">{{ cargando ? textoCargando : (permitirVacio ? textoVacio : placeholder) }}</span>
+  </ng-template>
+
+  <svg class="nps-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+</button>
+
+<div class="nps-panel" *ngIf="abierto" [class.is-arriba]="posicion.arriba"
+     [style.top.px]="posicion.top" [style.left.px]="posicion.left" [style.width.px]="posicion.width"
+     (click)="$event.preventDefault()">
+
+  <div class="nps-buscar" *ngIf="conBuscador">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+    <input #buscador type="text" role="searchbox" placeholder="Buscar…" autocomplete="off" spellcheck="false"
+           [value]="busqueda" (input)="buscar($any($event.target).value)"
+           [attr.aria-controls]="id + '-lista'" [attr.aria-activedescendant]="activa >= 0 ? id + '-op-' + activa : null" />
+    <span class="nps-conteo" *ngIf="busqueda">{{ cantidadVisible }}</span>
+  </div>
+
+  <ul #lista class="nps-lista" role="listbox" tabindex="-1" [id]="id + '-lista'" [style.max-height.px]="posicion.alto"
+      [attr.aria-label]="ariaLabel || placeholder">
+    <ng-container *ngFor="let f of filas; trackBy: trackFila">
+      <li *ngIf="f.grupo !== undefined" class="nps-grupo" role="presentation">{{ f.grupo }}</li>
+
+      <li *ngIf="f.grupo === undefined" class="nps-opcion" role="option"
+          [id]="id + '-op-' + f.indice" [attr.aria-selected]="esSeleccionada(f.opcion)"
+          [class.is-activa]="f.indice === activa" [class.is-atenuada]="atenuadaDe(f.opcion)" [class.is-vacio]="f.opcion === vacio"
+          (mousemove)="activa = f.indice" (click)="elegir(f.opcion, $event)">
+        <span class="nps-prefijo" *ngIf="hayPrefijos" [class.is-sin]="!prefijoDe(f.opcion)">{{ prefijoDe(f.opcion) || '—' }}</span>
+        <span class="nps-textos">
+          <b>{{ etiquetaDe(f.opcion) }}</b>
+          <small *ngIf="detalleDe(f.opcion) as d">{{ d }}</small>
+        </span>
+        <span class="nps-insignia" *ngIf="insigniaDe(f.opcion) as i" [attr.data-tono]="i.tono || 'neutral'">
+          <span>{{ i.texto }}</span>
+          <i class="nps-barra" *ngIf="i.proporcion != null" aria-hidden="true"><i [style.width.%]="i.proporcion * 100"></i></i>
+        </span>
+        <svg class="nps-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" aria-hidden="true" [style.visibility]="esSeleccionada(f.opcion) ? 'visible' : 'hidden'"><path d="m5 12 5 5L20 7"/></svg>
+      </li>
+    </ng-container>
+
+    <li class="nps-nada" *ngIf="!filas.length" role="presentation">
+      <span class="np-spinner np-spinner--sm" *ngIf="cargando"></span>
+      {{ cargando ? textoCargando : (busqueda ? 'Nada coincide con «' + busqueda + '».' : textoSinOpciones) }}
+    </li>
+  </ul>
+</div>
