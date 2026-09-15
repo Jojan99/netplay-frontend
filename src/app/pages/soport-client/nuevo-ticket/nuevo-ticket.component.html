@@ -1,0 +1,98 @@
+<div class="np-overlay" (click)="cerrar()">
+  <div class="np-modal np-modal--lg nt-modal" role="dialog" aria-modal="true" aria-labelledby="nt-titulo" (click)="$event.stopPropagation()">
+
+    <div class="np-modal-head">
+      <div>
+        <p class="np-kicker">Soporte <b>/</b> Nuevo ticket</p>
+        <h3 id="nt-titulo">Crear ticket</h3>
+      </div>
+      <button type="button" class="np-icobtn" (click)="cerrar()" aria-label="Cerrar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
+    </div>
+
+    <div class="nt-body">
+      <!-- 1. Cliente -->
+      <section class="nt-paso">
+        <header class="nt-paso-h">
+          <span class="nt-num" [class.is-ok]="cliente">
+            <svg *ngIf="cliente" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="m5 12 5 5L20 7"/></svg>
+            <ng-container *ngIf="!cliente">1</ng-container>
+          </span>
+          <h4>Cliente</h4>
+          <button type="button" class="np-link np-link--muted" *ngIf="cliente" (click)="cambiarCliente()">Cambiar</button>
+        </header>
+
+        <np-select *ngIf="!cliente" [ngModel]="cliente" (ngModelChange)="elegirCliente($event)"
+                   [opciones]="clientes" [presentacion]="presClientes" [cargando]="cargandoClientes" textoCargando="Cargando clientes…"
+                   placeholder="Buscar cliente…" textoBuscar="Nombre, cédula, teléfono o dirección"
+                   textoSinOpciones="Escribí para buscar entre tus clientes." [buscable]="true" [limite]="40" ariaLabel="Cliente"></np-select>
+
+        <div class="nt-cliente" *ngIf="cliente">
+          <span class="nt-avatar" aria-hidden="true">{{ inicialesCliente }}</span>
+          <div class="nt-cliente-datos">
+            <b>{{ nombreCliente }}</b>
+            <span class="np-mono">CC {{ cliente.dni || '—' }} · {{ cliente.phone || 'sin teléfono' }}</span>
+            <span class="nt-dir">{{ cliente.address || 'Sin dirección registrada' }}</span>
+          </div>
+          <button type="button" class="np-btn np-btn--ghost np-btn--sm" (click)="probarConexion()" [disabled]="haciendoPing || !cliente.dni">
+            <span class="np-spinner np-spinner--sm" *ngIf="haciendoPing"></span>{{ haciendoPing ? 'Probando…' : 'Probar conexión' }}
+          </button>
+        </div>
+
+        <div class="nt-ping" *ngIf="cliente && (ping.length || haciendoPing)" aria-live="polite">
+          <span class="nt-ping-p" *ngFor="let p of ping" [ngClass]="'is-' + p.estado" [title]="p.host + ' · ' + p.tiempo"></span>
+          <small>{{ resumenPing }}</small>
+        </div>
+      </section>
+
+      <!-- 2. Qué hay que hacer -->
+      <section class="nt-paso" [class.is-bloqueado]="!cliente">
+        <header class="nt-paso-h">
+          <span class="nt-num" [class.is-ok]="listo">
+            <svg *ngIf="listo" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="m5 12 5 5L20 7"/></svg>
+            <ng-container *ngIf="!listo">2</ng-container>
+          </span>
+          <h4>Qué hay que hacer</h4>
+          <small class="np-fine" *ngIf="!cliente">Elegí primero el cliente</small>
+        </header>
+
+        <div class="np-form">
+          <label class="np-field"><span>Tipo de servicio <em>*</em></span>
+            <np-select [(ngModel)]="servicio" [opciones]="servicios" [presentacion]="presServicios" placeholder="Seleccionar…" [deshabilitado]="!cliente" ariaLabel="Tipo de servicio"></np-select>
+          </label>
+          <label class="np-field"><span>Técnico responsable <em>*</em></span>
+            <np-select [(ngModel)]="tecnico" [opciones]="tecnicos" [presentacion]="presTecnicos" placeholder="Seleccionar…" [deshabilitado]="!cliente" ariaLabel="Técnico responsable"></np-select>
+          </label>
+
+          <div class="np-field np-field-full"><span>Prioridad <em>*</em></span>
+            <div class="nt-prioridades" role="radiogroup" aria-label="Prioridad">
+              <button type="button" class="nt-prioridad" *ngFor="let p of prioridades" role="radio"
+                      [attr.aria-checked]="prioridad === p.id" [ngClass]="'is-' + tonoPrioridad(p.name)"
+                      [disabled]="!cliente" (click)="prioridad = p.id"><i aria-hidden="true"></i>{{ p.name }}</button>
+            </div>
+          </div>
+
+          <label class="np-field"><span>Fecha</span>
+            <input type="date" class="np-input" [(ngModel)]="fecha" [disabled]="!cliente" />
+          </label>
+
+          <label class="np-field np-field-full"><span>Observación <em>*</em></span>
+            <textarea class="np-input np-textarea" rows="4" [(ngModel)]="observacion" [disabled]="!cliente"
+                      placeholder="Qué reporta el cliente o qué hay que hacer en la visita…"></textarea>
+          </label>
+        </div>
+      </section>
+    </div>
+
+    <div class="np-modal-foot nt-foot">
+      <label class="nt-avisar">
+        <input type="checkbox" [(ngModel)]="avisarGrupo" />
+        <span>Avisar al grupo de WhatsApp</span>
+      </label>
+      <span class="nt-falta" *ngIf="!listo">{{ faltante }}</span>
+      <button type="button" class="np-btn np-btn--ghost" (click)="cerrar()">Cancelar</button>
+      <button type="button" class="np-btn np-btn--primary" (click)="crear()" [disabled]="!listo || guardando">
+        <span class="np-spinner np-spinner--sm" *ngIf="guardando"></span>{{ guardando ? 'Creando…' : 'Crear ticket' }}
+      </button>
+    </div>
+  </div>
+</div>

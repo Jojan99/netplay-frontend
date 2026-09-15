@@ -8,11 +8,13 @@ import { TicketInterface, TicketNote, TicketStats } from '../../../models/ticket
 import { TareasEnSegundoPlanoService } from '../../../services/tareas-en-segundo-plano.service';
 import { NpSelectComponent, PresentacionSelect } from '../../../common/np-select/np-select.component';
 import { PRESENTACION_PERSONAS, conValor } from '../../../common/np-select/presentaciones';
+import { ActivatedRoute, Router } from '@angular/router';
+import { NuevoTicketComponent } from '../nuevo-ticket/nuevo-ticket.component';
 
 @Component({
   selector: 'app-task-ticket',
   standalone: true,
-  imports: [CommonModule, FormsModule, NpSelectComponent],
+  imports: [CommonModule, FormsModule, NpSelectComponent, NuevoTicketComponent],
   templateUrl: './task-ticket.component.html',
   styleUrls: ['./task-ticket.component.scss'],
   host: { class: 'np-console' },
@@ -44,6 +46,12 @@ export class TaskTicketComponent implements OnInit, OnDestroy {
   actionLoading  = false;
   showStats      = false;
   showDetail     = false;
+
+  /** Crear ticket en un modal: antes era una pantalla aparte en el menú. */
+  mostrarNuevo   = false;
+  puedeCrear     = false;
+  private route  = inject(ActivatedRoute);
+  private router = inject(Router);
 
   // ── Filters ───────────────────────────────────────────────────────────────
   filterStatus:  number | null = null;
@@ -98,6 +106,13 @@ export class TaskTicketComponent implements OnInit, OnDestroy {
   ngOnInit() {
     this.isAdmin   = this.authService.isAdmin();
     this.isTecnico = this.authService.isTecnico();
+    this.puedeCrear = this.isAdmin || this.authService.getAllowedModules().includes('created-ticket');
+
+    // /dashboard/created-ticket (el menú viejo, favoritos, atajos) llega con ?nuevo=1.
+    if (this.puedeCrear && this.route.snapshot.queryParamMap.get('nuevo')) {
+      this.mostrarNuevo = true;
+      this.router.navigate([], { relativeTo: this.route, queryParams: {}, replaceUrl: true });
+    }
 
     if (this.isAdmin) this.loadTechnicians();
     this.loadTickets();
@@ -105,6 +120,12 @@ export class TaskTicketComponent implements OnInit, OnDestroy {
 
     this.lastPollTime = new Date().toISOString();
     this.pollInterval = setInterval(() => this.pollUpdates(), 20000);
+  }
+
+  onTicketCreado() {
+    this.mostrarNuevo = false;
+    this.loadTickets();
+    if (this.isAdmin) this.loadStats();
   }
 
   @HostListener('window:resize') onResize() {}

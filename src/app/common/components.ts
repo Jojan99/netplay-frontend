@@ -46,17 +46,7 @@ export const components: RouteProps[] = [
     group: true,
     roles: [2, 3],
     children: [
-      {
-        title: 'Crear Ticket',
-        icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8V6a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v2a2 2 0 0 0 0 4v2a2 2 0 0 0 0 4v2a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-2a2 2 0 0 0 0-4v-2a2 2 0 0 0 0-4z"/><path d="M12 9v6M9 12h6"/></svg>`,
-        href: 'created-ticket',
-        group: false,
-        roles: [2, 3],
-        card: {
-          className: 'w-56',
-          images: { light: 'alerts-light.svg', dark: 'alerts-dark.svg' },
-        },
-      },
+      // "Crear Ticket" ya no va aparte: es el botón "Nuevo ticket" de esta pantalla.
       {
         title: 'Ticket',
         icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8V6a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v2a2 2 0 0 0 0 4v2a2 2 0 0 0 0 4v2a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-2a2 2 0 0 0 0-4v-2a2 2 0 0 0 0-4z"/><path d="M9 12h6"/></svg>`,

@@ -100,6 +100,8 @@ export class NpSelectComponent implements ControlValueAccessor, OnChanges, OnDes
   @Input() valorVacio: any = null;
   /** 'sm': más bajo, para barras de filtros y paginación. */
   @Input() tamano: 'md' | 'sm' = 'md';
+  /** Máximo de opciones a dibujar (0 = todas). Con más de mil clientes, al escribir una letra salían cientos. */
+  @Input() limite = 0;
   @Output() cambio = new EventEmitter<any>();
 
   @ViewChild('disparador') private disparador?: ElementRef<HTMLButtonElement>;
@@ -114,6 +116,8 @@ export class NpSelectComponent implements ControlValueAccessor, OnChanges, OnDes
   busqueda = '';
   activa = -1;
   filas: Fila[] = [];
+  /** Cuántas coincidencias quedaron afuera por el límite. */
+  excedentes = 0;
   posicion = { top: 0, left: 0, width: 0, alto: 320, arriba: false };
 
   private visibles: any[] = [];
@@ -214,12 +218,15 @@ export class NpSelectComponent implements ControlValueAccessor, OnChanges, OnDes
   recalcular(): void {
     const q = this.normalizar(this.busqueda);
     const texto = (o: any) => this.presentacion?.buscarEn?.(o) ?? `${this.etiquetaDe(o)} ${this.detalleDe(o) ?? ''}`;
-    const coinciden = this.todas.filter(o => q
+    let coinciden = this.todas.filter(o => q
       ? this.normalizar(texto(o)).includes(q)
       : !this.presentacion?.soloAlBuscar?.(o));
 
     const relevancia = this.presentacion?.relevancia;
     if (q && relevancia) coinciden.sort((a, b) => relevancia(b, q) - relevancia(a, q));
+
+    this.excedentes = this.limite > 0 ? Math.max(0, coinciden.length - this.limite) : 0;
+    if (this.excedentes) coinciden = coinciden.slice(0, this.limite);
 
     const grupoDe = this.presentacion?.grupo;
     const grupos = grupoDe ? [...new Set(coinciden.map(o => grupoDe(o) ?? ''))] : [];

@@ -202,6 +202,8 @@ export class UserService {
       search: Form.search,
       client_name: Form.client_name,
       technician_name: Form.technician_name,
+      // La casilla "Avisar al grupo" no llegaba: el backend avisaba siempre.
+      notify_group: Form.notify_group ?? true,
     });
 
     const url = this.env.rootUrl + 'api/ticket/createTicket'

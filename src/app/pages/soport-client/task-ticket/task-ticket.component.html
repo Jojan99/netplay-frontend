@@ -15,6 +15,7 @@
     <div class="np-actions">
       <button type="button" class="np-btn np-btn--ghost" *ngIf="isAdmin" (click)="showStats = !showStats">{{ showStats ? 'Ocultar ranking' : 'Ranking' }}</button>
       <button type="button" class="np-btn np-btn--ghost" (click)="loadTickets()" title="Actualizar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 12a8 8 0 1 1-2.3-5.7M20 4v5h-5"/></svg>Actualizar</button>
+      <button type="button" class="np-btn np-btn--primary" *ngIf="puedeCrear" (click)="mostrarNuevo = true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M12 5v14M5 12h14"/></svg>Nuevo ticket</button>
     </div>
   </header>
 
@@ -214,3 +215,6 @@
     </div>
   </div>
 </div>
+
+<!-- ══ Nuevo ticket ════════════════════════════════════════════════════════ -->
+<app-nuevo-ticket *ngIf="mostrarNuevo" (cerrado)="mostrarNuevo = false" (creado)="onTicketCreado()"></app-nuevo-ticket>

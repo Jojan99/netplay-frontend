@@ -26,3 +26,9 @@
 .np-audio-preview { display: grid; gap: 6px; audio { width: 100%; height: 32px; } }
 @media (max-width: 1400px) { .np-tickets.is-open .np-col-tech { display: none; } }
 @media (max-width: 760px) { .np-col-tech { display: none; } .np-table--registry { min-width: 0; } }
+
+/* Ranking con alto tope y scroll propio. Sin tope, las dos listas se comían la
+   pantalla y la tabla y la ficha del ticket quedaban en una franja cortada. */
+.np-stats-panel .np-card { max-height: 210px; display: flex; flex-direction: column; overflow: hidden; }
+.np-stats-panel .np-rank { min-height: 0; overflow-y: auto; }
+.np-tickets .np-workspace { min-height: 340px; }

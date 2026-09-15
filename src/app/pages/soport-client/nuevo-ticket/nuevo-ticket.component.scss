@@ -1,0 +1,67 @@
+/* ─── Nuevo ticket (modal) ──────────────────────────────────────────── */
+.nt-modal { max-height: calc(100vh - 48px); display: flex; flex-direction: column; }
+.nt-body { flex: 1; min-height: 0; overflow-y: auto; padding: 16px 18px; display: grid; gap: 18px; align-content: start; }
+
+.nt-paso { display: grid; gap: 12px; transition: opacity .15s;
+  &.is-bloqueado { opacity: .5; } }
+.nt-paso-h { display: flex; align-items: center; gap: 10px;
+  h4 { margin: 0; font: 600 14px var(--font-display); color: var(--text); }
+  .np-link, small { margin-left: auto; } }
+
+.nt-num {
+  width: 22px; height: 22px; flex-shrink: 0; border-radius: 50%;
+  display: grid; place-items: center; font: 700 11px var(--font-mono);
+  color: var(--accent); border: 1px solid var(--accent-line); background: var(--accent-soft);
+  svg { width: 12px; height: 12px; }
+  &.is-ok { color: #fff; background: var(--ok); border-color: var(--ok); }
+}
+
+/* Cliente elegido */
+.nt-cliente {
+  display: flex; align-items: center; gap: 12px; padding: 12px 14px;
+  border: 1px solid var(--accent-line); background: var(--accent-soft); border-radius: var(--radius-lg);
+}
+.nt-avatar {
+  width: 40px; height: 40px; flex-shrink: 0; border-radius: var(--radius-lg);
+  display: grid; place-items: center; font: 700 14px var(--font-display);
+  color: var(--accent-ink); background: var(--accent);
+}
+.nt-cliente-datos { flex: 1; min-width: 0; display: grid; gap: 2px;
+  b { font-size: 14px; color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  span { font-size: 12px; color: var(--text-2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .nt-dir { color: var(--text-3); } }
+
+/* Ping: un punto por respuesta */
+.nt-ping { display: flex; align-items: center; gap: 5px; flex-wrap: wrap; padding: 0 2px;
+  small { margin-left: 6px; font-size: 12px; color: var(--text-2); } }
+.nt-ping-p { width: 10px; height: 10px; border-radius: 50%; background: var(--surface-3);
+  &.is-ok { background: var(--ok); }
+  &.is-intermitente { background: var(--warn); }
+  &.is-caido { background: var(--danger); } }
+
+/* Prioridad: botones con el color de la píldora de la lista */
+.nt-prioridades { display: flex; flex-wrap: wrap; gap: 6px; }
+.nt-prioridad {
+  display: inline-flex; align-items: center; gap: 7px; height: 32px; padding: 0 14px;
+  border: 1px solid var(--line-strong); border-radius: 999px; background: var(--surface);
+  font: 600 12.5px var(--font-body); color: var(--text-2); cursor: pointer; transition: border-color .12s, background .12s;
+  i { width: 8px; height: 8px; border-radius: 50%; background: var(--text-3); }
+  &.is-alta i { background: var(--danger); }
+  &.is-media i { background: var(--warn); }
+  &.is-baja i { background: var(--ok); }
+  &:hover:not(:disabled) { border-color: var(--text-3); }
+  &[aria-checked='true'] { color: var(--text); border-color: var(--accent); background: var(--accent-soft); box-shadow: 0 0 0 1px var(--accent) inset; }
+  &:disabled { cursor: not-allowed; }
+}
+
+/* Pie: aviso al grupo a la izquierda, acciones a la derecha */
+.nt-foot { align-items: center; flex-wrap: wrap; }
+.nt-avisar { display: inline-flex; align-items: center; gap: 8px; margin-right: auto; font-size: 12.5px; color: var(--text-2); cursor: pointer;
+  input { width: 16px; height: 16px; accent-color: var(--accent); } }
+.nt-falta { font-size: 12px; color: var(--text-3); }
+
+@media (max-width: 600px) {
+  .nt-cliente { flex-wrap: wrap; .np-btn { width: 100%; justify-content: center; } }
+  .nt-falta { display: none; }
+  .nt-avisar { width: 100%; }
+}
