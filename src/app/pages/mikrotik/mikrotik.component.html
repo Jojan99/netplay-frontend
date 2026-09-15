@@ -292,8 +292,10 @@
       </ng-container>
     </ng-container>
 
-    <!-- ══ PPPoE ══ -->
-    <ng-container *ngIf="activeTab === 'pppoe'">
+    <!-- ══ PPPoE ══
+         Un solo contenedor: sueltas en la grilla de .np-scroll las piezas se
+         aplastaban entre sí cuando la tabla de conectados pedía alto. -->
+    <div class="np-pppoe-vista" *ngIf="activeTab === 'pppoe'">
       <div *ngIf="loadingPppoe" class="np-loading"><span class="np-spinner"></span> Consultando el router…</div>
       <p class="np-notice np-notice--danger" *ngIf="pppoeError && !loadingPppoe">{{ pppoeError }}</p>
 
@@ -322,21 +324,15 @@
             <b class="np-kpi-v" [ngClass]="servidorInvalido ? 'np-kpi-v--danger' : (pppoe.disponible ? 'np-kpi-v--ok' : 'np-kpi-v--warn')">
               {{ servidorInvalido ? 'Con error' : (pppoe.disponible ? 'Activo' : 'Sin montar') }}
             </b>
+            <!-- El detalle completo está en la pestaña Servidores: acá sólo lo
+                 esencial, para dejarle el alto a la tabla de conectados. -->
+            <span class="np-kpi-s np-mono" *ngIf="pppoe.servidores.length">
+              {{ pppoe.servidores[0].interfaz }} · {{ pppoe.servidores[0].perfil }}{{ pppoe.servidores.length > 1 ? ' +' + (pppoe.servidores.length - 1) : '' }}
+            </span>
           </div>
           <div class="np-kpi"><span class="np-kpi-k">Conectados ahora</span><b class="np-kpi-v np-kpi-v--accent">{{ conectados }}</b></div>
           <div class="np-kpi"><span class="np-kpi-k">Credenciales</span><b class="np-kpi-v">{{ pppoeUsuarios.length }}</b></div>
           <div class="np-kpi"><span class="np-kpi-k">Perfiles</span><b class="np-kpi-v">{{ pppoe.perfiles.length }}</b></div>
-        </section>
-
-        <!-- Los servidores montados -->
-        <section class="np-card" *ngIf="pppoe.servidores.length">
-          <div class="np-card-h"><h2>Servidor</h2></div>
-          <div class="np-pm-datos">
-            <div *ngFor="let sv of pppoe.servidores"><span>{{ sv.nombre }}</span><b>{{ sv.interfaz }}</b></div>
-            <div *ngFor="let sv of pppoe.servidores"><span>Perfil por defecto</span><b>{{ sv.perfil }}</b></div>
-            <div *ngFor="let sv of pppoe.servidores"><span>Autenticación</span><b>{{ sv.autenticacion || '—' }}</b></div>
-            <div *ngFor="let sv of pppoe.servidores"><span>Una sesión por equipo</span><b>{{ sv.una_sesion ? 'Sí' : 'No' }}</b></div>
-          </div>
         </section>
 
         <div class="np-seg np-pppoe-seg" role="tablist">
@@ -531,7 +527,7 @@
           </section>
         </ng-container>
       </ng-container>
-    </ng-container>
+    </div>
 
     <!-- ══ CONFIG ══ -->
     <ng-container *ngIf="activeTab === 'config'">
@@ -554,6 +550,53 @@
         </table></div>
       </section>
       <p class="np-notice np-notice--code">Requisitos en el MikroTik: habilitar la API en <span class="np-mono">IP → Services → api (8728)</span>, usuario con permisos <b>read</b> y <b>write</b>, y que el servidor alcance la IP del router.</p>
+    </ng-container>
+
+    <!-- ══ Velocidades de los planes ══
+         Va dentro del área de la página: antes estaba fuera de .np-page y se
+         pintaba debajo de todo, a lo ancho de la pantalla. -->
+    <ng-container *ngIf="activeTab === 'velocidades'">
+      <p class="np-notice np-notice--code vel-intro">
+        Definí acá cuánta velocidad da cada plan. <b>PPPoE</b> la lleva en su perfil PPP (viaja con la sesión);
+        <b>IP fija</b> va por lista de direcciones y PCQ en el árbol de colas. La ráfaga sólo aplica a PPPoE.
+      </p>
+
+      <div *ngIf="cargandoPlanes" class="np-loading"><span class="np-spinner"></span> Leyendo tus planes…</div>
+
+      <p class="np-notice" *ngIf="resultadoPlan" [ngClass]="resultadoPlan.tipo === 'ok' ? 'np-notice--ok' : 'np-notice--warn'">{{ resultadoPlan.texto }}</p>
+
+      <div class="vel-planes">
+        <article class="vel-plan" *ngFor="let p of planes" [class.is-sin]="!p.bajada">
+          <header>
+            <div>
+              <h3>{{ p.nombre }}</h3>
+              <p class="np-fine">{{ p.resumen || 'Sin velocidad definida' }}</p>
+            </div>
+            <span class="np-pill" [ngClass]="p.aplicado_en ? 'np-pill--active' : 'np-pill--neutral'">
+              {{ p.aplicado_en ? 'En el router' : 'Sin aplicar' }}
+            </span>
+          </header>
+
+          <div class="vel-cifras" *ngIf="p.bajada">
+            <div><span>Bajada</span><b>{{ p.bajada }} Mb</b></div>
+            <div><span>Subida</span><b>{{ p.subida }} Mb</b></div>
+            <div *ngIf="p.rafaga"><span>Ráfaga</span><b>{{ p.rafaga_bajada }} Mb · {{ p.rafaga_segundos }} s</b></div>
+            <div><span>Clientes</span><b>{{ p.clientes.pppoe + p.clientes.ip_fija }}</b><small *ngIf="p.clientes.sin_limite">{{ p.clientes.sin_limite }} sin límite</small></div>
+          </div>
+
+          <label class="np-check vel-reconectar" *ngIf="p.clientes.pppoe && p.bajada" [title]="'Un cliente PPPoE conectado sigue con la velocidad vieja hasta que su sesión se reinicia. El corte dura segundos.'">
+            <input type="checkbox" [(ngModel)]="reconectarAlAplicar[p.id]" [name]="'rec' + p.id" />
+            <span class="np-check-copy"><b>Reconectar sesiones al aplicar</b></span>
+          </label>
+
+          <footer>
+            <button type="button" class="np-btn np-btn--ghost np-btn--sm" (click)="editarPlan(p)">{{ p.bajada ? 'Cambiar velocidad' : 'Definir velocidad' }}</button>
+            <button type="button" class="np-btn np-btn--primary np-btn--sm" (click)="aplicarPlan(p)" [disabled]="!p.bajada || aplicandoPlan === p.id">
+              {{ aplicandoPlan === p.id ? 'Aplicando…' : 'Aplicar' }}
+            </button>
+          </footer>
+        </article>
+      </div>
     </ng-container>
   </div>
 </div>
@@ -1298,59 +1341,6 @@
   </div>
 </div>
 
-
-<!-- ══ Velocidades de los planes ═══════════════════════════════════════════ -->
-<ng-container *ngIf="activeTab === 'velocidades'">
-  <p class="np-notice np-notice--code">
-    Definí acá cuánta velocidad da cada plan. La plataforma lo traduce a lo que el router entiende, y a cada
-    tipo de cliente por su camino: <b>PPPoE</b> con un perfil PPP —la velocidad viaja con la sesión— e
-    <b>IP fija</b> con una lista de direcciones y PCQ en el árbol de colas, que es el sistema que este router ya usa
-    y el que aguanta cientos de clientes sin cargar el equipo.
-  </p>
-  <p class="np-notice np-notice--warn np-notice--inline">
-    La ráfaga sólo aplica a los clientes PPPoE. En IP fija el reparto lo hace PCQ, que no tiene ráfaga.
-  </p>
-
-  <div *ngIf="cargandoPlanes" class="np-loading"><span class="np-spinner"></span> Leyendo tus planes…</div>
-
-  <p class="np-notice" *ngIf="resultadoPlan" [ngClass]="resultadoPlan.tipo === 'ok' ? 'np-notice--ok' : 'np-notice--warn'">{{ resultadoPlan.texto }}</p>
-
-  <div class="vel-planes">
-    <article class="vel-plan" *ngFor="let p of planes" [class.is-sin]="!p.bajada">
-      <header>
-        <div>
-          <h3>{{ p.nombre }}</h3>
-          <p class="np-fine">{{ p.resumen || 'Todavía sin velocidad definida' }}</p>
-        </div>
-        <span class="np-pill" [ngClass]="p.aplicado_en ? 'np-pill--active' : 'np-pill--neutral'">
-          {{ p.aplicado_en ? 'En el router' : 'Sin aplicar' }}
-        </span>
-      </header>
-
-      <div class="vel-cifras" *ngIf="p.bajada">
-        <div><span>Bajada</span><b>{{ p.bajada }} Mb</b></div>
-        <div><span>Subida</span><b>{{ p.subida }} Mb</b></div>
-        <div *ngIf="p.rafaga"><span>Ráfaga</span><b>{{ p.rafaga_bajada }} Mb · {{ p.rafaga_segundos }} s</b></div>
-        <div><span>Clientes</span><b>{{ p.clientes.pppoe + p.clientes.ip_fija }}</b><small *ngIf="p.clientes.sin_limite">{{ p.clientes.sin_limite }} sin límite</small></div>
-      </div>
-
-      <label class="np-check vel-reconectar" *ngIf="p.clientes.pppoe">
-        <input type="checkbox" [(ngModel)]="reconectarAlAplicar[p.id]" [name]="'rec' + p.id" />
-        <span class="np-check-copy">
-          <b>Reconectar las sesiones al aplicar</b>
-          <small>Un cliente PPPoE conectado sigue con la velocidad vieja hasta que su sesión se reinicia. El corte dura segundos.</small>
-        </span>
-      </label>
-
-      <footer>
-        <button type="button" class="np-btn np-btn--ghost np-btn--sm" (click)="editarPlan(p)">{{ p.bajada ? 'Cambiar velocidad' : 'Definir velocidad' }}</button>
-        <button type="button" class="np-btn np-btn--primary np-btn--sm" (click)="aplicarPlan(p)" [disabled]="!p.bajada || aplicandoPlan === p.id">
-          {{ aplicandoPlan === p.id ? 'Aplicando…' : 'Aplicar en el router' }}
-        </button>
-      </footer>
-    </article>
-  </div>
-</ng-container>
 
 <!-- ══ Velocidad de un plan ════════════════════════════════════════════════ -->
 <div *ngIf="planEdita" class="np-overlay" (click)="planEdita = null">

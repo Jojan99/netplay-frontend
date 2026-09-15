@@ -698,6 +698,18 @@
 
 /* ── PPPoE ────────────────────────────────────────────────────────────────*/
 .np-pppoe-seg { margin: 4px 0 12px; }
+/* Las tablas de PPPoE van debajo de los indicadores y las pestañas: sin un
+   alto mínimo quedaban en una franja de 4 filas. Si no entra, se desplaza la
+   página entera. */
+.np-pppoe-seg ~ .np-registry { min-height: min(440px, 62vh); }
+/* La pestaña PPPoE va en un solo contenedor. Sueltos dentro de la grilla de
+   .np-scroll, los indicadores (overflow: hidden) dejaban que su fila se
+   achicara cuando la tabla pedía alto: se recortaban o se montaban sobre las
+   pestañas. Así la pestaña mide lo que ocupa y se desplaza la página entera. */
+.np-pppoe-vista { display: flex; flex-direction: column; gap: 16px; min-width: 0;
+  > .np-kpis, > .np-seg, > .np-notice { flex-shrink: 0; } }
+.np-pppoe-vista .np-pppoe-seg { margin: 0; }
+.np-kpi-s { display: block; margin-top: 2px; font-size: 11px; color: var(--text-3); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
 .np-baja-op {
   display: flex;
@@ -756,7 +768,9 @@
 }
 
 /* ─── Velocidades de los planes ─────────────────────────────────────── */
-.vel-planes { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 12px; }
+/* align-items: start — cada tarjeta mide lo suyo, sin estirarse a la más alta de la fila. */
+.vel-planes { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 12px; align-items: start; }
+.vel-intro { margin: 0; }
 .vel-plan {
   display: grid; gap: 12px; padding: 14px 16px; border-radius: var(--radius-lg);
   border: 1px solid var(--line); background: var(--surface); box-shadow: var(--shadow);
