@@ -1,9 +1,30 @@
 import { DialogService } from '../../../services/dialog.service';
+import { AuthService } from '../../../services/auth.service';
 import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { WhatsappService } from '../../services/whatsapp.service';
 
+interface InstanciaRecepcion {
+  id: string;
+  name: string;
+  status: string;
+  phone: string | null;
+  entregados_24h: number;
+  fallidos_24h: number;
+  ultimo_entregado: string | null;
+  ultimo_estado: string | null;
+  ultimo_error: string | null;
+}
+
+/**
+ * Recepción de mensajes de WhatsApp Web en el CRM, logs y rate limit.
+ *
+ * Antes cada instancia pedía escribir a mano la URL del webhook. Si quedaba
+ * vacía o con un dominio viejo, los mensajes de los clientes no llegaban a la
+ * bandeja y nadie se enteraba. Ahora se activa o desactiva para toda la
+ * empresa y la plataforma pone la dirección.
+ */
 @Component({
   selector: 'app-wa-webhook',
   standalone: true,
@@ -14,18 +35,19 @@ import { WhatsappService } from '../../services/whatsapp.service';
 })
 export class WaWebhookComponent implements OnInit {
   private dialog = inject(DialogService);
+  readonly esAdmin = inject(AuthService).isAdmin();
+
+  // Recepción en el CRM (toda la empresa)
+  recepcionActiva: boolean | null = null;
+  instanciasRecepcion: InstanciaRecepcion[] = [];
+  cargandoRecepcion   = true;
+  guardandoRecepcion  = false;
+  recepcionMsg        = '';
+  recepcionOk         = true;
 
   // Instancias
   instances: any[]    = [];
   selectedInstance    = '';
-
-  // Webhook config
-  webhookUrl          = '';
-  webhookSecret       = '';
-  currentWebhook      = { url: '', secret: '' };
-  saving              = false;
-  saveMsg             = '';
-  saveOk              = false;
 
   // Webhook logs
   webhookLogs: any[]  = [];
@@ -41,72 +63,64 @@ export class WaWebhookComponent implements OnInit {
   constructor(private wa: WhatsappService) {}
 
   ngOnInit(): void {
-    this.wa.ensureApiKey().subscribe({
-      next: () => {
-        this.wa.getInstances().subscribe({
-          next: (r: any) => { this.instances = r.instances || []; }
-        });
-      }
+    this.cargarRecepcion();
+    this.wa.getInstances().subscribe({
+      next: (r: any) => { this.instances = r.instances || []; }
     });
+  }
+
+  /** Las líneas cuyo último envío al CRM falló. */
+  get conFallas(): InstanciaRecepcion[] {
+    return this.instanciasRecepcion.filter(i => i.ultimo_estado === 'failed');
   }
 
   onInstanceChange(): void {
     if (!this.selectedInstance) return;
-    this.loadWebhookConfig();
     this.loadWebhookLogs();
     this.loadRateLimit();
   }
 
-  // ── Webhook ──────────────────────────────────────────────────
-  loadWebhookConfig(): void {
-    this.wa.getWebhook(this.selectedInstance).subscribe({
-      next: (r: any) => {
-        this.currentWebhook = {
-          url:    r.webhook_url    || '',
-          secret: r.webhook_secret || ''
-        };
-        this.webhookUrl    = r.webhook_url || '';
-        this.webhookSecret = '';
-      }
+  // ── Recepción en el CRM ──────────────────────────────────────
+  cargarRecepcion(): void {
+    this.cargandoRecepcion = true;
+    this.wa.getRecepcion().subscribe({
+      next: (r: any) => this.aplicarRecepcion(r),
+      error: (e: any) => {
+        this.cargandoRecepcion = false;
+        this.recepcionOk  = false;
+        this.recepcionMsg = e.error?.message || 'No se pudo consultar la recepción de mensajes.';
+      },
     });
   }
 
-  save(): void {
-    if (!this.webhookUrl.trim()) return;
-    this.saving  = true;
-    this.saveMsg = '';
+  async alternarRecepcion(): Promise<void> {
+    if (!this.esAdmin || this.guardandoRecepcion || this.recepcionActiva === null) return;
+    const activar = !this.recepcionActiva;
 
-    this.wa.setWebhook(
-      this.selectedInstance,
-      this.webhookUrl.trim(),
-      this.webhookSecret.trim() || undefined
-    ).subscribe({
-      next: () => {
-        this.saving  = false;
-        this.saveOk  = true;
-        this.saveMsg = 'Webhook guardado correctamente';
-        this.loadWebhookConfig();
-        setTimeout(() => this.saveMsg = '', 3000);
+    if (!activar && !await this.dialog.confirm('¿Desactivar la recepción? Los mensajes que tus clientes escriban a tus líneas de WhatsApp Web dejarán de llegar a la bandeja del CRM.')) return;
+
+    this.guardandoRecepcion = true;
+    this.recepcionMsg = '';
+    this.wa.setRecepcion(activar).subscribe({
+      next: (r: any) => {
+        this.guardandoRecepcion = false;
+        this.aplicarRecepcion(r);
+        this.recepcionOk  = true;
+        this.recepcionMsg = r.message || (activar ? 'Recepción activada.' : 'Recepción desactivada.');
+        setTimeout(() => this.recepcionMsg = '', 4000);
       },
       error: (e: any) => {
-        this.saving  = false;
-        this.saveOk  = false;
-        this.saveMsg = e.error?.message || 'Error al guardar';
-      }
+        this.guardandoRecepcion = false;
+        this.recepcionOk  = false;
+        this.recepcionMsg = e.error?.message || 'No se pudo cambiar la recepción.';
+      },
     });
   }
 
-  async remove() {
-    if (!await this.dialog.confirm('¿Eliminar el webhook de esta instancia?')) return;
-    this.wa.deleteWebhook(this.selectedInstance).subscribe({
-      next: () => {
-        this.currentWebhook = { url: '', secret: '' };
-        this.webhookUrl     = '';
-        this.saveOk         = true;
-        this.saveMsg        = 'Webhook eliminado';
-        setTimeout(() => this.saveMsg = '', 3000);
-      }
-    });
+  private aplicarRecepcion(r: any): void {
+    this.cargandoRecepcion   = false;
+    this.recepcionActiva     = !!r?.activa;
+    this.instanciasRecepcion = r?.instancias || [];
   }
 
   // ── Webhook Logs ─────────────────────────────────────────────

@@ -2,41 +2,83 @@
   <header class="np-head">
     <div>
       <p class="np-kicker">WhatsApp <b>/</b> Web (QR) <b>/</b> Webhook</p>
-      <h1 class="np-title">Webhook y rate limit</h1>
-      <div class="np-ribbon"><span *ngIf="currentWebhook.url"><i class="np-dot" style="background:var(--ok)"></i>webhook activo <span class="np-mono">{{ currentWebhook.url }}</span></span><span *ngIf="!currentWebhook.url">Configurá notificaciones y límite de envío por instancia.</span></div>
+      <h1 class="np-title">Recepción de mensajes y rate limit</h1>
+      <div class="np-ribbon">
+        <span *ngIf="recepcionActiva === true"><i class="np-dot" style="background:var(--ok)"></i>los mensajes llegan al CRM</span>
+        <span *ngIf="recepcionActiva === false"><i class="np-dot" style="background:var(--danger)"></i>recepción en el CRM desactivada</span>
+      </div>
     </div>
-    <div class="np-actions"><label class="np-pagesize">Instancia<select [(ngModel)]="selectedInstance" (change)="onInstanceChange()"><option value="">Seleccionar…</option><option *ngFor="let inst of instances" [value]="inst.instanceId">{{ inst.name }}</option></select></label></div>
   </header>
   <div class="np-scroll">
-    <p class="np-empty-block" *ngIf="!selectedInstance"><strong>Elegí una instancia para configurar su webhook.</strong></p>
-    <ng-container *ngIf="selectedInstance">
-      <div class="np-grid-2">
-        <section class="np-card">
-          <div class="np-card-h"><h2>Webhook</h2></div>
-          <div class="np-form np-form--single">
-            <label class="np-field"><span>URL</span><input class="np-input np-mono" [(ngModel)]="webhookUrl" type="url" placeholder="https://tuservidor.com/webhook" /><small class="np-fine">Se envía un POST cuando llegan mensajes nuevos.</small></label>
-            <label class="np-field"><span>Secret HMAC (opcional)</span><input class="np-input np-mono" [(ngModel)]="webhookSecret" type="password" placeholder="Clave para verificar la firma" /></label>
-            <p *ngIf="saveMsg" class="np-notice" [ngClass]="saveOk ? 'np-notice--ok' : 'np-notice--danger'">{{ saveMsg }}</p>
-            <div class="np-btnrow np-btnrow--end"><button type="button" class="np-btn np-btn--danger" *ngIf="currentWebhook.url" (click)="remove()">Eliminar</button><button type="button" class="np-btn np-btn--primary" (click)="save()" [disabled]="saving || !webhookUrl.trim()">{{ saving ? 'Guardando…' : 'Guardar webhook' }}</button></div>
+
+    <!-- Recepción en el CRM: una sola para toda la empresa -->
+    <section class="np-card">
+      <div class="np-card-h"><h2>Recepción de mensajes en el CRM</h2><span class="np-card-meta">Todas las líneas de la empresa</span></div>
+
+      <div *ngIf="cargandoRecepcion" class="np-loading np-loading--inline"><span class="np-spinner"></span> Consultando…</div>
+
+      <ng-container *ngIf="!cargandoRecepcion && recepcionActiva !== null">
+        <div class="wh-recepcion">
+          <div class="wh-recepcion-txt">
+            <b>{{ recepcionActiva ? 'Activada' : 'Desactivada' }}</b>
+            <p *ngIf="recepcionActiva">Lo que tus clientes escriben a tus líneas de WhatsApp Web llega a la bandeja del CRM. Las líneas nuevas también reciben, sin configurar nada.</p>
+            <p *ngIf="!recepcionActiva">Los mensajes de tus líneas de WhatsApp Web <b>no llegan</b> a la bandeja del CRM: tus clientes igual escriben, pero nadie los ve en el panel.</p>
           </div>
-        </section>
-        <section class="np-card">
-          <div class="np-card-h"><h2>Rate limit</h2><span class="np-card-meta" *ngIf="rateLimitStats"><b>{{ rateLimitStats.count }}</b> usados este minuto · resetea en <b>{{ rateLimitStats.secondsLeft }}s</b></span></div>
-          <div class="np-form">
-            <label class="np-field"><span>Mensajes por minuto</span><input class="np-input np-mono" [(ngModel)]="rateLimitPerMin" type="number" min="1" max="100" /></label>
-            <label class="np-field"><span>Delay (ms)</span><input class="np-input np-mono" [(ngModel)]="rateLimitDelay" type="number" min="100" step="100" /></label>
-            <p *ngIf="saveMsgRL" class="np-notice np-notice--ok np-field-full">{{ saveMsgRL }}</p>
-            <div class="np-field-full np-btnrow np-btnrow--end"><button type="button" class="np-btn np-btn--primary" (click)="saveRateLimit()" [disabled]="savingRL">{{ savingRL ? 'Guardando…' : 'Guardar rate limit' }}</button></div>
-          </div>
-        </section>
+          <button type="button" class="wh-switch" role="switch" [attr.aria-checked]="recepcionActiva" [class.is-on]="recepcionActiva"
+                  (click)="alternarRecepcion()" [disabled]="!esAdmin || guardandoRecepcion"
+                  [attr.aria-label]="recepcionActiva ? 'Desactivar recepción' : 'Activar recepción'"><i></i></button>
+        </div>
+        <p class="np-fine" *ngIf="!esAdmin">Sólo un administrador puede activarla o desactivarla.</p>
+      </ng-container>
+
+      <p *ngIf="recepcionMsg" class="np-notice" [ngClass]="recepcionOk ? 'np-notice--ok' : 'np-notice--danger'">{{ recepcionMsg }}</p>
+
+      <p *ngIf="recepcionActiva && conFallas.length" class="np-notice np-notice--danger">
+        <b>Hay mensajes que no están llegando al CRM</b> en {{ conFallas.length === 1 ? 'la línea ' + conFallas[0].name : conFallas.length + ' líneas' }}.
+        <span class="np-mono" *ngIf="conFallas[0].ultimo_error">Último error: {{ conFallas[0].ultimo_error }}</span>
+      </p>
+
+      <div class="np-tablewrap" *ngIf="!cargandoRecepcion && instanciasRecepcion.length"><table class="np-table np-table--compact">
+        <thead><tr><th>Línea</th><th>Conexión</th><th class="np-th-right">Entregados 24 h</th><th class="np-th-right">Fallidos 24 h</th><th>Última entrega</th></tr></thead>
+        <tbody>
+          <tr *ngFor="let i of instanciasRecepcion">
+            <td><div class="np-strong">{{ i.name }}</div><div class="np-fine np-mono" *ngIf="i.phone">{{ i.phone }}</div></td>
+            <td><span class="np-pill" [ngClass]="i.status === 'connected' ? 'np-pill--active' : 'np-pill--noip'">{{ i.status === 'connected' ? 'conectada' : i.status === 'waiting_qr' ? 'esperando QR' : 'desconectada' }}</span></td>
+            <td class="np-data np-td-right">{{ i.entregados_24h }}</td>
+            <td class="np-data np-td-right" [class.np-neg]="i.fallidos_24h > 0">{{ i.fallidos_24h }}</td>
+            <td class="np-data">{{ i.ultimo_entregado ? (i.ultimo_entregado | date:'dd/MM HH:mm') : '—' }}</td>
+          </tr>
+        </tbody>
+      </table></div>
+      <p class="np-fine" *ngIf="!cargandoRecepcion && recepcionActiva !== null && !instanciasRecepcion.length">Todavía no hay líneas de WhatsApp Web. Cuando conectes una, va a recibir según esta configuración.</p>
+    </section>
+
+    <!-- Logs y rate limit: por línea -->
+    <section class="np-card">
+      <div class="np-card-h">
+        <h2>Por línea</h2>
+        <label class="np-pagesize">Instancia<select [(ngModel)]="selectedInstance" (change)="onInstanceChange()"><option value="">Seleccionar…</option><option *ngFor="let inst of instances" [value]="inst.instanceId">{{ inst.name }}</option></select></label>
       </div>
+      <p class="np-fine" *ngIf="!selectedInstance">Elegí una línea para ver sus envíos al CRM y su límite de mensajes.</p>
+    </section>
+
+    <ng-container *ngIf="selectedInstance">
       <section class="np-card">
-        <div class="np-card-h"><h2>Logs del webhook</h2><button type="button" class="np-link" (click)="loadWebhookLogs()">Actualizar</button></div>
+        <div class="np-card-h"><h2>Rate limit</h2><span class="np-card-meta" *ngIf="rateLimitStats"><b>{{ rateLimitStats.count }}</b> usados este minuto · resetea en <b>{{ rateLimitStats.secondsLeft }}s</b></span></div>
+        <div class="np-form">
+          <label class="np-field"><span>Mensajes por minuto</span><input class="np-input np-mono" [(ngModel)]="rateLimitPerMin" type="number" min="1" max="100" /></label>
+          <label class="np-field"><span>Delay (ms)</span><input class="np-input np-mono" [(ngModel)]="rateLimitDelay" type="number" min="100" step="100" /></label>
+          <p *ngIf="saveMsgRL" class="np-notice np-notice--ok np-field-full">{{ saveMsgRL }}</p>
+          <div class="np-field-full np-btnrow np-btnrow--end"><button type="button" class="np-btn np-btn--primary" (click)="saveRateLimit()" [disabled]="savingRL">{{ savingRL ? 'Guardando…' : 'Guardar rate limit' }}</button></div>
+        </div>
+      </section>
+      <section class="np-card">
+        <div class="np-card-h"><h2>Envíos al CRM</h2><button type="button" class="np-link" (click)="loadWebhookLogs()">Actualizar</button></div>
         <div *ngIf="loadingLogs" class="np-loading np-loading--inline"><span class="np-spinner"></span> Cargando…</div>
         <div class="np-tablewrap" *ngIf="!loadingLogs"><table class="np-table np-table--compact">
           <thead><tr><th>Evento</th><th>Estado</th><th class="np-th-right">Intentos</th><th>Último intento</th><th class="np-th-right">Acción</th></tr></thead>
           <tbody>
-            <tr *ngFor="let log of webhookLogs"><td><div class="np-strong">{{ log.event }}</div><div class="np-fine np-neg" *ngIf="log.last_error">{{ log.last_error }}</div></td><td><span class="np-pill" [ngClass]="log.status === 'delivered' || log.status === 'success' ? 'np-pill--active' : log.status === 'failed' ? 'np-pill--suspended' : 'np-pill--noip'">{{ log.status }}</span></td><td class="np-data np-td-right">{{ log.attempts }}</td><td class="np-data">{{ log.last_attempt_at | date:'dd/MM HH:mm' }}</td><td class="np-td-right"><button type="button" class="np-btn np-btn--ghost np-btn--sm" *ngIf="log.status === 'failed'" (click)="retry(log.id)">Reintentar</button></td></tr>
+            <tr *ngFor="let log of webhookLogs"><td><div class="np-strong">{{ log.event }}</div><div class="np-fine np-neg" *ngIf="log.last_error">{{ log.last_error }}</div></td><td><span class="np-pill" [ngClass]="log.status === 'sent' ? 'np-pill--active' : log.status === 'failed' ? 'np-pill--suspended' : 'np-pill--noip'">{{ log.status === 'sent' ? 'entregado' : log.status === 'failed' ? 'fallido' : 'pendiente' }}</span></td><td class="np-data np-td-right">{{ log.attempts }}</td><td class="np-data">{{ log.last_attempt | date:'dd/MM HH:mm' }}</td><td class="np-td-right"><button type="button" class="np-btn np-btn--ghost np-btn--sm" *ngIf="log.status === 'failed'" (click)="retry(log.id)">Reintentar</button></td></tr>
             <tr *ngIf="!webhookLogs.length" class="np-empty"><td colspan="5">Sin eventos registrados.</td></tr>
           </tbody>
         </table></div>

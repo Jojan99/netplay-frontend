@@ -33,6 +33,17 @@
     <button type="button" class="np-btn np-btn--primary np-btn--sm" (click)="showNewConversationModal = true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M12 5v14M5 12h14"/></svg>Nuevo chat</button>
   </div>
 
+  <!-- WhatsApp Web sin recepción: lo que escriben los clientes no llega a esta bandeja -->
+  <div class="np-notice np-notice--danger" role="alert" *ngIf="recepcionApagada" style="display:flex; flex-wrap:wrap; align-items:center; gap:8px 14px; margin:8px 12px 0">
+    <span style="flex:1; min-width:240px"><b>La recepción de mensajes de WhatsApp Web está desactivada.</b> Lo que tus clientes escriben a tus líneas no llega a esta bandeja.</span>
+    <button type="button" class="np-btn np-btn--primary np-btn--sm" *ngIf="esAdmin" (click)="activarRecepcion()" [disabled]="activandoRecepcion">{{ activandoRecepcion ? 'Activando…' : 'Activar recepción' }}</button>
+    <span *ngIf="!esAdmin">Pedile a un administrador que la active en <b>WhatsApp → Web → Webhook</b>.</span>
+  </div>
+  <div class="np-notice np-notice--danger" role="alert" *ngIf="!recepcionApagada && recepcionFallando" style="display:flex; flex-wrap:wrap; align-items:center; gap:8px 14px; margin:8px 12px 0">
+    <span style="flex:1; min-width:240px"><b>Hay mensajes de WhatsApp Web que no están llegando a esta bandeja</b> ({{ recepcionFallando }}).</span>
+    <button type="button" class="np-btn np-btn--ghost np-btn--sm" (click)="verRecepcion()">Ver detalle</button>
+  </div>
+
   <ng-container *ngIf="mainView === 'dashboard'"><app-crm-dashboard class="wa-dashboard" (openChat)="openChat($event)"></app-crm-dashboard></ng-container>
 
   <div class="wa-layout" *ngIf="mainView === 'inbox'">

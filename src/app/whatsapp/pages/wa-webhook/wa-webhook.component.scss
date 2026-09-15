@@ -3,3 +3,15 @@
 .np-msg { max-width: 320px; }
 .np-form--single { grid-template-columns: 1fr; }
 .np-empty-block { margin: 40px auto; text-align: center; color: var(--text-3); strong { display: block; color: var(--text-2); } }
+
+/* Recepción en el CRM: texto a la izquierda, interruptor a la derecha */
+.wh-recepcion { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 4px 0 10px; }
+.wh-recepcion-txt { min-width: 0;
+  b { display: block; font-size: 15px; margin-bottom: 2px; }
+  p { margin: 0; color: var(--text-2); font-size: 13px; line-height: 1.5; max-width: 70ch; } }
+
+.wh-switch { position: relative; flex-shrink: 0; width: 48px; height: 26px; border-radius: 999px; border: 1px solid var(--line-strong); background: var(--surface-3); cursor: pointer; transition: background .15s, border-color .15s;
+  i { position: absolute; top: 2px; left: 2px; width: 20px; height: 20px; border-radius: 50%; background: #fff; box-shadow: 0 1px 3px rgb(0 0 0 / .25); transition: transform .15s; }
+  &.is-on { background: var(--ok); border-color: var(--ok); i { transform: translateX(22px); } }
+  &:disabled { cursor: not-allowed; opacity: .6; }
+  &:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; } }

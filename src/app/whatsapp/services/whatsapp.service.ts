@@ -149,6 +149,17 @@ export class WhatsappService {
     return this.http.post(`${this.WA_PROXY}/crm/instances/${instanceId}/webhook/retry/${logId}`, {}, this.h());
   }
 
+  // ── Recepción en el CRM (por empresa) ────────────────────────────────────────
+  /** Si los mensajes de WhatsApp Web llegan a la bandeja del CRM y cómo van las entregas de cada línea. */
+  getRecepcion(): Observable<any> {
+    return this.http.get(`${this.WA_PROXY}/crm/recepcion`, this.h());
+  }
+
+  /** Sólo administradores (lo valida el proxy de Laravel). */
+  setRecepcion(activa: boolean): Observable<any> {
+    return this.http.put(`${this.WA_PROXY}/crm/recepcion`, { activa }, this.h());
+  }
+
   // ── Rate Limit ───────────────────────────────────────────────────────────────
   getRateLimit(instanceId: string): Observable<any> {
     return this.http.get(`${this.WA_PROXY}/crm/instances/${instanceId}/rate-limit`, this.h());

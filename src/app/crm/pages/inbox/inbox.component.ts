@@ -19,6 +19,9 @@ import { CrmNewConversationModalComponent } from '../../components/crm-new-conve
 
 import { CrmService } from '../../../services/crm.service';
 import { EchoService } from '../../../services/echo.service';
+import { AuthService } from '../../../services/auth.service';
+import { WhatsappService } from '../../../whatsapp/services/whatsapp.service';
+import { Router } from '@angular/router';
 
 type InboxStatus = 'all' | 'new' | 'in_progress' | 'closed';
 type MainView    = 'inbox' | 'dashboard';
@@ -196,8 +199,60 @@ export class InboxComponent implements OnInit, OnDestroy {
     this.loadLabels();
     this.loadSettings();
     this.listenInboxRealtime();
+    if (isPlatformBrowser(this.platformId)) this.loadRecepcion();
     // El permiso se pide tras el primer clic del agente (el navegador lo exige)
     if (isPlatformBrowser(this.platformId)) document.addEventListener('click', () => this.askNotificationPermission(), { once: true });
+  }
+
+  /* ── RECEPCIÓN DE WHATSAPP WEB ──────────────────────────────── */
+  private wa     = inject(WhatsappService);
+  private router = inject(Router);
+  readonly esAdmin = inject(AuthService).isAdmin();
+
+  /**
+   * Si la empresa recibe en esta bandeja lo que llega a sus líneas de WhatsApp
+   * Web. Apagada, los clientes escriben y nadie los ve en el panel: se avisa
+   * arriba. null mientras no se sabe o si la empresa no usa WhatsApp Web.
+   */
+  recepcion: { activa: boolean; instancias: any[] } | null = null;
+  activandoRecepcion = false;
+
+  get recepcionApagada(): boolean {
+    return !!this.recepcion && !this.recepcion.activa && this.recepcion.instancias.length > 0;
+  }
+
+  /** Nombre de las líneas cuyo último envío a la bandeja falló, o vacío. */
+  get recepcionFallando(): string {
+    if (!this.recepcion?.activa) return '';
+    return this.recepcion.instancias.filter(i => i.ultimo_estado === 'failed').map(i => i.name).join(', ');
+  }
+
+  loadRecepcion(): void {
+    this.wa.getRecepcion().subscribe({
+      next: (r: any) => this.recepcion = { activa: !!r?.activa, instancias: r?.instancias ?? [] },
+      // Sin credenciales de WhatsApp Web o sin permiso: no hay nada que avisar.
+      error: () => this.recepcion = null,
+    });
+  }
+
+  activarRecepcion(): void {
+    if (this.activandoRecepcion) return;
+    this.activandoRecepcion = true;
+    this.wa.setRecepcion(true).subscribe({
+      next: (r: any) => {
+        this.activandoRecepcion = false;
+        this.recepcion = { activa: !!r?.activa, instancias: r?.instancias ?? [] };
+        this.toast.success('Listo: los mensajes de WhatsApp Web vuelven a llegar a esta bandeja.');
+      },
+      error: (e: any) => {
+        this.activandoRecepcion = false;
+        this.toast.error(e?.error?.message || 'No se pudo activar la recepción.');
+      },
+    });
+  }
+
+  verRecepcion(): void {
+    this.router.navigate(['/dashboard/whatsapp/netplay/webhook']);
   }
 
   /* ── REALTIME ───────────────────────────────────────────────── */
