@@ -158,9 +158,39 @@ export class OltTr069Component implements OnInit {
 
   // ── Pasos ─────────────────────────────────────────────────────────────────
 
+  // ── Servidor propio: lo que más se carga mal ─────────────────────────────
+
+  /** "http://181.48.150.43:7547/" → "181.48.150.43" (y el puerto pasa a su campo). */
+  limpiarHost() {
+    let v = (this.form.host || '').trim().replace(/^[a-z][a-z0-9+.-]*:\/\//i, '').replace(/[/?#].*$/, '');
+    const m = v.match(/^(.+):(\d{1,5})$/);
+    if (m) { v = m[1]; this.form.puerto_cwmp = Number(m[2]); }
+    this.form.host = v.toLowerCase();
+  }
+
+  /** La API apuntando al puerto de los equipos: responde 405 porque no es la API. */
+  get apiUsaPuertoDeEquipos(): boolean {
+    const m = (this.form.url_nbi || '').match(/:(\d{1,5})(\/|$)/);
+    return !!m && Number(m[1]) === Number(this.form.puerto_cwmp || 7547);
+  }
+
+  /** La dirección de la API que se va a usar (vacía = http://host:7557). */
+  get apiEfectiva(): string {
+    const url = (this.form.url_nbi || '').trim();
+    if (url) return /^https?:\/\//i.test(url) ? url : `http://${url}`;
+    return this.form.host ? `http://${this.form.host}:7557` : 'http://TU-SERVIDOR:7557';
+  }
+
   guardarServidor() {
+    if (this.form.modo === 'propio') this.limpiarHost();
+
     if (this.form.modo === 'propio' && !this.form.host.trim()) {
       this.toast.error('Falta la dirección de tu servidor TR-069.');
+      return;
+    }
+
+    if (this.form.modo === 'propio' && this.apiUsaPuertoDeEquipos) {
+      this.toast.error(`La API no va en el puerto de los equipos (${this.form.puerto_cwmp}). En GenieACS es el 7557.`);
       return;
     }
 

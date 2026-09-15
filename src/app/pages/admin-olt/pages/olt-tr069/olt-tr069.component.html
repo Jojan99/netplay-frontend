@@ -87,10 +87,26 @@
 
         <div class="tr-propio" *ngIf="form.modo === 'propio'">
           <div class="np-form">
-            <label class="np-field"><span>Dirección de tu servidor</span><input class="np-input np-mono" [(ngModel)]="form.host" placeholder="acs.miempresa.com" /></label>
-            <label class="np-field"><span>Puerto de los equipos</span><input type="number" class="np-input np-mono" [(ngModel)]="form.puerto_cwmp" /></label>
-            <label class="np-field np-field-full"><span>Dirección de su API <em class="np-fine">(opcional)</em></span><input class="np-input np-mono" [(ngModel)]="form.url_nbi" placeholder="http://10.0.0.5:7557" /></label>
+            <label class="np-field">
+              <span>Dirección de tu servidor</span>
+              <input class="np-input np-mono" [(ngModel)]="form.host" (blur)="limpiarHost()" placeholder="181.48.150.43 o acs.miempresa.com" />
+              <small class="np-fine">Sólo la IP o el dominio: sin <code>http://</code> ni puerto.</small>
+            </label>
+            <label class="np-field">
+              <span>Puerto de los equipos</span>
+              <input type="number" class="np-input np-mono" [(ngModel)]="form.puerto_cwmp" />
+              <small class="np-fine">Donde reportan las ONT. En GenieACS es el 7547.</small>
+            </label>
+            <label class="np-field np-field-full">
+              <span>Dirección de su API <em class="np-fine">(opcional)</em></span>
+              <input class="np-input np-mono" [(ngModel)]="form.url_nbi" [placeholder]="'http://' + (form.host || 'TU-SERVIDOR') + ':7557'" />
+              <small class="np-fine">La API de GenieACS (NBI), puerto <b>7557</b>. No es el puerto de los equipos. Vacía se usa <code class="np-mono">{{ apiEfectiva }}</code>.</small>
+            </label>
           </div>
+
+          <p class="np-notice np-notice--warn np-notice--inline" *ngIf="apiUsaPuertoDeEquipos">
+            La dirección de la API usa el puerto de los equipos ({{ form.puerto_cwmp }}): ahí la API no contesta (da 405). Cambiala al <b>7557</b>.
+          </p>
 
           <div class="tr-elige tr-elige--chico">
             <label class="tr-tarjeta" [class.is-on]="form.alcance === 'publica'">
@@ -103,6 +119,25 @@
               <span class="tr-tarjeta-txt"><b>Está en una red privada</b><small>Armamos el túnel con tu router. También hace falta para que los cambios se apliquen al instante.</small></span>
               <span class="tr-tarjeta-check" aria-hidden="true">✓</span>
             </label>
+          </div>
+
+          <!-- Lo que tiene que estar listo del lado de su servidor: sin esto la
+               plataforma no llega a la API y el diagnóstico da "no contesta". -->
+          <div class="np-notice np-notice--info tr-preparar">
+            <b>Qué preparar en tu servidor</b>
+            <ol>
+              <li>
+                Que la API de GenieACS escuche hacia afuera: en <code class="np-mono">/opt/genieacs/genieacs.env</code> poné
+                <code class="np-mono">GENIEACS_NBI_INTERFACE=0.0.0.0</code> y reiniciá <code class="np-mono">genieacs-nbi</code>.
+              </li>
+              <li>
+                La API no tiene contraseña: en el firewall dejá entrar al puerto <b>7557</b> sólo desde la plataforma
+                <ng-container *ngIf="estado?.ip_plataforma">(<code class="np-mono">{{ estado.ip_plataforma }}</code>)</ng-container>. Por ejemplo:
+                <pre class="olt-script">sudo iptables -I INPUT -p tcp --dport 7557 ! -s {{ estado?.ip_plataforma || 'IP-DE-LA-PLATAFORMA' }} -j DROP</pre>
+              </li>
+              <li>El puerto de los equipos (<b>{{ form.puerto_cwmp || 7547 }}</b>) abierto para tus ONT.</li>
+              <li *ngIf="form.alcance === 'publica'">Con IP pública no hace falta el paso 2 ni el script del paso 3: guardá y usá <b>Revisar ahora</b>.</li>
+            </ol>
           </div>
         </div>
 
@@ -161,6 +196,16 @@
               </label>
             </div>
           </div>
+
+          <!-- Aplicar reemplaza las redes del túnel: con una red desmarcada (por
+               ejemplo la de gestión de las ONT) el servidor deja de llegar a ella. -->
+          <p class="np-notice np-notice--warn np-notice--inline" *ngIf="!(estado?.modo === 'propio' && estado?.alcance === 'publica')">
+            <b>Aplicar reemplaza las redes del túnel de este router por las marcadas.</b>
+            Si una red que hoy se usa queda sin marcar (por ejemplo la de gestión de las ONT o un rango PPPoE nuevo), el servidor deja de llegar a ella.
+          </p>
+          <p class="np-notice np-notice--info np-notice--inline" *ngIf="estado?.modo === 'propio' && estado?.alcance === 'publica'">
+            Tu servidor tiene IP pública: no hace falta aplicar redes. Los equipos llegan a él por internet.
+          </p>
 
           <div class="tr-acciones">
             <button type="button" class="np-btn np-btn--primary" (click)="aplicar()" [disabled]="aplicando">
