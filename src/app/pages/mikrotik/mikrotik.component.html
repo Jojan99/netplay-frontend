@@ -379,7 +379,7 @@
         <!-- Servidores: uno por VLAN, con su perfil y su rango -->
         <section class="px-panel" *ngIf="vistaPppoe === 'servidores'">
           <header class="px-panel-head">
-            <p>El servidor escucha en la interfaz por donde llegan los clientes (una VLAN, no la de internet) y les da la IP del rango de su perfil.</p>
+            <p>El servidor escucha en la interfaz (VLAN) por donde llegan los clientes. La velocidad y la IP las pone el <b>perfil del plan</b> de cada cliente; el perfil base sólo se usa si una credencial no tiene plan.</p>
             <button type="button" class="np-btn np-btn--ghost np-btn--sm" (click)="nuevoServidor()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M12 5v14M5 12h14"/></svg>Nuevo servidor</button>
           </header>
           <p class="np-pm-vacio" *ngIf="!pppoe.servidores.length">No hay ningún servidor PPPoE montado.</p>
@@ -396,7 +396,7 @@
               </header>
               <ol class="px-cadena">
                 <li><span>Servicio</span><b class="np-mono">{{ sv.nombre }}</b></li>
-                <li><span>Perfil</span><b class="np-mono">{{ sv.perfil }}</b><em>{{ sv.perfilDatos?.velocidad || 'sin límite' }}</em></li>
+                <li><span>Perfil base</span><b class="np-mono">{{ sv.perfil }}</b><em>sólo para credenciales sin plan</em></li>
                 <li><span>Reparte</span><b class="np-mono">{{ sv.rango || '—' }}</b><em *ngIf="sv.perfilDatos?.direccion_local">puerta {{ sv.perfilDatos.direccion_local }}</em></li>
               </ol>
               <footer>
@@ -410,7 +410,7 @@
         <!-- Perfiles -->
         <section class="px-panel" *ngIf="vistaPppoe === 'perfiles'">
           <header class="px-panel-head">
-            <p>El perfil fija la <b>velocidad</b> y de qué rango sale la IP. Los que reparten de otro lado (una VPN) no sirven para clientes.</p>
+            <p>Hay <b>un perfil por plan</b> (<span class="np-mono">plan-…</span>): fija la velocidad y da la IP del rango de planes, sin importar la VLAN del cliente. Los <span class="np-mono">perfil-pppoe-…</span> son los base de cada servidor.</p>
             <button type="button" class="np-btn np-btn--ghost np-btn--sm" (click)="nuevoPerfil()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M12 5v14M5 12h14"/></svg>Nuevo perfil</button>
           </header>
           <ul class="px-filas">
