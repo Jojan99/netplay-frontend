@@ -689,10 +689,10 @@ export class UserComponent implements OnInit {
 
     const ok = await this.dialog.confirm(
       aPppoe
-        ? `El cliente pasa a conectarse por PPPoE con el usuario «${this.cambioUsuario}». ` +
-          `Se le quita la IP fija y tiene que reconectar con las credenciales nuevas. ¿Confirmás?`
-        : `El cliente pasa a IP fija con ${this.cambioIp}. Se le borra la credencial PPPoE ` +
-          `y tiene que reiniciar el equipo. ¿Confirmás?`,
+        ? `El cliente pasa a conectarse por PPPoE con el usuario «${this.cambioUsuario}» y se le quita la IP fija. ` +
+          `Si su ONT está en el TR-069, se reconfigura sola; si no, hay que cargarle las credenciales en el equipo. ¿Confirmás?`
+        : `El cliente pasa a IP fija con ${this.cambioIp} y se le borra la credencial PPPoE. ` +
+          `Si su ONT está en el TR-069, se reconfigura sola y se carga su MAC en el MikroTik; si no, hay que configurarla en el equipo. ¿Confirmás?`,
       { okLabel: 'Cambiar la conexión' },
     );
 
