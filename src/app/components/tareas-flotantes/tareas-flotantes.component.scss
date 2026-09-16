@@ -131,3 +131,6 @@ button:focus-visible { outline: 2px solid var(--accent, #0f766e); outline-offset
 @media (prefers-reduced-motion: reduce) {
   .tf-giro, .tf-barra::after, .tf-panel, .tf-pastilla { animation: none; }
 }
+
+/* Botones de la tarea en una fila: con «Ver detalle» y quitar, la X se caía abajo. */
+.tf-lado { display: flex; align-items: center; gap: 4px; }
