@@ -2,7 +2,7 @@ import { CommonModule } from '@angular/common';
 import { HttpClientModule } from '@angular/common/http';
 import { Component, HostListener, ChangeDetectorRef, OnInit, ViewChild, ElementRef, inject } from '@angular/core';
 import { DialogService } from '../../services/dialog.service';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { OntEquipoComponent } from '../../components/ont-equipo/ont-equipo.component';
 import { FormsModule } from '@angular/forms';
 import { NpSelectComponent, PresentacionSelect } from '../../common/np-select/np-select.component';
@@ -22,6 +22,7 @@ import { CompanyWhatsappService } from '../../services/company-whatsapp.service'
 import { MikrotikService } from '../../services/mikrotik.service';
 import { OltService } from '../../services/olt.service';
 import { TareasEnSegundoPlanoService } from '../../services/tareas-en-segundo-plano.service';
+import { GestionRemotaService } from '../../services/gestion-remota.service';
 
 interface Toast {
   id: number;
@@ -127,6 +128,48 @@ export class UserComponent implements OnInit {
 
   private dialog = inject(DialogService);
   private tareas = inject(TareasEnSegundoPlanoService);
+  private gestionRemota = inject(GestionRemotaService);
+  private router = inject(Router);
+
+  // ── Conexión a internet: estado y aprovisionamiento de su ONT ──────────
+  editandoConexion = false;
+  provCliente: any = null;
+  cargandoProv = false;
+  reaplicando = false;
+
+  cargarProvCliente() {
+    if (!this.selectedUserId) return;
+    this.cargandoProv = true;
+    this.gestionRemota.aprovisionamientoDeCliente(Number(this.selectedUserId)).subscribe({
+      next: (r: any) => { this.cargandoProv = false; this.provCliente = r?.error === 0 ? r.data : null; },
+      error: () => { this.cargandoProv = false; this.provCliente = null; },
+    });
+  }
+
+  reaplicarEnOnt() {
+    this.reaplicando = true;
+    this.gestionRemota.reaplicarDeCliente(Number(this.selectedUserId)).subscribe({
+      next: (r: any) => {
+        this.reaplicando = false;
+        this.toast(r?.message ?? 'Listo', r?.error ? 'error' : 'success');
+        if (!r?.error) { this.seguirReconfiguracion(r, 'Reaplicando la conexión en la ONT'); this.cargarProvCliente(); }
+      },
+      error: () => { this.reaplicando = false; this.toast('No se pudo reaplicar', 'error'); },
+    });
+  }
+
+  verAprovisionamiento(id: number) {
+    this.router.navigateByUrl(`/dashboard/olt/acceso-remoto?tab=aprov&aprov=${id}`);
+  }
+
+  estadoAprov(e: string): string {
+    return ({ esperando: 'Esperando al equipo', aplicando: 'Aplicando', listo: 'Aplicado', con_errores: 'Con fallas', vencido: 'No apareció', error: 'Falla' } as Record<string, string>)[e] ?? e;
+  }
+
+  /** Al pasar a PPPoE hacen falta los perfiles del router. */
+  cargarPppoeSiFalta() {
+    if (!this.pppoePerfilesCliente.length && !this.cargandoSesionPppoe) this.cargarPppoeCliente();
+  }
 
   /** Si el cambio disparó la reconfiguración de la ONT, se sigue en la ventana de tareas. */
   private seguirReconfiguracion(r: any, que: string) {
@@ -724,6 +767,8 @@ export class UserComponent implements OnInit {
 
         if (!r.error) {
           this.seguirReconfiguracion(r, 'Reconfigurando la ONT (cambio de conexión)');
+          this.editandoConexion = false;
+          setTimeout(() => this.cargarProvCliente(), 800);
           this.loadModalUser(this.selectedUserId);
           this.getAllUser();
         } else {
@@ -806,6 +851,8 @@ export class UserComponent implements OnInit {
 
         if (!r.error) {
           this.seguirReconfiguracion(r, 'Reconfigurando la ONT (IP nueva)');
+          this.editandoConexion = false;
+          setTimeout(() => this.cargarProvCliente(), 800);
           this.cambioVlan = null;
           this.cambioIp = '';
           this.migrIpzone = [];
@@ -907,6 +954,8 @@ export class UserComponent implements OnInit {
     this.onServiceRouterChange();
     this.loadAssignedOnt(this.selectedUserId);
     this.prepararCambioConexion();
+    this.editandoConexion = false;
+    this.cargarProvCliente();
   }
 
   onServiceRouterChange() {

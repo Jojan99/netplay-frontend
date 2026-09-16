@@ -83,7 +83,13 @@ export class GestionRemotaService {
     return this.http.put(`${this.base}/aprovisionamiento`, datos, this.h());
   }
 
-  /** Un aprovisionamiento, para seguirlo desde la ventana de tareas. */
+  /** La conexión del cliente vista desde su ficha. */
+  aprovisionamientoDeCliente(userId: number): Observable<any> { return this.http.get(`${this.base}/aprovisionamiento/cliente/${userId}`, this.h()); }
+
+  /** Vuelve a cargarle a la ONT la conexión que dice la ficha. */
+  reaplicarDeCliente(userId: number): Observable<any> { return this.http.post(`${this.base}/aprovisionamiento/cliente/${userId}/reaplicar`, {}, this.h()); }
+
+    /** Un aprovisionamiento, para seguirlo desde la ventana de tareas. */
   verAprovisionamiento(id: number): Observable<any> { return this.http.get(`${this.base}/aprovisionamiento/${id}`, this.h()); }
 
   /** Vuelve a aplicar un aprovisionamiento que terminó con fallas (lo toma la tarea de cada minuto). */

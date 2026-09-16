@@ -299,85 +299,140 @@
             </div>
           </section>
 
-          <!-- Solo IP fija: en PPPoE el servicio lo da la sesión del usuario. -->
-          <section *ngIf="!clienteEsPppoe">
-            <p class="np-sect">Autorizar servicio</p>
-            <div class="np-form">
-              <label class="np-field"><span>MAC</span><input type="text" class="np-input np-mono" [(ngModel)]="mac" placeholder="AA:BB:CC:DD:EE:FF" /></label>
-              <label class="np-field"><span>Serial</span><input type="text" class="np-input np-mono" [(ngModel)]="serial" placeholder="Serial del equipo" /></label>
-              <button type="button" class="np-btn np-btn--primary np-field-full" (click)="autorizarServicio()" [disabled]="submittingService || !mac">
-                {{ submittingService ? 'Autorizando…' : 'Autorizar servicio' }}
-              </button>
-            </div>
-          </section>
-
-          <!-- Tipo de conexión: se puede migrar sin borrar el cliente. -->
+          <!-- ── Conexión a internet ───────────────────────────────────── -->
           <section>
-            <p class="np-sect">Conexión</p>
-            <p class="np-fine np-conex-actual">
-              Hoy se conecta
-              <b *ngIf="!clienteEsPppoe">con IP fija</b>
-              <b *ngIf="clienteEsPppoe">por PPPoE, con el usuario <span class="np-mono">{{ selectedUserData?.pppoe_user }}</span></b>.
-            </p>
-            <p class="np-fine" *ngIf="clienteEsPppoe && sesionPppoe">
-              Conectado ahora · IP de gestión <b class="np-mono">{{ sesionPppoe.ip }}</b>
-              <ng-container *ngIf="sesionPppoe.desde"> · hace {{ sesionPppoe.desde }}</ng-container>
-              <ng-container *ngIf="sesionPppoe.mac"> · equipo <span class="np-mono">{{ sesionPppoe.mac }}</span></ng-container>
-            </p>
-            <p class="np-fine" *ngIf="clienteEsPppoe && !sesionPppoe && !cargandoSesionPppoe">Sin sesión PPPoE activa en este momento.</p>
+            <p class="np-sect">Conexión a internet</p>
 
-            <div class="np-form">
-              <div class="np-field np-field-full np-tipoconex">
-                <span>Tipo de conexión</span>
-                <div class="np-seg" role="group">
-                  <!-- Sin deshabilitar: al elegir PPPoE hay que poder volver a IP
-                       fija para desistir del cambio. -->
-                  <button type="button" [attr.aria-pressed]="cambioTipo === 'static'" (click)="cambioTipo = 'static'">IP fija</button>
-                  <button type="button" [attr.aria-pressed]="cambioTipo === 'pppoe'" (click)="cambioTipo = 'pppoe'">PPPoE</button>
+            <div class="cx-card">
+              <!-- Cómo se conecta hoy -->
+              <div class="cx-cab">
+                <span class="cx-tipo">{{ clienteEsPppoe ? 'PPPoE' : 'IP fija' }}</span>
+                <b class="np-mono cx-valor">{{ clienteEsPppoe ? (selectedUserData?.pppoe_user || '—') : (selectedUserData?.ip || 'sin IP asignada') }}</b>
+                <span class="cx-estado" *ngIf="clienteEsPppoe" [attr.data-ok]="!!sesionPppoe">
+                  <i aria-hidden="true"></i>{{ cargandoSesionPppoe && !sesionPppoe ? 'Consultando…' : (sesionPppoe ? 'Conectado' : 'Sin sesión') }}
+                </span>
+                <span class="cx-estado" *ngIf="!clienteEsPppoe && provCliente?.arp" [attr.data-ok]="!provCliente.arp.sin_mac">
+                  <i aria-hidden="true"></i>{{ provCliente.arp.sin_mac ? 'Sin MAC en el router' : 'MAC cargada' }}
+                </span>
+                <button type="button" class="np-btn np-btn--ghost np-btn--sm cx-cambiar" (click)="editandoConexion = !editandoConexion; editandoConexion && prepararCambioConexion()">
+                  {{ editandoConexion ? 'Cancelar' : 'Cambiar conexión' }}
+                </button>
+              </div>
+
+              <dl class="cx-datos">
+                <ng-container *ngIf="clienteEsPppoe">
+                  <div><dt>Perfil</dt><dd class="np-mono">{{ selectedUserData?.pppoe_profile || 'default' }}</dd></div>
+                  <div *ngIf="sesionPppoe"><dt>IP de la sesión</dt><dd class="np-mono">{{ sesionPppoe.ip }}</dd></div>
+                  <div *ngIf="sesionPppoe?.desde"><dt>Conectado hace</dt><dd>{{ sesionPppoe?.desde }}</dd></div>
+                  <div *ngIf="sesionPppoe?.mac"><dt>Equipo</dt><dd class="np-mono">{{ sesionPppoe?.mac }}</dd></div>
+                </ng-container>
+                <ng-container *ngIf="!clienteEsPppoe">
+                  <div *ngIf="provCliente?.arp?.interfaz"><dt>VLAN</dt><dd class="np-mono">{{ provCliente.arp.interfaz }}</dd></div>
+                  <div><dt>MAC en el router</dt><dd class="np-mono">{{ provCliente?.arp?.mac || (cargandoProv ? 'leyendo…' : '—') }}</dd></div>
+                </ng-container>
+              </dl>
+
+              <p class="np-notice np-notice--warn np-notice--inline" *ngIf="!clienteEsPppoe && provCliente?.arp?.sin_mac">
+                El MikroTik no tiene la MAC real de este equipo y no le va a contestar.
+                <ng-container *ngIf="provCliente?.habilitado && provCliente?.tiene_ont">Tocá «Reaplicar en la ONT» y se carga sola.</ng-container>
+                <ng-container *ngIf="!(provCliente?.habilitado && provCliente?.tiene_ont)">Cargala a mano abajo.</ng-container>
+              </p>
+
+              <!-- La ONT y su aprovisionamiento -->
+              <div class="cx-ont" *ngIf="assignedOnt">
+                <div class="cx-ont-txt">
+                  <span class="cx-ont-t">Equipo ONT</span>
+                  <ng-container *ngIf="!provCliente?.habilitado">
+                    <small>El aprovisionamiento está apagado: un cambio de conexión hay que cargarlo en el equipo.</small>
+                  </ng-container>
+                  <ng-container *ngIf="provCliente?.habilitado && provCliente?.ultimo as u">
+                    <small>
+                      <em class="cx-pill" [attr.data-estado]="u.estado">{{ estadoAprov(u.estado) }}</em>
+                      {{ u.detalle }} · {{ u.creado | date:'dd/MM HH:mm' }}
+                    </small>
+                  </ng-container>
+                  <ng-container *ngIf="provCliente?.habilitado && !provCliente?.ultimo">
+                    <small>Se reconfigura sola por TR-069 cuando cambies la conexión.</small>
+                  </ng-container>
+                </div>
+                <div class="cx-ont-acc" *ngIf="provCliente?.habilitado">
+                  <button type="button" class="np-btn np-btn--ghost np-btn--sm" *ngIf="provCliente?.ultimo" (click)="verAprovisionamiento(provCliente.ultimo.id)">Ver detalle</button>
+                  <button type="button" class="np-btn np-btn--ghost np-btn--sm" (click)="reaplicarEnOnt()" [disabled]="reaplicando">{{ reaplicando ? 'Pidiendo…' : 'Reaplicar en la ONT' }}</button>
                 </div>
               </div>
+            </div>
 
-              <ng-container *ngIf="cambioTipo === 'pppoe'">
-                <label class="np-field"><span>Usuario PPPoE</span>
-                  <input type="text" class="np-input np-mono" [(ngModel)]="cambioUsuario" placeholder="Suele ser el documento" />
-                </label>
-                <label class="np-field"><span>Contraseña <em *ngIf="clienteEsPppoe">dejala vacía para no cambiarla</em></span>
-                  <span class="np-input-wrap">
-                    <input type="text" class="np-input np-mono" [(ngModel)]="cambioClave" placeholder="Contraseña del cliente" />
-                    <button type="button" class="np-eye" (click)="generarClaveCambio()" title="Generar una contraseña">GENERAR</button>
-                  </span>
-                </label>
-                <label class="np-field np-field-full"><span>Perfil PPP <em>define la velocidad</em></span>
-                  <np-select [(ngModel)]="cambioPerfil" [opciones]="pppoePerfilesCliente" [presentacion]="presPerfiles" [valorVacio]="''"
-                             [cargando]="cargandoSesionPppoe" textoCargando="Leyendo el router…"
-                             [placeholder]="pppoePerfilesCliente.length ? 'Seleccione perfil…' : 'Sin perfiles en el router'"
-                             [deshabilitado]="!pppoePerfilesCliente.length" ariaLabel="Perfil PPP"></np-select>
-                </label>
-              </ng-container>
+            <!-- Cambiar la conexión: sólo cuando se pide -->
+            <div class="np-panel cx-editar" *ngIf="editandoConexion">
+              <div class="np-form">
+                <div class="np-field np-field-full np-tipoconex">
+                  <span>Tipo de conexión</span>
+                  <div class="np-seg" role="group">
+                    <button type="button" [attr.aria-pressed]="cambioTipo === 'static'" (click)="cambioTipo = 'static'">IP fija</button>
+                    <button type="button" [attr.aria-pressed]="cambioTipo === 'pppoe'" (click)="cambioTipo = 'pppoe'; cargarPppoeSiFalta()">PPPoE</button>
+                  </div>
+                </div>
 
-              <ng-container *ngIf="cambioTipo === 'static'">
-                <label class="np-field"><span>VLAN</span>
-                  <np-select [(ngModel)]="cambioVlan" (ngModelChange)="onCambioVlanChange($event)" [opciones]="interfaces" [presentacion]="redes" placeholder="Seleccione VLAN…" ariaLabel="VLAN"></np-select>
-                </label>
-                <label class="np-field"><span>IP <em>({{ migrIpzone.length }} disponibles)</em></span>
-                  <np-select [ngModel]="cambioIp || null" (ngModelChange)="cambioIp = $event || ''" [opciones]="opcionesIp.de(migrIpzone)" [presentacion]="ipsPresentacion" placeholder="Seleccione IP…" textoBuscar="Buscar IP: 50, .150, 192.168…" [buscable]="true" [deshabilitado]="!migrIpzone.length" ariaLabel="IP"></np-select>
-                </label>
-              </ng-container>
+                <ng-container *ngIf="cambioTipo === 'pppoe'">
+                  <label class="np-field"><span>Usuario PPPoE</span>
+                    <input type="text" class="np-input np-mono" [(ngModel)]="cambioUsuario" placeholder="Suele ser el documento" />
+                  </label>
+                  <label class="np-field"><span>Contraseña <em *ngIf="clienteEsPppoe">vacía = no cambia</em></span>
+                    <span class="np-input-wrap">
+                      <input type="text" class="np-input np-mono" [(ngModel)]="cambioClave" placeholder="Contraseña del cliente" />
+                      <button type="button" class="np-eye" (click)="generarClaveCambio()" title="Generar una contraseña">GENERAR</button>
+                    </span>
+                  </label>
+                  <label class="np-field np-field-full"><span>Perfil PPP <em>define la velocidad</em></span>
+                    <np-select [(ngModel)]="cambioPerfil" [opciones]="pppoePerfilesCliente" [presentacion]="presPerfiles" [valorVacio]="''"
+                               [cargando]="cargandoSesionPppoe" textoCargando="Leyendo el router…"
+                               [placeholder]="pppoePerfilesCliente.length ? 'Seleccione perfil…' : 'Sin perfiles en el router'"
+                               [deshabilitado]="!pppoePerfilesCliente.length" ariaLabel="Perfil PPP"></np-select>
+                  </label>
+                </ng-container>
 
-              <p class="np-notice np-notice--warn np-notice--inline np-field-full" *ngIf="cambioAviso">{{ cambioAviso }}</p>
+                <ng-container *ngIf="cambioTipo === 'static'">
+                  <label class="np-field"><span>VLAN</span>
+                    <np-select [(ngModel)]="cambioVlan" (ngModelChange)="onCambioVlanChange($event)" [opciones]="interfaces" [presentacion]="redes" placeholder="Seleccione VLAN…" ariaLabel="VLAN"></np-select>
+                  </label>
+                  <label class="np-field"><span>IP <em>({{ migrIpzone.length }} disponibles)</em></span>
+                    <np-select [ngModel]="cambioIp || null" (ngModelChange)="cambioIp = $event || ''" [opciones]="opcionesIp.de(migrIpzone)" [presentacion]="ipsPresentacion" placeholder="Seleccione IP…" textoBuscar="Buscar IP: 50, .150, 192.168…" [buscable]="true" [deshabilitado]="!migrIpzone.length" ariaLabel="IP"></np-select>
+                  </label>
+                </ng-container>
 
-              <!-- Un cliente puede quedar fuera del control de velocidad del plan. -->
-              <div class="np-vel-cliente np-field-full">
-                <span class="np-vel-t">Control de velocidad</span>
-                <label class="np-check"><input type="radio" name="velctl" value="plan" [(ngModel)]="controlVelocidad" (ngModelChange)="guardarControlVelocidad()" /> El de su plan</label>
-                <label class="np-check"><input type="radio" name="velctl" value="sin_limite" [(ngModel)]="controlVelocidad" (ngModelChange)="guardarControlVelocidad()" /> Sin límite</label>
-                <span class="np-fine">Sin límite queda fuera de las reglas del plan: al aplicar no se le pone cola ni perfil.</span>
+                <p class="np-notice np-notice--inline np-field-full" [class.np-notice--warn]="!provCliente?.habilitado || !assignedOnt">
+                  <ng-container *ngIf="provCliente?.habilitado && assignedOnt">Al guardar, la ONT se reconfigura sola por TR-069{{ cambioTipo === 'static' ? ' y se carga su MAC en el MikroTik' : '' }}. El WiFi del cliente no se toca.</ng-container>
+                  <ng-container *ngIf="!provCliente?.habilitado || !assignedOnt">La ONT no se reconfigura sola{{ !assignedOnt ? ' (el cliente no tiene ONT asignada)' : ' (el aprovisionamiento está apagado)' }}: hay que cargar el cambio en el equipo.</ng-container>
+                </p>
+                <p class="np-notice np-notice--warn np-notice--inline np-field-full" *ngIf="cambioAviso">{{ cambioAviso }}</p>
+
+                <div class="np-btnrow np-field-full">
+                  <button type="button" class="np-btn np-btn--primary" (click)="aplicarConexion()" [disabled]="!puedeAplicarConexion">{{ etiquetaConexion }}</button>
+                  <button type="button" class="np-btn np-btn--ghost" (click)="editandoConexion = false">Cancelar</button>
+                </div>
               </div>
+            </div>
 
-              <button type="button" class="np-btn np-btn--warn np-field-full"
-                      (click)="aplicarConexion()" [disabled]="!puedeAplicarConexion">
-                {{ etiquetaConexion }}
-              </button>
+            <!-- MAC a mano: sólo IP fija y cuando no se hace sola -->
+            <details class="np-panel cx-mac" *ngIf="!clienteEsPppoe">
+              <summary>Cargar la MAC a mano</summary>
+              <div class="np-form">
+                <label class="np-field"><span>MAC</span><input type="text" class="np-input np-mono" [(ngModel)]="mac" placeholder="AA:BB:CC:DD:EE:FF" /></label>
+                <label class="np-field"><span>Serial</span><input type="text" class="np-input np-mono" [(ngModel)]="serial" placeholder="Serial del equipo" /></label>
+                <button type="button" class="np-btn np-btn--primary np-field-full" (click)="autorizarServicio()" [disabled]="submittingService || !mac">
+                  {{ submittingService ? 'Guardando…' : 'Guardar la MAC' }}
+                </button>
+              </div>
+            </details>
+          </section>
+
+          <!-- ── Control de velocidad ─────────────────────────────────────── -->
+          <section>
+            <p class="np-sect">Velocidad</p>
+            <div class="np-vel-cliente">
+              <label class="np-check"><input type="radio" name="velctl" value="plan" [(ngModel)]="controlVelocidad" (ngModelChange)="guardarControlVelocidad()" /> La de su plan</label>
+              <label class="np-check"><input type="radio" name="velctl" value="sin_limite" [(ngModel)]="controlVelocidad" (ngModelChange)="guardarControlVelocidad()" /> Sin límite</label>
+              <span class="np-fine">Sin límite queda fuera de las reglas del plan: al aplicar no se le pone cola ni perfil.</span>
             </div>
           </section>
 

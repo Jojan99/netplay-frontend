@@ -104,3 +104,36 @@
   font: 600 11px var(--font-body); text-transform: none; letter-spacing: 0; color: var(--accent);
   &:hover { text-decoration: underline; }
 }
+
+/* ─── Conexión a internet: cómo está hoy y su ONT ───────────────────── */
+.cx-card { display: grid; gap: 12px; padding: 14px 16px; border: 1px solid var(--line); border-radius: var(--radius-lg); background: var(--surface); }
+.cx-cab { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; }
+.cx-tipo { font-size: 10.5px; font-weight: 800; letter-spacing: .5px; text-transform: uppercase; padding: 3px 9px; border-radius: 999px; background: var(--accent-soft, var(--surface-3)); color: var(--accent); }
+.cx-valor { font-size: 15px; color: var(--text); }
+.cx-estado { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 700; color: var(--danger);
+  i { width: 8px; height: 8px; border-radius: 50%; background: currentColor; }
+  &[data-ok="true"] { color: var(--ok); }
+}
+.cx-cambiar { margin-left: auto; }
+.cx-datos { margin: 0; display: flex; flex-wrap: wrap; gap: 8px 22px;
+  > div { display: grid; gap: 1px; }
+  dt { font-size: 10.5px; font-weight: 700; letter-spacing: .4px; text-transform: uppercase; color: var(--text-3); }
+  dd { margin: 0; font-size: 13px; color: var(--text); }
+}
+.cx-ont { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px;
+  padding: 10px 12px; border-radius: var(--radius); background: var(--surface-2); border: 1px solid var(--line); }
+.cx-ont-txt { display: grid; gap: 3px; min-width: 0; flex: 1 1 260px;
+  small { font-size: 12px; color: var(--text-2); line-height: 1.5; overflow-wrap: anywhere; }
+}
+.cx-ont-t { font-size: 10.5px; font-weight: 800; letter-spacing: .5px; text-transform: uppercase; color: var(--text-3); }
+.cx-ont-acc { display: flex; gap: 6px; flex-wrap: wrap; }
+.cx-pill { font-style: normal; font-size: 10px; font-weight: 800; letter-spacing: .3px; text-transform: uppercase; padding: 1px 7px; margin-right: 4px;
+  border-radius: 999px; background: var(--warn-soft); color: var(--warn);
+  &[data-estado="listo"] { background: var(--ok-soft); color: var(--ok); }
+  &[data-estado="con_errores"], &[data-estado="error"], &[data-estado="vencido"] { background: var(--danger-soft); color: var(--danger); }
+}
+.cx-editar { margin-top: 10px; }
+.cx-mac { margin-top: 10px;
+  > summary { cursor: pointer; font-size: 12.5px; font-weight: 700; color: var(--text-2); }
+  &[open] > summary { margin-bottom: 10px; }
+}
