@@ -801,3 +801,28 @@
   b { font-size: 12.5px; }
   small { display: block; font-size: 11.5px; color: var(--text-2); line-height: 1.45; }
 }
+
+/* ── Asistente de PPPoE: elegir el modo y el automático por VLAN ── */
+.px-modos { display: grid; gap: 10px; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); }
+.px-modo {
+  position: relative; display: grid; gap: 6px; align-content: start; text-align: left; cursor: pointer;
+  padding: 16px; border-radius: var(--radius); font: inherit; color: var(--text);
+  background: var(--surface); border: 1px solid var(--line-strong);
+  b { font-size: 14px; }
+  > span:not(.px-modo-tag) { font-size: 12.5px; line-height: 1.5; color: var(--text-2); }
+  &:hover { border-color: var(--accent); }
+  &.is-rec { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent) inset; }
+}
+.px-modo-tag {
+  justify-self: start; padding: 2px 8px; border-radius: 999px; font-size: 10.5px; font-weight: 800;
+  letter-spacing: .4px; text-transform: uppercase; background: var(--accent); color: var(--accent-ink, #fff);
+}
+.px-sub, .px-crea small { display: block; font-weight: 400; }
+.px-arreglo { display: grid; gap: 6px; margin-top: 12px; p { margin: 0; } }
+.px-pasos {
+  list-style: none; margin: 0 0 12px; padding: 0; display: grid; gap: 8px;
+  li { display: grid; grid-template-columns: 18px 1fr; gap: 8px; font-size: 13px; }
+  li > span:first-child { color: var(--ok, #16a34a); font-weight: 800; }
+  li.is-mal > span:first-child { color: var(--danger); }
+  small { display: block; color: var(--text-2); font-size: 12px; line-height: 1.45; }
+}

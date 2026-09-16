@@ -216,8 +216,79 @@ export class MikrotikComponent implements OnInit {
     });
   }
 
+  /** Primero se elige cómo: automático por VLAN o paso a paso. */
+  modoAsistente: 'elegir' | 'auto' | 'manual' = 'elegir';
+  propuestaPppoe: any = null;
+  resultadoAuto: any = null;
+
   abrirAsistente() {
     this.mostrarAsistente = true;
+    this.modoAsistente = 'elegir';
+    this.resultadoMontaje = null;
+    this.resultadoAuto = null;
+    this.pppoeError = '';
+  }
+
+  elegirAutomatico() {
+    this.modoAsistente = 'auto';
+    this.propuestaPppoe = null;
+    this.resultadoAuto = null;
+    this.pppoeError = '';
+
+    this.svc.getPppoePropuesta(this.selectedRouterId).subscribe({
+      next: r => {
+        if (r?.error !== 0) { this.pppoeError = r?.message || 'No se pudo leer el router.'; return; }
+        // Nada marcado de entrada en las VLAN: cada una se elige a conciencia.
+        // Las velocidades mal escritas sí: arreglarlas nunca empeora nada.
+        this.propuestaPppoe = {
+          ...r.data,
+          vlans: (r.data?.vlans ?? []).map((v: any) => ({ ...v, crear: false })),
+          sin_unidad: (r.data?.sin_unidad ?? []).map((p: any) => ({ ...p, corregir: true })),
+        };
+      },
+      error: () => { this.pppoeError = 'No se pudo leer el router.'; },
+    });
+  }
+
+  porInterfaz = (_: number, v: any) => v.interfaz;
+
+  get cambiosAuto(): number {
+    const p = this.propuestaPppoe;
+    if (!p) return 0;
+    return p.vlans.filter((v: any) => v.crear && !v.tiene).length + p.sin_unidad.filter((x: any) => x.corregir).length;
+  }
+
+  async montarAutomatico() {
+    const p = this.propuestaPppoe;
+    const vlans = p.vlans.filter((v: any) => v.crear && !v.tiene);
+    const corregir = p.sin_unidad.filter((x: any) => x.corregir);
+
+    const partes = [];
+    if (vlans.length) partes.push(`crear PPPoE en la${vlans.length > 1 ? 's' : ''} VLAN ${vlans.map((v: any) => v.vlan).join(', ')}`);
+    if (corregir.length) partes.push(`corregir la velocidad de ${corregir.map((x: any) => x.perfil).join(', ')}`);
+
+    const ok = await this.dialog.confirm(`Se va a ${partes.join(' y ')} en el router. Los clientes que ya navegan no se cortan. ¿Confirmás?`, { okLabel: 'Crear' });
+    if (!ok) return;
+
+    this.montando = true;
+    this.pppoeError = '';
+    this.svc.pppoeAutomatico({
+      interfaces: vlans.map((v: any) => v.interfaz),
+      corregir: corregir.map((x: any) => x.perfil),
+      router_id: this.selectedRouterId,
+    }).subscribe({
+      next: r => {
+        this.montando = false;
+        this.resultadoAuto = r?.data ?? { ok: false, pasos: [] };
+        if (!r?.data) this.pppoeError = r?.message || 'No se pudo configurar.';
+        this.loadPppoe();
+      },
+      error: () => { this.montando = false; this.pppoeError = 'No se pudo configurar el router.'; },
+    });
+  }
+
+  elegirManual() {
+    this.modoAsistente = 'manual';
     this.resultadoMontaje = null;
     this.opcionesPppoe = null;
     this.paso = 1;

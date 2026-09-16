@@ -286,9 +286,12 @@ export class OltAccesoRemotoComponent implements OnInit {
         if (r?.error !== 0) { this.error = r?.message ?? 'No se pudo revisar'; return; }
         this.diag = r.data;
         this.armarItems();
+        // Objeto nuevo: el resumen del canal de gestión se arma de nuevo con los nombres.
+        const nombres = { ...this.nombresOlt };
         for (const g of this.diag?.grupos ?? []) {
-          if (g.olt_id) this.nombresOlt[g.olt_id] = g.titulo;
+          if (g.olt_id) nombres[g.olt_id] = g.titulo;
         }
+        this.nombresOlt = nombres;
         // Apagado: lo único útil es configurarlo.
         if (!this.tabElegida && this.diag?.nivel === 'apagado') this.tab = 'config';
         if (this.tab === 'perfiles') this.cargarPerfilesDeTodas();
@@ -312,6 +315,27 @@ export class OltAccesoRemotoComponent implements OnInit {
   }
 
   irAlAsistente() { this.abrirTab('config'); }
+
+  /** Con la gestión activa, el formulario sólo se abre para cambiarla. */
+  cambiando = false;
+
+  cambiar() {
+    this.cambiando = true;
+    if (!this.sug && !this.buscando) this.buscar();
+  }
+
+  /** Por qué puerto sale cada OLT, con su nombre si ya se conoce. */
+  get uplinksActivos(): { nombre: string; puerto: string }[] {
+    const mapa = this.estado?.uplinks ?? {};
+    if (this.uplinksDe.mapa !== mapa || this.uplinksDe.nombres !== this.nombresOlt) {
+      this.uplinksDe = {
+        mapa, nombres: this.nombresOlt,
+        lista: Object.entries(mapa).map(([id, puerto]) => ({ nombre: this.nombresOlt[Number(id)] ?? `OLT ${id}`, puerto: String(puerto) })),
+      };
+    }
+    return this.uplinksDe.lista;
+  }
+  private uplinksDe: { mapa: any; nombres: any; lista: { nombre: string; puerto: string }[] } = { mapa: null, nombres: null, lista: [] };
 
   private irA(id: string) {
     setTimeout(() => document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 60);
@@ -352,7 +376,12 @@ export class OltAccesoRemotoComponent implements OnInit {
   readonly presInterfaces: PresentacionSelect<string> = {
     valor: i => i,
     etiqueta: i => i,
-    detalle: i => (i === this.sug?.interfaz ? 'La propuesta: la que más VLAN lleva' : null),
+    detalle: i => {
+      const vlans: number[] = this.sug?.vlans_por_interfaz?.[i] ?? [];
+      const lista = vlans.length ? `VLAN ${vlans.join(', ')}` : 'Sin VLAN';
+      return i === this.sug?.interfaz ? `${lista} · la propuesta` : lista;
+    },
+    buscarEn: i => [i, ...(this.sug?.vlans_por_interfaz?.[i] ?? [])].join(' '),
     insignia: (i, todas) => {
       const n = Number(this.sug?.interfaces?.[i] ?? 0);
       const mayor = Math.max(1, ...todas.map(x => Number(this.sug?.interfaces?.[x] ?? 0)));
@@ -401,6 +430,7 @@ export class OltAccesoRemotoComponent implements OnInit {
         this.pasos = r?.data?.pasos ?? [];
         if (r?.error !== 0) { this.toast.error(r?.message ?? 'No se pudo activar'); return; }
         this.estado = r.data?.estado ?? this.estado;
+        this.cambiando = false;
         this.toast.success(r.message);
         this.revisar();
       },

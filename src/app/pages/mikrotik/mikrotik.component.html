@@ -982,7 +982,7 @@
     </div>
 
     <!-- Los pasos, siempre visibles: se ve dónde se está y qué falta -->
-    <ol class="np-wiz-pasos" *ngIf="opcionesPppoe && !resultadoMontaje">
+    <ol class="np-wiz-pasos" *ngIf="modoAsistente === 'manual' && opcionesPppoe && !resultadoMontaje">
       <li *ngFor="let p of pasosPppoe"
           [class.is-actual]="p.n === paso"
           [class.is-hecho]="p.n < paso">
@@ -992,6 +992,86 @@
     </ol>
 
     <div class="np-modal-body">
+      <!-- 0 · Cómo armarlo -->
+      <ng-container *ngIf="modoAsistente === 'elegir'">
+        <p class="np-wiz-detalle">Elegí cómo querés dejarlo listo.</p>
+        <div class="px-modos">
+          <button type="button" class="px-modo is-rec" (click)="elegirAutomatico()">
+            <span class="px-modo-tag">Recomendado</span>
+            <b>Automático, una conexión por VLAN</b>
+            <span>Lee las VLAN del router y a las que no atienden PPPoE les crea todo lo que hace falta: su rango de IP, su perfil y el servidor. Lo que ya funciona no se toca.</span>
+          </button>
+          <button type="button" class="px-modo" (click)="elegirManual()">
+            <b>Paso a paso</b>
+            <span>Elegís vos la interfaz, el rango, los perfiles de cada plan y la salida a internet.</span>
+          </button>
+        </div>
+      </ng-container>
+
+      <!-- Automático por VLAN -->
+      <ng-container *ngIf="modoAsistente === 'auto'">
+        <div *ngIf="!propuestaPppoe && !pppoeError" class="np-loading"><span class="np-spinner"></span> Leyendo las VLAN del router…</div>
+        <p class="np-notice np-notice--warn np-notice--inline" *ngIf="pppoeError">{{ pppoeError }}</p>
+
+        <ng-container *ngIf="propuestaPppoe && !resultadoAuto">
+          <p class="np-wiz-detalle">Marcá las VLAN donde querés atender clientes PPPoE. Cada una queda con su propio rango, así nunca se pisan las IP.</p>
+
+          <div class="np-tablewrap np-sync-box">
+            <table class="np-table np-table--compact">
+              <thead><tr><th></th><th>VLAN</th><th>Por</th><th>Qué hay / qué se crea</th></tr></thead>
+              <tbody>
+                <tr *ngFor="let v of propuestaPppoe.vlans; trackBy: porInterfaz">
+                  <td><input type="checkbox" [(ngModel)]="v.crear" [disabled]="v.tiene" [attr.aria-label]="'Crear PPPoE en ' + v.interfaz" /></td>
+                  <td class="np-strong">{{ v.vlan }}<small class="np-fine px-sub">{{ v.interfaz }}</small></td>
+                  <td class="np-mono">{{ v.sobre }}</td>
+                  <td *ngIf="v.tiene"><span class="np-badge np-badge--ok">Ya atiende PPPoE</span> <small class="np-fine np-mono">{{ v.rango }}</small></td>
+                  <td *ngIf="!v.tiene" class="np-mono px-crea">{{ v.rango }}<small class="np-fine">{{ v.reusa ? 'Ya tenía rango y perfil: sólo falta el servidor' : 'puerta ' + v.gateway + ' · ' + v.perfil }}</small></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <p class="np-pm-vacio" *ngIf="!propuestaPppoe.vlans.length">El router no tiene VLAN de clientes. Usá «Paso a paso» para elegir otra interfaz.</p>
+
+          <div class="px-arreglo" *ngIf="propuestaPppoe.sin_unidad.length">
+            <h4 class="np-sync-h">Velocidades mal escritas</h4>
+            <p class="np-fine">Sin «M» el MikroTik lo toma en bits por segundo: el cliente conecta pero no navega.</p>
+            <label class="np-check" *ngFor="let p of propuestaPppoe.sin_unidad">
+              <input type="checkbox" [(ngModel)]="p.corregir" />
+              <span><b class="np-mono">{{ p.perfil }}</b>: {{ p.actual }} → <b class="np-mono">{{ p.corregida }}</b>
+                <small class="np-fine" *ngIf="p.usan"> · {{ p.usan }} cliente(s) lo usan; lo toman al reconectarse</small></span>
+            </label>
+          </div>
+
+          <p class="np-fine" *ngIf="propuestaPppoe.nat.general">Salida a internet: el router ya tiene una regla general, no hace falta agregar nada.</p>
+          <p class="np-fine" *ngIf="!propuestaPppoe.nat.general && propuestaPppoe.nat.wan.length">Salida a internet: cada rango nuevo sale por <b>{{ propuestaPppoe.nat.wan[0] }}</b>.</p>
+          <p class="np-notice np-notice--warn np-notice--inline" *ngIf="!propuestaPppoe.nat.general && !propuestaPppoe.nat.wan.length">No se encontró por dónde sale el router a internet: revisá el NAT después.</p>
+
+          <div class="np-btnrow np-btnrow--end">
+            <button type="button" class="np-btn np-btn--ghost" (click)="modoAsistente = 'elegir'">Atrás</button>
+            <button type="button" class="np-btn np-btn--primary" (click)="montarAutomatico()" [disabled]="montando || !cambiosAuto">
+              {{ montando ? 'Creando…' : (cambiosAuto ? 'Crear ahora' : 'Nada para crear') }}
+            </button>
+          </div>
+        </ng-container>
+
+        <ng-container *ngIf="resultadoAuto">
+          <p class="np-notice" [ngClass]="resultadoAuto.ok ? 'np-notice--ok' : 'np-notice--danger'">
+            <strong>{{ resultadoAuto.ok ? 'Listo. Esas VLAN ya atienden clientes PPPoE.' : 'Quedaron cosas sin hacer.' }}</strong>
+          </p>
+          <ul class="px-pasos">
+            <li *ngFor="let p of resultadoAuto.pasos" [class.is-mal]="!p.ok">
+              <span aria-hidden="true">{{ p.ok ? '✓' : '!' }}</span>
+              <span><b>{{ p.paso }}</b><small>{{ p.detalle }}</small></span>
+            </li>
+          </ul>
+          <p class="np-fine" *ngIf="resultadoAuto.ok">Al registrar o pasar un cliente a <b>PPPoE</b>, su ONT se conecta al servidor de su VLAN.</p>
+          <div class="np-btnrow np-btnrow--end">
+            <button type="button" class="np-btn np-btn--primary" (click)="cerrarAsistente()">Cerrar</button>
+          </div>
+        </ng-container>
+      </ng-container>
+
+      <ng-container *ngIf="modoAsistente === 'manual'">
       <div *ngIf="!opcionesPppoe && !resultadoMontaje" class="np-loading"><span class="np-spinner"></span> Leyendo el router…</div>
 
       <!-- Resultado -->
@@ -1102,13 +1182,14 @@
         <p class="np-notice np-notice--warn np-notice--inline" *ngIf="pppoeError">{{ pppoeError }}</p>
 
         <div class="np-btnrow np-btnrow--end">
-          <button type="button" class="np-btn np-btn--ghost" (click)="cerrarAsistente()" *ngIf="paso === 1">Cancelar</button>
+          <button type="button" class="np-btn np-btn--ghost" (click)="modoAsistente = 'elegir'" *ngIf="paso === 1">Atrás</button>
           <button type="button" class="np-btn np-btn--ghost" (click)="pasoAnterior()" *ngIf="paso > 1">Atrás</button>
           <button type="button" class="np-btn np-btn--primary" (click)="siguientePaso()" *ngIf="paso < ultimoPaso" [disabled]="!puedeAvanzar">Siguiente</button>
           <button type="button" class="np-btn np-btn--primary" (click)="montarPppoe()" *ngIf="paso === ultimoPaso" [disabled]="montando">
             {{ montando ? 'Configurando…' : 'Configurar el router' }}
           </button>
         </div>
+      </ng-container>
       </ng-container>
     </div>
   </div>

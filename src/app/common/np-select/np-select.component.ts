@@ -428,7 +428,8 @@ export class NpSelectComponent implements ControlValueAccessor, OnChanges, OnDes
       };
       let pendiente = false;
       const reubicar = (e: Event) => {
-        if (pendiente || this.lista?.nativeElement.contains(e.target as Node)) return;
+        // En «resize» el target es la ventana, que no es un nodo: contains() lanzaba.
+        if (pendiente || (e.target instanceof Node && this.lista?.nativeElement.contains(e.target))) return;
         pendiente = true;
         requestAnimationFrame(() => {
           pendiente = false;

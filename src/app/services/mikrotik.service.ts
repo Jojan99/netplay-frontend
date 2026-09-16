@@ -124,6 +124,16 @@ export class MikrotikService {
     return this.http.post(`${this.base}/pppoe/montar`, data, this.h());
   }
 
+  /** Qué VLAN ya atienden PPPoE y qué se crearía en las demás. */
+  getPppoePropuesta(routerId?: number | null): Observable<any> {
+    return this.http.get(`${this.base}/pppoe/propuesta`, { ...this.h(), ...this.params(routerId) });
+  }
+
+  /** Crea el PPPoE de las VLAN elegidas y corrige velocidades sin unidad. */
+  pppoeAutomatico(data: { interfaces: string[]; corregir: string[]; router_id?: number | null }): Observable<any> {
+    return this.http.post(`${this.base}/pppoe/automatico`, data, this.h());
+  }
+
   /** Qué se llevaría por delante desmontar PPPoE. */
   getPppoeQueSeBorra(routerId?: number | null): Observable<any> {
     return this.http.get(`${this.base}/pppoe/que-se-borra`, { ...this.h(), ...this.params(routerId) });
