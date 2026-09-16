@@ -21,6 +21,7 @@ import { Subscription } from 'rxjs';
 import { CompanyWhatsappService } from '../../services/company-whatsapp.service';
 import { MikrotikService } from '../../services/mikrotik.service';
 import { OltService } from '../../services/olt.service';
+import { TareasEnSegundoPlanoService } from '../../services/tareas-en-segundo-plano.service';
 
 interface Toast {
   id: number;
@@ -125,6 +126,13 @@ export class UserComponent implements OnInit {
 
 
   private dialog = inject(DialogService);
+  private tareas = inject(TareasEnSegundoPlanoService);
+
+  /** Si el cambio disparó la reconfiguración de la ONT, se sigue en la ventana de tareas. */
+  private seguirReconfiguracion(r: any, que: string) {
+    const id = Number(r?.data?.aprovisionamiento);
+    if (id) this.tareas.seguirAprovisionamiento(id, `${que} · cliente #${this.selectedUserId}`);
+  }
 
   constructor(
     private userSvc: UserService,
@@ -715,6 +723,7 @@ export class UserComponent implements OnInit {
         this.toast(r.message ?? 'Listo', r.error ? 'error' : 'success');
 
         if (!r.error) {
+          this.seguirReconfiguracion(r, 'Reconfigurando la ONT (cambio de conexión)');
           this.loadModalUser(this.selectedUserId);
           this.getAllUser();
         } else {
@@ -796,6 +805,7 @@ export class UserComponent implements OnInit {
         this.toast(r.message ?? (r.error ? 'Error' : 'IP cambiada'), r.error ? 'error' : 'success');
 
         if (!r.error) {
+          this.seguirReconfiguracion(r, 'Reconfigurando la ONT (IP nueva)');
           this.cambioVlan = null;
           this.cambioIp = '';
           this.migrIpzone = [];

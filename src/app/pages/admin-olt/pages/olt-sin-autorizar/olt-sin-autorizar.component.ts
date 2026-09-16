@@ -439,6 +439,12 @@ export class OltSinAutorizarComponent implements OnInit {
       this.tareas.seguir(acceso.tarea, `Dando acceso remoto · ${this.form.description || this.form.serial} (${this.form.fsp})`, 'dar_acceso');
     }
 
+    // El aprovisionamiento también: corre al minuto y se ve en la ventana.
+    const aprov: any = this.pasos.find((p: any) => p?.aprovisionamiento);
+    if (aprov) {
+      this.tareas.seguirAprovisionamiento(Number(aprov.aprovisionamiento), `Aprovisionando · ${this.form.description || this.form.serial} (${this.form.fsp})`);
+    }
+
     if (res?.error !== 0) {
       this.toast.error(res?.message || 'La OLT no autorizó la ONT.');
       return;

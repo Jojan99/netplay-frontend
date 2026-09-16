@@ -83,6 +83,9 @@ export class GestionRemotaService {
     return this.http.put(`${this.base}/aprovisionamiento`, datos, this.h());
   }
 
+  /** Un aprovisionamiento, para seguirlo desde la ventana de tareas. */
+  verAprovisionamiento(id: number): Observable<any> { return this.http.get(`${this.base}/aprovisionamiento/${id}`, this.h()); }
+
   /** Vuelve a aplicar un aprovisionamiento que terminó con fallas (lo toma la tarea de cada minuto). */
   reintentarAprovisionamiento(id: number): Observable<any> {
     return this.http.post(`${this.base}/aprovisionamiento/${id}/reintentar`, {}, this.h());

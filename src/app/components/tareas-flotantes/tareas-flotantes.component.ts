@@ -1,4 +1,5 @@
 import { Component, OnDestroy, OnInit, PLATFORM_ID, inject, signal } from '@angular/core';
+import { Router } from '@angular/router';
 import { isPlatformBrowser } from '@angular/common';
 import { TareaSeguida, TareasEnSegundoPlanoService } from '../../services/tareas-en-segundo-plano.service';
 
@@ -17,6 +18,13 @@ import { TareaSeguida, TareasEnSegundoPlanoService } from '../../services/tareas
 })
 export class TareasFlotantesComponent implements OnInit, OnDestroy {
   readonly svc = inject(TareasEnSegundoPlanoService);
+  private router = inject(Router);
+
+  verDetalle(t: TareaSeguida): void {
+    if (!t.enlace) return;
+    this.router.navigateByUrl(t.enlace);
+    this.svc.alternarMinimizado();
+  }
   private enNavegador = isPlatformBrowser(inject(PLATFORM_ID));
 
   /** Reloj para el tiempo transcurrido y los pasos estimados. */

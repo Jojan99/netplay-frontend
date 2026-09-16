@@ -1,6 +1,6 @@
 import { Injectable, PLATFORM_ID, computed, inject, signal } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
-import { Observable, finalize, shareReplay, tap } from 'rxjs';
+import { Observable, finalize, map, shareReplay, switchMap, take, takeWhile, tap, timer } from 'rxjs';
 import { GestionRemotaService } from './gestion-remota.service';
 import { AuthService } from './auth.service';
 
@@ -15,6 +15,8 @@ export interface TareaSeguida {
   inicio: number;
   fin?: number;
   puedeParar: boolean;
+  /** Dónde se ve el detalle completo. */
+  enlace?: string;
 }
 
 /**
@@ -86,7 +88,9 @@ export class TareasEnSegundoPlanoService {
 
     // Las que seguían corriendo cuando se cerró o recargó la página.
     for (const t of this.tareas()) {
-      if (t.estado === 'en_curso' && t.tipo !== 'senal' && t.tipo !== 'diagnostico') this.seguir(t.id, t.titulo, t.tipo);
+      if (t.estado !== 'en_curso') continue;
+      if (t.tipo === 'aprovisionamiento') this.seguirAprovisionamiento(Number(t.id.replace('aprov-', '')), t.titulo);
+      else if (t.tipo !== 'senal' && t.tipo !== 'diagnostico') this.seguir(t.id, t.titulo, t.tipo);
     }
   }
 
@@ -132,6 +136,58 @@ export class TareasEnSegundoPlanoService {
     flujo.subscribe({ error: () => {} });
 
     return flujo;
+  }
+
+  /**
+   * El aprovisionamiento de una ONT: lo trabaja la tarea de cada minuto del
+   * servidor, así que se pregunta cada 5 s cómo va. Se ve el paso en curso y se
+   * puede abrir el detalle en Acceso remoto → Aprovisionamiento.
+   */
+  seguirAprovisionamiento(id: number, titulo: string): void {
+    if (!id) return;
+    const clave = `aprov-${id}`;
+    if (this.flujos.has(clave)) return;
+
+    const enlace = `/dashboard/olt/acceso-remoto?tab=aprov&aprov=${id}`;
+
+    if (!this.tareas().some(t => t.id === clave)) {
+      this.tareas.update(lista => [{
+        id: clave, tipo: 'aprovisionamiento', titulo, estado: 'en_curso' as EstadoTarea,
+        detalle: 'Esperando que el equipo aparezca en el TR-069…', inicio: Date.now(), puedeParar: false, enlace,
+      }, ...lista].slice(0, 20));
+    } else {
+      this.actualizar(clave, { enlace });
+    }
+    this.minimizado.set(false);
+    this.guardar();
+
+    const enCurso = (e: string) => e === 'esperando' || e === 'aplicando';
+
+    const flujo = timer(0, 5000).pipe(
+      // Quince minutos alcanzan: el servidor deja de esperar al equipo antes.
+      take(180),
+      switchMap(() => this.gestion.verAprovisionamiento(id)),
+      map((r: any) => r?.data ?? null),
+      tap((a: any) => {
+        if (!a) return;
+        const pasos: any[] = a.pasos ?? [];
+        const ultimo = pasos.length ? pasos[pasos.length - 1] : null;
+        const detalle = enCurso(a.estado)
+          ? (ultimo && !ultimo.ok && !ultimo.omitido ? `${ultimo.paso}: ${ultimo.detalle}` : a.detalle)
+          : a.detalle;
+        this.actualizar(clave, {
+          estado: enCurso(a.estado) ? 'en_curso' : (a.estado === 'listo' || a.estado === 'reemplazado' ? 'listo' : 'error'),
+          detalle: detalle ?? '',
+          ...(!enCurso(a.estado) ? { fin: Date.now() } : {}),
+        });
+      }),
+      takeWhile((a: any) => !a || enCurso(a.estado), true),
+      finalize(() => this.flujos.delete(clave)),
+      shareReplay({ bufferSize: 1, refCount: false }),
+    );
+
+    this.flujos.set(clave, flujo);
+    flujo.subscribe({ error: () => this.actualizar(clave, { estado: 'error', detalle: 'Se perdió el seguimiento; mirá el detalle en Acceso remoto.', fin: Date.now() }) });
   }
 
   // ── Tareas que no son de acceso remoto ─────────────────────────────────

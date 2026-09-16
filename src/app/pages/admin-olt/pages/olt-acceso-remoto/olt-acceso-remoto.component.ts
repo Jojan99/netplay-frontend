@@ -6,6 +6,7 @@ import { GestionRemotaService } from '../../../../services/gestion-remota.servic
 import { ToastService } from '../../../../services/toast.service';
 import { TareasEnSegundoPlanoService } from '../../../../services/tareas-en-segundo-plano.service';
 import { NpSelectComponent, PresentacionSelect } from '../../../../common/np-select/np-select.component';
+import { ActivatedRoute } from '@angular/router';
 
 /** Lo leído de los perfiles de línea de una OLT. */
 interface PerfilesDeOlt {
@@ -86,10 +87,23 @@ export class OltAccesoRemotoComponent implements OnInit {
     activar: 'Ir al asistente', perfiles: 'Revisar perfiles', al_dia: 'Poner al día',
   };
 
+  private ruta = inject(ActivatedRoute);
+
   ngOnInit() {
     this.cargar();
     this.revisar();
     this.cargarAprov();
+
+    // Desde la ventana de tareas: ?tab=aprov&aprov=ID abre esa fila.
+    this.ruta.queryParamMap.subscribe(q => {
+      if (q.get('tab') === 'aprov') {
+        this.tab = 'aprov';
+        this.tabElegida = true;
+        this.filtroAprov = 'todos';
+        const id = Number(q.get('aprov'));
+        if (id) { this.abiertoAprov = id; this.cargarAprov(); }
+      }
+    });
   }
 
   // ── Pestañas ──────────────────────────────────────────────────────────

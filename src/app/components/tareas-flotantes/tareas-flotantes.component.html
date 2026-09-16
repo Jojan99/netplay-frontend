@@ -44,6 +44,9 @@
               <span class="tf-tiempo">{{ t.estado === 'en_curso' ? 'Lleva' : 'Tardó' }} {{ duracion(t) }}</span>
             </div>
 
+            @if (t.enlace) {
+              <button type="button" class="tf-btn" (click)="verDetalle(t)" title="Ver el detalle">Ver detalle</button>
+            }
             @if (t.estado === 'en_curso') {
               @if (t.puedeParar) {
                 <button type="button" class="tf-btn" (click)="svc.parar(t.id)">Detener</button>
