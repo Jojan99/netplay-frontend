@@ -76,7 +76,7 @@
       <section class="ar-panel" *ngIf="diag && problemas.length">
         <h3 class="ar-panel-t">Para resolver</h3>
         <ul class="ar-items">
-          <li *ngFor="let i of problemas" [attr.data-estado]="i.estado">
+          <li *ngFor="let i of problemas; trackBy: porItem" [attr.data-estado]="i.estado">
             <span class="ar-ico" aria-hidden="true">
               <ng-container [ngSwitch]="i.estado">
                 <svg *ngSwitchCase="'error'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M6 6l12 12M18 6 6 18"/></svg>
@@ -101,7 +101,7 @@
       <details class="ar-panel ar-plegable" *ngIf="bienes.length">
         <summary>Lo que está bien <span class="np-c">{{ bienes.length }}</span></summary>
         <ul class="ar-items ar-items--ok">
-          <li *ngFor="let i of bienes" data-estado="ok">
+          <li *ngFor="let i of bienes; trackBy: porItem" data-estado="ok">
             <span class="ar-ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="m5 12 5 5L20 7"/></svg></span>
             <div class="ar-item-txt">
               <b>{{ i.titulo }} <small class="ar-donde">{{ i.grupo.titulo }}</small></b>
@@ -135,7 +135,7 @@
         <p class="np-notice np-notice--danger" *ngIf="perfiles[oltId].error">{{ perfiles[oltId].error }}</p>
         <p class="np-loading" *ngIf="perfiles[oltId].cargando && !perfiles[oltId].perfiles.length"><span class="np-spinner"></span> Leyendo cada perfil en la OLT…</p>
 
-        <div class="np-tablewrap" *ngIf="perfiles[oltId].perfiles.length">
+        <div class="np-tablewrap ar-tabla-scroll" *ngIf="perfiles[oltId].perfiles.length">
           <table class="np-table np-table--compact np-tabla-movil">
             <thead><tr><th>Perfil</th><th>Clientes</th><th>Estado</th><th></th></tr></thead>
             <tbody>
@@ -184,11 +184,12 @@
 
     <!-- ══ Aprovisionamiento ════════════════════════════════════════════ -->
     <ng-container *ngIf="tab === 'aprov' && aprov">
+      <!-- Ajustes: una fila con el interruptor; las opciones plegadas -->
       <section class="ar-panel">
         <div class="ar-perfiles-head">
           <div>
-            <h3 class="ar-panel-t">Aprovisionamiento al autorizar</h3>
-            <p class="np-fine">Cuando el equipo aparece en el TR-069 se le carga la conexión del cliente, el WiFi y la cuenta de administración.</p>
+            <h3 class="ar-panel-t">Aprovisionar al autorizar</h3>
+            <p class="np-fine">Cuando la ONT aparece en el TR-069 se le carga la conexión del cliente, el WiFi y la cuenta de administración.</p>
           </div>
           <label class="ar-interruptor">
             <button type="button" class="np-switch" role="switch" [attr.aria-checked]="aprovForm.aprovisionar" aria-label="Aprovisionamiento automático"
@@ -196,58 +197,88 @@
             <b>{{ aprovForm.aprovisionar ? 'Encendido' : 'Apagado' }}</b>
           </label>
         </div>
-        <p class="np-notice np-notice--warn np-notice--inline" *ngIf="aprovForm.aprovisionar && !aprov.gestion_activa">El acceso remoto está apagado: sin él los equipos no llegan al TR-069 y no se aplica nada.</p>
+        <p class="np-notice np-notice--warn np-notice--inline" *ngIf="aprovForm.aprovisionar && !aprov.gestion_activa">El acceso remoto está apagado: sin él los equipos no llegan al TR-069.</p>
 
-        <div class="np-form" *ngIf="aprovForm.aprovisionar">
-          <div class="np-field np-field-full">
-            <span>Qué se configura</span>
-            <label class="np-check"><input type="checkbox" [(ngModel)]="aprovForm.wan" /> Conexión a internet del cliente <small class="np-fine">· Huawei</small></label>
-            <label class="np-check"><input type="checkbox" [(ngModel)]="aprovForm.wifi" /> WiFi</label>
-            <label class="np-check"><input type="checkbox" [(ngModel)]="aprovForm.admin" /> Cuenta de administración</label>
+        <details class="ar-opciones" *ngIf="aprovForm.aprovisionar">
+          <summary>
+            Opciones
+            <span class="ar-resumen-opc">{{ resumenOpciones }}</span>
+          </summary>
+          <div class="ar-opciones-grid">
+            <div class="ar-campo">
+              <label>Qué se configura</label>
+              <label class="np-check"><input type="checkbox" [(ngModel)]="aprovForm.wan" /> Conexión a internet <small class="np-fine">(Huawei)</small></label>
+              <label class="np-check"><input type="checkbox" [(ngModel)]="aprovForm.wifi" /> WiFi</label>
+              <label class="np-check"><input type="checkbox" [(ngModel)]="aprovForm.admin" /> Cuenta de administración</label>
+            </div>
+            <div class="ar-campo">
+              <label>Nombre del WiFi por defecto</label>
+              <input class="np-input" [(ngModel)]="aprovForm.wifi_prefijo" maxlength="20" [placeholder]="aprov.prefijo_sugerido" [disabled]="!aprovForm.wifi" />
+              <small class="np-fine">Queda «{{ aprovForm.wifi_prefijo || aprov.prefijo_sugerido }}_APELLIDO», igual en 2.4 y 5 GHz.</small>
+            </div>
+            <div class="ar-campo" *ngIf="aprovForm.admin">
+              <label>Usuario administrador</label>
+              <input class="np-input" [(ngModel)]="aprovForm.admin_usuario" maxlength="32" autocomplete="off" />
+            </div>
+            <div class="ar-campo" *ngIf="aprovForm.admin">
+              <label>Clave administrador</label>
+              <input class="np-input" type="password" [(ngModel)]="aprovForm.admin_clave" maxlength="64" autocomplete="new-password" [placeholder]="aprov.admin_con_clave ? 'Guardada · escribí para cambiarla' : ''" />
+            </div>
           </div>
-          <label class="np-field np-field-full" *ngIf="aprovForm.wifi"><span>Inicio del nombre del WiFi <em>si no se escribe uno al autorizar</em></span>
-            <input class="np-input" [(ngModel)]="aprovForm.wifi_prefijo" maxlength="20" [placeholder]="aprov.prefijo_sugerido" />
-            <small class="np-fine">Queda «{{ aprovForm.wifi_prefijo || aprov.prefijo_sugerido }}_APELLIDO», igual en 2.4 y 5 GHz.</small>
-          </label>
-          <ng-container *ngIf="aprovForm.admin">
-            <label class="np-field"><span>Usuario administrador</span><input class="np-input" [(ngModel)]="aprovForm.admin_usuario" maxlength="32" autocomplete="off" /></label>
-            <label class="np-field"><span>Clave administrador</span><input class="np-input" type="password" [(ngModel)]="aprovForm.admin_clave" maxlength="64" autocomplete="new-password" [placeholder]="aprov.admin_con_clave ? 'Guardada · escribí para cambiarla' : ''" /></label>
-          </ng-container>
-          <div class="np-actions np-field-full">
-            <button type="button" class="np-btn np-btn--primary" (click)="guardarAprov()" [disabled]="guardandoAprov">{{ guardandoAprov ? 'Guardando…' : 'Guardar' }}</button>
+          <div class="np-actions">
+            <button type="button" class="np-btn np-btn--primary np-btn--sm" (click)="guardarAprov()" [disabled]="guardandoAprov">{{ guardandoAprov ? 'Guardando…' : 'Guardar opciones' }}</button>
           </div>
-        </div>
+        </details>
       </section>
 
+      <!-- Equipos aprovisionados -->
       <section class="ar-panel">
         <div class="ar-perfiles-head">
-          <h3 class="ar-panel-t">Últimos equipos</h3>
-          <button type="button" class="np-btn np-btn--ghost np-btn--sm" (click)="cargarAprov()">Actualizar</button>
-        </div>
-        <p class="np-fine" *ngIf="!aprovUltimos.length">Todavía no se aprovisionó ningún equipo.</p>
-
-        <ul class="ar-aprov" *ngIf="aprovUltimos.length">
-          <li *ngFor="let a of aprovUltimos" [attr.data-estado]="a.estado">
-            <button type="button" class="ar-aprov-fila" (click)="abiertoAprov = abiertoAprov === a.id ? null : a.id" [attr.aria-expanded]="abiertoAprov === a.id">
-              <span class="ar-aprov-quien">
-                <b>{{ a.cliente || a.serial }}</b>
-                <small>{{ a.ont }}<ng-container *ngIf="a.wifi_ssid"> · WiFi «{{ a.wifi_ssid }}» · clave <span class="np-mono">{{ a.wifi_clave }}</span></ng-container></small>
-              </span>
-              <em class="ar-pill" [attr.data-estado]="pillAprov(a.estado)">{{ estadosAprov[a.estado] || a.estado }}</em>
-            </button>
-            <div class="ar-aprov-detalle" *ngIf="abiertoAprov === a.id">
-              <small class="np-fine">{{ a.detalle }}</small>
-              <ul>
-                <li *ngFor="let p of a.pasos" [class.is-mal]="!p.ok && !p.omitido">
-                  <span class="ar-tick" aria-hidden="true">{{ p.ok ? '✓' : (p.omitido ? '–' : '!') }}</span>
-                  <span><b>{{ p.paso }}</b><small>{{ p.detalle }}</small></span>
-                </li>
-              </ul>
-              <button type="button" class="np-btn np-btn--ghost np-btn--sm" *ngIf="esMalo(a.estado)"
-                      (click)="reintentarAprov(a, $event)" [disabled]="reintentando === a.id">{{ reintentando === a.id ? 'Pidiendo…' : 'Reintentar' }}</button>
+          <h3 class="ar-panel-t">Equipos</h3>
+          <div class="np-actions">
+            <div class="np-chips" role="group" aria-label="Filtrar">
+              <button type="button" class="np-chip" *ngFor="let f of filtrosAprov" [attr.aria-pressed]="filtroAprov === f.id" (click)="filtroAprov = f.id">
+                {{ f.label }} <span class="np-c" *ngIf="cuentaAprov(f.id)">{{ cuentaAprov(f.id) }}</span>
+              </button>
             </div>
-          </li>
-        </ul>
+            <button type="button" class="np-btn np-btn--ghost np-btn--sm" (click)="cargarAprov()">Actualizar</button>
+          </div>
+        </div>
+
+        <p class="np-fine" *ngIf="!aprovFiltrados.length">{{ aprovUltimos.length ? 'No hay equipos con este filtro.' : 'Todavía no se aprovisionó ningún equipo.' }}</p>
+
+        <div class="np-tablewrap ar-tabla-scroll" *ngIf="aprovFiltrados.length">
+          <table class="np-table np-table--compact ar-tabla-aprov">
+            <thead><tr><th>Cliente</th><th>ONT</th><th>WiFi</th><th>Estado</th><th>Fecha</th></tr></thead>
+            <tbody>
+              <ng-container *ngFor="let a of aprovFiltrados; trackBy: porId">
+                <tr class="ar-fila" [class.is-abierta]="abiertoAprov === a.id" (click)="abiertoAprov = abiertoAprov === a.id ? null : a.id">
+                  <td><b>{{ a.cliente || 'Sin cliente' }}</b></td>
+                  <td class="np-data">{{ a.ont }}</td>
+                  <td>
+                    <ng-container *ngIf="a.wifi_ssid; else sinWifi">{{ a.wifi_ssid }}<small class="np-data"> · {{ a.wifi_clave }}</small></ng-container>
+                    <ng-template #sinWifi>—</ng-template>
+                  </td>
+                  <td><em class="ar-pill" [attr.data-estado]="pillAprov(a.estado)">{{ estadosAprov[a.estado] || a.estado }}</em></td>
+                  <td class="np-data">{{ a.creado | date:'dd/MM HH:mm' }}</td>
+                </tr>
+                <tr *ngIf="abiertoAprov === a.id" class="ar-fila-detalle">
+                  <td colspan="5">
+                    <p class="np-fine">{{ a.detalle }} <span class="np-data">· {{ a.serial }}</span></p>
+                    <ul class="ar-pasos-lista">
+                      <li *ngFor="let p of a.pasos" [class.is-mal]="!p.ok && !p.omitido" [class.is-omitido]="p.omitido">
+                        <span class="ar-tick" aria-hidden="true">{{ p.ok ? '✓' : (p.omitido ? '–' : '!') }}</span>
+                        <span><b>{{ p.paso }}</b><small>{{ p.detalle }}</small></span>
+                      </li>
+                    </ul>
+                    <button type="button" class="np-btn np-btn--ghost np-btn--sm" *ngIf="esMalo(a.estado)"
+                            (click)="reintentarAprov(a, $event)" [disabled]="reintentando === a.id">{{ reintentando === a.id ? 'Pidiendo…' : 'Reintentar' }}</button>
+                  </td>
+                </tr>
+              </ng-container>
+            </tbody>
+          </table>
+        </div>
       </section>
     </ng-container>
 

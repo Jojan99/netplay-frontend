@@ -113,12 +113,50 @@ export class OltAccesoRemotoComponent implements OnInit {
     }
   }
 
-  get problemas(): any[] {
-    return (this.diag?.grupos ?? []).flatMap((g: any) => (g.items ?? []).filter((i: any) => i.estado !== 'ok').map((i: any) => ({ ...i, grupo: g })));
+  /**
+   * Se arman una vez al llegar el diagnóstico. Como getters devolvían objetos
+   * nuevos en cada ciclo, Angular redibujaba la lista entera y el clic en «Ir
+   * al asistente» o «Revisar perfiles» caía sobre un botón que ya no existía.
+   */
+  problemas: any[] = [];
+  bienes: any[] = [];
+
+  private armarItems() {
+    const todos = (this.diag?.grupos ?? []).flatMap((g: any) => (g.items ?? []).map((i: any) => ({ ...i, grupo: g })));
+    this.problemas = todos.filter((i: any) => i.estado !== 'ok');
+    this.bienes = todos.filter((i: any) => i.estado === 'ok');
   }
 
-  get bienes(): any[] {
-    return (this.diag?.grupos ?? []).flatMap((g: any) => (g.items ?? []).filter((i: any) => i.estado === 'ok').map((i: any) => ({ ...i, grupo: g })));
+  porItem = (_: number, i: any) => `${i.grupo?.titulo}|${i.titulo}`;
+  porId = (_: number, a: any) => a.id;
+
+  // ── Lista de aprovisionamientos ───────────────────────────────────────
+
+  readonly filtrosAprov = [
+    { id: 'activos', label: 'En curso' },
+    { id: 'fallas', label: 'Con fallas' },
+    { id: 'listos', label: 'Listos' },
+    { id: 'todos', label: 'Todos' },
+  ] as const;
+  filtroAprov: 'activos' | 'fallas' | 'listos' | 'todos' = 'todos';
+
+  private enFiltro(a: any, f: string): boolean {
+    switch (f) {
+      case 'activos': return ['esperando', 'aplicando'].includes(a.estado);
+      case 'fallas':  return this.esMalo(a.estado);
+      case 'listos':  return a.estado === 'listo';
+      // «Todos» sin los reemplazados: son altas viejas de la misma ONT.
+      default:        return a.estado !== 'reemplazado';
+    }
+  }
+
+  cuentaAprov(f: string): number { return this.aprovUltimos.filter(a => this.enFiltro(a, f)).length; }
+
+  get aprovFiltrados(): any[] { return this.aprovUltimos.filter(a => this.enFiltro(a, this.filtroAprov)); }
+
+  get resumenOpciones(): string {
+    const f = this.aprovForm;
+    return [f.wan && 'internet', f.wifi && 'WiFi', f.admin && 'cuenta admin'].filter(Boolean).join(' · ') || 'nada';
   }
 
   get perfilesLeidos(): boolean { return this.oltsConPerfiles.some(o => (this.perfiles[o]?.perfiles?.length ?? 0) > 0); }
@@ -233,6 +271,7 @@ export class OltAccesoRemotoComponent implements OnInit {
         this.revisando = false;
         if (r?.error !== 0) { this.error = r?.message ?? 'No se pudo revisar'; return; }
         this.diag = r.data;
+        this.armarItems();
         for (const g of this.diag?.grupos ?? []) {
           if (g.olt_id) this.nombresOlt[g.olt_id] = g.titulo;
         }

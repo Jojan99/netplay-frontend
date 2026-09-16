@@ -240,3 +240,38 @@ tr.is-mal td { background: var(--danger-soft); }
    barra tiene overflow-x y así su alto mínimo quedaba en cero. */
 .ar-scroll { grid-auto-rows: max-content; }
 .ar-tabs { min-height: max-content; }
+
+/* Tablas largas con su propio scroll y la cabecera fija. */
+.ar-tabla-scroll { max-height: 420px; overflow: auto;
+  thead th { position: sticky; top: 0; z-index: 1; background: var(--surface-2); }
+}
+
+/* Aprovisionamiento. */
+.ar-opciones {
+  border-top: 1px solid var(--line); padding-top: 10px;
+  > summary { cursor: pointer; font-size: 13px; font-weight: 700; display: flex; align-items: center; gap: 10px; }
+  &[open] > summary { margin-bottom: 12px; }
+  .np-actions { margin-top: 12px; }
+}
+.ar-resumen-opc { font-size: 12px; font-weight: 500; color: var(--text-3); }
+.ar-opciones-grid { display: grid; gap: 14px 18px; grid-template-columns: repeat(auto-fit, minmax(min(260px, 100%), 1fr));
+  .ar-campo .np-input { max-width: none; }
+  .np-check { padding: 2px 0; border: 0; }
+}
+.ar-tabla-aprov {
+  td { vertical-align: middle; }
+  small { color: var(--text-3); }
+}
+.ar-fila { cursor: pointer;
+  &:hover td { background: var(--surface-2); }
+  &.is-abierta td { background: var(--accent-soft, var(--surface-2)); }
+}
+.ar-fila-detalle > td { background: var(--surface-2); padding: 10px 14px 14px;
+  > .np-fine { margin: 0 0 8px; }
+  > .np-btn { margin-top: 8px; }
+}
+.ar-pasos-lista { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px;
+  li { display: flex; gap: 9px; align-items: flex-start; }
+  li > span:last-child { display: grid; gap: 1px; min-width: 0; b { font-size: 12.5px; } small { font-size: 11.5px; color: var(--text-3); overflow-wrap: anywhere; } }
+  li.is-omitido .ar-tick { background: var(--surface-3); color: var(--text-3); }
+}
