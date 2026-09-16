@@ -242,3 +242,11 @@
 
 /* Con un modal abierto el botón del chat tapaba sus botones de abajo. */
 body:has(.np-overlay) app-crm-widget .wg-launch { display: none !important; }
+
+/* Logo de Netvula: la versión clara u oscura según el tema. */
+.nv-logo { display: block; height: auto; }
+.nv-logo--sobre-oscuro { display: none; }
+:root.dark, :root[data-theme='dark'] {
+  .nv-logo--sobre-claro { display: none; }
+  .nv-logo--sobre-oscuro { display: block; }
+}

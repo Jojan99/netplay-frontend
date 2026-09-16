@@ -8,6 +8,11 @@
   repeating-linear-gradient(0deg, transparent 0 39px, color-mix(in srgb, var(--bg) 8%, transparent) 39px 40px),
   repeating-linear-gradient(90deg, transparent 0 39px, color-mix(in srgb, var(--bg) 8%, transparent) 39px 40px); opacity: .6; }
 .np-login-side-inner { position: relative; max-width: 460px; display: grid; gap: 22px; }
+/* La columna lateral usa el color invertido al tema: en claro es oscura, por eso
+   el HTML le pone la versión de letras claras como la «del tema claro». */
+.np-login-logo { margin-bottom: 18px; .nv-logo { width: 220px; } }
+/* En el teléfono la columna lateral no se ve: el logo va arriba del formulario. */
+.np-login-logo-card { margin-bottom: 14px; .nv-logo { width: 176px; } }
 .np-login-side .np-kicker { color: color-mix(in srgb, var(--bg) 65%, transparent); b { color: var(--accent); } }
 .np-login-claim { font-family: var(--font-display); font-weight: 600; font-size: clamp(26px, 3vw, 38px); line-height: 1.08; letter-spacing: -0.02em; margin: 0; text-wrap: balance; }
 .np-login-facts { margin: 0; display: grid; gap: 12px; border-top: 1px solid color-mix(in srgb, var(--bg) 20%, transparent); padding-top: 18px;

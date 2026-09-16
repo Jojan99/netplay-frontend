@@ -2,9 +2,9 @@
   <!-- ── Barra ─────────────────────────────────────────────────────── -->
   <header class="nv-top">
     <div class="nv-wrap nv-top-in">
-      <a class="nv-marca" routerLink="/">
-        <span class="nv-marca-sig" aria-hidden="true"><i></i><i></i><i></i></span>
-        <b>{{ nombre() }}</b>
+      <a class="nv-marca" routerLink="/" [attr.aria-label]="nombre() + ', inicio'">
+        <img class="nv-logo nv-logo--sobre-claro" src="assets/brand/netvula-logo.png" [alt]="nombre()" width="177" height="32" />
+        <img class="nv-logo nv-logo--sobre-oscuro" src="assets/brand/netvula-logo-dark.png" [alt]="nombre()" width="177" height="32" />
       </a>
 
       <nav class="nv-nav" aria-label="Secciones">
@@ -240,7 +240,10 @@
 
   <footer class="nv-pie">
     <div class="nv-wrap nv-pie-in">
-      <span>© {{ anio }} {{ nombre() }}</span>
+      <span class="nv-pie-marca">
+        <img src="assets/brand/netvula-marca.png" alt="" width="20" height="20" />
+        © {{ anio }} {{ nombre() }}
+      </span>
       <nav>
         <a routerLink="/politica-de-privacidad">Política de privacidad</a>
         <a routerLink="/login">Ingresar</a>

@@ -3,7 +3,11 @@
 
   <aside class="np-login-side" aria-hidden="true">
     <div class="np-login-side-inner">
-      <p class="np-kicker">{{ enEmpresa ? empresaNombre : marca }} <b>/</b> Plataforma de operación</p>
+      <div class="np-login-logo">
+        <img class="nv-logo nv-logo--sobre-claro" src="assets/brand/netvula-logo-dark.png" alt="Netvula" width="220" height="40" />
+        <img class="nv-logo nv-logo--sobre-oscuro" src="assets/brand/netvula-logo.png" alt="Netvula" width="220" height="40" />
+      </div>
+      <p class="np-kicker" *ngIf="enEmpresa">{{ empresaNombre }} <b>/</b> Plataforma de operación</p>
       <h2 class="np-login-claim">{{ enEmpresa ? 'El panel de ' + empresaNombre + ': red, cartera y soporte en una sola consola.' : 'La red, la cartera y el soporte en una sola consola.' }}</h2>
       <dl class="np-login-facts">
         <div><dt>Clientes</dt><dd>Registro, servicios, facturación y tickets por cliente.</dd></div>
@@ -22,6 +26,10 @@
         <div><b>{{ empresaNombre }}</b><small>Acceso del equipo</small></div>
       </div>
 
+      <div class="np-login-logo-card" *ngIf="!enEmpresa">
+        <img class="nv-logo nv-logo--sobre-claro" src="assets/brand/netvula-logo.png" alt="Netvula" width="176" height="32" />
+        <img class="nv-logo nv-logo--sobre-oscuro" src="assets/brand/netvula-logo-dark.png" alt="Netvula" width="176" height="32" />
+      </div>
       <p class="np-kicker">Acceso <b>/</b> Operadores</p>
       <h1 class="np-title np-login-title">Iniciar sesión</h1>
       <p class="np-login-help">Ingresá con tu documento y contraseña.</p>

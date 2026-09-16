@@ -4,7 +4,7 @@
 .app-footer-inner { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 16px; height: 36px; padding: 0 16px; }
 .app-footer-brand, .app-footer-status, .app-footer-meta { display: flex; align-items: center; gap: 10px; white-space: nowrap; }
 .app-footer-brand b { font-weight: 500; color: var(--text-2); }
-.app-footer-mark { display: grid; width: 20px; height: 20px; place-items: center; border-radius: 4px; background: var(--text); color: var(--bg); font-family: var(--font-display); font-weight: 700; font-size: 11px; }
+.app-footer-mark { display: block; width: 20px; height: 20px; object-fit: contain; }
 .app-footer-status { justify-self: center; color: var(--ok); i { width: 6px; height: 6px; border-radius: 50%; background: var(--ok); box-shadow: 0 0 0 3px var(--ok-soft); } }
 .app-footer-meta { justify-self: end; a { color: var(--text-2); text-decoration: none; &:hover { color: var(--accent); } } }
 .app-footer-divider { width: 1px; height: 12px; background: var(--line-strong); }

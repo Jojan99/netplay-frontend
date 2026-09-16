@@ -10,8 +10,10 @@
 /* Barra */
 .nv-top { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 20; background: color-mix(in srgb, var(--surface) 88%, transparent); backdrop-filter: blur(10px); border-bottom: 1px solid var(--line); }
 .nv-top-in { display: flex; align-items: center; gap: 18px; min-height: 60px; }
-.nv-marca { display: inline-flex; align-items: center; gap: 9px; color: var(--text); text-decoration: none;
-  b { font: 700 19px var(--font-display); letter-spacing: -0.02em; } }
+.nv-marca { display: inline-flex; align-items: center; color: var(--text); text-decoration: none;
+  .nv-logo { height: 32px; width: auto; } }
+@media (max-width: 420px) { .nv-marca .nv-logo { height: 26px; } }
+.nv-pie-marca { display: inline-flex; align-items: center; gap: 8px; img { width: 20px; height: 20px; } }
 .nv-marca-sig { display: inline-grid; grid-template-columns: repeat(3, 5px); gap: 3px; align-items: end; height: 18px;
   i { display: block; border-radius: 2px; background: var(--accent); }
   i:nth-child(1) { height: 8px; } i:nth-child(2) { height: 13px; } i:nth-child(3) { height: 18px; } }
