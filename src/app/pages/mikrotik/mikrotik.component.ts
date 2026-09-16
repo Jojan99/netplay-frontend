@@ -182,13 +182,45 @@ export class MikrotikComponent implements OnInit {
   }
 
   get puedeAvanzar(): boolean {
-    if (this.paso === 1) return !!this.form.interfaz;
-    if (this.paso === 2) return !!this.form.rango.trim() && !!this.form.gateway.trim();
+    if (this.paso === 1) return !!this.form.interfaz && !this.servidorEnInterfaz;
+    if (this.paso === 2) {
+      const f = this.form;
+      return !!f.rango.trim() && !!f.gateway.trim() && !!f.pool.trim() && !!f.perfil.trim() && !!f.servicio.trim()
+        && !this.yaExiste('pools', f.pool) && !this.yaExiste('perfiles', f.perfil) && !this.yaExiste('servidores', f.servicio)
+        && !this.choquesPppoe?.length;
+    }
     return true;
   }
 
+  /** Lo que el router ya dice tener no se vuelve a proponer: se pisaría. */
+  choquesPppoe: string[] | null = null;
+  validandoPppoe = false;
+
+  get servidorEnInterfaz(): string | null {
+    const i = this.form.interfaz;
+    return i ? ((this.opcionesPppoe?.servidores ?? []).find((s: any) => s.interfaz === i)?.nombre ?? null) : null;
+  }
+
+  yaExiste(lista: 'pools' | 'perfiles' | 'servidores', nombre: string): boolean {
+    const n = (nombre ?? '').trim().toLowerCase();
+    return !!n && (this.opcionesPppoe?.[lista] ?? []).some((x: any) => String(x.nombre ?? '').toLowerCase() === n);
+  }
+
   siguientePaso() {
-    if (this.paso < this.ultimoPaso && this.puedeAvanzar) this.paso++;
+    if (this.paso >= this.ultimoPaso || !this.puedeAvanzar) return;
+    if (this.paso !== 2) { this.paso++; return; }
+
+    // Los rangos se cruzan de formas que no se ven a ojo: lo revisa el router.
+    this.validandoPppoe = true;
+    this.svc.validarPppoe({ ...this.form, router_id: this.selectedRouterId }).subscribe({
+      next: r => {
+        this.validandoPppoe = false;
+        if (r?.error !== 0) { this.pppoeError = r?.message || 'No se pudo revisar el router.'; return; }
+        this.choquesPppoe = r.data?.choques ?? [];
+        if (!this.choquesPppoe!.length) this.paso++;
+      },
+      error: () => { this.validandoPppoe = false; this.pppoeError = 'No se pudo revisar el router.'; },
+    });
   }
 
   pasoAnterior() {
@@ -289,6 +321,7 @@ export class MikrotikComponent implements OnInit {
 
   elegirManual() {
     this.modoAsistente = 'manual';
+    this.choquesPppoe = null;
     this.resultadoMontaje = null;
     this.opcionesPppoe = null;
     this.paso = 1;

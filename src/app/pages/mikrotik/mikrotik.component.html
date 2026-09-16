@@ -1104,6 +1104,10 @@
             <np-select [(ngModel)]="form.interfaz" [opciones]="interfacesParaPppoe" [presentacion]="presInterfaces" [valorVacio]="''"
                        placeholder="Seleccione interfaz…" ariaLabel="Interfaz"></np-select>
           </label>
+          <p class="np-notice np-notice--warn np-notice--inline np-field-full" *ngIf="servidorEnInterfaz">
+            «{{ form.interfaz }}» ya atiende PPPoE con el servidor <b>{{ servidorEnInterfaz }}</b>. Elegí otra interfaz:
+            configurarla de nuevo reemplazaría ese servidor y sus clientes tomarían IP de otro rango.
+          </p>
         </div>
 
         <!-- 2 · Direcciones -->
@@ -1113,17 +1117,32 @@
             dirección del router dentro de esa red — tiene que estar fuera del rango.
           </p>
           <label class="np-field"><span>Rango para clientes</span>
-            <input type="text" class="np-input np-mono" [(ngModel)]="form.rango" />
+            <input type="text" class="np-input np-mono" [(ngModel)]="form.rango" (ngModelChange)="choquesPppoe = null" />
           </label>
           <label class="np-field"><span>Puerta de enlace</span>
-            <input type="text" class="np-input np-mono" [(ngModel)]="form.gateway" />
+            <input type="text" class="np-input np-mono" [(ngModel)]="form.gateway" (ngModelChange)="choquesPppoe = null" />
           </label>
           <label class="np-field"><span>Nombre del rango</span>
-            <input type="text" class="np-input np-mono" [(ngModel)]="form.pool" />
+            <input type="text" class="np-input np-mono" [(ngModel)]="form.pool" (ngModelChange)="choquesPppoe = null" />
+            <small class="px-mal" *ngIf="yaExiste('pools', form.pool)">Ya hay un rango con ese nombre.</small>
           </label>
-          <label class="np-field"><span>Nombre del servicio <em>lo ven los equipos</em></span>
-            <input type="text" class="np-input np-mono" [(ngModel)]="form.servicio" />
+          <label class="np-field"><span>Nombre del perfil</span>
+            <input type="text" class="np-input np-mono" [(ngModel)]="form.perfil" (ngModelChange)="choquesPppoe = null" />
+            <small class="px-mal" *ngIf="yaExiste('perfiles', form.perfil)">Ya hay un perfil con ese nombre.</small>
           </label>
+          <label class="np-field np-field-full"><span>Nombre del servicio <em>lo ven los equipos</em></span>
+            <input type="text" class="np-input np-mono" [(ngModel)]="form.servicio" (ngModelChange)="choquesPppoe = null" />
+            <small class="px-mal" *ngIf="yaExiste('servidores', form.servicio)">Ya hay un servidor con ese nombre.</small>
+          </label>
+
+          <p class="np-fine np-field-full" *ngIf="opcionesPppoe.pools?.length">
+            Ya en el router: <span class="np-mono" *ngFor="let p of opcionesPppoe.pools; let ultimo = last">{{ p.nombre }} ({{ p.rangos }}){{ ultimo ? '' : ' · ' }}</span>
+          </p>
+
+          <div class="np-notice np-notice--danger np-notice--inline np-field-full" *ngIf="choquesPppoe?.length">
+            <strong>Así pisaría algo que ya existe:</strong>
+            <ul class="px-choques"><li *ngFor="let c of choquesPppoe">{{ c }}</li></ul>
+          </div>
         </div>
 
         <!-- 3 · Planes -->
@@ -1184,7 +1203,7 @@
         <div class="np-btnrow np-btnrow--end">
           <button type="button" class="np-btn np-btn--ghost" (click)="modoAsistente = 'elegir'" *ngIf="paso === 1">Atrás</button>
           <button type="button" class="np-btn np-btn--ghost" (click)="pasoAnterior()" *ngIf="paso > 1">Atrás</button>
-          <button type="button" class="np-btn np-btn--primary" (click)="siguientePaso()" *ngIf="paso < ultimoPaso" [disabled]="!puedeAvanzar">Siguiente</button>
+          <button type="button" class="np-btn np-btn--primary" (click)="siguientePaso()" *ngIf="paso < ultimoPaso" [disabled]="!puedeAvanzar || validandoPppoe">{{ validandoPppoe ? 'Revisando el router…' : 'Siguiente' }}</button>
           <button type="button" class="np-btn np-btn--primary" (click)="montarPppoe()" *ngIf="paso === ultimoPaso" [disabled]="montando">
             {{ montando ? 'Configurando…' : 'Configurar el router' }}
           </button>

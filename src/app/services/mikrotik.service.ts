@@ -124,6 +124,11 @@ export class MikrotikService {
     return this.http.post(`${this.base}/pppoe/montar`, data, this.h());
   }
 
+  /** Qué de lo elegido en el paso a paso choca con lo que ya tiene el router. */
+  validarPppoe(data: any): Observable<any> {
+    return this.http.post(`${this.base}/pppoe/validar`, data, this.h());
+  }
+
   /** Qué VLAN ya atienden PPPoE y qué se crearía en las demás. */
   getPppoePropuesta(routerId?: number | null): Observable<any> {
     return this.http.get(`${this.base}/pppoe/propuesta`, { ...this.h(), ...this.params(routerId) });
