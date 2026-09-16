@@ -436,7 +436,7 @@
         <!-- Rangos -->
         <section class="px-panel" *ngIf="vistaPppoe === 'pools'">
           <header class="px-panel-head">
-            <p>El rango es el conjunto de IP que se reparte. Cada VLAN debería tener el suyo para que no se pisen.</p>
+            <p>El rango es el conjunto de IP que se reparte. Un cliente toma su IP del rango de <b>su perfil</b>: los perfiles listados en cada rango son los que sacan IP de ahí.</p>
             <button type="button" class="np-btn np-btn--ghost np-btn--sm" (click)="nuevoPool()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M12 5v14M5 12h14"/></svg>Nuevo rango</button>
           </header>
           <ul class="px-filas">
@@ -444,7 +444,7 @@
               <div class="px-fila-t"><b class="np-mono">{{ p.nombre }}</b></div>
               <dl class="px-fila-d">
                 <div class="is-ancho"><dt>Direcciones</dt><dd class="np-mono">{{ p.rangos }}</dd></div>
-                <div class="is-ancho"><dt>Lo usa</dt><dd>{{ p.usado_por.join(', ') || 'nadie' }}</dd></div>
+                <div class="is-ancho"><dt>Perfiles que dan IP de acá</dt><dd>{{ p.usado_por.join(', ') || 'ninguno: no se está usando' }}</dd></div>
               </dl>
               <div class="px-fila-acc">
                 <button type="button" class="np-icobtn" (click)="editarPool(p)" title="Editar" aria-label="Editar rango"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 20h4L18 10l-4-4L4 16v4zM13 7l4 4"/></svg></button>
@@ -1100,13 +1100,13 @@
 
           <div class="np-tablewrap np-sync-box" *ngIf="planesPppoe.length">
             <table class="np-table np-table--compact">
-              <thead><tr><th></th><th>Plan</th><th>Velocidad</th><th>Perfil que se crea</th></tr></thead>
+              <thead><tr><th></th><th>Plan</th><th>Velocidad</th><th>Perfil</th></tr></thead>
               <tbody>
                 <tr *ngFor="let p of planesPppoe">
                   <td><input type="checkbox" [(ngModel)]="p.crear" /></td>
                   <td class="np-strong">{{ p.plan }}</td>
                   <td class="np-mono">{{ p.bajada }}↓ / {{ p.subida }}↑ Mbps</td>
-                  <td><input type="text" class="np-input np-mono np-wiz-mini" [(ngModel)]="p.perfil" [disabled]="!p.crear" /></td>
+                  <td><input type="text" class="np-input np-mono np-wiz-mini" [(ngModel)]="p.perfil" [disabled]="!p.crear || p.ya_creado" /><small class="np-fine px-sub" *ngIf="p.ya_creado">Ya existe: sólo se ajusta la velocidad</small></td>
                 </tr>
               </tbody>
             </table>

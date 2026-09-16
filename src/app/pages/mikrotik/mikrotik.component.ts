@@ -346,7 +346,8 @@ export class MikrotikComponent implements OnInit {
         };
 
         // Todos los planes marcados: lo normal es querer un perfil por cada uno.
-        this.planesPppoe = (r.data?.planes ?? []).map((p: any) => ({ ...p, crear: true }));
+        // Los que ya tienen perfil van sin marcar: no hace falta tocarlos.
+        this.planesPppoe = (r.data?.planes ?? []).map((p: any) => ({ ...p, crear: !p.ya_creado }));
       },
       error: () => { this.pppoeError = 'No se pudo leer el router.'; },
     });
