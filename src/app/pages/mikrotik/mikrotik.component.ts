@@ -411,7 +411,56 @@ export class MikrotikComponent implements OnInit {
   }
 
   /** Qué se ve en la pestaña. */
-  vistaPppoe: 'conectados' | 'usuarios' | 'perfiles' | 'pools' | 'servidores' = 'conectados';
+  vistaPppoe: 'clientes' | 'servidores' | 'perfiles' | 'pools' = 'clientes';
+
+  // ── Lista de clientes PPPoE ──
+  buscarCred = '';
+  filtroCred: 'todos' | 'on' | 'off' | 'deshab' = 'todos';
+  readonly filtrosCred: { key: 'todos' | 'on' | 'off' | 'deshab'; label: string }[] = [
+    { key: 'todos', label: 'Todos' }, { key: 'on', label: 'Conectados' },
+    { key: 'off', label: 'Sin conectar' }, { key: 'deshab', label: 'Deshabilitadas' },
+  ];
+
+  private estadoCred(u: any): 'on' | 'off' | 'deshab' {
+    return u.sesion ? 'on' : (u.habilitado ? 'off' : 'deshab');
+  }
+
+  cuentaCred(f: string): number {
+    return f === 'todos' ? this.pppoeUsuarios.length : this.pppoeUsuarios.filter(u => this.estadoCred(u) === f).length;
+  }
+
+  /** Conectados primero; se arma de nuevo sólo si cambia algo de lo que depende. */
+  get credFiltradas(): any[] {
+    const clave = [this.pppoeUsuarios, this.filtroCred, this.buscarCred];
+    if (this.credCache.clave.some((v, i) => v !== clave[i])) {
+      const q = this.buscarCred.trim().toLowerCase();
+      const orden = { on: 0, off: 1, deshab: 2 };
+      const lista = this.pppoeUsuarios
+        .filter(u => this.filtroCred === 'todos' || this.estadoCred(u) === this.filtroCred)
+        .filter(u => !q || [u.cliente, u.usuario, u.comentario, u.sesion?.ip, u.perfil].some(x => String(x ?? '').toLowerCase().includes(q)))
+        .sort((a, b) => orden[this.estadoCred(a)] - orden[this.estadoCred(b)] || String(a.cliente ?? '~').localeCompare(String(b.cliente ?? '~')));
+      this.credCache = { clave, lista };
+    }
+    return this.credCache.lista;
+  }
+  private credCache: { clave: any[]; lista: any[] } = { clave: [null, null, null], lista: [] };
+
+  porUsuario = (_: number, u: any) => u.usuario;
+
+  /** Cada servidor con su perfil y el rango del que reparte, para leerlo de corrido. */
+  get servidoresArmados(): any[] {
+    if (this.srvCache.de !== this.pppoe || this.srvCache.pools !== this.pppoePools) {
+      const perfiles = this.pppoe?.perfiles ?? [];
+      const lista = (this.pppoe?.servidores ?? []).map((sv: any) => {
+        const perfilDatos = perfiles.find((p: any) => p.nombre === sv.perfil) ?? null;
+        const pool = this.pppoePools.find((p: any) => p.nombre === perfilDatos?.pool);
+        return { ...sv, perfilDatos, rango: pool?.rangos ?? perfilDatos?.pool ?? null };
+      }).sort((a: any, b: any) => String(a.interfaz).localeCompare(String(b.interfaz), undefined, { numeric: true }));
+      this.srvCache = { de: this.pppoe, pools: this.pppoePools, lista };
+    }
+    return this.srvCache.lista;
+  }
+  private srvCache: { de: any; pools: any; lista: any[] } = { de: null, pools: null, lista: [] };
 
   pppoePools: any[] = [];
   pppoeInterfaces: any[] = [];
@@ -523,7 +572,11 @@ export class MikrotikComponent implements OnInit {
   credencial: any = null;
   borrandoCred = false;
 
+  /** Pestaña del detalle: los datos de la conexión o el equipo. */
+  credTab: 'conexion' | 'equipo' = 'conexion';
+
   abrirCredencial(u: any) {
+    this.credTab = 'conexion';
     this.credencial = u;
   }
 
@@ -1079,6 +1132,8 @@ export class MikrotikComponent implements OnInit {
 
   setTab(tab: 'info' | 'clients' | 'conflicts' | 'pppoe' | 'velocidades' | 'config') {
     this.activeTab = tab;
+    // En el teléfono la fila de pestañas se desplaza: la elegida queda a la vista.
+    setTimeout(() => document.querySelector('.np-mk .np-toolbar [aria-pressed="true"]')?.scrollIntoView({ inline: 'center', block: 'nearest' }));
     if (tab === 'info')      { this.loadInfo(); }
     if (tab === 'clients')   { if (!this.clients.length) this.loadClients(); }
     if (tab === 'conflicts') { if (!this.conflicts.length) this.loadConflicts(); }

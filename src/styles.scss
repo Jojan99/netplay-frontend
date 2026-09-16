@@ -239,3 +239,6 @@
 ::-webkit-scrollbar-thumb:hover {
   background: var(--text-3);
 }
+
+/* Con un modal abierto el botón del chat tapaba sus botones de abajo. */
+body:has(.np-overlay) app-crm-widget .wg-launch { display: none !important; }
