@@ -14,35 +14,42 @@
     </div>
   </header>
 
-  <div class="np-toolbar">
+  <div class="np-toolbar emp-barra">
     <label class="np-search">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg>
       <input type="search" [(ngModel)]="search" (ngModelChange)="loadEmployees()" placeholder="Nombre, cédula o cargo…" aria-label="Buscar empleado" />
     </label>
+    <div class="np-chips" role="group" aria-label="Filtrar por estado">
+      <button type="button" class="np-chip" [attr.aria-pressed]="filtro === 'todos'" (click)="filtro = 'todos'">Todos<span class="np-c">{{ employees.length }}</span></button>
+      <button type="button" class="np-chip" [attr.aria-pressed]="filtro === 'activos'" (click)="filtro = 'activos'">Activos<span class="np-c">{{ activeCount }}</span></button>
+      <button type="button" class="np-chip" [attr.aria-pressed]="filtro === 'inactivos'" (click)="filtro = 'inactivos'">Inactivos<span class="np-c">{{ employees.length - activeCount }}</span></button>
+    </div>
     <span class="np-spacer"></span>
     <p *ngIf="successMsg" class="np-notice np-notice--ok np-notice--inline">{{ successMsg }}</p>
   </div>
 
   <div class="np-workspace">
-    <section class="np-registry" aria-label="Empleados">
-      <div class="np-registry-wrap">
-        <table class="np-table np-table--registry">
-          <thead><tr><th class="np-th-stripe"></th><th>Empleado</th><th>Cargo</th><th class="np-col-doc">Cédula</th><th>Sistema</th><th>Estado</th><th class="np-th-right"></th></tr></thead>
-          <tbody>
-            <tr *ngIf="isLoading && !selected" class="np-empty"><td colspan="7"><span class="np-spinner"></span></td></tr>
-            <tr *ngIf="!isLoading && employees.length === 0" class="np-empty"><td colspan="7"><strong>Sin empleados registrados.</strong></td></tr>
-            <tr *ngFor="let e of employees" class="np-row" [ngClass]="e.active ? 'np-row--active' : 'np-row--off'" [attr.aria-selected]="selected?.id === e.id" (click)="selectEmployee(e)" tabindex="0" (keydown.enter)="selectEmployee(e)">
-              <td class="np-stripe"><i></i></td>
-              <td><div class="np-name">{{ e.first_name }} {{ e.last_name }}</div><div class="np-plan"><em>{{ e.phone || e.email || '—' }}</em></div></td>
-              <td>{{ e.job_title || 'Sin cargo' }}</td>
-              <td class="np-data np-col-doc">{{ e.dni }}</td>
-              <td><span class="np-tag" *ngIf="e.staff_profile">{{ e.staff_profile }}</span><span class="np-muted" *ngIf="!e.staff_profile">—</span></td>
-              <td><span class="np-pill" [ngClass]="e.active ? 'np-pill--active' : 'np-pill--neutral'">{{ e.active ? 'Activo' : 'Inactivo' }}</span></td>
-              <td class="np-td-right"><div class="np-rowacts"><button type="button" class="np-icobtn" title="Abrir ficha"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 6 6 6-6 6"/></svg></button></div></td>
-            </tr>
-          </tbody>
-        </table>
+    <section class="emp-lista" aria-label="Empleados">
+      <div *ngIf="isLoading && !selected" class="np-loading"><span class="np-spinner"></span> Cargando equipo…</div>
+
+      <div class="emp-vacio" *ngIf="!isLoading && !visibles.length">
+        <b>{{ employees.length ? 'Nadie coincide con el filtro.' : 'Todavía no hay empleados.' }}</b>
+        <span *ngIf="!employees.length">Creá el primero con «Nuevo empleado». Si ya tiene usuario en el sistema, se vincula solo.</span>
       </div>
+
+      <button type="button" *ngFor="let e of visibles; trackBy: porId" class="emp-card" [class.is-off]="!e.active" [attr.aria-pressed]="selected?.id === e.id" (click)="selectEmployee(e)">
+        <span class="np-avatar emp-avatar" aria-hidden="true">{{ (e.first_name || '?')[0] }}{{ (e.last_name || '')[0] }}</span>
+        <span class="emp-card-id">
+          <b>{{ e.first_name }} {{ e.last_name }}</b>
+          <small>{{ e.job_title || 'Sin cargo' }}</small>
+        </span>
+        <span class="np-pill" [ngClass]="e.active ? 'np-pill--active' : 'np-pill--neutral'">{{ e.active ? 'Activo' : 'Inactivo' }}</span>
+        <span class="emp-card-datos">
+          <span><i>CC</i><span class="np-mono">{{ e.dni || '—' }}</span></span>
+          <span><i>Tel</i><span class="np-mono">{{ e.phone || '—' }}</span></span>
+          <span *ngIf="e.staff_profile"><i>Usuario</i><span class="np-tag">{{ e.staff_profile }}</span></span>
+        </span>
+      </button>
     </section>
 
     <!-- ══ Ficha del empleado ═══════════════════════════════════════════ -->
@@ -70,7 +77,20 @@
         <p *ngIf="errorMsg" class="np-notice np-notice--danger">{{ errorMsg }}</p>
 
         <section *ngIf="activeTab === 'profile'">
-          <p class="np-sect">Perfil</p>
+          <p class="np-sect">Expediente</p>
+          <ul class="emp-exp">
+            <li *ngFor="let x of expediente" [class.is-ok]="x.ok">
+              <button type="button" (click)="setTab(x.tab)">
+                <i aria-hidden="true">{{ x.ok ? '✓' : '!' }}</i>
+                <span><b>{{ x.titulo }}</b><small>{{ x.detalle }}</small></span>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg>
+              </button>
+            </li>
+          </ul>
+        </section>
+
+        <section *ngIf="activeTab === 'profile'">
+          <p class="np-sect">Datos</p>
           <dl class="np-dl">
             <dt>Correo</dt><dd>{{ selected.email || '—' }}</dd>
             <dt>Teléfono</dt><dd class="np-mono">{{ selected.phone || '—' }}</dd>

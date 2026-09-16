@@ -1,9 +1,65 @@
-/* ─── Empleados: sólo lo propio ─────────────────────────────────────── */
+/* ─── Empleados ─────────────────────────────────────────────────────── */
 .np-emp { --np-inspector-w: 460px; }
-.np-row--active .np-stripe i { background: var(--ok); }
-.np-row--off .np-stripe i    { background: var(--line-strong); }
 .np-insp-tags { margin-top: 6px; }
 .np-list { display: grid; gap: 6px; }
 .np-list-item { display: flex; align-items: flex-start; gap: 10px; padding: 9px 10px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--surface); }
 .np-list-main { flex: 1; min-width: 0; .np-name { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; } }
-@media (max-width: 760px) { .np-col-doc { display: none; } .np-table--registry { min-width: 0; } }
+
+.emp-barra { flex-wrap: wrap; gap: 10px; }
+
+/* Tarjetas: se ven nombre, cargo, estado y contacto sin abrir la ficha. */
+.emp-lista {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(290px, 1fr)); gap: 10px; align-content: start;
+  min-height: 0; max-height: 100%; overflow: auto; padding: 2px;
+}
+.np-page.is-open .emp-lista { grid-template-columns: 1fr; }
+.emp-card {
+  display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 10px 12px; align-items: center;
+  padding: 12px 14px; text-align: left; cursor: pointer; font: inherit; color: var(--text);
+  background: var(--surface); border: 1px solid var(--line); border-left: 3px solid var(--ok);
+  border-radius: var(--radius-lg); box-shadow: var(--shadow); transition: border-color .12s, box-shadow .12s;
+  &:hover, &:focus-visible { border-color: var(--accent); border-left-color: var(--ok); outline: none; }
+  &.is-off { border-left-color: var(--line-strong); .emp-avatar { background: var(--surface-3); color: var(--text-3); } }
+  &[aria-pressed="true"] { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent) inset; }
+}
+.emp-avatar { width: 40px; height: 40px; font-size: 15px; text-transform: uppercase; }
+.emp-card-id { display: grid; gap: 2px; min-width: 0;
+  b { font-size: 13.5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  small { font-size: 12px; color: var(--text-3); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; } }
+.emp-card-datos {
+  grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: 4px 16px; padding-top: 8px; border-top: 1px solid var(--line);
+  font-size: 12px; color: var(--text-2);
+  > span { display: inline-flex; align-items: center; gap: 6px; min-width: 0; }
+  i { font-style: normal; font-size: 10.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; color: var(--text-3); }
+}
+.emp-vacio {
+  grid-column: 1 / -1; display: grid; gap: 4px; justify-items: center; text-align: center; padding: 36px 16px;
+  border: 1px dashed var(--line-strong); border-radius: var(--radius-lg); font-size: 12.5px; color: var(--text-3);
+  b { font-size: 14px; color: var(--text-2); }
+}
+
+/* Expediente: qué está cargado y qué falta, con salto a la pestaña. */
+.emp-exp {
+  list-style: none; margin: 0 0 16px; padding: 0; border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden;
+  li + li { border-top: 1px solid var(--line); }
+  button {
+    width: 100%; display: grid; grid-template-columns: 22px minmax(0, 1fr) 16px; gap: 10px; align-items: center;
+    padding: 9px 12px; background: var(--surface); border: 0; cursor: pointer; text-align: left; font: inherit; color: var(--text);
+    &:hover { background: var(--surface-2); }
+    svg { width: 15px; height: 15px; color: var(--text-3); }
+  }
+  i {
+    width: 22px; height: 22px; border-radius: 50%; display: grid; place-items: center; font-style: normal; font-size: 12px; font-weight: 800;
+    background: var(--warn-soft); color: var(--warn);
+  }
+  li.is-ok i { background: var(--ok-soft); color: var(--ok); }
+  span { display: grid; gap: 1px; min-width: 0; }
+  b { font-size: 13px; }
+  small { font-size: 12px; color: var(--text-3); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+}
+
+@media (max-width: 640px) {
+  .emp-barra .np-search { flex: 1 1 100%; }
+  .emp-barra .np-chips { overflow-x: auto; flex-wrap: nowrap; }
+  .emp-lista { grid-template-columns: 1fr; max-height: none; }
+}

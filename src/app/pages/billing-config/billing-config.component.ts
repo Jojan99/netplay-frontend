@@ -244,8 +244,9 @@ export class BillingConfigComponent implements OnInit {
     const module = this.route.snapshot.data?.['module'];
     if (module === 'payment-gateway') {
       this.activeTab = 'gateway';
-      this.loadGatewayConfig();
     }
+    // Siempre: el resumen de arriba dice si la pasarela está activa.
+    this.loadGatewayConfig();
 
     this.loadConfig();
     this.loadGroupInfo();
@@ -641,23 +642,24 @@ export class BillingConfigComponent implements OnInit {
     return m[s] ?? s;
   }
 
+  /** Color del estado de una transacción, con las pastillas del panel. */
   txStatusClass(s: string): string {
-    const map: Record<string, string> = {
-      pending:   'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300',
-      approved:  'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300',
-      declined:  'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300',
-      cancelled: 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-300',
-      failed:    'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-400',
-    };
-    return map[s] ?? 'bg-gray-100 text-gray-600';
+    return ({ approved: 'np-pill--active', pending: 'np-pill--noip', declined: 'np-pill--suspended',
+              cancelled: 'np-pill--suspended', failed: 'np-pill--neutral' } as Record<string, string>)[s] ?? 'np-pill--neutral';
   }
 
-  gatewayBadgeClass(g: string): string {
-    return { wompi: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300',
-             epayco: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300',
-             zonapago: 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300',
-             efipay: 'bg-cyan-100 text-cyan-700 dark:bg-cyan-900/30 dark:text-cyan-300',
-           }[g] ?? 'bg-gray-100 text-gray-700';
+  /** Cambia de sección; en el teléfono la pestaña elegida queda a la vista. */
+  irA(tab: 'billing' | 'invoice' | 'payment-methods' | 'gateway' | 'cortes'): void {
+    this.activeTab = tab;
+    setTimeout(() => document.querySelector('.bc-tabs [aria-selected="true"]')?.scrollIntoView({ inline: 'center', block: 'nearest' }));
+  }
+
+  get gruposActivos(): number {
+    return this.schedules.filter(s => s.active).length;
+  }
+
+  get metodosActivos(): number {
+    return this.paymentMethods.filter(m => m.active).length;
   }
 
   gatewayLabel(g: string): string {

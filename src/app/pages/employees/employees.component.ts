@@ -102,6 +102,43 @@ export class EmployeesComponent implements OnInit {
     { id: 'bank', label: 'Banco' }, { id: 'equipment', label: 'Dotaciones' }, { id: 'disciplinary', label: 'Descargos' }, { id: 'payroll', label: 'Nómina' },
   ];
   get activeCount(): number { return this.employees.filter(e => e.active).length; }
+
+  filtro: 'todos' | 'activos' | 'inactivos' = 'todos';
+  porId = (_: number, e: any) => e.id;
+
+  /** Activos primero; se arma de nuevo sólo si cambia la lista o el filtro. */
+  get visibles(): any[] {
+    if (this.visCache.de !== this.employees || this.visCache.filtro !== this.filtro) {
+      const lista = this.employees
+        .filter(e => this.filtro === 'todos' || (this.filtro === 'activos' ? e.active : !e.active))
+        .sort((a, b) => Number(!!b.active) - Number(!!a.active) || `${a.first_name} ${a.last_name}`.localeCompare(`${b.first_name} ${b.last_name}`));
+      this.visCache = { de: this.employees, filtro: this.filtro, lista };
+    }
+    return this.visCache.lista;
+  }
+  private visCache: { de: any; filtro: string; lista: any[] } = { de: null, filtro: '', lista: [] };
+
+  /** Qué tiene cargado la ficha: se ve de un vistazo qué falta y se va directo. */
+  get expediente(): { tab: Tab; titulo: string; detalle: string; ok: boolean }[] {
+    const e = this.selected;
+    if (!e) return [];
+    if (this.expCache.de === e && this.expCache.eq === this.equipment && this.expCache.di === this.disciplinary && this.expCache.pa === this.payrolls) return this.expCache.lista;
+    const c = e.labor_contract, a = e.affiliation, b = e.bank_account;
+    const afil = a ? ['arl', 'eps', 'pension_fund', 'compensation_fund'].filter(k => a[k]).length : 0;
+    const tipo = this.opcionesTipoContrato.find(o => o.valor === c?.type)?.etiqueta;
+    const ultimo = this.payrolls.length ? this.payrolls[0]?.period : null;
+    const lista = [
+      { tab: 'contract' as Tab, titulo: 'Contrato', ok: !!c?.type, detalle: c?.type ? `${tipo ?? c.type}${c.salary ? ' · $ ' + Number(c.salary).toLocaleString('es-CO') : ''}` : 'Sin contrato cargado' },
+      { tab: 'affiliations' as Tab, titulo: 'Afiliaciones', ok: afil === 4, detalle: afil === 4 ? 'ARL, EPS, pensión y caja' : `${afil} de 4 cargadas` },
+      { tab: 'bank' as Tab, titulo: 'Cuenta bancaria', ok: !!b?.account_number, detalle: b?.account_number ? `${b.bank_name || 'Banco'} · ${b.account_type}` : 'Sin cuenta para pagar' },
+      { tab: 'equipment' as Tab, titulo: 'Dotaciones', ok: true, detalle: this.equipment.length ? `${this.equipment.filter(x => !x.returned_at).length} en su poder` : 'Ninguna asignada' },
+      { tab: 'disciplinary' as Tab, titulo: 'Descargos', ok: !this.disciplinary.length, detalle: this.disciplinary.length ? `${this.disciplinary.length} registrado(s)` : 'Ninguno' },
+      { tab: 'payroll' as Tab, titulo: 'Nómina', ok: !!this.payrolls.length, detalle: ultimo ? `Último pago ${ultimo}` : 'Sin pagos registrados' },
+    ];
+    this.expCache = { de: e, eq: this.equipment, di: this.disciplinary, pa: this.payrolls, lista };
+    return lista;
+  }
+  private expCache: any = { de: null, lista: [] };
   conditionPill(c: string): string {
     return ({ nuevo: 'np-pill--info', bueno: 'np-pill--active', regular: 'np-pill--noip', malo: 'np-pill--suspended' } as Record<string, string>)[c] ?? 'np-pill--neutral';
   }
