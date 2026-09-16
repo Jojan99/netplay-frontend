@@ -92,6 +92,57 @@ export class OltAccesoRemotoComponent implements OnInit {
     this.cargarAprov();
   }
 
+  // ── Pestañas ──────────────────────────────────────────────────────────
+
+  tab: 'estado' | 'perfiles' | 'equipos' | 'aprov' | 'config' = 'estado';
+  private tabElegida = false;
+
+  abrirTab(t: 'estado' | 'perfiles' | 'equipos' | 'aprov' | 'config') {
+    this.tab = t;
+    this.tabElegida = true;
+    if (t === 'perfiles') this.cargarPerfilesDeTodas();
+    if (t === 'aprov') this.cargarAprov();
+  }
+
+  /** Los perfiles se leen solos al abrir la pestaña, una vez por OLT. */
+  private cargarPerfilesDeTodas() {
+    for (const g of this.diag?.grupos ?? []) {
+      if (g.olt_id && String(g.marca ?? '').toLowerCase() === 'huawei' && !this.perfiles[g.olt_id]) {
+        this.verPerfiles(g.olt_id);
+      }
+    }
+  }
+
+  get problemas(): any[] {
+    return (this.diag?.grupos ?? []).flatMap((g: any) => (g.items ?? []).filter((i: any) => i.estado !== 'ok').map((i: any) => ({ ...i, grupo: g })));
+  }
+
+  get bienes(): any[] {
+    return (this.diag?.grupos ?? []).flatMap((g: any) => (g.items ?? []).filter((i: any) => i.estado === 'ok').map((i: any) => ({ ...i, grupo: g })));
+  }
+
+  get perfilesLeidos(): boolean { return this.oltsConPerfiles.some(o => (this.perfiles[o]?.perfiles?.length ?? 0) > 0); }
+
+  get perfilesPendientes(): number {
+    return this.oltsConPerfiles.reduce((n, o) => n + (this.perfiles[o]?.pendientes?.length ?? 0), 0);
+  }
+
+  get equiposFaltan(): number {
+    return this.estado?.activa ? Math.max(0, (this.estado.equipos?.total ?? 0) - (this.estado.equipos?.con_gestion ?? 0)) : 0;
+  }
+
+  get porcentajeAcceso(): number {
+    const t = this.estado?.equipos?.total ?? 0;
+    return t ? Math.round((this.estado.equipos.con_gestion / t) * 100) : 0;
+  }
+
+  get aprovConFallas(): number { return this.aprovUltimos.filter(a => this.esMalo(a.estado)).length; }
+
+  /** El color de la píldora de cada aprovisionamiento. */
+  pillAprov(estado: string): string {
+    return estado === 'listo' ? 'listo' : this.esMalo(estado) ? 'error' : estado === 'reemplazado' ? 'sin_leer' : 'pendiente';
+  }
+
   // ── Aprovisionamiento automático al autorizar ─────────────────────────
 
   aprov: any = null;
@@ -118,7 +169,7 @@ export class OltAccesoRemotoComponent implements OnInit {
         this.reintentando = null;
         if (r?.error !== 0) { this.toast.error(r?.message ?? 'No se pudo reintentar'); return; }
         this.aprovUltimos = r.data ?? this.aprovUltimos;
-        this.toast.success('Se reintenta en menos de un minuto. Tocá "Actualizar lista" para ver cómo va.');
+        this.toast.success('Se reintenta en menos de un minuto. Tocá "Actualizar" para ver cómo va.');
       },
       error: (e: any) => { this.reintentando = null; this.toast.error(e?.error?.message ?? 'No se pudo reintentar'); },
     });
@@ -185,6 +236,9 @@ export class OltAccesoRemotoComponent implements OnInit {
         for (const g of this.diag?.grupos ?? []) {
           if (g.olt_id) this.nombresOlt[g.olt_id] = g.titulo;
         }
+        // Apagado: lo único útil es configurarlo.
+        if (!this.tabElegida && this.diag?.nivel === 'apagado') this.tab = 'config';
+        if (this.tab === 'perfiles') this.cargarPerfilesDeTodas();
       },
       error: () => { this.revisando = false; this.error = 'No se pudo revisar'; },
     });
@@ -193,17 +247,18 @@ export class OltAccesoRemotoComponent implements OnInit {
   /** El botón de cada punto del diagnóstico lleva a donde se arregla. */
   hacer(item: any, grupo: any) {
     if (item.accion === 'activar') {
-      if (!this.sug) this.buscar();
-      this.irA('ar-asistente');
-    } else if (item.accion === 'perfiles' && grupo.olt_id) {
-      this.verPerfiles(grupo.olt_id);
+      this.abrirTab('config');
+      if (!this.sug && !this.buscando) this.buscar();
+    } else if (item.accion === 'perfiles') {
+      this.abrirTab('perfiles');
+      if (grupo?.olt_id) this.verPerfiles(grupo.olt_id);
     } else if (item.accion === 'al_dia') {
-      this.irA('ar-aldia');
-      if (!this.poniendoAlDia) this.ponerAlDia();
+      // Sólo lleva a la pestaña: poner al día toca cientos de equipos y se decide ahí.
+      this.abrirTab('equipos');
     }
   }
 
-  irAlAsistente() { this.irA('ar-asistente'); }
+  irAlAsistente() { this.abrirTab('config'); }
 
   private irA(id: string) {
     setTimeout(() => document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 60);

@@ -3,10 +3,10 @@
     <div>
       <p class="np-kicker">Admin OLT <b>/</b> Acceso remoto</p>
       <h1 class="np-title">Acceso remoto a los equipos</h1>
-      <p class="np-fine">Una red aparte para las ONT: piden IP y con ella reciben la dirección del TR-069. Sin eso, cada equipo hay que tocarlo en sitio.</p>
+      <p class="np-fine">La red por la que las ONT de tus clientes llegan al servidor TR-069.</p>
     </div>
     <div class="np-actions">
-      <button type="button" class="np-btn np-btn--ghost" (click)="cargar(); revisar()" [disabled]="revisando">
+      <button type="button" class="np-btn np-btn--ghost" (click)="cargar(); revisar(); cargarAprov()" [disabled]="revisando">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 12a8 8 0 1 1-2.3-5.7M20 4v5h-5"/></svg>
         {{ revisando ? 'Revisando…' : 'Revisar ahora' }}
       </button>
@@ -18,281 +18,151 @@
   <div class="np-scroll ar-scroll">
     <p class="np-notice np-notice--danger" *ngIf="error">{{ error }}</p>
 
-    <!-- ── Cómo está, en una frase ──────────────────────────────────── -->
-    <section class="ar-salud" *ngIf="diag" [attr.data-nivel]="diag.nivel">
+    <!-- ── Resumen ───────────────────────────────────────────────────── -->
+    <section class="ar-salud" [attr.data-nivel]="diag?.nivel">
       <div class="ar-salud-main">
         <span class="ar-led" aria-hidden="true"><i></i></span>
         <div>
-          <h2>{{ diag.nivel === 'apagado' ? 'Acceso remoto apagado' : diag.resumen }}</h2>
-          <p *ngIf="estado?.activa">VLAN {{ estado.vlan }} · red {{ estado.red }} · {{ estado.equipos.con_gestion }} de {{ estado.equipos.total }} equipos con acceso</p>
-          <p *ngIf="diag.nivel === 'apagado'">Los equipos de tus clientes no tienen por dónde reportar al servidor TR-069.</p>
+          <h2>{{ !diag ? 'Revisando…' : (diag.nivel === 'apagado' ? 'Acceso remoto apagado' : diag.resumen) }}</h2>
+          <p *ngIf="estado?.activa">VLAN {{ estado.vlan }} · red {{ estado.red }}</p>
+          <p *ngIf="diag?.nivel === 'apagado'">Los equipos no tienen por dónde llegar al servidor TR-069.</p>
         </div>
       </div>
-      <div class="np-actions">
-        <button type="button" class="np-btn np-btn--primary" *ngIf="diag.nivel === 'apagado'" (click)="buscar(); irAlAsistente()">Configurar</button>
-        <button type="button" class="np-btn np-btn--ghost" *ngIf="estado?.activa" (click)="desactivar()" [disabled]="aplicando">Desactivar</button>
+
+      <div class="ar-metricas" *ngIf="estado?.activa">
+        <button type="button" class="ar-metrica" (click)="abrirTab('equipos')">
+          <span>Equipos con acceso</span>
+          <b>{{ estado.equipos.con_gestion }} <small>de {{ estado.equipos.total }}</small></b>
+          <i class="ar-barra"><i [style.width.%]="porcentajeAcceso"></i></i>
+        </button>
+        <button type="button" class="ar-metrica" (click)="abrirTab('perfiles')">
+          <span>Perfiles pendientes</span>
+          <b>{{ perfilesLeidos ? perfilesPendientes : '—' }}</b>
+          <small>{{ perfilesLeidos ? 'de línea' : 'sin revisar' }}</small>
+        </button>
+        <button type="button" class="ar-metrica" (click)="abrirTab('aprov')">
+          <span>Aprovisionamiento</span>
+          <b [class.is-on]="aprovForm.aprovisionar">{{ aprovForm.aprovisionar ? 'Encendido' : 'Apagado' }}</b>
+          <small *ngIf="aprovConFallas">{{ aprovConFallas }} con fallas</small>
+        </button>
       </div>
+
+      <button type="button" class="np-btn np-btn--primary" *ngIf="diag?.nivel === 'apagado'" (click)="abrirTab('config')">Configurar</button>
     </section>
 
-    <!-- ── Punto por punto ──────────────────────────────────────────── -->
-    <div class="ar-grupos" *ngIf="diag?.grupos?.length">
-      <section class="ar-grupo" *ngFor="let g of diag.grupos">
-        <header>
-          <h3>{{ g.titulo }}</h3>
-          <small *ngIf="g.marca">{{ g.marca }}</small>
-        </header>
-        <ul>
-          <li *ngFor="let i of g.items" [attr.data-estado]="i.estado">
+    <!-- ── Pestañas ──────────────────────────────────────────────────── -->
+    <div class="np-tabs ar-tabs" role="tablist">
+      <button type="button" class="np-tab" role="tab" [attr.aria-selected]="tab === 'estado'" (click)="abrirTab('estado')">
+        Estado <span class="np-c" *ngIf="problemas.length">{{ problemas.length }}</span>
+      </button>
+      <button type="button" class="np-tab" role="tab" *ngIf="estado?.activa" [attr.aria-selected]="tab === 'perfiles'" (click)="abrirTab('perfiles')">
+        Perfiles de línea <span class="np-c" *ngIf="perfilesPendientes">{{ perfilesPendientes }}</span>
+      </button>
+      <button type="button" class="np-tab" role="tab" *ngIf="estado?.activa" [attr.aria-selected]="tab === 'equipos'" (click)="abrirTab('equipos')">
+        Equipos <span class="np-c" *ngIf="equiposFaltan">{{ equiposFaltan }}</span>
+      </button>
+      <button type="button" class="np-tab" role="tab" *ngIf="aprov" [attr.aria-selected]="tab === 'aprov'" (click)="abrirTab('aprov')">
+        Aprovisionamiento <span class="np-c" *ngIf="aprovConFallas">{{ aprovConFallas }}</span>
+      </button>
+      <button type="button" class="np-tab" role="tab" [attr.aria-selected]="tab === 'config'" (click)="abrirTab('config')">
+        Configuración
+      </button>
+    </div>
+
+    <!-- ══ Estado ═══════════════════════════════════════════════════════ -->
+    <ng-container *ngIf="tab === 'estado'">
+      <p class="np-loading" *ngIf="revisando && !diag"><span class="np-spinner"></span> Revisando el router, las OLT y los equipos…</p>
+
+      <section class="ar-panel" *ngIf="diag && problemas.length">
+        <h3 class="ar-panel-t">Para resolver</h3>
+        <ul class="ar-items">
+          <li *ngFor="let i of problemas" [attr.data-estado]="i.estado">
             <span class="ar-ico" aria-hidden="true">
               <ng-container [ngSwitch]="i.estado">
-                <svg *ngSwitchCase="'ok'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="m5 12 5 5L20 7"/></svg>
                 <svg *ngSwitchCase="'error'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M6 6l12 12M18 6 6 18"/></svg>
                 <svg *ngSwitchCase="'manual'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M14.7 6.3a4 4 0 0 0-5.4 5.4L3 18l3 3 6.3-6.3a4 4 0 0 0 5.4-5.4l-2.5 2.5-2.5-.5-.5-2.5z"/></svg>
                 <svg *ngSwitchDefault viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6"><path d="M12 7v6M12 17h.01"/></svg>
               </ng-container>
             </span>
             <div class="ar-item-txt">
-              <b>{{ i.titulo }} <em class="ar-pill" [attr.data-estado]="i.estado">{{ etiquetas[i.estado] || i.estado }}</em></b>
+              <b>{{ i.titulo }} <small class="ar-donde">{{ i.grupo.titulo }}</small></b>
               <small>{{ i.detalle }}</small>
             </div>
-            <button type="button" class="np-btn np-btn--ghost ar-item-btn" *ngIf="i.accion" (click)="hacer(i, g)">{{ acciones[i.accion] }}</button>
+            <button type="button" class="np-btn np-btn--ghost np-btn--sm" *ngIf="i.accion" (click)="hacer(i, i.grupo)">{{ acciones[i.accion] }}</button>
           </li>
         </ul>
       </section>
-    </div>
 
-    <p class="np-loading" *ngIf="revisando && !diag"><span class="np-spinner"></span> Revisando el router, las OLT y los equipos…</p>
+      <section class="ar-panel ar-panel--ok" *ngIf="diag && !problemas.length && diag.nivel !== 'apagado'">
+        <h3 class="ar-panel-t">Todo en orden</h3>
+        <p class="np-fine">El router, las OLT y los equipos están listos para llegar al TR-069.</p>
+      </section>
 
-    <!-- ── Cómo es de punta a punta ─────────────────────────────────── -->
-    <details class="ar-guia" [open]="diag?.nivel === 'apagado'">
-      <summary>Cómo funciona, en orden</summary>
-      <ol>
-        <li><b>Se elige una VLAN libre y una red privada.</b> La VLAN es un carril aparte dentro del mismo cable: por ahí viajan sólo los equipos de tus clientes hablando con el servidor.</li>
-        <li><b>El MikroTik queda de portero.</b> Se le crea esa VLAN y un DHCP: cuando un equipo pide IP, se la da y en la misma respuesta le dice dónde está el servidor TR-069. La red queda encerrada: no ve a tus clientes ni a tu administración.</li>
-        <li><b>La OLT deja pasar la VLAN.</b> Se agrega al puerto que va al MikroTik, sin quitar ninguna de las que ya pasaban.</li>
-        <li><b>Cada perfil de línea abre el carril.</b> El perfil decide qué VLAN puede salir de cada equipo. Se le agrega la de gestión y se enciende la gestión TR-069, así el equipo arma solo su conexión. Al guardarlo, la OLT reconfigura a los clientes de ese perfil: puede haber un corte de segundos.</li>
-        <li><b>Cada equipo recibe su permiso.</b> Al autorizar una ONT se hace solo. A las que ya estaban se les da desde «Poner al día», o de a una desde Autorizadas → el equipo → <i>Dar acceso remoto</i>.</li>
-        <li><b>El equipo se presenta.</b> Pide IP, recibe la dirección del servidor y aparece en TR-069, con su WiFi y quién está conectado.</li>
-      </ol>
-      <p class="np-fine"><b>Qué OLT lo hacen solas:</b> Huawei GPON, de punta a punta. En C-Data EPON la red queda lista pero cada equipo se configura a mano, porque la OLT no puede indicarle a la ONU que pida su IP de gestión. ZTE, V-SOL y C-Data GPON todavía no están automatizadas: el diagnóstico te dice qué hacer a mano en cada una.</p>
-    </details>
-
-    <!-- ── Paso 1: qué está libre ───────────────────────────────────── -->
-    <section class="ar-paso" id="ar-asistente">
-      <div class="ar-paso-n"><span>1</span></div>
-      <div class="ar-paso-cuerpo">
-        <header>
-          <h2>{{ estado?.activa ? 'Cambiar la VLAN o la red' : 'Mirá qué está libre' }}</h2>
-          <p>Se lee lo que hay puesto hoy en el MikroTik y en cada OLT. Nada se cambia todavía.</p>
-        </header>
-
-        <button type="button" class="np-btn np-btn--primary" (click)="buscar()" [disabled]="buscando">
-          {{ buscando ? 'Leyendo la red… (puede tardar un minuto)' : (sug ? 'Volver a leer' : 'Buscar') }}
-        </button>
-      </div>
-    </section>
-
-    <!-- ── Paso 2: VLAN, red y puertos ──────────────────────────────── -->
-    <section class="ar-paso" *ngIf="sug && !sug.error">
-      <div class="ar-paso-n"><span>2</span></div>
-      <div class="ar-paso-cuerpo">
-        <header>
-          <h2>Elegí la VLAN y la red</h2>
-          <p>Lo marcado es lo que está libre. Podés poner otro número si en tu red significa algo.</p>
-        </header>
-
-        <div class="ar-campo">
-          <label>Número de VLAN</label>
-          <div class="ar-chips">
-            <button type="button" *ngFor="let v of sug.vlans_libres" class="ar-chip"
-                    [class.is-on]="form.vlan === v" (click)="form.vlan = v">{{ v }}</button>
-            <input type="number" class="np-input ar-chip-input" [(ngModel)]="form.vlan" min="2" max="4094" placeholder="otra" />
-          </div>
-          <small class="np-fine" *ngIf="!vlanOcupada">En uso hoy: {{ sug.vlans_en_uso.join(', ') || 'ninguna' }}</small>
-          <small class="ar-mal" *ngIf="vlanOcupada">Esa VLAN ya está en uso: usarla dejaría sin servicio a esos clientes.</small>
-        </div>
-
-        <div class="ar-campo">
-          <label>Red para los equipos</label>
-          <div class="ar-chips">
-            <button type="button" *ngIf="estado?.red" class="ar-chip" [class.is-on]="form.red === estado.red" (click)="form.red = estado.red">{{ estado.red }} (la actual)</button>
-            <button type="button" *ngFor="let r of sug.redes_libres" class="ar-chip"
-                    [class.is-on]="form.red === r" (click)="form.red = r">{{ r }}</button>
-          </div>
-          <small class="np-fine">Direcciones privadas que no chocan con ninguna de tu router. Alcanzan para 1.000 equipos.</small>
-        </div>
-
-        <div class="ar-campo">
-          <label>Por dónde salen las OLT</label>
-          <np-select [(ngModel)]="form.interfaz" [opciones]="interfaces" [presentacion]="presInterfaces" placeholder="Elegí la interfaz…" ariaLabel="Interfaz hacia las OLT" style="max-width: 460px"></np-select>
-          <small class="np-fine">La interfaz del MikroTik que va hacia la OLT. Se propone la que ya lleva las VLAN de tus clientes.</small>
-        </div>
-
-        <div class="ar-campo" *ngIf="sug.olts?.length">
-          <label>Cada OLT</label>
-          <div class="ar-olt" *ngFor="let o of sug.olts">
-            <div class="ar-olt-txt">
-              <b>{{ o.nombre }}</b>
-              <small>{{ o.marca }}</small>
+      <details class="ar-panel ar-plegable" *ngIf="bienes.length">
+        <summary>Lo que está bien <span class="np-c">{{ bienes.length }}</span></summary>
+        <ul class="ar-items ar-items--ok">
+          <li *ngFor="let i of bienes" data-estado="ok">
+            <span class="ar-ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="m5 12 5 5L20 7"/></svg></span>
+            <div class="ar-item-txt">
+              <b>{{ i.titulo }} <small class="ar-donde">{{ i.grupo.titulo }}</small></b>
+              <small>{{ i.detalle }}</small>
             </div>
-            <np-select [(ngModel)]="form.uplinks[o.olt_id]" [ngModelOptions]="{ standalone: true }"
-                       *ngIf="o.puertos?.length && o.soporte?.nivel === 'completo'"
-                       [opciones]="o.puertos" [presentacion]="presUplinks"
-                       [permitirVacio]="true" textoVacio="No tocar esta OLT" [valorVacio]="''"
-                       [ariaLabel]="'Puerto de subida de ' + o.nombre" style="flex: 1; min-width: 220px"></np-select>
-            <p class="ar-soporte" *ngIf="o.soporte?.nivel !== 'completo'" [attr.data-nivel]="o.soporte?.nivel">
-              <b>{{ o.soporte?.titulo }}.</b> {{ o.soporte?.detalle }}
-            </p>
-          </div>
-          <small class="np-fine">El puerto de subida que va al MikroTik. Sólo se agrega la VLAN nueva: no se quita ninguna de las que ya pasan.</small>
-        </div>
-
-        <button type="button" class="np-btn np-btn--primary" (click)="activar()" [disabled]="!puedeActivar">
-          {{ aplicando ? 'Aplicando…' : (estado?.activa ? 'Volver a aplicar' : 'Activar acceso remoto') }}
-        </button>
-      </div>
-    </section>
-
-    <p class="np-notice np-notice--danger" *ngIf="sug?.error">{{ sug.error }}</p>
-
-    <section class="np-card ar-pasos" *ngIf="pasos.length">
-      <h2 class="np-card-title">Lo que se aplicó</h2>
-      <ul>
-        <li *ngFor="let p of pasos" [class.is-mal]="!p.ok">
-          <span class="ar-tick" aria-hidden="true">{{ p.ok ? '✓' : '!' }}</span>
-          <span><b>{{ p.paso }}</b><small *ngIf="p.detalle">{{ p.detalle }}</small></span>
-        </li>
-      </ul>
-    </section>
-
-    <!-- ── Paso 3: perfiles de línea ────────────────────────────────── -->
-    <section class="ar-paso" id="ar-perfiles" *ngIf="estado?.activa">
-      <div class="ar-paso-n"><span>3</span></div>
-      <div class="ar-paso-cuerpo">
-        <header>
-          <h2>Abrí el carril en los perfiles de línea</h2>
-          <p>Sin esto el equipo descarta el tráfico de gestión aunque todo lo demás esté bien. Al guardar un perfil, la OLT reconfigura a sus clientes: puede haber un corte de unos segundos. Conviene hacerlo en horario tranquilo.</p>
-        </header>
-
-        <p class="np-fine" *ngIf="!oltsConPerfiles.length">Elegí «Revisar perfiles» en la OLT de arriba para ver cuáles faltan.</p>
-
-        <div class="ar-perfiles" *ngFor="let oltId of oltsConPerfiles">
-          <div class="ar-perfiles-head">
-            <h3>{{ nombresOlt[oltId] || ('OLT ' + oltId) }}</h3>
-            <div class="np-actions">
-              <button type="button" class="np-btn np-btn--ghost" (click)="verPerfiles(oltId, true)" [disabled]="perfiles[oltId].cargando || enCola">
-                {{ perfiles[oltId].cargando ? 'Leyendo la OLT…' : 'Volver a leer' }}
-              </button>
-              <button type="button" class="np-btn np-btn--primary" *ngIf="perfiles[oltId].pendientes.length && !enCola"
-                      (click)="pedirTodos(oltId)" [disabled]="perfiles[oltId].cargando || !!preparando">
-                Preparar los {{ perfiles[oltId].pendientes.length }} pendientes
-              </button>
-              <button type="button" class="np-btn np-btn--ghost" *ngIf="enCola" (click)="pararCola()">Parar después de este</button>
-            </div>
-          </div>
-
-          <p class="np-notice np-notice--danger" *ngIf="perfiles[oltId].error">{{ perfiles[oltId].error }}</p>
-          <p class="np-loading" *ngIf="perfiles[oltId].cargando && !perfiles[oltId].perfiles.length"><span class="np-spinner"></span> Leyendo cada perfil en la OLT…</p>
-
-          <div class="np-tablewrap" *ngIf="perfiles[oltId].perfiles.length">
-            <table class="np-table np-table--compact np-tabla-movil">
-              <thead><tr><th>Perfil</th><th>Clientes</th><th>Estado</th><th>Detalle</th><th></th></tr></thead>
-              <tbody>
-                <tr *ngFor="let p of perfiles[oltId].perfiles" [class.is-mal]="p.fallo">
-                  <td class="es-principal"><b>{{ p.nombre }}</b><small class="np-data"> #{{ p.id }}</small></td>
-                  <td class="np-data" data-label="Clientes">{{ p.equipos }}</td>
-                  <td data-label="Estado"><em class="ar-pill" [attr.data-estado]="p.estado">{{ etiquetas[p.estado] || p.estado }}</em></td>
-                  <td class="ar-detalle es-ancha" data-label="Detalle">{{ p.detalle }}</td>
-                  <td class="es-acciones">
-                    <button type="button" class="np-btn np-btn--ghost" *ngIf="p.estado === 'pendiente'"
-                            (click)="pedirUno(oltId, p)" [disabled]="!!preparando || enCola">
-                      {{ preparando === oltId + ':' + p.id ? 'Preparando…' : 'Preparar' }}
-                    </button>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-
-          <p class="np-fine" *ngIf="perfiles[oltId].perfiles.length && !perfiles[oltId].pendientes.length">Todos los perfiles de esta OLT dejan salir la gestión, incluidos los que todavía no usa ningún cliente.</p>
-        </div>
-      </div>
-    </section>
-
-    <!-- ── Aprovisionamiento automático al autorizar ────────────────── -->
-    <section class="ar-paso" id="ar-aprov" *ngIf="aprov">
-      <div class="ar-paso-n"><span>·</span></div>
-      <div class="ar-paso-cuerpo">
-        <header>
-          <h2>Aprovisionamiento automático al autorizar</h2>
-          <p>Cuando autorizás una ONT con su cliente, apenas el equipo aparece en el TR-069 se le carga la conexión a internet del cliente (IP fija o PPPoE, en la VLAN elegida), el WiFi y la cuenta de administración. Cada paso queda anotado abajo.</p>
-        </header>
-
-        <div class="np-actions">
-          <button type="button" class="np-switch" role="switch" [attr.aria-checked]="aprovForm.aprovisionar" aria-label="Aprovisionamiento automático"
-                  [disabled]="guardandoAprov" (click)="aprovForm.aprovisionar = !aprovForm.aprovisionar; guardarAprov()"></button>
-          <b>{{ aprovForm.aprovisionar ? 'Encendido' : 'Apagado' }}</b>
-        </div>
-        <p class="np-notice np-notice--warn np-notice--inline" *ngIf="aprovForm.aprovisionar && !aprov.gestion_activa">El acceso remoto está apagado: sin él los equipos no llegan al TR-069 y el aprovisionamiento no se aplica.</p>
-
-        <div class="np-form" *ngIf="aprovForm.aprovisionar">
-          <div class="np-field np-field-full">
-            <span>Qué se configura</span>
-            <label class="np-check"><input type="checkbox" [(ngModel)]="aprovForm.wan" /> Conexión a internet del cliente <small class="np-fine">· por ahora en equipos Huawei</small></label>
-            <label class="np-check"><input type="checkbox" [(ngModel)]="aprovForm.wifi" /> WiFi: nombre y clave</label>
-            <label class="np-check"><input type="checkbox" [(ngModel)]="aprovForm.admin" /> Cuenta de administración del equipo</label>
-          </div>
-          <label class="np-field np-field-full" *ngIf="aprovForm.wifi"><span>Inicio del nombre del WiFi <em>cuando no se escribe uno al autorizar</em></span>
-            <input class="np-input" [(ngModel)]="aprovForm.wifi_prefijo" maxlength="20" [placeholder]="aprov.prefijo_sugerido" />
-            <small class="np-fine">Queda «{{ aprovForm.wifi_prefijo || aprov.prefijo_sugerido }}_APELLIDO» con una clave de 10 caracteres, con el mismo nombre y la misma clave en 2.4 y 5 GHz.</small>
-          </label>
-          <ng-container *ngIf="aprovForm.admin">
-            <label class="np-field"><span>Usuario administrador</span><input class="np-input" [(ngModel)]="aprovForm.admin_usuario" maxlength="32" autocomplete="off" /></label>
-            <label class="np-field"><span>Clave administrador</span><input class="np-input" type="password" [(ngModel)]="aprovForm.admin_clave" maxlength="64" autocomplete="new-password" [placeholder]="aprov.admin_con_clave ? 'Guardada · escribí para cambiarla' : ''" /></label>
-          </ng-container>
-        </div>
-
-        <div class="np-actions">
-          <button type="button" class="np-btn np-btn--primary" *ngIf="aprovForm.aprovisionar" (click)="guardarAprov()" [disabled]="guardandoAprov">{{ guardandoAprov ? 'Guardando…' : 'Guardar' }}</button>
-          <button type="button" class="np-btn np-btn--ghost" (click)="cargarAprov()">Actualizar lista</button>
-        </div>
-
-        <ul class="ar-lista" *ngIf="aprovUltimos.length">
-          <li *ngFor="let a of aprovUltimos" [class.is-mal]="esMalo(a.estado)" (click)="abiertoAprov = abiertoAprov === a.id ? null : a.id" style="cursor: pointer">
-            <span class="ar-tick" aria-hidden="true">{{ a.estado === 'listo' ? '✓' : (esMalo(a.estado) ? '!' : '…') }}</span>
-            <span>
-              <b>{{ a.cliente || a.serial }} · {{ estadosAprov[a.estado] || a.estado }}</b>
-              <small>{{ a.ont }} · {{ a.serial }}<ng-container *ngIf="a.wifi_ssid"> · WiFi «{{ a.wifi_ssid }}» clave <span class="np-mono">{{ a.wifi_clave }}</span></ng-container> · {{ a.detalle }}</small>
-              <ng-container *ngIf="abiertoAprov === a.id">
-                <small *ngFor="let p of a.pasos">{{ p.ok ? '✓' : (p.omitido ? '–' : '✗') }} {{ p.paso }}: {{ p.detalle }}</small>
-              </ng-container>
-            </span>
-            <button type="button" class="np-btn np-btn--ghost np-btn--sm" *ngIf="esMalo(a.estado)"
-                    (click)="reintentarAprov(a, $event)" [disabled]="reintentando === a.id">{{ reintentando === a.id ? 'Pidiendo…' : 'Reintentar' }}</button>
           </li>
         </ul>
-      </div>
-    </section>
+      </details>
+    </ng-container>
 
-    <!-- ── Equipos C-Data ────────────────────────────────────────────── -->
-    <section class="ar-paso" *ngIf="estado?.activa">
-      <div class="ar-paso-n"><span>·</span></div>
-      <div class="ar-paso-cuerpo">
-        <header>
-          <h2>Equipos C-Data</h2>
-          <p>Reciben por la OLT la dirección y las credenciales del servidor TR-069 igual que los Huawei, pero <b>las aplican recién al reiniciarse</b>. Los que autorizás de ahora en más se reinician solos al configurarse, porque todavía no le dan servicio a nadie. A los clientes que ya navegan no se los reinicia sin avisar: el resultado dice que falta el reinicio, y lo hacés cuando no moleste (tarda un minuto sin internet).</p>
-        </header>
-      </div>
-    </section>
+    <!-- ══ Perfiles de línea ════════════════════════════════════════════ -->
+    <ng-container *ngIf="tab === 'perfiles'">
+      <p class="np-notice np-notice--inline">El perfil de línea decide qué VLAN puede sacar cada equipo: tiene que llevar la de gestión (VLAN {{ estado?.vlan }}) y el TR-069 encendido. Al prepararlo, la OLT reconfigura a los clientes de ese perfil y puede haber un corte de segundos.</p>
+      <p class="np-fine" *ngIf="!oltsConPerfiles.length">No hay OLT que admita preparar perfiles desde acá.</p>
 
-    <!-- ── Paso 4: los equipos que ya estaban ───────────────────────── -->
-    <section class="ar-paso" id="ar-aldia" *ngIf="estado?.activa">
-      <div class="ar-paso-n"><span>4</span></div>
-      <div class="ar-paso-cuerpo">
-        <header>
-          <h2>Poné al día los equipos que ya tenías</h2>
-          <p>Los nuevos lo reciben al autorizarlos. A los {{ estado.equipos.total - estado.equipos.con_gestion }} que quedan hay que darles el acceso una vez. Hacelo después de preparar sus perfiles.</p>
-        </header>
+      <section class="ar-panel" *ngFor="let oltId of oltsConPerfiles">
+        <div class="ar-perfiles-head">
+          <h3 class="ar-panel-t">{{ nombresOlt[oltId] || ('OLT ' + oltId) }}</h3>
+          <div class="np-actions">
+            <button type="button" class="np-btn np-btn--ghost np-btn--sm" (click)="verPerfiles(oltId, true)" [disabled]="perfiles[oltId].cargando || enCola">
+              {{ perfiles[oltId].cargando ? 'Leyendo la OLT…' : 'Volver a leer' }}
+            </button>
+            <button type="button" class="np-btn np-btn--primary np-btn--sm" *ngIf="perfiles[oltId].pendientes.length && !enCola"
+                    (click)="pedirTodos(oltId)" [disabled]="perfiles[oltId].cargando || !!preparando">
+              Preparar los {{ perfiles[oltId].pendientes.length }} pendientes
+            </button>
+            <button type="button" class="np-btn np-btn--ghost np-btn--sm" *ngIf="enCola" (click)="pararCola()">Parar después de este</button>
+          </div>
+        </div>
+
+        <p class="np-notice np-notice--danger" *ngIf="perfiles[oltId].error">{{ perfiles[oltId].error }}</p>
+        <p class="np-loading" *ngIf="perfiles[oltId].cargando && !perfiles[oltId].perfiles.length"><span class="np-spinner"></span> Leyendo cada perfil en la OLT…</p>
+
+        <div class="np-tablewrap" *ngIf="perfiles[oltId].perfiles.length">
+          <table class="np-table np-table--compact np-tabla-movil">
+            <thead><tr><th>Perfil</th><th>Clientes</th><th>Estado</th><th></th></tr></thead>
+            <tbody>
+              <tr *ngFor="let p of perfiles[oltId].perfiles">
+                <td class="es-principal"><b>{{ p.nombre }}</b><small class="np-data"> #{{ p.id }}</small><small class="ar-detalle" *ngIf="p.estado !== 'listo'"><br>{{ p.detalle }}</small></td>
+                <td class="np-data" data-label="Clientes">{{ p.equipos }}</td>
+                <td data-label="Estado"><em class="ar-pill" [attr.data-estado]="p.estado">{{ etiquetas[p.estado] || p.estado }}</em></td>
+                <td class="es-acciones">
+                  <button type="button" class="np-btn np-btn--ghost np-btn--sm" *ngIf="p.estado === 'pendiente'"
+                          (click)="pedirUno(oltId, p)" [disabled]="!!preparando || enCola">
+                    {{ preparando === oltId + ':' + p.id ? 'Preparando…' : 'Preparar' }}
+                  </button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <p class="np-fine" *ngIf="perfiles[oltId].perfiles.length && !perfiles[oltId].pendientes.length">Todos los perfiles de esta OLT dejan salir la gestión.</p>
+      </section>
+    </ng-container>
+
+    <!-- ══ Equipos ══════════════════════════════════════════════════════ -->
+    <ng-container *ngIf="tab === 'equipos' && estado?.activa">
+      <section class="ar-panel">
+        <h3 class="ar-panel-t">Equipos que ya tenías</h3>
+        <p class="np-fine">Los que autorizás de ahora en más reciben el acceso solos. A los {{ equiposFaltan }} que quedan hay que dárselo una vez. Hacelo después de preparar sus perfiles de línea.</p>
 
         <div class="np-actions">
           <button type="button" class="np-btn np-btn--primary" (click)="ponerAlDia()" *ngIf="!poniendoAlDia"
@@ -307,8 +177,172 @@
             <span><b>{{ h.nombre || h.ont }}</b><small>{{ h.ont }} · {{ h.detalle }}</small></span>
           </li>
         </ul>
-      </div>
-    </section>
+      </section>
+
+      <p class="np-notice np-notice--inline"><b>C-Data:</b> reciben la dirección del TR-069 por la OLT pero la aplican al reiniciarse. Los recién autorizados se reinician solos; a los que ya navegan no, y el resultado avisa que falta el reinicio.</p>
+    </ng-container>
+
+    <!-- ══ Aprovisionamiento ════════════════════════════════════════════ -->
+    <ng-container *ngIf="tab === 'aprov' && aprov">
+      <section class="ar-panel">
+        <div class="ar-perfiles-head">
+          <div>
+            <h3 class="ar-panel-t">Aprovisionamiento al autorizar</h3>
+            <p class="np-fine">Cuando el equipo aparece en el TR-069 se le carga la conexión del cliente, el WiFi y la cuenta de administración.</p>
+          </div>
+          <label class="ar-interruptor">
+            <button type="button" class="np-switch" role="switch" [attr.aria-checked]="aprovForm.aprovisionar" aria-label="Aprovisionamiento automático"
+                    [disabled]="guardandoAprov" (click)="aprovForm.aprovisionar = !aprovForm.aprovisionar; guardarAprov()"></button>
+            <b>{{ aprovForm.aprovisionar ? 'Encendido' : 'Apagado' }}</b>
+          </label>
+        </div>
+        <p class="np-notice np-notice--warn np-notice--inline" *ngIf="aprovForm.aprovisionar && !aprov.gestion_activa">El acceso remoto está apagado: sin él los equipos no llegan al TR-069 y no se aplica nada.</p>
+
+        <div class="np-form" *ngIf="aprovForm.aprovisionar">
+          <div class="np-field np-field-full">
+            <span>Qué se configura</span>
+            <label class="np-check"><input type="checkbox" [(ngModel)]="aprovForm.wan" /> Conexión a internet del cliente <small class="np-fine">· Huawei</small></label>
+            <label class="np-check"><input type="checkbox" [(ngModel)]="aprovForm.wifi" /> WiFi</label>
+            <label class="np-check"><input type="checkbox" [(ngModel)]="aprovForm.admin" /> Cuenta de administración</label>
+          </div>
+          <label class="np-field np-field-full" *ngIf="aprovForm.wifi"><span>Inicio del nombre del WiFi <em>si no se escribe uno al autorizar</em></span>
+            <input class="np-input" [(ngModel)]="aprovForm.wifi_prefijo" maxlength="20" [placeholder]="aprov.prefijo_sugerido" />
+            <small class="np-fine">Queda «{{ aprovForm.wifi_prefijo || aprov.prefijo_sugerido }}_APELLIDO», igual en 2.4 y 5 GHz.</small>
+          </label>
+          <ng-container *ngIf="aprovForm.admin">
+            <label class="np-field"><span>Usuario administrador</span><input class="np-input" [(ngModel)]="aprovForm.admin_usuario" maxlength="32" autocomplete="off" /></label>
+            <label class="np-field"><span>Clave administrador</span><input class="np-input" type="password" [(ngModel)]="aprovForm.admin_clave" maxlength="64" autocomplete="new-password" [placeholder]="aprov.admin_con_clave ? 'Guardada · escribí para cambiarla' : ''" /></label>
+          </ng-container>
+          <div class="np-actions np-field-full">
+            <button type="button" class="np-btn np-btn--primary" (click)="guardarAprov()" [disabled]="guardandoAprov">{{ guardandoAprov ? 'Guardando…' : 'Guardar' }}</button>
+          </div>
+        </div>
+      </section>
+
+      <section class="ar-panel">
+        <div class="ar-perfiles-head">
+          <h3 class="ar-panel-t">Últimos equipos</h3>
+          <button type="button" class="np-btn np-btn--ghost np-btn--sm" (click)="cargarAprov()">Actualizar</button>
+        </div>
+        <p class="np-fine" *ngIf="!aprovUltimos.length">Todavía no se aprovisionó ningún equipo.</p>
+
+        <ul class="ar-aprov" *ngIf="aprovUltimos.length">
+          <li *ngFor="let a of aprovUltimos" [attr.data-estado]="a.estado">
+            <button type="button" class="ar-aprov-fila" (click)="abiertoAprov = abiertoAprov === a.id ? null : a.id" [attr.aria-expanded]="abiertoAprov === a.id">
+              <span class="ar-aprov-quien">
+                <b>{{ a.cliente || a.serial }}</b>
+                <small>{{ a.ont }}<ng-container *ngIf="a.wifi_ssid"> · WiFi «{{ a.wifi_ssid }}» · clave <span class="np-mono">{{ a.wifi_clave }}</span></ng-container></small>
+              </span>
+              <em class="ar-pill" [attr.data-estado]="pillAprov(a.estado)">{{ estadosAprov[a.estado] || a.estado }}</em>
+            </button>
+            <div class="ar-aprov-detalle" *ngIf="abiertoAprov === a.id">
+              <small class="np-fine">{{ a.detalle }}</small>
+              <ul>
+                <li *ngFor="let p of a.pasos" [class.is-mal]="!p.ok && !p.omitido">
+                  <span class="ar-tick" aria-hidden="true">{{ p.ok ? '✓' : (p.omitido ? '–' : '!') }}</span>
+                  <span><b>{{ p.paso }}</b><small>{{ p.detalle }}</small></span>
+                </li>
+              </ul>
+              <button type="button" class="np-btn np-btn--ghost np-btn--sm" *ngIf="esMalo(a.estado)"
+                      (click)="reintentarAprov(a, $event)" [disabled]="reintentando === a.id">{{ reintentando === a.id ? 'Pidiendo…' : 'Reintentar' }}</button>
+            </div>
+          </li>
+        </ul>
+      </section>
+    </ng-container>
+
+    <!-- ══ Configuración ════════════════════════════════════════════════ -->
+    <ng-container *ngIf="tab === 'config'">
+      <section class="ar-panel" id="ar-asistente">
+        <div class="ar-perfiles-head">
+          <div>
+            <h3 class="ar-panel-t">{{ estado?.activa ? 'VLAN y red de gestión' : 'Activar el acceso remoto' }}</h3>
+            <p class="np-fine">Primero se lee lo que hay en el MikroTik y en cada OLT. Nada se cambia hasta que confirmes.</p>
+          </div>
+          <button type="button" class="np-btn np-btn--ghost np-btn--sm" (click)="buscar()" [disabled]="buscando">
+            {{ buscando ? 'Leyendo la red… (hasta un minuto)' : (sug ? 'Volver a leer' : 'Leer la red') }}
+          </button>
+        </div>
+
+        <p class="np-notice np-notice--danger" *ngIf="sug?.error">{{ sug.error }}</p>
+
+        <ng-container *ngIf="sug && !sug.error">
+          <div class="ar-campo">
+            <label>VLAN</label>
+            <div class="ar-chips">
+              <button type="button" *ngFor="let v of sug.vlans_libres" class="ar-chip"
+                      [class.is-on]="form.vlan === v" (click)="form.vlan = v">{{ v }}</button>
+              <input type="number" class="np-input ar-chip-input" [(ngModel)]="form.vlan" min="2" max="4094" placeholder="otra" />
+            </div>
+            <small class="np-fine" *ngIf="!vlanOcupada">En uso hoy: {{ sug.vlans_en_uso.join(', ') || 'ninguna' }}</small>
+            <small class="ar-mal" *ngIf="vlanOcupada">Esa VLAN ya está en uso: dejaría sin servicio a esos clientes.</small>
+          </div>
+
+          <div class="ar-campo">
+            <label>Red</label>
+            <div class="ar-chips">
+              <button type="button" *ngIf="estado?.red" class="ar-chip" [class.is-on]="form.red === estado.red" (click)="form.red = estado.red">{{ estado.red }} (actual)</button>
+              <button type="button" *ngFor="let r of sug.redes_libres" class="ar-chip"
+                      [class.is-on]="form.red === r" (click)="form.red = r">{{ r }}</button>
+            </div>
+          </div>
+
+          <div class="ar-campo">
+            <label>Interfaz del MikroTik hacia las OLT</label>
+            <np-select [(ngModel)]="form.interfaz" [opciones]="interfaces" [presentacion]="presInterfaces" placeholder="Elegí la interfaz…" ariaLabel="Interfaz hacia las OLT" style="max-width: 460px"></np-select>
+          </div>
+
+          <div class="ar-campo" *ngIf="sug.olts?.length">
+            <label>Puerto de subida de cada OLT</label>
+            <div class="ar-olt" *ngFor="let o of sug.olts">
+              <div class="ar-olt-txt"><b>{{ o.nombre }}</b><small>{{ o.marca }}</small></div>
+              <np-select [(ngModel)]="form.uplinks[o.olt_id]" [ngModelOptions]="{ standalone: true }"
+                         *ngIf="o.puertos?.length && o.soporte?.nivel === 'completo'"
+                         [opciones]="o.puertos" [presentacion]="presUplinks"
+                         [permitirVacio]="true" textoVacio="No tocar esta OLT" [valorVacio]="''"
+                         [ariaLabel]="'Puerto de subida de ' + o.nombre" style="flex: 1; min-width: 220px"></np-select>
+              <p class="ar-soporte" *ngIf="o.soporte?.nivel !== 'completo'"><b>{{ o.soporte?.titulo }}.</b> {{ o.soporte?.detalle }}</p>
+            </div>
+          </div>
+
+          <div class="np-actions">
+            <button type="button" class="np-btn np-btn--primary" (click)="activar()" [disabled]="!puedeActivar">
+              {{ aplicando ? 'Aplicando…' : (estado?.activa ? 'Volver a aplicar' : 'Activar acceso remoto') }}
+            </button>
+          </div>
+        </ng-container>
+
+        <ul class="ar-lista" *ngIf="pasos.length">
+          <li *ngFor="let p of pasos" [class.is-mal]="!p.ok">
+            <span class="ar-tick" aria-hidden="true">{{ p.ok ? '✓' : '!' }}</span>
+            <span><b>{{ p.paso }}</b><small *ngIf="p.detalle">{{ p.detalle }}</small></span>
+          </li>
+        </ul>
+      </section>
+
+      <details class="ar-panel ar-plegable">
+        <summary>Cómo funciona</summary>
+        <ol class="ar-guia-lista">
+          <li><b>Una VLAN aparte.</b> Por ahí viajan sólo los equipos hablando con el servidor.</li>
+          <li><b>El MikroTik da la IP</b> y, en la misma respuesta, la dirección del TR-069. La red queda aislada.</li>
+          <li><b>La OLT deja pasar la VLAN</b> por el puerto que va al MikroTik.</li>
+          <li><b>Cada perfil de línea abre el carril</b> para esa VLAN y enciende el TR-069.</li>
+          <li><b>Cada equipo recibe su permiso</b>: solo al autorizarlo, o desde «Poner al día».</li>
+          <li><b>El equipo aparece en el TR-069</b> y, si está encendido, se aprovisiona.</li>
+        </ol>
+        <p class="np-fine">Huawei GPON queda automático de punta a punta. En C-Data EPON cada equipo se configura a mano.</p>
+      </details>
+
+      <section class="ar-panel ar-peligro" *ngIf="estado?.activa">
+        <div class="ar-perfiles-head">
+          <div>
+            <h3 class="ar-panel-t">Desactivar</h3>
+            <p class="np-fine">Quita la VLAN, el DHCP y las reglas del MikroTik. Los equipos dejan de llegar al TR-069.</p>
+          </div>
+          <button type="button" class="np-btn np-btn--ghost np-btn--sm" (click)="desactivar()" [disabled]="aplicando">Desactivar</button>
+        </div>
+      </section>
+    </ng-container>
   </div>
 </div>
 

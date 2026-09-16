@@ -168,3 +168,75 @@ tr.is-mal td { background: var(--danger-soft); }
   .ar-perfiles-head .np-actions { width: 100%; }
 }
 
+
+/* ─── Reorganización en pestañas ─────────────────────────────────────── */
+.ar-salud { align-items: stretch; }
+.ar-salud-main { flex: 1 1 260px; }
+.ar-metricas { display: flex; flex-wrap: wrap; gap: 8px; }
+.ar-metrica {
+  display: grid; gap: 2px; min-width: 140px; padding: 8px 12px; text-align: left; cursor: pointer; font: inherit;
+  border-radius: var(--radius); border: 1px solid var(--line); background: var(--surface-2); color: var(--text);
+  &:hover { border-color: var(--accent); }
+  > span { font-size: 10.5px; font-weight: 800; letter-spacing: .4px; text-transform: uppercase; color: var(--text-3); }
+  > b { font-size: 18px; letter-spacing: -.3px; small { font-size: 12px; font-weight: 600; color: var(--text-3); } }
+  > b.is-on { color: var(--ok); }
+  > small { font-size: 11.5px; color: var(--text-3); }
+}
+.ar-barra { display: block; height: 4px; border-radius: 99px; background: var(--surface-3); overflow: hidden; margin-top: 4px;
+  > i { display: block; height: 100%; background: var(--ok); border-radius: 99px; } }
+
+.ar-tabs { padding: 0; }
+
+.ar-panel {
+  display: grid; gap: 12px; padding: 16px 18px; min-width: 0;
+  border-radius: var(--radius-lg); border: 1px solid var(--line); background: var(--surface);
+}
+.ar-panel--ok { border-left: 3px solid var(--ok); }
+.ar-panel-t { margin: 0; font-size: 14px; }
+.ar-panel .np-fine { margin: 0; }
+.ar-peligro { border-color: color-mix(in srgb, var(--danger) 35%, var(--line)); }
+
+.ar-plegable {
+  > summary { cursor: pointer; font-size: 13px; font-weight: 700; display: flex; align-items: center; gap: 8px; }
+  &:not([open]) { gap: 0; }
+}
+.ar-guia-lista { margin: 0; padding-left: 20px; display: grid; gap: 6px; font-size: 12.5px; color: var(--text-2); line-height: 1.5; b { color: var(--text); } }
+
+.ar-items { list-style: none; margin: 0; padding: 0; display: grid; gap: 0;
+  > li { display: grid; grid-template-columns: 22px 1fr auto; gap: 10px; align-items: center; padding: 10px 0; }
+  > li + li { border-top: 1px solid var(--line); }
+}
+.ar-items--ok > li { grid-template-columns: 22px 1fr; padding: 7px 0; }
+.ar-donde { font-size: 10.5px; font-weight: 700; letter-spacing: .3px; text-transform: uppercase; color: var(--text-3); }
+
+.ar-interruptor { display: inline-flex; align-items: center; gap: 8px; }
+
+.ar-aprov { list-style: none; margin: 0; padding: 0; display: grid;
+  > li + li { border-top: 1px solid var(--line); }
+}
+.ar-aprov-fila {
+  width: 100%; display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  padding: 10px 2px; background: none; border: 0; cursor: pointer; font: inherit; color: inherit; text-align: left;
+  &:hover .ar-aprov-quien b { color: var(--accent); }
+}
+.ar-aprov-quien { display: grid; gap: 1px; min-width: 0;
+  b { font-size: 13px; }
+  small { font-size: 11.5px; color: var(--text-3); overflow-wrap: anywhere; }
+}
+.ar-aprov-detalle { display: grid; gap: 8px; padding: 0 2px 12px;
+  ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+  li { display: flex; gap: 9px; align-items: flex-start; }
+  li > span:last-child { display: grid; gap: 1px; min-width: 0; b { font-size: 12.5px; } small { font-size: 11.5px; color: var(--text-3); overflow-wrap: anywhere; } }
+  .np-btn { justify-self: start; }
+}
+
+@media (max-width: 640px) {
+  .ar-metrica { flex: 1 1 100%; }
+  .ar-items > li { grid-template-columns: 22px 1fr; }
+  .ar-items > li > .np-btn { grid-column: 2; justify-self: start; }
+}
+
+/* Con una pestaña larga la grilla comprimía la barra de pestañas a 1 px: la
+   barra tiene overflow-x y así su alto mínimo quedaba en cero. */
+.ar-scroll { grid-auto-rows: max-content; }
+.ar-tabs { min-height: max-content; }
