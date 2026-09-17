@@ -4,6 +4,21 @@ import { environment } from '../../environments/environment';
 import { Observable } from 'rxjs';
 import { EgressesInterface } from '../models/egresses-interface';
 
+/** Filtros de la pantalla de Egresos: los mismos para lista, tablero y CSV. */
+export interface FiltrosEgresos {
+  search?: string;
+  from?: string;
+  to?: string;
+  category?: string;
+  payment_method_id?: number | null;
+  sin_categoria?: boolean;
+  sin_metodo?: boolean;
+  sin_fecha?: boolean;
+  ids?: number[];
+  page?: number;
+  per_page?: number;
+}
+
 
 @Injectable({
   providedIn: 'root'
@@ -203,35 +218,94 @@ export class FinanceService {
 
   // ── Egresos v2 ─────────────────────────────────────────────────────────
 
-  getEgresosPaginated(search: string, from: string, to: string, category: string, page: number, perPage: number): Observable<any> {
-    let params = new HttpParams().set('page', page).set('per_page', perPage);
-    if (search)   params = params.set('search', search);
-    if (from)     params = params.set('from', from);
-    if (to)       params = params.set('to', to);
-    if (category) params = params.set('category', category);
-    return this.http.get<any>(this.env.rootUrl + 'api/egresos/list', { headers: this.getHeaders(), params });
+  /** Sólo el token: para multipart el navegador pone su propio Content-Type. */
+  private getAuthHeaders(): HttpHeaders {
+    return new HttpHeaders({ 'Authorization': `Bearer ${this.getAuthToken()}` });
   }
 
-  createEgresoV2(data: { concept: string; category: string; value: number; payment_method_id?: number | null }): Observable<any> {
+  /** Los filtros de la pantalla de egresos, iguales para lista, tablero y CSV. */
+  private egresosParams(f: FiltrosEgresos): HttpParams {
+    let params = new HttpParams();
+    if (f.search)            params = params.set('search', f.search);
+    if (f.from)              params = params.set('from', f.from);
+    if (f.to)                params = params.set('to', f.to);
+    if (f.category)          params = params.set('category', f.category);
+    if (f.payment_method_id) params = params.set('payment_method_id', f.payment_method_id);
+    if (f.sin_categoria)     params = params.set('sin_categoria', 1);
+    if (f.sin_metodo)        params = params.set('sin_metodo', 1);
+    if (f.sin_fecha)         params = params.set('sin_fecha', 1);
+    if (f.ids?.length)       params = params.set('ids', f.ids.join(','));
+    if (f.page)              params = params.set('page', f.page);
+    if (f.per_page)          params = params.set('per_page', f.per_page);
+    return params;
+  }
+
+  getEgresosPaginated(f: FiltrosEgresos): Observable<any> {
+    return this.http.get<any>(this.env.rootUrl + 'api/egresos/list',
+      { headers: this.getHeaders(), params: this.egresosParams(f) });
+  }
+
+  /** Tablero: totales, comparaciones, categorías, evolución y avisos. */
+  getEgresosTablero(f: FiltrosEgresos): Observable<any> {
+    return this.http.get<any>(this.env.rootUrl + 'api/egresos/tablero',
+      { headers: this.getHeaders(), params: this.egresosParams(f) });
+  }
+
+  createEgresoV2(data: FormData): Observable<any> {
     return this.http.post<any>(this.env.rootUrl + 'api/egresos/create-v2',
-      JSON.stringify(data), { headers: this.getHeaders() });
+      data, { headers: this.getAuthHeaders() });
   }
 
-  updateEgreso(id: number, data: { concept: string; category: string; value: number }): Observable<any> {
-    return this.http.put<any>(`${this.env.rootUrl}api/egresos/${id}`,
-      JSON.stringify(data), { headers: this.getHeaders() });
+  /** POST con _method=PUT: PHP no lee multipart en un PUT de verdad. */
+  updateEgreso(id: number, data: FormData): Observable<any> {
+    data.append('_method', 'PUT');
+    return this.http.post<any>(`${this.env.rootUrl}api/egresos/${id}`,
+      data, { headers: this.getAuthHeaders() });
   }
 
   deleteEgreso(id: number): Observable<any> {
     return this.http.delete<any>(`${this.env.rootUrl}api/egresos/${id}`, { headers: this.getHeaders() });
   }
 
-  exportEgresosCSV(from?: string, to?: string): Observable<Blob> {
-    let params = new HttpParams();
-    if (from) params = params.set('from', from);
-    if (to)   params = params.set('to', to);
+  /** Crea el siguiente egreso de uno recurrente (sólo cuando el usuario lo pide). */
+  repetirEgreso(id: number): Observable<any> {
+    return this.http.post<any>(`${this.env.rootUrl}api/egresos/${id}/repetir`, '{}', { headers: this.getHeaders() });
+  }
+
+  /** El comprobante vive en carpeta privada: se baja con el token, no por URL pública. */
+  getComprobanteEgreso(id: number): Observable<Blob> {
+    return this.http.get(`${this.env.rootUrl}api/egresos/${id}/comprobante`,
+      { headers: this.getHeaders(), responseType: 'blob' });
+  }
+
+  exportEgresosCSV(f: FiltrosEgresos): Observable<Blob> {
     return this.http.get(`${this.env.rootUrl}api/egresos/export`,
-      { headers: this.getHeaders(), params, responseType: 'blob' });
+      { headers: this.getHeaders(), params: this.egresosParams(f), responseType: 'blob' });
+  }
+
+  // ── Categorías de egreso (por empresa) ────────────────────────────────────
+
+  getCategoriasEgreso(): Observable<any> {
+    return this.http.get<any>(`${this.env.rootUrl}api/egresos/categorias`, { headers: this.getHeaders() });
+  }
+
+  crearCategoriaEgreso(name: string, color?: string | null): Observable<any> {
+    return this.http.post<any>(`${this.env.rootUrl}api/egresos/categorias`,
+      JSON.stringify({ name, color: color ?? null }), { headers: this.getHeaders() });
+  }
+
+  actualizarCategoriaEgreso(id: number, data: { name?: string; color?: string | null }): Observable<any> {
+    return this.http.put<any>(`${this.env.rootUrl}api/egresos/categorias/${id}`,
+      JSON.stringify(data), { headers: this.getHeaders() });
+  }
+
+  alternarCategoriaEgreso(id: number): Observable<any> {
+    return this.http.patch<any>(`${this.env.rootUrl}api/egresos/categorias/${id}/toggle`,
+      '{}', { headers: this.getHeaders() });
+  }
+
+  eliminarCategoriaEgreso(id: number): Observable<any> {
+    return this.http.delete<any>(`${this.env.rootUrl}api/egresos/categorias/${id}`, { headers: this.getHeaders() });
   }
 
   // ── Perfil de usuario ─────────────────────────────────────────────────────

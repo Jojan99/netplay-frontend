@@ -9,3 +9,12 @@
 .is-off { opacity: .62; .np-name { text-decoration: line-through; } }
 /* Campo que el servidor señaló como equivocado. */
 .np-input.is-bad { border-color: var(--danger); }
+
+/* El botón "Generar" va en la etiqueta del campo: debajo del input dejaba un
+   salto de línea que descuadraba el formulario. */
+.np-field > span .np-link--enlinea {
+  margin-left: 8px;
+  font: inherit;
+  text-transform: none;
+  letter-spacing: 0;
+}

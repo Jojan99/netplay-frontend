@@ -3,85 +3,467 @@
     <div>
       <p class="np-kicker">Operación <b>/</b> Finanzas <b>/</b> Egresos</p>
       <h1 class="np-title">Egresos</h1>
-      <div class="np-ribbon">
-        <span><span class="np-n">{{ formatCurrency(totalPeriod) }}</span>en el período</span>
-        <span><span class="np-n">{{ total | number }}</span>registros</span>
-        <span>promedio <span class="np-n">{{ total > 0 ? formatCurrency(totalPeriod / total) : '$ 0' }}</span></span>
+      <div class="np-ribbon" *ngIf="tablero as t">
+        <span><span class="np-n">{{ pesos(t.total) }}</span>en el período</span>
+        <span><span class="np-n">{{ t.movimientos | number }}</span>movimientos</span>
+        <span>promedio <span class="np-n">{{ pesos(t.promedio) }}</span></span>
+        <span *ngIf="t.anterior?.variacion != null" [class]="claseVariacion(t.anterior.variacion)">
+          {{ signo(t.anterior.variacion) }}{{ t.anterior.variacion }}% contra el período anterior
+        </span>
       </div>
+      <div class="np-ribbon np-ribbon--loading" *ngIf="!tablero && cargandoTablero">Calculando el período…</div>
     </div>
     <div class="np-actions">
-      <button type="button" class="np-btn np-btn--ghost" (click)="exportCSV()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12m0 0 4-4m-4 4-4-4M4 17v3h16v-3"/></svg>Exportar CSV</button>
-      <button type="button" class="np-btn np-btn--primary" (click)="openCreate()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M12 5v14M5 12h14"/></svg>Nuevo egreso</button>
+      <button type="button" class="np-btn np-btn--ghost" (click)="exportarCSV()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12m0 0 4-4m-4 4-4-4M4 17v3h16v-3"/></svg>Exportar CSV
+      </button>
+      <button type="button" class="np-btn np-btn--primary" (click)="abrirCrear()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M12 5v14M5 12h14"/></svg>Nuevo egreso
+      </button>
     </div>
   </header>
 
+  <!-- ══ Filtros ══════════════════════════════════════════════════════════ -->
   <div class="np-toolbar">
+    <div class="np-seg np-eg-seg">
+      <button type="button" [attr.aria-pressed]="pestana === 'tablero'"     (click)="pestana = 'tablero'">Tablero</button>
+      <button type="button" [attr.aria-pressed]="pestana === 'movimientos'" (click)="pestana = 'movimientos'">Movimientos<span class="np-c">{{ total | number }}</span></button>
+      <button type="button" [attr.aria-pressed]="pestana === 'categorias'"  (click)="pestana = 'categorias'">Tipos de egreso</button>
+    </div>
+
     <label class="np-search">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg>
-      <input type="search" [(ngModel)]="searchTerm" (ngModelChange)="onSearchChange()" placeholder="Concepto…" aria-label="Buscar egreso" />
+      <input type="search" [(ngModel)]="busqueda" (ngModelChange)="alBuscar()" placeholder="Concepto, proveedor o comprobante…" aria-label="Buscar egreso" />
     </label>
-    <label class="np-field np-field--inline"><span>Desde</span><input type="date" class="np-input np-input--sm" [(ngModel)]="filterFrom" (ngModelChange)="onFilterChange()" /></label>
-    <label class="np-field np-field--inline"><span>Hasta</span><input type="date" class="np-input np-input--sm" [(ngModel)]="filterTo" (ngModelChange)="onFilterChange()" /></label>
-    <label class="np-pagesize">Categoría<np-select [(ngModel)]="filterCategory" (ngModelChange)="onFilterChange()" [opciones]="categories" [presentacion]="presCategorias" [permitirVacio]="true" textoVacio="Todas" [valorVacio]="''" placeholder="Todas" tamano="sm" style="min-width: 150px" ariaLabel="Categoría"></np-select></label>
+    <label class="np-field np-field--inline"><span>Desde</span><input type="date" class="np-input np-input--sm" [(ngModel)]="desde" (ngModelChange)="alFiltrar()" /></label>
+    <label class="np-field np-field--inline"><span>Hasta</span><input type="date" class="np-input np-input--sm" [(ngModel)]="hasta" (ngModelChange)="alFiltrar()" /></label>
     <span class="np-spacer"></span>
-    <label class="np-pagesize">Mostrar<np-select [(ngModel)]="perPage" (ngModelChange)="changePerPage()" [opciones]="perPageOptions" [presentacion]="presPorPagina" tamano="sm" style="min-width: 140px" ariaLabel="Registros por página"></np-select></label>
+    <label class="np-pagesize">Categoría
+      <np-select [(ngModel)]="categoria" (ngModelChange)="alFiltrar()" [opciones]="nombresDeCategoria" [presentacion]="presTextos"
+                 [permitirVacio]="true" textoVacio="Todas" [valorVacio]="''" placeholder="Todas" tamano="sm" style="min-width: 160px" ariaLabel="Categoría"></np-select>
+    </label>
+    <label class="np-pagesize">Método
+      <np-select [(ngModel)]="metodoId" (ngModelChange)="alFiltrar()" [opciones]="metodosActivos" [presentacion]="presMetodos"
+                 [permitirVacio]="true" textoVacio="Todos" placeholder="Todos" tamano="sm" style="min-width: 170px" ariaLabel="Método de pago"></np-select>
+    </label>
   </div>
 
-  <div class="np-workspace">
-    <section class="np-registry" aria-label="Egresos">
+  <div class="np-eg-atajos">
+    <div class="np-chips">
+      <button type="button" class="np-chip" (click)="periodo('mes')">Este mes</button>
+      <button type="button" class="np-chip" (click)="periodo('anterior')">Mes pasado</button>
+      <button type="button" class="np-chip" (click)="periodo('anio')">Este año</button>
+      <button type="button" class="np-chip" (click)="periodo('doce')">Últimos 12 meses</button>
+    </div>
+    <span class="np-spacer"></span>
+    <span class="np-eg-filtroaviso" *ngIf="aviso">
+      Filtrado por el aviso: <b>{{ aviso.etiqueta }}</b>
+      <button type="button" class="np-link" (click)="limpiarAviso()">quitar</button>
+    </span>
+  </div>
+
+  <!-- ══ Tablero ══════════════════════════════════════════════════════════ -->
+  <div class="np-scroll" *ngIf="pestana === 'tablero'">
+    <div class="np-loading" *ngIf="cargandoTablero && !tablero"><span class="np-spinner"></span> Calculando el período…</div>
+
+    <ng-container *ngIf="tablero as t">
+      <p class="np-eg-aviso-migracion" *ngIf="t.migracion_pendiente">
+        Falta correr la migración de egresos: por ahora la fecha del gasto es la de registro, y no se guardan proveedor,
+        comprobante, notas, adjunto ni recurrencia.
+      </p>
+
+      <section class="np-kpis np-kpis--5">
+        <div class="np-kpi">
+          <span class="np-kpi-l">Total del período</span>
+          <span class="np-kpi-v">{{ pesos(t.total) }}</span>
+          <span class="np-kpi-s">{{ t.movimientos | number }} movimientos · {{ pesos(t.por_dia) }} por día</span>
+        </div>
+        <div class="np-kpi">
+          <span class="np-kpi-l">Contra período anterior</span>
+          <span class="np-kpi-v" [class]="claseVariacion(t.anterior?.variacion)">
+            {{ t.anterior?.variacion != null ? signo(t.anterior.variacion) + t.anterior.variacion + ' %' : '—' }}
+          </span>
+          <span class="np-kpi-s">{{ pesos(t.anterior?.total) }} entre {{ t.anterior?.desde | date:'dd/MM/yy' }} y {{ t.anterior?.hasta | date:'dd/MM/yy' }}</span>
+        </div>
+        <div class="np-kpi">
+          <span class="np-kpi-l">Contra el año pasado</span>
+          <span class="np-kpi-v" [class]="claseVariacion(t.anio_pasado?.variacion)">
+            {{ t.anio_pasado?.variacion != null ? signo(t.anio_pasado.variacion) + t.anio_pasado.variacion + ' %' : '—' }}
+          </span>
+          <span class="np-kpi-s">{{ pesos(t.anio_pasado?.total) }} en el mismo período de {{ t.anio_pasado?.desde | date:'yyyy' }}</span>
+        </div>
+        <div class="np-kpi">
+          <span class="np-kpi-l">Margen del período</span>
+          <span class="np-kpi-v" [class.np-kpi-v--ok]="t.contra_ingresos?.margen > 0" [class.np-kpi-v--danger]="t.contra_ingresos?.margen < 0">
+            {{ pesos(t.contra_ingresos?.margen) }}
+          </span>
+          <span class="np-kpi-s">ingresos {{ pesos(t.contra_ingresos?.ingresos) }} − gastos {{ pesos(t.contra_ingresos?.gastos_totales) }}</span>
+        </div>
+        <div class="np-kpi">
+          <span class="np-kpi-l">Egreso por cliente activo</span>
+          <span class="np-kpi-v">{{ t.contra_ingresos?.egreso_por_cliente != null ? pesos(t.contra_ingresos.egreso_por_cliente) : '—' }}</span>
+          <span class="np-kpi-s">{{ t.contra_ingresos?.clientes_activos | number }} clientes activos</span>
+        </div>
+      </section>
+
+      <!-- Período sin nada cargado: se ofrece el último mes con movimientos -->
+      <div class="np-card np-eg-vacio" *ngIf="t.movimientos === 0 && t.ultimo_mes_con_datos">
+        <div>
+          <h2>No hay egresos entre {{ t.periodo?.desde | date:'dd/MM/yyyy' }} y {{ t.periodo?.hasta | date:'dd/MM/yyyy' }}.</h2>
+          <p class="np-muted">El último mes con movimientos cargados es {{ t.ultimo_mes_con_datos }}.</p>
+        </div>
+        <button type="button" class="np-btn np-btn--ghost" (click)="irAlUltimoMesConDatos()">Ver {{ t.ultimo_mes_con_datos }}</button>
+      </div>
+
+      <!-- ── Avisos ── -->
+      <div class="np-card" *ngIf="alertas.length">
+        <div class="np-card-h">
+          <h2>Qué revisar</h2>
+          <span class="np-card-meta">{{ alertas.length }} aviso(s) · sólo lo que dicen los datos</span>
+        </div>
+        <ul class="np-eg-avisos">
+          <li *ngFor="let a of alertas; trackBy: porTipo" class="np-eg-aviso" [attr.data-sev]="a.severidad">
+            <span class="np-dot" [class.is-alta]="a.severidad === 'alta'" [class.is-media]="a.severidad === 'media'"></span>
+            <div class="np-eg-aviso-txt">
+              <strong>{{ a.titulo }}</strong>
+              <p>{{ a.detalle }}</p>
+            </div>
+            <button type="button" class="np-btn np-btn--ghost np-btn--sm" (click)="verAviso(a)">Ver movimientos</button>
+          </li>
+        </ul>
+      </div>
+
+      <!-- ── Categorías y evolución ── -->
+      <section class="np-grid-2">
+        <div class="np-card">
+          <div class="np-card-h">
+            <h2>Gasto por categoría</h2>
+            <button type="button" class="np-btn np-btn--ghost np-btn--sm" (click)="verTablaCategorias = !verTablaCategorias">
+              {{ verTablaCategorias ? 'Ver gráfico' : 'Ver tabla' }}
+            </button>
+          </div>
+          <p class="np-muted np-eg-nota">El peso es sobre el total del período; la variación, contra el período anterior de igual duración.</p>
+
+          <div class="np-viz-hbars" *ngIf="!verTablaCategorias && barrasCategorias.length" role="list">
+            <div class="np-viz-hbar" *ngFor="let c of barrasCategorias; trackBy: porNombre" role="listitem" tabindex="0"
+                 [attr.aria-label]="c.categoria + ': ' + pesos(c.total) + ', ' + c.peso + ' por ciento del período'">
+              <span class="np-viz-cat">{{ c.categoria }}</span>
+              <span class="np-viz-track"><span class="np-viz-fill" [style.width.%]="c.alto" [style.background]="colorDeCategoria(c.categoria)"></span></span>
+              <span class="np-viz-val">{{ compacto(c.total) }}</span>
+              <span class="np-viz-tip" role="tooltip">
+                <b>{{ pesos(c.total) }}</b>
+                <span>{{ c.peso }} % del período · {{ c.movimientos }} movimiento(s)</span>
+                <span *ngIf="c.variacion != null">antes {{ pesos(c.anterior) }} ({{ signo(c.variacion) }}{{ c.variacion }} %)</span>
+              </span>
+            </div>
+          </div>
+
+          <div class="np-tablewrap" *ngIf="verTablaCategorias && barrasCategorias.length">
+            <table class="np-table np-table--compact">
+              <thead><tr><th>Categoría</th><th class="np-th-right">Movs.</th><th class="np-th-right">Total</th><th class="np-th-right">Peso</th><th class="np-th-right">vs anterior</th></tr></thead>
+              <tbody>
+                <tr *ngFor="let c of barrasCategorias; trackBy: porNombre">
+                  <td>{{ c.categoria }}</td>
+                  <td class="np-data np-td-right">{{ c.movimientos }}</td>
+                  <td class="np-money">{{ pesos(c.total) }}</td>
+                  <td class="np-data np-td-right">{{ c.peso }} %</td>
+                  <td class="np-data np-td-right" [class]="claseVariacion(c.variacion)">{{ c.variacion != null ? signo(c.variacion) + c.variacion + ' %' : '—' }}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <p class="np-muted np-eg-nota" *ngIf="!barrasCategorias.length">Sin movimientos en el período.</p>
+        </div>
+
+        <div class="np-card">
+          <div class="np-card-h"><h2>Evolución de los últimos 12 meses</h2></div>
+          <p class="np-muted np-eg-nota">Por la fecha real del gasto; los egresos sin fecha no aparecen acá.</p>
+          <div class="np-viz-cols" role="list">
+            <div class="np-viz-col" *ngFor="let m of barrasMeses; trackBy: porMes" role="listitem" tabindex="0"
+                 [attr.aria-label]="m.etiqueta + ': ' + pesos(m.total)">
+              <span class="np-viz-val">{{ m.total ? compacto(m.total) : '—' }}</span>
+              <span class="np-viz-colarea"><span class="np-viz-fill" [style.height.%]="m.alto"></span></span>
+              <span class="np-viz-cat">{{ m.etiqueta }}</span>
+              <span class="np-viz-tip" role="tooltip"><b>{{ pesos(m.total) }}</b><span>{{ m.etiqueta }} · {{ m.movimientos }} movimiento(s)</span></span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ── Mayores, ingresos y métodos ── -->
+      <section class="np-grid-2">
+        <div class="np-card">
+          <div class="np-card-h"><h2>Los gastos más grandes del período</h2></div>
+          <div class="np-tablewrap" *ngIf="mayores.length; else sinMayores">
+            <table class="np-table np-table--compact">
+              <thead><tr><th>Concepto</th><th>Categoría</th><th>Fecha</th><th class="np-th-right">Valor</th></tr></thead>
+              <tbody>
+                <tr *ngFor="let e of mayores; trackBy: porId" class="np-row" (click)="abrirEditar(e)">
+                  <td><div class="np-name">{{ e.concept }}</div><div class="np-plan" *ngIf="e.supplier">{{ e.supplier }}</div></td>
+                  <td><span class="np-tag">{{ e.category || 'Sin categoría' }}</span></td>
+                  <td class="np-data">{{ e.fecha | date:'dd/MM/yy' }}</td>
+                  <td class="np-money np-neg">{{ pesos(e.value) }}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <ng-template #sinMayores><p class="np-muted np-eg-nota">Sin movimientos en el período.</p></ng-template>
+        </div>
+
+        <div class="np-card">
+          <div class="np-card-h"><h2>Contra los ingresos</h2><span class="np-card-meta">misma fuente que el Resumen Financiero</span></div>
+          <dl class="np-dl np-eg-dl" *ngIf="tablero.contra_ingresos as ci">
+            <dt>Ingresos del período</dt><dd class="np-money">{{ pesos(ci.ingresos) }}</dd>
+            <dt>Egresos de este módulo</dt><dd class="np-money np-neg">{{ pesos(ci.egresos_modulo) }}</dd>
+            <dt>Compras de inventario</dt><dd class="np-money np-neg">{{ pesos(ci.compras_inventario) }}</dd>
+            <dt>Gastos totales</dt><dd class="np-money np-neg">{{ pesos(ci.gastos_totales) }}</dd>
+            <dt>Margen</dt><dd class="np-money" [class.np-pos]="ci.margen > 0" [class.np-neg]="ci.margen < 0">{{ pesos(ci.margen) }}</dd>
+            <dt>Egresos sobre ingresos</dt><dd class="np-data">{{ ci.peso_sobre_ingresos != null ? ci.peso_sobre_ingresos + ' %' : 'sin ingresos en el período' }}</dd>
+            <dt>Clientes activos</dt><dd class="np-data">{{ ci.clientes_activos | number }}</dd>
+          </dl>
+
+          <h3 class="np-sect np-eg-sect">Por método de pago</h3>
+          <div class="np-tablewrap" *ngIf="porMetodo.length; else sinMetodos">
+            <table class="np-table np-table--compact">
+              <thead><tr><th>Método</th><th class="np-th-right">Movs.</th><th class="np-th-right">Total</th></tr></thead>
+              <tbody>
+                <tr *ngFor="let m of porMetodo; trackBy: porNombre">
+                  <td>{{ m.metodo }}</td>
+                  <td class="np-data np-td-right">{{ m.movimientos }}</td>
+                  <td class="np-money">{{ pesos(m.total) }}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <ng-template #sinMetodos><p class="np-muted np-eg-nota">Sin movimientos en el período.</p></ng-template>
+        </div>
+      </section>
+
+      <!-- ── Recurrentes ── -->
+      <div class="np-card" *ngIf="recurrentes.length">
+        <div class="np-card-h">
+          <h2>Gastos que se repiten</h2>
+          <span class="np-card-meta">nada se crea solo: se registra cuando vos lo pedís</span>
+        </div>
+        <div class="np-tablewrap">
+          <table class="np-table np-table--compact">
+            <thead><tr><th>Concepto</th><th>Cada</th><th>Último</th><th>Siguiente</th><th class="np-th-right">Valor</th><th class="np-th-right"></th></tr></thead>
+            <tbody>
+              <tr *ngFor="let r of recurrentes; trackBy: porId">
+                <td><div class="np-name">{{ r.concept }}</div><div class="np-plan" *ngIf="r.supplier">{{ r.supplier }}</div></td>
+                <td class="np-data">{{ r.recurrence === 'quincenal' ? '15 días' : 'mes' }}</td>
+                <td class="np-data">{{ r.ultima | date:'dd/MM/yy' }}</td>
+                <td class="np-data"><span [class.np-neg]="r.vencida">{{ r.siguiente | date:'dd/MM/yy' }}</span></td>
+                <td class="np-money">{{ pesos(r.value) }}</td>
+                <td class="np-td-right"><button type="button" class="np-btn np-btn--ghost np-btn--sm" (click)="repetir(r)">Registrar el siguiente</button></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </ng-container>
+  </div>
+
+  <!-- ══ Movimientos ══════════════════════════════════════════════════════ -->
+  <div class="np-workspace" *ngIf="pestana === 'movimientos'">
+    <section class="np-registry" aria-label="Movimientos de egreso">
       <div class="np-registry-wrap">
         <table class="np-table np-table--registry">
-          <thead><tr><th class="np-th-stripe"></th><th>Concepto</th><th>Categoría</th><th class="np-th-right">Valor</th><th>Método</th><th>Fecha</th><th class="np-th-right">Acciones</th></tr></thead>
+          <thead><tr>
+            <th class="np-th-stripe"></th><th>Fecha</th><th>Concepto</th><th>Categoría</th>
+            <th>Método</th><th class="np-th-right">Valor</th><th class="np-th-right">Acciones</th>
+          </tr></thead>
           <tbody>
-            <ng-container *ngIf="loading"><tr class="np-skel" *ngFor="let i of [1,2,3,4,5,6]"><td class="np-stripe"><i></i></td><td><span class="np-skel-bar" style="width:60%"></span></td><td><span class="np-skel-bar" style="width:70px"></span></td><td><span class="np-skel-bar" style="width:70px;margin-left:auto"></span></td><td></td><td></td><td></td></tr></ng-container>
-            <tr *ngIf="!loading && egresos.length === 0" class="np-empty"><td colspan="7"><strong>No hay egresos en este período.</strong></td></tr>
-            <tr *ngFor="let e of egresos" class="np-row" (click)="openEdit(e)" tabindex="0" (keydown.enter)="openEdit(e)">
-              <td class="np-stripe"><i style="background:var(--danger)"></i></td>
-              <td><div class="np-name">{{ e.concept }}</div></td>
-              <td><span class="np-tag np-tag--neutral">{{ e.category || 'General' }}</span></td>
-              <td class="np-money np-neg">{{ formatCurrency(e.value) }}</td>
-              <td>{{ e.payment_method_name || '—' }}</td>
-              <td class="np-data">{{ e.created_at | date:'dd/MM/yy' }}</td>
-              <td class="np-td-right"><div class="np-rowacts" (click)="$event.stopPropagation()">
-                <button type="button" class="np-icobtn" (click)="openEdit(e)" title="Editar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 20h4L18 10l-4-4L4 16v4zM13 7l4 4"/></svg></button>
-                <button type="button" class="np-icobtn" (click)="openDelete(e)" title="Eliminar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/></svg></button>
-              </div></td>
+            <ng-container *ngIf="cargandoLista">
+              <tr class="np-skel" *ngFor="let i of [1,2,3,4,5,6]; trackBy: porValor">
+                <td class="np-stripe"><i></i></td><td><span class="np-skel-bar" style="width:60px"></span></td>
+                <td><span class="np-skel-bar" style="width:60%"></span></td><td><span class="np-skel-bar" style="width:70px"></span></td>
+                <td><span class="np-skel-bar" style="width:80px"></span></td><td><span class="np-skel-bar" style="width:70px;margin-left:auto"></span></td><td></td>
+              </tr>
+            </ng-container>
+            <tr *ngIf="!cargandoLista && egresos.length === 0" class="np-empty">
+              <td colspan="7"><strong>No hay egresos con estos filtros.</strong>Cambiá el período o quitá el filtro del aviso.</td>
+            </tr>
+            <tr *ngFor="let e of egresos; trackBy: porId" class="np-row" (click)="abrirEditar(e)" tabindex="0" (keydown.enter)="abrirEditar(e)">
+              <td class="np-stripe"><i [style.background]="colorDeCategoria(e.category) || 'var(--danger)'"></i></td>
+              <td class="np-data" [class.np-data--dim]="!e.fecha">{{ e.fecha ? (e.fecha | date:'dd/MM/yy') : 'sin fecha' }}</td>
+              <td>
+                <div class="np-name">{{ e.concept }}</div>
+                <div class="np-plan">
+                  <ng-container *ngIf="e.supplier">{{ e.supplier }}</ng-container>
+                  <ng-container *ngIf="e.document_number"> · <em>{{ e.document_number }}</em></ng-container>
+                  <ng-container *ngIf="e.recurrence"> · se repite {{ e.recurrence }}</ng-container>
+                </div>
+              </td>
+              <td><span class="np-tag" [class.np-eg-tag-vacia]="!e.category">{{ e.category || 'Sin categoría' }}</span></td>
+              <td class="np-data" [class.np-data--dim]="!e.payment_method_name">{{ e.payment_method_name || 'sin método' }}</td>
+              <td class="np-money np-neg">{{ pesos(e.value) }}</td>
+              <td class="np-td-right">
+                <div class="np-rowacts" (click)="$event.stopPropagation()">
+                  <button type="button" class="np-icobtn" *ngIf="e.tiene_adjunto" (click)="verComprobante(e)" title="Ver comprobante">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.5 12.5 21a5 5 0 0 1-7-7l8-8a3.5 3.5 0 0 1 5 5l-8 8a2 2 0 0 1-3-3l7.5-7.5"/></svg>
+                  </button>
+                  <button type="button" class="np-icobtn" (click)="abrirEditar(e)" title="Editar">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 20h4L18 10l-4-4L4 16v4zM13 7l4 4"/></svg>
+                  </button>
+                  <button type="button" class="np-icobtn" (click)="abrirBorrar(e)" title="Eliminar">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/></svg>
+                  </button>
+                </div>
+              </td>
             </tr>
           </tbody>
         </table>
       </div>
-      <div class="np-pager" *ngIf="!loading && total > 0">
-        <span class="np-range">{{ (page - 1) * perPage + 1 }}–{{ page * perPage > total ? total : page * perPage }} de {{ total | number }}</span>
+      <div class="np-pager" *ngIf="!cargandoLista && total > 0">
+        <span class="np-range">{{ (pagina - 1) * porPagina + 1 }}–{{ pagina * porPagina > total ? total : pagina * porPagina }} de {{ total | number }} · suman <b>{{ pesos(suma) }}</b></span>
+        <label class="np-pagesize">Mostrar
+          <np-select [(ngModel)]="porPagina" (ngModelChange)="cambiarPorPagina()" [opciones]="opcionesPorPagina" [presentacion]="presPorPagina" tamano="sm" style="min-width: 140px" ariaLabel="Registros por página"></np-select>
+        </label>
         <div class="np-pages">
-          <button type="button" (click)="prevPage()" [disabled]="page === 1">‹</button>
-          <button type="button" *ngFor="let p of pages" (click)="goToPage(p)" [attr.aria-current]="p === page ? 'page' : null">{{ p }}</button>
-          <button type="button" (click)="nextPage()" [disabled]="page === lastPage">›</button>
+          <button type="button" (click)="anterior()" [disabled]="pagina === 1">‹</button>
+          <button type="button" *ngFor="let p of paginas; trackBy: porValor" (click)="irAPagina(p)" [attr.aria-current]="p === pagina ? 'page' : null">{{ p }}</button>
+          <button type="button" (click)="siguiente()" [disabled]="pagina === ultimaPagina">›</button>
         </div>
       </div>
     </section>
   </div>
-</div>
 
-<!-- ══ Crear / editar ══════════════════════════════════════════════════════ -->
-<div *ngIf="modal" class="np-overlay" (click)="modal = false">
-  <div class="np-modal" role="dialog" aria-modal="true" (click)="$event.stopPropagation()">
-    <div class="np-modal-head"><div><p class="np-kicker">Egresos <b>/</b> {{ modalMode === 'create' ? 'Nuevo' : 'Editar' }}</p><h3>{{ modalMode === 'create' ? 'Nuevo egreso' : 'Editar egreso' }}</h3></div></div>
-    <div class="np-modal-body">
-      <div class="np-form">
-        <label class="np-field np-field-full"><span>Concepto <em>*</em></span><input type="text" class="np-input" [(ngModel)]="form.concept" placeholder="Descripción del gasto" /></label>
-        <label class="np-field"><span>Categoría</span><np-select [(ngModel)]="form.category" [opciones]="categories" [presentacion]="presCategorias" textoBuscar="Buscar categoría…" ariaLabel="Categoría"></np-select></label>
-        <label class="np-field"><span>Valor <em>*</em></span><input type="number" class="np-input np-mono" [(ngModel)]="form.value" min="1" /></label>
-        <label class="np-field np-field-full" *ngIf="activePaymentMethods.length > 0"><span>Método de pago</span><np-select [(ngModel)]="form.payment_method_id" [opciones]="activePaymentMethods" [presentacion]="presMetodos" [permitirVacio]="true" textoVacio="Sin especificar" placeholder="Sin especificar" ariaLabel="Método de pago"></np-select></label>
+  <!-- ══ Tipos de egreso ══════════════════════════════════════════════════ -->
+  <div class="np-scroll" *ngIf="pestana === 'categorias'">
+    <div class="np-card">
+      <div class="np-card-h">
+        <h2>Tipos de egreso de la empresa</h2>
+        <span class="np-card-meta">{{ categorias.length }} en el catálogo</span>
       </div>
-      <div class="np-btnrow np-btnrow--end"><button type="button" class="np-btn np-btn--ghost" (click)="modal = false">Cancelar</button><button type="button" class="np-btn np-btn--primary" (click)="saveForm()" [disabled]="!form.concept.trim() || form.value <= 0">{{ modalMode === 'create' ? 'Guardar' : 'Actualizar' }}</button></div>
+      <p class="np-muted np-eg-nota">
+        Cada empresa tiene su propio catálogo. Renombrar arrastra el nombre a los movimientos viejos;
+        el tipo que ya tiene movimientos no se puede borrar, se desactiva para que deje de ofrecerse al registrar.
+      </p>
+
+      <div class="np-form np-form--row np-eg-nueva">
+        <label class="np-field"><span>Nuevo tipo de egreso</span>
+          <input type="text" class="np-input" [(ngModel)]="nuevaCategoria.name" (keydown.enter)="crearCategoria()" placeholder="Ancho de banda, Nómina, Arriendo…" maxlength="120" />
+        </label>
+        <button type="button" class="np-btn np-btn--primary" (click)="crearCategoria()" [disabled]="!nuevaCategoria.name.trim()">Agregar</button>
+      </div>
+
+      <div class="np-loading" *ngIf="cargandoCategorias"><span class="np-spinner"></span> Cargando el catálogo…</div>
+
+      <div class="np-tablewrap" *ngIf="!cargandoCategorias">
+        <table class="np-table np-table--compact">
+          <thead><tr><th>Tipo</th><th>Color</th><th class="np-th-right">Movimientos</th><th class="np-th-right">Total histórico</th><th>Estado</th><th class="np-th-right">Acciones</th></tr></thead>
+          <tbody>
+            <tr *ngIf="categorias.length === 0" class="np-empty"><td colspan="6"><strong>Todavía no hay tipos de egreso.</strong></td></tr>
+            <tr *ngFor="let c of categorias; trackBy: porId" [class.np-eg-inactiva]="!c.active">
+              <td>
+                <ng-container *ngIf="editandoId !== c.id">
+                  <div class="np-name">{{ c.name }}</div>
+                </ng-container>
+                <span class="np-eg-editar" *ngIf="editandoId === c.id">
+                  <input type="text" class="np-input np-input--sm" [(ngModel)]="nombreEditado" (keydown.enter)="guardarNombre(c)" (keydown.escape)="cancelarRenombrar()" maxlength="120" />
+                  <button type="button" class="np-btn np-btn--primary np-btn--sm" (click)="guardarNombre(c)">Guardar</button>
+                  <button type="button" class="np-btn np-btn--ghost np-btn--sm" (click)="cancelarRenombrar()">Cancelar</button>
+                </span>
+              </td>
+              <td>
+                <span class="np-eg-colores">
+                  <button type="button" class="np-eg-color" *ngFor="let col of paleta; trackBy: porValor"
+                          [style.background]="col" [class.is-on]="c.color === col" (click)="ponerColor(c, col)"
+                          [attr.aria-label]="'Color ' + col" [attr.title]="'Color ' + col"></button>
+                </span>
+              </td>
+              <td class="np-data np-td-right">{{ c.movimientos | number }}</td>
+              <td class="np-money">{{ pesos(c.total) }}</td>
+              <td><span class="np-pill" [class.np-pill--active]="c.active" [class.np-pill--neutral]="!c.active">{{ c.active ? 'Activo' : 'Inactivo' }}</span></td>
+              <td class="np-td-right">
+                <div class="np-btnrow np-btnrow--end np-eg-acciones">
+                  <button type="button" class="np-btn np-btn--ghost np-btn--sm" (click)="empezarRenombrar(c)" *ngIf="editandoId !== c.id">Renombrar</button>
+                  <button type="button" class="np-btn np-btn--ghost np-btn--sm" (click)="alternarCategoria(c)">{{ c.active ? 'Desactivar' : 'Activar' }}</button>
+                  <button type="button" class="np-btn np-btn--danger np-btn--sm" (click)="borrarCategoria(c)"
+                          [disabled]="c.movimientos > 0 || c.ligada"
+                          [attr.title]="(c.movimientos > 0 || c.ligada) ? 'Tiene movimientos: desactivala en vez de borrarla' : 'Eliminar'">Eliminar</button>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
     </div>
   </div>
 </div>
 
-<div *ngIf="deleteModal" class="np-overlay" (click)="deleteModal = false">
+<!-- ══ Crear / editar egreso ═══════════════════════════════════════════════ -->
+<div *ngIf="modal" class="np-overlay" (click)="modal = false">
+  <div class="np-modal np-modal--lg" role="dialog" aria-modal="true" (click)="$event.stopPropagation()">
+    <div class="np-modal-head">
+      <div>
+        <p class="np-kicker">Egresos <b>/</b> {{ modoModal === 'crear' ? 'Nuevo' : 'Editar' }}</p>
+        <h3>{{ modoModal === 'crear' ? 'Nuevo egreso' : 'Editar egreso' }}</h3>
+      </div>
+    </div>
+    <div class="np-modal-body">
+      <div class="np-form">
+        <label class="np-field np-field-full"><span>Concepto <em>*</em></span>
+          <input type="text" class="np-input" [(ngModel)]="form.concept" placeholder="Qué se pagó" maxlength="200" />
+        </label>
+
+        <label class="np-field"><span>Fecha del gasto</span>
+          <input type="date" class="np-input" [(ngModel)]="form.expense_date" />
+        </label>
+        <label class="np-field"><span>Valor <em>*</em></span>
+          <input type="number" class="np-input np-mono" [(ngModel)]="form.value" min="1" placeholder="0" />
+        </label>
+
+        <label class="np-field"><span>Categoría</span>
+          <np-select [(ngModel)]="form.category" [opciones]="nombresDeCategoria" [presentacion]="presTextos" textoBuscar="Buscar categoría…" ariaLabel="Categoría"></np-select>
+        </label>
+        <label class="np-field"><span>Método de pago</span>
+          <np-select [(ngModel)]="form.payment_method_id" [opciones]="metodosActivos" [presentacion]="presMetodos"
+                     [permitirVacio]="true" textoVacio="Sin especificar" placeholder="Sin especificar" ariaLabel="Método de pago"></np-select>
+        </label>
+
+        <label class="np-field"><span>Proveedor o beneficiario</span>
+          <input type="text" class="np-input" [(ngModel)]="form.supplier" placeholder="A quién se le pagó" maxlength="160" />
+        </label>
+        <label class="np-field"><span>N.º de comprobante o factura</span>
+          <input type="text" class="np-input np-mono" [(ngModel)]="form.document_number" placeholder="FAC-000123" maxlength="60" />
+        </label>
+
+        <label class="np-field np-field-full"><span>Se repite</span>
+          <np-select [(ngModel)]="form.recurrence" [opciones]="opcionesRecurrencia" [presentacion]="presSimple" ariaLabel="Recurrencia"></np-select>
+        </label>
+
+        <label class="np-field np-field-full"><span>Notas</span>
+          <textarea class="np-input np-eg-notas" [(ngModel)]="form.notes" rows="2" maxlength="2000" placeholder="Detalle para acordarte después"></textarea>
+        </label>
+
+        <div class="np-field np-field-full">
+          <span>Comprobante (PDF o imagen, hasta 8 MB)</span>
+          <input type="file" class="np-input np-eg-archivo" accept=".pdf,.jpg,.jpeg,.png,.webp" (change)="alElegirArchivo($event)" />
+          <p class="np-muted np-eg-nota" *ngIf="adjuntoActual && !archivo">Ya tiene adjunto: <b>{{ adjuntoActual }}</b>. Si subís otro, lo reemplaza.</p>
+          <p class="np-muted np-eg-nota">Se guarda en carpeta privada: sólo se abre desde acá, con tu sesión.</p>
+        </div>
+      </div>
+
+      <div class="np-btnrow np-btnrow--end">
+        <button type="button" class="np-btn np-btn--ghost" (click)="modal = false">Cancelar</button>
+        <button type="button" class="np-btn np-btn--primary" (click)="guardar()" [disabled]="!formValido || guardando">
+          <span *ngIf="guardando" class="np-spinner np-spinner--sm"></span>{{ modoModal === 'crear' ? 'Guardar' : 'Actualizar' }}
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div *ngIf="modalBorrar" class="np-overlay" (click)="modalBorrar = false">
   <div class="np-modal np-modal--confirm" role="alertdialog" aria-modal="true" (click)="$event.stopPropagation()">
     <span class="np-confirm-icon is-danger"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/></svg></span>
-    <h3>¿Eliminar el egreso?</h3><p>Esta acción no se puede deshacer.</p>
-    <div class="np-btnrow np-btnrow--center"><button type="button" class="np-btn np-btn--ghost" (click)="deleteModal = false">Cancelar</button><button type="button" class="np-btn np-btn--danger-solid" (click)="confirmDelete()">Eliminar</button></div>
+    <h3>¿Eliminar el egreso?</h3><p>Esta acción no se puede deshacer. También se borra su comprobante adjunto.</p>
+    <div class="np-btnrow np-btnrow--center">
+      <button type="button" class="np-btn np-btn--ghost" (click)="modalBorrar = false">Cancelar</button>
+      <button type="button" class="np-btn np-btn--danger-solid" (click)="confirmarBorrar()">Eliminar</button>
+    </div>
   </div>
 </div>

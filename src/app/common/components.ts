@@ -169,18 +169,6 @@ export const components: RouteProps[] = [
         },
       },
       {
-        title: 'Historial Facturas',
-        icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5M9 13h6M9 17h6"/></svg>`,
-        href: 'history-Facture',
-        module: 'history-facture',
-        group: false,
-        roles: [2, 4],
-        card: {
-          className: 'w-56',
-          images: { light: 'alerts-light.svg', dark: 'alerts-dark.svg' },
-        },
-      },
-      {
         title: 'Resumen Financiero',
         icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19h16M6 15V9M10 15V5M14 15v-4M18 15V7"/></svg>`,
         href: 'resumen',
