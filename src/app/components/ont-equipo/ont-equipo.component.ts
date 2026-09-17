@@ -61,7 +61,7 @@ export class OntEquipoComponent implements OnChanges {
   urlAcs = '';
 
   /** La red a la que se le está cambiando la contraseña. */
-  cambiandoClave: { indice: number; clave: string; todas: boolean } | null = null;
+  cambiandoClave: { indice: number; clave: string; ssid: string; todas: boolean } | null = null;
   guardandoClave = false;
   avisoClave: { texto: string; tipo: 'ok' | 'error' } | null = null;
 
@@ -80,8 +80,16 @@ export class OntEquipoComponent implements OnChanges {
   get redesConClave(): number { return this.redesAcs.filter((r: any) => !!r.ruta_clave && r.activo === true).length; }
 
   empezarCambioClave(r: any) {
-    this.cambiandoClave = { indice: r.indice, clave: '', todas: true };
+    this.cambiandoClave = { indice: r.indice, clave: '', ssid: r.ssid ?? '', todas: true };
     this.avisoClave = null;
+  }
+
+  /** El nombre de la red cambia sólo si lo tocaron: se compara con el actual. */
+  private ssidNuevo(c: { indice: number; ssid: string }): string | null {
+    const nuevo = (c.ssid ?? '').trim();
+    const actual = (this.redesAcs.find((r: any) => r.indice === c.indice)?.ssid ?? '').trim();
+
+    return nuevo !== '' && nuevo !== actual ? nuevo : null;
   }
 
   /** Una contraseña fácil de dictar por teléfono: sin 0/O ni 1/l. */
@@ -98,26 +106,39 @@ export class OntEquipoComponent implements OnChanges {
     if (!c || !this.acs?.id) return;
 
     const clave = c.clave.trim();
-    if (clave.length < 8 || clave.length > 63) {
+    const ssid = this.ssidNuevo(c);
+
+    if (clave !== '' && (clave.length < 8 || clave.length > 63)) {
       this.avisoClave = { texto: 'La contraseña debe tener entre 8 y 63 caracteres.', tipo: 'error' };
       return;
     }
 
-    const todas = c.todas && this.redesConClave > 1;
+    if (ssid !== null && ssid.length > 32) {
+      this.avisoClave = { texto: 'El nombre de la red no puede pasar de 32 caracteres.', tipo: 'error' };
+      return;
+    }
+
+    if (clave === '' && ssid === null) {
+      this.avisoClave = { texto: 'Cambiá el nombre de la red, la contraseña, o las dos.', tipo: 'error' };
+      return;
+    }
+
+    // El nombre es de esta red: si fueran las dos bandas quedarían con el mismo
+    // nombre y el cliente no podría distinguirlas.
+    const todas = c.todas && this.redesConClave > 1 && ssid === null;
     this.guardandoClave = true;
-    this.acsSvc.cambiarWifi(this.acs.id, c.indice, null, clave, todas).subscribe({
+    this.acsSvc.cambiarWifi(this.acs.id, c.indice, ssid, clave || null, todas).subscribe({
       next: (r: any) => {
         this.guardandoClave = false;
-        if (r?.error !== 0) { this.avisoClave = { texto: r?.message || 'No se pudo cambiar la contraseña.', tipo: 'error' }; return; }
+        if (r?.error !== 0) { this.avisoClave = { texto: r?.message || 'No se pudo cambiar el WiFi.', tipo: 'error' }; return; }
         this.cambiandoClave = null;
-        this.avisoClave = {
-          texto: (todas ? 'Contraseña cambiada en todas las redes.' : 'Contraseña cambiada.') + ' Los equipos del cliente tienen que volver a conectarse con la nueva.',
-          tipo: 'ok',
-        };
+        const hecho = clave !== '' && ssid !== null ? 'Nombre y contraseña cambiados.'
+          : (ssid !== null ? `La red ahora se llama «${ssid}».` : (todas ? 'Contraseña cambiada en todas las redes.' : 'Contraseña cambiada.'));
+        this.avisoClave = { texto: hecho + ' Los equipos del cliente tienen que volver a conectarse.', tipo: 'ok' };
         // El equipo tarda unos segundos en aplicarlo y reportarlo.
         setTimeout(() => this.acsSvc.deCliente(this.userId).subscribe({ next: (x: any) => { if (x?.error === 0) this.acs = x.data; } }), 5000);
       },
-      error: () => { this.guardandoClave = false; this.avisoClave = { texto: 'No se pudo cambiar la contraseña.', tipo: 'error' }; },
+      error: () => { this.guardandoClave = false; this.avisoClave = { texto: 'No se pudo cambiar el WiFi.', tipo: 'error' }; },
     });
   }
 
