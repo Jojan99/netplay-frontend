@@ -109,6 +109,7 @@ export class ImportadorComponent implements OnInit, OnDestroy {
       next: (r: any) => {
         const d = r?.data ?? {};
         this.campos = d.campos ?? {};
+        this.camposLista = Object.entries(this.campos).map(([campo, etiqueta]) => ({ campo, etiqueta }));
         this.planes = d.planes ?? [];
         this.routers = d.routers ?? [];
         this.grupos = d.grupos ?? [];
@@ -201,9 +202,14 @@ export class ImportadorComponent implements OnInit, OnDestroy {
   }
 
   // ── Paso 2 (archivo): columnas ───────────────────────────────────────
-  get camposLista(): { campo: string; etiqueta: string }[] {
-    return Object.entries(this.campos).map(([campo, etiqueta]) => ({ campo, etiqueta }));
-  }
+  /**
+   * Los campos a mapear, armados una sola vez. Como getter devolvía un arreglo
+   * nuevo en cada ciclo de Angular, el *ngFor rehacía los selectores sin parar y
+   * la pestaña se colgaba al subir un archivo.
+   */
+  camposLista: { campo: string; etiqueta: string }[] = [];
+
+  porCampo = (_: number, c: { campo: string }) => c.campo;
 
   ejemploColumna(campo: string): string {
     const i = this.mapeo[campo];
@@ -267,6 +273,7 @@ export class ImportadorComponent implements OnInit, OnDestroy {
         break;
       case 'analizado':
         this.paso = 'previa';
+        this.resumirAnalisis();
         if (anterior !== 'analizado') this.prepararOpciones();
         this.cambiarFiltro('');
         break;
@@ -403,14 +410,16 @@ export class ImportadorComponent implements OnInit, OnDestroy {
     return Math.max(0, Math.min(elegidos, (this.a.total ?? 0) - (this.a.invalidos ?? 0)));
   }
 
-  get diasPago(): { dia: string; n: number; grupo: any }[] {
-    return Object.entries(this.a.dias_pago ?? {}).map(([dia, n]) => ({
+  // Se arman cuando llega el análisis y no en cada ciclo de Angular: un arreglo
+  // nuevo por ciclo rehace la lista entera todo el tiempo.
+  diasPago: { dia: string; n: number; grupo: any }[] = [];
+  erroresAgrupados: { texto: string; n: number }[] = [];
+
+  private resumirAnalisis(): void {
+    this.diasPago = Object.entries(this.a.dias_pago ?? {}).map(([dia, n]) => ({
       dia, n: n as number, grupo: this.grupos.find(g => Number(g.billing_day) === Number(dia))?.grupo ?? null,
     }));
-  }
-
-  get erroresAgrupados(): { texto: string; n: number }[] {
-    return Object.entries(this.a.errores ?? {}).map(([texto, n]) => ({ texto, n: n as number }));
+    this.erroresAgrupados = Object.entries(this.a.errores ?? {}).map(([texto, n]) => ({ texto, n: n as number }));
   }
 
   get puedeImportar(): boolean {

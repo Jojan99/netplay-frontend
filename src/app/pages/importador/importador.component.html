@@ -161,7 +161,7 @@
       </div>
 
       <div class="imp-mapeo">
-        <div class="imp-mapeo-fila" *ngFor="let c of camposLista">
+        <div class="imp-mapeo-fila" *ngFor="let c of camposLista; trackBy: porCampo">
           <div class="imp-mapeo-campo">
             <b>{{ c.etiqueta }}</b><em *ngIf="c.campo === 'dni' || c.campo === 'nombre'"> *</em>
           </div>
