@@ -365,6 +365,14 @@ export const components: RouteProps[] = [
         card: { className: 'w-56', images: { light: 'alerts-light.svg', dark: 'alerts-dark.svg' } },
       },
       {
+        title: 'Avisos y destinos',
+        icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 0 0-12 0c0 6-2 7-2 7h16s-2-1-2-7"/><path d="M10.5 20a2 2 0 0 0 3 0"/></svg>`,
+        href: 'whatsapp/netplay/avisos',
+        group: false,
+        roles: [2],
+        card: { className: 'w-56', images: { light: 'alerts-light.svg', dark: 'alerts-dark.svg' } },
+      },
+      {
         title: 'API Meta',
         icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"/></svg>`,
         href: 'whatsapp/meta',

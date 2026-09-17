@@ -130,11 +130,16 @@ export class CompanyWhatsappService {
     return this.http.post(`${this.env.rootUrl}api/company/notification-routes`, JSON.stringify(data), { headers: this.getHeaders() });
   }
 
-  updateNotificationRoute(id: number, data: { enabled?: boolean; label?: string }): Observable<any> {
+  updateNotificationRoute(id: number, data: { enabled?: boolean; label?: string; destination?: string }): Observable<any> {
     return this.http.put(`${this.env.rootUrl}api/company/notification-routes/${id}`, JSON.stringify(data), { headers: this.getHeaders() });
   }
 
   deleteNotificationRoute(id: number): Observable<any> {
     return this.http.delete(`${this.env.rootUrl}api/company/notification-routes/${id}`, { headers: this.getHeaders() });
+  }
+
+  /** Manda un mensaje de prueba al destino, para ver dónde cae antes de confiar en él. */
+  probarNotificationRoute(id: number): Observable<any> {
+    return this.http.post(`${this.env.rootUrl}api/company/notification-routes/probar`, JSON.stringify({ id }), { headers: this.getHeaders() });
   }
 }

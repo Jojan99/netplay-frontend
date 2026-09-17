@@ -1,125 +1,160 @@
-<div class="p-6 max-w-4xl mx-auto space-y-6">
+<div class="np-page np-wa-avisos">
 
-  <div>
-    <h1 class="text-2xl font-bold text-gray-800 dark:text-white">Notificaciones WhatsApp</h1>
-    <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">
-      Define a qué número o grupo de WhatsApp se envía cada tipo de evento del sistema.
-    </p>
-  </div>
-
-  <!-- Loading -->
-  <div *ngIf="loading" class="flex justify-center py-12">
-    <div class="w-6 h-6 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
-  </div>
-
-  <div *ngIf="!loading" class="space-y-6">
-
-    <!-- ═══ Rutas por evento ═══════════════════════════════════════════════ -->
-    <div *ngFor="let key of eventKeys"
-         class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-5">
-
-      <h3 class="font-semibold text-gray-800 dark:text-white text-sm mb-3">{{ eventTypes[key] }}</h3>
-
-      <div *ngIf="routesByEvent(key).length === 0"
-           class="text-xs text-gray-400 dark:text-gray-500 italic">
-        Sin destinos configurados para este evento.
-      </div>
-
-      <div class="space-y-2">
-        <div *ngFor="let r of routesByEvent(key)"
-             class="flex items-center gap-3 px-3 py-2 rounded-lg"
-             [ngClass]="r.enabled ? 'bg-gray-50 dark:bg-gray-700/50' : 'bg-gray-100 dark:bg-gray-800 opacity-60'">
-
-          <!-- toggle -->
-          <button (click)="toggle(r)"
-                  class="shrink-0 w-8 h-4 rounded-full relative transition-colors"
-                  [ngClass]="r.enabled ? 'bg-green-500' : 'bg-gray-300 dark:bg-gray-600'">
-            <span class="absolute top-0.5 w-3 h-3 bg-white rounded-full shadow transition-all"
-                  [ngClass]="r.enabled ? 'left-4' : 'left-0.5'"></span>
-          </button>
-
-          <div class="flex-1 min-w-0">
-            <p class="text-sm font-medium text-gray-700 dark:text-gray-200 truncate">
-              {{ r.label || formatDest(r.destination) }}
-            </p>
-            <p class="text-xs text-gray-400 truncate">{{ formatDest(r.destination) }}</p>
-          </div>
-
-          <button (click)="delete(r)"
-                  class="shrink-0 text-gray-400 hover:text-red-500 transition">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
-            </svg>
-          </button>
-        </div>
+  <header class="np-head">
+    <div>
+      <p class="np-kicker">WhatsApp <b>/</b> Web (QR) <b>/</b> Avisos</p>
+      <h1 class="np-title">Avisos y destinos</h1>
+      <div class="np-ribbon">
+        <span><span class="np-n">{{ avisosPrendidos }}</span>avisos prendidos</span>
+        <span><span class="np-n">{{ totalDestinos }}</span>destinos</span>
+        <span>a qué grupo o número llega cada cosa</span>
       </div>
     </div>
+    <div class="np-actions">
+      <button type="button" class="np-btn np-btn--ghost np-btn--sm" (click)="cargarGrupos()" [disabled]="cargandoGrupos || !lineaConectada">
+        {{ cargandoGrupos ? 'Leyendo grupos…' : 'Actualizar grupos' }}
+      </button>
+    </div>
+  </header>
 
-    <!-- ═══ Agregar nueva ruta ══════════════════════════════════════════════ -->
-    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-5">
-      <h3 class="font-semibold text-gray-800 dark:text-white text-sm mb-4">Agregar destino</h3>
+  <!-- Sin línea de WhatsApp Web no hay grupos ni envíos. -->
+  <p *ngIf="!cargando && !lineaConectada" class="np-notice np-notice--warn">
+    <strong>Esta empresa todavía no tiene una línea de WhatsApp Web conectada.</strong>
+    Los avisos que configures acá no van a salir hasta que vincules el teléfono.
+    <a routerLink="/dashboard/whatsapp/netplay/instancias" class="np-link">Conectar la línea (QR)</a>
+  </p>
 
-      <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-4">
-        <div>
-          <label class="block text-xs font-medium text-gray-500 mb-1">Evento</label>
-          <np-select [(ngModel)]="addForm.event_type" [opciones]="eventKeys" [presentacion]="presEventos"
-                     placeholder="Elegí un evento…" [valorVacio]="''" ariaLabel="Evento"></np-select>
-        </div>
-        <div>
-          <label class="block text-xs font-medium text-gray-500 mb-1">Número o JID de grupo</label>
-          <input [(ngModel)]="addForm.destination" type="text" placeholder="Ej: 3200000000 o JID@g.us"
-                 class="w-full px-3 py-2 text-sm border border-gray-200 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-blue-500">
-        </div>
-        <div>
-          <label class="block text-xs font-medium text-gray-500 mb-1">Etiqueta (opcional)</label>
-          <input [(ngModel)]="addForm.label" type="text" placeholder="Ej: Grupo ventas"
-                 class="w-full px-3 py-2 text-sm border border-gray-200 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-blue-500">
-        </div>
+  <p *ngIf="!cargando && lineaConectada && !waActivado" class="np-notice np-notice--warn">
+    La línea está conectada pero WhatsApp está apagado para esta empresa.
+    Las alertas de red igual salen; los demás avisos, no.
+    <a routerLink="/dashboard/whatsapp/netplay/panel" class="np-link">Ver la configuración</a>
+  </p>
+
+  <div *ngIf="cargando" class="np-emptystate"><span class="np-spinner"></span></div>
+
+  <div *ngIf="!cargando" class="np-avisos-lista">
+
+    <section *ngFor="let s of secciones; trackBy: porSeccion" class="np-card np-aviso-seccion">
+      <div class="np-card-h">
+        <h2>{{ s.nombre }}</h2>
+        <span class="np-tag np-tag--neutral">{{ s.activos }} de {{ s.avisos.length }} prendidos</span>
       </div>
 
-      <button (click)="addRoute()" [disabled]="saving || !addForm.destination"
-              class="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-50 rounded-lg flex items-center gap-2 transition">
-        <span *ngIf="saving" class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
-        Agregar destino
+      <div class="np-aviso" *ngFor="let a of s.avisos; trackBy: porAviso" [class.is-off]="!a.encendido">
+
+        <div class="np-aviso-top">
+          <button type="button" class="np-switch" role="switch"
+                  [attr.aria-checked]="a.encendido" [attr.aria-label]="a.titulo"
+                  (click)="alternarAviso(a)"></button>
+
+          <div class="np-aviso-id">
+            <h3>{{ a.titulo }}</h3>
+            <p class="np-aviso-cuando">{{ a.cuando }}</p>
+            <p *ngIf="a.resumen" class="np-fine">{{ a.resumen }}</p>
+          </div>
+
+          <button type="button" class="np-btn np-btn--ghost np-btn--sm" (click)="abrirNuevo(a)">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M12 5v14M5 12h14"/></svg>
+            Destino
+          </button>
+        </div>
+
+        <div class="np-destinos" *ngIf="a.destinos.length">
+          <div class="np-destino" *ngFor="let d of a.destinos; trackBy: porDestino" [class.is-off]="!d.enabled">
+            <span class="np-destino-ico" [class.is-grupo]="d.esGrupo">{{ d.esGrupo ? '👥' : '📱' }}</span>
+
+            <div class="np-destino-id">
+              <span class="np-destino-nombre">{{ d.texto }}</span>
+              <span class="np-fine">{{ d.detalle }}</span>
+            </div>
+
+            <span class="np-state" [class.is-off]="!d.enabled">{{ d.enabled ? 'activo' : 'en pausa' }}</span>
+
+            <div class="np-rowacts is-visible">
+              <button type="button" class="np-icobtn" (click)="probar(d)" [disabled]="probando === d.id" title="Mandar un mensaje de prueba">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 12l16-8-6 16-2.5-6.5L4 12z"/></svg>
+              </button>
+              <button type="button" class="np-icobtn" (click)="alternarDestino(d)" [title]="d.enabled ? 'Poner en pausa' : 'Activar'">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v9"/><path d="M6.5 6.5a8 8 0 1 0 11 0"/></svg>
+              </button>
+              <button type="button" class="np-icobtn" (click)="abrirEdicion(a, d)" title="Editar">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 20h4l10-10-4-4L4 16v4z"/><path d="M13.5 6.5l4 4"/></svg>
+              </button>
+              <button type="button" class="np-icobtn" (click)="eliminar(d)" title="Quitar destino">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/></svg>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <p *ngIf="!a.destinos.length" class="np-aviso-vacio">
+          Nadie recibe este aviso todavía.
+        </p>
+      </div>
+    </section>
+
+  </div>
+</div>
+
+<!-- ═══ Elegir el destino ═══════════════════════════════════════════════════ -->
+<div *ngIf="modalAbierto" class="np-overlay" (click)="cerrarModal()">
+  <div class="np-modal" role="dialog" aria-modal="true" (click)="$event.stopPropagation()">
+    <div class="np-modal-head">
+      <div>
+        <p class="np-kicker">Avisos <b>/</b> Destino</p>
+        <h3>{{ destinoEnEdicion ? 'Cambiar destino' : 'Agregar destino' }}</h3>
+      </div>
+      <button type="button" class="np-icobtn" (click)="cerrarModal()" aria-label="Cerrar">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M6 6l12 12M18 6 6 18"/></svg>
       </button>
     </div>
 
-    <!-- ═══ Grupos de WhatsApp disponibles ══════════════════════════════════ -->
-    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-5">
-      <div class="flex items-center justify-between mb-3">
-        <h3 class="font-semibold text-gray-800 dark:text-white text-sm">Grupos de tu instancia</h3>
-        <button (click)="loadGroups()" [disabled]="loadingGroups"
-                class="text-xs text-blue-600 hover:underline disabled:opacity-50">
-          {{ loadingGroups ? 'Cargando...' : 'Actualizar' }}
-        </button>
-      </div>
-
-      <p class="text-xs text-gray-400 mb-3">
-        Haz clic en un grupo para usarlo como destino en el formulario de arriba.
+    <div class="np-modal-body">
+      <p class="np-notice np-notice--code" *ngIf="avisoEnEdicion">
+        <strong>{{ avisoEnEdicion.titulo }}</strong><br>{{ avisoEnEdicion.cuando }}
       </p>
 
-      <div *ngIf="!loadingGroups && groups.length === 0"
-           class="text-xs text-gray-400 italic">
-        No se encontraron grupos (asegúrate de tener la instancia conectada).
+      <div class="np-chips" role="group" aria-label="Tipo de destino">
+        <button type="button" class="np-chip" [attr.aria-pressed]="tipoDestino === 'grupo'" (click)="elegirTipo('grupo')">👥 Grupo de WhatsApp</button>
+        <button type="button" class="np-chip" [attr.aria-pressed]="tipoDestino === 'numero'"
+                [disabled]="avisoEnEdicion?.soloGrupo" (click)="elegirTipo('numero')">📱 Número</button>
       </div>
 
-      <div class="space-y-1 max-h-60 overflow-y-auto">
-        <button *ngFor="let g of groups"
-                (click)="selectGroup(g.jid, g.name)"
-                class="w-full text-left px-3 py-2 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-900/20 transition flex items-center gap-3">
-          <span class="w-8 h-8 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center text-green-700 text-xs font-bold shrink-0">
-            {{ g.name.charAt(0) }}
-          </span>
-          <div class="min-w-0">
-            <p class="text-sm font-medium text-gray-700 dark:text-gray-200 truncate">{{ g.name }}</p>
-            <p class="text-xs text-gray-400">{{ g.participants }} participantes</p>
-          </div>
-          <svg class="w-4 h-4 text-gray-300 ml-auto shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/>
-          </svg>
+      <p *ngIf="avisoEnEdicion?.soloGrupo" class="np-fine">
+        Las alertas de la red van siempre a un grupo: es donde están los técnicos.
+      </p>
+
+      <div class="np-form">
+        <label class="np-field np-field-full" *ngIf="tipoDestino === 'grupo'">
+          <span>Grupo de la línea</span>
+          <np-select [(ngModel)]="grupoElegido" [opciones]="grupos" [presentacion]="presGrupos"
+                     [cargando]="cargandoGrupos" placeholder="Elegí un grupo…" [valorVacio]="null"
+                     textoSinOpciones="La línea no está en ningún grupo." ariaLabel="Grupo de WhatsApp"></np-select>
+        </label>
+
+        <label class="np-field np-field-full" *ngIf="tipoDestino === 'numero'">
+          <span>Número con indicativo</span>
+          <input class="np-input np-mono" [(ngModel)]="numero" type="tel" inputmode="numeric" placeholder="573001234567" />
+        </label>
+
+        <label class="np-field np-field-full">
+          <span>Nombre para reconocerlo (opcional)</span>
+          <input class="np-input" [(ngModel)]="etiqueta" type="text" placeholder="Ej: Grupo de técnicos" />
+        </label>
+      </div>
+
+      <p *ngIf="tipoDestino === 'grupo' && errorGrupos" class="np-notice np-notice--warn np-notice--inline">
+        {{ errorGrupos }} Para que aparezca, la línea de la empresa tiene que estar dentro del grupo.
+      </p>
+
+      <p *ngIf="errorModal" class="np-notice np-notice--danger">{{ errorModal }}</p>
+
+      <div class="np-btnrow np-btnrow--end">
+        <button type="button" class="np-btn np-btn--ghost" (click)="cerrarModal()">Cancelar</button>
+        <button type="button" class="np-btn np-btn--primary" (click)="guardarDestino()" [disabled]="guardando">
+          {{ guardando ? 'Guardando…' : (destinoEnEdicion ? 'Guardar' : 'Agregar destino') }}
         </button>
       </div>
     </div>
-
   </div>
 </div>

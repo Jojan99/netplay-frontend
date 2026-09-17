@@ -32,7 +32,7 @@ import { RouterModule } from '@angular/router';
 })
 export class NetplayLayoutComponent {
   readonly links = [
-    { path: 'panel', label: 'Configuración' }, { path: 'instancias', label: 'Instancias' }, { path: 'enviar', label: 'Enviar' },
+    { path: 'panel', label: 'Configuración' }, { path: 'instancias', label: 'Instancias' }, { path: 'avisos', label: 'Avisos' }, { path: 'enviar', label: 'Enviar' },
     { path: 'programados', label: 'Programados' }, { path: 'logs', label: 'Logs' }, { path: 'webhook', label: 'Webhook' },
   ];
 }

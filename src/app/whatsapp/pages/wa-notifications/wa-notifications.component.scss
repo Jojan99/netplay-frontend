@@ -1,0 +1,44 @@
+/* ─── Avisos y destinos: sólo lo propio ─────────────────────────────── */
+.np-avisos-lista { display: grid; gap: 16px; padding-bottom: 24px; }
+
+.np-aviso-seccion {
+  h2 { font-family: var(--font-display); font-size: 15px; font-weight: 600; margin: 0; letter-spacing: -0.01em; color: var(--text); }
+}
+
+.np-aviso {
+  display: grid; gap: 10px; padding: 12px 0;
+  border-top: 1px solid var(--line);
+  &:first-of-type { border-top: 0; padding-top: 0; }
+  &.is-off { opacity: .62; }
+}
+
+.np-aviso-top { display: flex; align-items: flex-start; gap: 12px; }
+.np-aviso-top .np-switch { margin-top: 2px; flex-shrink: 0; }
+.np-aviso-top > .np-btn { flex-shrink: 0; }
+
+.np-aviso-id {
+  min-width: 0; flex: 1;
+  h3 { font-size: 13.5px; font-weight: 700; margin: 0; color: var(--text); overflow-wrap: anywhere; }
+}
+.np-aviso-cuando { margin: 3px 0 0; font-size: 12px; color: var(--text-3); line-height: 1.4; }
+.np-aviso-vacio { margin: 0 0 0 48px; font-size: 12px; color: var(--text-3); font-style: italic; }
+
+.np-destinos { display: grid; gap: 6px; margin-left: 48px; }
+
+.np-destino {
+  display: flex; align-items: center; gap: 10px;
+  padding: 7px 10px; border-radius: var(--radius);
+  background: var(--surface-2); border: 1px solid var(--line);
+  &.is-off { background: transparent; }
+}
+.np-destino-ico { flex-shrink: 0; font-size: 14px; line-height: 1; }
+.np-destino-id { min-width: 0; flex: 1; display: grid; }
+.np-destino-nombre { font-size: 12.5px; font-weight: 700; color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.np-destino .np-state { flex-shrink: 0; }
+.np-destino .np-rowacts { flex-shrink: 0; }
+
+@media (max-width: 760px) {
+  .np-destinos, .np-aviso-vacio { margin-left: 0; }
+  .np-aviso-top { flex-wrap: wrap; }
+  .np-aviso-top > .np-btn { margin-left: 48px; }
+}
