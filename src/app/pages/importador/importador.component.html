@@ -157,7 +157,10 @@
           <h2 class="imp-h2">¿Qué columna es cada dato?</h2>
           <p class="np-muted">{{ imp.nombre_archivo }} · {{ imp.total }} filas. Lo marcado ya se reconoció solo; revisalo y completá lo que falte.</p>
         </div>
-        <button type="button" class="np-link np-link--muted" (click)="cancelar()">Descartar</button>
+        <div class="np-btnrow">
+          <button type="button" class="np-link" (click)="volverADetectar()">Volver a la detección automática</button>
+          <button type="button" class="np-link np-link--muted" (click)="cancelar()">Descartar</button>
+        </div>
       </div>
 
       <div class="imp-mapeo">
@@ -201,7 +204,10 @@
             <h2 class="imp-h2">Vista previa</h2>
             <p class="np-muted">Todavía no se guardó nada. Revisá y elegí cómo importar.</p>
           </div>
-          <button type="button" class="np-link np-link--muted" (click)="cancelar()">Descartar</button>
+          <div class="np-btnrow">
+            <button type="button" class="np-link" *ngIf="puedeRevisarColumnas" (click)="paso = 'columnas'">Revisar las columnas</button>
+            <button type="button" class="np-link np-link--muted" (click)="cancelar()">Descartar</button>
+          </div>
         </div>
 
         <div class="np-stats imp-stats">
@@ -228,11 +234,10 @@
       <section class="imp-card">
         <h2 class="imp-h2">Qué clientes importar</h2>
         <div class="imp-estados">
-          <label class="np-check np-check--box" *ngFor="let e of ['activo', 'suspendido', 'retirado']">
-            <input type="checkbox" [checked]="opciones.estados.includes(e)" (change)="alternarEstado(e)" />
-            <span><b>{{ textoEstado(e) }}s</b> · {{ (a.por_estado?.[e] ?? 0) + (e === 'activo' ? (a.por_estado?.desconocido ?? 0) : 0) | number }}
-              <small *ngIf="e === 'suspendido'" class="np-muted"><br>Quedan suspendidos también acá.</small>
-              <small *ngIf="e === 'retirado'" class="np-muted"><br>Entran dados de baja, sólo como historial.</small>
+          <label class="np-check np-check--box" *ngFor="let e of ESTADOS; trackBy: porValor">
+            <input type="checkbox" [checked]="opciones.estados.includes(e.v)" (change)="alternarEstado(e.v); recalcularResumen()" />
+            <span><b>{{ e.t }}</b> · {{ (a.por_estado?.[e.v] ?? 0) + (e.v === 'activo' ? (a.por_estado?.desconocido ?? 0) : 0) | number }}
+              <small class="np-muted"><br>{{ e.ayuda }}</small>
             </span>
           </label>
         </div>
@@ -245,23 +250,75 @@
         <p class="np-muted imp-nota" *ngIf="opciones.existentes === 'actualizar'">Se actualizan contacto, plan, router, conexión y estado con lo que trae {{ nombre(imp.origen) }}. Un dato vacío en el origen no borra el que hay.</p>
       </section>
 
-      <!-- Planes -->
+      <!-- Nombres y apellidos -->
       <section class="imp-card">
         <div class="imp-cardhead">
-          <h2 class="imp-h2">Planes</h2>
+          <div>
+            <h2 class="imp-h2">Nombres y apellidos</h2>
+            <p class="np-muted">{{ nombre(imp.origen) }} trae el nombre completo en una sola columna. Elegí cómo partirlo y mirá los ejemplos de tu propio archivo.</p>
+          </div>
+        </div>
+        <div class="imp-nombres">
+          <label class="np-field">
+            <span>Cómo separar</span>
+            <np-select [ngModel]="opciones.regla_nombre" (ngModelChange)="verNombres($event)" [opciones]="opcionesRegla" [presentacion]="pres" ariaLabel="Forma de separar el nombre"></np-select>
+          </label>
+          <div class="imp-ejemplos">
+            <div class="np-loading np-loading--inline" *ngIf="probandoNombres"><span class="np-spinner np-spinner--sm"></span>Probando…</div>
+            <table class="np-table np-table--compact" *ngIf="!probandoNombres && ejemplosNombre.length">
+              <thead><tr><th>Como viene</th><th>Nombres</th><th>Apellidos</th></tr></thead>
+              <tbody>
+                <tr *ngFor="let e of ejemplosNombre; trackBy: porCompleto">
+                  <td class="np-data np-data--dim">{{ e.completo }}</td>
+                  <td><b>{{ e.nombres }}</b></td>
+                  <td><b>{{ e.apellidos || '—' }}</b></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <p class="np-muted imp-nota">Si tu archivo ya trae los apellidos en otra columna, volvé al paso de columnas y asignala: en ese caso no se parte nada.</p>
+      </section>
+
+      <!-- Planes y su valor -->
+      <section class="imp-card">
+        <div class="imp-cardhead">
+          <div>
+            <h2 class="imp-h2">Planes y su valor mensual</h2>
+            <p class="np-muted">Sin valor no se le puede facturar al cliente: la factura le saldría en $0.</p>
+          </div>
           <span class="np-muted" *ngIf="planesACrear">Se van a crear {{ planesACrear }} planes.</span>
         </div>
         <div class="np-tablewrap">
           <table class="np-table np-table--compact imp-tabla-map">
-            <thead><tr><th>Plan en {{ nombre(imp.origen) }}</th><th class="np-th-right">Clientes</th><th>Velocidad · precio</th><th>Queda como</th></tr></thead>
+            <thead><tr><th>Plan en {{ nombre(imp.origen) }}</th><th class="np-th-right">Clientes</th><th>Velocidad</th><th>Queda como</th><th>Valor mensual</th></tr></thead>
             <tbody>
-              <tr *ngFor="let p of a.planes">
+              <tr *ngFor="let p of a.planes; trackBy: porClave">
                 <td><b>{{ p.nombre }}</b><div class="np-plan">{{ p.motivo }}</div></td>
                 <td class="np-data np-td-right">{{ p.clientes }}</td>
-                <td class="np-data">{{ p.bajada ? p.bajada + '/' + (p.subida || '?') + ' Mbps' : 'sin velocidad' }} · {{ p.precio !== null ? '$' + peso(p.precio) : 'sin precio' }}<span *ngIf="p.precios_distintos > 1" class="np-muted"> ({{ p.precios_distintos }} precios)</span></td>
+                <td class="np-data">{{ p.bajada ? p.bajada + '/' + (p.subida || '?') + ' Mbps' : 'sin velocidad' }}</td>
                 <td class="imp-select">
-                  <np-select [(ngModel)]="opciones.planes[p.clave]" [opciones]="p.clave === '' ? opcionesPlan.slice(1) : opcionesPlan" [presentacion]="pres"
+                  <np-select [ngModel]="opciones.planes[p.clave]" (ngModelChange)="opciones.planes[p.clave] = $event; recalcularResumen()"
+                             [opciones]="p.clave === '' ? opcionesPlan.slice(1) : opcionesPlan" [presentacion]="pres"
                              placeholder="Elegí un plan…" [ariaLabel]="'Plan para ' + p.nombre"></np-select>
+                </td>
+                <td class="imp-precio">
+                  <ng-container *ngIf="opciones.planes[p.clave] === 'crear'">
+                    <input class="np-input np-mono" type="number" min="0" step="1000" placeholder="0"
+                           [ngModel]="opciones.precios[p.clave]" (ngModelChange)="opciones.precios[p.clave] = $event; recalcularResumen()"
+                           [class.is-vacio]="!opciones.precios[p.clave]" [attr.aria-label]="'Valor mensual de ' + p.nombre" />
+                    <small class="imp-mal" *ngIf="!opciones.precios[p.clave]">Falta el valor</small>
+                  </ng-container>
+                  <ng-container *ngIf="opciones.planes[p.clave] && opciones.planes[p.clave] !== 'crear'">
+                    <div class="np-money">{{ valorDelPlan(opciones.planes[p.clave]) !== null ? '$' + peso(valorDelPlan(opciones.planes[p.clave])) : 'sin valor' }}</div>
+                    <label class="np-check imp-check-mini">
+                      <input type="checkbox" [ngModel]="opciones.actualizar_precio[p.clave]" (ngModelChange)="opciones.actualizar_precio[p.clave] = $event; recalcularResumen()" />
+                      <span>Cambiarlo</span>
+                    </label>
+                    <input *ngIf="opciones.actualizar_precio[p.clave]" class="np-input np-mono" type="number" min="0" step="1000"
+                           [ngModel]="opciones.precios[p.clave]" (ngModelChange)="opciones.precios[p.clave] = $event; recalcularResumen()"
+                           [attr.aria-label]="'Nuevo valor de ' + p.nombre" />
+                  </ng-container>
                 </td>
               </tr>
             </tbody>
@@ -272,59 +329,213 @@
           <np-select [(ngModel)]="opciones.tipo_plan" [opciones]="opcionesTipoPlan" [presentacion]="pres" ariaLabel="Tecnología"></np-select>
         </label>
         <p class="np-notice np-notice--warn" *ngIf="planesSinElegir"><strong>Falta elegir {{ planesSinElegir }} plan(es).</strong></p>
-        <p class="np-muted imp-nota" *ngIf="planesACrear">Si un plan no trae velocidad o precio, se crea en 0: revisalo después en Planes de internet.</p>
+        <p class="np-notice np-notice--warn" *ngIf="planesSinValor"><strong>{{ planesSinValor }} plan(es) quedan sin valor mensual.</strong> Se pueden importar igual, pero hasta que les cargues el valor sus facturas saldrán en $0.</p>
+      </section>
+
+      <!-- Grupos de facturación: qué día se le cobra a cada uno -->
+      <section class="imp-card">
+        <div class="imp-cardhead">
+          <div>
+            <h2 class="imp-h2">Qué día se le cobra a cada cliente</h2>
+            <p class="np-muted">Los clientes se reparten en grupos de facturación. Cada grupo tiene un día del mes y ese día se le genera la factura a todos los del grupo.</p>
+          </div>
+        </div>
+
+        <div class="imp-grupos" *ngIf="grupos.length">
+          <div class="imp-grupo" *ngFor="let g of grupos; trackBy: porGrupo">
+            <b>{{ g.nombre || 'Grupo ' + g.grupo }}</b>
+            <span class="np-data">Día {{ g.billing_day }}</span>
+            <small class="np-muted">{{ g.clientes || 0 }} clientes hoy</small>
+          </div>
+        </div>
+        <p class="np-notice np-notice--warn" *ngIf="!grupos.length">
+          <strong>Todavía no tenés grupos de facturación.</strong> Creá al menos uno acá abajo: sin eso no se puede importar, porque cada cliente necesita saber qué día se le cobra.
+        </p>
+
+        <div class="np-form imp-nuevogrupo">
+          <label class="np-field">
+            <span>Día del mes</span>
+            <input class="np-input np-mono" type="number" min="1" max="28" [(ngModel)]="nuevoGrupo.billing_day" aria-label="Día del mes" />
+          </label>
+          <label class="np-field">
+            <span>Nombre (opcional)</span>
+            <input class="np-input" [(ngModel)]="nuevoGrupo.nombre" placeholder="Quincena, Fin de mes…" />
+          </label>
+          <div class="np-field">
+            <span>&nbsp;</span>
+            <button type="button" class="np-btn np-btn--ghost" (click)="crearGrupo()" [disabled]="creandoGrupo || !nuevoGrupo.billing_day">
+              <span *ngIf="creandoGrupo" class="np-spinner np-spinner--sm"></span>{{ creandoGrupo ? 'Creando…' : 'Agregar grupo' }}
+            </button>
+          </div>
+        </div>
+        <p class="np-muted imp-nota">Se pueden tener hasta 4 grupos, del día 1 al 28. Son los mismos de Configuración › Facturación.</p>
+
+        <ng-container *ngIf="grupos.length">
+          <p class="np-sect imp-sect">Cómo repartir a los importados</p>
+          <div class="np-seg imp-seg">
+            <button type="button" *ngFor="let m of MODOS_GRUPO; trackBy: porValor"
+                    [attr.aria-pressed]="opciones.grupo_modo === m.v" (click)="opciones.grupo_modo = $any(m.v); recalcularResumen()">{{ m.t }}</button>
+          </div>
+
+          <div class="np-form">
+            <label class="np-field">
+              <span>{{ opciones.grupo_modo === 'todos' ? 'Grupo para todos' : 'Grupo por defecto' }} <em>*</em></span>
+              <np-select [ngModel]="opciones.grupo" (ngModelChange)="opciones.grupo = $event; recalcularResumen()" [opciones]="opcionesGrupo" [presentacion]="pres" ariaLabel="Grupo de facturación"></np-select>
+            </label>
+          </div>
+
+          <div class="np-tablewrap" *ngIf="opciones.grupo_modo !== 'todos'">
+            <table class="np-table np-table--compact imp-tabla-map">
+              <thead><tr><th>{{ opciones.grupo_modo === 'plan' ? 'Plan' : (opciones.grupo_modo === 'router' ? 'Router o zona' : 'Estado') }}</th><th class="np-th-right">Clientes</th><th>Grupo</th></tr></thead>
+              <tbody>
+                <tr *ngFor="let x of repartoVista; trackBy: porClave">
+                  <td><b>{{ x.nombre }}</b></td>
+                  <td class="np-data np-td-right">{{ x.clientes }}</td>
+                  <td class="imp-select">
+                    <np-select [ngModel]="grupoDeReparto(x.clave)" (ngModelChange)="ponerGrupoReparto(x.clave, $event)"
+                               [opciones]="opcionesGrupo" [presentacion]="pres" [permitirVacio]="true"
+                               [textoVacio]="'Grupo por defecto'" [placeholder]="'Grupo por defecto'" [ariaLabel]="'Grupo para ' + x.nombre"></np-select>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <label class="np-check np-check--box" *ngIf="diasPago.length">
+            <input type="checkbox" [(ngModel)]="opciones.grupo_por_dia" (ngModelChange)="recalcularResumen()" />
+            <span>Usar el día de corte que trae {{ nombre(imp.origen) }} cuando coincide con un grupo.
+              <small class="np-muted"><br>
+                <ng-container *ngFor="let d of diasPago; let ult = last">Día {{ d.dia }}: {{ d.n }} → {{ d.grupo ? 'grupo ' + d.grupo : 'grupo por defecto' }}{{ ult ? '' : ' · ' }}</ng-container>
+              </small>
+            </span>
+          </label>
+
+          <label class="np-check np-check--box">
+            <input type="checkbox" [(ngModel)]="opciones.cobro_mes_completo" />
+            <span>Cobrarles el mes completo en la próxima factura.
+              <small class="np-muted"><br>Sin esto, la facturación los toma como clientes nuevos y les cobra sólo los días que van desde hoy.</small>
+            </span>
+          </label>
+          <p class="np-muted imp-nota">También podés elegir el grupo cliente por cliente en la lista de abajo.</p>
+        </ng-container>
       </section>
 
       <!-- Routers -->
       <section class="imp-card">
-        <h2 class="imp-h2">Routers</h2>
-        <p class="np-muted" *ngIf="!routers.length">La empresa no tiene routers cargados: los clientes quedan sin router y se los asignás después.</p>
-        <div class="np-tablewrap" *ngIf="routers.length">
+        <div class="imp-cardhead">
+          <div>
+            <h2 class="imp-h2">A qué router queda amarrado cada cliente</h2>
+            <p class="np-muted">Es sólo una anotación en la ficha: el importador no le escribe nada al MikroTik.</p>
+          </div>
+        </div>
+
+        <p class="np-notice np-notice--warn" *ngIf="!routers.length">
+          <strong>La empresa no tiene routers cargados.</strong> Podés importar igual —los clientes quedan sin router— y después cargar el MikroTik en
+          <a routerLink="/dashboard/mikrotik">Mikrotik</a> y volver acá a amarrarlos.
+        </p>
+
+        <div class="np-form" *ngIf="routers.length">
+          <label class="np-field">
+            <span>Router para todos</span>
+            <np-select [ngModel]="opciones.router_todos" (ngModelChange)="opciones.router_todos = $event; recalcularResumen()"
+                       [opciones]="opcionesRouter" [presentacion]="pres" [permitirVacio]="true"
+                       textoVacio="Según la columna del archivo" placeholder="Según la columna del archivo" ariaLabel="Router para todos"></np-select>
+          </label>
+        </div>
+
+        <div class="np-tablewrap" *ngIf="routers.length && a.routers?.length">
           <table class="np-table np-table--compact imp-tabla-map">
-            <thead><tr><th>Router / zona en {{ nombre(imp.origen) }}</th><th class="np-th-right">Clientes</th><th>Router en Netvula</th></tr></thead>
+            <thead><tr><th>Router o zona en {{ nombre(imp.origen) }}</th><th class="np-th-right">Clientes</th><th>Router en Netvula</th></tr></thead>
             <tbody>
-              <tr *ngFor="let r of a.routers">
+              <tr *ngFor="let r of a.routers; trackBy: porClave">
                 <td><b>{{ r.nombre }}</b></td>
                 <td class="np-data np-td-right">{{ r.clientes }}</td>
                 <td class="imp-select">
-                  <np-select [(ngModel)]="opciones.routers[r.clave]" [opciones]="opcionesRouter" [presentacion]="pres"
-                             [permitirVacio]="true" textoVacio="Sin router" placeholder="Sin router" [ariaLabel]="'Router para ' + r.nombre"></np-select>
+                  <np-select [ngModel]="opciones.routers[r.clave]" (ngModelChange)="opciones.routers[r.clave] = $event; recalcularResumen()"
+                             [opciones]="opcionesRouter" [presentacion]="pres"
+                             [permitirVacio]="true" textoVacio="El de arriba" placeholder="El de arriba" [ariaLabel]="'Router para ' + r.nombre"></np-select>
                 </td>
               </tr>
             </tbody>
           </table>
         </div>
-        <p class="np-muted imp-nota">Sólo se anota el router en la ficha: no se le escribe nada al MikroTik.</p>
+        <p class="np-muted imp-nota" *ngIf="routers.length">Cuando termine la importación vas a poder comparar con el MikroTik —sólo lectura— y amarrar a los que calcen.</p>
       </section>
 
-      <!-- Facturación -->
-      <section class="imp-card">
-        <h2 class="imp-h2">Facturación</h2>
-        <p class="np-notice np-notice--danger" *ngIf="!grupos.length">La empresa no tiene grupos de facturación. Configuralos en <a routerLink="/dashboard/billing-config">Configuración › Facturación</a> antes de importar.</p>
-        <div class="np-form" *ngIf="grupos.length">
-          <label class="np-field">
-            <span>Grupo de facturación <em>*</em></span>
-            <np-select [(ngModel)]="opciones.grupo" [opciones]="opcionesGrupo" [presentacion]="pres" ariaLabel="Grupo de facturación"></np-select>
-          </label>
-          <div></div>
-          <label class="np-check np-check--box np-field-full" *ngIf="diasPago.length">
-            <input type="checkbox" [(ngModel)]="opciones.grupo_por_dia" />
-            <span>Usar el día de corte de {{ nombre(imp.origen) }} cuando coincide con un grupo.
-              <small class="np-muted"><br>
-                <ng-container *ngFor="let d of diasPago; let ult = last">Día {{ d.dia }}: {{ d.n }} → {{ d.grupo ? 'grupo ' + d.grupo : 'grupo elegido' }}{{ ult ? '' : ' · ' }}</ng-container>
-              </small>
-            </span>
-          </label>
-          <label class="np-check np-check--box np-field-full">
-            <input type="checkbox" [(ngModel)]="opciones.cobro_mes_completo" />
-            <span>Cobrarles el mes completo en la próxima factura.
-              <small class="np-muted"><br>Sin esto, la facturación los toma como clientes nuevos y les cobra sólo los días desde hoy.</small>
-            </span>
-          </label>
+      <!-- Saldo que traen de la otra plataforma -->
+      <section class="imp-card" *ngIf="saldoClientes">
+        <div class="imp-cardhead">
+          <div>
+            <h2 class="imp-h2">Lo que te deben de {{ nombre(imp.origen) }}</h2>
+            <p class="np-muted"><b>{{ saldoClientes | number }} clientes</b> deben <b>${{ peso(saldoTotal) }}</b> en total<ng-container *ngIf="a.saldo?.facturas"> ({{ a.saldo.facturas | number }} facturas)</ng-container>.</p>
+          </div>
         </div>
-        <p class="np-notice np-notice--warn" *ngIf="a.saldo?.clientes">
-          <strong>{{ a.saldo.clientes | number }} clientes deben ${{ peso(a.saldo.total) }} en {{ nombre(imp.origen) }}.</strong>
-          Ese saldo no se convierte en facturas (se enviarían recordatorios y cortes automáticos): queda anotado en el reporte para que lo cobres o lo cargues a mano.
+
+        <p class="np-notice np-notice--warn" *ngIf="faltaMigracion">{{ faltaMigracion }}</p>
+
+        <label class="np-check np-check--box" *ngIf="!faltaMigracion">
+          <input type="checkbox" [(ngModel)]="opciones.saldo.crear" />
+          <span><b>Crear una factura por ese saldo</b>, a nombre de cada cliente.
+            <small class="np-muted"><br>Si no la marcás, el saldo queda sólo anotado en el reporte y no se le cobra desde acá.</small>
+          </span>
+        </label>
+
+        <ng-container *ngIf="opciones.saldo.crear && !faltaMigracion">
+          <div class="np-form">
+            <label class="np-field np-field-full">
+              <span>Concepto de la factura</span>
+              <input class="np-input" [(ngModel)]="opciones.saldo.concepto" maxlength="160" placeholder="Saldo anterior de WispHub" />
+            </label>
+            <label class="np-field">
+              <span>Fecha de la factura</span>
+              <np-select [(ngModel)]="opciones.saldo.fecha_modo" [opciones]="opcionesFechaSaldo" [presentacion]="pres" ariaLabel="Fecha de la factura"></np-select>
+            </label>
+            <label class="np-field" *ngIf="opciones.saldo.fecha_modo === 'fecha'">
+              <span>Qué día</span>
+              <input class="np-input np-mono" type="date" [(ngModel)]="opciones.saldo.fecha" />
+            </label>
+            <label class="np-check np-check--box np-field-full">
+              <input type="checkbox" [(ngModel)]="opciones.saldo.evitar_envio" />
+              <span>No enviarles estas facturas por correo.
+                <small class="np-muted"><br>Quedan marcadas como ya enviadas, así el envío diario de facturas no sale con 72 correos de golpe.</small>
+              </span>
+            </label>
+          </div>
+
+          <div class="np-notice np-notice--warn">
+            <strong>Ojo con lo que dispara una factura sin pagar en la plataforma:</strong>
+            <ul class="imp-lista-avisos">
+              <li *ngIf="avisosEmpresa?.whatsapp?.length">Tenés recordatorios por WhatsApp activos ({{ avisosEmpresa.whatsapp.join(', ') }}): les van a llegar avisos de pago según los días que tengas configurados.</li>
+              <li *ngIf="!avisosEmpresa?.whatsapp?.length">No tenés recordatorios por WhatsApp activos: no se les avisa por ese lado.</li>
+              <li *ngIf="avisosEmpresa?.email">Tenés el envío de facturas por correo activo: marcá la casilla de arriba si no querés que salgan.</li>
+              <li *ngIf="avisosEmpresa?.auto_suspende">Tenés el corte automático activo (a partir de {{ avisosEmpresa.facturas_corte }} factura(s) sin pagar, el día {{ avisosEmpresa.dia_corte }} de cada mes): estos clientes pueden quedar suspendidos solos.</li>
+              <li *ngIf="!avisosEmpresa?.auto_suspende">No tenés el corte automático activo: nadie queda suspendido por esta factura.</li>
+              <li>La importación en sí no manda ningún mensaje ni suspende a nadie.</li>
+            </ul>
+          </div>
+        </ng-container>
+      </section>
+
+      <!-- Resumen final -->
+      <section class="imp-card">
+        <h2 class="imp-h2">Cómo van a quedar</h2>
+        <div class="np-tablewrap">
+          <table class="np-table np-table--compact">
+            <thead><tr><th>Plan</th><th class="np-th-right">Clientes</th><th class="np-th-right">Valor mensual</th><th>Se le cobra</th><th>Router</th></tr></thead>
+            <tbody>
+              <tr *ngFor="let r of resumen; trackBy: porPlan">
+                <td><b>{{ r.plan }}</b><span class="np-tag" *ngIf="r.nuevo">nuevo</span></td>
+                <td class="np-data np-td-right">{{ r.clientes | number }}</td>
+                <td class="np-money" [class.imp-mal]="!r.valor">{{ r.valor ? '$' + peso(r.valor) : 'sin valor' }}</td>
+                <td class="np-data">{{ r.dia ? 'el día ' + r.dia + ' de cada mes' : 'falta el grupo' }}</td>
+                <td class="np-data">{{ r.router }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <p class="np-muted imp-nota">
+          {{ a.nuevos | number }} clientes nuevos · {{ a.existentes | number }} ya existen ({{ opciones.existentes === 'omitir' ? 'se dejan como están' : 'se actualizan' }}) ·
+          {{ a.invalidos | number }} no se pueden importar<ng-container *ngIf="opciones.saldo.crear && saldoClientes"> · {{ saldoClientes | number }} facturas de saldo por ${{ peso(saldoTotal) }}</ng-container>.
         </p>
       </section>
 
@@ -388,24 +599,69 @@
         </div>
       </section>
 
-      <section class="imp-card" *ngIf="routers.length">
+      <section class="imp-card">
         <div class="imp-cardhead">
           <div>
-            <h2 class="imp-h2">Comparar con el router</h2>
-            <p class="np-muted">Lee el ARP del MikroTik y cuenta qué IP no coinciden con las fichas. <b>Sólo lee</b>: no cambia nada ni en el router ni acá.</p>
+            <h2 class="imp-h2">Amarrar con el MikroTik</h2>
+            <p class="np-muted">Busca a cada cliente importado en el router: por IP y documento en el ARP, y por usuario en las credenciales PPPoE. <b>Sólo lee el router</b>, no le cambia nada.</p>
           </div>
-          <button type="button" class="np-btn np-btn--ghost" (click)="revisarRouter()" [disabled]="sincronizando">
-            <span *ngIf="sincronizando" class="np-spinner np-spinner--sm"></span>{{ sincronizando ? 'Leyendo el router…' : 'Comparar' }}
-          </button>
+          <div class="np-btnrow" *ngIf="routers.length">
+            <np-select [(ngModel)]="routerCotejo" [opciones]="opcionesRouter" [presentacion]="pres" [permitirVacio]="true"
+                       textoVacio="Todos los routers" placeholder="Todos los routers" tamano="sm" ariaLabel="Router a revisar" style="width: 200px"></np-select>
+            <button type="button" class="np-btn np-btn--ghost" (click)="compararConElRouter(false)" [disabled]="cotejando">
+              <span *ngIf="cotejando" class="np-spinner np-spinner--sm"></span>{{ cotejando ? 'Leyendo el router…' : 'Comparar' }}
+            </button>
+          </div>
         </div>
-        <div *ngIf="sincronizacion" class="np-ribbon">
-          <span *ngFor="let r of sincronizacion.routers">{{ r.router }}: <span class="np-n">{{ r.entradas | number }}</span>entradas ARP</span>
-          <span><span class="np-n">{{ sincronizacion.sin_cambio ?? 0 | number }}</span>coinciden</span>
-          <span><i class="np-dot" style="background:var(--warn)"></i><span class="np-n">{{ sincronizacion.cambios?.length ?? 0 | number }}</span>con otra IP en el router</span>
-          <span><span class="np-n">{{ sincronizacion.desconocidos?.length ?? 0 | number }}</span>entradas sin cliente</span>
-        </div>
-        <p class="np-muted imp-nota" *ngIf="sincronizacion?.cambios?.length">Para traer esas IP a las fichas usá <a routerLink="/dashboard/mikrotik">Mikrotik › Sincronizar IPs</a>, donde podés revisarlas antes de aplicar.</p>
-        <p class="np-notice np-notice--danger" *ngIf="sincronizacion?.errores?.length">{{ sincronizacion.errores.join(' ') }}</p>
+
+        <p class="np-notice np-notice--warn" *ngIf="!routers.length">
+          La empresa todavía no tiene routers cargados. Agregá tu MikroTik en <a routerLink="/dashboard/mikrotik">Mikrotik</a> y volvé acá para amarrar a los clientes.
+        </p>
+
+        <ng-container *ngIf="cotejo">
+          <div class="np-ribbon">
+            <span *ngFor="let r of cotejo.routers"><b>{{ r.nombre }}</b>: <span class="np-n">{{ r.arp | number }}</span>en ARP · <span class="np-n">{{ r.pppoe | number }}</span>PPPoE</span>
+          </div>
+          <div class="np-stats imp-stats">
+            <div class="np-stat"><span class="np-stat-l">Importados</span><span class="np-stat-v">{{ cotejo.total | number }}</span></div>
+            <div class="np-stat"><span class="np-stat-l">Están en el router</span><span class="np-stat-v imp-ok">{{ cotejo.encontrados | number }}</span></div>
+            <div class="np-stat"><span class="np-stat-l">No aparecen</span><span class="np-stat-v is-warn">{{ cotejo.sin_encontrar | number }}</span></div>
+            <div class="np-stat"><span class="np-stat-l">Con otra IP</span><span class="np-stat-v">{{ cotejo.otra_ip | number }}</span></div>
+            <div class="np-stat"><span class="np-stat-l">Para amarrar</span><span class="np-stat-v">{{ cotejo.para_amarrar | number }}</span></div>
+          </div>
+          <p class="np-muted imp-nota">
+            Encontrados por IP: {{ cotejo.por_ip | number }} · por documento en el comment: {{ cotejo.por_documento | number }} · por usuario PPPoE: {{ cotejo.por_pppoe | number }}.
+          </p>
+
+          <div class="np-btnrow" *ngIf="cotejo.para_amarrar">
+            <button type="button" class="np-btn np-btn--primary" (click)="compararConElRouter(true)" [disabled]="cotejando">
+              Amarrar {{ cotejo.para_amarrar | number }} cliente(s) a su router
+            </button>
+            <span class="np-muted">Sólo anota el router en la ficha del cliente. No toca el MikroTik ni le cambia el router a quien ya tenía uno.</span>
+          </div>
+          <p class="np-notice np-notice--ok" *ngIf="cotejo.amarrados">{{ cotejo.amarrados | number }} cliente(s) quedaron amarrados a su router.</p>
+          <p class="np-muted imp-nota" *ngIf="cotejo.otra_ip">
+            Hay {{ cotejo.otra_ip | number }} cliente(s) con otra IP en el router. Para traer esas IP a las fichas usá <a routerLink="/dashboard/mikrotik">Mikrotik › Sincronizar IPs</a>, que las muestra antes de aplicar.
+          </p>
+
+          <div class="np-tablewrap np-tablewrap--scroll" *ngIf="cotejo.hallazgos?.length">
+            <table class="np-table np-table--compact">
+              <thead><tr><th>Cliente</th><th>Documento</th><th>Cómo se encontró</th><th>Router</th><th>IP en la ficha</th><th>IP en el router</th></tr></thead>
+              <tbody>
+                <tr *ngFor="let h of cotejo.hallazgos">
+                  <td>{{ h.nombre }}</td>
+                  <td class="np-data">{{ h.dni }}</td>
+                  <td>{{ h.como === 'ip' ? 'Por su IP' : (h.como === 'documento' ? 'Por el documento en el comment' : 'Por el usuario PPPoE') }}</td>
+                  <td>{{ h.router }}</td>
+                  <td class="np-data">{{ h.ip_ficha || '—' }}</td>
+                  <td class="np-data" [class.imp-mal]="h.otra_ip">{{ h.ip_router || '—' }}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <p class="np-notice np-notice--danger" *ngIf="cotejo.errores?.length">{{ cotejo.errores.join(' ') }}</p>
+        </ng-container>
       </section>
 
       <ng-container *ngTemplateOutlet="tablaFilas"></ng-container>
@@ -438,14 +694,37 @@
       </div>
     </div>
 
+    <!-- Elegir a mano el grupo o el router de unos cuantos -->
+    <div class="imp-asignar" *ngIf="paso === 'previa' && !faltaMigracion">
+      <span class="np-muted">{{ seleccion.size ? seleccion.size + ' elegidos' : 'Marcá clientes para darles otro grupo o router' }}</span>
+      <np-select [(ngModel)]="asignarGrupo" [opciones]="opcionesGrupo" [presentacion]="pres" [permitirVacio]="true"
+                 textoVacio="Grupo…" placeholder="Grupo…" tamano="sm" ariaLabel="Grupo para los elegidos" style="width: 200px"></np-select>
+      <np-select [(ngModel)]="asignarRouter" [opciones]="opcionesRouter" [presentacion]="pres" [permitirVacio]="true"
+                 textoVacio="Router…" placeholder="Router…" tamano="sm" ariaLabel="Router para los elegidos" style="width: 180px"></np-select>
+      <button type="button" class="np-btn np-btn--sm np-btn--ghost" (click)="asignar(false)"
+              [disabled]="asignando || !seleccion.size || (!asignarGrupo && !asignarRouter)">Aplicar a los elegidos</button>
+      <button type="button" class="np-btn np-btn--sm np-btn--ghost" (click)="asignar(true)"
+              [disabled]="asignando || (!asignarGrupo && !asignarRouter)">Aplicar a todo lo que se ve ({{ totalFilas | number }})</button>
+    </div>
+
     <div class="np-tablewrap">
       <table class="np-table np-table--compact imp-filas">
-        <thead><tr><th class="np-th-right">#</th><th>Cliente</th><th>Plan</th><th>Conexión</th><th>Estado</th><th>{{ paso === 'resultado' ? 'Resultado' : 'Vista previa' }}</th></tr></thead>
+        <thead><tr>
+          <th class="imp-col-check" *ngIf="paso === 'previa' && !faltaMigracion">
+            <input type="checkbox" [checked]="seleccionEnPagina" (change)="seleccionarPagina()" aria-label="Elegir todos los de esta página" />
+          </th>
+          <th class="np-th-right">#</th><th>Cliente</th><th>Plan</th><th>Conexión</th>
+          <th *ngIf="!faltaMigracion">Cobro · router</th>
+          <th>Estado</th><th>{{ paso === 'resultado' ? 'Resultado' : 'Vista previa' }}</th>
+        </tr></thead>
         <tbody>
-          <tr *ngIf="cargandoFilas"><td colspan="6"><div class="np-loading np-loading--inline"><span class="np-spinner np-spinner--sm"></span>Cargando…</div></td></tr>
-          <tr *ngIf="!cargandoFilas && !filas.length" class="np-empty"><td colspan="6"><strong>Nada para mostrar.</strong></td></tr>
-          <ng-container *ngFor="let f of filas">
+          <tr *ngIf="cargandoFilas"><td colspan="9"><div class="np-loading np-loading--inline"><span class="np-spinner np-spinner--sm"></span>Cargando…</div></td></tr>
+          <tr *ngIf="!cargandoFilas && !filas.length" class="np-empty"><td colspan="9"><strong>Nada para mostrar.</strong></td></tr>
+          <ng-container *ngFor="let f of filas; trackBy: porFila">
             <tr class="np-row" (click)="filaAbierta = filaAbierta === f.id ? null : f.id" tabindex="0" (keydown.enter)="filaAbierta = filaAbierta === f.id ? null : f.id">
+              <td class="imp-col-check" *ngIf="paso === 'previa' && !faltaMigracion" (click)="$event.stopPropagation()">
+                <input type="checkbox" [checked]="seleccion.has(f.id)" (change)="alternarSeleccion(f.id)" [attr.aria-label]="'Elegir a ' + f.datos.nombres" />
+              </td>
               <td class="np-data np-td-right">{{ f.fila }}</td>
               <td>
                 <div class="np-name">{{ f.datos.nombres }} {{ f.datos.apellidos }}</div>
@@ -453,6 +732,10 @@
               </td>
               <td>{{ f.datos.plan || '—' }}<div class="np-plan" *ngIf="f.datos.router">{{ f.datos.router }}</div></td>
               <td class="np-data">{{ f.datos.tipo_conexion === 'pppoe' ? 'PPPoE · ' + f.datos.pppoe_usuario : (f.datos.ip || 'IP fija sin IP') }}</td>
+              <td class="np-data np-data--dim" *ngIf="!faltaMigracion">
+                {{ f.grupo_elegido ? textoGrupo(f.grupo_elegido) : (paso === 'previa' ? 'lo general' : '—') }}
+                <div class="np-plan" *ngIf="f.router_elegido">{{ nombreRouter(f.router_elegido) }}</div>
+              </td>
               <td>{{ textoEstado(f.datos.estado) }}</td>
               <td>
                 <span class="np-pill" [ngClass]="'np-pill--' + tonoFila(f)">{{ textoFila(f) }}</span>
@@ -462,13 +745,14 @@
             </tr>
             <tr *ngIf="filaAbierta === f.id" class="imp-detalle">
               <td></td>
-              <td colspan="5">
+              <td [attr.colspan]="faltaMigracion ? 6 : 8">
                 <p *ngIf="f.mensaje"><b>{{ f.mensaje }}</b></p>
                 <ul *ngIf="f.errores.length" class="imp-lista is-mal"><li *ngFor="let e of f.errores">{{ e }}</li></ul>
                 <ul *ngIf="f.avisos.length" class="imp-lista"><li *ngFor="let e of f.avisos">{{ e }}</li></ul>
                 <p class="np-meta">
                   Tel. <b>{{ f.datos.telefono || '—' }}</b> · Correo <b>{{ f.datos.email || '—' }}</b> · Dirección <b>{{ f.datos.direccion || '—' }}</b>
                   · MAC <b>{{ f.datos.mac || '—' }}</b> · Día de corte <b>{{ f.datos.dia_pago || '—' }}</b> · Saldo <b>{{ f.datos.saldo ? '$' + peso(f.datos.saldo) : '—' }}</b>
+                  <ng-container *ngIf="f.datos.facturas_pendientes"> · Facturas pendientes en el origen <b>{{ f.datos.facturas_pendientes }}</b></ng-container>
                   <ng-container *ngIf="f.user_id"> · <a [routerLink]="['/dashboard/usuario']" [queryParams]="{ cliente: f.user_id }">Abrir ficha</a></ng-container>
                 </p>
               </td>
@@ -495,10 +779,16 @@
     <h3>¿Importar los clientes?</h3>
     <p>
       Se crean hasta <b>{{ a.nuevos | number }}</b> clientes nuevos
-      <ng-container *ngIf="a.existentes">y {{ opciones.existentes === 'omitir' ? 'se dejan como están' : 'se actualizan' }} <b>{{ a.existentes | number }}</b> que ya existen</ng-container>,
-      en estado {{ opciones.estados.join(', ') }}<ng-container *ngIf="planesACrear">, con {{ planesACrear }} planes nuevos</ng-container>.
+      <ng-container *ngIf="a.existentes">y {{ opciones.existentes === 'omitir' ? 'se dejan como están' : 'se actualizan' }} <b>{{ a.existentes | number }}</b> que ya existen</ng-container>.
     </p>
-    <p class="np-muted">No se toca el router, no se avisa a los clientes y no se generan facturas.</p>
+    <ul class="imp-confirma">
+      <li>Estados: {{ opciones.estados.join(', ') }}.</li>
+      <li *ngIf="planesACrear">Se crean <b>{{ planesACrear }}</b> planes<ng-container *ngIf="planesSinValor">, <b class="imp-mal">{{ planesSinValor }} sin valor mensual</b></ng-container>.</li>
+      <li>Se les cobra según su grupo ({{ opciones.grupo_modo === 'todos' ? textoGrupo(opciones.grupo) : 'repartido por ' + opciones.grupo_modo }}).</li>
+      <li *ngIf="opciones.router_todos">Todos quedan en el router <b>{{ nombreRouter(opciones.router_todos) }}</b>.</li>
+      <li *ngIf="opciones.saldo.crear && saldoClientes"><b>Se crean {{ saldoClientes | number }} facturas</b> por el saldo, ${{ peso(saldoTotal) }} en total.</li>
+    </ul>
+    <p class="np-muted">No se toca el router, no se le avisa a ningún cliente y no se genera ninguna otra factura.</p>
     <div class="np-btnrow np-btnrow--center">
       <button type="button" class="np-btn np-btn--ghost" (click)="confirmar = false">Revisar de nuevo</button>
       <button type="button" class="np-btn np-btn--primary" (click)="ejecutar()" [disabled]="ocupado">{{ ocupado ? 'Iniciando…' : 'Importar' }}</button>

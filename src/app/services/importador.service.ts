@@ -12,13 +12,34 @@ export type EstadoImportacion =
 /** Las opciones que confirma el administrador antes de importar. */
 export interface OpcionesImportacion {
   planes: Record<string, number | 'crear' | null>;
+  /** Valor mensual de cada plan (el del origen casi nunca viene). */
+  precios: Record<string, number | null>;
+  /** Planes que ya existen y cuyo valor se quiere pisar. */
+  actualizar_precio: Record<string, boolean>;
   routers: Record<string, number | null>;
+  /** Router para todos los que no tengan uno propio. */
+  router_todos: number | null;
   estados: string[];
   existentes: 'omitir' | 'actualizar';
   grupo: number | null;
+  /** Cómo se reparten los grupos: a todos igual o por plan, router o estado. */
+  grupo_modo: 'todos' | 'plan' | 'router' | 'estado';
+  grupos_por_plan: Record<string, number | null>;
+  grupos_por_router: Record<string, number | null>;
+  grupos_por_estado: Record<string, number | null>;
   grupo_por_dia: boolean;
   cobro_mes_completo: boolean;
   tipo_plan: string;
+  /** Cómo se parte el nombre completo en nombres y apellidos. */
+  regla_nombre: string;
+  /** La factura por el saldo que el cliente traía de la otra plataforma. */
+  saldo: {
+    crear: boolean;
+    concepto: string;
+    fecha_modo: 'corte' | 'hoy' | 'fecha';
+    fecha: string | null;
+    evitar_envio: boolean;
+  };
 }
 
 /**
@@ -68,6 +89,29 @@ export class ImportadorService {
   }
 
   cancelar(id: number): Observable<any> { return this.http.post(`${this.base}/${id}/cancelar`, {}, this.h()); }
+
+  /** Guarda cómo se parte el nombre completo y devuelve ejemplos del archivo. */
+  nombres(id: number, regla: string): Observable<any> {
+    return this.http.post(`${this.base}/${id}/nombres`, { regla }, this.h());
+  }
+
+  /** Le pone grupo de facturación o router a los clientes elegidos. */
+  asignar(id: number, datos: { ids?: number[]; todas?: boolean; filtro?: string; buscar?: string; grupo?: number | null; router?: number | null }): Observable<any> {
+    return this.http.post(`${this.base}/${id}/asignar`, datos, this.h());
+  }
+
+  /** Crea (o ajusta) un grupo de facturación de la empresa. */
+  crearGrupo(datos: { grupo?: number | null; billing_day: number; nombre?: string }): Observable<any> {
+    return this.http.post(`${this.base}/grupos`, datos, this.h());
+  }
+
+  /**
+   * Compara los clientes importados con el MikroTik (sólo lectura). Con
+   * amarrar=true además les anota el router en la ficha.
+   */
+  cotejo(id: number, routerId: number | null, amarrar = false): Observable<any> {
+    return this.http.post(`${this.base}/${id}/cotejo`, { router_id: routerId, amarrar }, this.h());
+  }
 
   reporte(id: number): Observable<Blob> {
     return this.http.get(`${this.base}/${id}/reporte`, { ...this.h(false), responseType: 'blob' });

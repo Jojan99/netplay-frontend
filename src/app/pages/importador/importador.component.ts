@@ -5,7 +5,6 @@ import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { Subscription, switchMap, timer } from 'rxjs';
 import { ImportadorService, OpcionesImportacion, OrigenImportacion } from '../../services/importador.service';
 import { AuthService } from '../../services/auth.service';
-import { MikrotikService } from '../../services/mikrotik.service';
 import { TareasEnSegundoPlanoService } from '../../services/tareas-en-segundo-plano.service';
 import { NpSelectComponent, PresentacionSelect } from '../../common/np-select/np-select.component';
 
@@ -35,7 +34,6 @@ const NOMBRE_ORIGEN: Record<OrigenImportacion, string> = { wisphub: 'WispHub', m
 export class ImportadorComponent implements OnInit, OnDestroy {
   private svc = inject(ImportadorService);
   private auth = inject(AuthService);
-  private mikrotik = inject(MikrotikService);
   private tareas = inject(TareasEnSegundoPlanoService);
   private route = inject(ActivatedRoute);
   private router = inject(Router);
@@ -57,6 +55,10 @@ export class ImportadorComponent implements OnInit, OnDestroy {
   grupos: any[] = [];
   credenciales: any[] = [];
   historial: any[] = [];
+  /** Aviso si falta correr la migración de la segunda tanda. */
+  faltaMigracion = '';
+  /** Qué tiene prendido la empresa: recordatorios, correo y corte automático. */
+  avisosEmpresa: any = null;
 
   // Paso 1
   origen: OrigenImportacion | null = null;
@@ -68,6 +70,8 @@ export class ImportadorComponent implements OnInit, OnDestroy {
   imp: any = null;
   muestra: string[][] = [];
   mapeo: Record<string, number | null> = {};
+  /** Lo que el sistema detecta solo: para volver atrás si se cambió a mano. */
+  mapeoSugerido: Record<string, number | null> = {};
   opciones: OpcionesImportacion = this.opcionesVacias();
 
   // Filas
@@ -82,8 +86,25 @@ export class ImportadorComponent implements OnInit, OnDestroy {
   private buscarTimer: any;
 
   confirmar = false;
-  sincronizando = false;
-  sincronizacion: any = null;
+
+  // Nombres
+  ejemplosNombre: { completo: string; nombres: string; apellidos: string }[] = [];
+  probandoNombres = false;
+
+  // Grupos de facturación
+  nuevoGrupo = { billing_day: 15, nombre: '' };
+  creandoGrupo = false;
+
+  // Selección de clientes en la lista, para asignarles grupo o router
+  seleccion = new Set<number>();
+  asignando = false;
+  asignarGrupo: number | null = null;
+  asignarRouter: number | null = null;
+
+  // Cotejo con el MikroTik (después de importar)
+  cotejando = false;
+  cotejo: any = null;
+  routerCotejo: number | null = null;
 
   private sondeo?: Subscription;
 
@@ -94,6 +115,58 @@ export class ImportadorComponent implements OnInit, OnDestroy {
   opcionesRouter: Opcion[] = [];
   opcionesGrupo: Opcion[] = [];
   opcionesColumna: Opcion[] = [];
+  readonly ESTADOS: { v: string; t: string; ayuda: string }[] = [
+    { v: 'activo', t: 'Activos', ayuda: 'Entran con el servicio andando.' },
+    { v: 'suspendido', t: 'Suspendidos', ayuda: 'Entran suspendidos también acá.' },
+    { v: 'retirado', t: 'Retirados', ayuda: 'Entran dados de baja, sólo como historial.' },
+  ];
+
+  readonly MODOS_GRUPO: { v: string; t: string }[] = [
+    { v: 'todos', t: 'A todos el mismo' },
+    { v: 'plan', t: 'Según el plan' },
+    { v: 'router', t: 'Según el router o zona' },
+    { v: 'estado', t: 'Según el estado' },
+  ];
+
+  opcionesRegla: Opcion[] = [];
+
+  readonly opcionesFechaSaldo: Opcion[] = [
+    { v: 'corte', t: 'El día de corte de su grupo (este mes)', d: 'Es lo más parecido a una factura normal' },
+    { v: 'hoy', t: 'Hoy' },
+    { v: 'fecha', t: 'Una fecha que yo elija', d: 'Una fecha pasada ya cuenta como atrasada' },
+  ];
+
+  /** Las filas de la tabla de reparto de grupos, según el modo elegido. */
+  repartoVista: { clave: string; nombre: string; clientes: number }[] = [];
+
+  // trackBy: sin esto Angular rehace los selectores en cada ciclo y la pestaña
+  // se pone lenta con archivos grandes.
+  porValor = (_: number, x: { v: string }) => x.v;
+  porClave = (_: number, x: { clave: string }) => x.clave;
+  porGrupo = (_: number, x: { grupo: number }) => x.grupo;
+  porPlan = (_: number, x: { plan: string }) => x.plan;
+  porCompleto = (_: number, x: { completo: string }) => x.completo;
+  porFila = (_: number, f: { id: number }) => f.id;
+
+  /** El valor mensual que hoy tiene un plan de la empresa. */
+  valorDelPlan(id: any): number | null {
+    const p = this.planes.find(x => x.id === Number(id));
+    return p ? (Number(p.monthly_price) || null) : null;
+  }
+
+  grupoDeReparto(clave: string): number | null {
+    const o = this.opciones;
+    const mapa = o.grupo_modo === 'plan' ? o.grupos_por_plan : (o.grupo_modo === 'router' ? o.grupos_por_router : o.grupos_por_estado);
+    return mapa[clave] ?? null;
+  }
+
+  ponerGrupoReparto(clave: string, grupo: number | null): void {
+    const o = this.opciones;
+    const mapa = o.grupo_modo === 'plan' ? o.grupos_por_plan : (o.grupo_modo === 'router' ? o.grupos_por_router : o.grupos_por_estado);
+    mapa[clave] = grupo;
+    this.recalcularResumen();
+  }
+
   readonly opcionesTipoPlan: Opcion[] = [
     { v: 'fibra', t: 'Fibra óptica' }, { v: 'wireless', t: 'Wireless / Radio' },
     { v: 'cable', t: 'Cable coaxial' }, { v: 'dsl', t: 'DSL / ADSL' }, { v: 'otro', t: 'Otro' },
@@ -115,6 +188,9 @@ export class ImportadorComponent implements OnInit, OnDestroy {
         this.grupos = d.grupos ?? [];
         this.credenciales = d.credenciales ?? [];
         this.historial = d.importaciones ?? [];
+        this.faltaMigracion = d.falta_migracion ?? '';
+        this.avisosEmpresa = d.avisos_empresa ?? null;
+        this.opcionesRegla = Object.entries(d.reglas_nombre ?? {}).map(([v, t]) => ({ v, t: String(t) }));
         this.armarOpciones();
         this.cargando = false;
 
@@ -211,6 +287,21 @@ export class ImportadorComponent implements OnInit, OnDestroy {
 
   porCampo = (_: number, c: { campo: string }) => c.campo;
 
+  /**
+   * Dos datos distintos no pueden salir de la misma columna: los apellidos no
+   * son la columna del nombre ni el precio la del plan (leía "80 Mb" como $80).
+   */
+  private limpiarMapeo(mapeo: Record<string, number | null>): Record<string, number | null> {
+    const m = { ...mapeo };
+    if (m['apellidos'] !== null && m['apellidos'] === m['nombre']) m['apellidos'] = null;
+    if (m['plan_precio'] !== null && m['plan_precio'] === m['plan']) m['plan_precio'] = null;
+    return m;
+  }
+
+  volverADetectar(): void {
+    this.mapeo = this.limpiarMapeo(this.mapeoSugerido);
+  }
+
   ejemploColumna(campo: string): string {
     const i = this.mapeo[campo];
     if (i === null || i === undefined) return '';
@@ -250,6 +341,7 @@ export class ImportadorComponent implements OnInit, OnDestroy {
     this.origen = imp.origen;
     this.metodo = imp.metodo;
     if (imp.muestra) this.muestra = imp.muestra;
+    if (imp.mapeo_sugerido) this.mapeoSugerido = imp.mapeo_sugerido;
 
     this.router.navigate([], { relativeTo: this.route, queryParams: { id: imp.id }, replaceUrl: true });
 
@@ -266,13 +358,18 @@ export class ImportadorComponent implements OnInit, OnDestroy {
         break;
       case 'mapeo':
         this.paso = 'columnas';
-        this.mapeo = { ...(imp.mapeo ?? {}) };
+        this.mapeo = this.limpiarMapeo(imp.mapeo ?? {});
         this.opcionesColumna = (imp.columnas ?? []).map((c: string, i: number) => ({
           v: i, t: c || `Columna ${i + 1}`, d: this.muestra.map(f => f[i]).filter(v => v).slice(0, 2).join(' · ') || null,
         }));
         break;
       case 'analizado':
         this.paso = 'previa';
+        // Las columnas quedan a mano por si hay que corregir el mapeo.
+        this.mapeo = this.limpiarMapeo(imp.mapeo ?? {});
+        this.opcionesColumna = (imp.columnas ?? []).map((c: string, i: number) => ({
+          v: i, t: c || `Columna ${i + 1}`, d: this.muestra.map(f => f[i]).filter(v => v).slice(0, 2).join(' · ') || null,
+        }));
         this.resumirAnalisis();
         if (anterior !== 'analizado') this.prepararOpciones();
         this.cambiarFiltro('');
@@ -338,7 +435,8 @@ export class ImportadorComponent implements OnInit, OnDestroy {
     this.origen = null;
     this.muestra = [];
     this.filas = [];
-    this.sincronizacion = null;
+    this.seleccion.clear();
+    this.cotejo = null;
     this.error = '';
     this.paso = 'origen';
     this.router.navigate([], { relativeTo: this.route, queryParams: {}, replaceUrl: true });
@@ -360,8 +458,12 @@ export class ImportadorComponent implements OnInit, OnDestroy {
 
   private opcionesVacias(): OpcionesImportacion {
     return {
-      planes: {}, routers: {}, estados: ['activo', 'suspendido'], existentes: 'omitir',
-      grupo: null, grupo_por_dia: false, cobro_mes_completo: true, tipo_plan: 'fibra',
+      planes: {}, precios: {}, actualizar_precio: {},
+      routers: {}, router_todos: null,
+      estados: ['activo', 'suspendido'], existentes: 'omitir',
+      grupo: null, grupo_modo: 'todos', grupos_por_plan: {}, grupos_por_router: {}, grupos_por_estado: {},
+      grupo_por_dia: false, cobro_mes_completo: true, tipo_plan: 'fibra', regla_nombre: 'auto',
+      saldo: { crear: false, concepto: '', fecha_modo: 'corte', fecha: null, evitar_envio: true },
     };
   }
 
@@ -372,7 +474,11 @@ export class ImportadorComponent implements OnInit, OnDestroy {
       ...this.planes.map(p => ({ v: p.id, t: p.plan_name, d: `${p.download_speed}/${p.upload_speed} Mbps · $${peso(p.monthly_price)}${p.active ? '' : ' · inactivo'}` })),
     ];
     this.opcionesRouter = this.routers.map(r => ({ v: r.id, t: r.name }));
-    this.opcionesGrupo = this.grupos.map(g => ({ v: g.grupo, t: `Grupo ${g.grupo}`, d: `Factura el día ${g.billing_day}` }));
+    this.opcionesGrupo = this.grupos.map(g => ({
+      v: g.grupo,
+      t: g.nombre ? `${g.nombre} (grupo ${g.grupo})` : `Grupo ${g.grupo}`,
+      d: `Se le cobra el día ${g.billing_day}${g.clientes ? ' · ' + g.clientes + ' clientes' : ''}`,
+    }));
   }
 
   private prepararOpciones(): void {
@@ -383,10 +489,21 @@ export class ImportadorComponent implements OnInit, OnDestroy {
     for (const r of this.a.routers ?? []) {
       o.routers[r.clave] = r.sugerencia ?? null;
     }
+    for (const p of this.a.planes ?? []) {
+      // El precio del origen sólo se propone cuando es creíble; si no, queda
+      // vacío y la pantalla lo marca en rojo.
+      o.precios[p.clave] = p.precio ?? null;
+      o.actualizar_precio[p.clave] = false;
+    }
     o.grupo = this.grupos.length ? this.grupos[0].grupo : null;
     o.grupo_por_dia = Object.keys(this.a.dias_pago ?? {}).length > 0;
+    o.router_todos = this.routers.length === 1 ? this.routers[0].id : null;
+    o.regla_nombre = this.imp?.opciones?.regla_nombre ?? 'auto';
+    o.saldo.concepto = `Saldo anterior de ${this.nombre(this.origen)}`;
     if ((this.a.por_estado?.retirado ?? 0) === 0) o.estados = ['activo', 'suspendido'];
     this.opciones = o;
+    this.recalcularResumen();
+    this.verNombres(o.regla_nombre);
   }
 
   alternarEstado(e: string): void {
@@ -424,6 +541,140 @@ export class ImportadorComponent implements OnInit, OnDestroy {
 
   get puedeImportar(): boolean {
     return !!this.opciones.grupo && this.opciones.estados.length > 0 && this.planesSinElegir === 0 && this.aImportar > 0;
+  }
+
+  /** Planes que se van a usar sin valor mensual cargado: no se les puede facturar. */
+  get planesSinValor(): number {
+    return this.resumen.filter(r => !r.valor).length;
+  }
+
+  /**
+   * Cómo queda cada grupo de clientes con lo elegido: plan, valor, día de
+   * cobro y router. Es el resumen que mira el dueño antes de confirmar.
+   */
+  resumen: { plan: string; clientes: number; valor: number | null; nuevo: boolean; grupo: number | null; dia: number | null; router: string }[] = [];
+
+  recalcularResumen(): void {
+    const o = this.opciones;
+
+    this.repartoVista = o.grupo_modo === 'plan'
+      ? (this.a.planes ?? []).map((p: any) => ({ clave: p.clave, nombre: p.nombre, clientes: p.clientes }))
+      : o.grupo_modo === 'router'
+        ? (this.a.routers ?? []).map((r: any) => ({ clave: r.clave, nombre: r.nombre, clientes: r.clientes }))
+        : o.grupo_modo === 'estado'
+          ? this.ESTADOS.filter(e => o.estados.includes(e.v)).map(e => ({ clave: e.v, nombre: e.t, clientes: this.a.por_estado?.[e.v] ?? 0 }))
+          : [];
+
+    this.resumen = (this.a.planes ?? []).map((p: any) => {
+      const eleccion = o.planes[p.clave];
+      const propio = eleccion !== 'crear' ? this.planes.find(x => x.id === Number(eleccion)) : null;
+      const grupo = o.grupo_modo === 'plan' ? (o.grupos_por_plan[p.clave] ?? o.grupo) : o.grupo;
+
+      return {
+        plan: propio ? propio.plan_name : (p.nombre || '(sin plan)'),
+        clientes: p.clientes,
+        valor: propio ? Number(propio.monthly_price) || null : (Number(o.precios[p.clave]) || null),
+        nuevo: eleccion === 'crear',
+        grupo,
+        dia: this.grupos.find(g => g.grupo === grupo)?.billing_day ?? null,
+        router: o.router_todos
+          ? (this.routers.find(r => r.id === o.router_todos)?.name ?? '')
+          : 'según el archivo',
+      };
+    });
+  }
+
+  /** Los clientes con saldo, para el aviso de la factura. */
+  get saldoClientes(): number { return this.a.saldo?.clientes ?? 0; }
+  get saldoTotal(): number { return this.a.saldo?.total ?? 0; }
+
+  // ── Nombres ──────────────────────────────────────────────────────────
+  verNombres(regla: string): void {
+    if (!this.imp) return;
+    this.opciones.regla_nombre = regla;
+    this.probandoNombres = true;
+    this.svc.nombres(this.imp.id, regla).subscribe({
+      next: (r: any) => {
+        this.probandoNombres = false;
+        this.ejemplosNombre = r?.data?.ejemplos ?? [];
+        this.cargarFilas();
+      },
+      error: () => { this.probandoNombres = false; },
+    });
+  }
+
+  // ── Grupos de facturación ────────────────────────────────────────────
+  crearGrupo(): void {
+    if (!this.nuevoGrupo.billing_day) return;
+    this.creandoGrupo = true;
+    this.error = '';
+    this.svc.crearGrupo({ billing_day: Number(this.nuevoGrupo.billing_day), nombre: this.nuevoGrupo.nombre.trim() }).subscribe({
+      next: (r: any) => {
+        this.creandoGrupo = false;
+        if (r?.error) { this.error = r.message; return; }
+        this.grupos = r.data?.grupos ?? this.grupos;
+        this.armarOpciones();
+        if (!this.opciones.grupo) this.opciones.grupo = this.grupos[0]?.grupo ?? null;
+        this.nuevoGrupo = { billing_day: 30, nombre: '' };
+        this.recalcularResumen();
+      },
+      error: (e) => { this.creandoGrupo = false; this.error = this.mensaje(e, 'No se pudo crear el grupo.'); },
+    });
+  }
+
+  /** Volver al paso de columnas sin tener que subir el archivo otra vez. */
+  get puedeRevisarColumnas(): boolean {
+    return this.metodo === 'archivo' && this.opcionesColumna.length > 0 && this.muestra.length > 0;
+  }
+
+  nombreRouter(id: number | null): string {
+    return this.routers.find(r => r.id === Number(id))?.name ?? '';
+  }
+
+  textoGrupo(g: number | null): string {
+    const x = this.grupos.find(y => y.grupo === g);
+    return x ? `${x.nombre || 'Grupo ' + x.grupo} · día ${x.billing_day}` : 'sin grupo';
+  }
+
+  // ── Selección de clientes ────────────────────────────────────────────
+  alternarSeleccion(id: number): void {
+    this.seleccion.has(id) ? this.seleccion.delete(id) : this.seleccion.add(id);
+  }
+
+  seleccionarPagina(): void {
+    const todos = this.filas.every(f => this.seleccion.has(f.id));
+    for (const f of this.filas) todos ? this.seleccion.delete(f.id) : this.seleccion.add(f.id);
+  }
+
+  get seleccionEnPagina(): boolean {
+    return this.filas.length > 0 && this.filas.every(f => this.seleccion.has(f.id));
+  }
+
+  /** Asigna grupo o router a los clientes marcados (o a todo el filtro). */
+  asignar(aTodas = false): void {
+    if (!this.imp) return;
+    if (!aTodas && !this.seleccion.size) return;
+
+    const datos: any = aTodas
+      ? { todas: true, filtro: this.filtro, buscar: this.buscar.trim() }
+      : { ids: [...this.seleccion] };
+
+    if (this.asignarGrupo) datos.grupo = this.asignarGrupo;
+    if (this.asignarRouter) datos.router = this.asignarRouter;
+    if (!datos.grupo && !datos.router) return;
+
+    this.asignando = true;
+    this.svc.asignar(this.imp.id, datos).subscribe({
+      next: (r: any) => {
+        this.asignando = false;
+        if (r?.error) { this.error = r.message; return; }
+        this.seleccion.clear();
+        this.asignarGrupo = null;
+        this.asignarRouter = null;
+        this.cargarFilas();
+      },
+      error: (e) => { this.asignando = false; this.error = this.mensaje(e, 'No se pudo asignar.'); },
+    });
   }
 
   ejecutar(): void {
@@ -511,13 +762,21 @@ export class ImportadorComponent implements OnInit, OnDestroy {
     });
   }
 
-  /** Compara las IP de los clientes con el ARP del MikroTik sin escribir nada. */
-  revisarRouter(): void {
-    this.sincronizando = true;
-    this.sincronizacion = null;
-    this.mikrotik.syncIps(true).subscribe({
-      next: (r: any) => { this.sincronizando = false; this.sincronizacion = r?.data ?? { errores: [r?.message] }; },
-      error: (e) => { this.sincronizando = false; this.sincronizacion = { errores: [this.mensaje(e, 'No se pudo leer el router.')] }; },
+  /**
+   * Compara los clientes importados con el MikroTik: sólo lee el router. Con
+   * amarrar=true además les anota en la ficha el router donde aparecieron.
+   */
+  compararConElRouter(amarrar = false): void {
+    if (!this.imp) return;
+    this.cotejando = true;
+    this.error = '';
+    this.svc.cotejo(this.imp.id, this.routerCotejo, amarrar).subscribe({
+      next: (r: any) => {
+        this.cotejando = false;
+        this.cotejo = r?.data ?? null;
+        if (r?.error) this.error = r.message;
+      },
+      error: (e) => { this.cotejando = false; this.error = this.mensaje(e, 'No se pudo leer el router.'); },
     });
   }
 
