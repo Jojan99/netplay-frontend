@@ -215,7 +215,36 @@ export class OltVpnComponent implements OnInit {
   }
 
   get puedeGuardar(): boolean {
-    return this.form.nombre.trim() !== '' && this.form.redes_remotas.trim() !== '';
+    return this.form.nombre.trim() !== '' && this.redesAEnviar !== '';
+  }
+
+  /**
+   * Redes que conviene poner en un túnel nuevo: la /24 de cada OLT con IP
+   * privada que todavía no cae en ningún túnel. La IP del túnel en sí no se
+   * pide: la plataforma asigna la siguiente libre de la red del servidor.
+   */
+  get redesSugeridas(): string[] {
+    const privada = (ip: string) => /^10\./.test(ip) || /^192\.168\./.test(ip) || /^172\.(1[6-9]|2\d|3[01])\./.test(ip);
+    const redes   = this.olts
+      .map(o => (o.host || '').trim())
+      .filter(ip => /^\d{1,3}(\.\d{1,3}){3}$/.test(ip) && privada(ip))
+      .filter(ip => !this.tuneles.some(t => this.caeEn(ip, t.redes_remotas)))
+      .map(ip => ip.split('.').slice(0, 3).join('.') + '.0/24');
+
+    return [...new Set(redes)];
+  }
+
+  /** Las redes escritas, o las sugeridas si el campo quedó vacío en un alta. */
+  private get redesAEnviar(): string {
+    const escritas = this.form.redes_remotas.trim();
+    if (escritas || this.editando) return escritas;
+    return this.redesSugeridas.join(', ');
+  }
+
+  agregarRed(red: string): void {
+    const actuales = this.form.redes_remotas.split(',').map(r => r.trim()).filter(Boolean);
+    if (!actuales.includes(red)) actuales.push(red);
+    this.form.redes_remotas = actuales.join(', ');
   }
 
   crear(): void {
@@ -225,7 +254,7 @@ export class OltVpnComponent implements OnInit {
 
     this.olt.crearTunelVpn({
       nombre:        this.form.nombre.trim(),
-      redes_remotas: this.form.redes_remotas.trim(),
+      redes_remotas: this.redesAEnviar,
       keepalive:     this.form.keepalive,
       puerto_router: this.form.puerto_router,
       notas:         this.form.notas.trim() || null,

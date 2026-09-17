@@ -131,7 +131,17 @@
       <p class="np-notice np-notice--info np-notice--inline" *ngIf="editando">Al guardar, el servidor rehace su configuración. No hace falta volver a pegar el script en el router: sólo si agregás redes que necesiten enmascarado nuevo.</p>
       <div class="np-form">
         <label class="np-field np-field-full"><span>Nombre del nodo <em>*</em></span><input class="np-input" [(ngModel)]="form.nombre" placeholder="Nodo Rebolo" /></label>
-        <label class="np-field np-field-full"><span>Redes alcanzables <em>*</em></span><input class="np-input np-mono" [(ngModel)]="form.redes_remotas" placeholder="10.11.104.0/24, 192.168.88.0/24" /></label>
+        <label class="np-field np-field-full"><span>Redes alcanzables <em>*</em></span><input class="np-input np-mono" [(ngModel)]="form.redes_remotas" [placeholder]="redesSugeridas.length ? redesSugeridas.join(', ') : '10.11.104.0/24, 192.168.88.0/24'" /></label>
+        <p class="np-hint np-field-full" *ngIf="!editando && servidor">
+          La IP del túnel no se escribe: la plataforma le asigna al router la siguiente libre de
+          <code>{{ servidor.subred }}</code> (el servidor es <code>{{ servidor.ip_servidor }}</code>) y la pone en el script.
+          Acá van las redes <b>de tu lado</b>, detrás del router: la de gestión de la OLT, por ejemplo.
+        </p>
+        <p class="np-hint np-field-full" *ngIf="!editando && redesSugeridas.length">
+          Sugeridas por tus OLT:
+          <button type="button" class="np-link np-mono" *ngFor="let r of redesSugeridas" (click)="agregarRed(r)">{{ r }}</button>
+          <span *ngIf="!form.redes_remotas.trim()"> — si lo dejás vacío se usan éstas.</span>
+        </p>
         <label class="np-field"><span>Puerto en el router</span><input type="number" class="np-input np-mono" [(ngModel)]="form.puerto_router" /></label>
         <label class="np-field"><span>Keepalive (s)</span><input type="number" class="np-input np-mono" [(ngModel)]="form.keepalive" /></label>
         <label class="np-field np-field-full"><span>Notas</span><input class="np-input" [(ngModel)]="form.notas" placeholder="Reemplaza el jump host 181.48.150.42" /></label>
