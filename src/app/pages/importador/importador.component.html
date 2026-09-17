@@ -1,0 +1,507 @@
+<div class="np-page np-importador">
+
+  <!-- Cabecera -->
+  <header class="np-head">
+    <div>
+      <p class="np-kicker">Operación <b>/</b> Clientes <b>/</b> Importar</p>
+      <h1 class="np-title">Importar clientes</h1>
+      <div class="np-ribbon">
+        <span>Traé tus clientes desde <b>WispHub</b> o <b>Mikrowisp</b>: quedan con su plan, router, conexión y facturación.</span>
+      </div>
+    </div>
+    <div class="np-actions">
+      <a class="np-btn np-btn--ghost" routerLink="/dashboard/usuario">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>Volver a clientes
+      </a>
+      <button *ngIf="imp && paso !== 'origen'" type="button" class="np-btn np-btn--ghost" (click)="nueva()">Nueva importación</button>
+    </div>
+  </header>
+
+  <!-- Pasos -->
+  <ol class="imp-pasos" *ngIf="esAdmin && !cargando" aria-label="Pasos">
+    <li [class.is-on]="paso === 'origen'" [class.is-done]="paso !== 'origen'"><span>1</span>Plataforma</li>
+    <li [class.is-on]="['metodo','columnas','leyendo'].includes(paso)" [class.is-done]="['previa','importando','resultado'].includes(paso)"><span>2</span>Datos</li>
+    <li [class.is-on]="paso === 'previa'" [class.is-done]="['importando','resultado'].includes(paso)"><span>3</span>Revisar</li>
+    <li [class.is-on]="paso === 'importando'" [class.is-done]="paso === 'resultado'"><span>4</span>Importar</li>
+    <li [class.is-on]="paso === 'resultado'"><span>5</span>Resultado</li>
+  </ol>
+
+  <div class="imp-cuerpo">
+
+    <p *ngIf="!esAdmin" class="np-notice np-notice--warn"><strong>Sólo un administrador</strong> puede importar clientes.</p>
+    <div *ngIf="esAdmin && cargando" class="np-loading"><span class="np-spinner"></span>Cargando…</div>
+    <p *ngIf="error" class="np-notice np-notice--danger imp-error">{{ error }}</p>
+
+    <!-- ══ 1. Plataforma ══════════════════════════════════════════════════ -->
+    <ng-container *ngIf="esAdmin && !cargando && paso === 'origen'">
+      <section class="imp-card">
+        <h2 class="imp-h2">¿De qué plataforma venís?</h2>
+        <div class="imp-origenes">
+          <button type="button" class="imp-origen" (click)="elegirOrigen('wisphub')">
+            <b>WispHub</b>
+            <span>Con tu API Key o con el Excel de clientes.</span>
+          </button>
+          <button type="button" class="imp-origen" (click)="elegirOrigen('mikrowisp')">
+            <b>Mikrowisp</b>
+            <span>Con el token de la API de tu servidor o con el Excel de clientes.</span>
+          </button>
+        </div>
+        <ul class="imp-garantias">
+          <li>No se toca ningún router ni OLT: tus clientes ya están configurados allá.</li>
+          <li>No se les manda WhatsApp, correo ni avisos a los clientes.</li>
+          <li>No se generan facturas: sólo quedan listos para la próxima facturación.</li>
+          <li>Podés importar de nuevo sin duplicar: se reconocen por documento y por el ID de origen.</li>
+        </ul>
+      </section>
+
+      <section class="imp-card" *ngIf="historial.length">
+        <h2 class="imp-h2">Importaciones anteriores</h2>
+        <div class="np-tablewrap">
+          <table class="np-table np-table--compact">
+            <thead><tr><th>Fecha</th><th>Origen</th><th>Estado</th><th class="np-th-right">Clientes</th><th>Resultado</th><th></th></tr></thead>
+            <tbody>
+              <tr *ngFor="let h of historial">
+                <td class="np-data">{{ h.created_at }}</td>
+                <td>{{ nombre(h.origen) }} <small class="np-muted">· {{ h.metodo === 'api' ? 'API' : (h.nombre_archivo || 'archivo') }}</small></td>
+                <td><span class="np-pill" [ngClass]="'np-pill--' + tonoEstadoImportacion(h.estado)">{{ textoEstadoImportacion(h.estado) }}</span></td>
+                <td class="np-data np-td-right">{{ h.total }}</td>
+                <td class="np-data">{{ h.creados }} creados · {{ h.actualizados }} act. · {{ h.omitidos }} omit. · {{ h.errores }} err.</td>
+                <td class="np-td-right"><button type="button" class="np-link" (click)="abrir(h.id)">Abrir</button></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+    </ng-container>
+
+    <!-- ══ 2. Método ══════════════════════════════════════════════════════ -->
+    <section class="imp-card" *ngIf="esAdmin && paso === 'metodo' && origen">
+      <div class="imp-cardhead">
+        <h2 class="imp-h2">Clientes de {{ nombre(origen) }}</h2>
+        <button type="button" class="np-link np-link--muted" (click)="paso = 'origen'; error = ''">Cambiar plataforma</button>
+      </div>
+
+      <div class="np-seg imp-seg">
+        <button type="button"  [attr.aria-pressed]="metodo === 'api'" (click)="metodo = 'api'">Conectar por API</button>
+        <button type="button"  [attr.aria-pressed]="metodo === 'archivo'" (click)="metodo = 'archivo'">Subir el Excel / CSV</button>
+      </div>
+
+      <!-- API -->
+      <div *ngIf="metodo === 'api'" class="imp-bloque">
+        <div class="imp-ayuda" *ngIf="origen === 'wisphub'">
+          <b>Dónde está la API Key:</b> en WispHub abrí la <em>Lista de personal</em>, elegí un usuario con permiso para ver clientes y generá su <em>API Key</em>. Se muestra una sola vez: copiala entera.
+        </div>
+        <div class="imp-ayuda" *ngIf="origen === 'mikrowisp'">
+          <b>Qué necesitás:</b> la dirección de tu Mikrowisp (la misma con la que entrás al panel) y el <em>token de la API</em>, que se genera en la configuración del sistema de Mikrowisp. La API tiene que estar habilitada.
+        </div>
+
+        <div class="np-form">
+          <label class="np-field np-field-full">
+            <span>{{ origen === 'wisphub' ? 'Dirección de la API' : 'Dirección de tu Mikrowisp' }} <em>*</em></span>
+            <input class="np-input np-mono" [(ngModel)]="api.url" [placeholder]="origen === 'wisphub' ? 'https://api.wisphub.net' : 'https://mikrowisp.tuempresa.com'" autocomplete="off" />
+          </label>
+
+          <div class="np-field-full imp-guardada" *ngIf="credencial(origen) as c">
+            <label class="np-check np-check--box">
+              <input type="checkbox" [(ngModel)]="api.usarGuardado" />
+              <span>Usar la clave guardada el {{ c.guardada_en }}</span>
+            </label>
+            <button type="button" class="np-link np-link--muted" (click)="olvidarCredencial()">Borrar la clave guardada</button>
+          </div>
+
+          <label class="np-field np-field-full" *ngIf="!api.usarGuardado">
+            <span>{{ origen === 'wisphub' ? 'API Key' : 'Token de la API' }} <em>*</em></span>
+            <input class="np-input np-mono" type="password" [(ngModel)]="api.token" autocomplete="new-password" [placeholder]="origen === 'wisphub' ? 'AAAAAAAA.BBBBBBBBBBBBBBBB…' : 'Pegá el token'" />
+          </label>
+          <label class="np-check np-check--box np-field-full" *ngIf="!api.usarGuardado">
+            <input type="checkbox" [(ngModel)]="api.guardar" />
+            <span>Guardar la dirección y la clave para la próxima vez (quedan cifradas).</span>
+          </label>
+        </div>
+
+        <div class="np-btnrow np-btnrow--end">
+          <button type="button" class="np-btn np-btn--primary" (click)="conectarApi()" [disabled]="ocupado || !api.url.trim() || (!api.usarGuardado && !api.token.trim())">
+            <span *ngIf="ocupado" class="np-spinner np-spinner--sm"></span>{{ ocupado ? 'Conectando…' : 'Conectar y leer clientes' }}
+          </button>
+        </div>
+      </div>
+
+      <!-- Archivo -->
+      <div *ngIf="metodo === 'archivo'" class="imp-bloque">
+        <div class="imp-ayuda" *ngIf="origen === 'wisphub'">
+          <b>Cómo exportar:</b> en WispHub abrí <em>Clientes</em> y en <em>Ver/ocultar columnas</em> activá al menos <em>Cédula (DNI/C.C.)</em>, <em>Nombre</em>, <em>ID</em>, <em>Estado</em>, <em>Plan de Internet</em>, <em>Plan Precio</em>, <em>Router</em>, <em>Ip</em>, <em>Teléfono</em>, <em>Dirección</em>, <em>Día de Corte</em> y, si usás PPPoE, <em>Usuario RB</em> y <em>Password PPPoE</em>. Después tocá <em>Excel</em> o <em>CSV</em>. WispHub exporta sólo las columnas visibles.
+        </div>
+        <div class="imp-ayuda" *ngIf="origen === 'mikrowisp'">
+          <b>Cómo exportar:</b> en Mikrowisp exportá la lista de clientes a Excel con cédula, nombre, estado, plan (perfil), costo, router/nodo, IP, MAC y usuario/contraseña PPPoE. En el paso siguiente elegís qué columna es cada dato.
+        </div>
+
+        <label class="imp-drop" [class.has-file]="archivo">
+          <input type="file" accept=".xlsx,.csv,.txt" (change)="elegirArchivo($event)" />
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 16V4m0 0-4 4m4-4 4 4M4 16v3a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-3"/></svg>
+          <b>{{ archivo ? archivo.name : 'Elegí el archivo exportado' }}</b>
+          <span>{{ archivo ? (archivo.size / 1024 | number:'1.0-0') + ' KB' : 'Excel (.xlsx) o CSV. Un .xls viejo: abrilo en Excel y guardalo como .xlsx.' }}</span>
+        </label>
+
+        <div class="np-btnrow np-btnrow--end">
+          <button type="button" class="np-btn np-btn--primary" (click)="subirArchivo()" [disabled]="ocupado || !archivo">
+            <span *ngIf="ocupado" class="np-spinner np-spinner--sm"></span>{{ ocupado ? 'Leyendo…' : 'Leer archivo' }}
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ══ 2b. Columnas (archivo) ═════════════════════════════════════════ -->
+    <section class="imp-card" *ngIf="esAdmin && paso === 'columnas' && imp">
+      <div class="imp-cardhead">
+        <div>
+          <h2 class="imp-h2">¿Qué columna es cada dato?</h2>
+          <p class="np-muted">{{ imp.nombre_archivo }} · {{ imp.total }} filas. Lo marcado ya se reconoció solo; revisalo y completá lo que falte.</p>
+        </div>
+        <button type="button" class="np-link np-link--muted" (click)="cancelar()">Descartar</button>
+      </div>
+
+      <div class="imp-mapeo">
+        <div class="imp-mapeo-fila" *ngFor="let c of camposLista">
+          <div class="imp-mapeo-campo">
+            <b>{{ c.etiqueta }}</b><em *ngIf="c.campo === 'dni' || c.campo === 'nombre'"> *</em>
+          </div>
+          <np-select [(ngModel)]="mapeo[c.campo]" [opciones]="opcionesColumna" [presentacion]="pres"
+                     [permitirVacio]="true" textoVacio="— No está en el archivo —" placeholder="— No está en el archivo —"
+                     [ariaLabel]="'Columna para ' + c.etiqueta"></np-select>
+          <div class="imp-mapeo-ej np-data np-data--dim">{{ ejemploColumna(c.campo) }}</div>
+        </div>
+      </div>
+
+      <p class="np-notice np-notice--warn" *ngIf="!columnasListas"><strong>Faltan columnas:</strong> hacen falta al menos el documento y el nombre.</p>
+
+      <div class="np-btnrow np-btnrow--end">
+        <button type="button" class="np-btn np-btn--primary" (click)="confirmarColumnas()" [disabled]="ocupado || !columnasListas">
+          <span *ngIf="ocupado" class="np-spinner np-spinner--sm"></span>{{ ocupado ? 'Revisando…' : 'Ver vista previa' }}
+        </button>
+      </div>
+    </section>
+
+    <!-- ══ Leyendo (API) ══════════════════════════════════════════════════ -->
+    <section class="imp-card imp-progreso" *ngIf="esAdmin && paso === 'leyendo' && imp">
+      <span class="np-spinner"></span>
+      <div>
+        <h2 class="imp-h2">Leyendo clientes de {{ nombre(imp.origen) }}</h2>
+        <p class="np-muted">{{ imp.detalle || 'Conectando…' }}</p>
+        <p class="np-muted imp-nota">Podés seguir usando el panel: el avance queda en la ventana de tareas.</p>
+      </div>
+      <button type="button" class="np-btn np-btn--ghost" (click)="cancelar()" [disabled]="imp.estado === 'cancelando'">{{ imp.estado === 'cancelando' ? 'Cancelando…' : 'Cancelar' }}</button>
+    </section>
+
+    <!-- ══ 3. Vista previa ════════════════════════════════════════════════ -->
+    <ng-container *ngIf="esAdmin && paso === 'previa' && imp">
+
+      <section class="imp-card">
+        <div class="imp-cardhead">
+          <div>
+            <h2 class="imp-h2">Vista previa</h2>
+            <p class="np-muted">Todavía no se guardó nada. Revisá y elegí cómo importar.</p>
+          </div>
+          <button type="button" class="np-link np-link--muted" (click)="cancelar()">Descartar</button>
+        </div>
+
+        <div class="np-stats imp-stats">
+          <button type="button" class="np-stat" (click)="cambiarFiltro('')"><span class="np-stat-l">Leídos</span><span class="np-stat-v">{{ a.total | number }}</span></button>
+          <button type="button" class="np-stat" (click)="cambiarFiltro('nuevo')"><span class="np-stat-l">Nuevos</span><span class="np-stat-v imp-ok">{{ a.nuevos | number }}</span></button>
+          <button type="button" class="np-stat" (click)="cambiarFiltro('existente')"><span class="np-stat-l">Ya existen</span><span class="np-stat-v">{{ a.existentes | number }}</span></button>
+          <button type="button" class="np-stat" (click)="cambiarFiltro('invalido')"><span class="np-stat-l">No se pueden importar</span><span class="np-stat-v imp-mal">{{ a.invalidos | number }}</span></button>
+          <button type="button" class="np-stat" (click)="cambiarFiltro('avisos')"><span class="np-stat-l">Con avisos</span><span class="np-stat-v is-warn">{{ a.con_avisos | number }}</span></button>
+        </div>
+
+        <div class="np-ribbon">
+          <span><span class="np-n">{{ a.conexiones?.pppoe | number }}</span>PPPoE</span>
+          <span><span class="np-n">{{ a.conexiones?.static | number }}</span>IP fija</span>
+          <span *ngIf="a.conexiones?.sin_ip"><i class="np-dot" style="background:var(--warn)"></i><span class="np-n">{{ a.conexiones.sin_ip | number }}</span>sin IP</span>
+        </div>
+
+        <div *ngIf="erroresAgrupados.length" class="imp-errores">
+          <p class="np-sect">Por qué no se pueden importar algunos</p>
+          <ul><li *ngFor="let e of erroresAgrupados"><b class="np-mono">{{ e.n }}</b> {{ e.texto }}</li></ul>
+        </div>
+      </section>
+
+      <!-- Estados -->
+      <section class="imp-card">
+        <h2 class="imp-h2">Qué clientes importar</h2>
+        <div class="imp-estados">
+          <label class="np-check np-check--box" *ngFor="let e of ['activo', 'suspendido', 'retirado']">
+            <input type="checkbox" [checked]="opciones.estados.includes(e)" (change)="alternarEstado(e)" />
+            <span><b>{{ textoEstado(e) }}s</b> · {{ (a.por_estado?.[e] ?? 0) + (e === 'activo' ? (a.por_estado?.desconocido ?? 0) : 0) | number }}
+              <small *ngIf="e === 'suspendido'" class="np-muted"><br>Quedan suspendidos también acá.</small>
+              <small *ngIf="e === 'retirado'" class="np-muted"><br>Entran dados de baja, sólo como historial.</small>
+            </span>
+          </label>
+        </div>
+
+        <p class="np-sect imp-sect">Clientes que ya existen ({{ a.existentes | number }})</p>
+        <div class="np-seg">
+          <button type="button" [attr.aria-pressed]="opciones.existentes === 'omitir'" (click)="opciones.existentes = 'omitir'">Dejarlos como están</button>
+          <button type="button" [attr.aria-pressed]="opciones.existentes === 'actualizar'" (click)="opciones.existentes = 'actualizar'">Actualizar sus datos</button>
+        </div>
+        <p class="np-muted imp-nota" *ngIf="opciones.existentes === 'actualizar'">Se actualizan contacto, plan, router, conexión y estado con lo que trae {{ nombre(imp.origen) }}. Un dato vacío en el origen no borra el que hay.</p>
+      </section>
+
+      <!-- Planes -->
+      <section class="imp-card">
+        <div class="imp-cardhead">
+          <h2 class="imp-h2">Planes</h2>
+          <span class="np-muted" *ngIf="planesACrear">Se van a crear {{ planesACrear }} planes.</span>
+        </div>
+        <div class="np-tablewrap">
+          <table class="np-table np-table--compact imp-tabla-map">
+            <thead><tr><th>Plan en {{ nombre(imp.origen) }}</th><th class="np-th-right">Clientes</th><th>Velocidad · precio</th><th>Queda como</th></tr></thead>
+            <tbody>
+              <tr *ngFor="let p of a.planes">
+                <td><b>{{ p.nombre }}</b><div class="np-plan">{{ p.motivo }}</div></td>
+                <td class="np-data np-td-right">{{ p.clientes }}</td>
+                <td class="np-data">{{ p.bajada ? p.bajada + '/' + (p.subida || '?') + ' Mbps' : 'sin velocidad' }} · {{ p.precio !== null ? '$' + peso(p.precio) : 'sin precio' }}<span *ngIf="p.precios_distintos > 1" class="np-muted"> ({{ p.precios_distintos }} precios)</span></td>
+                <td class="imp-select">
+                  <np-select [(ngModel)]="opciones.planes[p.clave]" [opciones]="p.clave === '' ? opcionesPlan.slice(1) : opcionesPlan" [presentacion]="pres"
+                             placeholder="Elegí un plan…" [ariaLabel]="'Plan para ' + p.nombre"></np-select>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <label class="np-field imp-tipo" *ngIf="planesACrear">
+          <span>Tecnología de los planes nuevos</span>
+          <np-select [(ngModel)]="opciones.tipo_plan" [opciones]="opcionesTipoPlan" [presentacion]="pres" ariaLabel="Tecnología"></np-select>
+        </label>
+        <p class="np-notice np-notice--warn" *ngIf="planesSinElegir"><strong>Falta elegir {{ planesSinElegir }} plan(es).</strong></p>
+        <p class="np-muted imp-nota" *ngIf="planesACrear">Si un plan no trae velocidad o precio, se crea en 0: revisalo después en Planes de internet.</p>
+      </section>
+
+      <!-- Routers -->
+      <section class="imp-card">
+        <h2 class="imp-h2">Routers</h2>
+        <p class="np-muted" *ngIf="!routers.length">La empresa no tiene routers cargados: los clientes quedan sin router y se los asignás después.</p>
+        <div class="np-tablewrap" *ngIf="routers.length">
+          <table class="np-table np-table--compact imp-tabla-map">
+            <thead><tr><th>Router / zona en {{ nombre(imp.origen) }}</th><th class="np-th-right">Clientes</th><th>Router en Netvula</th></tr></thead>
+            <tbody>
+              <tr *ngFor="let r of a.routers">
+                <td><b>{{ r.nombre }}</b></td>
+                <td class="np-data np-td-right">{{ r.clientes }}</td>
+                <td class="imp-select">
+                  <np-select [(ngModel)]="opciones.routers[r.clave]" [opciones]="opcionesRouter" [presentacion]="pres"
+                             [permitirVacio]="true" textoVacio="Sin router" placeholder="Sin router" [ariaLabel]="'Router para ' + r.nombre"></np-select>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <p class="np-muted imp-nota">Sólo se anota el router en la ficha: no se le escribe nada al MikroTik.</p>
+      </section>
+
+      <!-- Facturación -->
+      <section class="imp-card">
+        <h2 class="imp-h2">Facturación</h2>
+        <p class="np-notice np-notice--danger" *ngIf="!grupos.length">La empresa no tiene grupos de facturación. Configuralos en <a routerLink="/dashboard/billing-config">Configuración › Facturación</a> antes de importar.</p>
+        <div class="np-form" *ngIf="grupos.length">
+          <label class="np-field">
+            <span>Grupo de facturación <em>*</em></span>
+            <np-select [(ngModel)]="opciones.grupo" [opciones]="opcionesGrupo" [presentacion]="pres" ariaLabel="Grupo de facturación"></np-select>
+          </label>
+          <div></div>
+          <label class="np-check np-check--box np-field-full" *ngIf="diasPago.length">
+            <input type="checkbox" [(ngModel)]="opciones.grupo_por_dia" />
+            <span>Usar el día de corte de {{ nombre(imp.origen) }} cuando coincide con un grupo.
+              <small class="np-muted"><br>
+                <ng-container *ngFor="let d of diasPago; let ult = last">Día {{ d.dia }}: {{ d.n }} → {{ d.grupo ? 'grupo ' + d.grupo : 'grupo elegido' }}{{ ult ? '' : ' · ' }}</ng-container>
+              </small>
+            </span>
+          </label>
+          <label class="np-check np-check--box np-field-full">
+            <input type="checkbox" [(ngModel)]="opciones.cobro_mes_completo" />
+            <span>Cobrarles el mes completo en la próxima factura.
+              <small class="np-muted"><br>Sin esto, la facturación los toma como clientes nuevos y les cobra sólo los días desde hoy.</small>
+            </span>
+          </label>
+        </div>
+        <p class="np-notice np-notice--warn" *ngIf="a.saldo?.clientes">
+          <strong>{{ a.saldo.clientes | number }} clientes deben ${{ peso(a.saldo.total) }} en {{ nombre(imp.origen) }}.</strong>
+          Ese saldo no se convierte en facturas (se enviarían recordatorios y cortes automáticos): queda anotado en el reporte para que lo cobres o lo cargues a mano.
+        </p>
+      </section>
+
+      <!-- Filas -->
+      <ng-container *ngTemplateOutlet="tablaFilas"></ng-container>
+
+      <div class="imp-barra">
+        <span class="np-muted">{{ a.nuevos | number }} nuevos · {{ a.existentes | number }} ya existen ({{ opciones.existentes === 'omitir' ? 'se dejan como están' : 'se actualizan' }}) · {{ a.invalidos | number }} no se importan</span>
+        <button type="button" class="np-btn np-btn--primary" (click)="confirmar = true" [disabled]="!puedeImportar">Importar clientes</button>
+      </div>
+    </ng-container>
+
+    <!-- ══ 4. Importando ══════════════════════════════════════════════════ -->
+    <section class="imp-card" *ngIf="esAdmin && paso === 'importando' && imp">
+      <div class="imp-cardhead">
+        <div>
+          <h2 class="imp-h2">Importando clientes</h2>
+          <p class="np-muted">{{ imp.detalle }}</p>
+        </div>
+        <button type="button" class="np-btn np-btn--ghost" (click)="cancelar()" [disabled]="imp.estado === 'cancelando'">{{ imp.estado === 'cancelando' ? 'Deteniendo…' : 'Detener' }}</button>
+      </div>
+      <div class="imp-barra-progreso" role="progressbar" [attr.aria-valuenow]="porcentaje" aria-valuemin="0" aria-valuemax="100">
+        <i [style.width.%]="porcentaje"></i>
+      </div>
+      <div class="np-ribbon">
+        <span><span class="np-n">{{ imp.procesadas | number }}</span>de {{ imp.total | number }}</span>
+        <span><i class="np-dot" style="background:var(--ok)"></i><span class="np-n">{{ imp.creados | number }}</span>creados</span>
+        <span><span class="np-n">{{ imp.actualizados | number }}</span>actualizados</span>
+        <span><span class="np-n">{{ imp.omitidos | number }}</span>omitidos</span>
+        <span><i class="np-dot" style="background:var(--danger)"></i><span class="np-n">{{ imp.errores | number }}</span>con error</span>
+      </div>
+      <p class="np-muted imp-nota">Podés cerrar esta pantalla: la importación sigue en el servidor y el avance queda en la ventana de tareas.</p>
+    </section>
+
+    <!-- ══ 5. Resultado ═══════════════════════════════════════════════════ -->
+    <ng-container *ngIf="esAdmin && paso === 'resultado' && imp">
+      <section class="imp-card">
+        <div class="imp-cardhead">
+          <div>
+            <h2 class="imp-h2">{{ imp.estado === 'listo' ? 'Importación terminada' : (imp.estado === 'cancelada' ? 'Importación detenida' : 'La importación se cortó') }}</h2>
+            <p class="np-muted">{{ imp.detalle }}</p>
+          </div>
+          <div class="np-btnrow">
+            <button type="button" class="np-btn np-btn--ghost" (click)="descargarReporte()">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12m0 0 4-4m-4 4-4-4M4 17v3h16v-3"/></svg>Descargar reporte
+            </button>
+            <a class="np-btn np-btn--primary" routerLink="/dashboard/usuario">Ver clientes</a>
+          </div>
+        </div>
+
+        <div class="np-stats imp-stats">
+          <button type="button" class="np-stat" (click)="cambiarFiltro('creado')"><span class="np-stat-l">Creados</span><span class="np-stat-v imp-ok">{{ imp.creados | number }}</span></button>
+          <button type="button" class="np-stat" (click)="cambiarFiltro('actualizado')"><span class="np-stat-l">Actualizados</span><span class="np-stat-v">{{ imp.actualizados | number }}</span></button>
+          <button type="button" class="np-stat" (click)="cambiarFiltro('omitido')"><span class="np-stat-l">Omitidos</span><span class="np-stat-v">{{ imp.omitidos | number }}</span></button>
+          <button type="button" class="np-stat" (click)="cambiarFiltro('error')"><span class="np-stat-l">Con error</span><span class="np-stat-v imp-mal">{{ imp.errores | number }}</span></button>
+        </div>
+
+        <div class="np-btnrow" *ngIf="imp.estado !== 'listo' && imp.procesadas < imp.total">
+          <p class="np-muted">Quedaron {{ imp.total - imp.procesadas | number }} clientes sin procesar.</p>
+          <button type="button" class="np-btn np-btn--ghost" (click)="ejecutar()" [disabled]="ocupado || !puedeImportar">Continuar con los que faltan</button>
+        </div>
+      </section>
+
+      <section class="imp-card" *ngIf="routers.length">
+        <div class="imp-cardhead">
+          <div>
+            <h2 class="imp-h2">Comparar con el router</h2>
+            <p class="np-muted">Lee el ARP del MikroTik y cuenta qué IP no coinciden con las fichas. <b>Sólo lee</b>: no cambia nada ni en el router ni acá.</p>
+          </div>
+          <button type="button" class="np-btn np-btn--ghost" (click)="revisarRouter()" [disabled]="sincronizando">
+            <span *ngIf="sincronizando" class="np-spinner np-spinner--sm"></span>{{ sincronizando ? 'Leyendo el router…' : 'Comparar' }}
+          </button>
+        </div>
+        <div *ngIf="sincronizacion" class="np-ribbon">
+          <span *ngFor="let r of sincronizacion.routers">{{ r.router }}: <span class="np-n">{{ r.entradas | number }}</span>entradas ARP</span>
+          <span><span class="np-n">{{ sincronizacion.sin_cambio ?? 0 | number }}</span>coinciden</span>
+          <span><i class="np-dot" style="background:var(--warn)"></i><span class="np-n">{{ sincronizacion.cambios?.length ?? 0 | number }}</span>con otra IP en el router</span>
+          <span><span class="np-n">{{ sincronizacion.desconocidos?.length ?? 0 | number }}</span>entradas sin cliente</span>
+        </div>
+        <p class="np-muted imp-nota" *ngIf="sincronizacion?.cambios?.length">Para traer esas IP a las fichas usá <a routerLink="/dashboard/mikrotik">Mikrotik › Sincronizar IPs</a>, donde podés revisarlas antes de aplicar.</p>
+        <p class="np-notice np-notice--danger" *ngIf="sincronizacion?.errores?.length">{{ sincronizacion.errores.join(' ') }}</p>
+      </section>
+
+      <ng-container *ngTemplateOutlet="tablaFilas"></ng-container>
+    </ng-container>
+  </div>
+</div>
+
+<!-- ══ Tabla de filas (vista previa y resultado) ════════════════════════ -->
+<ng-template #tablaFilas>
+  <section class="imp-card">
+    <div class="np-toolbar imp-toolbar">
+      <label class="np-search">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg>
+        <input type="search" placeholder="Nombre, documento o ID…" aria-label="Buscar" [(ngModel)]="buscar" (input)="alBuscar()" />
+      </label>
+      <div class="np-chips" role="group" aria-label="Filtrar">
+        <button type="button" class="np-chip" [attr.aria-pressed]="filtro === ''" (click)="cambiarFiltro('')">Todos</button>
+        <ng-container *ngIf="paso === 'previa'">
+          <button type="button" class="np-chip" [attr.aria-pressed]="filtro === 'nuevo'" (click)="cambiarFiltro('nuevo')">Nuevos</button>
+          <button type="button" class="np-chip" [attr.aria-pressed]="filtro === 'existente'" (click)="cambiarFiltro('existente')">Ya existen</button>
+          <button type="button" class="np-chip" [attr.aria-pressed]="filtro === 'invalido'" (click)="cambiarFiltro('invalido')">Con errores</button>
+          <button type="button" class="np-chip" [attr.aria-pressed]="filtro === 'avisos'" (click)="cambiarFiltro('avisos')">Con avisos</button>
+        </ng-container>
+        <ng-container *ngIf="paso === 'resultado'">
+          <button type="button" class="np-chip" [attr.aria-pressed]="filtro === 'creado'" (click)="cambiarFiltro('creado')">Creados</button>
+          <button type="button" class="np-chip" [attr.aria-pressed]="filtro === 'actualizado'" (click)="cambiarFiltro('actualizado')">Actualizados</button>
+          <button type="button" class="np-chip" [attr.aria-pressed]="filtro === 'omitido'" (click)="cambiarFiltro('omitido')">Omitidos</button>
+          <button type="button" class="np-chip" [attr.aria-pressed]="filtro === 'error'" (click)="cambiarFiltro('error')">Con error</button>
+        </ng-container>
+      </div>
+    </div>
+
+    <div class="np-tablewrap">
+      <table class="np-table np-table--compact imp-filas">
+        <thead><tr><th class="np-th-right">#</th><th>Cliente</th><th>Plan</th><th>Conexión</th><th>Estado</th><th>{{ paso === 'resultado' ? 'Resultado' : 'Vista previa' }}</th></tr></thead>
+        <tbody>
+          <tr *ngIf="cargandoFilas"><td colspan="6"><div class="np-loading np-loading--inline"><span class="np-spinner np-spinner--sm"></span>Cargando…</div></td></tr>
+          <tr *ngIf="!cargandoFilas && !filas.length" class="np-empty"><td colspan="6"><strong>Nada para mostrar.</strong></td></tr>
+          <ng-container *ngFor="let f of filas">
+            <tr class="np-row" (click)="filaAbierta = filaAbierta === f.id ? null : f.id" tabindex="0" (keydown.enter)="filaAbierta = filaAbierta === f.id ? null : f.id">
+              <td class="np-data np-td-right">{{ f.fila }}</td>
+              <td>
+                <div class="np-name">{{ f.datos.nombres }} {{ f.datos.apellidos }}</div>
+                <div class="np-plan"><em>{{ f.datos.dni || 'sin documento' }}</em><ng-container *ngIf="f.datos.external_id"> · ID {{ f.datos.external_id }}</ng-container></div>
+              </td>
+              <td>{{ f.datos.plan || '—' }}<div class="np-plan" *ngIf="f.datos.router">{{ f.datos.router }}</div></td>
+              <td class="np-data">{{ f.datos.tipo_conexion === 'pppoe' ? 'PPPoE · ' + f.datos.pppoe_usuario : (f.datos.ip || 'IP fija sin IP') }}</td>
+              <td>{{ textoEstado(f.datos.estado) }}</td>
+              <td>
+                <span class="np-pill" [ngClass]="'np-pill--' + tonoFila(f)">{{ textoFila(f) }}</span>
+                <span class="imp-contador is-mal" *ngIf="f.errores.length" [title]="f.errores.join(' ')">{{ f.errores.length }}</span>
+                <span class="imp-contador" *ngIf="f.avisos.length" [title]="f.avisos.join(' ')">{{ f.avisos.length }}</span>
+              </td>
+            </tr>
+            <tr *ngIf="filaAbierta === f.id" class="imp-detalle">
+              <td></td>
+              <td colspan="5">
+                <p *ngIf="f.mensaje"><b>{{ f.mensaje }}</b></p>
+                <ul *ngIf="f.errores.length" class="imp-lista is-mal"><li *ngFor="let e of f.errores">{{ e }}</li></ul>
+                <ul *ngIf="f.avisos.length" class="imp-lista"><li *ngFor="let e of f.avisos">{{ e }}</li></ul>
+                <p class="np-meta">
+                  Tel. <b>{{ f.datos.telefono || '—' }}</b> · Correo <b>{{ f.datos.email || '—' }}</b> · Dirección <b>{{ f.datos.direccion || '—' }}</b>
+                  · MAC <b>{{ f.datos.mac || '—' }}</b> · Día de corte <b>{{ f.datos.dia_pago || '—' }}</b> · Saldo <b>{{ f.datos.saldo ? '$' + peso(f.datos.saldo) : '—' }}</b>
+                  <ng-container *ngIf="f.user_id"> · <a [routerLink]="['/dashboard/usuario']" [queryParams]="{ cliente: f.user_id }">Abrir ficha</a></ng-container>
+                </p>
+              </td>
+            </tr>
+          </ng-container>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="np-pager np-pager--flat" *ngIf="totalFilas > porPagina">
+      <span class="np-range">{{ (pagina - 1) * porPagina + 1 }}–{{ pagina * porPagina > totalFilas ? totalFilas : pagina * porPagina }} de {{ totalFilas | number }}</span>
+      <div class="np-btnrow">
+        <button type="button" class="np-btn np-btn--sm np-btn--ghost" (click)="irAPagina(pagina - 1)" [disabled]="pagina <= 1">Anterior</button>
+        <button type="button" class="np-btn np-btn--sm np-btn--ghost" (click)="irAPagina(pagina + 1)" [disabled]="pagina >= paginas">Siguiente</button>
+      </div>
+    </div>
+  </section>
+</ng-template>
+
+<!-- ══ Confirmar ════════════════════════════════════════════════════════ -->
+<div *ngIf="confirmar && imp" class="np-overlay" (click)="confirmar = false">
+  <div class="np-modal np-modal--confirm" role="alertdialog" aria-modal="true" (click)="$event.stopPropagation()">
+    <span class="np-confirm-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="8" r="3.5"/><path d="M3 20a6 6 0 0 1 12 0M17 8v6M14 11h6"/></svg></span>
+    <h3>¿Importar los clientes?</h3>
+    <p>
+      Se crean hasta <b>{{ a.nuevos | number }}</b> clientes nuevos
+      <ng-container *ngIf="a.existentes">y {{ opciones.existentes === 'omitir' ? 'se dejan como están' : 'se actualizan' }} <b>{{ a.existentes | number }}</b> que ya existen</ng-container>,
+      en estado {{ opciones.estados.join(', ') }}<ng-container *ngIf="planesACrear">, con {{ planesACrear }} planes nuevos</ng-container>.
+    </p>
+    <p class="np-muted">No se toca el router, no se avisa a los clientes y no se generan facturas.</p>
+    <div class="np-btnrow np-btnrow--center">
+      <button type="button" class="np-btn np-btn--ghost" (click)="confirmar = false">Revisar de nuevo</button>
+      <button type="button" class="np-btn np-btn--primary" (click)="ejecutar()" [disabled]="ocupado">{{ ocupado ? 'Iniciando…' : 'Importar' }}</button>
+    </div>
+  </div>
+</div>

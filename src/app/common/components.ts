@@ -13,6 +13,8 @@ export type RouteProps = {
   card?: ComponentCardItem;
   children?: RouteProps[];
   module?: string;
+  /** Sólo lo ve el perfil ADMIN (además del módulo). */
+  soloAdmin?: boolean;
 };
 
 export const components: RouteProps[] = [
@@ -28,6 +30,18 @@ export const components: RouteProps[] = [
         href: 'usuario',
         group: false,
         roles: [2],
+        card: {
+          className: 'w-56',
+          images: { light: 'alerts-light.svg', dark: 'alerts-dark.svg' },
+        },
+      },
+      {
+        title: 'Importar clientes',
+        icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v11m0 0-4-4m4 4 4-4"/><path d="M4 15v4a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-4"/></svg>`,
+        href: 'usuario/importar',
+        group: false,
+        roles: [2],
+        soloAdmin: true,
         card: {
           className: 'w-56',
           images: { light: 'alerts-light.svg', dark: 'alerts-dark.svg' },

@@ -190,6 +190,7 @@ export class LayoutComponent implements OnInit {
           const filteredChildren = item.children.filter(child => {
             // Usar module si existe, si no usar href como clave de módulo
             const key = child.module || child.href || '';
+            if (child.soloAdmin && !this.authService.isAdmin()) return false;
             return !key || isAllowed(key);
           });
           if (filteredChildren.length === 0) return null;

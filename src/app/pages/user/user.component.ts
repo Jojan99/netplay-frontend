@@ -2,7 +2,8 @@ import { CommonModule } from '@angular/common';
 import { HttpClientModule } from '@angular/common/http';
 import { Component, HostListener, ChangeDetectorRef, OnInit, ViewChild, ElementRef, inject } from '@angular/core';
 import { DialogService } from '../../services/dialog.service';
-import { ActivatedRoute, Router } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { AuthService } from '../../services/auth.service';
 import { OntEquipoComponent } from '../../components/ont-equipo/ont-equipo.component';
 import { FormsModule } from '@angular/forms';
 import { NpSelectComponent, PresentacionSelect } from '../../common/np-select/np-select.component';
@@ -38,7 +39,7 @@ export type ClientTab = 'resumen' | 'servicios' | 'facturacion' | 'tickets' | 'h
   selector: 'app-user',
   templateUrl: './user.component.html',
   standalone: true,
-  imports: [CommonModule, FormsModule, NpSelectComponent, HttpClientModule, LayoutComponent, FooterComponent, OntEquipoComponent],
+  imports: [CommonModule, FormsModule, RouterLink, NpSelectComponent, HttpClientModule, LayoutComponent, FooterComponent, OntEquipoComponent],
   styleUrls: ['./user.component.scss'],
   host: { class: 'np-console' }
 })
@@ -130,6 +131,8 @@ export class UserComponent implements OnInit {
   private tareas = inject(TareasEnSegundoPlanoService);
   private gestionRemota = inject(GestionRemotaService);
   private router = inject(Router);
+  /** Importar clientes (WispHub, Mikrowisp) es sólo del administrador. */
+  readonly esAdmin = inject(AuthService).isAdmin();
 
   // ── Conexión a internet: estado y aprovisionamiento de su ONT ──────────
   editandoConexion = false;

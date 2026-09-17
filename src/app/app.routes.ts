@@ -45,6 +45,13 @@ export const routes: Routes = [
     children: [
       { path: 'home', component: DashboardComponent },
       { path: 'usuario',        component: UserComponent,              canActivate: [roleGuard], data: { module: 'usuario' } },
+      // Importar clientes de WispHub / Mikrowisp: la pantalla y el servidor lo limitan al administrador.
+      {
+        path: 'usuario/importar',
+        loadComponent: () => import('./pages/importador/importador.component').then(m => m.ImportadorComponent),
+        canActivate: [roleGuard],
+        data: { module: 'usuario' },
+      },
       { path: 'finanzas',       component: FinanceComponent,           canActivate: [roleGuard], data: { module: 'finanzas' } },
       { path: 'finanzas/metodos-pago', component: PaymentMethodsComponent, canActivate: [roleGuard], data: { module: 'finanzas' } },
       { path: 'egresos',        component: EgresosComponent,           canActivate: [roleGuard], data: { module: 'egresos' } },

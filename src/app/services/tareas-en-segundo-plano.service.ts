@@ -3,6 +3,7 @@ import { isPlatformBrowser } from '@angular/common';
 import { Observable, finalize, map, shareReplay, switchMap, take, takeWhile, tap, timer } from 'rxjs';
 import { GestionRemotaService } from './gestion-remota.service';
 import { AuthService } from './auth.service';
+import { ImportadorService } from './importador.service';
 
 export type EstadoTarea = 'en_curso' | 'listo' | 'error';
 
@@ -40,6 +41,7 @@ const SE_PUEDEN_PARAR = ['al_dia'];
 export class TareasEnSegundoPlanoService {
   private gestion = inject(GestionRemotaService);
   private auth = inject(AuthService);
+  private importador = inject(ImportadorService);
   private enNavegador = isPlatformBrowser(inject(PLATFORM_ID));
 
   readonly tareas = signal<TareaSeguida[]>([]);
@@ -90,6 +92,7 @@ export class TareasEnSegundoPlanoService {
     for (const t of this.tareas()) {
       if (t.estado !== 'en_curso') continue;
       if (t.tipo === 'aprovisionamiento') this.seguirAprovisionamiento(Number(t.id.replace('aprov-', '')), t.titulo);
+      else if (t.tipo === 'importacion') this.seguirImportacion(Number(t.id.replace('importacion-', '')), t.titulo);
       else if (t.tipo !== 'senal' && t.tipo !== 'diagnostico') this.seguir(t.id, t.titulo, t.tipo);
     }
   }
@@ -188,6 +191,50 @@ export class TareasEnSegundoPlanoService {
 
     this.flujos.set(clave, flujo);
     flujo.subscribe({ error: () => this.actualizar(clave, { estado: 'error', detalle: 'Se perdió el seguimiento; mirá el detalle en Acceso remoto.', fin: Date.now() }) });
+  }
+
+  /**
+   * Una importación de clientes (WispHub, Mikrowisp): la trabaja un proceso
+   * del servidor y se pregunta cada 4 s cómo va, aunque se cambie de pantalla.
+   */
+  seguirImportacion(id: number, titulo: string): void {
+    if (!id) return;
+    const clave = `importacion-${id}`;
+    if (this.flujos.has(clave)) return;
+
+    const enlace = `/dashboard/usuario/importar?id=${id}`;
+    const enCurso = (e: string) => ['leyendo', 'en_cola', 'importando', 'cancelando'].includes(e);
+
+    if (!this.tareas().some(t => t.id === clave)) {
+      this.tareas.update(lista => [{
+        id: clave, tipo: 'importacion', titulo, estado: 'en_curso' as EstadoTarea,
+        detalle: 'Arrancando…', inicio: Date.now(), puedeParar: false, enlace,
+      }, ...lista].slice(0, 20));
+    }
+    this.minimizado.set(false);
+    this.guardar();
+
+    const flujo = timer(0, 4000).pipe(
+      // Hasta dos horas: una importación grande por API puede tardar.
+      take(1800),
+      switchMap(() => this.importador.ver(id)),
+      map((r: any) => (r?.error === 0 ? r.data : null)),
+      tap((imp: any) => {
+        if (!imp) return;
+        const sigue = enCurso(imp.estado);
+        this.actualizar(clave, {
+          estado: sigue ? 'en_curso' : (imp.estado === 'error' ? 'error' : 'listo'),
+          detalle: imp.detalle ?? '',
+          ...(!sigue ? { fin: Date.now() } : {}),
+        });
+      }),
+      takeWhile((imp: any) => !imp || enCurso(imp.estado), true),
+      finalize(() => this.flujos.delete(clave)),
+      shareReplay({ bufferSize: 1, refCount: false }),
+    );
+
+    this.flujos.set(clave, flujo);
+    flujo.subscribe({ error: () => this.actualizar(clave, { estado: 'error', detalle: 'Se perdió el seguimiento; la importación sigue en el servidor.', fin: Date.now() }) });
   }
 
   // ── Tareas que no son de acceso remoto ─────────────────────────────────

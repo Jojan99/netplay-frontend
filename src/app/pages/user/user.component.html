@@ -24,6 +24,10 @@
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12m0 0 4-4m-4 4-4-4M4 17v3h16v-3"/></svg>
         {{ exportingCsv ? 'Exportando…' : 'Exportar CSV' }}
       </button>
+      <a *ngIf="esAdmin" class="np-btn np-btn--ghost" routerLink="/dashboard/usuario/importar" title="Traer clientes desde WispHub o Mikrowisp">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v11m0 0-4-4m4 4 4-4M4 15v4a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-4"/></svg>
+        Importar
+      </a>
       <button type="button" class="np-btn np-btn--primary" (click)="openCreateUserModal()">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M12 5v14M5 12h14"/></svg>
         Nuevo cliente
