@@ -132,6 +132,13 @@
     &.is-ok { color: var(--text); &::before { background: var(--ok); } } }
 }
 
+/* Pasos para conectar Mailjet: guía corta dentro de la tarjeta. */
+.bc-pasos {
+  margin: 10px 0 0; padding-left: 20px; display: grid; gap: 6px;
+  font-size: 12.5px; color: var(--text-2); line-height: 1.55;
+  b { color: var(--text); }
+}
+
 .bc-prueba { grid-template-columns: minmax(0, 2fr) minmax(0, 1fr); }
 .bc-resultado { display: grid; gap: 12px; padding: 12px 14px; border-radius: var(--radius); border: 1px solid var(--line); background: var(--surface-2);
   > .np-btn { justify-self: start; } }

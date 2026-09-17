@@ -303,6 +303,14 @@ export const components: RouteProps[] = [
         card: { className: 'w-56', images: { light: 'alerts-light.svg', dark: 'alerts-dark.svg' } },
       },
       {
+        title: 'Correo (Mailjet)',
+        icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg>`,
+        href: 'correo',
+        group: false,
+        roles: [2],
+        card: { className: 'w-56', images: { light: 'alerts-light.svg', dark: 'alerts-dark.svg' } },
+      },
+      {
         title: 'Contratos',
         icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5M8 17c1.5-2 3-2 4.5 0S15 19 17 15"/></svg>`,
         href: 'contratos',

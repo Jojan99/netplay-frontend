@@ -11,6 +11,7 @@ import { FinanceService } from '../../services/finance.service';
 import { InvoiceTemplateEditorComponent } from '../../components/invoice-template-editor/invoice-template-editor.component';
 import { InvoiceTemplate, InvoiceTemplateService } from '../../services/invoice-template.service';
 import { environment } from '../../../environments/environment';
+import { CorreoService, ConfiguracionCorreo } from '../../services/correo.service';
 import { NpSelectComponent, PresentacionSelect } from '../../common/np-select/np-select.component';
 import { OpcionSimple, PRESENTACION_PERSONAS, PRESENTACION_SIMPLE, conValor } from '../../common/np-select/presentaciones';
 
@@ -126,8 +127,19 @@ export class BillingConfigComponent implements OnInit {
   };
 
   // ── Tabs ──────────────────────────────────────────────────
-  activeTab: 'billing' | 'invoice' | 'payment-methods' | 'gateway' | 'cortes' = 'billing';
+  activeTab: 'billing' | 'invoice' | 'payment-methods' | 'gateway' | 'cortes' | 'correo' = 'billing';
   gwView: 'config' | 'test' | 'transactions' = 'config';
+
+  // ── Correo (Mailjet) ───────────────────────────────────────
+  correoCargando = false;
+  correoGuardando = false;
+  correoProbando  = false;
+  correoMsg   = '';
+  correoError = '';
+  correoConfig: ConfiguracionCorreo | null = null;
+  correoForm = { activo: false, api_key: '', api_secret: '', from_email: '', from_name: '' };
+  correoVerSecreto = false;
+  correoEmailPrueba = '';
 
   // ── Pasarela de pago online ────────────────────────────────
   readonly baseUrl = environment.rootUrl;
@@ -230,6 +242,7 @@ export class BillingConfigComponent implements OnInit {
     private financeService: FinanceService,
     private invoiceTemplateService: InvoiceTemplateService,
     private route: ActivatedRoute,
+    private correoService: CorreoService,
   ) {}
 
   private getHeaders(): HttpHeaders {
@@ -244,6 +257,11 @@ export class BillingConfigComponent implements OnInit {
     const module = this.route.snapshot.data?.['module'];
     if (module === 'payment-gateway') {
       this.activeTab = 'gateway';
+    }
+    // La dirección /dashboard/correo abre directo la sección de correo.
+    if (this.route.snapshot.data?.['tab'] === 'correo') {
+      this.activeTab = 'correo';
+      this.cargarCorreo();
     }
     // Siempre: el resumen de arriba dice si la pasarela está activa.
     this.loadGatewayConfig();
@@ -649,7 +667,7 @@ export class BillingConfigComponent implements OnInit {
   }
 
   /** Cambia de sección; en el teléfono la pestaña elegida queda a la vista. */
-  irA(tab: 'billing' | 'invoice' | 'payment-methods' | 'gateway' | 'cortes'): void {
+  irA(tab: 'billing' | 'invoice' | 'payment-methods' | 'gateway' | 'cortes' | 'correo'): void {
     this.activeTab = tab;
     setTimeout(() => document.querySelector('.bc-tabs [aria-selected="true"]')?.scrollIntoView({ inline: 'center', block: 'nearest' }));
   }
@@ -660,6 +678,103 @@ export class BillingConfigComponent implements OnInit {
 
   get metodosActivos(): number {
     return this.paymentMethods.filter(m => m.active).length;
+  }
+
+  // ── Correo (Mailjet) ──────────────────────────────────────
+  // Sin cuenta propia los correos salen de la cuenta de Netvula
+  // (no-reply@netvula.com) con el nombre de la empresa y las respuestas al
+  // correo de la empresa. Acá se conecta la cuenta de Mailjet propia.
+
+  cargarCorreo(): void {
+    this.correoCargando = true;
+    this.correoMsg = '';
+    this.correoError = '';
+    this.correoService.configuracion().subscribe({
+      next: (res) => {
+        this.correoCargando = false;
+        this.correoConfig = res?.data ?? null;
+        this.correoForm = {
+          activo:     !!this.correoConfig?.activo,
+          api_key:    '',
+          api_secret: '',
+          from_email: this.correoConfig?.from_email ?? '',
+          from_name:  this.correoConfig?.from_name ?? '',
+        };
+      },
+      error: (err) => {
+        this.correoCargando = false;
+        this.correoError = err?.error?.message ?? 'No se pudo cargar la configuración de correo.';
+      },
+    });
+  }
+
+  guardarCorreo(): void {
+    this.correoGuardando = true;
+    this.correoMsg = '';
+    this.correoError = '';
+
+    const datos: any = {
+      activo:     this.correoForm.activo,
+      from_email: this.correoForm.from_email.trim(),
+      from_name:  this.correoForm.from_name.trim(),
+    };
+    // Las llaves solo viajan si el admin escribió una nueva.
+    if (this.correoForm.api_key.trim())    datos.api_key    = this.correoForm.api_key.trim();
+    if (this.correoForm.api_secret.trim()) datos.api_secret = this.correoForm.api_secret.trim();
+
+    this.correoService.guardar(datos).subscribe({
+      next: (res) => {
+        this.correoGuardando = false;
+        this.correoMsg = res?.message ?? 'Configuración guardada.';
+        this.correoForm.api_secret = '';
+        this.correoForm.api_key = '';
+        this.correoConfig = res?.data ?? this.correoConfig;
+        if (res?.data) {
+          this.correoForm.activo     = !!res.data.activo;
+          this.correoForm.from_email = res.data.from_email ?? '';
+          this.correoForm.from_name  = res.data.from_name ?? '';
+        }
+      },
+      error: (err) => {
+        this.correoGuardando = false;
+        this.correoError = err?.error?.message ?? 'No se pudo guardar la configuración de correo.';
+      },
+    });
+  }
+
+  probarCorreo(): void {
+    this.correoProbando = true;
+    this.correoMsg = '';
+    this.correoError = '';
+    this.correoService.probar(this.correoEmailPrueba.trim() || undefined).subscribe({
+      next: (res) => {
+        this.correoProbando = false;
+        this.correoMsg = res?.message ?? 'Correo de prueba enviado.';
+      },
+      error: (err) => {
+        this.correoProbando = false;
+        this.correoError = err?.error?.message ?? 'No se pudo enviar el correo de prueba.';
+      },
+    });
+  }
+
+  async desconectarCorreo(): Promise<void> {
+    if (!await this.dialog.confirm('¿Desconectar tu cuenta de Mailjet? Los correos vuelven a salir desde ' + (this.correoConfig?.remitente_plataforma ?? 'la cuenta de Netvula') + '.')) return;
+    this.correoGuardando = true;
+    this.correoMsg = '';
+    this.correoError = '';
+    this.correoService.desconectar().subscribe({
+      next: (res) => {
+        this.correoGuardando = false;
+        this.correoMsg = res?.message ?? 'Cuenta de Mailjet desconectada.';
+        this.correoConfig = res?.data ?? this.correoConfig;
+        this.correoForm = { activo: false, api_key: '', api_secret: '', from_email: '', from_name: '' };
+      },
+      error: (err) => {
+        this.correoGuardando = false;
+        this.correoError = err?.error?.message ?? 'No se pudo desconectar la cuenta.';
+      },
+    });
   }
 
   gatewayLabel(g: string): string {

@@ -70,6 +70,8 @@ export const routes: Routes = [
       { path: 'staff',          component: StaffComponent,             canActivate: [roleGuard], data: { module: 'staff' } },
       { path: 'billing-config',  component: BillingConfigComponent, canActivate: [roleGuard], data: { module: 'billing-config' } },
       { path: 'payment-gateway', component: BillingConfigComponent, canActivate: [roleGuard], data: { module: 'payment-gateway' } },
+      // Correo (Mailjet) de la empresa: es una sección de la configuración de facturación.
+      { path: 'correo', component: BillingConfigComponent, canActivate: [roleGuard], data: { module: 'billing-config', tab: 'correo' } },
       { path: 'mikrotik',       component: MikrotikComponent,          canActivate: [roleGuard], data: { module: 'mikrotik' } },
       { path: 'resumen',        component: ResumenComponent,           canActivate: [roleGuard], data: { module: 'resumen' } },
       { path: 'cartera',        component: CarteraComponent,           canActivate: [roleGuard], data: { module: 'finanzas' } },

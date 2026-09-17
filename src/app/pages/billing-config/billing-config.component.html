@@ -2,7 +2,7 @@
   <header class="np-head">
     <div>
       <p class="np-kicker">Operación <b>/</b> Facturación</p>
-      <h1 class="np-title">{{ activeTab === 'gateway' ? 'Pasarela de pago' : 'Configuración de facturación' }}</h1>
+      <h1 class="np-title">{{ activeTab === 'gateway' ? 'Pasarela de pago' : (activeTab === 'correo' ? 'Correo (Mailjet)' : 'Configuración de facturación') }}</h1>
       <div class="np-ribbon">
         <span><span class="np-n">{{ gruposActivos }}</span>de {{ schedules.length }} grupos automáticos</span>
         <span><span class="np-n">{{ metodosActivos }}</span>métodos de pago activos</span>
@@ -25,6 +25,7 @@
     </button>
     <button type="button" class="np-tab" role="tab" [attr.aria-selected]="activeTab === 'gateway'" (click)="irA('gateway'); loadGatewayConfig()">Pasarela online</button>
     <button type="button" class="np-tab" role="tab" [attr.aria-selected]="activeTab === 'cortes'" (click)="irA('cortes')">Cortes por mora</button>
+    <button type="button" class="np-tab" role="tab" [attr.aria-selected]="activeTab === 'correo'" (click)="irA('correo'); cargarCorreo()">Correo (Mailjet)</button>
   </nav>
 
   <div class="np-scroll bc-cuerpo">
@@ -246,6 +247,129 @@
         <b>Todavía no hay métodos de pago.</b><span>Agregá el primero arriba.</span>
       </div>
     </section>
+  </ng-container>
+
+  <!-- ═══════════════ CORREO (MAILJET) ═══════════════ -->
+  <ng-container *ngIf="activeTab === 'correo'">
+    <p class="np-notice np-notice--ok" *ngIf="correoMsg">{{ correoMsg }}</p>
+    <p class="np-notice np-notice--danger" *ngIf="correoError">{{ correoError }}</p>
+    <div *ngIf="correoCargando" class="np-loading"><span class="np-spinner"></span> Cargando la configuración de correo…</div>
+
+    <ng-container *ngIf="!correoCargando">
+      <!-- Estado en una mirada -->
+      <section class="bc-gw-estado" [attr.data-estado]="correoConfig?.usando === 'propia' ? 'ok' : 'prueba'">
+        <span class="bc-punto" aria-hidden="true"></span>
+        <div>
+          <h2>{{ correoConfig?.usando === 'propia' ? 'Estás enviando con tu propia cuenta de Mailjet' : 'Estás enviando con el correo de Netvula' }}</h2>
+          <p *ngIf="correoConfig">
+            Salen desde <b class="np-mono">{{ correoConfig.remitente_actual.email }}</b>
+            a nombre de <b>{{ correoConfig.remitente_actual.nombre }}</b>
+            <ng-container *ngIf="correoConfig.remitente_actual.responder_a">
+              · las respuestas llegan a <b class="np-mono">{{ correoConfig.remitente_actual.responder_a }}</b>
+            </ng-container>
+          </p>
+          <p class="np-fine" *ngIf="correoConfig?.verificado_en">Llaves verificadas el {{ correoConfig?.verificado_en }}</p>
+        </div>
+      </section>
+
+      <section class="np-card">
+        <div class="np-card-h"><div><h2>¿Cómo funciona?</h2></div></div>
+        <p class="np-notice np-notice--info">
+          No necesitás hacer nada: por defecto las facturas y avisos de tus clientes salen desde
+          <b class="np-mono">{{ correoConfig?.remitente_plataforma || 'no-reply@netvula.com' }}</b>
+          con el nombre de tu empresa, y cuando el cliente responde el correo le llega a
+          <b class="np-mono">{{ correoConfig?.correo_empresa || 'el correo de tu empresa' }}</b>.
+        </p>
+        <p class="np-fine">
+          Si querés que los correos salgan desde tu propio dominio (por ejemplo
+          <span class="np-mono">facturacion&#64;tuempresa.com</span>), conectá la cuenta de Mailjet de tu empresa acá abajo.
+          Es gratis hasta 6.000 correos al mes y mejora la entrega porque el correo sale con tu marca.
+        </p>
+        <ol class="bc-pasos">
+          <li>Creá una cuenta en <span class="np-mono">mailjet.com</span> (gratis).</li>
+          <li>Entrá a <b>Account settings → API Key Management (REST API)</b> y copiá la <b>API Key</b> y la <b>Secret Key</b>.</li>
+          <li>En <b>Account settings → Senders &amp; Domains</b> agregá el correo con el que vas a enviar y confirmalo desde el mensaje que te manda Mailjet. Mejor todavía: validá el dominio completo con los registros <b>SPF</b> y <b>DKIM</b> que te indica Mailjet (se los pedís a quien te administra el dominio).</li>
+          <li>Pegá las llaves acá, activá el interruptor y guardá. Nosotros probamos las llaves antes de activarlas.</li>
+        </ol>
+      </section>
+
+      <section class="np-card">
+        <div class="np-card-h">
+          <div><h2>Tu cuenta de Mailjet</h2><p class="np-fine">Dejá las llaves vacías para conservar las guardadas.</p></div>
+        </div>
+
+        <!-- Campos trampa: frenan el autocompletado de contraseñas del navegador -->
+        <input type="text" style="display:none" aria-hidden="true" tabindex="-1" name="username_fake">
+        <input type="password" style="display:none" aria-hidden="true" tabindex="-1" name="password_fake" autocomplete="new-password">
+
+        <div class="np-form">
+          <div class="np-field">
+            <span>API Key <em>pública</em></span>
+            <div class="bc-guardada" *ngIf="correoConfig?.api_key">
+              <span class="np-mono">{{ correoConfig?.api_key }}</span>
+            </div>
+            <input type="text" class="np-input np-mono" [(ngModel)]="correoForm.api_key" autocomplete="off"
+                   [placeholder]="correoConfig?.api_key ? 'Nueva API Key (vacío = conservar)' : 'Ej: 1a2b3c4d5e6f…'" />
+          </div>
+
+          <div class="np-field">
+            <span>Secret Key <em>privada</em></span>
+            <div class="bc-guardada" *ngIf="correoConfig?.tiene_secreto">
+              <span class="np-mono">•••••••• guardada</span>
+            </div>
+            <input [type]="correoVerSecreto ? 'text' : 'password'" class="np-input np-mono" [(ngModel)]="correoForm.api_secret" autocomplete="new-password"
+                   [placeholder]="correoConfig?.tiene_secreto ? 'Nueva Secret Key (vacío = conservar)' : 'Ej: 9z8y7x6w…'" />
+            <small class="np-fine">
+              <button type="button" class="np-link" (click)="correoVerSecreto = !correoVerSecreto">{{ correoVerSecreto ? 'Ocultar' : 'Ver' }} la Secret Key</button>
+            </small>
+          </div>
+
+          <div class="np-field">
+            <span>Correo remitente <em>debe estar validado en Mailjet</em></span>
+            <input type="email" class="np-input" [(ngModel)]="correoForm.from_email" autocomplete="off" placeholder="facturacion&#64;tuempresa.com" />
+          </div>
+
+          <div class="np-field">
+            <span>Nombre que ve el cliente</span>
+            <input type="text" class="np-input" [(ngModel)]="correoForm.from_name" autocomplete="off" placeholder="Mi Empresa Internet" />
+          </div>
+        </div>
+
+        <div class="bc-opcion">
+          <div>
+            <b>Usar mi cuenta de Mailjet</b>
+            <small>Apagado, los correos salen desde {{ correoConfig?.remitente_plataforma || 'no-reply@netvula.com' }} con el nombre de tu empresa.</small>
+          </div>
+          <button type="button" class="np-switch" role="switch" [attr.aria-checked]="!!correoForm.activo"
+                  (click)="correoForm.activo = !correoForm.activo" aria-label="Usar mi cuenta de Mailjet"></button>
+        </div>
+
+        <div class="np-btnrow np-btnrow--end">
+          <button type="button" class="np-btn np-btn--ghost" (click)="desconectarCorreo()"
+                  [disabled]="correoGuardando || (!correoConfig?.tiene_secreto && !correoConfig?.activo)">Desconectar</button>
+          <button type="button" class="np-btn np-btn--primary" (click)="guardarCorreo()" [disabled]="correoGuardando">
+            <span *ngIf="correoGuardando" class="np-spinner np-spinner--sm"></span>{{ correoGuardando ? 'Guardando…' : 'Guardar' }}
+          </button>
+        </div>
+      </section>
+
+      <section class="np-card">
+        <div class="np-card-h">
+          <div><h2>Enviar una prueba</h2><p class="np-fine">Se envía tal como le llega a tus clientes.</p></div>
+        </div>
+        <div class="np-form">
+          <div class="np-field np-field-full">
+            <span>Enviar a <em>vacío = tu correo de acceso</em></span>
+            <input type="email" class="np-input" [(ngModel)]="correoEmailPrueba" autocomplete="off" placeholder="tucorreo@ejemplo.com" />
+          </div>
+        </div>
+        <div class="np-btnrow np-btnrow--end">
+          <button type="button" class="np-btn np-btn--primary" (click)="probarCorreo()" [disabled]="correoProbando">
+            <span *ngIf="correoProbando" class="np-spinner np-spinner--sm"></span>{{ correoProbando ? 'Enviando…' : 'Enviar prueba' }}
+          </button>
+        </div>
+      </section>
+    </ng-container>
   </ng-container>
 
   <!-- ═══════════════ PASARELA ONLINE ═══════════════ -->
