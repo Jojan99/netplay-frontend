@@ -355,7 +355,7 @@
         <div class="np-form imp-nuevogrupo">
           <label class="np-field">
             <span>Día del mes</span>
-            <input class="np-input np-mono" type="number" min="1" max="28" [(ngModel)]="nuevoGrupo.billing_day" aria-label="Día del mes" />
+            <input class="np-input np-mono" type="number" min="1" max="30" [(ngModel)]="nuevoGrupo.billing_day" aria-label="Día del mes" />
           </label>
           <label class="np-field">
             <span>Nombre (opcional)</span>
@@ -368,7 +368,7 @@
             </button>
           </div>
         </div>
-        <p class="np-muted imp-nota">Se pueden tener hasta 4 grupos, del día 1 al 28. Son los mismos de Configuración › Facturación.</p>
+        <p class="np-muted imp-nota">Se pueden tener hasta 4 grupos, del día 1 al 30. En los meses más cortos (febrero) se factura el último día. Son los mismos de Configuración › Facturación.</p>
 
         <ng-container *ngIf="grupos.length">
           <p class="np-sect imp-sect">Cómo repartir a los importados</p>

@@ -44,7 +44,7 @@ export class BillingConfigComponent implements OnInit {
   groupUserCounts: Record<number, number> = {};
 
   readonly maxGroups = 4;
-  readonly days      = Array.from({ length: 28 }, (_, i) => i + 1);
+  readonly days      = Array.from({ length: 30 }, (_, i) => i + 1);
   readonly hours     = Array.from({ length: 24 }, (_, i) => i);
 
   // ── Trigger modal ─────────────────────────────────────────
