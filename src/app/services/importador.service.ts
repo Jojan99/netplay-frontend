@@ -113,6 +113,15 @@ export class ImportadorService {
     return this.http.post(`${this.base}/${id}/cotejo`, { router_id: routerId, amarrar }, this.h());
   }
 
+  /**
+   * Deja los comentarios del ARP con la cédula del cliente. Sin `aplicar` sólo
+   * dice qué cambiaría; con `aplicar` escribe en el router (guardando antes un
+   * respaldo). Es opcional: el sistema ya los reconoce por su nombre de origen.
+   */
+  comentariosDelRouter(routerId: number | null, aplicar = false): Observable<any> {
+    return this.http.post(`${this.base}/comentarios`, { router_id: routerId, aplicar }, this.h());
+  }
+
   reporte(id: number): Observable<Blob> {
     return this.http.get(`${this.base}/${id}/reporte`, { ...this.h(false), responseType: 'blob' });
   }

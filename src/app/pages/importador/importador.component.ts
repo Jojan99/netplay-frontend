@@ -106,6 +106,11 @@ export class ImportadorComponent implements OnInit, OnDestroy {
   cotejo: any = null;
   routerCotejo: number | null = null;
 
+  // Normalizar los comentarios del router (opcional)
+  comentarios: any = null;
+  revisandoComentarios = false;
+  confirmarComentarios = false;
+
   private sondeo?: Subscription;
 
   // ── Presentación de los selects ──────────────────────────────────────
@@ -437,6 +442,7 @@ export class ImportadorComponent implements OnInit, OnDestroy {
     this.filas = [];
     this.seleccion.clear();
     this.cotejo = null;
+    this.comentarios = null;
     this.error = '';
     this.paso = 'origen';
     this.router.navigate([], { relativeTo: this.route, queryParams: {}, replaceUrl: true });
@@ -777,6 +783,28 @@ export class ImportadorComponent implements OnInit, OnDestroy {
         if (r?.error) this.error = r.message;
       },
       error: (e) => { this.cotejando = false; this.error = this.mensaje(e, 'No se pudo leer el router.'); },
+    });
+  }
+
+  /**
+   * Los comentarios del ARP con la cédula del cliente. Primero muestra qué
+   * cambiaría; sólo escribe cuando el administrador lo confirma.
+   */
+  verComentarios(aplicar = false): void {
+    this.revisandoComentarios = true;
+    this.error = '';
+    this.svc.comentariosDelRouter(this.routerCotejo, aplicar).subscribe({
+      next: (r: any) => {
+        this.revisandoComentarios = false;
+        this.confirmarComentarios = false;
+        this.comentarios = r?.data ?? null;
+        if (r?.error) this.error = r.message;
+      },
+      error: (e) => {
+        this.revisandoComentarios = false;
+        this.confirmarComentarios = false;
+        this.error = this.mensaje(e, 'No se pudo leer el router.');
+      },
     });
   }
 

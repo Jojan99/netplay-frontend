@@ -630,7 +630,13 @@
             <div class="np-stat"><span class="np-stat-l">Para amarrar</span><span class="np-stat-v">{{ cotejo.para_amarrar | number }}</span></div>
           </div>
           <p class="np-muted imp-nota">
-            Encontrados por IP: {{ cotejo.por_ip | number }} · por documento en el comment: {{ cotejo.por_documento | number }} · por usuario PPPoE: {{ cotejo.por_pppoe | number }}.
+            Encontrados por su nombre en {{ nombre(imp.origen) }}: {{ cotejo.por_nombre | number }} · por documento en el comment: {{ cotejo.por_documento | number }} · por su IP: {{ cotejo.por_ip | number }} · por usuario PPPoE: {{ cotejo.por_pppoe | number }}.
+          </p>
+
+          <p class="np-notice np-notice--ok" *ngIf="cotejo.identificados_por_nombre">
+            <strong>{{ cotejo.identificados_por_nombre | number }} clientes quedan identificados por su nombre de {{ nombre(imp.origen) }}</strong>
+            (en el router el comentario dice, por ejemplo, "brayanca" y no la cédula). El sistema ya los reconoce así para suspender, reactivar,
+            ver su estado y sincronizar la IP: no hace falta tocar el router.
           </p>
 
           <div class="np-btnrow" *ngIf="cotejo.para_amarrar">
@@ -661,6 +667,66 @@
           </div>
 
           <p class="np-notice np-notice--danger" *ngIf="cotejo.errores?.length">{{ cotejo.errores.join(' ') }}</p>
+        </ng-container>
+      </section>
+
+      <section class="imp-card" *ngIf="routers.length && cotejo?.identificados_por_nombre">
+        <div class="imp-cardhead">
+          <div>
+            <h2 class="imp-h2">Dejar la cédula en los comentarios del router <small class="np-muted">(opcional)</small></h2>
+            <p class="np-muted">
+              No hace falta: el sistema ya los encuentra por su nombre de origen. Es para el que prefiere tener todo el MikroTik con la cédula,
+              como lo escribe la plataforma cuando da de alta a un cliente.
+            </p>
+          </div>
+          <button type="button" class="np-btn np-btn--ghost" (click)="verComentarios(false)" [disabled]="revisandoComentarios">
+            <span *ngIf="revisandoComentarios" class="np-spinner np-spinner--sm"></span>{{ revisandoComentarios ? 'Leyendo el router…' : 'Ver qué cambiaría' }}
+          </button>
+        </div>
+
+        <ng-container *ngIf="comentarios">
+          <div class="np-stats imp-stats">
+            <div class="np-stat"><span class="np-stat-l">Quedarían con la cédula</span><span class="np-stat-v">{{ comentarios.para_cambiar | number }}</span></div>
+            <div class="np-stat"><span class="np-stat-l">Ya la tienen</span><span class="np-stat-v imp-ok">{{ comentarios.al_dia | number }}</span></div>
+            <div class="np-stat"><span class="np-stat-l">No son de un cliente</span><span class="np-stat-v">{{ comentarios.sin_cliente | number }}</span></div>
+            <div class="np-stat"><span class="np-stat-l">Dudosas</span><span class="np-stat-v is-warn">{{ comentarios.ambiguos | number }}</span></div>
+            <div class="np-stat"><span class="np-stat-l">Cambiadas</span><span class="np-stat-v">{{ comentarios.cambiados | number }}</span></div>
+          </div>
+
+          <div class="np-tablewrap np-tablewrap--scroll" *ngIf="comentarios.cambios?.length">
+            <table class="np-table np-table--compact">
+              <thead><tr><th>IP</th><th>Cliente</th><th>Comentario de hoy</th><th>Quedaría</th><th>Se reconoció por</th></tr></thead>
+              <tbody>
+                <tr *ngFor="let c of comentarios.cambios">
+                  <td class="np-data">{{ c.ip }}</td>
+                  <td>{{ c.cliente }}</td>
+                  <td class="np-data np-data--dim">{{ c.antes || '(vacío)' }}</td>
+                  <td class="np-data"><b>{{ c.ahora }}</b></td>
+                  <td>{{ c.reconocido_por === 'nombre' ? 'su nombre de origen' : (c.reconocido_por === 'ip' ? 'su IP' : c.reconocido_por) }}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <p class="np-notice np-notice--warn" *ngIf="comentarios.para_cambiar && !comentarios.aplicado">
+            <strong>Esto sí escribe en el MikroTik.</strong> Cambia únicamente el comentario de las entradas que son de un cliente de la empresa;
+            no borra ni crea ninguna, y no le corta el servicio a nadie. Antes de escribir se guarda cómo estaba cada entrada, con un archivo para
+            volver atrás.
+          </p>
+
+          <div class="np-btnrow" *ngIf="comentarios.para_cambiar && !comentarios.aplicado">
+            <button type="button" class="np-btn np-btn--warn" (click)="confirmarComentarios = true" [disabled]="revisandoComentarios">
+              Escribir la cédula en {{ comentarios.para_cambiar | number }} entrada(s)
+            </button>
+          </div>
+
+          <p class="np-notice np-notice--ok" *ngIf="comentarios.aplicado">
+            {{ comentarios.cambiados | number }} comentario(s) actualizados.
+            <ng-container *ngIf="comentarios.respaldo"><br>Respaldo guardado en <b class="np-mono">storage/app/{{ comentarios.respaldo.json }}</b>
+              y los comandos para deshacerlo en <b class="np-mono">storage/app/{{ comentarios.respaldo.rsc }}</b>.</ng-container>
+          </p>
+
+          <p class="np-notice np-notice--danger" *ngIf="comentarios.errores?.length">{{ comentarios.errores.join(' ') }}</p>
         </ng-container>
       </section>
 
@@ -792,6 +858,20 @@
     <div class="np-btnrow np-btnrow--center">
       <button type="button" class="np-btn np-btn--ghost" (click)="confirmar = false">Revisar de nuevo</button>
       <button type="button" class="np-btn np-btn--primary" (click)="ejecutar()" [disabled]="ocupado">{{ ocupado ? 'Iniciando…' : 'Importar' }}</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ Confirmar la escritura de comentarios en el router ═══════════════ -->
+<div *ngIf="confirmarComentarios" class="np-overlay" (click)="confirmarComentarios = false">
+  <div class="np-modal np-modal--confirm" role="alertdialog" aria-modal="true" (click)="$event.stopPropagation()">
+    <span class="np-confirm-icon is-danger"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 9v4m0 4h.01M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/></svg></span>
+    <h3>¿Escribir en el MikroTik?</h3>
+    <p>Se le va a cambiar el comentario a <b>{{ comentarios?.para_cambiar | number }}</b> entrada(s) del ARP para que digan la cédula del cliente.</p>
+    <p class="np-muted">No se borra ni se crea ninguna entrada, no se corta ningún servicio y queda un respaldo para volver atrás. Es opcional: sin esto el sistema igual los reconoce.</p>
+    <div class="np-btnrow np-btnrow--center">
+      <button type="button" class="np-btn np-btn--ghost" (click)="confirmarComentarios = false">Mejor no</button>
+      <button type="button" class="np-btn np-btn--warn" (click)="verComentarios(true)" [disabled]="revisandoComentarios">Sí, escribir</button>
     </div>
   </div>
 </div>
