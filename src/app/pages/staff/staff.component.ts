@@ -1,7 +1,8 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { CompanyService } from '../../services/company.service';
+import { AuthService } from '../../services/auth.service';
 import { NpSelectComponent, PresentacionSelect } from '../../common/np-select/np-select.component';
 
 interface StaffUser {
@@ -11,6 +12,8 @@ interface StaffUser {
   email: string;
   username: string;
   profile_name: string;
+  /** 0 = cuenta desactivada: sigue en la lista pero no puede entrar. */
+  active: number;
 }
 
 interface Profile {
@@ -84,6 +87,16 @@ export class StaffComponent implements OnInit {
     names: '', lastname: '', email: '', username: '', password: '', profile_id: 0,
   };
 
+  /** Contraseña a la vista, como en el alta de empresa y en el portal. */
+  showPw = false;
+  /** Campo que el servidor marcó como equivocado, para resaltarlo. */
+  errorField = '';
+
+  // ── Baja de una cuenta ─────────────────────────────────────────────────────
+  showDeleteModal = false;
+  deleting        = false;
+  toDelete: StaffUser | null = null;
+
   /** Roles al crear un usuario: cuántos del equipo ya lo tienen (de la lista cargada). Guarda el id numérico. */
   readonly presPerfiles: PresentacionSelect<Profile> = {
     valor: p => p.id,
@@ -95,6 +108,9 @@ export class StaffComponent implements OnInit {
   };
 
   get activeModulesCount(): number { return this.moduleItems.filter(m => m.active).length; }
+  trackStaff = (_: number, u: StaffUser) => u.id;
+  /** La propia cuenta no se puede eliminar: el botón ni siquiera aparece. */
+  readonly miUsuario = inject(AuthService).getUsername();
   rolePill(name: string): string {
     const n = (name || '').toUpperCase();
     if (n.includes('ADMIN')) return 'np-pill--suspended';
@@ -201,31 +217,97 @@ export class StaffComponent implements OnInit {
   openModal(): void {
     this.form     = { names: '', lastname: '', email: '', username: '', password: '', profile_id: this.profiles[0]?.id ?? 0 };
     this.errorMsg = '';
+    this.errorField = '';
+    this.showPw   = false;
     this.showModal = true;
   }
 
   closeModal(): void { this.showModal = false; }
 
+  /** Clave que cumple lo que pide el servidor: 10+, mayúsculas, minúsculas y números. */
+  generarPassword(): void {
+    const may = 'ABCDEFGHJKLMNPQRSTUVWXYZ', min = 'abcdefghijkmnpqrstuvwxyz', num = '23456789';
+    const todo = may + min + num;
+    const al = (s: string) => s[Math.floor(Math.random() * s.length)];
+    const clave = [al(may), al(min), al(num), al(num), ...Array.from({ length: 8 }, () => al(todo))];
+
+    // Mezcla para que las primeras posiciones no sean siempre del mismo tipo.
+    for (let i = clave.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [clave[i], clave[j]] = [clave[j], clave[i]];
+    }
+
+    this.form.password = clave.join('');
+    this.showPw        = true;
+  }
+
   save(): void {
     this.isSaving = true;
     this.errorMsg = '';
+    this.errorField = '';
 
     this.companyService.createStaff(this.form).subscribe({
       next: (res) => {
         this.isSaving = false;
         if (!res.error) {
           this.showModal  = false;
-          this.successMsg = 'Usuario creado correctamente.';
+          // El servidor dice con qué usuario va a entrar: se muestra tal cual.
+          this.successMsg = res.message || 'Usuario creado correctamente.';
           this.loadStaff();
-          setTimeout(() => { this.successMsg = ''; }, 3000);
+          setTimeout(() => { this.successMsg = ''; }, 6000);
         } else {
-          this.errorMsg = res.message || 'Error al crear el usuario.';
+          this.errorMsg   = res.message || 'No se pudo crear el usuario.';
+          this.errorField = res.data?.campo ?? '';
         }
       },
       error: (err) => {
         this.isSaving = false;
-        this.errorMsg = err?.error?.message || 'Error al crear el usuario.';
+        // El 422 de la validación trae el motivo exacto: mostrarlo, no taparlo.
+        this.errorMsg   = err?.error?.message || 'No se pudo crear el usuario. Revisá tu conexión e intentá de nuevo.';
+        this.errorField = err?.error?.data?.campo ?? '';
       },
+    });
+  }
+
+  // ── Baja de una cuenta ─────────────────────────────────────────────────────
+
+  openDelete(u: StaffUser): void {
+    this.toDelete        = u;
+    this.showDeleteModal = true;
+  }
+
+  closeDelete(): void { this.showDeleteModal = false; this.toDelete = null; }
+
+  confirmDelete(): void {
+    if (!this.toDelete || this.deleting) return;
+    this.deleting = true;
+
+    this.companyService.deleteStaff(this.toDelete.id).subscribe({
+      next: (res) => {
+        this.deleting        = false;
+        this.showDeleteModal = false;
+        this.toDelete        = null;
+        // El mensaje explica si la cuenta se borró o sólo quedó desactivada.
+        if (res.error) { this.errorMsg = res.message || 'No se pudo eliminar la cuenta.'; }
+        else           { this.successMsg = res.message || 'Cuenta eliminada.'; setTimeout(() => { this.successMsg = ''; }, 8000); }
+        this.loadStaff();
+      },
+      error: (err) => {
+        this.deleting        = false;
+        this.showDeleteModal = false;
+        this.errorMsg        = err?.error?.message || 'No se pudo eliminar la cuenta.';
+      },
+    });
+  }
+
+  reactivar(u: StaffUser): void {
+    this.companyService.reactivateStaff(u.id).subscribe({
+      next: (res) => {
+        if (res.error) { this.errorMsg = res.message || 'No se pudo reactivar la cuenta.'; }
+        else           { this.successMsg = res.message || 'Cuenta reactivada.'; setTimeout(() => { this.successMsg = ''; }, 6000); }
+        this.loadStaff();
+      },
+      error: (err) => { this.errorMsg = err?.error?.message || 'No se pudo reactivar la cuenta.'; },
     });
   }
 

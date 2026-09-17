@@ -275,6 +275,7 @@
 <div *ngIf="deleteEmpId" class="np-overlay" (click)="cancelDeleteEmp()"><div class="np-modal np-modal--confirm" role="alertdialog" (click)="$event.stopPropagation()">
   <span class="np-confirm-icon is-danger"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/></svg></span>
   <h3>¿Eliminar al empleado?</h3><p>Se eliminan también contrato, afiliaciones, dotaciones, descargos y nómina. No se puede deshacer.</p>
+  <p *ngIf="deleteErr" class="np-notice np-notice--danger">{{ deleteErr }}</p>
   <div class="np-btnrow np-btnrow--center"><button type="button" class="np-btn np-btn--ghost" (click)="cancelDeleteEmp()">Cancelar</button><button type="button" class="np-btn np-btn--danger-solid" (click)="deleteEmployee()" [disabled]="isDeleting">{{ isDeleting ? 'Eliminando…' : 'Eliminar' }}</button></div>
 </div></div>
 <div *ngIf="deleteEqId" class="np-overlay" (click)="cancelDeleteEq()"><div class="np-modal np-modal--confirm" role="alertdialog" (click)="$event.stopPropagation()">

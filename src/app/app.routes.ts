@@ -52,6 +52,14 @@ export const routes: Routes = [
         canActivate: [roleGuard],
         data: { module: 'usuario' },
       },
+      // Clientes eliminados: la misma llave de permiso que el registro de
+      // clientes, así el rol que ya entra a Clientes entra también acá.
+      {
+        path: 'usuario/eliminados',
+        loadComponent: () => import('./pages/clientes-eliminados/clientes-eliminados.component').then(m => m.ClientesEliminadosComponent),
+        canActivate: [roleGuard],
+        data: { module: 'usuario' },
+      },
       { path: 'finanzas',       component: FinanceComponent,           canActivate: [roleGuard], data: { module: 'finanzas' } },
       { path: 'finanzas/metodos-pago', component: PaymentMethodsComponent, canActivate: [roleGuard], data: { module: 'finanzas' } },
       { path: 'egresos',        component: EgresosComponent,           canActivate: [roleGuard], data: { module: 'egresos' } },

@@ -1,0 +1,135 @@
+<div class="np-page np-borrados">
+  <header class="np-head">
+    <div>
+      <p class="np-kicker">Operación <b>/</b> Clientes <b>/</b> Eliminados</p>
+      <h1 class="np-title">Clientes eliminados</h1>
+      <div class="np-ribbon">
+        <span><span class="np-n">{{ total | number }}</span>{{ search.trim() ? 'encontrados' : 'eliminados' }}</span>
+        <span class="np-fine">Se conservan sus datos: si vuelven a contratar, se reinstalan desde acá.</span>
+      </div>
+    </div>
+    <div class="np-actions">
+      <a class="np-btn np-btn--ghost" routerLink="/dashboard/usuario">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m15 6-6 6 6 6"/></svg>
+        Volver a clientes
+      </a>
+    </div>
+  </header>
+
+  <!-- Resultado de la última reinstalación -->
+  <div *ngIf="mensaje" class="np-notice" [ngClass]="mensajeTipo === 'ok' ? 'np-notice--ok' : 'np-notice--danger'">
+    <div>
+      <b>{{ mensaje }}</b>
+      <ul *ngIf="avisos.length" class="np-avisos">
+        <li *ngFor="let a of avisos">{{ a }}</li>
+      </ul>
+    </div>
+    <button type="button" class="np-icobtn" (click)="cerrarAviso()" aria-label="Cerrar aviso">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M6 6l12 12M18 6 6 18"/></svg>
+    </button>
+  </div>
+
+  <div class="np-toolbar">
+    <label class="np-search">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg>
+      <input type="search" placeholder="Nombre, documento, teléfono, correo o IP…" aria-label="Buscar cliente eliminado"
+             [(ngModel)]="search" (input)="onBuscar()" />
+    </label>
+    <span class="np-spacer"></span>
+  </div>
+
+  <section class="np-registry" aria-label="Clientes eliminados">
+    <div class="np-registry-wrap">
+      <table class="np-table np-table--registry">
+        <thead>
+          <tr>
+            <th>Cliente</th>
+            <th class="np-col-doc">Documento</th>
+            <th class="np-col-plan">Plan</th>
+            <th class="np-col-ip">IP / Conexión</th>
+            <th class="np-col-router">MikroTik</th>
+            <th>Eliminado</th>
+            <th class="np-td-right">Acción</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngIf="cargando" class="np-empty"><td colspan="7"><span class="np-spinner"></span></td></tr>
+
+          <ng-container *ngIf="!cargando">
+            <tr *ngFor="let c of clientes; trackBy: trackCliente" class="np-row np-row--static">
+              <td>
+                <div class="np-name">{{ c.names }} {{ c.lastname }}</div>
+                <div class="np-plan">{{ c.phone || 'Sin teléfono' }}<span *ngIf="c.address"> · {{ c.address }}</span></div>
+              </td>
+              <td class="np-data np-col-doc">{{ c.dni }}</td>
+              <td class="np-col-plan">{{ c.plan_name || 'Sin plan' }}</td>
+              <td class="np-data np-col-ip">
+                <span *ngIf="c.connection_type === 'pppoe'">PPPoE: {{ c.pppoe_user || '—' }}</span>
+                <span *ngIf="c.connection_type !== 'pppoe'">{{ c.ip || 'Sin IP' }}</span>
+                <small class="np-fine np-neg" *ngIf="c.ip_ocupada">Su IP ya es de otro cliente</small>
+              </td>
+              <td class="np-col-router">{{ c.router_name || 'Sin asignar' }}</td>
+              <td class="np-data np-data--dim">
+                {{ (c.eliminado_registrado_en || c.eliminado_en) | date: 'dd/MM/yyyy' }}
+                <small class="np-fine" *ngIf="c.eliminado_por">por {{ c.eliminado_por }}</small>
+                <small class="np-fine" *ngIf="!c.eliminado_registrado_en">fecha aproximada</small>
+              </td>
+              <td class="np-td-right">
+                <button type="button" class="np-btn np-btn--primary np-btn--sm" (click)="abrirReinstalar(c)">Reinstalar</button>
+              </td>
+            </tr>
+
+            <tr *ngIf="clientes.length === 0" class="np-empty">
+              <td colspan="7">
+                <strong>No hay clientes eliminados.</strong>
+                <span *ngIf="search">Probá con otro nombre, documento o IP.</span>
+              </td>
+            </tr>
+          </ng-container>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="np-pager" *ngIf="lastPage > 1">
+      <span class="np-range">Página {{ page }} de {{ lastPage }} · {{ total | number }} clientes</span>
+      <div class="np-pages">
+        <button type="button" (click)="anterior()" [disabled]="page === 1" aria-label="Página anterior">‹</button>
+        <button type="button" *ngFor="let p of pageNumbers" (click)="irA(p)" [attr.aria-current]="p === page ? 'page' : null">{{ p }}</button>
+        <button type="button" (click)="siguiente()" [disabled]="page === lastPage" aria-label="Página siguiente">›</button>
+      </div>
+    </div>
+  </section>
+</div>
+
+<!-- ══ Confirmar reinstalación ═════════════════════════════════════════════ -->
+<div *ngIf="showModal && elegido" class="np-overlay" (click)="cerrar()">
+  <div class="np-modal" role="dialog" aria-modal="true" aria-label="Reinstalar cliente" (click)="$event.stopPropagation()">
+    <div class="np-modal-head">
+      <div><p class="np-kicker">Clientes <b>/</b> Reinstalación</p><h3>Reinstalar a {{ elegido.names }} {{ elegido.lastname }}</h3></div>
+      <button type="button" class="np-icobtn" (click)="cerrar()" aria-label="Cerrar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
+    </div>
+    <div class="np-modal-body">
+      <p>Vuelve al registro de clientes con su documento <b class="np-mono">{{ elegido.dni }}</b>, su plan y su ficha de antes.</p>
+
+      <div class="np-notice np-notice--warn">
+        <div>
+          <b>Lo que no vuelve solo:</b>
+          <ul class="np-avisos">
+            <li>El MikroTik: al eliminarlo se le quitó o suspendió el servicio. Activalo desde su ficha en Clientes.</li>
+            <li *ngIf="elegido.ip_ocupada">Su IP {{ elegido.ip }} ya es de otro cliente activo: queda sin IP y hay que asignarle una nueva.</li>
+            <li *ngIf="!elegido.router_id">No tiene MikroTik asignado: elegilo en la ficha.</li>
+            <li *ngIf="!elegido.plan_name">No tiene plan de internet: asignale uno en la ficha.</li>
+            <li>Si tenía una ONT enlazada, revisá la ONU en la OLT antes de darlo por instalado.</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="np-btnrow np-btnrow--end">
+        <button type="button" class="np-btn np-btn--ghost" (click)="cerrar()">Cancelar</button>
+        <button type="button" class="np-btn np-btn--primary" (click)="confirmarReinstalar()" [disabled]="reinstalando">
+          <span *ngIf="reinstalando" class="np-spinner np-spinner--sm"></span>{{ reinstalando ? 'Reinstalando…' : 'Reinstalar cliente' }}
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

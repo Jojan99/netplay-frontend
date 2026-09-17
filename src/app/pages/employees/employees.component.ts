@@ -211,19 +211,33 @@ export class EmployeesComponent implements OnInit {
         if (r.status === 0) { this.showModal = false; this.toast(r.message); this.loadEmployees(); }
         else { this.errorMsg = r.message; }
       },
-      error: () => { this.isSaving = false; this.errorMsg = 'Error al guardar.'; },
+      // El servidor explica el motivo (cédula repetida, datos que faltan…):
+      // mostrarlo tal cual en vez de "Error al guardar".
+      error: (err) => { this.isSaving = false; this.errorMsg = err?.error?.message || 'No se pudo guardar. Revisá tu conexión e intentá de nuevo.'; },
     });
   }
 
-  confirmDeleteEmp(id: number): void { this.deleteEmpId = id; }
-  cancelDeleteEmp(): void            { this.deleteEmpId = null; }
+  /** Motivo por el que no se pudo eliminar, dentro de la confirmación. */
+  deleteErr = '';
+
+  confirmDeleteEmp(id: number): void { this.deleteEmpId = id; this.deleteErr = ''; }
+  cancelDeleteEmp(): void            { this.deleteEmpId = null; this.deleteErr = ''; }
 
   deleteEmployee(): void {
     if (!this.deleteEmpId) return;
     this.isDeleting = true;
+    this.deleteErr  = '';
     this.empService.delete(this.deleteEmpId).subscribe({
-      next: () => { this.isDeleting = false; this.deleteEmpId = null; this.toast('Empleado eliminado.'); if (this.selected?.id === this.deleteEmpId) this.selected = null; this.loadEmployees(); },
-      error: () => { this.isDeleting = false; },
+      next: (r) => {
+        this.isDeleting = false;
+        // Antes decía "Empleado eliminado" aunque el servidor hubiera fallado.
+        if (r?.status !== 0) { this.deleteErr = r?.message || 'No se pudo eliminar el empleado.'; return; }
+        if (this.selected?.id === this.deleteEmpId) this.selected = null;
+        this.deleteEmpId = null;
+        this.toast('Empleado eliminado.');
+        this.loadEmployees();
+      },
+      error: (err) => { this.isDeleting = false; this.deleteErr = err?.error?.message || 'No se pudo eliminar el empleado.'; },
     });
   }
 

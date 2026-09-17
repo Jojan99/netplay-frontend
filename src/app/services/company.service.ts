@@ -64,6 +64,16 @@ export class CompanyService {
     return this.http.post(this.base + 'staff/create', data, { headers: this.getHeaders() });
   }
 
+  /** Da de baja una cuenta del equipo: el servidor decide si la borra o la desactiva. */
+  deleteStaff(id: number): Observable<any> {
+    return this.http.delete(this.base + `staff/${id}`, { headers: this.getHeaders() });
+  }
+
+  /** Vuelve a habilitar una cuenta del equipo que había quedado desactivada. */
+  reactivateStaff(id: number): Observable<any> {
+    return this.http.post(this.base + `staff/${id}/reactivar`, {}, { headers: this.getHeaders() });
+  }
+
   updateBillingConfig(schedules: {
     grupo: number;
     billing_day: number;

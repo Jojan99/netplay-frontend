@@ -1,0 +1,8 @@
+/* ─── Clientes eliminados: sólo lo propio de la pantalla ────────────── */
+.np-borrados .np-notice { display: flex; align-items: flex-start; gap: 10px; justify-content: space-between; }
+.np-avisos { margin: 6px 0 0; padding-left: 16px; display: grid; gap: 4px; font-size: 12.5px; }
+.np-col-plan, .np-col-router { white-space: nowrap; }
+.np-borrados .np-fine { display: block; }
+@media (max-width: 1100px) { .np-col-router { display: none; } }
+@media (max-width: 900px)  { .np-col-plan { display: none; } }
+@media (max-width: 720px)  { .np-col-doc { display: none; } }

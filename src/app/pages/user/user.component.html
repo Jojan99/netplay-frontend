@@ -24,6 +24,10 @@
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12m0 0 4-4m-4 4-4-4M4 17v3h16v-3"/></svg>
         {{ exportingCsv ? 'Exportando…' : 'Exportar CSV' }}
       </button>
+      <a *ngIf="esAdmin" class="np-btn np-btn--ghost" routerLink="/dashboard/usuario/eliminados" title="Clientes eliminados: reinstalar a uno que vuelve">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 3-6.7M3 4v4h4"/></svg>
+        Eliminados
+      </a>
       <a *ngIf="esAdmin" class="np-btn np-btn--ghost" routerLink="/dashboard/usuario/importar" title="Traer clientes desde WispHub o Mikrowisp">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v11m0 0-4-4m4 4 4-4M4 15v4a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-4"/></svg>
         Importar

@@ -22,22 +22,30 @@
     </div>
     <span class="np-spacer"></span>
     <p *ngIf="successMsg" class="np-notice np-notice--ok np-notice--inline">{{ successMsg }}</p>
+    <p *ngIf="errorMsg && !showModal" class="np-notice np-notice--danger np-notice--inline">{{ errorMsg }}</p>
   </div>
 
   <div class="np-workspace">
     <section class="np-registry" aria-label="Usuarios">
       <div class="np-registry-wrap">
         <table class="np-table np-table--registry">
-          <thead><tr><th class="np-th-stripe"></th><th>Nombre</th><th>Usuario</th><th class="np-col-mail">Correo</th><th>Rol</th></tr></thead>
+          <thead><tr><th class="np-th-stripe"></th><th>Nombre</th><th>Usuario</th><th class="np-col-mail">Correo</th><th>Rol</th><th class="np-col-acc">Acciones</th></tr></thead>
           <tbody>
-            <tr *ngIf="isLoading" class="np-empty"><td colspan="5"><span class="np-spinner"></span></td></tr>
-            <tr *ngIf="!isLoading && staff.length === 0" class="np-empty"><td colspan="5"><strong>No hay usuarios registrados aún.</strong></td></tr>
-            <tr *ngFor="let u of staff" class="np-row np-row--static">
+            <tr *ngIf="isLoading" class="np-empty"><td colspan="6"><span class="np-spinner"></span></td></tr>
+            <tr *ngIf="!isLoading && staff.length === 0" class="np-empty"><td colspan="6"><strong>No hay usuarios registrados aún.</strong></td></tr>
+            <tr *ngFor="let u of staff; trackBy: trackStaff" class="np-row np-row--static" [class.is-off]="u.active === 0">
               <td class="np-stripe"><i [style.background]="roleColor(u.profile_name)"></i></td>
-              <td><div class="np-name">{{ u.names }} {{ u.lastname }}</div></td>
+              <td><div class="np-name">{{ u.names }} {{ u.lastname }}</div><small class="np-fine" *ngIf="u.active === 0">Cuenta desactivada: no puede entrar</small></td>
               <td class="np-data">{{ u.username }}</td>
               <td class="np-col-mail">{{ u.email }}</td>
               <td><span class="np-pill" [ngClass]="rolePill(u.profile_name)">{{ u.profile_name }}</span></td>
+              <td class="np-col-acc">
+                <span class="np-fine" *ngIf="u.username === miUsuario">Tu cuenta</span>
+                <button *ngIf="u.active !== 0 && u.username !== miUsuario" type="button" class="np-icobtn np-icobtn--danger" (click)="openDelete(u)" [title]="'Eliminar a ' + u.names" aria-label="Eliminar usuario">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M10 11v6m4-6v6M6 7l1 13h10l1-13M9 7V4h6v3"/></svg>
+                </button>
+                <button *ngIf="u.active === 0" type="button" class="np-btn np-btn--ghost np-btn--sm" (click)="reactivar(u)">Reactivar</button>
+              </td>
             </tr>
           </tbody>
         </table>
@@ -83,9 +91,18 @@
       <div class="np-form">
         <label class="np-field"><span>Nombre</span><input type="text" class="np-input" [(ngModel)]="form.names" name="names" required placeholder="Juan" /></label>
         <label class="np-field"><span>Apellido</span><input type="text" class="np-input" [(ngModel)]="form.lastname" name="lastname" required placeholder="Pérez" /></label>
-        <label class="np-field np-field-full"><span>Correo electrónico</span><input type="email" class="np-input" [(ngModel)]="form.email" name="email" required placeholder="usuario@empresa.com" /></label>
-        <label class="np-field"><span>Usuario</span><input type="text" class="np-input np-mono" [(ngModel)]="form.username" name="username" required placeholder="jperez" /></label>
-        <label class="np-field"><span>Contraseña</span><input type="password" class="np-input" [(ngModel)]="form.password" name="password" required placeholder="Mínimo 6 caracteres" /></label>
+        <label class="np-field np-field-full"><span>Correo electrónico</span><input type="email" class="np-input" [class.is-bad]="errorField === 'email'" [(ngModel)]="form.email" name="email" required placeholder="usuario@empresa.com" /></label>
+        <label class="np-field"><span>Usuario</span><input type="text" class="np-input np-mono" [class.is-bad]="errorField === 'username'" [(ngModel)]="form.username" name="username" required placeholder="jperez" /></label>
+        <label class="np-field"><span>Contraseña</span>
+          <span class="np-input-wrap">
+            <input [type]="showPw ? 'text' : 'password'" class="np-input" [class.is-bad]="errorField === 'password'" [(ngModel)]="form.password" name="password" required autocomplete="new-password" placeholder="10 caracteres, con mayúsculas y números" />
+            <button type="button" class="np-eye" (click)="showPw = !showPw" [attr.aria-label]="showPw ? 'Ocultar contraseña' : 'Mostrar contraseña'">
+              <svg *ngIf="!showPw" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>
+              <svg *ngIf="showPw" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3l18 18M10.6 10.6a3 3 0 0 0 4.2 4.2M9.9 5.1A10.4 10.4 0 0 1 12 5c6.5 0 10 7 10 7a17 17 0 0 1-3 3.6M6.2 6.2A17 17 0 0 0 2 12s3.5 7 10 7a10 10 0 0 0 4-.8"/></svg>
+            </button>
+          </span>
+          <small class="np-fine">Al menos 10 caracteres, con mayúsculas, minúsculas y números. <button type="button" class="np-link" (click)="generarPassword()">Generar</button></small>
+        </label>
         <label class="np-field np-field-full"><span>Rol</span><np-select [(ngModel)]="form.profile_id" name="profile_id" required [opciones]="profiles" [presentacion]="presPerfiles" placeholder="Seleccioná un rol…" [valorVacio]="0" ariaLabel="Rol"></np-select></label>
       </div>
       <div class="np-btnrow np-btnrow--end">
@@ -93,5 +110,21 @@
         <button type="submit" class="np-btn np-btn--primary" [disabled]="isSaving || mf.invalid"><span *ngIf="isSaving" class="np-spinner np-spinner--sm"></span>{{ isSaving ? 'Guardando…' : 'Crear usuario' }}</button>
       </div>
     </form>
+  </div>
+</div>
+
+<!-- ══ Eliminar usuario ════════════════════════════════════════════════════ -->
+<div *ngIf="showDeleteModal && toDelete" class="np-overlay" (click)="closeDelete()">
+  <div class="np-modal" role="dialog" aria-modal="true" aria-label="Eliminar usuario" (click)="$event.stopPropagation()">
+    <div class="np-modal-head"><div><p class="np-kicker">Cuentas <b>/</b> Baja</p><h3>Eliminar a {{ toDelete.names }} {{ toDelete.lastname }}</h3></div>
+      <button type="button" class="np-icobtn" (click)="closeDelete()" aria-label="Cerrar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div>
+    <div class="np-modal-body">
+      <p>La cuenta <b class="np-mono">{{ toDelete.username }}</b> ({{ toDelete.profile_name }}) no va a poder entrar más al sistema.</p>
+      <p class="np-fine">Si la persona ya atendió tickets, instalaciones o movimientos, la cuenta queda desactivada y esos registros siguen mostrando quién los hizo; si no tiene nada a su nombre, se borra y el usuario queda libre. No se puede eliminar la propia cuenta ni el último administrador de la empresa.</p>
+      <div class="np-btnrow np-btnrow--end">
+        <button type="button" class="np-btn np-btn--ghost" (click)="closeDelete()">Cancelar</button>
+        <button type="button" class="np-btn np-btn--danger" (click)="confirmDelete()" [disabled]="deleting"><span *ngIf="deleting" class="np-spinner np-spinner--sm"></span>{{ deleting ? 'Eliminando…' : 'Eliminar cuenta' }}</button>
+      </div>
+    </div>
   </div>
 </div>

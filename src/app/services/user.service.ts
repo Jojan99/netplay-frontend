@@ -187,6 +187,20 @@ export class UserService {
     return this.http.delete<any>(url, { headers: this.getHeaders() });
   }
 
+  /** Clientes eliminados de la empresa, paginados, para poder reinstalarlos. */
+  clientesEliminados(params: { page?: number; per_page?: number; q?: string } = {}): Observable<any> {
+    let p = new HttpParams();
+    if (params.page)     p = p.set('page', String(params.page));
+    if (params.per_page) p = p.set('per_page', String(params.per_page));
+    if (params.q)        p = p.set('q', params.q);
+    return this.http.get<any>(`${this.env.rootUrl}api/user/eliminados`, { headers: this.getHeaders(), params: p });
+  }
+
+  /** Devuelve un cliente eliminado al registro de activos. */
+  reinstalarCliente(id: any): Observable<any> {
+    return this.http.post<any>(`${this.env.rootUrl}api/user/${id}/reinstalar`, {}, { headers: this.getHeaders() });
+  }
+
   /** Lo que el cliente tiene en su MikroTik: credencial PPPoE, ARP, listas. */
   clienteEnRouter(id: any): Observable<any> {
     return this.http.get<any>(`${this.env.rootUrl}api/user/${id}/en-router`, { headers: this.getHeaders() });

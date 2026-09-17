@@ -3,3 +3,9 @@
 .np-row--static { cursor: default; }
 .np-chips-label { align-self: center; margin-right: 4px; }
 @media (max-width: 900px) { .np-col-mail { display: none; } .np-table--registry { min-width: 0; } }
+.np-col-acc { width: 92px; text-align: right; white-space: nowrap; }
+.np-icobtn--danger { color: var(--danger); &:hover:not(:disabled) { background: var(--danger-soft); color: var(--danger); } }
+/* Cuenta dada de baja: sigue en la lista, apagada. */
+.is-off { opacity: .62; .np-name { text-decoration: line-through; } }
+/* Campo que el servidor señaló como equivocado. */
+.np-input.is-bad { border-color: var(--danger); }
