@@ -145,24 +145,51 @@ export class WaInstanciasComponent implements OnInit, OnDestroy {
     this.qrError    = false;
     this.refreshQrImage();
     this.pollSub?.unsubscribe();
+    let vueltas = 0;
+
     this.pollSub = interval(5000).subscribe(() => {
+      vueltas++;
+
       this.wa.getInstanceStatus(inst.instanceId).subscribe({
         next: (s: any) => {
-          if (s.status === 'connected') { this.closeQR(); this.load(); }
+          if (s.status === 'connected') { this.closeQR(); this.load(); return; }
+
+          // WhatsApp cambia el QR cada pocos segundos: se vuelve a pedir cada
+          // 20 s, y también apenas la instancia tenga uno si al abrir no había.
+          if ((this.qrError && s.hasQR) || vueltas % 4 === 0) this.refreshQrImage();
         }
       });
     });
   }
 
+  /**
+   * El QR se pide con el token de la sesión y se muestra desde memoria: como
+   * <img src="..."> el navegador no manda el token, el servidor rechazaba la
+   * imagen y la pantalla decía "QR no disponible aún" aunque sí existiera.
+   */
   refreshQrImage(): void {
     if (!this.qrInstance) return;
-    this.qrError    = false;
-    this.qrImageUrl = this.wa.getQrUrl(this.qrInstance.instanceId) + `?t=${Date.now()}`;
+    this.qrError = false;
+    this.soltarQr();
+
+    this.wa.getQrBlob(this.qrInstance.instanceId).subscribe({
+      next: (imagen: Blob) => {
+        if (!imagen || imagen.size < 100) { this.qrError = true; return; }
+        this.qrImageUrl = URL.createObjectURL(imagen);
+      },
+      error: () => { this.qrError = true; },
+    });
+  }
+
+  /** Libera la imagen anterior: cada QR nuevo crea una dirección en memoria. */
+  private soltarQr(): void {
+    if (this.qrImageUrl.startsWith('blob:')) URL.revokeObjectURL(this.qrImageUrl);
+    this.qrImageUrl = '';
   }
 
   closeQR(): void {
     this.qrInstance = null;
-    this.qrImageUrl = '';
+    this.soltarQr();
     this.pollSub?.unsubscribe();
   }
 
