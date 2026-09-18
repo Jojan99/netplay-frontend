@@ -57,6 +57,7 @@
       <ng-container *ngIf="step === 2">
         <div class="np-form">
           <label class="np-field np-field-full"><span>Prefijo de facturación</span><input type="text" class="np-input np-mono" [(ngModel)]="form.invoice_prefix" name="invoice_prefix" maxlength="10" placeholder="FAC" (input)="form.invoice_prefix = form.invoice_prefix.toUpperCase()" /><small class="np-fine">Tus facturas se numerarán <b class="np-mono">{{ prefixPreview }}0001</b>. Se puede cambiar después.</small></label>
+          <label class="np-field np-field-full"><span>Código de descuento o de referido <small class="np-fine">(opcional)</small></span><input type="text" class="np-input np-mono" [(ngModel)]="form.codigo" name="codigo" maxlength="40" placeholder="LANZAMIENTO25" (input)="alEscribirCodigo()" /><small class="np-fine" [class.is-libre]="codigoEstado === 'sirve'" [class.is-ocupado]="codigoEstado === 'no-sirve'">{{ codigoMensaje || 'Si alguien te invitó, poné acá su código.' }}</small></label>
         </div>
         <p class="np-notice np-notice--info">Los datos fiscales de la factura (razón social, NIT, dirección) se copian de la empresa. Después podés ajustarlos y subir el logo desde <b>Configuración de facturación</b>.</p>
         <ul class="np-register-list">

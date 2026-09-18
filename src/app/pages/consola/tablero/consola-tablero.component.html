@@ -1,0 +1,150 @@
+<div class="np-page">
+
+  <header class="np-head">
+    <div>
+      <p class="np-kicker">Netvula <b>/</b> Consola</p>
+      <h1 class="np-title">La plataforma de un vistazo</h1>
+      <div class="np-ribbon" [class.np-ribbon--loading]="cargando">
+        <span><i class="np-dot" style="background:var(--accent)"></i><span class="np-n">{{ empresas.total || 0 }}</span>empresas</span>
+        <span><i class="np-dot" style="background:var(--ok)"></i><span class="np-n">{{ clientes.total || 0 }}</span>clientes en total</span>
+        <span *ngIf="enMora.length"><i class="np-dot" style="background:var(--danger)"></i><span class="np-n">{{ enMora.length }}</span>en mora</span>
+      </div>
+    </div>
+    <div class="np-actions">
+      <button type="button" class="np-btn" (click)="cargar(true)" [disabled]="refrescando">
+        <span *ngIf="refrescando" class="np-spinner np-spinner--sm"></span>
+        {{ refrescando ? 'Preguntando al ACS…' : 'Refrescar' }}
+      </button>
+    </div>
+  </header>
+
+  <p *ngIf="!migrada" class="np-notice np-notice--warn">
+    Falta correr la migración de la consola. Se ve el estado de las empresas, pero todavía no hay planes asignados,
+    ni cobros, ni bitácora.
+  </p>
+
+  <div class="np-scroll">
+
+    <section class="np-kpis np-kpis--5" aria-label="Empresas y clientes">
+      <div class="np-kpi np-kpi--accent">
+        <span class="np-kpi-l">Empresas</span>
+        <span class="np-kpi-v">{{ empresas.total || 0 }}</span>
+        <span class="np-kpi-s">
+          <i class="np-dot" style="background:var(--ok)"></i>{{ empresas.activas || 0 }} activas ·
+          <i class="np-dot" style="background:var(--info)"></i>{{ empresas.en_prueba || 0 }} en prueba ·
+          <i class="np-dot" style="background:var(--danger)"></i>{{ empresas.suspendidas || 0 }} suspendidas
+        </span>
+      </div>
+      <div class="np-kpi">
+        <span class="np-kpi-l">Clientes finales</span>
+        <span class="np-kpi-v">{{ clientes.total || 0 }}</span>
+        <span class="np-kpi-s">{{ clientes.activos || 0 }} activos · {{ clientes.suspendidos || 0 }} suspendidos · {{ clientes.retirados || 0 }} retirados</span>
+      </div>
+      <div class="np-kpi">
+        <span class="np-kpi-l">Ingreso mensual</span>
+        <span class="np-kpi-v np-kpi-v--ok">{{ pesos(ingresos.mrr) }}</span>
+        <span class="np-kpi-s">{{ ingresos.empresas_con_plan || 0 }} con plan · {{ pesos(ingresos.anual_estimado) }} al año</span>
+      </div>
+      <div class="np-kpi">
+        <span class="np-kpi-l">Sin plan asignado</span>
+        <span class="np-kpi-v" [class.np-kpi-v--warn]="(ingresos.sin_plan || 0) > 0">{{ ingresos.sin_plan || 0 }}</span>
+        <span class="np-kpi-s">no se les puede cobrar todavía</span>
+      </div>
+      <div class="np-kpi">
+        <span class="np-kpi-l">En mora</span>
+        <span class="np-kpi-v" [class.np-kpi-v--danger]="enMora.length > 0">{{ enMora.length }}</span>
+        <span class="np-kpi-s">{{ porVencer.length }} por vencer en 7 días</span>
+      </div>
+    </section>
+
+    <section class="np-kpis np-kpis--5" aria-label="Qué usa cada empresa">
+      <div class="np-kpi">
+        <span class="np-kpi-l">Con OLT</span>
+        <span class="np-kpi-v">{{ red.con_olt || 0 }}</span>
+        <span class="np-kpi-s">{{ red.olts || 0 }} OLT registradas</span>
+      </div>
+      <div class="np-kpi">
+        <span class="np-kpi-l">Con MikroTik</span>
+        <span class="np-kpi-v">{{ red.con_mikrotik || 0 }}</span>
+        <span class="np-kpi-s">{{ red.routers || 0 }} routers</span>
+      </div>
+      <div class="np-kpi">
+        <span class="np-kpi-l">Con TR-069</span>
+        <span class="np-kpi-v">{{ red.con_tr069 || 0 }}</span>
+        <span class="np-kpi-s">
+          {{ red.equipos_tr069 || 0 }} equipos reportando al ACS
+          <b *ngIf="red.acs_sin_respuesta" class="np-neg"> · {{ red.acs_sin_respuesta }} sin respuesta</b>
+        </span>
+      </div>
+      <div class="np-kpi">
+        <span class="np-kpi-l">Líneas de WhatsApp</span>
+        <span class="np-kpi-v">{{ red.lineas_wa_ok || 0 }}<span class="np-muted">/{{ red.lineas_wa || 0 }}</span></span>
+        <span class="np-kpi-s">conectadas sobre el total</span>
+      </div>
+      <div class="np-kpi">
+        <span class="np-kpi-l">Correo propio</span>
+        <span class="np-kpi-v">{{ red.con_mailjet || 0 }}</span>
+        <span class="np-kpi-s">empresas con Mailjet configurado</span>
+      </div>
+    </section>
+
+    <section class="np-grid-2">
+      <div class="np-card">
+        <div class="np-card-h"><h2>Empresas nuevas por mes</h2><span class="np-card-meta">últimos 12 meses</span></div>
+        <div class="np-barras">
+          <div class="np-barra" *ngFor="let b of barrasEmpresas">
+            <span class="np-barra-n">{{ b.altas || '' }}</span>
+            <i [style.height.%]="b.alto"></i>
+            <span class="np-barra-m">{{ b.etiqueta }}</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="np-card">
+        <div class="np-card-h"><h2>Clientes nuevos por mes</h2><span class="np-card-meta">sumando todas las empresas</span></div>
+        <div class="np-barras">
+          <div class="np-barra" *ngFor="let b of barrasClientes">
+            <span class="np-barra-n">{{ b.altas || '' }}</span>
+            <i class="np-barra--ok" [style.height.%]="b.alto"></i>
+            <span class="np-barra-m">{{ b.etiqueta }}</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="np-grid-2">
+      <div class="np-card">
+        <div class="np-card-h"><h2>En mora</h2><span class="np-card-meta">{{ enMora.length }} cobro(s) vencidos</span></div>
+        <table class="np-table np-table--compact">
+          <thead><tr><th>Empresa</th><th>Período</th><th class="np-th-right">Saldo</th><th class="np-th-right">Días</th></tr></thead>
+          <tbody>
+            <tr *ngIf="!enMora.length" class="np-empty"><td colspan="4"><strong>Nadie en mora.</strong></td></tr>
+            <tr *ngFor="let m of enMora">
+              <td><a class="np-link" [routerLink]="['/dashboard/consola/empresas']" [queryParams]="{ empresa: m.company_id }">{{ m.empresa }}</a></td>
+              <td class="np-data np-data--dim">{{ m.periodo }}</td>
+              <td class="np-td-right np-money">{{ pesos(m.saldo) }}</td>
+              <td class="np-td-right"><span class="np-pill np-pill--suspended">{{ m.dias }}</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="np-card">
+        <div class="np-card-h"><h2>Por vencer</h2><span class="np-card-meta">próximos 7 días</span></div>
+        <table class="np-table np-table--compact">
+          <thead><tr><th>Empresa</th><th>Ciclo</th><th>Próxima</th><th class="np-th-right">Faltan</th></tr></thead>
+          <tbody>
+            <tr *ngIf="!porVencer.length" class="np-empty"><td colspan="4"><strong>Nada por vencer esta semana.</strong></td></tr>
+            <tr *ngFor="let v of porVencer">
+              <td><a class="np-link" [routerLink]="['/dashboard/consola/empresas']" [queryParams]="{ empresa: v.company_id }">{{ v.empresa }}</a></td>
+              <td class="np-data np-data--dim">{{ v.ciclo }}</td>
+              <td class="np-data">{{ v.proxima }}</td>
+              <td class="np-td-right"><span class="np-pill np-pill--info">{{ v.dias }} días</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+  </div>
+</div>

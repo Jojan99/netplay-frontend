@@ -1,0 +1,124 @@
+<div class="np-page">
+
+  <header class="np-head">
+    <div>
+      <p class="np-kicker">Netvula <b>/</b> Consola</p>
+      <h1 class="np-title">Referidos</h1>
+      <div class="np-ribbon" [class.np-ribbon--loading]="cargando">
+        <span><span class="np-n">{{ referidos.length }}</span>referidos</span>
+        <span><i class="np-dot" style="background:var(--ok)"></i>{{ pesos(creditos.otorgados) }} otorgados</span>
+      </div>
+    </div>
+    <div class="np-actions">
+      <button type="button" class="np-btn" (click)="cargar()" [disabled]="cargando">Refrescar</button>
+    </div>
+  </header>
+
+  <div class="np-scroll">
+
+    <section class="np-kpis np-kpis--3">
+      <div class="np-kpi np-kpi--accent">
+        <span class="np-kpi-l">Crédito otorgado</span>
+        <span class="np-kpi-v">{{ pesos(creditos.otorgados) }}</span>
+        <span class="np-kpi-s">desde que arrancó el programa</span>
+      </div>
+      <div class="np-kpi">
+        <span class="np-kpi-l">Crédito consumido</span>
+        <span class="np-kpi-v np-kpi-v--ok">{{ pesos(creditos.consumidos) }}</span>
+        <span class="np-kpi-s">descontado de los cobros</span>
+      </div>
+      <div class="np-kpi">
+        <span class="np-kpi-l">Crédito pendiente</span>
+        <span class="np-kpi-v np-kpi-v--warn">{{ pesos(creditos.saldo) }}</span>
+        <span class="np-kpi-s">saldo a favor de las empresas</span>
+      </div>
+    </section>
+
+    <!-- ── Reglas del programa ─────────────────────────────────────── -->
+    <section class="np-panel np-panel--form">
+      <h2>Reglas del programa</h2>
+
+      <form class="np-form" (ngSubmit)="guardarAjustes()">
+        <label class="np-check np-check--box np-field-full">
+          <input type="checkbox" [(ngModel)]="ajustes.activo" name="activo" />
+          <span>Programa de referidos activo</span>
+        </label>
+
+        <div class="np-field np-field-full"><span><b>Lo que recibe la empresa nueva</b> (como descuento en su primer cobro)</span></div>
+        <label class="np-field"><span>Tipo</span>
+          <select class="np-input" [(ngModel)]="ajustes.beneficio_referido.tipo" name="br_tipo">
+            <option value="porcentaje">Porcentaje</option>
+            <option value="monto">Monto fijo</option>
+          </select>
+        </label>
+        <label class="np-field"><span>Valor</span>
+          <input type="number" class="np-input" [(ngModel)]="ajustes.beneficio_referido.valor" name="br_valor" min="0" /></label>
+        <label class="np-field"><span>Cuántos períodos</span>
+          <input type="number" class="np-input" [(ngModel)]="ajustes.beneficio_referido.periodos" name="br_periodos" min="1" max="36" /></label>
+
+        <div class="np-field np-field-full"><span><b>Lo que recibe quien refiere</b> (como crédito a favor)</span></div>
+        <label class="np-field"><span>Tipo</span>
+          <select class="np-input" [(ngModel)]="ajustes.beneficio_referidor.tipo" name="bo_tipo">
+            <option value="monto">Monto fijo de crédito</option>
+            <option value="porcentaje">Porcentaje de lo que pagó el referido</option>
+          </select>
+        </label>
+        <label class="np-field"><span>Valor</span>
+          <input type="number" class="np-input" [(ngModel)]="ajustes.beneficio_referidor.valor" name="bo_valor" min="0" /></label>
+        <label class="np-field"><span>Cuándo se acredita</span>
+          <select class="np-input" [(ngModel)]="ajustes.acreditar_en" name="acreditar_en">
+            <option value="primer_pago">Cuando el referido paga su primer período</option>
+            <option value="registro">Apenas se registra el referido</option>
+          </select>
+        </label>
+
+        <p class="np-notice np-notice--info np-field-full">
+          Recomendado: acreditar al primer pago. Con "apenas se registra" se regala crédito por altas que
+          después no pagan nada.
+        </p>
+
+        <div class="np-btnrow np-btnrow--end np-field-full">
+          <button type="submit" class="np-btn np-btn--primary" [disabled]="guardando">Guardar reglas</button>
+        </div>
+      </form>
+    </section>
+
+    <section class="np-grid-2">
+      <div class="np-card">
+        <div class="np-card-h"><h2>Quién refiere más</h2></div>
+        <table class="np-table np-table--compact">
+          <thead><tr><th>Empresa</th><th class="np-th-right">Traídas</th><th class="np-th-right">Pagan</th><th class="np-th-right">Crédito</th></tr></thead>
+          <tbody>
+            <tr *ngIf="!ranking.length" class="np-empty"><td colspan="4"><strong>Nadie refirió todavía.</strong></td></tr>
+            <tr *ngFor="let r of ranking; let i = index">
+              <td><span class="np-rank-n">{{ i + 1 }}</span> {{ r.empresa }}</td>
+              <td class="np-td-right"><b>{{ r.total }}</b></td>
+              <td class="np-td-right">{{ r.activos }}</td>
+              <td class="np-td-right np-money">{{ pesos(r.credito) }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="np-card">
+        <div class="np-card-h"><h2>Últimos referidos</h2></div>
+        <table class="np-table np-table--compact">
+          <thead><tr><th>Trajo</th><th>A</th><th>Estado</th><th class="np-th-right">Crédito</th></tr></thead>
+          <tbody>
+            <tr *ngIf="!referidos.length" class="np-empty"><td colspan="4"><strong>Sin movimientos.</strong></td></tr>
+            <tr *ngFor="let r of referidos">
+              <td class="np-name">{{ r.referidor }}</td>
+              <td>
+                {{ r.referida }}
+                <div class="np-plan"><em class="np-mono">{{ r.codigo }}</em> · {{ fecha(r.created_at) }}</div>
+              </td>
+              <td><span class="np-pill" [ngClass]="claseEstado(r.estado)">{{ textoEstado(r.estado) }}</span></td>
+              <td class="np-td-right np-money">{{ pesos(r.credito_otorgado) }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+  </div>
+</div>

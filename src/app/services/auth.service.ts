@@ -11,6 +11,13 @@ export interface AuthUser {
   company_logo: string;
   /** Nombre de la persona, para mostrar. El usuario es la cédula. */
   nombre?: string;
+  /**
+   * Dueño de la plataforma: le aparece la Consola de Netvula.
+   *
+   * Es sólo para decidir si se muestra el menú. El permiso de verdad lo
+   * comprueba el servidor en cada pedido (users.es_plataforma).
+   */
+  es_plataforma?: boolean;
 }
 
 @Injectable({ providedIn: 'root' })
@@ -38,6 +45,7 @@ export class AuthService {
       company_name: data.company_name ?? '',
       company_logo: data.company_logo ?? '',
       nombre:       data.nombre       ?? '',
+      es_plataforma: !!data.es_plataforma,
     };
     localStorage.setItem(this.USER_KEY, JSON.stringify(user));
     localStorage.setItem('employee_id', (data.employee_id ?? '').toString());
@@ -101,6 +109,21 @@ export class AuthService {
     const u = this.getUser();
     if (!u) return;
     localStorage.setItem(this.USER_KEY, JSON.stringify({ ...u, nombre }));
+  }
+
+  /** ¿Es el dueño de la plataforma? */
+  esPlataforma(): boolean { return this.getUser()?.es_plataforma === true; }
+
+  /**
+   * Refresca la marca de plataforma en la sesión.
+   *
+   * Las sesiones abiertas antes de que existiera la marca no la traen; el
+   * panel la vuelve a pedir al entrar, como ya hace con el nombre.
+   */
+  setPlataforma(es: boolean): void {
+    const u = this.getUser();
+    if (!u || u.es_plataforma === es) return;
+    localStorage.setItem(this.USER_KEY, JSON.stringify({ ...u, es_plataforma: es }));
   }
 
   /** De "JOJANNY MANUEL POMBO" a "Jojanny Manuel Pombo". */

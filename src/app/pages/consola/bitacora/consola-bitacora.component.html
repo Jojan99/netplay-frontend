@@ -1,0 +1,68 @@
+<div class="np-page">
+
+  <header class="np-head">
+    <div>
+      <p class="np-kicker">Netvula <b>/</b> Consola</p>
+      <h1 class="np-title">Bitácora</h1>
+      <div class="np-ribbon" [class.np-ribbon--loading]="cargando">
+        <span><span class="np-n">{{ total }}</span>anotaciones</span>
+      </div>
+    </div>
+  </header>
+
+  <div class="np-toolbar">
+    <label class="np-field np-field--inline"><span>Acción</span>
+      <select class="np-input np-input--sm" [(ngModel)]="accion" (ngModelChange)="filtrar()">
+        <option value="">Todas</option>
+        <option *ngFor="let a of acciones" [value]="a">{{ a }}</option>
+      </select>
+    </label>
+    <label class="np-field np-field--inline"><span>Desde</span>
+      <input type="date" class="np-input np-input--sm" [(ngModel)]="desde" (change)="filtrar()" /></label>
+    <label class="np-field np-field--inline"><span>Hasta</span>
+      <input type="date" class="np-input np-input--sm" [(ngModel)]="hasta" (change)="filtrar()" /></label>
+    <span class="np-spacer"></span>
+    <button type="button" class="np-btn np-btn--sm" (click)="cargar()">Refrescar</button>
+  </div>
+
+  <div class="np-scroll">
+    <section class="np-registry">
+      <div class="np-registry-wrap">
+        <table class="np-table np-table--registry np-table--compact">
+          <thead>
+            <tr>
+              <th class="np-th-stripe"></th>
+              <th>Cuándo</th>
+              <th>Quién</th>
+              <th>Acción</th>
+              <th>Empresa</th>
+              <th>Detalle</th>
+              <th class="np-only-desktop">IP</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngIf="cargando" class="np-empty"><td colspan="7"><span class="np-spinner"></span></td></tr>
+            <tr *ngIf="!cargando && !items.length" class="np-empty">
+              <td colspan="7"><strong>Sin anotaciones.</strong> Acá queda todo lo que se haga desde la consola.</td>
+            </tr>
+            <tr *ngFor="let b of items" class="np-row">
+              <td class="np-stripe"><i></i></td>
+              <td class="np-data np-data--dim np-nowrap">{{ fechaHora(b.created_at) }}</td>
+              <td class="np-mono">{{ b.usuario || '—' }}</td>
+              <td><span class="np-tag">{{ b.accion }}</span></td>
+              <td>{{ b.empresa || '—' }}</td>
+              <td class="np-fine np-truncate">{{ detalle(b.detalle) }}</td>
+              <td class="np-only-desktop np-mono np-data--dim">{{ b.ip }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="np-pager" *ngIf="paginas > 1">
+        <button type="button" class="np-btn np-btn--sm" (click)="ir(pagina - 1)" [disabled]="pagina <= 1">Anterior</button>
+        <span class="np-range">Página {{ pagina }} de {{ paginas }}</span>
+        <button type="button" class="np-btn np-btn--sm" (click)="ir(pagina + 1)" [disabled]="pagina >= paginas">Siguiente</button>
+      </div>
+    </section>
+  </div>
+</div>

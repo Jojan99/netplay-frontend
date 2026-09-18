@@ -1,0 +1,26 @@
+/* El inspector de la consola es más largo que el del resto del panel:
+   una empresa trae suscripción, cobros, red e integraciones. */
+.np-inspector .np-sect + .np-sect { margin-top: 18px; }
+
+.np-inspector h4.np-fine {
+  margin: 14px 0 4px;
+  text-transform: uppercase;
+  letter-spacing: .06em;
+  color: var(--text-3);
+}
+
+.np-inspector .np-form--row {
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 10px;
+}
+
+.np-inspector .np-form--row .np-field { flex: 1 1 160px; margin: 0; }
+
+.np-search { min-width: 260px; }
+
+@media (max-width: 720px) {
+  .np-search { min-width: 0; width: 100%; }
+}

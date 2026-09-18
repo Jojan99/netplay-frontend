@@ -18,6 +18,13 @@ export interface Sitio {
   empresa: EmpresaDelSitio | null;
 }
 
+/** Un cupón de descuento o el código de referido de otra empresa. */
+export interface CodigoRevisado {
+  tipo: 'cupon' | 'referido' | null;
+  valido: boolean;
+  detalle: string;
+}
+
 export interface Disponibilidad {
   subdominio: string;
   disponible: boolean;
@@ -73,6 +80,17 @@ export class SitioService {
     return this.http.get<any>(this.base + 'subdominio/disponible', { params: { s: subdominio } }).pipe(
       map(r => ({ ...(r?.data ?? {}), mensaje: r?.message ?? '' }) as Disponibilidad),
       catchError(() => of({ subdominio, disponible: false, direccion: '', mensaje: 'No pudimos revisar la dirección. Probá de nuevo.' })),
+    );
+  }
+
+  /**
+   * ¿Sirve este código? Puede ser un cupón o el código de referido de otra
+   * empresa; la respuesta dice cuál es y qué da.
+   */
+  codigo(codigo: string): Observable<CodigoRevisado> {
+    return this.http.get<any>(this.base + 'codigo', { params: { c: codigo } }).pipe(
+      map(r => (r?.data ?? { tipo: null, valido: false, detalle: r?.message ?? '' }) as CodigoRevisado),
+      catchError(() => of({ tipo: null, valido: false, detalle: 'No pudimos revisar el código. Probá de nuevo.' } as CodigoRevisado)),
     );
   }
 

@@ -62,6 +62,16 @@ export class ContractService {
     return this.http.get(`${this.base}/${contractId}/pdf-base-archivo`, { headers, responseType: 'blob' });
   }
 
+  /**
+   * Una hoja del PDF base ya dibujada por el servidor (poppler). Reemplaza al
+   * pdf.js del navegador: se ve nítida, es el documento exacto y no hay que
+   * bajar la librería desde un CDN.
+   */
+  getHojaPlantilla(contractId: number, pagina: number): Observable<Blob> {
+    const headers = new HttpHeaders({ Authorization: `Bearer ${localStorage.getItem('token')}` });
+    return this.http.get(`${this.base}/${contractId}/hoja/${pagina}`, { headers, responseType: 'blob' });
+  }
+
   create(data: { title: string; content: string; active?: boolean; installation_value?: string }): Observable<any> {
     return this.http.post(this.base, JSON.stringify(data), { headers: this.getHeaders() });
   }

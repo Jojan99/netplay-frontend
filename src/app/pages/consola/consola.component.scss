@@ -1,0 +1,19 @@
+/* El marco de la consola. Todo lo demás es del sistema np-*. */
+.np-consola {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  height: 100%;
+}
+
+.np-consola > .np-tabs {
+  position: sticky;
+  top: 0;
+  z-index: 3;
+  background: var(--bg);
+  padding: 10px 16px 0;
+  overflow-x: auto;
+  flex: 0 0 auto;
+}
+
+.np-consola > .np-tabs .np-tab { text-decoration: none; white-space: nowrap; }

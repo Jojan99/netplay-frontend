@@ -4,15 +4,11 @@ import { FormsModule } from '@angular/forms';
 import { ContractService } from '../../services/contract.service';
 import { UserService } from '../../services/user.service';
 import { DomSanitizer, SafeResourceUrl, SafeHtml } from '@angular/platform-browser';
+import { firstValueFrom } from 'rxjs';
 import { environment } from '../../../environments/environment';
-import * as pdfjsLib from 'pdfjs-dist';
 import { NpSelectComponent, PresentacionSelect } from '../../common/np-select/np-select.component';
 
 const PESOS = new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 });
-
-// Worker de pdfjs (requerido en producción)
-const PDFJS_VERSION = (pdfjsLib as any).version || '4.5.136';
-pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${PDFJS_VERSION}/pdf.worker.min.mjs`;
 
 /* ── Conversiones del editor de posiciones ─────────────────────────────────
    El PDF se arma con FPDI sin argumentos, o sea en MILÍMETROS, pero el tamaño
@@ -169,9 +165,8 @@ export class ContractsComponent implements OnInit, OnDestroy {
   avisoPdfCambiado = '';
   readonly TERMINOS_POR_DEFECTO = 'Declaro que leí el contrato completo, que los datos que aparecen en él son correctos y que acepto sus términos y condiciones. Entiendo que esta firma electrónica tiene la misma validez que una firma de puño y letra.';
 
-  private docPdf: any = null;
-  private baseUrlObjeto: string | null = null;
   private lienzoPagina: HTMLCanvasElement | null = null;
+  private urlHoja: string | null = null;
   private pxPorMm = 1;
   private arrastrando = false;
   private agarre = { dx: 0, dy: 0 };
@@ -625,73 +620,69 @@ export class ContractsComponent implements OnInit, OnDestroy {
         if (r.status !== 0) { this.isRenderingPdf = false; this.errorMsg = r.message || 'No se pudo leer el PDF base.'; return; }
         this.pdfPaginas = r.data.pages ?? [];
         this.pdfPagina = 1;
-        this.cargarPdf();
+        this.pdfListo = true;
+        this.renderPagina();
       },
       error: () => { this.isRenderingPdf = false; this.errorMsg = 'No se pudo leer el PDF base.'; },
     });
   }
 
-  private cargarPdf(): void {
-    this.contractService.getPdfBaseBlob(this.templateForm.id).subscribe({
-      next: async blob => {
-        try {
-          this.soltarPdf();
-          this.baseUrlObjeto = URL.createObjectURL(blob);
-          this.docPdf = await pdfjsLib.getDocument(this.baseUrlObjeto).promise;
-          this.pdfListo = true;
-          await this.renderPagina();
-        } catch {
-          this.isRenderingPdf = false;
-          this.errorMsg = 'No se pudo abrir el PDF base.';
-        }
-      },
-      error: () => { this.isRenderingPdf = false; this.errorMsg = 'No se pudo descargar el PDF base.'; },
-    });
-  }
-
   private soltarPdf(): void {
-    if (this.baseUrlObjeto) { URL.revokeObjectURL(this.baseUrlObjeto); this.baseUrlObjeto = null; }
-    if (this.docPdf?.destroy) { try { this.docPdf.destroy(); } catch {} }
-    this.docPdf = null;
+    if (this.urlHoja) { URL.revokeObjectURL(this.urlHoja); this.urlHoja = null; }
     this.lienzoPagina = null;
     this.pdfListo = false;
     clearTimeout(this.temporizadorPrevia);
   }
 
-  /** Dibuja la página del PDF en un lienzo de respaldo y la muestra. */
+  /**
+   * Trae la hoja ya dibujada por el servidor y la deja en un lienzo de respaldo.
+   * Se dibuja una sola vez por página: después, arrastrar un campo sólo vuelve a
+   * copiar esa imagen y a pintar los textos encima.
+   */
   async renderPagina(): Promise<void> {
-    if (!this.docPdf) return;
     const hoja = this.hojaActual();
-    if (!hoja) return;
+    if (!hoja || !this.templateForm.id) return;
 
     this.isRenderingPdf = true;
     this.campoSel = null;
+    this.errorMsg = '';
+
     try {
-      const pagina = await this.docPdf.getPage(this.paginaNum());
-      // Ancho de trabajo fijo: nítido sin cargar de más un portátil modesto.
-      const anchoPt = pagina.getViewport({ scale: 1 }).width;
-      const viewport = pagina.getViewport({ scale: 1200 / anchoPt });
+      const blob = await firstValueFrom(this.contractService.getHojaPlantilla(this.templateForm.id, this.paginaNum()));
+      const imagen = await this.imagenDesde(blob);
 
       const respaldo = document.createElement('canvas');
-      respaldo.width = Math.round(viewport.width);
-      respaldo.height = Math.round(viewport.height);
-      await pagina.render({ canvasContext: respaldo.getContext('2d')!, viewport }).promise;
+      respaldo.width = imagen.naturalWidth;
+      respaldo.height = imagen.naturalHeight;
+      respaldo.getContext('2d')!.drawImage(imagen, 0, 0);
       this.lienzoPagina = respaldo;
 
-      // pdf.js ya aplica /Rotate; FPDI también. Si las proporciones no coinciden
-      // es que la página viene girada y el mapeo saldría cruzado: se avisa.
-      const propPdfjs = viewport.width / viewport.height;
-      const propFpdi  = hoja.width / hoja.height;
-      this.avisoRotacion = Math.abs(propPdfjs - propFpdi) / propFpdi > 0.02
+      // La imagen y las medidas en mm tienen que describir la misma hoja. Si no
+      // coinciden, la página viene girada y el mapeo saldría cruzado: se avisa.
+      const propImagen = imagen.naturalWidth / imagen.naturalHeight;
+      const propFpdi = hoja.width / hoja.height;
+      this.avisoRotacion = Math.abs(propImagen - propFpdi) / propFpdi > 0.02
         ? 'Esta página del PDF viene girada y puede que las variables no caigan donde las coloque. Conviene subir el PDF ya enderezado.'
         : '';
 
       this.pintar();
     } catch {
-      this.errorMsg = 'No se pudo dibujar la página del PDF.';
+      this.errorMsg = 'No se pudo dibujar la página del PDF. Vuelva a abrir el editor.';
     } finally {
       this.isRenderingPdf = false;
     }
+  }
+
+  /** Blob de la hoja → <img> cargada, lista para copiar al lienzo. */
+  private imagenDesde(blob: Blob): Promise<HTMLImageElement> {
+    return new Promise((resolver, rechazar) => {
+      if (this.urlHoja) URL.revokeObjectURL(this.urlHoja);
+      this.urlHoja = URL.createObjectURL(blob);
+      const imagen = new Image();
+      imagen.onload = () => resolver(imagen);
+      imagen.onerror = () => rechazar(new Error('hoja ilegible'));
+      imagen.src = this.urlHoja;
+    });
   }
 
   cambiarPagina(): void { this.renderPagina(); }
@@ -887,9 +878,15 @@ export class ContractsComponent implements OnInit, OnDestroy {
     // campo caía corrido.
     const r = lienzo.getBoundingClientRect();
     if (!r.width || !r.height) return null;
+
+    // Los dos ejes se miden con la MISMA escala, la del ancho, que es la que usa
+    // pintar() para colocar los textos. Poppler redondea el alto de la imagen al
+    // píxel entero (2636 en vez de 2635,3) y usar la escala del alto metía ~0,1 mm
+    // de diferencia entre lo que se ve y lo que se estampa.
+    const mmPorPx = hoja.width / r.width;
     return {
-      x: ((e.clientX - r.left) / r.width) * hoja.width,
-      y: ((e.clientY - r.top) / r.height) * hoja.height,
+      x: (e.clientX - r.left) * mmPorPx,
+      y: (e.clientY - r.top) * mmPorPx,
     };
   }
 

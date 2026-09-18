@@ -15,6 +15,13 @@ export type RouteProps = {
   module?: string;
   /** Sólo lo ve el perfil ADMIN (además del módulo). */
   soloAdmin?: boolean;
+  /**
+   * Sólo lo ve el dueño de la plataforma (users.es_plataforma).
+   *
+   * No lleva módulo a propósito: así no se puede dar desde los permisos de
+   * ningún perfil. El servidor la cierra igual con su propio middleware.
+   */
+  soloPlataforma?: boolean;
 };
 
 export const components: RouteProps[] = [
@@ -390,6 +397,14 @@ export const components: RouteProps[] = [
     module: 'technician-map',
     group: false,
     roles: [2],
+    card: { className: 'w-56', images: { light: 'alerts-light.svg', dark: 'alerts-dark.svg' } },
+  },
+  {
+    title: 'Consola Netvula',
+    icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="14" rx="2"/><path d="M8 20h8M12 18v2"/><path d="M7 9h4M7 12h6"/></svg>`,
+    href: 'consola/tablero',
+    group: false,
+    soloPlataforma: true,
     card: { className: 'w-56', images: { light: 'alerts-light.svg', dark: 'alerts-dark.svg' } },
   },
 ];

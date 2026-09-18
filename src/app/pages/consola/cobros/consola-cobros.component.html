@@ -1,0 +1,110 @@
+<div class="np-page">
+
+  <header class="np-head">
+    <div>
+      <p class="np-kicker">Netvula <b>/</b> Consola</p>
+      <h1 class="np-title">Cobros de la plataforma</h1>
+      <div class="np-ribbon" [class.np-ribbon--loading]="cargando">
+        <span><i class="np-dot" style="background:var(--ok)"></i>{{ pesos(resumen.cobrado) }} cobrado</span>
+        <span><i class="np-dot" style="background:var(--warn)"></i>{{ pesos(resumen.pendiente) }} pendiente</span>
+        <span *ngIf="resumen.en_mora"><i class="np-dot" style="background:var(--danger)"></i>{{ pesos(resumen.en_mora) }} en mora</span>
+      </div>
+    </div>
+    <div class="np-actions">
+      <button type="button" class="np-btn np-btn--warn" (click)="marcarMoras()">Marcar moras</button>
+      <button type="button" class="np-btn" (click)="cargar()" [disabled]="cargando">Refrescar</button>
+    </div>
+  </header>
+
+  <div class="np-toolbar">
+    <div class="np-chips" role="group" aria-label="Estado del cobro">
+      <button type="button" class="np-chip" *ngFor="let f of FILTROS"
+              [attr.aria-pressed]="filtro === f.valor" (click)="cambiarFiltro(f.valor)">{{ f.titulo }}</button>
+    </div>
+  </div>
+
+  <div class="np-scroll">
+
+    <section class="np-grid-2" *ngIf="enMora.length || porVencer.length">
+      <div class="np-card" *ngIf="enMora.length">
+        <div class="np-card-h"><h2>En mora</h2><span class="np-card-meta">hay que llamarlos</span></div>
+        <table class="np-table np-table--compact">
+          <thead><tr><th>Empresa</th><th>Período</th><th class="np-th-right">Saldo</th><th class="np-th-right">Días</th></tr></thead>
+          <tbody>
+            <tr *ngFor="let m of enMora">
+              <td><a class="np-link" [routerLink]="['/dashboard/consola/empresas']" [queryParams]="{ empresa: m.company_id }">{{ m.empresa }}</a></td>
+              <td class="np-data np-data--dim">{{ m.periodo }}</td>
+              <td class="np-td-right np-money np-neg">{{ pesos(m.saldo) }}</td>
+              <td class="np-td-right"><span class="np-pill np-pill--suspended">{{ m.dias }}</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="np-card" *ngIf="porVencer.length">
+        <div class="np-card-h"><h2>Por vencer</h2><span class="np-card-meta">próximos 7 días</span></div>
+        <table class="np-table np-table--compact">
+          <thead><tr><th>Empresa</th><th>Ciclo</th><th>Próxima</th><th class="np-th-right">Faltan</th></tr></thead>
+          <tbody>
+            <tr *ngFor="let v of porVencer">
+              <td><a class="np-link" [routerLink]="['/dashboard/consola/empresas']" [queryParams]="{ empresa: v.company_id }">{{ v.empresa }}</a></td>
+              <td class="np-data np-data--dim">{{ v.ciclo }}</td>
+              <td class="np-data">{{ v.proxima }}</td>
+              <td class="np-td-right"><span class="np-pill np-pill--info">{{ v.dias }} días</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="np-registry">
+      <div class="np-registry-wrap">
+        <table class="np-table np-table--registry">
+          <thead>
+            <tr>
+              <th class="np-th-stripe"></th>
+              <th>Empresa</th>
+              <th>Período</th>
+              <th class="np-th-right">Lista</th>
+              <th class="np-th-right">Descuento</th>
+              <th class="np-th-right">Crédito</th>
+              <th class="np-th-right">Total</th>
+              <th class="np-th-right">Saldo</th>
+              <th>Estado</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngIf="cargando" class="np-empty"><td colspan="9"><span class="np-spinner"></span></td></tr>
+            <tr *ngIf="!cargando && !cobros.length" class="np-empty">
+              <td colspan="9"><strong>No hay cobros con este filtro.</strong>
+                Los cobros se generan desde la ficha de cada empresa.</td>
+            </tr>
+            <tr *ngFor="let c of cobros" class="np-row">
+              <td class="np-stripe"><i></i></td>
+              <td>
+                <a class="np-link" [routerLink]="['/dashboard/consola/empresas']" [queryParams]="{ empresa: c.company_id }">{{ c.empresa }}</a>
+                <div class="np-plan"><em>{{ c.ciclo }}</em></div>
+              </td>
+              <td>
+                <div class="np-data">{{ c.periodo_inicio }} → {{ c.periodo_fin }}</div>
+                <div class="np-plan"><em>vence {{ c.vence }}</em></div>
+              </td>
+              <td class="np-td-right np-money">{{ pesos(c.precio_lista) }}</td>
+              <td class="np-td-right np-money" [class.np-neg]="c.descuento > 0">
+                {{ c.descuento > 0 ? '-' + pesos(c.descuento) : '—' }}
+                <div class="np-plan" *ngIf="c.cupon_codigo"><em class="np-mono">{{ c.cupon_codigo }}</em></div>
+              </td>
+              <td class="np-td-right np-money" [class.np-neg]="c.credito_aplicado > 0">
+                {{ c.credito_aplicado > 0 ? '-' + pesos(c.credito_aplicado) : '—' }}
+              </td>
+              <td class="np-td-right np-money np-money--lg">{{ pesos(c.total) }}</td>
+              <td class="np-td-right np-money" [class.np-neg]="c.vencido">{{ pesos(c.saldo) }}</td>
+              <td><span class="np-pill" [ngClass]="claseEstado(c)">{{ textoEstado(c) }}</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+  </div>
+</div>

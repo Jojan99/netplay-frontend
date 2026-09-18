@@ -9,6 +9,7 @@ import { SitioService } from '../../services/sitio.service';
 
 type Step = 1 | 2 | 3;
 type EstadoSubdominio = 'vacio' | 'revisando' | 'libre' | 'ocupado';
+type EstadoCodigo = 'vacio' | 'revisando' | 'sirve' | 'no-sirve';
 
 @Component({
   selector: 'app-register-company',
@@ -57,6 +58,9 @@ export class RegisterCompanyComponent implements OnInit, OnDestroy {
     admin_phone:    '',
     admin_username: '',
     admin_password: '',
+    // Cupón de descuento o código de referido. Opcional: si no sirve, el alta
+    // sigue igual y se avisa acá mismo.
+    codigo:         '',
   };
   passwordConfirm = '';
 
@@ -67,6 +71,11 @@ export class RegisterCompanyComponent implements OnInit, OnDestroy {
   subdominioMensaje = 'Si la dejás vacía, la armamos con el nombre de la empresa.';
   private revisarSubdominio = new Subject<string>();
   private subs = new Subscription();
+
+  /* ── Cupón o código de referido ──────────────────────────────── */
+  codigoEstado: EstadoCodigo = 'vacio';
+  codigoMensaje = '';
+  private revisarCodigo = new Subject<string>();
 
   private sitioService = inject(SitioService);
   private route        = inject(ActivatedRoute);
@@ -106,6 +115,22 @@ export class RegisterCompanyComponent implements OnInit, OnDestroy {
   get usernamePreview(): string { return this.form.admin_username.trim() || this.form.nit.trim() || 'tu-nit'; }
   get prefixPreview(): string { return (this.form.invoice_prefix.trim() || 'FAC').toUpperCase(); }
 
+  /** Revisa el código mientras se escribe, sin frenar el registro. */
+  alEscribirCodigo(): void {
+    this.form.codigo = this.form.codigo.toUpperCase();
+    const c = this.form.codigo.trim();
+
+    if (c.length < 3) {
+      this.codigoEstado = 'vacio';
+      this.codigoMensaje = '';
+      return;
+    }
+
+    this.codigoEstado = 'revisando';
+    this.codigoMensaje = 'Revisando…';
+    this.revisarCodigo.next(c);
+  }
+
   constructor(
     private companyService: CompanyService,
     private router: Router,
@@ -125,6 +150,24 @@ export class RegisterCompanyComponent implements OnInit, OnDestroy {
       this.subdominioEstado  = r.disponible ? 'libre' : 'ocupado';
       this.subdominioMensaje = r.disponible ? `Tu equipo y tus clientes van a entrar por ${r.direccion}` : r.mensaje;
     }));
+
+    this.subs.add(this.revisarCodigo.pipe(
+      debounceTime(400),
+      switchMap(c => this.sitioService.codigo(c)),
+    ).subscribe(r => {
+      if (this.form.codigo.trim() === '') { this.codigoEstado = 'vacio'; return; }
+      this.codigoEstado  = r.valido ? 'sirve' : 'no-sirve';
+      this.codigoMensaje = r.valido
+        ? (r.tipo === 'referido' ? r.detalle : `Te aplicamos ${r.detalle} en tu primer pago.`)
+        : r.detalle;
+    }));
+
+    // El enlace del programa de referidos trae el código puesto.
+    const ref = (this.route.snapshot.queryParamMap.get('ref') ?? '').trim().toUpperCase();
+    if (ref) {
+      this.form.codigo = ref;
+      this.alEscribirCodigo();
+    }
 
     // Viene de reservarla en la página pública.
     const pedido = this.limpiarSubdominio(this.route.snapshot.queryParamMap.get('subdominio') ?? '');

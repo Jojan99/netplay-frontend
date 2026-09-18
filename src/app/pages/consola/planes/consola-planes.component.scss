@@ -1,0 +1,9 @@
+/* Los títulos de sección dentro de los modales de la consola. */
+.np-modal-body h4.np-fine {
+  margin: 14px 0 4px;
+  text-transform: uppercase;
+  letter-spacing: .06em;
+  color: var(--text-3);
+}
+
+.np-modal-body h4.np-fine:first-child { margin-top: 0; }

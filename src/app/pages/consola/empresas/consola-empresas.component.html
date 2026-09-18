@@ -1,0 +1,475 @@
+<div class="np-page" [class.is-open]="seleccionada">
+
+  <header class="np-head">
+    <div>
+      <p class="np-kicker">Netvula <b>/</b> Consola</p>
+      <h1 class="np-title">Empresas</h1>
+      <div class="np-ribbon" [class.np-ribbon--loading]="cargando">
+        <span><span class="np-n">{{ empresas.length }}</span>en la lista</span>
+        <span *ngIf="!conTr069" class="np-muted">TR-069 sin consultar</span>
+      </div>
+    </div>
+    <div class="np-actions">
+      <button type="button" class="np-btn" (click)="alternarTr069()" [disabled]="cargando">
+        {{ conTr069 ? 'Ocultar TR-069' : 'Consultar TR-069' }}
+      </button>
+      <button type="button" class="np-btn" (click)="cargar()" [disabled]="cargando">Refrescar</button>
+    </div>
+  </header>
+
+  <p *ngIf="!migrada" class="np-notice np-notice--warn">
+    Falta correr la migración de la consola: todavía no hay suscripciones, ni planes asignados, ni cobros.
+  </p>
+
+  <div class="np-toolbar">
+    <div class="np-chips" role="group" aria-label="Estado">
+      <button type="button" class="np-chip" *ngFor="let f of FILTROS"
+              [attr.aria-pressed]="filtro === f.valor" (click)="cambiarFiltro(f.valor)">{{ f.titulo }}</button>
+    </div>
+    <span class="np-spacer"></span>
+    <input type="search" class="np-input np-search" placeholder="Buscar por nombre, subdominio, NIT o correo…"
+           [ngModel]="busqueda" (ngModelChange)="alEscribir($event)" aria-label="Buscar empresa" />
+  </div>
+
+  <div class="np-workspace">
+
+    <!-- ══ Lista ═══════════════════════════════════════════════════════ -->
+    <section class="np-registry" aria-label="Empresas registradas">
+      <div class="np-registry-wrap">
+        <table class="np-table np-table--registry">
+          <thead>
+            <tr>
+              <th class="np-th-stripe"></th>
+              <th>Empresa</th>
+              <th>Plan</th>
+              <th class="np-th-right">Clientes</th>
+              <th class="np-th-right">Uso</th>
+              <th class="np-only-desktop">Red</th>
+              <th>Estado</th>
+              <th class="np-th-right">Próxima</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngIf="cargando" class="np-empty"><td colspan="8"><span class="np-spinner"></span></td></tr>
+            <tr *ngIf="!cargando && !empresas.length" class="np-empty">
+              <td colspan="8"><strong>No hay empresas con este filtro.</strong></td>
+            </tr>
+            <tr *ngFor="let e of empresas" class="np-row"
+                [attr.aria-selected]="seleccionada?.id === e.id"
+                (click)="abrir(e)" tabindex="0" (keydown.enter)="abrir(e)">
+              <td class="np-stripe"><i></i></td>
+              <td>
+                <div class="np-name">{{ e.nombre }}</div>
+                <div class="np-plan">
+                  <em class="np-mono">{{ e.subdominio }}</em>
+                  <span *ngIf="e.dominio_propio" class="np-tag np-tag--neutral">{{ e.dominio_propio }}</span>
+                  <span *ngIf="!e.confirmada" class="np-tag">sin confirmar</span>
+                </div>
+              </td>
+              <td>
+                <span *ngIf="e.suscripcion?.plan" class="np-data">{{ e.suscripcion?.plan }}</span>
+                <span *ngIf="!e.suscripcion?.plan" class="np-muted">—</span>
+                <div class="np-plan" *ngIf="e.suscripcion?.plan">
+                  <em>{{ e.suscripcion?.ciclo }} · {{ pesos(e.suscripcion?.precio) }}</em>
+                </div>
+              </td>
+              <td class="np-td-right">
+                <b>{{ e.clientes.total }}</b>
+                <div class="np-plan"><em>{{ e.clientes.activos }} act · {{ e.clientes.suspendidos }} susp</em></div>
+              </td>
+              <td class="np-td-right">
+                <span *ngIf="e.suscripcion?.uso?.incluidos as tope" class="np-mono"
+                      [class.np-neg]="e.suscripcion?.uso?.excedido">{{ e.clientes.activos }}/{{ tope }}</span>
+                <span *ngIf="!e.suscripcion?.uso?.incluidos" class="np-muted">—</span>
+              </td>
+              <td class="np-only-desktop">
+                <span class="np-tags">
+                  <span *ngIf="e.olts" class="np-tag">{{ e.olts }} OLT</span>
+                  <span *ngIf="e.routers" class="np-tag">{{ e.routers }} MikroTik</span>
+                  <span *ngIf="e.tr069" class="np-tag">{{ e.tr069 }} TR-069</span>
+                  <span *ngIf="e.lineas_wa" class="np-tag" [class.np-tag--neutral]="!e.lineas_wa_ok">WA {{ e.lineas_wa_ok }}/{{ e.lineas_wa }}</span>
+                </span>
+              </td>
+              <td><span class="np-pill" [ngClass]="claseEstado(e)">{{ textoEstado(e) }}</span></td>
+              <td class="np-td-right np-data np-data--dim">
+                {{ e.suscripcion?.proxima ? fecha(e.suscripcion?.proxima) : '—' }}
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ══ Detalle ═════════════════════════════════════════════════════ -->
+    <aside class="np-inspector" *ngIf="seleccionada" aria-label="Detalle de la empresa">
+
+      <div class="np-insp-head">
+        <div class="np-avatar">{{ seleccionada.nombre.charAt(0).toUpperCase() }}</div>
+        <div class="np-insp-id">
+          <h2>{{ seleccionada.nombre }}</h2>
+          <div class="np-meta">
+            <span class="np-mono">{{ seleccionada.subdominio }}</span> ·
+            NIT <b>{{ seleccionada.nit || '—' }}</b> ·
+            alta {{ fecha(seleccionada.registrada) }}
+          </div>
+        </div>
+        <div class="np-insp-tools">
+          <button type="button" class="np-icobtn" (click)="cerrar()" aria-label="Cerrar">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"/></svg>
+          </button>
+        </div>
+      </div>
+
+      <div class="np-insp-body">
+        <div *ngIf="cargandoDetalle" class="np-loading"><span class="np-spinner"></span> Cargando…</div>
+
+        <ng-container *ngIf="detalle && !cargandoDetalle">
+
+          <p *ngIf="detalle.empresa.suspendida" class="np-notice np-notice--danger">
+            Acceso suspendido. {{ detalle.empresa.motivo_suspension }}<br>
+            Su equipo no entra al panel; los clientes de la empresa siguen con servicio.
+          </p>
+
+          <!-- ── Suscripción ─────────────────────────────────────────── -->
+          <section class="np-sect">
+            <h3>Suscripción con Netvula
+              <span class="np-sect-actions">
+                <button type="button" class="np-btn np-btn--sm" (click)="editando = !editando">
+                  {{ editando ? 'Cancelar' : 'Editar' }}
+                </button>
+              </span>
+            </h3>
+
+            <dl class="np-dl" *ngIf="!editando">
+              <dt>Plan</dt><dd>{{ detalle.suscripcion?.plan || 'sin asignar' }}</dd>
+              <dt>Ciclo</dt><dd>{{ detalle.suscripcion?.ciclo }}</dd>
+              <dt>Precio</dt>
+              <dd>
+                <b class="np-money">{{ pesos(detalle.suscripcion?.precio) }}</b>
+                <span *ngIf="detalle.suscripcion?.precio_pactado !== null" class="np-tag">precio especial</span>
+                <span *ngIf="detalle.suscripcion?.precio_pactado !== null && detalle.suscripcion?.precio_lista" class="np-fine">
+                  lista: {{ pesos(detalle.suscripcion?.precio_lista) }}
+                </span>
+              </dd>
+              <dt>Estado</dt><dd><span class="np-pill" [ngClass]="claseEstado(seleccionada)">{{ textoEstado(seleccionada) }}</span></dd>
+              <dt>Método de pago</dt><dd>{{ detalle.suscripcion?.metodo_pago || 'sin definir' }}</dd>
+              <dt>Inicio</dt><dd>{{ fecha(detalle.suscripcion?.inicio) }}</dd>
+              <dt>Prueba hasta</dt><dd>{{ fecha(detalle.suscripcion?.prueba_hasta) }}</dd>
+              <dt>Próxima facturación</dt>
+              <dd>
+                {{ fecha(detalle.suscripcion?.proxima) }}
+                <span *ngIf="detalle.suscripcion?.dias_para_vencer !== null" class="np-fine">
+                  ({{ detalle.suscripcion?.dias_para_vencer }} días)
+                </span>
+              </dd>
+              <dt>Uso del plan</dt>
+              <dd>
+                <span *ngIf="detalle.suscripcion?.uso?.incluidos">
+                  {{ detalle.suscripcion.uso.clientes }} de {{ detalle.suscripcion.uso.incluidos }} clientes
+                  ({{ detalle.suscripcion.uso.porcentaje }}%)
+                  <b *ngIf="detalle.suscripcion.uso.excedido" class="np-neg"> · pasado del tope</b>
+                </span>
+                <span *ngIf="!detalle.suscripcion?.uso?.incluidos" class="np-muted">sin tope de clientes</span>
+              </dd>
+              <dt>Crédito a favor</dt><dd class="np-money">{{ pesos(detalle.suscripcion?.credito) }}</dd>
+              <dt>Código de referido</dt><dd class="np-mono">{{ detalle.suscripcion?.codigo_referido || '—' }}</dd>
+              <dt *ngIf="detalle.suscripcion?.notas">Notas</dt>
+              <dd *ngIf="detalle.suscripcion?.notas">{{ detalle.suscripcion?.notas }}</dd>
+            </dl>
+
+            <form class="np-form" *ngIf="editando" (ngSubmit)="guardarSuscripcion()">
+              <label class="np-field"><span>Plan</span>
+                <select class="np-input" [(ngModel)]="forma.plan_id" name="plan_id">
+                  <option [ngValue]="null">Sin plan</option>
+                  <option *ngFor="let p of planes" [ngValue]="p.id">{{ p.nombre }}</option>
+                </select>
+              </label>
+              <label class="np-field"><span>Ciclo</span>
+                <select class="np-input" [(ngModel)]="forma.ciclo" name="ciclo">
+                  <option value="mensual">Mensual</option>
+                  <option value="anual">Anual</option>
+                </select>
+              </label>
+              <label class="np-field np-field-full"><span>Precio pactado (vacío = precio de lista)</span>
+                <input type="number" class="np-input" [(ngModel)]="forma.precio_pactado" name="precio_pactado" min="0" step="1000" />
+                <small class="np-fine" *ngIf="precioDeLista !== null">Precio de lista hoy: <b>{{ pesos(precioDeLista) }}</b></small>
+              </label>
+              <label class="np-field"><span>Estado</span>
+                <select class="np-input" [(ngModel)]="forma.estado" name="estado">
+                  <option value="prueba">En prueba</option>
+                  <option value="al_dia">Al día</option>
+                  <option value="en_mora">En mora</option>
+                  <option value="suspendida">Suspendida</option>
+                  <option value="cancelada">Cancelada</option>
+                </select>
+              </label>
+              <label class="np-field"><span>Método de pago</span>
+                <select class="np-input" [(ngModel)]="forma.metodo_pago" name="metodo_pago">
+                  <option value="">Sin definir</option>
+                  <option value="transferencia">Transferencia</option>
+                  <option value="efectivo">Efectivo</option>
+                  <option value="pasarela">Pasarela</option>
+                </select>
+              </label>
+              <label class="np-field"><span>Inicio</span>
+                <input type="date" class="np-input" [(ngModel)]="forma.inicio" name="inicio" /></label>
+              <label class="np-field"><span>Prueba hasta</span>
+                <input type="date" class="np-input" [(ngModel)]="forma.prueba_hasta" name="prueba_hasta" /></label>
+              <label class="np-field"><span>Próxima facturación</span>
+                <input type="date" class="np-input" [(ngModel)]="forma.proxima_facturacion" name="proxima_facturacion" /></label>
+              <label class="np-field np-field-full"><span>Notas internas</span>
+                <textarea class="np-input" rows="2" [(ngModel)]="forma.notas" name="notas"></textarea></label>
+
+              <div class="np-btnrow np-btnrow--end np-field-full">
+                <button type="button" class="np-btn" (click)="editando = false">Cancelar</button>
+                <button type="submit" class="np-btn np-btn--primary" [disabled]="guardando">Guardar</button>
+              </div>
+            </form>
+          </section>
+
+          <!-- ── Cupón y crédito ─────────────────────────────────────── -->
+          <section class="np-sect">
+            <h3>Cupón y crédito</h3>
+
+            <div class="np-form np-form--row">
+              <label class="np-field"><span>Aplicar cupón</span>
+                <input type="text" class="np-input np-mono" [(ngModel)]="codigoCupon" name="cupon"
+                       placeholder="LANZAMIENTO25" (input)="codigoCupon = codigoCupon.toUpperCase()" /></label>
+              <button type="button" class="np-btn np-btn--sm" (click)="aplicarCupon()" [disabled]="!codigoCupon.trim()">Aplicar</button>
+              <button type="button" class="np-btn np-btn--sm np-btn--danger" *ngIf="detalle.suscripcion?.cupon_id" (click)="quitarCupon()">Quitar el actual</button>
+            </div>
+
+            <div class="np-form np-form--row">
+              <label class="np-field"><span>Ajustar crédito (negativo para restar)</span>
+                <input type="number" class="np-input" [(ngModel)]="montoCredito" name="montoCredito" step="1000" /></label>
+              <label class="np-field"><span>Por qué</span>
+                <input type="text" class="np-input" [(ngModel)]="notaCredito" name="notaCredito" maxlength="255" /></label>
+              <button type="button" class="np-btn np-btn--sm" (click)="ajustarCredito()">Ajustar</button>
+            </div>
+
+            <table class="np-table np-table--compact" *ngIf="detalle.creditos?.length">
+              <thead><tr><th>Fecha</th><th>Motivo</th><th class="np-th-right">Monto</th></tr></thead>
+              <tbody>
+                <tr *ngFor="let c of detalle.creditos">
+                  <td class="np-data np-data--dim">{{ fecha(c.created_at) }}</td>
+                  <td>{{ c.motivo }}<span class="np-fine" *ngIf="c.nota"> · {{ c.nota }}</span></td>
+                  <td class="np-td-right np-money" [class.np-pos]="c.monto > 0" [class.np-neg]="c.monto < 0">{{ pesos(c.monto) }}</td>
+                </tr>
+              </tbody>
+            </table>
+          </section>
+
+          <!-- ── Cobros ──────────────────────────────────────────────── -->
+          <section class="np-sect">
+            <h3>Cobros
+              <span class="np-sect-actions">
+                <button type="button" class="np-btn np-btn--sm np-btn--primary" (click)="simular()">Generar el del período</button>
+              </span>
+            </h3>
+
+            <table class="np-table np-table--compact">
+              <thead><tr><th>Período</th><th class="np-th-right">Total</th><th class="np-th-right">Saldo</th><th>Estado</th><th class="np-th-right">Acciones</th></tr></thead>
+              <tbody>
+                <tr *ngIf="!detalle.cobros?.length" class="np-empty"><td colspan="5"><strong>Todavía no se le cobró nada.</strong></td></tr>
+                <tr *ngFor="let c of detalle.cobros">
+                  <td>
+                    <div class="np-data">{{ c.periodo_inicio }} → {{ c.periodo_fin }}</div>
+                    <div class="np-plan"><em>vence {{ c.vence }}<span *ngIf="c.cupon_codigo"> · cupón {{ c.cupon_codigo }}</span></em></div>
+                  </td>
+                  <td class="np-td-right np-money">{{ pesos(c.total) }}</td>
+                  <td class="np-td-right np-money" [class.np-neg]="c.vencido">{{ pesos(c.saldo) }}</td>
+                  <td>
+                    <span class="np-pill"
+                          [ngClass]="c.estado === 'pagado' ? 'np-pill--active' : c.estado === 'anulado' ? 'np-pill--neutral' : c.vencido ? 'np-pill--suspended' : 'np-pill--info'">
+                      {{ c.estado === 'pagado' ? 'Pagado' : c.estado === 'anulado' ? 'Anulado' : c.vencido ? 'Vencido' : 'Pendiente' }}
+                    </span>
+                  </td>
+                  <td class="np-td-right">
+                    <div class="np-rowacts">
+                      <button type="button" class="np-btn np-btn--sm" *ngIf="c.estado === 'pendiente'" (click)="abrirPago(c)">Registrar pago</button>
+                      <button type="button" class="np-btn np-btn--sm np-btn--danger" *ngIf="c.estado === 'pendiente' && !c.pagos?.length" (click)="anular(c)">Anular</button>
+                    </div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </section>
+
+          <!-- ── Red e integraciones ─────────────────────────────────── -->
+          <section class="np-sect">
+            <h3>Red de la empresa</h3>
+
+            <dl class="np-dl">
+              <dt>Clientes</dt>
+              <dd>{{ detalle.clientes.total }} en total · {{ detalle.clientes.activos }} activos ·
+                  {{ detalle.clientes.suspendidos }} suspendidos · {{ detalle.clientes.retirados }} retirados</dd>
+              <dt>TR-069</dt>
+              <dd>
+                <span *ngIf="detalle.tr069 !== null">{{ detalle.tr069 }} equipos reportando al ACS</span>
+                <span *ngIf="detalle.tr069 === null" class="np-muted">el ACS no respondió</span>
+              </dd>
+              <dt>Último ingreso</dt><dd>{{ fechaHora(detalle.empresa.ultimo_ingreso) }}</dd>
+              <dt>Equipo de trabajo</dt><dd>{{ detalle.equipo.length }} usuarios</dd>
+            </dl>
+
+            <h4 class="np-fine">OLT</h4>
+            <table class="np-table np-table--compact">
+              <tbody>
+                <tr *ngIf="!detalle.olts.length" class="np-empty"><td colspan="3"><strong>Sin OLT.</strong></td></tr>
+                <tr *ngFor="let o of detalle.olts">
+                  <td class="np-name">{{ o.nombre }}</td>
+                  <td class="np-data">{{ o.marca }}</td>
+                  <td class="np-data np-data--dim">{{ o.modelo || 'sin modelo' }}</td>
+                </tr>
+              </tbody>
+            </table>
+
+            <h4 class="np-fine">MikroTik</h4>
+            <table class="np-table np-table--compact">
+              <tbody>
+                <tr *ngIf="!detalle.routers.length" class="np-empty"><td colspan="3"><strong>Sin routers.</strong></td></tr>
+                <tr *ngFor="let r of detalle.routers">
+                  <td class="np-name">{{ r.nombre }}</td>
+                  <td class="np-mono np-data--dim">{{ r.host }}:{{ r.puerto }}</td>
+                  <td class="np-data np-data--dim">{{ r.serie || 'serie sin leer' }}</td>
+                </tr>
+              </tbody>
+            </table>
+
+            <h4 class="np-fine">Líneas de WhatsApp</h4>
+            <table class="np-table np-table--compact">
+              <tbody>
+                <tr *ngIf="!detalle.lineas_wa.length" class="np-empty"><td colspan="3"><strong>Sin líneas.</strong></td></tr>
+                <tr *ngFor="let l of detalle.lineas_wa">
+                  <td class="np-name">{{ l.nombre }} <span *ngIf="l.principal" class="np-tag">principal</span></td>
+                  <td class="np-mono np-data--dim">{{ l.telefono || '—' }}</td>
+                  <td><span class="np-pill" [ngClass]="l.conectada ? 'np-pill--active' : 'np-pill--noip'">{{ l.estado }}</span></td>
+                </tr>
+              </tbody>
+            </table>
+
+            <h4 class="np-fine">Integraciones</h4>
+            <dl class="np-dl">
+              <dt>Correo propio (Mailjet)</dt><dd>{{ detalle.integraciones.mailjet }}</dd>
+              <dt>WhatsApp</dt><dd>{{ detalle.integraciones.whatsapp }}<span *ngIf="detalle.integraciones.wa_proveedor" class="np-fine"> · {{ detalle.integraciones.wa_proveedor }}</span></dd>
+              <dt>Pasarela de pago</dt><dd>{{ detalle.integraciones.pasarela }}</dd>
+              <dt>ACS</dt><dd>{{ detalle.integraciones.acs }}</dd>
+            </dl>
+            <p class="np-fine np-muted">Ninguna clave, token ni secreto se muestra acá: sólo si está configurado.</p>
+          </section>
+
+          <!-- ── Referidos ───────────────────────────────────────────── -->
+          <section class="np-sect" *ngIf="detalle.referidos?.length">
+            <h3>Empresas que trajo</h3>
+            <table class="np-table np-table--compact">
+              <tbody>
+                <tr *ngFor="let r of detalle.referidos">
+                  <td class="np-name">{{ r.empresa }}</td>
+                  <td><span class="np-pill" [ngClass]="r.estado === 'activo' ? 'np-pill--active' : r.estado === 'anulado' ? 'np-pill--neutral' : 'np-pill--info'">{{ r.estado }}</span></td>
+                  <td class="np-td-right np-money">{{ pesos(r.credito_otorgado) }}</td>
+                </tr>
+              </tbody>
+            </table>
+          </section>
+
+          <!-- ── Operación ───────────────────────────────────────────── -->
+          <section class="np-sect">
+            <h3>Acceso a la plataforma</h3>
+            <p class="np-fine">
+              Suspender cierra el panel para el equipo de la empresa. No corta el internet de sus clientes,
+              no cierra su portal y no detiene las tareas automáticas de esa empresa.
+            </p>
+            <div class="np-btnrow">
+              <button type="button" class="np-btn np-btn--danger" *ngIf="!detalle.empresa.suspendida" (click)="suspender()">Suspender acceso</button>
+              <button type="button" class="np-btn np-btn--ok" *ngIf="detalle.empresa.suspendida" (click)="reactivar()">Reactivar acceso</button>
+            </div>
+          </section>
+
+        </ng-container>
+      </div>
+    </aside>
+  </div>
+</div>
+
+<!-- ══ Modal: simular y confirmar el cobro ═══════════════════════════ -->
+<div class="np-overlay" *ngIf="modalCobro" (click)="modalCobro = false">
+  <div class="np-modal" (click)="$event.stopPropagation()" role="dialog" aria-label="Generar el cobro">
+    <div class="np-modal-head"><h2>Así quedaría el cobro</h2></div>
+
+    <div class="np-modal-body">
+      <div *ngIf="!simulacion" class="np-loading"><span class="np-spinner"></span> Calculando…</div>
+
+      <p *ngIf="simulacion && !simulacion.ok" class="np-notice np-notice--danger">{{ simulacion.motivo }}</p>
+
+      <ng-container *ngIf="simulacion?.ok">
+        <p class="np-fine">
+          {{ seleccionada?.nombre }} · período <b>{{ simulacion?.periodo_inicio }} → {{ simulacion?.periodo_fin }}</b>
+        </p>
+
+        <table class="np-table np-table--compact np-dl--ledger">
+          <tbody>
+            <tr *ngFor="let r of simulacion?.renglones">
+              <td>{{ r.concepto }}</td>
+              <td class="np-td-right np-money" [class.np-neg]="r.monto < 0">{{ pesos(r.monto) }}</td>
+            </tr>
+            <tr>
+              <td><b>Total a pagar</b></td>
+              <td class="np-td-right np-money np-money--lg">{{ pesos(simulacion?.total) }}</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <p class="np-fine np-muted">
+          Precio de lista del plan: {{ pesos(simulacion?.precio_lista) }}.
+          <span *ngIf="simulacion?.precio_pactado !== null"> Precio pactado con esta empresa: {{ pesos(simulacion?.precio_pactado) }}.</span>
+          <span *ngIf="simulacion?.credito_sobrante"> Queda {{ pesos(simulacion?.credito_sobrante) }} de crédito para el próximo período.</span>
+        </p>
+
+        <p *ngIf="simulacion?.ya_cobrado" class="np-notice np-notice--warn">Ese período ya está cobrado.</p>
+      </ng-container>
+    </div>
+
+    <div class="np-modal-foot">
+      <button type="button" class="np-btn" (click)="modalCobro = false">Cerrar</button>
+      <button type="button" class="np-btn np-btn--primary"
+              *ngIf="simulacion?.ok && !simulacion?.ya_cobrado"
+              [disabled]="guardando" (click)="confirmarCobro()">Generar el cobro</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ Modal: registrar un pago ══════════════════════════════════════ -->
+<div class="np-overlay" *ngIf="modalPago" (click)="modalPago = false">
+  <div class="np-modal" (click)="$event.stopPropagation()" role="dialog" aria-label="Registrar un pago">
+    <div class="np-modal-head"><h2>Registrar un pago</h2></div>
+
+    <form class="np-modal-body np-form" (ngSubmit)="registrarPago()">
+      <p class="np-fine np-field-full">
+        Cobro del período <b>{{ cobroDelPago?.periodo_inicio }}</b> · saldo <b class="np-money">{{ pesos(cobroDelPago?.saldo) }}</b>
+      </p>
+
+      <label class="np-field"><span>Monto recibido</span>
+        <input type="number" class="np-input" [(ngModel)]="pago.monto" name="monto" min="1" step="1000" required /></label>
+      <label class="np-field"><span>Fecha</span>
+        <input type="date" class="np-input" [(ngModel)]="pago.fecha" name="fecha" required /></label>
+      <label class="np-field"><span>Método</span>
+        <select class="np-input" [(ngModel)]="pago.metodo" name="metodo">
+          <option value="transferencia">Transferencia</option>
+          <option value="efectivo">Efectivo</option>
+          <option value="pasarela">Pasarela</option>
+        </select>
+      </label>
+      <label class="np-field"><span>Referencia</span>
+        <input type="text" class="np-input np-mono" [(ngModel)]="pago.referencia" name="referencia" maxlength="80" /></label>
+      <label class="np-field np-field-full"><span>Comprobante (imagen o PDF)</span>
+        <input type="file" class="np-input" accept="image/*,application/pdf" (change)="elegirArchivo($event)" /></label>
+      <label class="np-field np-field-full"><span>Nota</span>
+        <input type="text" class="np-input" [(ngModel)]="pago.nota" name="nota" maxlength="255" /></label>
+
+      <div class="np-btnrow np-btnrow--end np-field-full">
+        <button type="button" class="np-btn" (click)="modalPago = false">Cancelar</button>
+        <button type="submit" class="np-btn np-btn--primary" [disabled]="guardando || !pago.monto">Registrar</button>
+      </div>
+    </form>
+  </div>
+</div>

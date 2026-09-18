@@ -4,6 +4,7 @@ import { authGuard } from './guards/auth.guard';
 import { roleGuard } from './guards/role.guard';
 import { panelYaConectadoGuard } from './guards/ya-conectado.guard';
 import { raizDelSitioGuard, soloEnLaRaizGuard } from './guards/sitio.guard';
+import { plataformaGuard } from './guards/plataforma.guard';
 
 import { SignInComponent }            from './pages/sign-in/sign-in/sign-in.component';
 import { RegisterCompanyComponent }   from './pages/register-company/register-company.component';
@@ -102,6 +103,15 @@ export const routes: Routes = [
         data: { module: 'whatsapp' },
       },
       { path: 'perfil', component: ProfileComponent },
+
+      // La consola de Netvula: sólo para el dueño de la plataforma. No es un
+      // módulo del panel a propósito: no se puede dar desde los permisos de
+      // ningún perfil. El servidor la vuelve a cerrar con su propio middleware.
+      {
+        path: 'consola',
+        loadChildren: () => import('./pages/consola/consola.routes').then(m => m.CONSOLA_ROUTES),
+        canActivate: [plataformaGuard],
+      },
       { path: 'contratos', component: ContractsComponent, canActivate: [roleGuard], data: { module: 'contratos' } },
       { path: 'empleados', component: EmployeesComponent, canActivate: [roleGuard], data: { module: 'empleados' } },
       { path: 'planes-internet', component: InternetPlansComponent, canActivate: [roleGuard], data: { module: 'planes-internet' } },

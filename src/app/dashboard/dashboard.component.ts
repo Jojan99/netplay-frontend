@@ -10,6 +10,7 @@ import { forkJoin, Subscription } from 'rxjs';
 import { ThemeService } from '../common/services/theme/theme.service';
 import { OnboardingGuideComponent } from '../components/onboarding-guide/onboarding-guide.component';
 import { NpSelectComponent, PresentacionSelect } from '../common/np-select/np-select.component';
+import { ReferidosCardComponent } from '../components/referidos-card/referidos-card.component';
 
 Chart.register(...registerables, ChartDataLabels);
 
@@ -17,7 +18,7 @@ Chart.register(...registerables, ChartDataLabels);
   selector: 'app-dashboard',
   templateUrl: './dashboard.component.html',
   standalone: true,
-  imports: [CommonModule, FormsModule, OnboardingGuideComponent, NpSelectComponent],
+  imports: [CommonModule, FormsModule, OnboardingGuideComponent, NpSelectComponent, ReferidosCardComponent],
   styleUrls: ['./dashboard.component.scss'],
   host: { class: 'np-console' },
 })

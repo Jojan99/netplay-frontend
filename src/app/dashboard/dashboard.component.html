@@ -146,5 +146,9 @@
       </section>
     </ng-container>
 
+    <!-- Programa de referidos de la plataforma: sólo lo ve el administrador,
+         y sólo si el programa está activo. -->
+    <section *ngIf="isAdmin"><app-referidos-card></app-referidos-card></section>
+
   </div>
 </div>

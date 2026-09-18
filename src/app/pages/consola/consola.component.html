@@ -1,0 +1,8 @@
+<div class="np-consola">
+  <nav class="np-tabs" aria-label="Consola de Netvula">
+    <a *ngFor="let p of pestanas" class="np-tab" [routerLink]="['/dashboard/consola', p.ruta]"
+       routerLinkActive #activa="routerLinkActive" [attr.aria-selected]="activa.isActive">{{ p.titulo }}</a>
+  </nav>
+
+  <router-outlet></router-outlet>
+</div>
