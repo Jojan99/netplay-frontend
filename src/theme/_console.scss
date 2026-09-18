@@ -434,3 +434,155 @@ input.np-input:-webkit-autofill:active {
   box-shadow: 0 0 0 1000px var(--surface) inset;
   transition: background-color 9999s ease-in-out 0s;
 }
+
+/* ─── Consola de Netvula (admin.netvula.com) ──────────────────────────────
+   Piezas que sólo usa la consola del dueño. Van todas colgadas de
+   `.np-consola` —el armazón de esa aplicación— para que el panel de las
+   empresas, que comparte este archivo, no cambie ni un píxel.
+   Nada de colores a mano: todo sale de los tokens, así el tema claro y el
+   oscuro salen bien sin escribir dos veces cada regla.
+──────────────────────────────────────────────────────────────────────── */
+
+/* Cabecera de página: un poco más compacta que en el panel. */
+.np-consola .np-head { padding: 0 0 14px; }
+.np-consola .np-toolbar { padding: 12px 0 14px; }
+
+/* ── Etiqueta + valor ───────────────────────────────────────────────────
+   Reemplaza los renglones "Etiqueta: valor" que hacían del detalle de una
+   empresa una lista interminable. El valor se lee primero; la etiqueta es
+   chica y en mayúsculas, y el apunte de abajo explica sin robar atención. */
+.np-kvs { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 14px 20px; }
+.np-kv { display: grid; gap: 2px; min-width: 0; align-content: start; }
+.np-kv-l { font-size: 10px; font-weight: 700; letter-spacing: .07em; text-transform: uppercase; color: var(--text-3); }
+.np-kv-v { font-size: 14.5px; font-weight: 700; color: var(--text); line-height: 1.3; overflow-wrap: anywhere;
+  &.is-dim { color: var(--text-3); font-weight: 600; } }
+.np-kv-v--mono { font-family: var(--font-mono); font-weight: 600; font-size: 13.5px; font-variant-numeric: tabular-nums; }
+.np-kv-s { font-size: 11px; color: var(--text-3); line-height: 1.35; }
+
+/* ── Medidor ────────────────────────────────────────────────────────────
+   El uso del plan y el consumo de un cupón: un número solo no dice si va
+   bien o va apretado; la barra sí. */
+.np-meter { display: grid; gap: 5px; min-width: 90px; }
+.np-meter-t { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; font-size: 11.5px; color: var(--text-3);
+  b { font-family: var(--font-mono); font-size: 12.5px; font-weight: 600; color: var(--text); } }
+.np-meter-bar { height: 6px; border-radius: 999px; background: var(--surface-3); overflow: hidden;
+  > i { display: block; height: 100%; border-radius: inherit; background: var(--accent); transition: width .3s ease; } }
+.np-meter.is-warn .np-meter-bar > i { background: var(--warn); }
+.np-meter.is-warn .np-meter-t b { color: var(--warn); }
+.np-meter.is-over .np-meter-bar > i { background: var(--danger); }
+.np-meter.is-over .np-meter-t b { color: var(--danger); }
+.np-meter--sm { gap: 3px; .np-meter-bar { height: 4px; } .np-meter-t { font-size: 10.5px; b { font-size: 11.5px; } } }
+
+/* ── Estados ────────────────────────────────────────────────────────────
+   El idioma de color de toda la consola, una sola vez:
+     al día → verde · en prueba → azul · en mora → rojo suave ·
+     suspendida → rojo lleno (es el único corte de verdad).
+   La píldora llena se reserva para lo que está cortado: así "en mora" y
+   "suspendida" no se confunden aunque las dos sean rojas. */
+.np-consola .np-pill--corte { background: var(--danger); color: #fff; }
+
+/* ── Puntos de estado ───────────────────────────────────────────────────
+   El mismo idioma de color en todas las pantallas. */
+.np-consola .np-dot--ok      { background: var(--ok); }
+.np-consola .np-dot--warn    { background: var(--warn); }
+.np-consola .np-dot--danger  { background: var(--danger); }
+.np-consola .np-dot--info    { background: var(--info); }
+.np-consola .np-dot--accent  { background: var(--accent); }
+.np-consola .np-dot--neutral { background: var(--line-strong); }
+
+/* ── Señales de sí/no ───────────────────────────────────────────────────
+   Para "configurado / no configurado". No son botones: no se pulsan, no
+   cambian de color al pasar el mouse. */
+.np-flags { display: flex; flex-wrap: wrap; gap: 6px; }
+.np-flag { display: inline-flex; align-items: center; gap: 7px; height: 28px; padding: 0 11px; border-radius: 999px;
+  border: 1px solid var(--line); background: var(--surface-2); color: var(--text-2); font-size: 12px; font-weight: 700; white-space: nowrap;
+  &::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--line-strong); flex-shrink: 0; }
+  em { font-style: normal; font-family: var(--font-mono); font-weight: 500; font-size: 11px; color: var(--text-3); } }
+.np-flag--on  { border-color: var(--accent-line); background: var(--accent-soft); color: var(--accent); &::before { background: currentColor; } em { color: inherit; opacity: .8; } }
+.np-flag--off { color: var(--text-3); }
+
+/* ── Vacíos con algo que decir ──────────────────────────────────────────
+   "Todavía no…" a secas deja al dueño sin saber si falta hacer algo o si
+   está bien que esté vacío. Acá siempre hay una frase que lo aclara. */
+.np-nada { display: grid; justify-items: center; gap: 6px; padding: 26px 18px; text-align: center;
+  border: 1px dashed var(--line-strong); border-radius: var(--radius); background: var(--surface-2); color: var(--text-3);
+  svg { width: 22px !important; height: 22px !important; opacity: .55; margin-bottom: 2px; }
+  b { color: var(--text-2); font-size: 12.5px; }
+  span { font-size: 11.5px; max-width: 42ch; line-height: 1.45; } }
+.np-nada--sm { padding: 16px 14px; }
+.np-consola .np-empty td span { display: block; font-size: 11.5px; margin-top: 2px; }
+.np-consola .np-empty td svg { width: 20px !important; height: 20px !important; opacity: .5; margin-bottom: 6px; }
+
+/* ── Esqueletos mientras llegan los datos ───────────────────────────────
+   Una sola clase en la fila de KPI y los números se vuelven barras que
+   laten: se entiende que está cargando sin escribir "cargando" diez veces. */
+.np-consola .np-kpis.is-cargando .np-kpi-v {
+  color: transparent; width: 62%; border-radius: 4px;
+  background: linear-gradient(90deg, var(--surface-3) 25%, var(--surface-2) 50%, var(--surface-3) 75%);
+  background-size: 200% 100%; animation: np-shimmer 1.2s infinite;
+}
+.np-consola .np-kpis.is-cargando .np-kpi-s { visibility: hidden; }
+
+/* ── Tarjetas ───────────────────────────────────────────────────────────
+   El título de una tarjeta es el único "h2" de su zona: no hace falta que
+   grite. Las tablas de adentro llegan hasta el borde, sin doble marco. */
+.np-consola .np-card { gap: 14px; }
+.np-consola .np-card-h h2 { font-size: 14.5px; }
+.np-consola .np-card > .np-table { margin: 0 -16px -16px; width: calc(100% + 32px);
+  thead th:first-child, tbody td:first-child { padding-left: 16px; }
+  thead th:last-child, tbody td:last-child { padding-right: 16px; }
+  tbody tr:last-child td { border-bottom: 0; } }
+.np-consola .np-card > .np-tablewrap { border: 0; border-top: 1px solid var(--line); border-radius: 0; margin: 0 -16px -16px; }
+
+/* Subtítulo dentro de una tarjeta o de un modal. */
+.np-consola h4.np-fine, .np-consola .np-sub {
+  margin: 0; font-size: 10px; font-weight: 700; letter-spacing: .07em; text-transform: uppercase; color: var(--text-3);
+  display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+
+/* ── Zona delicada ──────────────────────────────────────────────────────
+   Suspender el acceso de una empresa no puede parecerse a "Guardar". Va
+   sola, al final, enmarcada en rojo y con el botón imposible de no ver. */
+.np-peligro { border: 1px solid var(--danger); border-radius: var(--radius-lg); background: var(--surface); overflow: hidden; }
+.np-peligro-h { display: flex; align-items: center; gap: 8px; padding: 9px 14px; background: var(--danger-soft); color: var(--danger);
+  font-size: 10.5px; font-weight: 800; letter-spacing: .07em; text-transform: uppercase;
+  svg { width: 15px; height: 15px; } }
+.np-peligro-b { display: flex; align-items: center; gap: 18px; flex-wrap: wrap; padding: 14px;
+  p { flex: 1 1 280px; margin: 0; font-size: 12.5px; line-height: 1.5; color: var(--text-2); }
+  .np-btn { flex-shrink: 0; } }
+.np-peligro--ok { border-color: var(--ok); .np-peligro-h { background: var(--ok-soft); color: var(--ok); } }
+
+/* ── Dinero ─────────────────────────────────────────────────────────────
+   Siempre a la derecha y en la misma tipografía, para poder comparar dos
+   cifras mirando la columna y no leyendo dígito por dígito. */
+.np-money--xl { font-size: 24px; font-weight: 700; letter-spacing: -0.02em; }
+.np-consola .np-table td.np-money, .np-consola .np-table th.np-th-right { text-align: right; }
+
+/* ── Enlace con ícono ───────────────────────────────────────────────────*/
+.np-linkico { display: inline-flex; align-items: center; gap: 5px; color: var(--accent); font-weight: 700; text-decoration: none;
+  svg { width: 13px !important; height: 13px !important; }
+  &:hover { text-decoration: underline; } }
+
+/* ── Filas de la tabla con color de estado ──────────────────────────────*/
+.np-consola .np-stripe i { background: var(--line-strong); }
+.np-consola .np-stripe--ok i      { background: var(--ok); }
+.np-consola .np-stripe--warn i    { background: var(--warn); }
+.np-consola .np-stripe--danger i  { background: var(--danger); }
+.np-consola .np-stripe--info i    { background: var(--info); }
+.np-consola .np-stripe--neutral i { background: var(--line-strong); }
+
+/* La flecha que avisa que la fila abre algo. */
+.np-consola .np-ir { color: var(--text-3); display: inline-grid; place-items: center; }
+.np-consola .np-row:hover .np-ir { color: var(--accent); }
+
+/* ── Que nada empuje la página de lado ──────────────────────────────────
+   En el teléfono las tablas anchas se desplazan dentro de su tarjeta; la
+   página nunca se corre. El recorte va en el cuerpo y no en `.np-consola`:
+   si se lo ponemos al armazón, la barra de arriba deja de quedarse fija. */
+.np-consola .np-tablewrap, .np-consola .np-registry-wrap { -webkit-overflow-scrolling: touch; }
+
+@media (max-width: 760px) {
+  .np-consola .np-table--compact { min-width: 420px; }
+  .np-consola .np-card > .np-table { margin: 0 -16px -16px; }
+  .np-consola .np-kvs { grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 12px 14px; }
+  .np-peligro-b .np-btn { width: 100%; }
+}

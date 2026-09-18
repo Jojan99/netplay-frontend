@@ -6,21 +6,28 @@
       <h1 class="np-title">Códigos de descuento</h1>
       <div class="np-ribbon" [class.np-ribbon--loading]="cargando">
         <span><span class="np-n">{{ cupones.length }}</span>cupones</span>
+        <span *ngIf="vigentes"><i class="np-dot np-dot--ok"></i>{{ vigentes }} vigentes</span>
+        <span *ngIf="usosTotales"><i class="np-dot np-dot--accent"></i>{{ usosTotales }} uso(s) en total</span>
       </div>
     </div>
     <div class="np-actions">
-      <button type="button" class="np-btn np-btn--primary" (click)="nuevo()" [disabled]="!migrada">Nuevo cupón</button>
+      <button type="button" class="np-btn np-btn--primary" (click)="nuevo()" [disabled]="!migrada">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M12 5v14M5 12h14"/>
+        </svg>
+        Nuevo cupón
+      </button>
     </div>
   </header>
 
   <p *ngIf="!migrada" class="np-notice np-notice--warn">
-    Falta correr la migración de la consola para poder usar cupones.
+    <strong>Falta correr la migración de la consola</strong> para poder usar cupones.
   </p>
 
   <div class="np-scroll">
     <section class="np-registry">
       <div class="np-registry-wrap">
-        <table class="np-table np-table--registry">
+        <table class="np-table np-table--registry np-tabla-cupones">
           <thead>
             <tr>
               <th class="np-th-stripe"></th>
@@ -29,38 +36,59 @@
               <th>Dura</th>
               <th class="np-only-desktop">Aplica a</th>
               <th>Vigencia</th>
-              <th class="np-th-right">Usos</th>
+              <th>Usos</th>
               <th>Estado</th>
               <th class="np-th-right">Acciones</th>
             </tr>
           </thead>
           <tbody>
-            <tr *ngIf="cargando" class="np-empty"><td colspan="9"><span class="np-spinner"></span></td></tr>
+            <ng-container *ngIf="cargando">
+              <tr class="np-skel" *ngFor="let s of esqueleto; trackBy: porIndice" aria-hidden="true">
+                <td class="np-stripe"><i></i></td>
+                <td colspan="8"><span class="np-skel-bar"></span><span class="np-skel-bar np-skel-bar--sm"></span></td>
+              </tr>
+            </ng-container>
+
             <tr *ngIf="!cargando && !cupones.length" class="np-empty">
-              <td colspan="9"><strong>Todavía no hay cupones.</strong> Creá uno para las campañas de lanzamiento.</td>
+              <td colspan="9">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <path d="M4 8a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2 2 2 0 0 0 0 4 2 2 0 0 0 0 4 2 2 0 0 1-2 2H6a2 2 0 0 1-2-2 2 2 0 0 0 0-4 2 2 0 0 0 0-4ZM14 6.5v2M14 11v2M14 15.5v2"/>
+                </svg>
+                <strong>Todavía no hay cupones.</strong>
+                <span>Un cupón es un código que una empresa pone al registrarse o que vos le aplicás desde su ficha. Creá uno para la campaña de lanzamiento.</span>
+              </td>
             </tr>
-            <tr *ngFor="let c of cupones" class="np-row">
-              <td class="np-stripe"><i></i></td>
+
+            <tr *ngFor="let c of cupones; trackBy: porId" class="np-row">
+              <td class="np-stripe" [ngClass]="claseRaya(c)"><i></i></td>
               <td>
                 <div class="np-name np-mono">{{ c.codigo }}</div>
                 <div class="np-plan"><em>{{ c.descripcion || 'sin descripción' }}</em></div>
               </td>
-              <td class="np-td-right np-money">{{ descuento(c) }}</td>
+              <td class="np-td-right">
+                <b class="np-money np-money--lg">{{ descuento(c) }}</b>
+              </td>
               <td class="np-data np-data--dim">{{ duracion(c) }}</td>
               <td class="np-only-desktop np-data np-data--dim">{{ alcance(c) }}</td>
-              <td class="np-data np-data--dim">
-                {{ c.desde ? fecha(c.desde) : 'desde siempre' }} → {{ c.hasta ? fecha(c.hasta) : 'sin fin' }}
+              <td class="np-data np-data--dim np-nowrap">
+                {{ c.desde ? fecha(c.desde) : 'desde siempre' }}<br>
+                {{ c.hasta ? '→ ' + fecha(c.hasta) : '→ sin fin' }}
               </td>
-              <td class="np-td-right">
-                <b>{{ c.usos }}</b><span class="np-muted" *ngIf="c.usos_maximos">/{{ c.usos_maximos }}</span>
+              <td class="np-td-usos">
+                <div class="np-meter np-meter--sm" [ngClass]="claseUso(c)" *ngIf="c.usos_maximos">
+                  <div class="np-meter-t"><b>{{ c.usos }}/{{ c.usos_maximos }}</b></div>
+                  <div class="np-meter-bar"><i [style.width.%]="porcentajeUso(c)"></i></div>
+                </div>
+                <b class="np-mono" *ngIf="!c.usos_maximos">{{ c.usos }}</b>
                 <div class="np-plan"><em>{{ c.empresas }} empresa(s)</em></div>
               </td>
               <td><span class="np-pill" [ngClass]="estadoClase(c)">{{ estadoTexto(c) }}</span></td>
               <td class="np-td-right">
-                <div class="np-rowacts">
-                  <button type="button" class="np-btn np-btn--sm" (click)="abrir(c)">Editar</button>
-                  <button type="button" class="np-btn np-btn--sm" (click)="verUsos(c)" [disabled]="!c.usos">Usos</button>
-                  <button type="button" class="np-btn np-btn--sm np-btn--danger" (click)="borrar(c)" [disabled]="c.usos > 0">Borrar</button>
+                <div class="np-rowacts is-visible">
+                  <button type="button" class="np-btn np-btn--sm np-btn--ghost" (click)="abrir(c)">Editar</button>
+                  <button type="button" class="np-btn np-btn--sm np-btn--ghost" (click)="verUsos(c)" [disabled]="!c.usos">Usos</button>
+                  <button type="button" class="np-btn np-btn--sm np-btn--danger" (click)="borrar(c)" [disabled]="c.usos > 0"
+                          [attr.title]="c.usos > 0 ? 'No se puede borrar: ya lo usaron' : null">Borrar</button>
                 </div>
               </td>
             </tr>
@@ -72,11 +100,16 @@
 </div>
 
 <!-- ══ Modal: editar el cupón ════════════════════════════════════════ -->
-<div class="np-overlay" *ngIf="modal" (click)="modal = false">
+<div class="np-overlay np-overlay--top" *ngIf="modal" (click)="modal = false">
   <div class="np-modal np-modal--editor" (click)="$event.stopPropagation()" role="dialog" aria-label="Editar el cupón">
-    <div class="np-modal-head"><h2>{{ editando ? 'Editar el cupón' : 'Nuevo cupón' }}</h2></div>
+    <div class="np-modal-head">
+      <h2>{{ editando ? 'Editar el cupón' : 'Nuevo cupón' }}</h2>
+      <button type="button" class="np-icobtn" (click)="modal = false" aria-label="Cerrar">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
 
-    <form class="np-modal-body np-form" (ngSubmit)="guardar()">
+    <form class="np-modal-body np-modal-body--scroll np-form" (ngSubmit)="guardar()">
       <label class="np-field"><span>Código</span>
         <input type="text" class="np-input np-mono" [(ngModel)]="forma.codigo" name="codigo" maxlength="40"
                placeholder="LANZAMIENTO25" (input)="forma.codigo = forma.codigo.toUpperCase()" required /></label>
@@ -114,9 +147,9 @@
         <input type="number" class="np-input" [(ngModel)]="forma.periodos" name="periodos" min="1" max="36" /></label>
 
       <div class="np-field np-field-full">
-        <span>Planes a los que aplica <small class="np-fine">(ninguno marcado = todos)</small></span>
+        <span>Planes a los que aplica <small class="np-fine">ninguno marcado = todos</small></span>
         <div class="np-checklist">
-          <label class="np-check np-check--btn" *ngFor="let p of planes">
+          <label class="np-check np-check--btn" *ngFor="let p of planes; trackBy: porClave">
             <input type="checkbox" [(ngModel)]="planesElegidos[p.clave]" [name]="'plan_' + p.clave" />
             <span>{{ p.nombre }}</span>
           </label>
@@ -124,7 +157,7 @@
       </div>
 
       <div class="np-field np-field-full">
-        <span>Ciclos a los que aplica <small class="np-fine">(ninguno marcado = los dos)</small></span>
+        <span>Ciclos a los que aplica <small class="np-fine">ninguno marcado = los dos</small></span>
         <div class="np-checklist">
           <label class="np-check np-check--btn">
             <input type="checkbox" [(ngModel)]="ciclosElegidos['mensual']" name="ciclo_mensual" /><span>Mensual</span>
@@ -143,8 +176,11 @@
       </label>
 
       <div class="np-btnrow np-btnrow--end np-field-full">
-        <button type="button" class="np-btn" (click)="modal = false">Cancelar</button>
-        <button type="submit" class="np-btn np-btn--primary" [disabled]="guardando">Guardar</button>
+        <button type="button" class="np-btn np-btn--ghost" (click)="modal = false">Cancelar</button>
+        <button type="submit" class="np-btn np-btn--primary" [disabled]="guardando">
+          <span *ngIf="guardando" class="np-spinner np-spinner--sm"></span>
+          Guardar el cupón
+        </button>
       </div>
     </form>
   </div>
@@ -152,26 +188,37 @@
 
 <!-- ══ Modal: quién lo usó ═══════════════════════════════════════════ -->
 <div class="np-overlay" *ngIf="modalUsos" (click)="modalUsos = false">
-  <div class="np-modal" (click)="$event.stopPropagation()" role="dialog" aria-label="Usos del cupón">
-    <div class="np-modal-head"><h2>Empresas que usaron {{ cuponDeLosUsos?.codigo }}</h2></div>
+  <div class="np-modal np-modal--lg" (click)="$event.stopPropagation()" role="dialog" aria-label="Usos del cupón">
+    <div class="np-modal-head">
+      <h2>Empresas que usaron <span class="np-mono">{{ cuponDeLosUsos?.codigo }}</span></h2>
+      <button type="button" class="np-icobtn" (click)="modalUsos = false" aria-label="Cerrar">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
 
     <div class="np-modal-body np-modal-body--scroll">
-      <table class="np-table np-table--compact">
-        <thead><tr><th>Empresa</th><th>Cómo</th><th>Cobro</th><th>Cuándo</th></tr></thead>
-        <tbody>
-          <tr *ngIf="!usos.length" class="np-empty"><td colspan="4"><strong>Nadie lo usó todavía.</strong></td></tr>
-          <tr *ngFor="let u of usos">
-            <td class="np-name">{{ u.empresa }}</td>
-            <td class="np-data np-data--dim">{{ u.origen === 'registro' ? 'al registrarse' : 'desde la consola' }}</td>
-            <td class="np-mono np-data--dim">{{ u.cobro_id ? '#' + u.cobro_id : 'sin cobrar aún' }}</td>
-            <td class="np-data np-data--dim">{{ fecha(u.created_at) }}</td>
-          </tr>
-        </tbody>
-      </table>
+      <div class="np-tablewrap" *ngIf="usos.length">
+        <table class="np-table np-table--compact">
+          <thead><tr><th>Empresa</th><th>Cómo</th><th>Cobro</th><th>Cuándo</th></tr></thead>
+          <tbody>
+            <tr *ngFor="let u of usos; trackBy: porId">
+              <td class="np-name">{{ u.empresa }}</td>
+              <td class="np-data np-data--dim">{{ u.origen === 'registro' ? 'al registrarse' : 'desde la consola' }}</td>
+              <td class="np-mono np-data--dim">{{ u.cobro_id ? '#' + u.cobro_id : 'sin cobrar aún' }}</td>
+              <td class="np-data np-data--dim np-nowrap">{{ fecha(u.created_at) }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="np-nada" *ngIf="!usos.length">
+        <span class="np-spinner"></span>
+        <b>Buscando quién lo usó…</b>
+      </div>
     </div>
 
     <div class="np-modal-foot">
-      <button type="button" class="np-btn" (click)="modalUsos = false">Cerrar</button>
+      <button type="button" class="np-btn np-btn--ghost" (click)="modalUsos = false">Cerrar</button>
     </div>
   </div>
 </div>

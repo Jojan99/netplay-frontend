@@ -6,7 +6,15 @@
       <h1 class="np-title">Bitácora</h1>
       <div class="np-ribbon" [class.np-ribbon--loading]="cargando">
         <span><span class="np-n">{{ total }}</span>anotaciones</span>
+        <span *ngIf="accion || desde || hasta" class="np-muted">con los filtros puestos</span>
       </div>
+    </div>
+    <div class="np-actions">
+      <button type="button" class="np-btn np-btn--ghost" (click)="limpiar()" *ngIf="accion || desde || hasta">Quitar filtros</button>
+      <button type="button" class="np-btn np-btn--ghost" (click)="cargar()" [disabled]="cargando">
+        <span *ngIf="cargando" class="np-spinner np-spinner--sm"></span>
+        Refrescar
+      </button>
     </div>
   </header>
 
@@ -14,21 +22,19 @@
     <label class="np-field np-field--inline"><span>Acción</span>
       <select class="np-input np-input--sm" [(ngModel)]="accion" (ngModelChange)="filtrar()">
         <option value="">Todas</option>
-        <option *ngFor="let a of acciones" [value]="a">{{ a }}</option>
+        <option *ngFor="let a of acciones; trackBy: porTexto" [value]="a">{{ a }}</option>
       </select>
     </label>
     <label class="np-field np-field--inline"><span>Desde</span>
       <input type="date" class="np-input np-input--sm" [(ngModel)]="desde" (change)="filtrar()" /></label>
     <label class="np-field np-field--inline"><span>Hasta</span>
       <input type="date" class="np-input np-input--sm" [(ngModel)]="hasta" (change)="filtrar()" /></label>
-    <span class="np-spacer"></span>
-    <button type="button" class="np-btn np-btn--sm" (click)="cargar()">Refrescar</button>
   </div>
 
   <div class="np-scroll">
     <section class="np-registry">
       <div class="np-registry-wrap">
-        <table class="np-table np-table--registry np-table--compact">
+        <table class="np-table np-table--registry np-table--compact np-tabla-bitacora">
           <thead>
             <tr>
               <th class="np-th-stripe"></th>
@@ -41,17 +47,30 @@
             </tr>
           </thead>
           <tbody>
-            <tr *ngIf="cargando" class="np-empty"><td colspan="7"><span class="np-spinner"></span></td></tr>
+            <ng-container *ngIf="cargando">
+              <tr class="np-skel" *ngFor="let s of esqueleto; trackBy: porIndice" aria-hidden="true">
+                <td class="np-stripe"><i></i></td>
+                <td colspan="6"><span class="np-skel-bar"></span></td>
+              </tr>
+            </ng-container>
+
             <tr *ngIf="!cargando && !items.length" class="np-empty">
-              <td colspan="7"><strong>Sin anotaciones.</strong> Acá queda todo lo que se haga desde la consola.</td>
+              <td colspan="7">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <path d="M8 6h12M8 12h12M8 18h12M3.5 6h.01M3.5 12h.01M3.5 18h.01"/>
+                </svg>
+                <strong>Sin anotaciones.</strong>
+                <span>Acá queda todo lo que se hace desde la consola: quién cambió un plan, quién generó un cobro, quién suspendió a una empresa.</span>
+              </td>
             </tr>
-            <tr *ngFor="let b of items" class="np-row">
-              <td class="np-stripe"><i></i></td>
+
+            <tr *ngFor="let b of items; trackBy: porId" class="np-row">
+              <td class="np-stripe" [ngClass]="claseRaya(b.accion)"><i></i></td>
               <td class="np-data np-data--dim np-nowrap">{{ fechaHora(b.created_at) }}</td>
               <td class="np-mono">{{ b.usuario || '—' }}</td>
-              <td><span class="np-tag">{{ b.accion }}</span></td>
+              <td><span class="np-tag" [ngClass]="claseAccion(b.accion)">{{ b.accion }}</span></td>
               <td>{{ b.empresa || '—' }}</td>
-              <td class="np-fine np-truncate">{{ detalle(b.detalle) }}</td>
+              <td class="np-bit-detalle" [attr.title]="detalle(b.detalle)">{{ detalle(b.detalle) || '—' }}</td>
               <td class="np-only-desktop np-mono np-data--dim">{{ b.ip }}</td>
             </tr>
           </tbody>
@@ -59,9 +78,9 @@
       </div>
 
       <div class="np-pager" *ngIf="paginas > 1">
-        <button type="button" class="np-btn np-btn--sm" (click)="ir(pagina - 1)" [disabled]="pagina <= 1">Anterior</button>
-        <span class="np-range">Página {{ pagina }} de {{ paginas }}</span>
-        <button type="button" class="np-btn np-btn--sm" (click)="ir(pagina + 1)" [disabled]="pagina >= paginas">Siguiente</button>
+        <button type="button" class="np-btn np-btn--sm np-btn--ghost" (click)="ir(pagina - 1)" [disabled]="pagina <= 1">Anterior</button>
+        <span class="np-range">Página {{ pagina }} de {{ paginas }} · {{ total }} anotación(es)</span>
+        <button type="button" class="np-btn np-btn--sm np-btn--ghost" (click)="ir(pagina + 1)" [disabled]="pagina >= paginas">Siguiente</button>
       </div>
     </section>
   </div>

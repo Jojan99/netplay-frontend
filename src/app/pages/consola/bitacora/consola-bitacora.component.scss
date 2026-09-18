@@ -1,2 +1,24 @@
-/* El detalle es un JSON: se corta antes de romper la fila. */
-.np-truncate { max-width: 420px; }
+/* La bitácora es una lista larga de renglones parecidos: lo único que la
+   hace leíble es que la acción tenga color y que el detalle no empuje la
+   tabla de ancho. */
+.np-tabla-bitacora { min-width: 820px; }
+
+/* El detalle es JSON aplanado: se corta y el resto queda en el título. */
+.np-bit-detalle {
+  max-width: 340px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 11.5px;
+  color: var(--text-3);
+}
+
+/* Las familias de acción. El fondo sale del token suave del color, así se
+   lee igual de bien en claro y en oscuro. */
+.np-tag--peligro { background: var(--danger-soft); color: var(--danger); }
+.np-tag--bien    { background: var(--ok-soft);     color: var(--ok); }
+.np-tag--aviso   { background: var(--warn-soft);   color: var(--warn); }
+
+@media (max-width: 760px) {
+  .np-bit-detalle { max-width: 200px; }
+}

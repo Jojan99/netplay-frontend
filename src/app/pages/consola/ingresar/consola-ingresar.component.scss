@@ -1,15 +1,64 @@
-/* El ingreso de la consola: una caja sola, sin nada del panel alrededor. */
+/* El ingreso de la consola: una caja sola, sin nada del panel alrededor.
+   En pantalla grande va acompañada de un lado de marca que explica de qué
+   consola se trata; en el teléfono ese lado desaparece y queda la caja. */
 .np-ingreso {
   min-height: 100vh;
   display: grid;
-  place-items: center;
-  padding: 24px 16px;
-  background: var(--bg);
+  grid-template-columns: minmax(0, 1fr) minmax(0, 420px);
+  align-items: center;
+  justify-content: center;
+  gap: 48px;
+  padding: 32px 24px;
+  background:
+    radial-gradient(1100px 520px at 12% -10%, color-mix(in srgb, var(--accent) 14%, transparent), transparent 70%),
+    var(--bg);
 }
 
+/* ── Lado de marca ─────────────────────────────────────────────────── */
+.np-ingreso-marca {
+  max-width: 460px;
+  justify-self: end;
+
+  h2 {
+    margin: 22px 0 10px;
+    font: 600 30px/1.1 var(--font-display);
+    letter-spacing: -0.02em;
+    color: var(--text);
+    text-wrap: balance;
+  }
+
+  p {
+    margin: 0;
+    max-width: 44ch;
+    font-size: 13.5px;
+    line-height: 1.6;
+    color: var(--text-2);
+  }
+}
+
+.np-ingreso-puntos {
+  list-style: none;
+  margin: 22px 0 0;
+  padding: 0;
+  display: grid;
+  gap: 10px;
+
+  li {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 12.5px;
+    font-weight: 600;
+    color: var(--text-2);
+  }
+
+  svg { width: 17px; height: 17px; flex-shrink: 0; color: var(--accent); }
+}
+
+/* ── La caja ───────────────────────────────────────────────────────── */
 .np-ingreso-caja {
   width: 100%;
-  max-width: 380px;
+  max-width: 420px;
   background: var(--surface);
   border: 1px solid var(--line);
   border-radius: var(--radius-lg);
@@ -17,35 +66,41 @@
   padding: 26px 24px 20px;
 }
 
-.np-ingreso-marca {
+.np-ingreso-cab {
   display: flex;
   align-items: center;
   gap: 12px;
   margin-bottom: 22px;
-}
 
-.np-ingreso-marca h1 {
-  font: 600 19px/1.2 var(--font-display);
-  margin: 0;
-  color: var(--text);
+  h1 { font: 600 19px/1.2 var(--font-display); margin: 0; color: var(--text); }
+  p { margin: 2px 0 0; }
 }
-
-.np-ingreso-marca p { margin: 2px 0 0; }
 
 .np-ingreso-logo {
   display: grid;
   place-items: center;
-  width: 38px;
-  height: 38px;
-  flex: 0 0 38px;
-  border-radius: var(--radius);
+  width: 54px;
+  height: 54px;
+  flex: 0 0 54px;
+  border-radius: var(--radius-lg);
   background: var(--accent);
   color: var(--accent-ink);
-  font: 700 20px/1 var(--font-display);
+  font: 700 28px/1 var(--font-display);
+  box-shadow: var(--shadow);
 }
 
-.np-ingreso .np-btn--primary {
+.np-ingreso-logo--sm {
+  width: 38px;
+  height: 38px;
+  flex-basis: 38px;
+  border-radius: var(--radius);
+  font-size: 20px;
+  box-shadow: none;
+}
+
+.np-ingreso-entrar {
   justify-content: center;
+  height: 40px;
   margin-top: 6px;
 }
 
@@ -54,4 +109,11 @@
   padding-top: 14px;
   border-top: 1px solid var(--line);
   text-align: center;
+  line-height: 1.5;
+}
+
+@media (max-width: 940px) {
+  .np-ingreso { grid-template-columns: minmax(0, 420px); justify-items: center; }
+  .np-ingreso-marca { display: none; }
+  .np-ingreso-caja { justify-self: center; }
 }

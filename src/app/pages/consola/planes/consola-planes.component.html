@@ -6,17 +6,24 @@
       <h1 class="np-title">Planes de la plataforma</h1>
       <div class="np-ribbon" [class.np-ribbon--loading]="cargando">
         <span><span class="np-n">{{ planes.length }}</span>planes</span>
-        <span class="np-mono">{{ moneda }}</span>
+        <span><i class="np-dot np-dot--ok"></i>{{ visibles }} visibles en la página pública</span>
+        <span><i class="np-dot np-dot--accent"></i>{{ empresasConPlan }} empresa(s) con plan</span>
+        <span class="np-mono np-muted">{{ moneda }}</span>
       </div>
     </div>
     <div class="np-actions">
-      <button type="button" class="np-btn np-btn--primary" (click)="nuevo()" [disabled]="!enBase">Nuevo plan</button>
+      <button type="button" class="np-btn np-btn--primary" (click)="nuevo()" [disabled]="!enBase">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M12 5v14M5 12h14"/>
+        </svg>
+        Nuevo plan
+      </button>
     </div>
   </header>
 
   <p *ngIf="!enBase" class="np-notice np-notice--warn">
-    Los planes todavía salen de <span class="np-mono">config/plataforma.php</span> y no se pueden editar desde acá.
-    Corré la migración de la consola y quedan en la base, con los mismos precios.
+    <strong>Los planes todavía salen de <span class="np-mono">config/plataforma.php</span>.</strong>
+    No se pueden editar desde acá. Corré la migración de la consola y quedan en la base, con los mismos precios.
   </p>
 
   <p class="np-notice np-notice--info np-notice--inline" *ngIf="notaPrecios">{{ notaPrecios }}</p>
@@ -24,7 +31,7 @@
   <div class="np-scroll">
     <section class="np-registry">
       <div class="np-registry-wrap">
-        <table class="np-table np-table--registry">
+        <table class="np-table np-table--registry np-tabla-planes">
           <thead>
             <tr>
               <th class="np-th-stripe"></th>
@@ -38,24 +45,58 @@
             </tr>
           </thead>
           <tbody>
-            <tr *ngIf="cargando" class="np-empty"><td colspan="8"><span class="np-spinner"></span></td></tr>
-            <tr *ngIf="!cargando && !planes.length" class="np-empty"><td colspan="8"><strong>No hay planes cargados.</strong></td></tr>
-            <tr *ngFor="let p of planes" class="np-row">
-              <td class="np-stripe"><i></i></td>
-              <td>
-                <div class="np-name">{{ p.nombre }} <span *ngIf="p.destacado" class="np-tag">destacado</span></div>
-                <div class="np-plan"><em class="np-mono">{{ p.clave }}</em> · {{ p.para || 'sin descripción' }}</div>
+            <ng-container *ngIf="cargando">
+              <tr class="np-skel" *ngFor="let s of esqueleto; trackBy: porIndice" aria-hidden="true">
+                <td class="np-stripe"><i></i></td>
+                <td colspan="7"><span class="np-skel-bar"></span><span class="np-skel-bar np-skel-bar--sm"></span></td>
+              </tr>
+            </ng-container>
+
+            <tr *ngIf="!cargando && !planes.length" class="np-empty">
+              <td colspan="8">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <path d="M12 3 3 8l9 5 9-5-9-5ZM3 12l9 5 9-5M3 16l9 5 9-5"/>
+                </svg>
+                <strong>No hay planes cargados.</strong>
+                <span>Sin planes no se le puede asignar precio a ninguna empresa. Creá el primero con "Nuevo plan".</span>
               </td>
-              <td class="np-td-right np-money">{{ p.precio_mensual === null ? 'Consultar' : pesos(p.precio_mensual) }}</td>
-              <td class="np-td-right np-money">{{ p.precio_anual === null ? 'Consultar' : pesos(p.precio_anual) }}</td>
-              <td class="np-td-right">{{ p.clientes === null ? 'sin tope' : p.clientes }}</td>
-              <td class="np-td-right"><b>{{ p.empresas }}</b></td>
-              <td><span class="np-pill" [ngClass]="p.activo ? 'np-pill--active' : 'np-pill--neutral'">{{ p.activo ? 'Visible' : 'Oculto' }}</span></td>
+            </tr>
+
+            <tr *ngFor="let p of planes; trackBy: porId" class="np-row" [class.is-destacado]="p.destacado">
+              <td class="np-stripe" [ngClass]="p.activo ? 'np-stripe--ok' : 'np-stripe--neutral'"><i></i></td>
+              <td>
+                <div class="np-name">
+                  {{ p.nombre }}
+                  <span *ngIf="p.destacado" class="np-tag">destacado</span>
+                </div>
+                <div class="np-plan">
+                  <em class="np-mono">{{ p.clave }}</em> · {{ p.para || 'sin descripción' }}
+                </div>
+                <span class="np-tags np-tags--incluye" *ngIf="p.incluye?.length">
+                  <span class="np-tag np-tag--neutral" *ngFor="let i of p.incluye; trackBy: porIndice">{{ i }}</span>
+                </span>
+              </td>
+              <td class="np-td-right np-money">
+                {{ p.precio_mensual === null ? 'Consultar' : pesos(p.precio_mensual) }}
+              </td>
+              <td class="np-td-right np-money">
+                {{ p.precio_anual === null ? 'Consultar' : pesos(p.precio_anual) }}
+                <span class="np-fine" *ngIf="p.precio_anual !== null && p.precio_mensual">{{ ahorroAnual(p) }}</span>
+              </td>
+              <td class="np-td-right np-data">{{ p.clientes === null ? 'sin tope' : p.clientes }}</td>
+              <td class="np-td-right"><b class="np-mono">{{ p.empresas }}</b></td>
+              <td>
+                <span class="np-pill" [ngClass]="p.activo ? 'np-pill--active' : 'np-pill--neutral'">
+                  {{ p.activo ? 'Visible' : 'Oculto' }}
+                </span>
+              </td>
               <td class="np-td-right">
-                <div class="np-rowacts">
-                  <button type="button" class="np-btn np-btn--sm" (click)="abrir(p)" [disabled]="p.solo_lectura">Editar</button>
-                  <button type="button" class="np-btn np-btn--sm" (click)="verPrecios(p)" [disabled]="p.solo_lectura">Precios</button>
-                  <button type="button" class="np-btn np-btn--sm np-btn--danger" (click)="borrar(p)" [disabled]="p.solo_lectura || p.empresas > 0">Borrar</button>
+                <div class="np-rowacts is-visible">
+                  <button type="button" class="np-btn np-btn--sm np-btn--ghost" (click)="abrir(p)" [disabled]="p.solo_lectura">Editar</button>
+                  <button type="button" class="np-btn np-btn--sm np-btn--ghost" (click)="verPrecios(p)" [disabled]="p.solo_lectura">Precios</button>
+                  <button type="button" class="np-btn np-btn--sm np-btn--danger" (click)="borrar(p)"
+                          [disabled]="p.solo_lectura || p.empresas > 0"
+                          [attr.title]="p.empresas > 0 ? 'No se puede borrar: hay empresas con este plan' : null">Borrar</button>
                 </div>
               </td>
             </tr>
@@ -67,11 +108,16 @@
 </div>
 
 <!-- ══ Modal: editar el plan ═════════════════════════════════════════ -->
-<div class="np-overlay" *ngIf="modal" (click)="modal = false">
+<div class="np-overlay np-overlay--top" *ngIf="modal" (click)="modal = false">
   <div class="np-modal np-modal--editor" (click)="$event.stopPropagation()" role="dialog" aria-label="Editar el plan">
-    <div class="np-modal-head"><h2>{{ editando ? 'Editar el plan' : 'Nuevo plan' }}</h2></div>
+    <div class="np-modal-head">
+      <h2>{{ editando ? 'Editar el plan' : 'Nuevo plan' }}</h2>
+      <button type="button" class="np-icobtn" (click)="modal = false" aria-label="Cerrar">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
 
-    <form class="np-modal-body np-form" (ngSubmit)="guardar()">
+    <form class="np-modal-body np-modal-body--scroll np-form" (ngSubmit)="guardar()">
       <label class="np-field"><span>Clave (la que usan los cupones)</span>
         <input type="text" class="np-input np-mono" [(ngModel)]="forma.clave" name="clave" maxlength="40"
                (input)="forma.clave = forma.clave.toLowerCase()" required /></label>
@@ -111,58 +157,80 @@
       </p>
 
       <div class="np-btnrow np-btnrow--end np-field-full">
-        <button type="button" class="np-btn" (click)="modal = false">Cancelar</button>
-        <button type="submit" class="np-btn np-btn--primary" [disabled]="guardando">Guardar</button>
+        <button type="button" class="np-btn np-btn--ghost" (click)="modal = false">Cancelar</button>
+        <button type="submit" class="np-btn np-btn--primary" [disabled]="guardando">
+          <span *ngIf="guardando" class="np-spinner np-spinner--sm"></span>
+          Guardar el plan
+        </button>
       </div>
     </form>
   </div>
 </div>
 
 <!-- ══ Modal: historial de precios ═══════════════════════════════════ -->
-<div class="np-overlay" *ngIf="modalPrecios" (click)="modalPrecios = false">
-  <div class="np-modal np-modal--lg" (click)="$event.stopPropagation()" role="dialog" aria-label="Historial de precios">
-    <div class="np-modal-head"><h2>Precios de "{{ planDelHistorial?.nombre }}"</h2></div>
+<div class="np-overlay np-overlay--top" *ngIf="modalPrecios" (click)="modalPrecios = false">
+  <div class="np-modal np-modal--editor" (click)="$event.stopPropagation()" role="dialog" aria-label="Historial de precios">
+    <div class="np-modal-head">
+      <h2>Precios de "{{ planDelHistorial?.nombre }}"</h2>
+      <button type="button" class="np-icobtn" (click)="modalPrecios = false" aria-label="Cerrar">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
 
     <div class="np-modal-body np-modal-body--scroll">
-      <h4 class="np-fine">Historial</h4>
-      <table class="np-table np-table--compact">
-        <thead><tr><th>Desde</th><th class="np-th-right">Mensual</th><th class="np-th-right">Anual</th><th>Motivo</th><th>Quién</th></tr></thead>
-        <tbody>
-          <tr *ngIf="!historial.length" class="np-empty"><td colspan="5"><strong>Sin cambios registrados todavía.</strong></td></tr>
-          <tr *ngFor="let h of historial">
-            <td class="np-data np-data--dim">{{ fecha(h.desde) }}</td>
-            <td class="np-td-right np-money">{{ pesos(h.precio_mensual) }}</td>
-            <td class="np-td-right np-money">{{ pesos(h.precio_anual) }}</td>
-            <td>{{ h.motivo || '—' }}</td>
-            <td class="np-mono np-data--dim">{{ h.usuario || '—' }}</td>
-          </tr>
-        </tbody>
-      </table>
+      <div class="np-bloque">
+        <h4 class="np-fine">Historial de precios</h4>
+        <div class="np-tablewrap" *ngIf="historial.length">
+          <table class="np-table np-table--compact">
+            <thead><tr><th>Desde</th><th class="np-th-right">Mensual</th><th class="np-th-right">Anual</th><th>Motivo</th><th>Quién</th></tr></thead>
+            <tbody>
+              <tr *ngFor="let h of historial; trackBy: porId">
+                <td class="np-data np-data--dim np-nowrap">{{ fecha(h.desde) }}</td>
+                <td class="np-td-right np-money">{{ pesos(h.precio_mensual) }}</td>
+                <td class="np-td-right np-money">{{ pesos(h.precio_anual) }}</td>
+                <td>{{ h.motivo || '—' }}</td>
+                <td class="np-mono np-data--dim">{{ h.usuario || '—' }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <p class="np-nada np-nada--sm" *ngIf="!historial.length">
+          <b>Sin cambios registrados todavía.</b>
+          <span>Cada vez que cambies el precio del plan va a quedar acá, con el motivo y quién lo hizo.</span>
+        </p>
+      </div>
 
-      <h4 class="np-fine">Empresas con este plan</h4>
-      <table class="np-table np-table--compact">
-        <thead><tr><th>Empresa</th><th>Ciclo</th><th class="np-th-right">Precio pactado</th><th>Estado</th></tr></thead>
-        <tbody>
-          <tr *ngIf="!afectadas.length" class="np-empty"><td colspan="4"><strong>Ninguna empresa tiene este plan.</strong></td></tr>
-          <tr *ngFor="let a of afectadas">
-            <td class="np-name">{{ a.empresa }}</td>
-            <td class="np-data np-data--dim">{{ a.ciclo }}</td>
-            <td class="np-td-right np-money">
-              {{ a.precio_pactado === null ? 'precio de lista' : pesos(a.precio_pactado) }}
-            </td>
-            <td class="np-data">{{ a.estado }}</td>
-          </tr>
-        </tbody>
-      </table>
+      <div class="np-bloque">
+        <h4 class="np-fine">Empresas con este plan</h4>
+        <div class="np-tablewrap" *ngIf="afectadas.length">
+          <table class="np-table np-table--compact">
+            <thead><tr><th>Empresa</th><th>Ciclo</th><th class="np-th-right">Precio pactado</th><th>Estado</th></tr></thead>
+            <tbody>
+              <tr *ngFor="let a of afectadas; trackBy: porIndice">
+                <td class="np-name">{{ a.empresa }}</td>
+                <td class="np-data np-data--dim">{{ a.ciclo }}</td>
+                <td class="np-td-right np-money" [class.np-data--dim]="a.precio_pactado === null">
+                  {{ a.precio_pactado === null ? 'precio de lista' : pesos(a.precio_pactado) }}
+                </td>
+                <td class="np-data">{{ a.estado }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <p class="np-nada np-nada--sm" *ngIf="!afectadas.length">
+          <b>Ninguna empresa tiene este plan.</b>
+          <span>Cambiarle el precio no afecta a nadie todavía.</span>
+        </p>
+      </div>
 
       <p class="np-notice np-notice--warn" *ngIf="conPrecioEspecial">
-        {{ conPrecioEspecial }} empresa(s) están con precio especial. Si las pasás al precio nuevo,
-        desde su próximo cobro pagan el de lista.
+        <strong>{{ conPrecioEspecial }} empresa(s) están con precio especial.</strong>
+        Si las pasás al precio nuevo, desde su próximo cobro pagan el de lista.
       </p>
     </div>
 
     <div class="np-modal-foot">
-      <button type="button" class="np-btn" (click)="modalPrecios = false">Cerrar</button>
+      <button type="button" class="np-btn np-btn--ghost" (click)="modalPrecios = false">Cerrar</button>
       <button type="button" class="np-btn np-btn--warn" [disabled]="!conPrecioEspecial" (click)="pasarAlPrecioNuevo()">
         Pasar al precio nuevo ({{ conPrecioEspecial }})
       </button>

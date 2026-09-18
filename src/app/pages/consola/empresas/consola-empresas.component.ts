@@ -10,6 +10,36 @@ import { ToastService } from '../../../services/toast.service';
 type Filtro = 'todas' | 'activas' | 'prueba' | 'mora' | 'suspendidas' | 'sin_plan';
 
 /**
+ * Una fila de la lista, ya resuelta para pintar.
+ *
+ * Todo lo que la tabla necesita (el color de la raya, el texto del estado,
+ * las etiquetas de la red) se calcula una vez al filtrar y no dentro del
+ * *ngFor: un getter que devuelve un arreglo nuevo en cada ciclo deja la
+ * pestaña girando para siempre.
+ */
+interface FilaEmpresa {
+  e: EmpresaConsola;
+  raya: string;
+  estadoClase: string;
+  estadoTexto: string;
+  plan: string | null;
+  planPie: string;
+  usoTexto: string;
+  usoPorcentaje: number;
+  usoClase: string;
+  proxima: string;
+  red: { titulo: string; neutral: boolean }[];
+}
+
+/** Un renglón de la red o del equipo de la empresa, ya resuelto. */
+interface ChipIntegracion {
+  titulo: string;
+  valor: string;
+  detalle: string | null;
+  ok: boolean;
+}
+
+/**
  * Las empresas registradas en Netvula: su tamaño, qué usan y cómo van con el
  * pago de la plataforma. El detalle es de sólo lectura salvo lo comercial:
  * plan, precio, cupón, crédito, cobros y suspensión.
@@ -40,11 +70,23 @@ export class ConsolaEmpresasComponent implements OnInit, OnDestroy {
 
   /** La lista ya filtrada. Se recalcula al cambiar algo, nunca en el *ngFor. */
   empresas: EmpresaConsola[] = [];
+  /** La misma lista, ya resuelta para pintar. */
+  filas: FilaEmpresa[] = [];
+  /** Cuántas empresas cae en cada filtro, para el número de cada chip. */
+  conteos: Record<string, number> = {};
   private todas: EmpresaConsola[] = [];
+
+  /** Filas de mentira mientras llega la lista, para no mostrar un vacío. */
+  readonly esqueleto = [1, 2, 3, 4, 5, 6];
 
   seleccionada: EmpresaConsola | null = null;
   detalle: any = null;
   planes: PlanConsola[] = [];
+
+  /** Lo de la ficha que se arma una sola vez al abrir la empresa. */
+  integraciones: ChipIntegracion[] = [];
+  usoPorcentaje = 0;
+  usoClase = '';
 
   // Edición de la suscripción
   editando = false;
@@ -130,24 +172,80 @@ export class ConsolaEmpresasComponent implements OnInit, OnDestroy {
   filtrar(): void {
     const aguja = this.busqueda.trim().toLowerCase();
 
-    this.empresas = this.todas.filter(e => {
-      if (aguja) {
-        const campos = `${e.nombre} ${e.subdominio ?? ''} ${e.nit ?? ''} ${e.email ?? ''}`.toLowerCase();
-        if (!campos.includes(aguja)) return false;
-      }
+    this.empresas = this.todas.filter(e => this.coincide(e, aguja) && this.entraEn(e, this.filtro));
 
-      const estado = e.suscripcion?.estado ?? null;
+    // Los números de los chips salen de la búsqueda, no del filtro elegido:
+    // así el chip dice cuántas hay para ver antes de pulsarlo.
+    const enBusqueda = this.todas.filter(e => this.coincide(e, aguja));
+    const conteos: Record<string, number> = {};
+    for (const f of this.FILTROS) conteos[f.valor] = enBusqueda.filter(e => this.entraEn(e, f.valor)).length;
+    this.conteos = conteos;
 
-      switch (this.filtro) {
-        case 'activas':     return estado === 'al_dia' && !e.suspendida;
-        case 'prueba':      return estado === 'prueba';
-        case 'mora':        return estado === 'en_mora';
-        case 'suspendidas': return e.suspendida;
-        case 'sin_plan':    return !e.suscripcion?.plan_id;
-        default:            return true;
-      }
-    });
+    this.filas = this.empresas.map(e => this.aFila(e));
   }
+
+  private coincide(e: EmpresaConsola, aguja: string): boolean {
+    if (!aguja) return true;
+
+    return `${e.nombre} ${e.subdominio ?? ''} ${e.nit ?? ''} ${e.email ?? ''}`.toLowerCase().includes(aguja);
+  }
+
+  private entraEn(e: EmpresaConsola, filtro: Filtro): boolean {
+    const estado = e.suscripcion?.estado ?? null;
+
+    switch (filtro) {
+      case 'activas':     return estado === 'al_dia' && !e.suspendida;
+      case 'prueba':      return estado === 'prueba';
+      case 'mora':        return estado === 'en_mora';
+      case 'suspendidas': return e.suspendida;
+      case 'sin_plan':    return !e.suscripcion?.plan_id;
+      default:            return true;
+    }
+  }
+
+  /** Deja la fila lista para pintar: sin cuentas dentro del *ngFor. */
+  private aFila(e: EmpresaConsola): FilaEmpresa {
+    const s = e.suscripcion;
+    const tope = s?.uso?.incluidos ?? null;
+    const activos = e.clientes?.activos ?? 0;
+    const porcentaje = tope ? Math.min(100, Math.round((activos / tope) * 100)) : 0;
+
+    const red: { titulo: string; neutral: boolean }[] = [];
+    if (e.olts)   red.push({ titulo: `${e.olts} OLT`, neutral: false });
+    if (e.routers) red.push({ titulo: `${e.routers} MikroTik`, neutral: false });
+    if (e.tr069)  red.push({ titulo: `${e.tr069} TR-069`, neutral: false });
+    if (e.lineas_wa) red.push({ titulo: `WhatsApp ${e.lineas_wa_ok}/${e.lineas_wa}`, neutral: !e.lineas_wa_ok });
+
+    return {
+      e,
+      raya: this.claseRaya(e),
+      estadoClase: this.claseEstado(e),
+      estadoTexto: this.textoEstado(e),
+      plan: s?.plan ?? null,
+      planPie: s?.plan ? `${s.ciclo} · ${pesos(s.precio)}` : '',
+      usoTexto: tope ? `${activos}/${tope}` : '—',
+      usoPorcentaje: porcentaje,
+      usoClase: !tope ? '' : s?.uso?.excedido ? 'is-over' : porcentaje >= 85 ? 'is-warn' : '',
+      proxima: s?.proxima ? this.fecha(s.proxima) : '—',
+      red,
+    };
+  }
+
+  /** El color de la raya de la izquierda: el estado se ve sin leer. */
+  private claseRaya(e: EmpresaConsola): string {
+    if (e.suspendida) return 'np-stripe--danger';
+
+    switch (e.suscripcion?.estado) {
+      case 'al_dia':  return 'np-stripe--ok';
+      case 'en_mora': return 'np-stripe--danger';
+      case 'prueba':  return 'np-stripe--info';
+      default:        return 'np-stripe--neutral';
+    }
+  }
+
+  porEmpresa(_: number, f: FilaEmpresa): number { return f.e.id; }
+  porId(i: number, x: { id?: number | null }): number { return x?.id ?? i; }
+  porIndice(i: number): number { return i; }
 
   cambiarFiltro(f: Filtro): void { this.filtro = f; this.filtrar(); }
 
@@ -166,6 +264,7 @@ export class ConsolaEmpresasComponent implements OnInit, OnDestroy {
         this.detalle = r?.data ?? null;
         this.planes = this.detalle?.planes ?? [];
         this.cargarForma();
+        this.resolverFicha();
         this.cargandoDetalle = false;
       },
       error: err => {
@@ -175,7 +274,12 @@ export class ConsolaEmpresasComponent implements OnInit, OnDestroy {
     });
   }
 
-  cerrar(): void { this.seleccionada = null; this.detalle = null; this.editando = false; }
+  cerrar(): void {
+    this.seleccionada = null;
+    this.detalle = null;
+    this.editando = false;
+    this.integraciones = [];
+  }
 
   @HostListener('document:keydown.escape')
   alEscapar(): void {
@@ -198,6 +302,27 @@ export class ConsolaEmpresasComponent implements OnInit, OnDestroy {
       proxima_facturacion: s?.proxima ?? '',
       notas: s?.notas ?? '',
     };
+  }
+
+  /**
+   * Arma de una vez lo que la ficha repite: las señales de integración y la
+   * barra de uso del plan. Nada de esto se calcula dentro de un *ngFor.
+   */
+  private resolverFicha(): void {
+    const i = this.detalle?.integraciones ?? {};
+
+    this.integraciones = [
+      { titulo: 'Correo propio', valor: i.mailjet ?? 'no configurado', detalle: i.mailjet_remitente ?? null, ok: i.mailjet === 'configurado' },
+      { titulo: 'WhatsApp',      valor: i.whatsapp ?? 'no configurado', detalle: i.wa_proveedor ?? null,     ok: i.whatsapp === 'configurado' },
+      { titulo: 'Pasarela',      valor: i.pasarela ?? 'no configurada', detalle: null,                       ok: !!i.pasarela && i.pasarela !== 'no configurada' },
+      { titulo: 'ACS',           valor: i.acs ?? 'no configurado',      detalle: null,                       ok: !!i.acs && i.acs !== 'no configurado' },
+    ];
+
+    const uso = this.detalle?.suscripcion?.uso;
+    const tope = uso?.incluidos ?? null;
+
+    this.usoPorcentaje = tope ? Math.min(100, Math.round(((uso?.clientes ?? 0) / tope) * 100)) : 0;
+    this.usoClase = !tope ? '' : uso?.excedido ? 'is-over' : this.usoPorcentaje >= 85 ? 'is-warn' : '';
   }
 
   /** El precio de lista del plan elegido, para mostrarlo al lado del pactado. */
@@ -406,7 +531,9 @@ export class ConsolaEmpresasComponent implements OnInit, OnDestroy {
 
   // ── Presentación ──────────────────────────────────────────────────────
   claseEstado(e: EmpresaConsola): string {
-    if (e.suspendida) return 'np-pill--suspended';
+    // La suspendida lleva la píldora llena: es el único corte de verdad y
+    // no se puede confundir con una que está en mora.
+    if (e.suspendida) return 'np-pill--suspended np-pill--corte';
 
     switch (e.suscripcion?.estado) {
       case 'al_dia':  return 'np-pill--active';
@@ -419,6 +546,25 @@ export class ConsolaEmpresasComponent implements OnInit, OnDestroy {
   textoEstado(e: EmpresaConsola): string {
     if (e.suspendida) return 'Suspendida';
     return this.ESTADOS[e.suscripcion?.estado ?? ''] ?? 'Sin suscripción';
+  }
+
+  /** El estado de un cobro, con el mismo idioma de color de toda la consola. */
+  claseCobro(c: any): string {
+    if (c?.estado === 'pagado')  return 'np-pill--active';
+    if (c?.estado === 'anulado') return 'np-pill--neutral';
+    return c?.vencido ? 'np-pill--suspended' : 'np-pill--info';
+  }
+
+  textoCobro(c: any): string {
+    if (c?.estado === 'pagado')  return 'Pagado';
+    if (c?.estado === 'anulado') return 'Anulado';
+    return c?.vencido ? 'Vencido' : 'Pendiente';
+  }
+
+  claseReferido(estado: string): string {
+    if (estado === 'activo')  return 'np-pill--active';
+    if (estado === 'anulado') return 'np-pill--neutral';
+    return 'np-pill--info';
   }
 
   fecha(d: string | null | undefined): string {

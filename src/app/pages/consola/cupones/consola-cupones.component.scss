@@ -1,2 +1,9 @@
-/* Los grupos de casillas del cupón (planes y ciclos) van en línea. */
-.np-field > .np-checklist { margin-top: 6px; }
+/* Los cupones tienen nueve columnas: la tabla se desplaza dentro de su
+   tarjeta antes que apretar el código hasta partirlo. */
+.np-tabla-cupones { min-width: 980px; }
+
+/* La columna de usos lleva la barra: ancho fijo para que no baile. */
+.np-td-usos { width: 128px; }
+
+/* El descuento es lo primero que se busca en esta pantalla. */
+.np-tabla-cupones .np-money--lg { font-size: 16px; }

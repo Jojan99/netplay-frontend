@@ -1,9 +1,25 @@
-/* Los títulos de sección dentro de los modales de la consola. */
-.np-modal-body h4.np-fine {
-  margin: 14px 0 4px;
-  text-transform: uppercase;
-  letter-spacing: .06em;
-  color: var(--text-3);
+/* Los planes: la fila muestra también qué incluye cada uno, que estaba en
+   la respuesta del servidor y no se veía en ningún lado. */
+.np-tabla-planes { min-width: 820px; }
+
+.np-tags--incluye {
+  margin-top: 6px;
+  max-width: 460px;
 }
 
-.np-modal-body h4.np-fine:first-child { margin-top: 0; }
+/* El plan destacado es el que la página pública empuja: se nota. */
+.np-row.is-destacado .np-name { color: var(--accent); }
+
+/* Cada bloque del modal de precios lleva su título chico y su tabla. */
+.np-bloque {
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+}
+
+/* El apunte del ahorro anual va debajo de la cifra, alineado con ella. */
+.np-tabla-planes .np-fine {
+  text-align: right;
+  color: var(--ok);
+  font-weight: 600;
+}

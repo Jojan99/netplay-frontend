@@ -1,23 +1,50 @@
 <div class="np-consola">
 
-  <header class="np-consola-barra">
-    <span class="np-consola-logo">N</span>
-    <div class="np-consola-marca">
-      <b>Consola Netvula</b>
-      <span class="np-fine">la plataforma</span>
-    </div>
+  <header class="np-cbar">
 
-    <nav class="np-tabs" aria-label="Consola de Netvula">
-      <a *ngFor="let p of pestanas" class="np-tab" [routerLink]="['/consola', p.ruta]"
-         routerLinkActive #activa="routerLinkActive" [attr.aria-selected]="activa.isActive">{{ p.titulo }}</a>
+    <a class="np-cbar-marca" routerLink="/consola/tablero" aria-label="Consola de Netvula, ir al tablero">
+      <span class="np-cbar-logo" aria-hidden="true">N</span>
+      <span class="np-cbar-copy">
+        <b>Netvula</b>
+        <span>Consola de la plataforma</span>
+      </span>
+    </a>
+
+    <span class="np-cbar-sello" aria-hidden="true">dueño</span>
+
+    <nav class="np-cnav" aria-label="Secciones de la consola">
+      <a *ngFor="let p of pestanas; trackBy: porRuta" class="np-cnav-i" [routerLink]="['/consola', p.ruta]"
+         routerLinkActive #activa="routerLinkActive" [attr.aria-current]="activa.isActive ? 'page' : null">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
+             stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path [attr.d]="p.icono"></path>
+        </svg>
+        <span>{{ p.titulo }}</span>
+      </a>
     </nav>
 
     <span class="np-spacer"></span>
 
     <flowbite-dark-theme-toggle></flowbite-dark-theme-toggle>
-    <span class="np-fine np-only-desktop np-consola-quien">{{ usuario?.nombre || usuario?.email }}</span>
-    <button type="button" class="np-btn np-btn--sm" (click)="salir()">Salir</button>
+
+    <div class="np-cquien np-only-desktop" *ngIf="usuario">
+      <span class="np-cquien-ini" aria-hidden="true">{{ inicial }}</span>
+      <span class="np-cquien-copy">
+        <b>{{ usuario.nombre || usuario.email }}</b>
+        <span>{{ usuario.nombre ? usuario.email : 'sesión de la consola' }}</span>
+      </span>
+    </div>
+
+    <button type="button" class="np-btn np-btn--ghost np-btn--sm np-cbar-salir" (click)="salir()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
+           stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M15 17l5-5-5-5M20 12H9M12 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h6"/>
+      </svg>
+      <span>Salir</span>
+    </button>
   </header>
 
-  <router-outlet></router-outlet>
+  <main class="np-cuerpo">
+    <router-outlet></router-outlet>
+  </main>
 </div>

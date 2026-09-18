@@ -71,6 +71,10 @@ export class ConsolaTableroComponent implements OnInit, OnDestroy {
 
   pesos = pesos;
 
+  porMes(_: number, b: Barra): string { return b.mes; }
+
+  porAviso(i: number, a: { company_id?: number }): number { return a?.company_id ?? i; }
+
   /** Alto de cada barra en porcentaje, contra el mes más alto. */
   private aBarras(serie: { mes: string; altas: number }[]): Barra[] {
     const tope = Math.max(1, ...serie.map(s => s.altas));

@@ -1,26 +1,178 @@
-/* El inspector de la consola es más largo que el del resto del panel:
-   una empresa trae suscripción, cobros, red e integraciones. */
-.np-inspector .np-sect + .np-sect { margin-top: 18px; }
+/* La ficha de una empresa.
+   Antes era una columna de 420px con trece secciones apiladas y trece
+   títulos iguales: no había forma de encontrar nada. Ahora ocupa el ancho
+   de la pantalla, arranca con quién es y cuánto pesa, y reparte el resto
+   en dos columnas: a la izquierda lo comercial (lo que se toca), a la
+   derecha lo técnico (lo que se mira). */
 
-.np-inspector h4.np-fine {
-  margin: 14px 0 4px;
-  text-transform: uppercase;
-  letter-spacing: .06em;
-  color: var(--text-3);
+.np-ficha {
+  display: grid;
+  gap: 16px;
+  align-content: start;
+  min-width: 0;
 }
 
-.np-inspector .np-form--row {
+/* ── Identidad ──────────────────────────────────────────────────────── */
+.np-ficha-head {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-areas:
+    'volver volver'
+    'quien  acciones';
+  gap: 14px 20px;
+  align-items: end;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--line);
+}
+
+.np-ficha-volver {
+  grid-area: volver;
+  justify-self: start;
+}
+
+.np-ficha-id {
+  grid-area: quien;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-width: 0;
+  flex-wrap: wrap;
+}
+
+.np-ficha-id-copy {
+  min-width: 0;
+
+  h2 {
+    margin: 0;
+    font: 600 26px/1.15 var(--font-display);
+    letter-spacing: -0.02em;
+    color: var(--text);
+    overflow-wrap: anywhere;
+  }
+}
+
+.np-ficha-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 16px;
+  margin-top: 5px;
+  font-size: 12px;
+  color: var(--text-3);
+
+  b { color: var(--text-2); font-weight: 600; }
+}
+
+.np-ficha-estado {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.np-ficha-acciones {
+  grid-area: acciones;
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+/* El avatar grande de la ficha: el mismo de la lista, con más aire. */
+.np-avatar--lg {
+  width: 52px;
+  height: 52px;
+  flex: 0 0 52px;
+  font-size: 23px;
+}
+
+/* La fecha del último ingreso no es un número: necesita menos cuerpo. */
+.np-ficha-ingreso { font-size: 14px; }
+
+/* ── Dos columnas ───────────────────────────────────────────────────── */
+.np-ficha-cols {
+  display: grid;
+  grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr);
+  gap: 16px;
+  align-items: start;
+}
+
+.np-ficha-col {
+  display: grid;
+  gap: 16px;
+  align-content: start;
+  min-width: 0;
+}
+
+/* ── El plan y su precio ────────────────────────────────────────────── */
+.np-plan-hero {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 18px;
+  flex-wrap: wrap;
+  padding: 14px 16px;
+  border: 1px solid var(--accent-line);
+  border-radius: var(--radius);
+  background: var(--accent-soft);
+}
+
+/* Sobre el fondo del acento las etiquetas grises pierden contraste: acá
+   van del color del acento, que se lee bien en claro y en oscuro. */
+.np-plan-hero .np-kv-l { color: var(--accent); }
+.np-plan-hero .np-kv-s { color: var(--text-2); }
+
+.np-plan-nombre {
+  font: 600 21px/1.2 var(--font-display);
+  letter-spacing: -0.01em;
+  color: var(--text);
+}
+
+.np-plan-hero-precio {
+  text-align: right;
+  justify-items: end;
+}
+
+/* Los renglones de "aplicar cupón" y "ajustar crédito": campo(s) y botón
+   en la misma línea, y el botón alineado con el borde de abajo del campo.
+   En la rejilla de dos columnas del formulario quedaban uno debajo de otro. */
+.np-card .np-form--row {
   display: flex;
   align-items: flex-end;
   gap: 8px;
   flex-wrap: wrap;
-  margin-bottom: 10px;
 }
 
-.np-inspector .np-form--row .np-field { flex: 1 1 160px; margin: 0; }
+.np-card .np-form--row .np-field {
+  flex: 1 1 180px;
+  margin: 0;
+}
 
-.np-search { min-width: 260px; }
+/* Cada sublista de la tarjeta de red lleva su propio título chico. */
+.np-bloque {
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+}
 
-@media (max-width: 720px) {
-  .np-search { min-width: 0; width: 100%; }
+/* ── La lista ───────────────────────────────────────────────────────── */
+/* La columna del uso del plan necesita un ancho fijo para que la barra
+   no baile de fila en fila. */
+.np-td-uso { width: 118px; }
+
+@media (max-width: 1100px) {
+  .np-ficha-cols { grid-template-columns: minmax(0, 1fr); }
+}
+
+@media (max-width: 760px) {
+  .np-ficha-head {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas: 'volver' 'quien' 'acciones';
+    align-items: start;
+  }
+  .np-ficha-id-copy h2 { font-size: 21px; }
+  .np-ficha-acciones { justify-content: stretch; .np-btn { flex: 1; } }
+  .np-plan-hero { padding: 12px 14px; }
+  .np-plan-hero-precio { text-align: left; justify-items: start; }
+  .np-td-uso { width: auto; }
 }

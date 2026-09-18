@@ -86,6 +86,9 @@ export class ConsolaReferidosComponent implements OnInit, OnDestroy {
     }
   }
 
+  porId(i: number, r: { id?: number }): number { return r?.id ?? i; }
+  porIndice(i: number): number { return i; }
+
   fecha(d: string | null | undefined): string {
     return d ? new Date(d).toLocaleDateString('es-CO') : '—';
   }

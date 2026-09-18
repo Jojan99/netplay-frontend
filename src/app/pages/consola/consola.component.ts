@@ -28,15 +28,25 @@ export class ConsolaComponent implements OnInit {
 
   usuario: UsuarioConsola | null = null;
 
+  /** Las secciones de la consola. El ícono es el `d` de un trazo solo. */
   readonly pestanas = [
-    { ruta: 'tablero',   titulo: 'Tablero' },
-    { ruta: 'empresas',  titulo: 'Empresas' },
-    { ruta: 'cobros',    titulo: 'Cobros' },
-    { ruta: 'planes',    titulo: 'Planes' },
-    { ruta: 'cupones',   titulo: 'Cupones' },
-    { ruta: 'referidos', titulo: 'Referidos' },
-    { ruta: 'bitacora',  titulo: 'Bitácora' },
+    { ruta: 'tablero',   titulo: 'Tablero',   icono: 'M3 3h7v7H3zM14 3h7v5h-7zM14 12h7v9h-7zM3 14h7v7H3z' },
+    { ruta: 'empresas',  titulo: 'Empresas',  icono: 'M3 21h18M5 21V5a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v16M15 10h2a2 2 0 0 1 2 2v9M9 7h2M9 11h2M9 15h2' },
+    { ruta: 'cobros',    titulo: 'Cobros',    icono: 'M2 6h20v12H2zM12 9a3 3 0 1 0 0 6 3 3 0 0 0 0-6M5.5 10v.01M18.5 14v.01' },
+    { ruta: 'planes',    titulo: 'Planes',    icono: 'M12 3 3 8l9 5 9-5-9-5ZM3 12l9 5 9-5M3 16l9 5 9-5' },
+    { ruta: 'cupones',   titulo: 'Cupones',   icono: 'M4 8a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2 2 2 0 0 0 0 4 2 2 0 0 0 0 4 2 2 0 0 1-2 2H6a2 2 0 0 1-2-2 2 2 0 0 0 0-4 2 2 0 0 0 0-4ZM14 6.5v2M14 11v2M14 15.5v2' },
+    { ruta: 'referidos', titulo: 'Referidos', icono: 'M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2M9 3a4 4 0 1 0 0 8 4 4 0 0 0 0-8M22 21v-2a4 4 0 0 0-3-3.9M16 3.1a4 4 0 0 1 0 7.8' },
+    { ruta: 'bitacora',  titulo: 'Bitácora',  icono: 'M8 6h12M8 12h12M8 18h12M3.5 6h.01M3.5 12h.01M3.5 18h.01' },
   ];
+
+  /** La letra del avatar de quien está adentro. */
+  get inicial(): string {
+    const quien = this.usuario?.nombre || this.usuario?.email || 'N';
+    return quien.charAt(0).toUpperCase();
+  }
+
+  /** Las pestañas no cambian nunca, pero Angular no tiene por qué rehacerlas. */
+  porRuta(_: number, p: { ruta: string }): string { return p.ruta; }
 
   ngOnInit(): void {
     this.usuario = this.sesion.usuario();

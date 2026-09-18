@@ -31,6 +31,9 @@ export class ConsolaBitacoraComponent implements OnInit, OnDestroy {
   desde = '';
   hasta = '';
 
+  /** Filas de mentira mientras llega la página. */
+  readonly esqueleto = [1, 2, 3, 4, 5, 6, 7, 8];
+
   ngOnInit(): void { this.cargar(); }
 
   ngOnDestroy(): void { this.destruir$.next(); this.destruir$.complete(); }
@@ -57,6 +60,38 @@ export class ConsolaBitacoraComponent implements OnInit, OnDestroy {
   }
 
   filtrar(): void { this.pagina = 1; this.cargar(); }
+
+  limpiar(): void {
+    this.accion = '';
+    this.desde = '';
+    this.hasta = '';
+    this.filtrar();
+  }
+
+  /**
+   * El color de la anotación por familia de acción: lo que se suspende o
+   * se anula se ve distinto de lo que sólo se guarda.
+   */
+  claseAccion(accion: string): string {
+    const a = accion || '';
+    if (a.includes('suspend') || a.includes('anul') || a.includes('borr') || a.includes('elimin')) return 'np-tag--peligro';
+    if (a.includes('reactiv') || a.includes('pago')  || a.includes('cobro')) return 'np-tag--bien';
+    if (a.includes('mora')) return 'np-tag--aviso';
+    return 'np-tag--neutral';
+  }
+
+  claseRaya(accion: string): string {
+    switch (this.claseAccion(accion)) {
+      case 'np-tag--peligro': return 'np-stripe--danger';
+      case 'np-tag--bien':    return 'np-stripe--ok';
+      case 'np-tag--aviso':   return 'np-stripe--warn';
+      default:                return 'np-stripe--neutral';
+    }
+  }
+
+  porId(i: number, b: { id?: number }): number { return b?.id ?? i; }
+  porTexto(i: number, t: string): string { return t ?? String(i); }
+  porIndice(i: number): number { return i; }
 
   ir(p: number): void {
     if (p < 1 || p > this.paginas) return;

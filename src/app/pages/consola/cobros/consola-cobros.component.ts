@@ -41,6 +41,13 @@ export class ConsolaCobrosComponent implements OnInit, OnDestroy {
 
   pesos = pesos;
 
+  /** Filas de mentira mientras llega la lista. */
+  readonly esqueleto = [1, 2, 3, 4, 5, 6];
+
+  porId(i: number, c: { id?: number }): number { return c?.id ?? i; }
+  porAviso(i: number, a: { company_id?: number }): number { return a?.company_id ?? i; }
+  porIndice(i: number): number { return i; }
+
   ngOnInit(): void { this.cargar(); }
 
   ngOnDestroy(): void { this.destruir$.next(); this.destruir$.complete(); }
@@ -95,5 +102,12 @@ export class ConsolaCobrosComponent implements OnInit, OnDestroy {
     if (c.estado === 'pagado')  return 'Pagado';
     if (c.estado === 'anulado') return 'Anulado';
     return c.vencido ? 'Vencido' : 'Pendiente';
+  }
+
+  /** El color de la raya de la izquierda de la fila. */
+  claseRaya(c: any): string {
+    if (c.estado === 'pagado')  return 'np-stripe--ok';
+    if (c.estado === 'anulado') return 'np-stripe--neutral';
+    return c.vencido ? 'np-stripe--danger' : 'np-stripe--info';
   }
 }

@@ -1,2 +1,14 @@
-/* La tabla de cobros tiene muchas columnas de plata: que no se parta el número. */
-.np-table--registry .np-money { white-space: nowrap; }
+/* Los cobros son ocho columnas de plata: la tabla necesita más ancho del
+   que cabe en un teléfono, así que se desplaza dentro de su tarjeta y la
+   página no se corre de lado. */
+.np-tabla-cobros { min-width: 880px; }
+
+/* Las cifras de la fila no deben bailar: el apunte de abajo (el cupón, lo
+   que ya pagó) va alineado con la cifra, en mono y chiquito. */
+.np-tabla-cobros .np-fine {
+  text-align: right;
+  font-family: var(--font-mono);
+}
+
+/* El puntito de color al lado del título de una tarjeta. */
+.np-card-h h2 .np-dot { margin-right: 8px; }

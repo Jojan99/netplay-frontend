@@ -1,11 +1,43 @@
 <div class="np-ingreso">
+
+  <!-- ══ Lado de marca: deja claro dónde está parado ═══════════════════ -->
+  <aside class="np-ingreso-marca" aria-hidden="true">
+    <span class="np-ingreso-logo">N</span>
+    <h2>Consola de la plataforma</h2>
+    <p>
+      Acá se administra Netvula entera: las empresas que la usan, sus planes,
+      los cobros y los cupones. No es el panel de ninguna empresa.
+    </p>
+    <ul class="np-ingreso-puntos">
+      <li>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 3l8 4v5c0 5-3.4 8.4-8 9.5C7.4 20.4 4 17 4 12V7l8-4Z"/><path d="m9 12 2 2 4-4"/>
+        </svg>
+        Sesión aparte de la de las empresas
+      </li>
+      <li>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M8 6h12M8 12h12M8 18h12M3.5 6h.01M3.5 12h.01M3.5 18h.01"/>
+        </svg>
+        Todo lo que se haga queda en la bitácora
+      </li>
+      <li>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 3v18M7 7h8a3 3 0 0 1 0 6H7h9a3 3 0 0 1 0 6"/>
+        </svg>
+        Suspender el acceso no le corta el internet a nadie
+      </li>
+    </ul>
+  </aside>
+
+  <!-- ══ La caja del ingreso ═══════════════════════════════════════════ -->
   <div class="np-ingreso-caja">
 
-    <header class="np-ingreso-marca">
-      <span class="np-ingreso-logo">N</span>
+    <header class="np-ingreso-cab">
+      <span class="np-ingreso-logo np-ingreso-logo--sm">N</span>
       <div>
         <h1>Consola Netvula</h1>
-        <p class="np-fine">La plataforma, no una empresa.</p>
+        <p class="np-fine">Entrá con tu cuenta de la consola.</p>
       </div>
       <span class="np-spacer"></span>
       <flowbite-dark-theme-toggle></flowbite-dark-theme-toggle>
@@ -14,6 +46,7 @@
     <form class="np-form" (ngSubmit)="ingresar()">
       <label class="np-field np-field-full"><span>Correo</span>
         <input type="email" class="np-input" [(ngModel)]="email" name="email"
+               placeholder="vos@netvula.com"
                autocomplete="username" autocapitalize="off" spellcheck="false" required />
       </label>
 
@@ -23,7 +56,7 @@
                  name="password" autocomplete="current-password" required />
           <button type="button" class="np-eye" (click)="verClave = !verClave"
                   [attr.aria-label]="verClave ? 'Ocultar la contraseña' : 'Ver la contraseña'">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
               <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/>
               <path *ngIf="!verClave" d="M3 3l18 18"/>
             </svg>
@@ -31,11 +64,11 @@
         </span>
       </label>
 
-      <p *ngIf="error" class="np-notice np-notice--danger np-field-full">{{ error }}</p>
+      <p *ngIf="error" class="np-notice np-notice--danger np-field-full" role="alert">{{ error }}</p>
 
-      <button type="submit" class="np-btn np-btn--primary np-field-full" [disabled]="cargando">
+      <button type="submit" class="np-btn np-btn--primary np-field-full np-ingreso-entrar" [disabled]="cargando">
         <span *ngIf="cargando" class="np-spinner np-spinner--sm"></span>
-        {{ cargando ? 'Entrando…' : 'Entrar' }}
+        {{ cargando ? 'Entrando…' : 'Entrar a la consola' }}
       </button>
     </form>
 

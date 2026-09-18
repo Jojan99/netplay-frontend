@@ -33,6 +33,12 @@ export class ConsolaPlanesComponent implements OnInit, OnDestroy {
   notaPrecios = '';
 
   planes: PlanConsola[] = [];
+  /** Resumen de la cinta de la cabecera, calculado al cargar. */
+  visibles = 0;
+  empresasConPlan = 0;
+
+  /** Filas de mentira mientras llega la lista. */
+  readonly esqueleto = [1, 2, 3, 4];
 
   modal = false;
   editando: PlanConsola | null = null;
@@ -64,6 +70,8 @@ export class ConsolaPlanesComponent implements OnInit, OnDestroy {
         this.enBase = d.en_base !== false;
         this.moneda = d.moneda ?? 'COP';
         this.notaPrecios = d.nota_precios ?? '';
+        this.visibles = this.planes.filter(p => p.activo).length;
+        this.empresasConPlan = this.planes.reduce((suma, p) => suma + (p.empresas || 0), 0);
         this.cargando = false;
       },
       error: e => { this.cargando = false; this.toast.error(e?.error?.message || 'No se pudieron cargar los planes.'); },
@@ -192,6 +200,22 @@ export class ConsolaPlanesComponent implements OnInit, OnDestroy {
       error: e => this.toast.error(e?.error?.message || 'No se pudo aplicar el precio.'),
     });
   }
+
+  /**
+   * Cuánto se ahorra quien paga el año de una: es la razón por la que
+   * alguien elige el ciclo anual, y no estaba escrita en ningún lado.
+   */
+  ahorroAnual(p: PlanConsola): string {
+    if (p.precio_anual === null || !p.precio_mensual) return '';
+
+    const doceMeses = p.precio_mensual * 12;
+    if (p.precio_anual >= doceMeses) return '';
+
+    return `ahorra ${Math.round(((doceMeses - p.precio_anual) / doceMeses) * 100)}%`;
+  }
+
+  porId(i: number, x: { id?: number | null }): number { return x?.id ?? i; }
+  porIndice(i: number): number { return i; }
 
   fecha(d: string | null | undefined): string {
     return d ? new Date(d).toLocaleString('es-CO', { dateStyle: 'short', timeStyle: 'short' }) : '—';

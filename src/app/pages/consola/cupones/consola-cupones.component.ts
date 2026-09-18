@@ -27,6 +27,13 @@ export class ConsolaCuponesComponent implements OnInit, OnDestroy {
   cupones: CuponConsola[] = [];
   planes: PlanConsola[] = [];
 
+  /** Resumen de la cinta de la cabecera, calculado al cargar. */
+  vigentes = 0;
+  usosTotales = 0;
+
+  /** Filas de mentira mientras llega la lista. */
+  readonly esqueleto = [1, 2, 3, 4];
+
   modal = false;
   editando: CuponConsola | null = null;
   forma = this.formaVacia();
@@ -52,6 +59,8 @@ export class ConsolaCuponesComponent implements OnInit, OnDestroy {
         this.cupones = r?.data?.cupones ?? [];
         this.planes = r?.data?.planes ?? [];
         this.migrada = r?.data?.migrada !== false;
+        this.vigentes = this.cupones.filter(c => c.activo && !c.vencido && !c.agotado).length;
+        this.usosTotales = this.cupones.reduce((suma, c) => suma + (c.usos || 0), 0);
         this.cargando = false;
       },
       error: e => { this.cargando = false; this.toast.error(e?.error?.message || 'No se pudieron cargar los cupones.'); },
@@ -195,6 +204,28 @@ export class ConsolaCuponesComponent implements OnInit, OnDestroy {
     if (!c.activo) return 'np-pill--neutral';
     return c.vencido || c.agotado ? 'np-pill--suspended' : 'np-pill--active';
   }
+
+  /** La raya de color de la izquierda, con el mismo idioma que la píldora. */
+  claseRaya(c: CuponConsola): string {
+    if (!c.activo) return 'np-stripe--neutral';
+    return c.vencido || c.agotado ? 'np-stripe--danger' : 'np-stripe--ok';
+  }
+
+  /** Cuánto le queda al cupón antes de agotarse. */
+  porcentajeUso(c: CuponConsola): number {
+    if (!c.usos_maximos) return 0;
+    return Math.min(100, Math.round((c.usos / c.usos_maximos) * 100));
+  }
+
+  claseUso(c: CuponConsola): string {
+    const p = this.porcentajeUso(c);
+    if (p >= 100) return 'is-over';
+    return p >= 80 ? 'is-warn' : '';
+  }
+
+  porId(i: number, c: { id?: number }): number { return c?.id ?? i; }
+  porClave(i: number, p: PlanConsola): string { return p?.clave ?? String(i); }
+  porIndice(i: number): number { return i; }
 
   fecha(d: string | null | undefined): string {
     return d ? new Date(d).toLocaleDateString('es-CO') : '—';

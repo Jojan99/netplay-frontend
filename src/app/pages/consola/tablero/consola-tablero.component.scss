@@ -1,10 +1,13 @@
-/* Gráfico de barras propio: un canvas para doce números no se justifica. */
+/* Gráfico de barras propio: un canvas para doce números no se justifica.
+   Cada mes tiene su carril: así un mes en cero se ve como un mes en cero y
+   no como un hueco, y las doce columnas quedan parejas. */
 .np-barras {
   display: flex;
   align-items: flex-end;
   gap: 6px;
-  height: 160px;
-  padding: 8px 4px 0;
+  height: 180px;
+  padding: 8px 2px 0;
+  border-bottom: 1px solid var(--line);
 }
 
 .np-barra {
@@ -17,17 +20,31 @@
   min-width: 0;
 }
 
-.np-barra i {
-  display: block;
+/* El carril gris de fondo. */
+.np-barra-p {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
   width: 100%;
   max-width: 34px;
+  flex: 1;
+  min-height: 0;
+  border-radius: 3px 3px 0 0;
+  background: var(--surface-2);
+}
+
+.np-barra-p i {
+  display: block;
+  width: 100%;
   min-height: 2px;
   border-radius: 3px 3px 0 0;
   background: var(--accent);
-  transition: height .25s ease;
+  transition: height .25s ease, filter .12s;
 }
 
-.np-barra i.np-barra--ok { background: var(--ok); }
+.np-barra-p i.np-barra--ok { background: var(--ok); }
+
+.np-barra:hover .np-barra-p i { filter: brightness(1.12); }
 
 .np-barra-n {
   font: 600 11px/1 var(--font-mono);
@@ -43,7 +60,19 @@
   white-space: nowrap;
 }
 
+/* Mientras llegan los datos: los carriles vacíos, latiendo. */
+.np-barras--cargando {
+  background:
+    repeating-linear-gradient(90deg, var(--surface-2) 0 26px, transparent 26px 34px);
+  opacity: .7;
+  animation: np-shimmer 1.2s infinite;
+  background-size: 200% 100%;
+}
+
+/* El puntito de color al lado del título de una tarjeta. */
+.np-card-h h2 .np-dot { margin-right: 8px; }
+
 @media (max-width: 720px) {
-  .np-barras { height: 130px; }
+  .np-barras { height: 140px; }
   .np-barra-m { font-size: 9px; transform: rotate(-45deg); transform-origin: center; }
 }

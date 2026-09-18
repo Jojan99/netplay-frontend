@@ -5,34 +5,38 @@
       <p class="np-kicker">Netvula <b>/</b> Consola</p>
       <h1 class="np-title">La plataforma de un vistazo</h1>
       <div class="np-ribbon" [class.np-ribbon--loading]="cargando">
-        <span><i class="np-dot" style="background:var(--accent)"></i><span class="np-n">{{ empresas.total || 0 }}</span>empresas</span>
-        <span><i class="np-dot" style="background:var(--ok)"></i><span class="np-n">{{ clientes.total || 0 }}</span>clientes en total</span>
-        <span *ngIf="enMora.length"><i class="np-dot" style="background:var(--danger)"></i><span class="np-n">{{ enMora.length }}</span>en mora</span>
+        <span><i class="np-dot np-dot--accent"></i><span class="np-n">{{ empresas.total || 0 }}</span>empresas</span>
+        <span><i class="np-dot np-dot--ok"></i><span class="np-n">{{ clientes.total || 0 }}</span>clientes en total</span>
+        <span *ngIf="enMora.length"><i class="np-dot np-dot--danger"></i><span class="np-n">{{ enMora.length }}</span>en mora</span>
       </div>
     </div>
     <div class="np-actions">
-      <button type="button" class="np-btn" (click)="cargar(true)" [disabled]="refrescando">
+      <button type="button" class="np-btn np-btn--ghost" (click)="cargar(true)" [disabled]="refrescando">
         <span *ngIf="refrescando" class="np-spinner np-spinner--sm"></span>
+        <svg *ngIf="!refrescando" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M21 12a9 9 0 1 1-2.6-6.4M21 3v6h-6"/>
+        </svg>
         {{ refrescando ? 'Preguntando al ACS…' : 'Refrescar' }}
       </button>
     </div>
   </header>
 
   <p *ngIf="!migrada" class="np-notice np-notice--warn">
-    Falta correr la migración de la consola. Se ve el estado de las empresas, pero todavía no hay planes asignados,
-    ni cobros, ni bitácora.
+    <strong>Falta correr la migración de la consola.</strong>
+    Se ve el estado de las empresas, pero todavía no hay planes asignados, ni cobros, ni bitácora.
   </p>
 
   <div class="np-scroll">
 
-    <section class="np-kpis np-kpis--5" aria-label="Empresas y clientes">
+    <!-- ══ El negocio ══════════════════════════════════════════════════ -->
+    <section class="np-kpis np-kpis--5" [class.is-cargando]="cargando" aria-label="Empresas, clientes e ingresos">
       <div class="np-kpi np-kpi--accent">
         <span class="np-kpi-l">Empresas</span>
         <span class="np-kpi-v">{{ empresas.total || 0 }}</span>
         <span class="np-kpi-s">
-          <i class="np-dot" style="background:var(--ok)"></i>{{ empresas.activas || 0 }} activas ·
-          <i class="np-dot" style="background:var(--info)"></i>{{ empresas.en_prueba || 0 }} en prueba ·
-          <i class="np-dot" style="background:var(--danger)"></i>{{ empresas.suspendidas || 0 }} suspendidas
+          <i class="np-dot np-dot--ok"></i>{{ empresas.activas || 0 }} activas ·
+          <i class="np-dot np-dot--info"></i>{{ empresas.en_prueba || 0 }} en prueba ·
+          <i class="np-dot np-dot--danger"></i>{{ empresas.suspendidas || 0 }} suspendidas
         </span>
       </div>
       <div class="np-kpi">
@@ -57,7 +61,8 @@
       </div>
     </section>
 
-    <section class="np-kpis np-kpis--5" aria-label="Qué usa cada empresa">
+    <!-- ══ Qué usa cada empresa ════════════════════════════════════════ -->
+    <section class="np-kpis np-kpis--5" [class.is-cargando]="cargando" aria-label="Qué usa cada empresa">
       <div class="np-kpi">
         <span class="np-kpi-l">Con OLT</span>
         <span class="np-kpi-v">{{ red.con_olt || 0 }}</span>
@@ -72,7 +77,7 @@
         <span class="np-kpi-l">Con TR-069</span>
         <span class="np-kpi-v">{{ red.con_tr069 || 0 }}</span>
         <span class="np-kpi-s">
-          {{ red.equipos_tr069 || 0 }} equipos reportando al ACS
+          {{ red.equipos_tr069 || 0 }} equipos en el ACS
           <b *ngIf="red.acs_sin_respuesta" class="np-neg"> · {{ red.acs_sin_respuesta }} sin respuesta</b>
         </span>
       </div>
@@ -88,54 +93,80 @@
       </div>
     </section>
 
+    <!-- ══ Cómo viene creciendo ════════════════════════════════════════ -->
     <section class="np-grid-2">
       <div class="np-card">
-        <div class="np-card-h"><h2>Empresas nuevas por mes</h2><span class="np-card-meta">últimos 12 meses</span></div>
-        <div class="np-barras">
-          <div class="np-barra" *ngFor="let b of barrasEmpresas">
+        <div class="np-card-h">
+          <h2>Empresas nuevas por mes</h2>
+          <span class="np-card-meta">últimos 12 meses</span>
+        </div>
+        <div class="np-barras" *ngIf="!cargando">
+          <div class="np-barra" *ngFor="let b of barrasEmpresas; trackBy: porMes"
+               [attr.title]="b.altas + ' empresa(s) en ' + b.etiqueta">
             <span class="np-barra-n">{{ b.altas || '' }}</span>
-            <i [style.height.%]="b.alto"></i>
+            <span class="np-barra-p"><i [style.height.%]="b.alto"></i></span>
             <span class="np-barra-m">{{ b.etiqueta }}</span>
           </div>
         </div>
+        <div class="np-barras np-barras--cargando" *ngIf="cargando" aria-hidden="true"></div>
       </div>
 
       <div class="np-card">
-        <div class="np-card-h"><h2>Clientes nuevos por mes</h2><span class="np-card-meta">sumando todas las empresas</span></div>
-        <div class="np-barras">
-          <div class="np-barra" *ngFor="let b of barrasClientes">
+        <div class="np-card-h">
+          <h2>Clientes nuevos por mes</h2>
+          <span class="np-card-meta">sumando todas las empresas</span>
+        </div>
+        <div class="np-barras" *ngIf="!cargando">
+          <div class="np-barra" *ngFor="let b of barrasClientes; trackBy: porMes"
+               [attr.title]="b.altas + ' cliente(s) en ' + b.etiqueta">
             <span class="np-barra-n">{{ b.altas || '' }}</span>
-            <i class="np-barra--ok" [style.height.%]="b.alto"></i>
+            <span class="np-barra-p"><i class="np-barra--ok" [style.height.%]="b.alto"></i></span>
             <span class="np-barra-m">{{ b.etiqueta }}</span>
           </div>
         </div>
+        <div class="np-barras np-barras--cargando" *ngIf="cargando" aria-hidden="true"></div>
       </div>
     </section>
 
+    <!-- ══ A quién hay que llamar ══════════════════════════════════════ -->
     <section class="np-grid-2">
       <div class="np-card">
-        <div class="np-card-h"><h2>En mora</h2><span class="np-card-meta">{{ enMora.length }} cobro(s) vencidos</span></div>
-        <table class="np-table np-table--compact">
+        <div class="np-card-h">
+          <h2><i class="np-dot np-dot--danger"></i>En mora</h2>
+          <span class="np-card-meta" *ngIf="enMora.length"><b>{{ enMora.length }}</b> cobro(s) vencidos</span>
+        </div>
+
+        <table class="np-table np-table--compact" *ngIf="enMora.length">
           <thead><tr><th>Empresa</th><th>Período</th><th class="np-th-right">Saldo</th><th class="np-th-right">Días</th></tr></thead>
           <tbody>
-            <tr *ngIf="!enMora.length" class="np-empty"><td colspan="4"><strong>Nadie en mora.</strong></td></tr>
-            <tr *ngFor="let m of enMora">
+            <tr *ngFor="let m of enMora; trackBy: porAviso">
               <td><a class="np-link" [routerLink]="['/consola/empresas']" [queryParams]="{ empresa: m.company_id }">{{ m.empresa }}</a></td>
               <td class="np-data np-data--dim">{{ m.periodo }}</td>
-              <td class="np-td-right np-money">{{ pesos(m.saldo) }}</td>
+              <td class="np-td-right np-money np-neg">{{ pesos(m.saldo) }}</td>
               <td class="np-td-right"><span class="np-pill np-pill--suspended">{{ m.dias }}</span></td>
             </tr>
           </tbody>
         </table>
+
+        <div class="np-nada" *ngIf="!enMora.length && !cargando">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="m5 13 4 4L19 7"/>
+          </svg>
+          <b>Nadie está en mora.</b>
+          <span>Todas las empresas con plan están al día con lo que le deben a Netvula.</span>
+        </div>
       </div>
 
       <div class="np-card">
-        <div class="np-card-h"><h2>Por vencer</h2><span class="np-card-meta">próximos 7 días</span></div>
-        <table class="np-table np-table--compact">
+        <div class="np-card-h">
+          <h2><i class="np-dot np-dot--info"></i>Por vencer</h2>
+          <span class="np-card-meta">próximos 7 días</span>
+        </div>
+
+        <table class="np-table np-table--compact" *ngIf="porVencer.length">
           <thead><tr><th>Empresa</th><th>Ciclo</th><th>Próxima</th><th class="np-th-right">Faltan</th></tr></thead>
           <tbody>
-            <tr *ngIf="!porVencer.length" class="np-empty"><td colspan="4"><strong>Nada por vencer esta semana.</strong></td></tr>
-            <tr *ngFor="let v of porVencer">
+            <tr *ngFor="let v of porVencer; trackBy: porAviso">
               <td><a class="np-link" [routerLink]="['/consola/empresas']" [queryParams]="{ empresa: v.company_id }">{{ v.empresa }}</a></td>
               <td class="np-data np-data--dim">{{ v.ciclo }}</td>
               <td class="np-data">{{ v.proxima }}</td>
@@ -143,6 +174,14 @@
             </tr>
           </tbody>
         </table>
+
+        <div class="np-nada" *ngIf="!porVencer.length && !cargando">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M8 2v4M16 2v4M3 10h18M5 6h14a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2Z"/>
+          </svg>
+          <b>Esta semana no vence nada.</b>
+          <span>Acá van a aparecer las empresas a las que hay que facturarles en los próximos siete días.</span>
+        </div>
       </div>
     </section>
 
