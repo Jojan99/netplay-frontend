@@ -30,11 +30,43 @@ export class ContractService {
     return this.http.get(`${this.base}/${id}`, { headers: this.getHeaders() });
   }
 
+  // ── Parametrización ───────────────────────────────────────────────────────
+
+  /** Catálogo de variables (etiqueta, grupo, ayuda y ejemplo) que arma el backend. */
+  getVariables(): Observable<any> {
+    return this.http.get(`${this.base}/variables`, { headers: this.getHeaders() });
+  }
+
+  /** Vista previa del contrato con los datos reales de un cliente. */
+  vistaPrevia(data: { content: string; user_id?: number; contract_id?: number; installation_value?: string; plazo?: string }): Observable<any> {
+    return this.http.post(`${this.base}/vista-previa`, JSON.stringify(data), { headers: this.getHeaders() });
+  }
+
+  /**
+   * El PDF estampado de verdad con los datos de un cliente real y las posiciones
+   * que hay en pantalla, aunque todavía no se hayan guardado.
+   */
+  pdfPrueba(contractId: number, body: { user_id?: number; fields?: any[] }): Observable<Blob> {
+    const headers = new HttpHeaders({ 'Content-Type': 'application/json', Authorization: `Bearer ${localStorage.getItem('token')}` });
+    return this.http.post(`${this.base}/${contractId}/pdf-prueba`, JSON.stringify(body), { headers, responseType: 'blob' });
+  }
+
+  /** Vista previa con los avisos de variables vacías, para el modo PDF. */
+  revisarVariables(data: { variables: string[]; user_id?: number; contract_id?: number }): Observable<any> {
+    return this.http.post(`${this.base}/vista-previa`, JSON.stringify({ ...data, content: '' }), { headers: this.getHeaders() });
+  }
+
+  /** PDF base de la plantilla. Ya no se sirve en /storage: va con el JWT. */
+  getPdfBaseBlob(contractId: number): Observable<Blob> {
+    const headers = new HttpHeaders({ Authorization: `Bearer ${localStorage.getItem('token')}` });
+    return this.http.get(`${this.base}/${contractId}/pdf-base-archivo`, { headers, responseType: 'blob' });
+  }
+
   create(data: { title: string; content: string; active?: boolean; installation_value?: string }): Observable<any> {
     return this.http.post(this.base, JSON.stringify(data), { headers: this.getHeaders() });
   }
 
-  update(id: number, data: { title: string; content: string; active: boolean; logo?: string; installation_value?: string; pdf_path?: string }): Observable<any> {
+  update(id: number, data: { title: string; content: string; active: boolean; logo?: string; installation_value?: string; plazo?: string; terminos?: string; pdf_path?: string }): Observable<any> {
     return this.http.put(`${this.base}/${id}`, JSON.stringify(data), { headers: this.getHeaders() });
   }
 

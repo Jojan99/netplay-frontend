@@ -1,4 +1,4 @@
-import { Component, OnInit, ElementRef, ViewChild } from '@angular/core';
+import { Component, OnInit, OnDestroy, ElementRef, NgZone, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ContractService } from '../../services/contract.service';
@@ -10,9 +10,19 @@ import { NpSelectComponent, PresentacionSelect } from '../../common/np-select/np
 
 const PESOS = new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 });
 
-// Configurar worker de pdfjs (requerido en producción)
+// Worker de pdfjs (requerido en producción)
 const PDFJS_VERSION = (pdfjsLib as any).version || '4.5.136';
 pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${PDFJS_VERSION}/pdf.worker.min.mjs`;
+
+/* ── Conversiones del editor de posiciones ─────────────────────────────────
+   El PDF se arma con FPDI sin argumentos, o sea en MILÍMETROS, pero el tamaño
+   de fuente va en puntos. Las coordenadas guardadas son milímetros desde la
+   esquina superior izquierda de la página, y el punto marcado es la esquina
+   superior izquierda del texto. Estas constantes son las mismas que usa
+   ContractPdfService para estampar: si se tocan, hay que tocar las dos.        */
+const PT_A_MM = 25.4 / 72;
+const ALTURA_MAYUSCULAS = 0.717;
+const FUENTE_MINIMA = 0.6;
 
 interface Contract {
   id: number;
@@ -20,9 +30,9 @@ interface Contract {
   content: string;
   logo?: string;
   pdf_path?: string;
-  pdf_url?: string;
   installation_value?: string;
   plazo?: string;
+  terminos?: string;
   active: boolean;
   created_at: string;
 }
@@ -32,13 +42,17 @@ interface ClientContract {
   status: 'pending' | 'signed';
   token: string;
   signed_at: string | null;
+  created_at?: string | null;
+  sent_at?: string | null;
+  sent_channel?: string | null;
+  opened_at?: string | null;
   require_documents: boolean;
   document_front_path?: string;
   document_back_path?: string;
   document_number_front?: string;
   document_number_back?: string;
-  contract: { id: number; title: string };
-  user: { id: number; username: string; names?: string; lastname?: string; phone?: string; email?: string; dni?: string };
+  contract?: { id: number; title: string };
+  user?: { id: number; username: string; names?: string; lastname?: string; phone?: string; email?: string; dni?: string };
 }
 
 interface Client {
@@ -50,7 +64,33 @@ interface Client {
   email: string;
 }
 
+/** Una variable del catálogo, tal como la manda el backend. */
+interface Variable {
+  clave: string;
+  etiqueta: string;
+  grupo: string;
+  ayuda: string;
+  ejemplo: string;
+  solo_pdf?: boolean;
+}
+
+interface GrupoVariables {
+  nombre: string;
+  items: Variable[];
+}
+
+interface CampoPdf {
+  variable: string;
+  page: number;
+  x: number;
+  y: number;
+  font_size: number;
+  color: string;
+  max_width: number;
+}
+
 type Tab = 'templates' | 'assigned';
+type Modo = 'html' | 'pdf';
 
 @Component({
   selector: 'app-contracts',
@@ -60,10 +100,10 @@ type Tab = 'templates' | 'assigned';
   styleUrl: './contracts.component.scss',
   host: { class: 'np-console' },
 })
-export class ContractsComponent implements OnInit {
+export class ContractsComponent implements OnInit, OnDestroy {
 
-  get signedCount():  number { return this.assignedContracts.filter(c => c.status === 'signed').length; }
-  get pendingCount(): number { return this.assignedContracts.filter(c => c.status !== 'signed').length; }
+  signedCount  = 0;
+  pendingCount = 0;
 
   activeTab: Tab = 'templates';
 
@@ -73,154 +113,92 @@ export class ContractsComponent implements OnInit {
   showTemplateModal          = false;
   isEditing                  = false;
   isSaving                   = false;
-  templateForm               = { id: 0, title: '', content: '', active: true, installation_value: '', plazo: '12' };
+  templateForm               = { id: 0, title: '', content: '', active: true, installation_value: '', plazo: '12', terminos: '' };
   deleteConfirmId: number | null = null;
   isDeleting                 = false;
 
-  // ── PDF Upload / Guía ────────────────────────────────────────────────────
-  pdfFile: File | null       = null;
+  /** Pestañas del editor de plantilla. */
+  seccion: 'contenido' | 'previa' | 'pdf' = 'contenido';
+
+  // ── PDF de guía (transcribir) ─────────────────────────────────────────────
   isUploadingPdf             = false;
-  pdfGuideUrl: string | null = null;   // URL del PDF original para mostrar como guía
+  pdfGuideUrl: string | null = null;
 
-  // ── PDF Base (fondo exacto del contrato) ───────────────────────────────────
-  pdfBaseFile: File | null   = null;
+  // ── PDF base (fondo exacto) ───────────────────────────────────────────────
   isUploadingPdfBase         = false;
-  hasPdfBase                 = false;  // Indica si el contrato ya tiene PDF base
-  pdfBaseUrl: string | null  = null;   // URL pública del PDF base
+  hasPdfBase                 = false;
 
-  // ── Logo Upload ───────────────────────────────────────────────────────────
-  logoFile: File | null      = null;
+  // ── Logo ──────────────────────────────────────────────────────────────────
   logoPreview: string | null = null;
   isUploadingLogo            = false;
 
-  // ── Preview HTML ──────────────────────────────────────────────────────────
-  showPreview                = false;
+  // ── Catálogo de variables ─────────────────────────────────────────────────
+  variables: Variable[] = [];
+  gruposVariables: GrupoVariables[] = [];
+  private etiquetas = new Map<string, string>();
+  private ejemplos: Record<string, string> = {};
+  buscarVar = '';
 
-  // ── PDF Coordinate Picker ─────────────────────────────────────────────────
-  pdfPickerActive            = false;
-  pdfPickerVariable          = '';
-  pdfFields: Array<{id?:number, variable:string, page:number, x:number, y:number, font_size:number, color:string, max_width:number}> = [];
-  pdfDimensions: {pageCount:number, pages:Array<{page:number, width:number, height:number, orientation:string}>} | null = null;
-  pdfPickerPage              = 1;
+  // ── Vista previa con datos reales ─────────────────────────────────────────
+  previaBuscar = '';
+  previaResultados: Client[] = [];
+  previaCliente: Client | null = null;
+  previaHtml: SafeHtml | null = null;
+  previaVacias: string[] = [];
+  previaDesconocidas: string[] = [];
+  previaUsadas: string[] = [];
+  cargandoPrevia = false;
+  private temporizadorPrevia: any = null;
 
-  // Canvas rendering del PDF (pixel-perfect)
-  @ViewChild('pdfCanvas') pdfCanvasRef!: ElementRef<HTMLCanvasElement>;
-  @ViewChild('pdfImage') pdfImageRef!: ElementRef<HTMLImageElement>;
-  pdfCanvasUrl: string | null = null;
+  // ── Editor de posiciones sobre el PDF ─────────────────────────────────────
+  @ViewChild('pdfCanvas') pdfCanvasRef?: ElementRef<HTMLCanvasElement>;
+  pdfCampos: CampoPdf[] = [];
+  pdfPaginas: Array<{ page: number; width: number; height: number; orientation: string }> = [];
+  pdfPagina = 1;
+  varElegida = '';
+  campoSel: number | null = null;
   isRenderingPdf = false;
-  pdfRenderScale = 1.5;
-  pdfImageUrl: string | null = null;
-  cursorCoords: {x:number, y:number, pdfX:number, pdfY:number} | null = null;
-  pdfPreviewMode = false;  // true = muestra datos dummy sobre el PDF
+  pdfListo = false;
+  guardandoCampos = false;
+  avisoRotacion = '';
+  camposSucios = false;
+  zoomPdf = 1;
+  camposFuera: string[] = [];
+  faltanDatos: string[] = [];
+  generandoPrueba = false;
+  avisoPdfCambiado = '';
+  readonly TERMINOS_POR_DEFECTO = 'Declaro que leí el contrato completo, que los datos que aparecen en él son correctos y que acepto sus términos y condiciones. Entiendo que esta firma electrónica tiene la misma validez que una firma de puño y letra.';
 
-  // Valores dummy para preview visual (se actualizan dinámicamente)
-  get pdfPreviewValues(): Record<string, string> {
-    const instVal = this.templateForm.installation_value;
-    const instValP = this.templateForm.plazo;
-    const formattedInst = instVal && parseFloat(instVal) > 0
-      ? '$' + new Intl.NumberFormat('es-CO', { minimumFractionDigits: 0, maximumFractionDigits: 2 }).format(parseFloat(instVal))
-      : '$60.000';
-    const plazo = instValP ? parseInt(instValP) : 12; // meses
+  private docPdf: any = null;
+  private baseUrlObjeto: string | null = null;
+  private lienzoPagina: HTMLCanvasElement | null = null;
+  private pxPorMm = 1;
+  private arrastrando = false;
+  private agarre = { dx: 0, dy: 0 };
+  private repintado = 0;
 
-    return {
-      '{{nombre}}': 'JUAN',
-      '{{apellido}}': 'PEREZ',
-      '{{nombre_completo}}': 'JUAN PEREZ',
-      '{{dni}}': '12345678',
-      '{{telefono}}': '3001234567',
-      '{{email}}': 'juan@ejemplo.com',
-      '{{direccion}}': 'Calle 123 # 45-67',
-      '{{fecha}}': '16/07/2026',
-      '{{contrato_id}}': '999',
-      '{{dia}}': '16',
-      '{{mes}}': '07',
-      '{{anio}}': '2026',
-      '{{plan_nombre}}': 'INTERNET 200MB',
-      '{{plan_velocidad}}': '200 Mb',
-      '{{plan_precio}}': '$50.000',
-      '{{plan_instalacion}}': formattedInst,
-      '{{promocion_nombre}}': 'PROMO VERANO',
-      '{{check_200mb}}': 'X',
-      '{{check_300mb}}': '',
-      '{{check_400mb}}': '',
-      '{{check_otra}}': '',
-      '{{check_os_nuevo}}': 'X',
-      '{{check_os_mod}}': '',
-      '{{check}}': 'X',
-      '{{tipo_documento}}': 'CC',
-      '{{valor_instalacion}}': formattedInst,
-      '{{plazo}}': plazo.toString(),
-      '{{firma}}': 'FIRMA',
-    };
-  }
-
-  // ── Variables rápidas ─────────────────────────────────────────────────────
-  quickVars = [
-    { label: 'Nombre',            code: '{{nombre}}' },
-    { label: 'Apellido',          code: '{{apellido}}' },
-    { label: 'Nombre completo',   code: '{{nombre_completo}}' },
-    { label: 'DNI',               code: '{{dni}}' },
-    { label: 'Teléfono',          code: '{{telefono}}' },
-    { label: 'Email',             code: '{{email}}' },
-    { label: 'Dirección',         code: '{{direccion}}' },
-    { label: 'Fecha',             code: '{{fecha}}' },
-    // Fecha separada
-    { label: 'Día',               code: '{{dia}}' },
-    { label: 'Mes',               code: '{{mes}}' },
-    { label: 'Año',               code: '{{anio}}' },
-    // Documento
-    { label: 'Tipo documento',    code: '{{tipo_documento}}' },
-    // Plan de internet
-    { label: 'Plan nombre',       code: '{{plan_nombre}}' },
-    { label: 'Plan velocidad',    code: '{{plan_velocidad}}' },
-    { label: 'Plan precio',       code: '{{plan_precio}}' },
-    { label: 'Plan instalación',  code: '{{plan_instalacion}}' },
-    { label: 'Promoción',         code: '{{promocion_nombre}}' },
-    { label: 'Valor instalación', code: '{{valor_instalacion}}' },
-    { label: 'Plazo',             code: '{{plazo}}' },
-    // Checks velocidad
-    { label: 'Check 200 Mb',      code: '{{check_200mb}}' },
-    { label: 'Check 300 Mb',      code: '{{check_300mb}}' },
-    { label: 'Check 400 Mb',      code: '{{check_400mb}}' },
-    { label: 'Check Otra vel.',   code: '{{check_otra}}' },
-    // Checks OS
-    { label: 'Check OS Nuevo',    code: '{{check_os_nuevo}}' },
-    { label: 'Check OS Modif.',   code: '{{check_os_mod}}' },
-    // Check simple
-    { label: 'Check (siempre X)', code: '{{check}}' },
-    // Firma posicionada
-    { label: 'Firma (imagen)',    code: '{{firma}}' },
-    { label: 'ID Contrato',       code: '{{contrato_id}}' },
-  ];
-
-  /** Variables del editor de PDF: la etiqueta, la clave debajo y agrupadas (son casi 30). Guarda el code, como [value]. */
-  readonly presVariablesPdf: PresentacionSelect = {
-    valor: v => v?.code,
-    etiqueta: v => v?.label ?? '',
-    detalle: v => v?.code,
-    grupo: v => {
-      const code = String(v?.code ?? '');
-      if (/^\{\{(fecha|dia|mes|anio)\}\}$/.test(code)) return 'Fecha';
-      if (/^\{\{check/.test(code)) return 'Casillas';
-      if (/^\{\{(plan_|promocion_|valor_instalacion|plazo)/.test(code)) return 'Plan y valores';
-      if (/^\{\{(firma|contrato_id)\}\}$/.test(code)) return 'Firma y contrato';
-      return 'Cliente';
-    },
+  /** Variables del editor de PDF: etiqueta arriba, clave debajo y agrupadas. */
+  readonly presVariablesPdf: PresentacionSelect<Variable> = {
+    valor: v => v?.clave,
+    etiqueta: v => v?.etiqueta ?? '',
+    detalle: v => v?.clave,
+    grupo: v => v?.grupo ?? 'Cliente',
   };
 
-  /** Páginas del PDF: guarda el número (antes [ngValue]="p.page") y muestra orientación y tamaño. */
+  /** Páginas del PDF: guarda el número y muestra orientación y tamaño en mm. */
   readonly presPaginasPdf: PresentacionSelect = {
     valor: p => p?.page,
     etiqueta: p => `Página ${p?.page}`,
     detalle: p => {
       const orientacion = ({ portrait: 'Vertical', landscape: 'Horizontal' } as Record<string, string>)[p?.orientation] ?? p?.orientation;
-      const tamano = p?.width && p?.height ? `${Math.round(p.width)} × ${Math.round(p.height)}` : null;
+      const tamano = p?.width && p?.height ? `${Math.round(p.width)} × ${Math.round(p.height)} mm` : null;
       return [orientacion, tamano].filter(Boolean).join(' · ') || null;
     },
   };
 
   // ── Asignación ────────────────────────────────────────────────────────────
   assignedContracts: ClientContract[] = [];
+  asignadosFiltrados: ClientContract[] = [];
   isLoadingAssigned                   = false;
   showAssignModal                     = false;
   isAssigning                         = false;
@@ -231,10 +209,6 @@ export class ContractsComponent implements OnInit {
   selectedContractId                  = 0;
   requireDocuments                    = false;
 
-  /**
-   * Plantillas al asignar: el valor de instalación y si es un PDF. Guarda el id
-   * como número, igual que openAssign (el select viejo lo pasaba a texto al cambiar).
-   */
   readonly presContratos: PresentacionSelect<Contract> = {
     valor: c => c.id,
     etiqueta: c => c.title ?? '',
@@ -253,22 +227,10 @@ export class ContractsComponent implements OnInit {
   documentNumberFront = '';
   documentNumberBack = '';
 
-  // ── Filtro asignados ─────────────────────────────────────────────────────
+  // ── Filtro y estado de asignados ─────────────────────────────────────────
   assignedSearch = '';
+  filtroEstado: 'todos' | 'pending' | 'signed' = 'todos';
 
-  get filteredAssigned(): ClientContract[] {
-    const q = this.assignedSearch.trim().toLowerCase();
-    if (!q) return this.assignedContracts;
-    return this.assignedContracts.filter(cc =>
-      cc.user.names?.toLowerCase().includes(q)      ||
-      cc.user.lastname?.toLowerCase().includes(q)   ||
-      cc.user.dni?.toLowerCase().includes(q)        ||
-      cc.user.username?.toLowerCase().includes(q)   ||
-      cc.contract.title.toLowerCase().includes(q)
-    );
-  }
-
-  // ── Eliminar contrato asignado ────────────────────────────────────────────
   deleteClientContractId: number | null = null;
   isDeletingAssigned                    = false;
 
@@ -280,7 +242,6 @@ export class ContractsComponent implements OnInit {
   isSendingEmail                       = false;
   copiedId: number | null              = null;
 
-  // ── Feedback ──────────────────────────────────────────────────────────────
   successMsg = '';
   errorMsg   = '';
 
@@ -290,18 +251,61 @@ export class ContractsComponent implements OnInit {
     private contractService: ContractService,
     private userService: UserService,
     private sanitizer: DomSanitizer,
+    private zone: NgZone,
   ) {}
-
-  get safePdfBaseUrl(): SafeResourceUrl | null {
-    if (!this.pdfBaseUrl) return null;
-    const url = this.pdfBaseUrl + '#page=' + this.pdfPickerPage + '&toolbar=0&navpanes=0&scrollbar=0&zoom=page-width';
-    return this.sanitizer.bypassSecurityTrustResourceUrl(url);
-  }
 
   ngOnInit(): void {
     this.loadContracts();
     this.loadAssigned();
+    this.cargarVariables();
   }
+
+  ngOnDestroy(): void {
+    this.soltarPdf();
+  }
+
+  // ── Catálogo de variables ─────────────────────────────────────────────────
+
+  /**
+   * La lista la manda el backend: es la misma que reemplaza al firmar. Antes
+   * estaba copiada acá y ofrecía variables que el backend no conocía.
+   */
+  private cargarVariables(): void {
+    this.contractService.getVariables().subscribe({
+      next: r => {
+        if (r.status !== 0) return;
+        this.variables = r.data ?? [];
+        this.ejemplos = {};
+        this.etiquetas.clear();
+        this.variables.forEach(v => {
+          this.ejemplos[v.clave] = v.ejemplo;
+          this.etiquetas.set(v.clave, v.etiqueta);
+        });
+        this.agruparVariables();
+      },
+    });
+  }
+
+  /** Se recalcula sólo al cargar o al filtrar: nunca desde la plantilla. */
+  private agruparVariables(): void {
+    const texto = this.buscarVar.trim().toLowerCase();
+    const grupos = new Map<string, Variable[]>();
+
+    this.variables.forEach(v => {
+      if (texto && !(`${v.etiqueta} ${v.clave} ${v.ayuda}`.toLowerCase().includes(texto))) return;
+      if (!grupos.has(v.grupo)) grupos.set(v.grupo, []);
+      grupos.get(v.grupo)!.push(v);
+    });
+
+    this.gruposVariables = Array.from(grupos, ([nombre, items]) => ({ nombre, items }));
+  }
+
+  filtrarVariables(): void { this.agruparVariables(); }
+
+  etiquetaVar(clave: string): string { return this.etiquetas.get(clave) ?? clave; }
+
+  /** Modo de la plantilla: PDF con coordenadas o plantilla HTML. */
+  get modo(): Modo { return this.hasPdfBase ? 'pdf' : 'html'; }
 
   // ── Plantillas ────────────────────────────────────────────────────────────
 
@@ -315,15 +319,12 @@ export class ContractsComponent implements OnInit {
 
   openCreate(): void {
     this.isEditing     = false;
-    this.templateForm  = { id: 0, title: '', content: '', active: true, installation_value: '', plazo: '12' };
-    this.logoFile      = null;
+    this.templateForm  = { id: 0, title: '', content: '', active: true, installation_value: '', plazo: '12', terminos: '' };
     this.logoPreview   = null;
-    this.pdfFile       = null;
-    this.pdfBaseFile   = null;
     this.hasPdfBase    = false;
-    this.pdfBaseUrl    = null;
     this.pdfGuideUrl   = null;
-    this.showPreview   = false;
+    this.seccion       = 'contenido';
+    this.limpiarPrevia();
     this.errorMsg      = '';
     this.showTemplateModal = true;
   }
@@ -337,20 +338,31 @@ export class ContractsComponent implements OnInit {
       active: c.active,
       installation_value: c.installation_value ?? '',
       plazo: c.plazo ?? '12',
+      terminos: c.terminos ?? '',
     };
     this.logoPreview  = c.logo ?? null;
     this.hasPdfBase   = !!c.pdf_path;
-    this.pdfBaseUrl   = c.pdf_path ? environment.rootUrl + 'storage/' + c.pdf_path : null;
     this.pdfGuideUrl  = null;
-    this.pdfFile      = null;
-    this.pdfBaseFile  = null;
     this.errorMsg     = '';
-    this.pdfPickerActive = false;
-    this.pdfFields    = [];
+    // El modo principal es el PDF propio: si la plantilla ya tiene uno, se abre ahí.
+    this.seccion      = this.hasPdfBase ? 'pdf' : 'contenido';
+    this.avisoPdfCambiado = '';
+    this.camposFuera  = [];
+    this.faltanDatos  = [];
+    this.pdfCampos    = [];
+    this.pdfPaginas   = [];
+    this.campoSel     = null;
+    this.camposSucios = false;
+    this.pdfListo     = false;
+    this.soltarPdf();
+    this.limpiarPrevia();
     this.showTemplateModal = true;
-    if (this.hasPdfBase) {
-      this.loadPdfDimensionsAndFields();
-    }
+    if (this.hasPdfBase) this.abrirEditorPdf();
+  }
+
+  cerrarPlantilla(): void {
+    this.showTemplateModal = false;
+    this.soltarPdf();
   }
 
   saveTemplate(): void {
@@ -358,9 +370,7 @@ export class ContractsComponent implements OnInit {
     this.errorMsg = '';
 
     const payload: any = { ...this.templateForm };
-    if (this.logoPreview) {
-      payload.logo = this.logoPreview;
-    }
+    if (this.logoPreview) payload.logo = this.logoPreview;
 
     const obs = this.isEditing
       ? this.contractService.update(this.templateForm.id, payload)
@@ -370,8 +380,8 @@ export class ContractsComponent implements OnInit {
       next: r => {
         this.isSaving = false;
         if (r.status === 0) {
-          this.showTemplateModal = false;
-          this.toast(this.isEditing ? 'Contrato actualizado.' : 'Contrato creado.');
+          this.cerrarPlantilla();
+          this.toast(this.isEditing ? 'Plantilla actualizada.' : 'Plantilla creada.');
           this.loadContracts();
         } else {
           this.errorMsg = r.message;
@@ -391,10 +401,649 @@ export class ContractsComponent implements OnInit {
       next: () => {
         this.isDeleting      = false;
         this.deleteConfirmId = null;
-        this.toast('Contrato eliminado.');
+        this.toast('Plantilla eliminada.');
         this.loadContracts();
       },
       error: () => { this.isDeleting = false; },
+    });
+  }
+
+  // ── Insertar variables en el contenido ────────────────────────────────────
+
+  insertVar(clave: string): void {
+    const ta = document.getElementById('contractContent') as HTMLTextAreaElement | null;
+    if (!ta) {
+      this.templateForm.content += ' ' + clave;
+      this.previaPendiente();
+      return;
+    }
+    const start = ta.selectionStart;
+    const end   = ta.selectionEnd;
+    const text  = this.templateForm.content;
+    this.templateForm.content = text.substring(0, start) + clave + text.substring(end);
+    setTimeout(() => {
+      ta.selectionStart = ta.selectionEnd = start + clave.length;
+      ta.focus();
+    }, 0);
+    this.previaPendiente();
+  }
+
+  /**
+   * Quita los style= del HTML pegado para que la página de firma aplique su
+   * propio diseño (los editores de texto los meten en cada etiqueta).
+   */
+  cleanStyles(): void {
+    if (!this.templateForm.content) return;
+    this.templateForm.content = this.templateForm.content
+      .replace(/\s*style\s*=\s*["'][^"']*["']/gi, '')
+      .replace(/\s*class\s*=\s*["'](contract-body|contract-guide)["']/gi, '')
+      .replace(/<p\s*><strong>Guía:<\/strong>[^<]*<\/p>/i, '')
+      .replace(/>\s+</g, '><')
+      .trim();
+    this.toast('Estilos quitados. El contrato usará el diseño de la página de firma.');
+    this.previaPendiente();
+  }
+
+  // ── Vista previa con un cliente real ──────────────────────────────────────
+
+  private limpiarPrevia(): void {
+    this.previaBuscar = '';
+    this.previaResultados = [];
+    this.previaCliente = null;
+    this.previaHtml = null;
+    this.previaVacias = [];
+    this.previaDesconocidas = [];
+    this.previaUsadas = [];
+  }
+
+  buscarClientePrevia(): void {
+    if (this.previaBuscar.trim().length < 2) { this.previaResultados = []; return; }
+    this.userService.searchClients(this.previaBuscar).subscribe({
+      next:  r => { this.previaResultados = r.data ?? []; },
+      error: () => { this.previaResultados = []; },
+    });
+  }
+
+  elegirClientePrevia(c: Client): void {
+    this.previaCliente = c;
+    this.previaResultados = [];
+    this.previaBuscar = `${c.names} ${c.lastname}`;
+    if (this.seccion === 'pdf') this.revisarDatos();
+    else this.pedirPrevia();
+  }
+
+  /** Mientras se escribe el contrato, la previa se refresca con calma. */
+  previaPendiente(): void {
+    if (this.seccion !== 'previa') return;
+    clearTimeout(this.temporizadorPrevia);
+    this.temporizadorPrevia = setTimeout(() => this.pedirPrevia(), 700);
+  }
+
+  pedirPrevia(): void {
+    this.cargandoPrevia = true;
+    this.contractService.vistaPrevia({
+      content: this.templateForm.content || '',
+      user_id: this.previaCliente?.id,
+      contract_id: this.templateForm.id || undefined,
+      installation_value: this.templateForm.installation_value,
+      plazo: this.templateForm.plazo,
+    }).subscribe({
+      next: r => {
+        this.cargandoPrevia = false;
+        if (r.status !== 0) { this.errorMsg = r.message || 'No se pudo generar la vista previa.'; return; }
+        this.previaHtml = this.sanitizer.bypassSecurityTrustHtml(r.data.html || '');
+        this.previaUsadas = r.data.usadas ?? [];
+        this.previaVacias = r.data.vacias ?? [];
+        this.previaDesconocidas = r.data.desconocidas ?? [];
+      },
+      error: () => { this.cargandoPrevia = false; this.errorMsg = 'Error de red en la vista previa.'; },
+    });
+  }
+
+  abrirSeccion(s: 'contenido' | 'previa' | 'pdf'): void {
+    this.seccion = s;
+    if (s === 'previa' && !this.previaHtml) this.pedirPrevia();
+    if (s === 'pdf' && this.hasPdfBase && !this.pdfListo) this.abrirEditorPdf();
+    if (s === 'pdf' && this.pdfListo) setTimeout(() => this.pintar(), 0);
+  }
+
+  // ── Subidas ───────────────────────────────────────────────────────────────
+
+  onPdfSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+    if (!file) return;
+    this.isUploadingPdf = true;
+    this.contractService.uploadPdf(file).subscribe({
+      next: r => {
+        this.isUploadingPdf = false;
+        if (r.status === 0) {
+          if (r.data?.html) this.templateForm.content = r.data.html;
+          if (r.data?.guia) this.pdfGuideUrl = `${environment.rootUrl}api/contracts/guia/${r.data.guia}`;
+          this.toast('PDF transcrito. Revise el texto y coloque las variables donde corresponda.');
+        } else {
+          this.errorMsg = r.message || 'Error al convertir PDF.';
+        }
+      },
+      error: () => { this.isUploadingPdf = false; this.errorMsg = 'Error al subir PDF.'; },
+    });
+    input.value = '';
+  }
+
+  onPdfBaseSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+    if (!file || !this.isEditing) return;
+
+    // Cambiar el PDF de una plantilla que ya tiene campos deja las posiciones
+    // apuntando a un documento distinto: se avisa antes y después.
+    const teniaCampos = this.pdfCampos.length > 0;
+    if (teniaCampos && !confirm(
+      `Esta plantilla ya tiene ${this.pdfCampos.length} variables colocadas sobre el PDF actual. ` +
+      'Si sube otro archivo, las posiciones se conservan pero puede que no coincidan con el documento nuevo. ¿Continuar?')) {
+      input.value = '';
+      return;
+    }
+
+    this.isUploadingPdfBase = true;
+    this.contractService.uploadPdfBase(this.templateForm.id, file).subscribe({
+      next: r => {
+        this.isUploadingPdfBase = false;
+        if (r.status === 0) {
+          this.hasPdfBase = true;
+          this.pdfListo = false;
+          this.avisoPdfCambiado = teniaCampos
+            ? 'Cambió el PDF base: revise una por una que las variables sigan cayendo donde deben y use “Probar con un cliente” antes de dejar la plantilla activa.'
+            : '';
+          this.soltarPdf();
+          this.seccion = 'pdf';
+          this.abrirEditorPdf();
+          this.toast('PDF guardado. Ahora coloque cada variable sobre el documento.');
+        } else {
+          this.errorMsg = r.message || 'Error al guardar PDF base.';
+        }
+      },
+      error: () => { this.isUploadingPdfBase = false; this.errorMsg = 'Error al subir PDF base.'; },
+    });
+    input.value = '';
+  }
+
+  onLogoSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => { this.logoPreview = reader.result as string; };
+    reader.readAsDataURL(file);
+    if (!this.isEditing) { input.value = ''; return; }
+
+    this.isUploadingLogo = true;
+    this.contractService.uploadLogo(this.templateForm.id, file).subscribe({
+      next: r => {
+        this.isUploadingLogo = false;
+        if (r.status === 0) this.toast('Logo guardado.');
+        else this.errorMsg = r.message || 'Error al subir logo.';
+      },
+      error: () => { this.isUploadingLogo = false; this.errorMsg = 'Error al subir logo.'; },
+    });
+    input.value = '';
+  }
+
+  safePdfUrl(): SafeResourceUrl | null {
+    return this.pdfGuideUrl ? this.sanitizer.bypassSecurityTrustResourceUrl(this.pdfGuideUrl) : null;
+  }
+
+  // ══ Editor de posiciones sobre el PDF ═════════════════════════════════════
+  //
+  // El PDF se dibuja UNA vez en un lienzo aparte y se reutiliza: encima se
+  // pintan los valores de ejemplo con el mismo tamaño y la misma línea base que
+  // usará ContractPdfService, así que lo que se ve es lo que se estampa.
+
+  abrirEditorPdf(): void {
+    if (!this.templateForm.id || !this.hasPdfBase) return;
+    this.isRenderingPdf = true;
+    this.errorMsg = '';
+
+    this.contractService.getPdfFields(this.templateForm.id).subscribe({
+      next: r => {
+        this.pdfCampos = (r.status === 0 && r.data ? r.data : []).map((f: any) => ({
+          variable: f.variable,
+          page: Number(f.page) || 1,
+          x: Number(f.x), y: Number(f.y),
+          font_size: Number(f.font_size) || 10,
+          color: f.color || '000000',
+          max_width: Number(f.max_width) || 0,
+        }));
+        this.camposSucios = false;
+        this.revisarBordes();
+        this.revisarDatos();
+      },
+    });
+
+    this.contractService.getPdfDimensions(this.templateForm.id).subscribe({
+      next: r => {
+        if (r.status !== 0) { this.isRenderingPdf = false; this.errorMsg = r.message || 'No se pudo leer el PDF base.'; return; }
+        this.pdfPaginas = r.data.pages ?? [];
+        this.pdfPagina = 1;
+        this.cargarPdf();
+      },
+      error: () => { this.isRenderingPdf = false; this.errorMsg = 'No se pudo leer el PDF base.'; },
+    });
+  }
+
+  private cargarPdf(): void {
+    this.contractService.getPdfBaseBlob(this.templateForm.id).subscribe({
+      next: async blob => {
+        try {
+          this.soltarPdf();
+          this.baseUrlObjeto = URL.createObjectURL(blob);
+          this.docPdf = await pdfjsLib.getDocument(this.baseUrlObjeto).promise;
+          this.pdfListo = true;
+          await this.renderPagina();
+        } catch {
+          this.isRenderingPdf = false;
+          this.errorMsg = 'No se pudo abrir el PDF base.';
+        }
+      },
+      error: () => { this.isRenderingPdf = false; this.errorMsg = 'No se pudo descargar el PDF base.'; },
+    });
+  }
+
+  private soltarPdf(): void {
+    if (this.baseUrlObjeto) { URL.revokeObjectURL(this.baseUrlObjeto); this.baseUrlObjeto = null; }
+    if (this.docPdf?.destroy) { try { this.docPdf.destroy(); } catch {} }
+    this.docPdf = null;
+    this.lienzoPagina = null;
+    this.pdfListo = false;
+    clearTimeout(this.temporizadorPrevia);
+  }
+
+  /** Dibuja la página del PDF en un lienzo de respaldo y la muestra. */
+  async renderPagina(): Promise<void> {
+    if (!this.docPdf) return;
+    const hoja = this.hojaActual();
+    if (!hoja) return;
+
+    this.isRenderingPdf = true;
+    this.campoSel = null;
+    try {
+      const pagina = await this.docPdf.getPage(this.paginaNum());
+      // Ancho de trabajo fijo: nítido sin cargar de más un portátil modesto.
+      const anchoPt = pagina.getViewport({ scale: 1 }).width;
+      const viewport = pagina.getViewport({ scale: 1200 / anchoPt });
+
+      const respaldo = document.createElement('canvas');
+      respaldo.width = Math.round(viewport.width);
+      respaldo.height = Math.round(viewport.height);
+      await pagina.render({ canvasContext: respaldo.getContext('2d')!, viewport }).promise;
+      this.lienzoPagina = respaldo;
+
+      // pdf.js ya aplica /Rotate; FPDI también. Si las proporciones no coinciden
+      // es que la página viene girada y el mapeo saldría cruzado: se avisa.
+      const propPdfjs = viewport.width / viewport.height;
+      const propFpdi  = hoja.width / hoja.height;
+      this.avisoRotacion = Math.abs(propPdfjs - propFpdi) / propFpdi > 0.02
+        ? 'Esta página del PDF viene girada y puede que las variables no caigan donde las coloque. Conviene subir el PDF ya enderezado.'
+        : '';
+
+      this.pintar();
+    } catch {
+      this.errorMsg = 'No se pudo dibujar la página del PDF.';
+    } finally {
+      this.isRenderingPdf = false;
+    }
+  }
+
+  cambiarPagina(): void { this.renderPagina(); }
+
+  paginaAnterior(): void {
+    if (this.paginaNum() <= 1) return;
+    this.pdfPagina = this.paginaNum() - 1;
+    this.renderPagina();
+  }
+
+  paginaSiguiente(): void {
+    if (this.paginaNum() >= this.pdfPaginas.length) return;
+    this.pdfPagina = this.paginaNum() + 1;
+    this.renderPagina();
+  }
+
+  cambiarZoom(paso: number): void {
+    this.zoomPdf = Math.min(2.5, Math.max(0.5, Math.round((this.zoomPdf + paso) * 100) / 100));
+  }
+
+  /**
+   * Campos que se salen del borde de la hoja: ahí el texto se imprime cortado o
+   * directamente no se ve, y hasta ahora no avisaba nada.
+   */
+  private revisarBordes(): void {
+    const fuera: string[] = [];
+    this.pdfCampos.forEach(c => {
+      const hoja = this.pdfPaginas[c.page - 1];
+      if (!hoja) { fuera.push(`${this.etiquetaVar(c.variable)} (página ${c.page}, que no existe)`); return; }
+      const ancho = c.variable === '{{firma}}' ? (c.max_width > 0 && c.max_width <= 120 ? c.max_width : 80) : (c.max_width || 40);
+      const alto = c.variable === '{{firma}}' ? ancho * 0.32 : c.font_size * ALTURA_MAYUSCULAS * PT_A_MM;
+      if (c.x < 0 || c.y < 0 || c.x + ancho > hoja.width + 1 || c.y + alto > hoja.height + 1) {
+        fuera.push(`${this.etiquetaVar(c.variable)} (página ${c.page})`);
+      }
+    });
+    this.camposFuera = fuera;
+  }
+
+  /** Pregunta al backend qué variables de las colocadas saldrían en blanco. */
+  revisarDatos(): void {
+    const variables = Array.from(new Set(this.pdfCampos.map(c => c.variable).filter(v => v !== '{{firma}}')));
+    if (!variables.length) { this.faltanDatos = []; return; }
+
+    this.contractService.revisarVariables({
+      variables,
+      user_id: this.previaCliente?.id,
+      contract_id: this.templateForm.id || undefined,
+    }).subscribe({
+      next: r => { if (r.status === 0) this.faltanDatos = [...(r.data.vacias ?? []), ...(r.data.desconocidas ?? [])]; },
+    });
+  }
+
+  /** El PDF estampado de verdad, con los datos del cliente elegido. */
+  probarConCliente(): void {
+    if (!this.templateForm.id) return;
+    this.generandoPrueba = true;
+    this.errorMsg = '';
+    this.contractService.pdfPrueba(this.templateForm.id, {
+      user_id: this.previaCliente?.id,
+      fields: this.pdfCampos,
+    }).subscribe({
+      next: blob => {
+        this.generandoPrueba = false;
+        window.open(URL.createObjectURL(blob), '_blank');
+      },
+      error: () => { this.generandoPrueba = false; this.errorMsg = 'No se pudo generar la prueba en PDF.'; },
+    });
+  }
+
+  /** Copia el campo seleccionado en todas las demás páginas (firma, cédula…). */
+  duplicarEnTodas(): void {
+    if (this.campoSel === null) return;
+    const base = this.pdfCampos[this.campoSel];
+    this.pdfPaginas.forEach(hoja => {
+      if (hoja.page === base.page) return;
+      if (this.pdfCampos.some(c => c.page === hoja.page && c.variable === base.variable && Math.abs(c.x - base.x) < 0.5 && Math.abs(c.y - base.y) < 0.5)) return;
+      this.pdfCampos.push({ ...base, page: hoja.page });
+    });
+    this.campoCambiado();
+    this.toast('Variable copiada en todas las páginas, en la misma posición.');
+  }
+
+  /** Copia el campo seleccionado un poco más abajo, en la misma página. */
+  duplicarCampo(): void {
+    if (this.campoSel === null) return;
+    const base = this.pdfCampos[this.campoSel];
+    this.pdfCampos.push({ ...base, y: this.redondear(base.y + 6) });
+    this.campoSel = this.pdfCampos.length - 1;
+    this.campoCambiado();
+  }
+
+  private paginaNum(): number { return parseInt(String(this.pdfPagina), 10) || 1; }
+
+  private hojaActual(): { width: number; height: number } | null {
+    return this.pdfPaginas[this.paginaNum() - 1] ?? null;
+  }
+
+  /** Repinta el PDF y encima los campos, tal cual saldrán estampados. */
+  pintar(): void {
+    const lienzo = this.pdfCanvasRef?.nativeElement;
+    const hoja = this.hojaActual();
+    if (!lienzo || !this.lienzoPagina || !hoja) return;
+
+    lienzo.width = this.lienzoPagina.width;
+    lienzo.height = this.lienzoPagina.height;
+    this.pxPorMm = lienzo.width / hoja.width;
+
+    this.engancharLienzo(lienzo);
+
+    const ctx = lienzo.getContext('2d')!;
+    ctx.drawImage(this.lienzoPagina, 0, 0);
+
+    const pagina = this.paginaNum();
+    this.pdfCampos.forEach((c, i) => {
+      if (c.page !== pagina) return;
+      const caja = this.cajaDe(ctx, c);
+      const sel = this.campoSel === i;
+
+      if (c.variable === '{{firma}}') {
+        ctx.fillStyle = 'rgba(16,185,129,.16)';
+        ctx.fillRect(caja.x, caja.y, caja.w, caja.h);
+        ctx.strokeStyle = sel ? '#4f46e5' : '#059669';
+        ctx.lineWidth = sel ? 2.5 : 1.5;
+        ctx.strokeRect(caja.x, caja.y, caja.w, caja.h);
+        ctx.fillStyle = '#047857';
+        ctx.font = `600 ${Math.round(caja.h * 0.3)}px system-ui, sans-serif`;
+        ctx.textBaseline = 'middle';
+        ctx.fillText('FIRMA', caja.x + 6, caja.y + caja.h / 2);
+        return;
+      }
+
+      // Fondo tenue sólo para ubicar el campo; el texto va en su sitio exacto.
+      ctx.fillStyle = sel ? 'rgba(79,70,229,.16)' : 'rgba(79,70,229,.07)';
+      ctx.fillRect(caja.x, caja.y, caja.w, caja.h);
+      if (sel) {
+        ctx.strokeStyle = '#4f46e5';
+        ctx.lineWidth = 2;
+        ctx.strokeRect(caja.x, caja.y, caja.w, caja.h);
+      }
+
+      ctx.fillStyle = '#' + (c.color || '000000');
+      ctx.font = `${caja.fuentePx}px Helvetica, Arial, sans-serif`;
+      ctx.textBaseline = 'alphabetic';
+      ctx.fillText(caja.texto, caja.x, caja.baseline);
+    });
+  }
+
+  /**
+   * Caja del campo en píxeles del lienzo. El texto se achica igual que en el
+   * backend cuando no entra en su ancho, para que la previa no mienta.
+   */
+  private cajaDe(ctx: CanvasRenderingContext2D, c: CampoPdf) {
+    const px = c.x * this.pxPorMm;
+    const py = c.y * this.pxPorMm;
+
+    if (c.variable === '{{firma}}') {
+      const ancho = (c.max_width > 0 && c.max_width <= 120 ? c.max_width : 80) * this.pxPorMm;
+      return { x: px, y: py, w: ancho, h: ancho * 0.32, fuentePx: 0, baseline: 0, texto: '' };
+    }
+
+    let texto = this.ejemplos[c.variable] ?? this.etiquetaVar(c.variable);
+    if (!texto) texto = '·';
+    let tamano = c.font_size;
+    const topeMm = c.max_width > 0 ? c.max_width : 0;
+    const mide = (t: string, pt: number) => {
+      ctx.font = `${pt * PT_A_MM * this.pxPorMm}px Helvetica, Arial, sans-serif`;
+      return ctx.measureText(t).width / this.pxPorMm;
+    };
+
+    if (topeMm > 0 && mide(texto, tamano) > topeMm) {
+      const minimo = Math.max(5, Math.round(c.font_size * FUENTE_MINIMA));
+      while (tamano > minimo && mide(texto, tamano) > topeMm) tamano--;
+      if (mide(texto, tamano) > topeMm) {
+        while (texto.length > 1 && mide(texto + '.', tamano) > topeMm) texto = texto.slice(0, -1);
+        texto += '.';
+      }
+    }
+
+    const fuentePx = tamano * PT_A_MM * this.pxPorMm;
+    const alto = tamano * ALTURA_MAYUSCULAS * PT_A_MM * this.pxPorMm;
+    ctx.font = `${fuentePx}px Helvetica, Arial, sans-serif`;
+
+    return { x: px, y: py, w: Math.max(ctx.measureText(texto).width, 6), h: alto, fuentePx, baseline: py + alto, texto };
+  }
+
+  /** Milímetros desde la esquina superior izquierda de la hoja. */
+  private aMm(e: PointerEvent | MouseEvent): { x: number; y: number } | null {
+    const lienzo = this.pdfCanvasRef?.nativeElement;
+    const hoja = this.hojaActual();
+    if (!lienzo || !hoja) return null;
+    // Se mide contra el rectángulo real del lienzo y con clientX/clientY: con
+    // offsetX el navegador devuelve coordenadas del hijo que esté encima y el
+    // campo caía corrido.
+    const r = lienzo.getBoundingClientRect();
+    if (!r.width || !r.height) return null;
+    return {
+      x: ((e.clientX - r.left) / r.width) * hoja.width,
+      y: ((e.clientY - r.top) / r.height) * hoja.height,
+    };
+  }
+
+  private campoEn(mm: { x: number; y: number }): number | null {
+    const lienzo = this.pdfCanvasRef?.nativeElement;
+    if (!lienzo) return null;
+    const ctx = lienzo.getContext('2d')!;
+    const pagina = this.paginaNum();
+    // De arriba hacia abajo de la pila: gana el último dibujado.
+    for (let i = this.pdfCampos.length - 1; i >= 0; i--) {
+      const c = this.pdfCampos[i];
+      if (c.page !== pagina) continue;
+      const caja = this.cajaDe(ctx, c);
+      const x = caja.x / this.pxPorMm, y = caja.y / this.pxPorMm;
+      const w = caja.w / this.pxPorMm, h = caja.h / this.pxPorMm;
+      if (mm.x >= x - 1 && mm.x <= x + w + 1 && mm.y >= y - 1 && mm.y <= y + h + 1) return i;
+    }
+    return null;
+  }
+
+  alPresionar(e: PointerEvent): void {
+    const mm = this.aMm(e);
+    if (!mm) return;
+    const i = this.campoEn(mm);
+
+    if (i !== null) {
+      this.campoSel = i;
+      this.arrastrando = true;
+      this.agarre = { dx: mm.x - this.pdfCampos[i].x, dy: mm.y - this.pdfCampos[i].y };
+      (e.target as HTMLElement).setPointerCapture(e.pointerId);
+      this.pintar();
+      return;
+    }
+
+    if (!this.varElegida) { this.campoSel = null; this.pintar(); return; }
+
+    this.pdfCampos.push({
+      variable: this.varElegida,
+      page: this.paginaNum(),
+      x: this.redondear(mm.x),
+      y: this.redondear(mm.y),
+      font_size: this.varElegida === '{{firma}}' ? 12 : 10,
+      color: '000000',
+      max_width: this.varElegida === '{{firma}}' ? 60 : 50,
+    });
+    this.campoSel = this.pdfCampos.length - 1;
+    this.campoCambiado();
+  }
+
+  /**
+   * El arrastre se escucha FUERA de la zona de Angular: un pointermove atado en
+   * la plantilla dispara un ciclo de detección de cambios por cada píxel, y con
+   * el modal abierto eso se nota. Al soltar se vuelve a entrar para que la tabla
+   * de campos muestre las coordenadas nuevas.
+   */
+  private engancharLienzo(lienzo: HTMLCanvasElement): void {
+    if ((lienzo as any).__enganchado) return;
+    (lienzo as any).__enganchado = true;
+    this.zone.runOutsideAngular(() => {
+      lienzo.addEventListener('pointermove', this.alArrastrar);
+      lienzo.addEventListener('pointerup', this.alSoltar);
+      lienzo.addEventListener('pointercancel', this.alSoltar);
+    });
+  }
+
+  private alArrastrar = (e: PointerEvent): void => {
+    if (!this.arrastrando || this.campoSel === null) return;
+    const mm = this.aMm(e);
+    if (!mm) return;
+
+    const c = this.pdfCampos[this.campoSel];
+    const hoja = this.hojaActual()!;
+    c.x = this.redondear(Math.min(Math.max(0, mm.x - this.agarre.dx), hoja.width));
+    c.y = this.redondear(Math.min(Math.max(0, mm.y - this.agarre.dy), hoja.height));
+    this.camposSucios = true;
+
+    // Un repintado por cuadro: arrastrar no debe recalcular el PDF entero.
+    cancelAnimationFrame(this.repintado);
+    this.repintado = requestAnimationFrame(() => this.pintar());
+  };
+
+  private alSoltar = (): void => {
+    if (!this.arrastrando) return;
+    this.arrastrando = false;
+    this.zone.run(() => {});
+  };
+
+  /** Flechas: 1 mm, y 0,1 mm con Shift. Supr borra el campo seleccionado. */
+  alTeclear(e: KeyboardEvent): void {
+    if (this.campoSel === null) return;
+    const paso = e.shiftKey ? 0.1 : 1;
+    const c = this.pdfCampos[this.campoSel];
+    let usada = true;
+
+    switch (e.key) {
+      case 'ArrowLeft':  c.x = this.redondear(Math.max(0, c.x - paso)); break;
+      case 'ArrowRight': c.x = this.redondear(c.x + paso); break;
+      case 'ArrowUp':    c.y = this.redondear(Math.max(0, c.y - paso)); break;
+      case 'ArrowDown':  c.y = this.redondear(c.y + paso); break;
+      case 'Delete':
+      case 'Backspace':  this.quitarCampo(this.campoSel); return;
+      default: usada = false;
+    }
+
+    if (!usada) return;
+    e.preventDefault();
+    this.camposSucios = true;
+    this.pintar();
+  }
+
+  private redondear(v: number): number { return Math.round(v * 10) / 10; }
+
+  seleccionarCampo(i: number): void {
+    this.campoSel = i;
+    if (this.pdfCampos[i].page !== this.paginaNum()) {
+      this.pdfPagina = this.pdfCampos[i].page;
+      this.renderPagina();
+      return;
+    }
+    this.pintar();
+  }
+
+  quitarCampo(i: number): void {
+    this.pdfCampos.splice(i, 1);
+    this.campoSel = null;
+    this.camposSucios = true;
+    this.pintar();
+  }
+
+  campoCambiado(): void {
+    this.camposSucios = true;
+    this.revisarBordes();
+    this.revisarDatos();
+    this.pintar();
+  }
+
+  savePdfFields(): void {
+    if (!this.templateForm.id) return;
+    this.guardandoCampos = true;
+    this.contractService.savePdfFields(this.templateForm.id, this.pdfCampos).subscribe({
+      next: r => {
+        this.guardandoCampos = false;
+        if (r.status === 0) { this.camposSucios = false; this.toast('Posiciones guardadas.'); }
+        else this.errorMsg = r.message || 'Error al guardar las posiciones.';
+      },
+      error: () => { this.guardandoCampos = false; this.errorMsg = 'Error de red al guardar las posiciones.'; },
+    });
+  }
+
+  openPdfPreview(): void {
+    if (!this.templateForm.id) return;
+    this.contractService.getPdfPreviewBlob(this.templateForm.id).subscribe({
+      next: blob => window.open(URL.createObjectURL(blob), '_blank'),
+      error: () => { this.errorMsg = 'Error al generar la prueba en PDF.'; },
     });
   }
 
@@ -402,12 +1051,55 @@ export class ContractsComponent implements OnInit {
 
   loadAssigned(): void {
     this.isLoadingAssigned = true;
-    // Carga los contratos asignados de todos los clientes activos
-    // El backend filtra por company_id del JWT
     this.contractService.getByUser(0).subscribe({
-      next:  r => { this.isLoadingAssigned = false; this.assignedContracts = r.data ?? []; },
+      next: r => {
+        this.isLoadingAssigned = false;
+        this.assignedContracts = r.data ?? [];
+        this.recalcularAsignados();
+      },
       error: () => { this.isLoadingAssigned = false; },
     });
+  }
+
+  /**
+   * La lista filtrada es un campo, no un getter: un getter que devuelve un array
+   * nuevo obliga a Angular a redibujar el *ngFor en cada ciclo de detección.
+   */
+  recalcularAsignados(): void {
+    const q = this.assignedSearch.trim().toLowerCase();
+    this.asignadosFiltrados = this.assignedContracts.filter(cc => {
+      if (this.filtroEstado !== 'todos' && cc.status !== this.filtroEstado) return false;
+      if (!q) return true;
+      return [cc.user?.names, cc.user?.lastname, cc.user?.dni, cc.user?.username, cc.contract?.title]
+        .some(v => (v ?? '').toLowerCase().includes(q));
+    });
+
+    this.signedCount  = this.assignedContracts.filter(c => c.status === 'signed').length;
+    this.pendingCount = this.assignedContracts.length - this.signedCount;
+  }
+
+  filtrarEstado(estado: 'todos' | 'pending' | 'signed'): void {
+    this.filtroEstado = estado;
+    this.recalcularAsignados();
+  }
+
+  /** Etiqueta de la etapa en la que está el contrato del cliente. */
+  etapa(cc: ClientContract): string {
+    if (cc.status === 'signed') return 'Firmado';
+    if (cc.opened_at) return 'Abierto sin firmar';
+    if (cc.sent_at) return 'Enviado';
+    return 'Sin enviar';
+  }
+
+  etapaTono(cc: ClientContract): string {
+    if (cc.status === 'signed') return 'np-pill--active';
+    if (cc.opened_at) return 'np-pill--info';
+    if (cc.sent_at) return 'np-pill--noip';
+    return 'np-pill--neutral';
+  }
+
+  canal(cc: ClientContract): string {
+    return cc.sent_channel === 'whatsapp' ? 'WhatsApp' : (cc.sent_channel === 'email' ? 'correo' : '');
   }
 
   openAssign(): void {
@@ -439,7 +1131,7 @@ export class ContractsComponent implements OnInit {
     if (!this.selectedClient || !this.selectedContractId) return;
     this.isAssigning = true;
     this.contractService.assign(this.selectedContractId, this.selectedClient.id, this.requireDocuments).subscribe({
-      next: r => {
+      next: () => {
         this.isAssigning     = false;
         this.showAssignModal = false;
         this.toast('Contrato asignado. Ya puede enviarle el link al cliente.');
@@ -451,9 +1143,7 @@ export class ContractsComponent implements OnInit {
 
   // ── Link de firma ─────────────────────────────────────────────────────────
 
-  getSignUrl(token: string): string {
-    return this.contractService.getSignUrl(token);
-  }
+  getSignUrl(token: string): string { return this.contractService.getSignUrl(token); }
 
   copyLink(cc: ClientContract): void {
     navigator.clipboard.writeText(this.getSignUrl(cc.token));
@@ -463,64 +1153,68 @@ export class ContractsComponent implements OnInit {
 
   openSend(cc: ClientContract): void {
     this.showSendModal = cc;
-    // Normalizar teléfono para mostrar con prefijo +57 si es colombiano
-    const rawPhone = (cc.user.phone ?? '').trim();
-    const digitsOnly = rawPhone.replace(/\D/g, '');
-    if (/^3\d{9}$/.test(digitsOnly)) {
-      this.phoneInput = '+57' + digitsOnly;
-    } else if (/^57\d{10}$/.test(digitsOnly)) {
-      this.phoneInput = '+' + digitsOnly;
-    } else {
-      this.phoneInput = rawPhone;
-    }
-    this.emailInput = cc.user.email ?? '';
+    this.errorMsg = '';
+    const digitos = (cc.user?.phone ?? '').replace(/\D/g, '');
+    if (/^3\d{9}$/.test(digitos))        this.phoneInput = '+57' + digitos;
+    else if (/^57\d{10}$/.test(digitos)) this.phoneInput = '+' + digitos;
+    else                                 this.phoneInput = (cc.user?.phone ?? '').trim();
+    this.emailInput = cc.user?.email ?? '';
   }
 
   closeSend(): void { this.showSendModal = null; }
 
   sendWhatsApp(): void {
     if (!this.showSendModal || !this.phoneInput) return;
-
-    // Normalizar número: quitar todo excepto dígitos
-    let phone = this.phoneInput.replace(/\D/g, '');
-
-    // Validar formato colombiano: 10 dígitos (3xxxxxxxxxx) o 12 dígitos (57xxxxxxxxxx)
-    const isValidColombian = /^(57\d{10}|3\d{9})$/.test(phone);
-    if (!isValidColombian) {
-      this.errorMsg = 'Número inválido. Ingrese 10 dígitos (3XX...) o 12 dígitos (57...). Ej: 3245127868 o 573245127868';
+    const phone = this.phoneInput.replace(/\D/g, '');
+    if (!/^(57\d{10}|3\d{9})$/.test(phone)) {
+      this.errorMsg = 'Número inválido. Use 10 dígitos (3XX…) o 12 con el 57 adelante.';
       return;
     }
 
+    const cc = this.showSendModal;
     this.isSendingWa = true;
     this.errorMsg = '';
-    this.contractService.sendByWhatsApp(this.showSendModal.id, phone).subscribe({
-      next: (r) => {
+    this.contractService.sendByWhatsApp(cc.id, phone).subscribe({
+      next: r => {
         this.isSendingWa = false;
         if (r.status === 0) {
+          this.aplicarSeguimiento(cc, r.data);
           this.showSendModal = null;
-          this.toast('Mensaje enviado por WhatsApp.');
+          this.toast('Link enviado por WhatsApp.');
         } else {
-          this.errorMsg = r.message || 'Error al enviar WhatsApp.';
+          this.errorMsg = r.message || 'Error al enviar por WhatsApp.';
         }
       },
-      error: (err) => {
-        this.isSendingWa = false;
-        this.errorMsg = err.error?.message || 'Error de conexión al enviar WhatsApp.';
-      },
+      error: err => { this.isSendingWa = false; this.errorMsg = err.error?.message || 'Error de conexión al enviar.'; },
     });
   }
 
   sendMail(): void {
     if (!this.showSendModal || !this.emailInput) return;
+    const cc = this.showSendModal;
     this.isSendingEmail = true;
-    this.contractService.sendByEmail(this.showSendModal.id, this.emailInput).subscribe({
-      next: () => {
+    this.errorMsg = '';
+    this.contractService.sendByEmail(cc.id, this.emailInput).subscribe({
+      next: r => {
         this.isSendingEmail = false;
-        this.showSendModal  = null;
-        this.toast('Correo enviado exitosamente.');
+        if (r.status === 0) {
+          this.aplicarSeguimiento(cc, r.data);
+          this.showSendModal = null;
+          this.toast('Link enviado por correo.');
+        } else {
+          this.errorMsg = r.message || 'Error al enviar el correo.';
+        }
       },
-      error: () => { this.isSendingEmail = false; },
+      error: () => { this.isSendingEmail = false; this.errorMsg = 'Error de red al enviar el correo.'; },
     });
+  }
+
+  /** Refresca la fila sin recargar toda la lista. */
+  private aplicarSeguimiento(cc: ClientContract, data: any): void {
+    if (!data) return;
+    cc.sent_at = data.sent_at ?? cc.sent_at;
+    cc.sent_channel = data.sent_channel ?? cc.sent_channel;
+    cc.opened_at = data.opened_at ?? cc.opened_at;
   }
 
   confirmDeleteAssigned(id: number): void  { this.deleteClientContractId = id; }
@@ -531,9 +1225,9 @@ export class ContractsComponent implements OnInit {
     this.isDeletingAssigned = true;
     this.contractService.deleteClientContract(this.deleteClientContractId).subscribe({
       next: () => {
-        this.isDeletingAssigned       = false;
-        this.deleteClientContractId   = null;
-        this.toast('Contrato eliminado del cliente.');
+        this.isDeletingAssigned     = false;
+        this.deleteClientContractId = null;
+        this.toast('Contrato quitado del cliente.');
         this.loadAssigned();
       },
       error: () => { this.isDeletingAssigned = false; },
@@ -551,580 +1245,52 @@ export class ContractsComponent implements OnInit {
     });
   }
 
-  // ── PDF Upload ────────────────────────────────────────────────────────────
-
-  onPdfSelected(event: Event): void {
-    const input = event.target as HTMLInputElement;
-    if (input.files && input.files[0]) {
-      this.pdfFile = input.files[0];
-      this.uploadPdf();
-    }
-  }
-
-  uploadPdf(): void {
-    if (!this.pdfFile) return;
-    this.isUploadingPdf = true;
-    this.contractService.uploadPdf(this.pdfFile).subscribe({
-      next: (r) => {
-        this.isUploadingPdf = false;
-        if (r.status === 0) {
-          if (r.data?.html) {
-            this.templateForm.content = r.data.html;
-          }
-          if (r.data?.pdfUrl) {
-            this.pdfGuideUrl = r.data.pdfUrl;
-            this.showPreview = true;
-          }
-          this.toast('PDF cargado. Puede editar el contenido y usar el PDF original como guía.');
-        } else {
-          this.errorMsg = r.message || 'Error al convertir PDF.';
-        }
-      },
-      error: () => {
-        this.isUploadingPdf = false;
-        this.errorMsg = 'Error al subir PDF.';
-      },
-    });
-  }
-
-  // ── PDF Base Upload (fondo exacto del contrato) ───────────────────────────
-
-  onPdfBaseSelected(event: Event): void {
-    const input = event.target as HTMLInputElement;
-    if (input.files && input.files[0]) {
-      this.pdfBaseFile = input.files[0];
-      this.uploadPdfBase();
-    }
-  }
-
-  uploadPdfBase(): void {
-    if (!this.pdfBaseFile || !this.isEditing) return;
-    this.isUploadingPdfBase = true;
-    this.contractService.uploadPdfBase(this.templateForm.id, this.pdfBaseFile).subscribe({
-      next: (r) => {
-        this.isUploadingPdfBase = false;
-        if (r.status === 0) {
-          this.hasPdfBase = true;
-          this.pdfBaseUrl = r.data?.pdf_url ?? null;
-          this.loadPdfDimensionsAndFields();
-          this.toast('PDF base guardado. Ahora configurá las coordenadas de cada variable.');
-        } else {
-          this.errorMsg = r.message || 'Error al guardar PDF base.';
-        }
-      },
-      error: () => {
-        this.isUploadingPdfBase = false;
-        this.errorMsg = 'Error al subir PDF base.';
-      },
-    });
-  }
-
-  // ── PDF Coordinate Picker ────────────────────────────────────────────────
-
-  loadPdfDimensionsAndFields(): void {
-    if (!this.templateForm.id || !this.hasPdfBase) return;
-    this.contractService.getPdfDimensions(this.templateForm.id).subscribe({
-      next: (r) => {
-        if (r.status === 0) {
-          this.pdfDimensions = r.data;
-          this.pdfPickerPage = 1;
-          // Re-renderizar una vez que las dimensiones estén listas y el DOM se haya actualizado
-          if (this.pdfPickerActive) {
-            setTimeout(() => this.renderPdfPage(), 0);
-          }
-        }
-      },
-    });
-    this.contractService.getPdfFields(this.templateForm.id).subscribe({
-      next: (r) => {
-        if (r.status === 0 && r.data) {
-          this.pdfFields = r.data.map((f: any) => ({
-            id: f.id,
-            variable: f.variable,
-            page: f.page,
-            x: f.x,
-            y: f.y,
-            font_size: f.font_size,
-            color: f.color,
-            max_width: f.max_width,
-          }));
-        } else {
-          this.pdfFields = [];
-        }
-        // Re-renderizar cuando carguen los campos (para mostrar puntos al abrir)
-        if (this.pdfPickerActive) {
-          setTimeout(() => this.renderPdfPage(), 0);
-        }
-      },
-    });
-  }
-
-  openPdfPicker(): void {
-    this.pdfPickerActive = true;
-    this.pdfCanvasUrl = this.pdfBaseUrl;
-    this.loadPdfDimensionsAndFields();
-  }
-
-  closePdfPicker(): void {
-    this.pdfPickerActive = false;
-    this.pdfPickerVariable = '';
-  }
-
-  /**
-   * Renderiza la página actual del PDF base en el canvas usando pdfjs-dist.
-   * Esto da una imagen pixel-perfect del PDF sin márgenes del visor de iframe.
-   */
-  async renderPdfPage(): Promise<void> {
-    if (!this.pdfCanvasUrl || !this.pdfDimensions) {
-      console.warn('[PDF Picker] Falta pdfCanvasUrl o pdfDimensions');
-      return;
-    }
-    const canvas = this.pdfCanvasRef?.nativeElement;
-    if (!canvas) {
-      console.warn('[PDF Picker] Canvas no disponible en DOM');
-      this.errorMsg = 'Canvas no disponible. Cerrá y volvé a abrir el editor.';
-      return;
-    }
-
-    this.isRenderingPdf = true;
-    this.errorMsg = '';
-    // Asegurar que pdfPickerPage sea un número entero (el <select> lo convierte a string)
-    const pageNum = parseInt(String(this.pdfPickerPage), 10);
-    try {
-      console.log('[PDF Picker] Cargando PDF:', this.pdfCanvasUrl);
-      const loadingTask = pdfjsLib.getDocument(this.pdfCanvasUrl);
-      const pdf = await loadingTask.promise;
-      console.log('[PDF Picker] PDF cargado. Páginas:', pdf.numPages);
-
-      if (pageNum < 1 || pageNum > pdf.numPages) {
-        throw new Error(`Página ${pageNum} fuera de rango (1-${pdf.numPages})`);
-      }
-
-      const page = await pdf.getPage(pageNum);
-      console.log('[PDF Picker] Página', pageNum, 'cargada');
-
-      // Escala: dibujamos a 1.5x para buena calidad visual
-      const viewport = page.getViewport({ scale: this.pdfRenderScale });
-      canvas.width = viewport.width;
-      canvas.height = viewport.height;
-      console.log('[PDF Picker] Canvas size:', canvas.width, 'x', canvas.height);
-
-      const ctx = canvas.getContext('2d')!;
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      await page.render({ canvasContext: ctx, viewport }).promise;
-
-      // Dibujar marcadores de campos ya colocados (directo sobre el canvas = pixel-perfect)
-      const currentPageData = this.pdfDimensions!.pages[this.pdfPickerPage - 1];
-      this.drawMarkersOnCanvas(ctx, canvas.width, canvas.height, { width: currentPageData.width, height: currentPageData.height });
-
-      // Convertir canvas a imagen base64 para mostrar como <img>
-      this.pdfImageUrl = canvas.toDataURL('image/png');
-      console.log('[PDF Picker] Imagen generada con marcadores. Size:', this.pdfImageUrl.length);
-    } catch (e: any) {
-      console.error('[PDF Picker] Error renderizando PDF:', e);
-      this.errorMsg = 'No se pudo renderizar el PDF. Probá recargar la página o usar el botón de abajo.';
-    } finally {
-      this.isRenderingPdf = false;
-    }
-  }
-
-  /**
-   * Dibuja marcadores + labels sobre el canvas.
-   * En modo preview también dibuja el valor dummy como se vería en el PDF final.
-   */
-  private drawMarkersOnCanvas(
-    ctx: CanvasRenderingContext2D,
-    canvasW: number,
-    _canvasH: number,
-    pageData: { width: number; height: number }
-  ): void {
-    const scaleX = canvasW / pageData.width;
-    const currentPageNum = parseInt(String(this.pdfPickerPage), 10);
-
-    this.pdfFields.forEach((f) => {
-      if (f.page !== currentPageNum) return;
-
-      const px = f.x * scaleX;
-      const py = f.y * scaleX;
-      const isFirma = f.variable === '{{firma}}';
-      const varName = f.variable.replace('{{', '').replace('}}', '');
-
-      // Tamaño de fuente base: pt * 1.5 (escala canvas) -> luego CSS escala proporcionalmente
-      const fontSizePx = Math.round(f.font_size * 1.5);
-
-      if (this.pdfPreviewMode && !isFirma) {
-        // ── MODO PREVIEW: dibujar valor dummy como texto real ──
-        const previewVal = this.pdfPreviewValues[f.variable] || 'VALOR';
-        console.log({
-    variable: f.variable,
-    valor: this.pdfPreviewValues[f.variable],
-    todos: this.pdfPreviewValues
-});
-
-        // Fondo blanco semitransparente para legibilidad
-        ctx.font = `bold ${fontSizePx}px Arial, sans-serif`;
-        const textMetrics = ctx.measureText(previewVal);
-        const textW = textMetrics.width + 8;
-        const textH = fontSizePx + 6;
-        ctx.fillStyle = 'rgba(255,255,255,0.92)';
-        ctx.fillRect(px - 2, py - 2, textW, textH);
-
-        // Texto dummy (color del campo)
-        const colorHex = f.color || '000000';
-        const r = parseInt(colorHex.substring(0, 2), 16);
-        const g = parseInt(colorHex.substring(2, 4), 16);
-        const b = parseInt(colorHex.substring(4, 6), 16);
-        ctx.fillStyle = `rgb(${r},${g},${b})`;
-        ctx.textAlign = 'left';
-        ctx.textBaseline = 'top';
-        ctx.fillText(previewVal, px, py);
-
-        // Label pequeño arriba indicando la variable
-        const labelFont = Math.max(8, Math.round(fontSizePx * 0.7));
-        ctx.font = `bold ${labelFont}px Arial, sans-serif`;
-        ctx.fillStyle = '#ef4444';
-        ctx.fillText(varName, px, py - labelFont - 2);
-
-        // Punto indicador pequeño al inicio
-        ctx.beginPath();
-        ctx.arc(px - 6, py + fontSizePx / 2, 3, 0, Math.PI * 2);
-        ctx.fillStyle = '#ef4444';
-        ctx.fill();
-
-      } else if (this.pdfPreviewMode && isFirma) {
-        // ── MODO PREVIEW: firma como rectángulo gris ──
-        ctx.fillStyle = 'rgba(200,200,200,0.4)';
-        ctx.fillRect(px, py, 80 * scaleX, 25 * scaleX);
-        ctx.strokeStyle = '#6b7280';
-        ctx.lineWidth = 1;
-        ctx.strokeRect(px, py, 80 * scaleX, 25 * scaleX);
-        ctx.font = `bold ${fontSizePx}px Arial, sans-serif`;
-        ctx.fillStyle = '#6b7280';
-        ctx.textAlign = 'left';
-        ctx.textBaseline = 'top';
-        ctx.fillText('( FIRMA )', px + 4, py + 4);
-
-      } else {
-        // ── MODO NORMAL: punto + label de variable ──
-        // Punto visible
-        ctx.beginPath();
-        ctx.arc(px, py, 5, 0, Math.PI * 2);
-        ctx.fillStyle = 'rgba(255,255,255,0.95)';
-        ctx.fill();
-        ctx.beginPath();
-        ctx.arc(px, py, 4, 0, Math.PI * 2);
-        ctx.fillStyle = isFirma ? '#10b981' : '#ef4444';
-        ctx.fill();
-        ctx.beginPath();
-        ctx.arc(px, py, 4, 0, Math.PI * 2);
-        ctx.strokeStyle = 'rgba(0,0,0,0.4)';
-        ctx.lineWidth = 0.8;
-        ctx.stroke();
-
-        // Label de variable arriba del punto
-        ctx.font = `bold ${Math.max(9, fontSizePx)}px Arial, sans-serif`;
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'bottom';
-        const labelY = py - 7;
-        // Fondo blanco para el label
-        const labelMetrics = ctx.measureText(varName);
-        const labelW = labelMetrics.width + 6;
-        ctx.fillStyle = 'rgba(255,255,255,0.9)';
-        ctx.fillRect(px - labelW / 2, labelY - 11, labelW, 13);
-        ctx.fillStyle = isFirma ? '#047857' : '#b91c1c';
-        ctx.fillText(varName, px, labelY);
-      }
-    });
-  }
-
-  onPdfPreviewClick(event: MouseEvent): void {
-    if (!this.pdfPickerActive || !this.pdfPickerVariable || !this.pdfDimensions) return;
-
-    const img = event.target as HTMLImageElement;
-    if (!img || !img.clientWidth) return;
-
-    const currentPageNum = parseInt(String(this.pdfPickerPage), 10);
-    const pageData = this.pdfDimensions.pages[currentPageNum - 1];
-    if (!pageData) return;
-
-    // offsetX/Y son la posición exacta dentro de la imagen renderizada (px del DOM)
-    const clickX = event.offsetX;
-    const clickY = event.offsetY;
-
-    // Escala: puntos PDF = click_px * (pdf_pts / img_px)
-    const scaleX = pageData.width / img.clientWidth;
-    const scaleY = pageData.height / img.clientHeight;
-
-    const pdfX = clickX * scaleX;
-    const pdfY = clickY * scaleY;
-
-    // Debug en consola para verificar precisión
-    console.log('[PDF Click]', { clickX, clickY, imgW: img.clientWidth, imgH: img.clientHeight, pdfX, pdfY, pageW: pageData.width, pageH: pageData.height });
-
-    // Siempre agregar una nueva instancia
-    this.pdfFields.push({
-      variable: this.pdfPickerVariable,
-      page: this.pdfPickerPage,
-      x: parseFloat(pdfX.toFixed(2)),
-      y: parseFloat(pdfY.toFixed(2)),
-      font_size: this.pdfPickerVariable === '{{firma}}' ? 12 : 10,
-      color: '000000',
-      max_width: 200,
-    });
-
-    const existingCount = this.pdfFields.filter(
-      f => f.variable === this.pdfPickerVariable && f.page === this.pdfPickerPage
-    ).length;
-    const msg = existingCount > 1
-      ? `Nueva posición #${existingCount} agregada: ${this.pdfPickerVariable}`
-      : `Posición guardada: ${this.pdfPickerVariable}`;
-    this.toast(`${msg} (página ${this.pdfPickerPage})`);
-
-    // Re-renderizar para mostrar el nuevo marcador dibujado sobre el PDF
-    this.renderPdfPage();
-  }
-
-  onPdfMouseMove(event: MouseEvent): void {
-    if (!this.pdfDimensions) return;
-    const img = event.target as HTMLImageElement;
-    if (!img || !img.clientWidth) return;
-
-    const pageData = this.pdfDimensions.pages[this.pdfPickerPage - 1];
-    if (!pageData) return;
-
-    const scaleX = pageData.width / img.clientWidth;
-    const scaleY = pageData.height / img.clientHeight;
-
-    this.cursorCoords = {
-      x: Math.round(event.offsetX),
-      y: Math.round(event.offsetY),
-      pdfX: Math.round(event.offsetX * scaleX),
-      pdfY: Math.round(event.offsetY * scaleY),
-    };
-  }
-
-  removePdfField(idx: number): void {
-    this.pdfFields.splice(idx, 1);
-    // Re-renderizar para quitar el punto del canvas
-    this.renderPdfPage();
-  }
-
-  savePdfFields(): void {
-    if (!this.templateForm.id) return;
-    const payload = this.pdfFields.map(f => ({
-      variable: f.variable,
-      page: f.page,
-      x: f.x,
-      y: f.y,
-      font_size: f.font_size,
-      color: f.color,
-      max_width: f.max_width,
-    }));
-    this.contractService.savePdfFields(this.templateForm.id, payload).subscribe({
-      next: (r) => {
-        if (r.status === 0) {
-          this.toast('Coordenadas guardadas exitosamente.');
-        } else {
-          this.errorMsg = r.message || 'Error al guardar coordenadas.';
-        }
-      },
-      error: () => this.errorMsg = 'Error de red al guardar coordenadas.',
-    });
-  }
-
-  openPdfPreview(): void {
-    if (!this.templateForm.id) return;
-    this.contractService.getPdfPreviewBlob(this.templateForm.id).subscribe({
-      next: (blob) => {
-        const url = URL.createObjectURL(blob);
-        window.open(url, '_blank');
-      },
-      error: () => {
-        this.errorMsg = 'Error al generar la vista previa del PDF.';
-      },
-    });
-  }
-
-  // ── Logo Upload ───────────────────────────────────────────────────────────
-
-  onLogoSelected(event: Event): void {
-    const input = event.target as HTMLInputElement;
-    if (input.files && input.files[0]) {
-      this.logoFile = input.files[0];
-      const reader = new FileReader();
-      reader.onload = () => {
-        this.logoPreview = reader.result as string;
-      };
-      reader.readAsDataURL(this.logoFile);
-      this.uploadLogo();
-    }
-  }
-
-  uploadLogo(): void {
-    if (!this.logoFile || !this.isEditing) return;
-    this.isUploadingLogo = true;
-    this.contractService.uploadLogo(this.templateForm.id, this.logoFile).subscribe({
-      next: (r) => {
-        this.isUploadingLogo = false;
-        if (r.status === 0) {
-          this.toast('Logo guardado.');
-        } else {
-          this.errorMsg = r.message || 'Error al subir logo.';
-        }
-      },
-      error: () => {
-        this.isUploadingLogo = false;
-        this.errorMsg = 'Error al subir logo.';
-      },
-    });
-  }
-
-  // ── Variables rápidas ─────────────────────────────────────────────────────
-
-  insertVar(code: string): void {
-    const ta = document.getElementById('contractContent') as HTMLTextAreaElement | null;
-    if (!ta) {
-      this.templateForm.content += ' ' + code;
-      return;
-    }
-    const start = ta.selectionStart;
-    const end   = ta.selectionEnd;
-    const text  = this.templateForm.content;
-    this.templateForm.content = text.substring(0, start) + code + text.substring(end);
-    setTimeout(() => {
-      ta.selectionStart = ta.selectionEnd = start + code.length;
-      ta.focus();
-    }, 0);
-  }
-
-  togglePreview(): void {
-    this.showPreview = !this.showPreview;
-  }
-
-  safePdfUrl(): SafeResourceUrl | null {
-    return this.pdfGuideUrl ? this.sanitizer.bypassSecurityTrustResourceUrl(this.pdfGuideUrl) : null;
-  }
-
-  /**
-   * Limpia todos los inline styles del HTML, dejando solo etiquetas semánticas limpias.
-   * Esto permite que el CSS de la página de firma aplique el diseño formal.
-   */
-  cleanStyles(): void {
-    if (!this.templateForm.content) return;
-    let html = this.templateForm.content;
-    // Quitar atributos style="..." de todas las etiquetas
-    html = html.replace(/\s*style\s*=\s*["'][^"']*["']/gi, '');
-    // Quitar atributos class que sean del wrapper viejo
-    html = html.replace(/\s*class\s*=\s*["']contract-body["']/gi, '');
-    html = html.replace(/\s*class\s*=\s*["']contract-guide["']/gi, '');
-    // Quitar el wrapper viejo con inline style
-    html = html.replace(/<div\s*>\s*<p\s*><strong>Guía:<\/strong>[^<]*<\/p>/i, '');
-    html = html.replace(/<\/div>\s*$/i, '');
-    // Limpiar espacios extra
-    html = html.replace(/>\s+</g, '><');
-    html = html.replace(/\n\s*\n/g, '\n');
-    this.templateForm.content = html.trim();
-    this.toast('Estilos limpiados. El contrato ahora usará el diseño formal.');
-  }
-
-  /**
-   * Renderiza el HTML de preview aplicando estilos formales de contrato
-   * y reemplazando las variables {{xxx}} con badges de colores.
-   */
-  renderPreviewHtml(): SafeHtml {
-    let html = this.templateForm.content || '';
-
-    // Aplicar estilos formales de contrato a headings (simulando la página de firma)
-    html = html.replace(/<h2>/gi, '<h2 style="font-family:Georgia,serif; font-size:16px; font-weight:bold; text-align:center; color:#1a1a2e; margin:20px 0 10px; text-transform:uppercase; letter-spacing:0.5px; border-bottom:1px solid #ccc; padding-bottom:4px;">');
-    html = html.replace(/<h3>/gi, '<h3 style="font-family:Georgia,serif; font-size:14px; font-weight:bold; text-align:left; color:#333; margin:16px 0 8px; background:#f5f5f5; padding:4px 8px; border-left:3px solid #6c63ff;">');
-    html = html.replace(/<p>/gi, '<p style="font-size:14px; line-height:1.85; color:#222; margin-bottom:10px; text-indent:30px; text-align:justify;">');
-    html = html.replace(/<table>/gi, '<table style="width:100%; border-collapse:collapse; margin:12px 0; font-size:13px;">');
-    html = html.replace(/<td>/gi, '<td style="border:1px solid #bbb; padding:8px 10px; text-align:left; background:#fafafa;">');
-    html = html.replace(/<th>/gi, '<th style="border:1px solid #bbb; padding:8px 10px; text-align:left; background:#f0f0f0; font-weight:bold;">');
-
-    // Badges de variables con colores distintivos
-    const varBadges: Record<string, { label: string; bg: string; color: string }> = {
-      '{{nombre}}':          { label: 'NOMBRE',          bg: '#dbeafe', color: '#1e40af' },
-      '{{apellido}}':        { label: 'APELLIDO',        bg: '#dcfce7', color: '#166534' },
-      '{{nombre_completo}}': { label: 'NOMBRE COMPLETO', bg: '#e0e7ff', color: '#3730a3' },
-      '{{dni}}':             { label: 'DNI',             bg: '#fef3c7', color: '#92400e' },
-      '{{telefono}}':        { label: 'TELÉFONO',        bg: '#fce7f3', color: '#9d174d' },
-      '{{email}}':           { label: 'EMAIL',           bg: '#ccfbf1', color: '#115e59' },
-      '{{direccion}}':       { label: 'DIRECCIÓN',       bg: '#f3e8ff', color: '#6b21a8' },
-      '{{fecha}}':           { label: 'FECHA',           bg: '#ffedd5', color: '#9a3412' },
-      '{{fecha_hora}}':      { label: 'FECHA Y HORA',    bg: '#ecfccb', color: '#3f6212' },
-      '{{contrato_id}}':     { label: 'N° CONTRATO',     bg: '#f1f5f9', color: '#475569' },
-    };
-
-    Object.entries(varBadges).forEach(([code, badge]) => {
-      const escaped = code.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-      const regex = new RegExp(escaped, 'g');
-      html = html.replace(
-        regex,
-        `<span style="display:inline-block; padding:2px 8px; border-radius:4px; font-size:12px; font-weight:700; background:${badge.bg}; color:${badge.color}; border:1px solid ${badge.color}; font-family:Arial,sans-serif; white-space:nowrap;">${badge.label}</span>`
-      );
-    });
-
-    return this.sanitizer.bypassSecurityTrustHtml(html);
-  }
-
-  // ── Helpers ───────────────────────────────────────────────────────────────
-
-  toast(msg: string): void {
-    this.successMsg = msg;
-    setTimeout(() => { this.successMsg = ''; }, 3500);
-  }
-
-  // ── Documentos de identidad ─────────────────────────────────────────────
+  // ── Documentos de identidad ───────────────────────────────────────────────
 
   openDocuments(cc: ClientContract): void {
-    this.showDocumentsModal = cc;
-    this.documentFrontFile = null;
-    this.documentBackFile = null;
+    this.showDocumentsModal   = cc;
+    this.documentFrontFile    = null;
+    this.documentBackFile     = null;
     this.documentFrontPreview = null;
-    this.documentBackPreview = null;
-    this.documentNumberFront = cc.document_number_front || cc.user?.dni || '';
-    this.documentNumberBack = cc.document_number_back || cc.user?.dni || '';
+    this.documentBackPreview  = null;
+    this.documentNumberFront  = cc.document_number_front || cc.user?.dni || '';
+    this.documentNumberBack   = cc.document_number_back  || cc.user?.dni || '';
     this.isUploadingDocuments = false;
+    this.errorMsg = '';
   }
 
-  closeDocuments(): void {
-    this.showDocumentsModal = null;
-  }
+  closeDocuments(): void { this.showDocumentsModal = null; }
 
   onDocumentFrontSelected(event: Event): void {
-    const input = event.target as HTMLInputElement;
-    if (input.files && input.files[0]) {
-      this.documentFrontFile = input.files[0];
-      const reader = new FileReader();
-      reader.onload = () => { this.documentFrontPreview = reader.result as string; };
-      reader.readAsDataURL(this.documentFrontFile);
-    }
+    const file = (event.target as HTMLInputElement).files?.[0];
+    if (!file) return;
+    this.documentFrontFile = file;
+    const reader = new FileReader();
+    reader.onload = () => { this.documentFrontPreview = reader.result as string; };
+    reader.readAsDataURL(file);
   }
 
   onDocumentBackSelected(event: Event): void {
-    const input = event.target as HTMLInputElement;
-    if (input.files && input.files[0]) {
-      this.documentBackFile = input.files[0];
-      const reader = new FileReader();
-      reader.onload = () => { this.documentBackPreview = reader.result as string; };
-      reader.readAsDataURL(this.documentBackFile);
-    }
+    const file = (event.target as HTMLInputElement).files?.[0];
+    if (!file) return;
+    this.documentBackFile = file;
+    const reader = new FileReader();
+    reader.onload = () => { this.documentBackPreview = reader.result as string; };
+    reader.readAsDataURL(file);
   }
 
   uploadDocuments(): void {
     if (!this.showDocumentsModal) return;
     const cc = this.showDocumentsModal;
+    const dni = cc.user?.dni || '';
 
-    // Validar número de documento contra el DNI del contrato
-    const clientDni = cc.user?.dni || '';
-    if (clientDni) {
-      if (this.documentNumberFront && this.documentNumberFront !== clientDni) {
-        this.errorMsg = `El número frontal (${this.documentNumberFront}) no coincide con el DNI del contrato (${clientDni}).`;
+    if (dni) {
+      if (this.documentNumberFront && this.documentNumberFront !== dni) {
+        this.errorMsg = `El número frontal (${this.documentNumberFront}) no coincide con la cédula del contrato (${dni}).`;
         return;
       }
-      if (this.documentNumberBack && this.documentNumberBack !== clientDni) {
-        this.errorMsg = `El número trasero (${this.documentNumberBack}) no coincide con el DNI del contrato (${clientDni}).`;
+      if (this.documentNumberBack && this.documentNumberBack !== dni) {
+        this.errorMsg = `El número trasero (${this.documentNumberBack}) no coincide con la cédula del contrato (${dni}).`;
         return;
       }
     }
@@ -1136,28 +1302,26 @@ export class ContractsComponent implements OnInit {
       this.documentFrontFile || undefined,
       this.documentBackFile || undefined,
       this.documentNumberFront || undefined,
-      this.documentNumberBack || undefined
+      this.documentNumberBack || undefined,
     ).subscribe({
-      next: (r) => {
+      next: r => {
         this.isUploadingDocuments = false;
         if (r.status === 0) {
           this.closeDocuments();
-          this.toast('Documentos guardados exitosamente.');
+          this.toast('Documentos guardados.');
           this.loadAssigned();
         } else {
           this.errorMsg = r.message || 'Error al guardar documentos.';
         }
       },
-      error: () => {
-        this.isUploadingDocuments = false;
-        this.errorMsg = 'Error de red al subir documentos.';
-      },
+      error: () => { this.isUploadingDocuments = false; this.errorMsg = 'Error de red al subir documentos.'; },
     });
   }
 
-  statusBadge(status: string): string {
-    return status === 'signed'
-      ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300'
-      : 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-300';
+  // ── Helpers ───────────────────────────────────────────────────────────────
+
+  toast(msg: string): void {
+    this.successMsg = msg;
+    setTimeout(() => { this.successMsg = ''; }, 3500);
   }
 }

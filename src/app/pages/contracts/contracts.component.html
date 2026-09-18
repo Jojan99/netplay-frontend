@@ -24,8 +24,13 @@
     </div>
     <label class="np-search" *ngIf="activeTab === 'assigned'">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg>
-      <input type="search" [(ngModel)]="assignedSearch" placeholder="Nombre, cédula o contrato…" aria-label="Buscar contrato asignado" />
+      <input type="search" [(ngModel)]="assignedSearch" (input)="recalcularAsignados()" placeholder="Nombre, cédula o contrato…" aria-label="Buscar contrato asignado" />
     </label>
+    <div class="np-chips" *ngIf="activeTab === 'assigned'">
+      <button type="button" class="np-chip" [attr.aria-pressed]="filtroEstado === 'todos'" (click)="filtrarEstado('todos')">Todos</button>
+      <button type="button" class="np-chip" [attr.aria-pressed]="filtroEstado === 'pending'" (click)="filtrarEstado('pending')">Pendientes</button>
+      <button type="button" class="np-chip" [attr.aria-pressed]="filtroEstado === 'signed'" (click)="filtrarEstado('signed')">Firmados</button>
+    </div>
     <span class="np-spacer"></span>
     <p *ngIf="successMsg" class="np-notice np-notice--ok np-notice--inline">{{ successMsg }}</p>
   </div>
@@ -36,13 +41,17 @@
 
         <!-- Plantillas -->
         <table class="np-table np-table--registry" *ngIf="activeTab === 'templates'">
-          <thead><tr><th class="np-th-stripe"></th><th>Plantilla</th><th>Recursos</th><th>Creada</th><th>Estado</th><th class="np-th-right">Acciones</th></tr></thead>
+          <thead><tr><th class="np-th-stripe"></th><th>Plantilla</th><th>Cómo se arma</th><th>Creada</th><th>Estado</th><th class="np-th-right">Acciones</th></tr></thead>
           <tbody>
             <tr *ngIf="isLoading" class="np-empty"><td colspan="6"><span class="np-spinner"></span></td></tr>
             <tr *ngFor="let c of contracts" class="np-row" [ngClass]="c.active ? 'np-row--active' : 'np-row--off'" (click)="openEdit(c)" tabindex="0" (keydown.enter)="openEdit(c)">
               <td class="np-stripe"><i></i></td>
               <td><div class="np-name">{{ c.title }}</div><div class="np-plan">Valor instalación <em>{{ c.installation_value ? ('$ ' + (c.installation_value | number:'1.0-0')) : '—' }}</em></div></td>
-              <td><span class="np-tags"><span class="np-tag np-tag--neutral" *ngIf="c.logo">Logo</span><span class="np-tag" *ngIf="c.pdf_path">PDF base</span><span class="np-muted" *ngIf="!c.logo && !c.pdf_path">—</span></span></td>
+              <td>
+                <span class="np-pill np-pill--info" *ngIf="c.pdf_path">PDF con coordenadas</span>
+                <span class="np-pill np-pill--neutral" *ngIf="!c.pdf_path">Plantilla de texto</span>
+                <span class="np-fine" *ngIf="c.logo">Con logo propio</span>
+              </td>
               <td class="np-data">{{ c.created_at | date:'dd/MM/yy' }}</td>
               <td><span class="np-pill" [ngClass]="c.active ? 'np-pill--active' : 'np-pill--neutral'">{{ c.active ? 'Activa' : 'Inactiva' }}</span></td>
               <td class="np-td-right"><div class="np-rowacts" (click)="$event.stopPropagation()">
@@ -56,34 +65,37 @@
 
         <!-- Asignados -->
         <table class="np-table np-table--registry" *ngIf="activeTab === 'assigned'">
-          <thead><tr><th class="np-th-stripe"></th><th>Cliente</th><th>Contrato</th><th>Documentos</th><th>Estado</th><th class="np-th-right">Acciones</th></tr></thead>
+          <thead><tr><th class="np-th-stripe"></th><th>Cliente</th><th>Contrato</th><th>Documentos</th><th>Seguimiento</th><th class="np-th-right">Acciones</th></tr></thead>
           <tbody>
             <tr *ngIf="isLoadingAssigned" class="np-empty"><td colspan="6"><span class="np-spinner"></span></td></tr>
-            <tr *ngFor="let cc of filteredAssigned" class="np-row" [ngClass]="cc.status === 'signed' ? 'np-row--active' : 'np-row--noip'">
+            <tr *ngFor="let cc of asignadosFiltrados" class="np-row" [ngClass]="cc.status === 'signed' ? 'np-row--active' : 'np-row--noip'">
               <td class="np-stripe"><i></i></td>
               <td><div class="np-name">{{ cc.user?.names }} {{ cc.user?.lastname }}</div><div class="np-plan">CC <em>{{ cc.user?.dni || cc.user?.username }}</em></div></td>
               <td>{{ cc.contract?.title }}</td>
               <td>
                 <span class="np-muted" *ngIf="!cc.require_documents">No requiere</span>
-                <span class="np-pill np-pill--active" *ngIf="cc.require_documents && cc.document_front_path && cc.document_back_path">Docs listos</span>
-                <span class="np-pill np-pill--noip" *ngIf="cc.require_documents && !(cc.document_front_path && cc.document_back_path)">Faltan docs</span>
+                <span class="np-pill np-pill--active" *ngIf="cc.require_documents && cc.document_front_path && cc.document_back_path">Cédula lista</span>
+                <span class="np-pill np-pill--noip" *ngIf="cc.require_documents && !(cc.document_front_path && cc.document_back_path)">Falta cédula</span>
               </td>
               <td>
-                <span class="np-pill" [ngClass]="cc.status === 'signed' ? 'np-pill--active' : 'np-pill--noip'">{{ cc.status === 'signed' ? 'Firmado' : 'Pendiente' }}</span>
-                <div class="np-fine" *ngIf="cc.signed_at">{{ cc.signed_at | date:'dd/MM/yy HH:mm' }}</div>
+                <span class="np-pill" [ngClass]="etapaTono(cc)">{{ etapa(cc) }}</span>
+                <span class="np-fine" *ngIf="cc.sent_at">Enviado {{ cc.sent_at | date:'dd/MM/yy HH:mm' }}<ng-container *ngIf="canal(cc)"> por {{ canal(cc) }}</ng-container></span>
+                <span class="np-fine" *ngIf="cc.opened_at">Abierto {{ cc.opened_at | date:'dd/MM/yy HH:mm' }}</span>
+                <span class="np-fine" *ngIf="cc.signed_at">Firmado {{ cc.signed_at | date:'dd/MM/yy HH:mm' }}</span>
+                <span class="np-fine" *ngIf="!cc.sent_at && !cc.opened_at && !cc.signed_at">Asignado {{ cc.created_at | date:'dd/MM/yy' }}</span>
               </td>
               <td class="np-td-right"><div class="np-rowacts">
                 <button type="button" class="np-icobtn" [class.np-icobtn--ok]="copiedId === cc.id" (click)="copyLink(cc)" [title]="copiedId === cc.id ? 'Copiado' : 'Copiar link de firma'">
                   <svg *ngIf="copiedId !== cc.id" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V6a2 2 0 0 1 2-2h9"/></svg>
                   <svg *ngIf="copiedId === cc.id" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="m5 13 4 4L19 7"/></svg>
                 </button>
-                <button type="button" class="np-icobtn np-icobtn--ok" (click)="openSend(cc)" title="Enviar link de firma"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 20l1.3-3.8A8 8 0 1 1 8 19.2L4 20z"/></svg></button>
+                <button type="button" class="np-icobtn np-icobtn--ok" (click)="openSend(cc)" [title]="cc.sent_at ? 'Reenviar link de firma' : 'Enviar link de firma'"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 20l1.3-3.8A8 8 0 1 1 8 19.2L4 20z"/></svg></button>
                 <button type="button" class="np-icobtn" *ngIf="cc.require_documents" (click)="openDocuments(cc)" title="Documentos de identidad"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="9" cy="11" r="2"/><path d="M14 10h4M14 14h4M6 17c.8-1.6 4.2-1.6 5 0"/></svg></button>
                 <button type="button" class="np-icobtn" *ngIf="cc.status === 'signed'" (click)="downloadPdf(cc)" title="Descargar PDF firmado"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5M12 11v6m0 0-2.5-2.5M12 17l2.5-2.5"/></svg></button>
                 <button type="button" class="np-icobtn" (click)="confirmDeleteAssigned(cc.id)" title="Quitar contrato del cliente"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/></svg></button>
               </div></td>
             </tr>
-            <tr *ngIf="!isLoadingAssigned && filteredAssigned.length === 0" class="np-empty"><td colspan="6"><strong>{{ assignedSearch ? 'Sin resultados para "' + assignedSearch + '".' : 'Sin contratos asignados.' }}</strong></td></tr>
+            <tr *ngIf="!isLoadingAssigned && asignadosFiltrados.length === 0" class="np-empty"><td colspan="6"><strong>{{ assignedSearch ? 'Sin resultados para "' + assignedSearch + '".' : 'Sin contratos asignados.' }}</strong></td></tr>
           </tbody>
         </table>
       </div>
@@ -91,358 +103,262 @@
   </div>
 </div>
 
-<!-- ══ Plantilla: crear / editar (editor de PDF y variables) ═══════════════ -->
+<!-- ══ Plantilla: crear / editar ════════════════════════════════════════════ -->
 <div *ngIf="showTemplateModal" class="np-overlay np-overlay--top">
-  <div class="np-modal np-modal--editor" [class.np-modal--editor-wide]="pdfGuideUrl" role="dialog" aria-modal="true">
+  <div class="np-modal np-modal--editor np-modal--editor-wide" role="dialog" aria-modal="true">
     <div class="np-modal-head">
-      <div><p class="np-kicker">Contratos <b>/</b> Plantilla</p><h3>{{ isEditing ? 'Editar plantilla' : 'Nueva plantilla de contrato' }}</h3></div>
-      <button type="button" class="np-icobtn" (click)="showTemplateModal = false" aria-label="Cerrar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
+      <div><p class="np-kicker">Contratos <b>/</b> Plantilla</p><h3>{{ isEditing ? templateForm.title : 'Nueva plantilla de contrato' }}</h3></div>
+      <button type="button" class="np-icobtn" (click)="cerrarPlantilla()" aria-label="Cerrar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
     </div>
-    <div class="np-modal-body np-modal-body--scroll space-y-4">
-      <div *ngIf="errorMsg" class="bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 text-sm px-3 py-2 rounded-lg">
-        {{ errorMsg }}
-      </div>
 
-      <!-- Título -->
-      <div>
-        <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Título del contrato</label>
-        <input [(ngModel)]="templateForm.title" placeholder="Ej: Contrato de prestación de servicios de internet"
-          class="w-full px-3 py-2 text-sm bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl border border-slate-200/60 dark:border-slate-700/60 rounded-xl text-slate-700 dark:text-slate-300 focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-400 transition-all shadow-sm outline-none"/>
-      </div>
+    <div class="np-tabs" role="tablist">
+      <button type="button" class="np-tab" role="tab" *ngIf="isEditing" [attr.aria-selected]="seccion === 'pdf'" (click)="abrirSeccion('pdf')">Mi PDF y sus variables<span class="np-c" *ngIf="pdfCampos.length">{{ pdfCampos.length }}</span></button>
+      <button type="button" class="np-tab" role="tab" [attr.aria-selected]="seccion === 'contenido'" (click)="abrirSeccion('contenido')">Datos y texto</button>
+      <button type="button" class="np-tab" role="tab" [attr.aria-selected]="seccion === 'previa'" (click)="abrirSeccion('previa')">Cómo lo ve el cliente</button>
+    </div>
 
-      <!-- Valor de instalación -->
-      <div *ngIf="isEditing">
-        <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Valor de instalación (fijo para este contrato)</label>
-        <div class="flex items-center gap-2">
-          <span class="text-slate-500 text-sm">$</span>
-          <input [(ngModel)]="templateForm.installation_value" type="number" min="0" step="1000"
-            placeholder="60000"
-            class="w-full px-3 py-2 text-sm bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl border border-slate-200/60 dark:border-slate-700/60 rounded-xl text-slate-700 dark:text-slate-300 focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-400 transition-all shadow-sm outline-none"/>
+    <div class="np-modal-body np-modal-body--scroll">
+      <p *ngIf="errorMsg" class="np-notice np-notice--danger">{{ errorMsg }}</p>
+
+      <!-- ── Contenido ───────────────────────────────────────────────────── -->
+      <ng-container *ngIf="seccion === 'contenido'">
+
+        <div class="np-notice np-notice--info np-ctr-modo" *ngIf="modo === 'pdf'">
+          <strong>Esta plantilla usa su propio PDF.</strong>
+          El cliente firma sobre una copia exacta de ese documento y sus datos se imprimen en los puntos que usted
+          marcó en <em>Mi PDF y sus variables</em>. El texto de más abajo es lo que el cliente lee en la pantalla del
+          celular antes de firmar: conviene tenerlo, aunque el documento que vale es el PDF.
         </div>
-        <p class="text-xs text-slate-400 mt-1" ngNonBindable>
-          Este valor se usará para <code>{{valor_instalacion}}</code> en todos los clientes que firmen esta plantilla.
-        </p>
-      </div>
-
-      <div *ngIf="isEditing">
-        <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Valor de plazo (fijo para este contrato)</label>
-        <div class="flex items-center gap-2">
-          <span class="text-slate-500 text-sm">$</span>
-          <input [(ngModel)]="templateForm.plazo" type="number" min="0" step="1000"
-            placeholder="60000"
-            class="w-full px-3 py-2 text-sm bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl border border-slate-200/60 dark:border-slate-700/60 rounded-xl text-slate-700 dark:text-slate-300 focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-400 transition-all shadow-sm outline-none"/>
+        <div class="np-notice np-notice--warn np-ctr-modo" *ngIf="modo !== 'pdf' && isEditing">
+          <strong>Suba el contrato de su empresa en PDF.</strong>
+          Es la forma recomendada: el cliente firma su formato exacto y usted sólo marca dónde va cada dato.
+          Si no tiene el contrato en PDF, escríbalo acá abajo como texto y también funcionará.
         </div>
-        <p class="text-xs text-slate-400 mt-1" ngNonBindable>
-          Este valor se usará para <code>{{plazo}}</code> en todos los clientes que firmen esta plantilla.
-        </p>
-      </div>
-      
+        <div class="np-notice np-notice--code np-ctr-modo" *ngIf="!isEditing">
+          Cree la plantilla con un título y después podrá subir su contrato en PDF y colocarle las variables.
+        </div>
 
-      <!-- Logo del contrato -->
-      <div>
-        <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Logo del contrato</label>
-        <div class="flex items-center gap-3">
-          <label class="cursor-pointer inline-flex items-center gap-2 px-3 py-2 text-sm font-medium text-indigo-700 dark:text-indigo-300 bg-indigo-50 dark:bg-indigo-900/30 rounded-lg hover:bg-indigo-100 dark:hover:bg-indigo-900/50 transition">
-            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
-            </svg>
-            {{ isEditing ? 'Cambiar logo' : 'Subir logo' }}
-            <input type="file" accept="image/*" class="hidden" (change)="onLogoSelected($event)"/>
+        <div class="np-form">
+          <label class="np-field np-field-full"><span>Título del contrato</span>
+            <input class="np-input" [(ngModel)]="templateForm.title" placeholder="Contrato de prestación de servicios de internet" />
           </label>
-          <span *ngIf="isUploadingLogo" class="text-xs text-slate-500">Subiendo...</span>
-        </div>
-        <div *ngIf="logoPreview" class="mt-2 p-2 bg-slate-50/80 dark:bg-slate-800/80 rounded-lg inline-block">
-          <img [src]="logoPreview" alt="Logo preview" class="h-16 w-auto object-contain rounded"/>
-        </div>
-      </div>
-
-      <!-- Subir PDF -->
-      <div>
-        <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Cargar desde PDF</label>
-        <div class="flex items-center gap-3">
-          <label class="cursor-pointer inline-flex items-center gap-2 px-3 py-2 text-sm font-medium text-rose-700 dark:text-rose-300 bg-rose-50 dark:bg-rose-900/30 rounded-lg hover:bg-rose-100 dark:hover:bg-rose-900/50 transition">
-            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"/>
-            </svg>
-            Seleccionar PDF
-            <input type="file" accept="application/pdf" class="hidden" (change)="onPdfSelected($event)"/>
+          <label class="np-field"><span>Valor de instalación (pesos)</span>
+            <input class="np-input np-mono" type="number" min="0" step="1000" [(ngModel)]="templateForm.installation_value" placeholder="60000" (change)="previaPendiente()" />
+            <small class="np-fine">Se usa en la variable “Valor de instalación”.</small>
           </label>
-          <span *ngIf="isUploadingPdf" class="text-xs text-slate-500">Convirtiendo PDF a HTML...</span>
+          <label class="np-field"><span>Plazo de permanencia (meses)</span>
+            <input class="np-input np-mono" type="number" min="0" max="120" step="1" [(ngModel)]="templateForm.plazo" placeholder="12" (change)="previaPendiente()" />
+            <small class="np-fine">Se usa en la variable “Plazo”.</small>
+          </label>
         </div>
-        <p class="text-xs text-slate-400 mt-1">El sistema extraerá el texto del PDF y lo convertirá a HTML editable.</p>
-      </div>
 
-      <!-- Subir PDF Base (copia exacta) -->
-      <div *ngIf="isEditing">
-        <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">PDF base (copia exacta)</label>
-        <div class="flex items-center gap-3">
-          <label class="cursor-pointer inline-flex items-center gap-2 px-3 py-2 text-sm font-medium text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-900/30 rounded-lg hover:bg-emerald-100 dark:hover:bg-emerald-900/50 transition">
-            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
-            </svg>
+        <div class="np-ctr-archivos">
+          <label class="np-btn np-btn--ghost np-btn--sm">
+            {{ logoPreview ? 'Cambiar logo' : 'Subir logo' }}
+            <input type="file" accept="image/*" hidden (change)="onLogoSelected($event)" />
+          </label>
+          <label class="np-btn np-btn--ghost np-btn--sm">
+            Transcribir desde un PDF
+            <input type="file" accept="application/pdf" hidden (change)="onPdfSelected($event)" />
+          </label>
+          <label class="np-btn np-btn--ghost np-btn--sm" *ngIf="isEditing">
             {{ hasPdfBase ? 'Cambiar PDF base' : 'Subir PDF base' }}
-            <input type="file" accept="application/pdf" class="hidden" (change)="onPdfBaseSelected($event)"/>
+            <input type="file" accept="application/pdf" hidden (change)="onPdfBaseSelected($event)" />
           </label>
-          <span *ngIf="isUploadingPdfBase" class="text-xs text-slate-500">Guardando PDF base...</span>
-          <span *ngIf="hasPdfBase && !isUploadingPdfBase" class="text-xs text-emerald-600 font-medium">
-            <svg class="w-3 h-3 inline" fill="currentColor" viewBox="0 0 20 20">
-              <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
-            </svg>
-            PDF base guardado
-          </span>
+          <span class="np-muted" *ngIf="isUploadingLogo || isUploadingPdf || isUploadingPdfBase"><span class="np-spinner np-spinner--sm"></span> Subiendo…</span>
+          <span class="np-spacer"></span>
+          <img *ngIf="logoPreview" [src]="logoPreview" alt="Logo de la plantilla" class="np-ctr-logo" />
         </div>
-        <p class="text-xs text-slate-400 mt-1">
-          Este PDF se usará como <strong>copia exacta</strong> en el documento final. Se le agregará la firma del cliente al final.
-        </p>
-      </div>
 
-      <!-- Configurar posiciones de variables sobre PDF -->
-      <div *ngIf="hasPdfBase && isEditing" class="border border-indigo-200 dark:border-indigo-800 rounded-lg p-3 bg-indigo-50/50 dark:bg-indigo-900/20">
-        <div class="flex items-center justify-between mb-2">
-          <label class="block text-sm font-medium text-indigo-700 dark:text-indigo-300">Posicionar variables sobre PDF</label>
-          <div class="flex gap-2">
-            <button (click)="openPdfPreview()"
-              class="px-3 py-1.5 text-xs font-semibold rounded-md bg-slate-600 text-white hover:bg-slate-700 transition"
-              title="Ver PDF de prueba con datos dummy">
-              Preview
-            </button>
-            <button (click)="pdfPickerActive ? closePdfPicker() : openPdfPicker()"
-              class="px-3 py-1.5 text-xs font-semibold rounded-md bg-indigo-600 text-white hover:bg-indigo-700 transition">
-              {{ pdfPickerActive ? 'Cerrar editor' : 'Configurar posiciones' }}
-            </button>
-          </div>
-        </div>
-        <p class="text-xs text-slate-500 dark:text-slate-400">
-          Hacé clic sobre el PDF para posicionar cada variable. Usá <strong>Preview</strong> para verificar que queden bien antes de firmar.
-        </p>
+        <section>
+          <p class="np-sect">Variables disponibles
+            <span class="np-sect-actions"><button type="button" class="np-link" (click)="cleanStyles()">Quitar estilos del HTML</button></span>
+          </p>
+          <label class="np-search np-ctr-buscarvar">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg>
+            <input type="search" [(ngModel)]="buscarVar" (input)="filtrarVariables()" placeholder="Buscar variable: dirección, plan, fecha…" aria-label="Buscar variable" />
+          </label>
+          <p class="np-muted np-ctr-ayuda">Haga clic en una para escribirla donde tenga el cursor. Al firmar se reemplaza por el dato real del cliente.</p>
 
-        <!-- Editor de coordenadas -->
-        <div *ngIf="pdfPickerActive" class="mt-3 space-y-3">
-
-          <!-- Selector de variable y página + toggle preview -->
-          <div class="flex flex-wrap items-center gap-3">
-            <div>
-              <label class="text-xs font-medium text-slate-600 dark:text-slate-300">Variable</label>
-              <!-- "ID Contrato" ya está en quickVars: el <option> suelto que lo repetía no hace falta. -->
-              <np-select [(ngModel)]="pdfPickerVariable" [opciones]="quickVars" [presentacion]="presVariablesPdf"
-                         [permitirVacio]="true" textoVacio="— Elegir —" [valorVacio]="''" textoBuscar="Buscar variable…"
-                         tamano="sm" style="width: 220px; margin-top: 4px" ariaLabel="Variable"></np-select>
-            </div>
-            <div *ngIf="pdfDimensions && pdfDimensions.pageCount > 1">
-              <label class="text-xs font-medium text-slate-600 dark:text-slate-300">Página</label>
-              <np-select [(ngModel)]="pdfPickerPage" (cambio)="renderPdfPage()" [opciones]="pdfDimensions.pages" [presentacion]="presPaginasPdf"
-                         tamano="sm" style="width: 130px; margin-top: 4px" ariaLabel="Página"></np-select>
-            </div>
-            <div>
-              <button (click)="pdfPreviewMode = !pdfPreviewMode; renderPdfPage();"
-                class="mt-5 px-3 py-1.5 text-xs font-semibold rounded-md transition"
-                [class.bg-indigo-600]="!pdfPreviewMode"
-                [class.text-white]="!pdfPreviewMode"
-                [class.bg-emerald-100]="pdfPreviewMode"
-                [class.text-emerald-700]="pdfPreviewMode"
-                [class.hover:bg-indigo-700]="!pdfPreviewMode"
-                [class.hover:bg-emerald-200]="pdfPreviewMode">
-                {{ pdfPreviewMode ? 'Ocultar preview' : 'Ver preview' }}
-              </button>
-            </div>
-            <div class="text-xs text-slate-500 dark:text-slate-400">
-              <span *ngIf="pdfPickerVariable && !pdfPreviewMode">Hacé clic sobre el PDF para posicionar.</span>
-              <span *ngIf="pdfPickerVariable && pdfPreviewMode">Modo preview: verás datos de ejemplo.</span>
-              <span *ngIf="!pdfPickerVariable">Primero seleccioná una variable.</span>
-            </div>
-          </div>
-
-          <!-- Vista previa del PDF: estructura ultra-plana, sin contenedores extra -->
-          <div class="mt-3 rounded-lg border border-gray-300 dark:border-slate-600/60 bg-white shadow-inner"
-            style="max-height: 70vh; overflow-y: auto; text-align: center;"
-            *ngIf="pdfDimensions && pdfDimensions.pages[pdfPickerPage-1] as pageData">
-
-            <canvas #pdfCanvas style="display: none;"></canvas>
-
-            <!-- Spinner -->
-            <div *ngIf="isRenderingPdf" class="flex items-center justify-center py-12 text-slate-400 text-sm">
-              <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center animate-pulse shadow-lg shadow-indigo-500/30 mr-3">
-                <svg class="w-5 h-5 text-white animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"/></svg>
-              </div>
-              Renderizando PDF...
-            </div>
-
-            <!-- Error -->
-            <div *ngIf="!isRenderingPdf && errorMsg" class="p-6">
-              <p class="text-red-600 text-sm mb-3">{{ errorMsg }}</p>
-              <button (click)="renderPdfPage()"
-                class="px-4 py-2 bg-indigo-600 text-white text-xs font-semibold rounded hover:bg-indigo-700 transition">
-                Recargar PDF
-              </button>
-            </div>
-
-            <!-- Imagen del PDF + marcadores (mismo contenedor, misma escala) -->
-            <div *ngIf="!isRenderingPdf && pdfImageUrl"
-              style="position: relative; display: inline-block; width: 100%; max-width: 900px; line-height: 0;">
-
-              <img #pdfImage
-                [src]="pdfImageUrl"
-                style="width: 100%; display: block; cursor: crosshair; border-radius: 4px;"
-                (click)="onPdfPreviewClick($event)"
-                (mousemove)="onPdfMouseMove($event)"
-                alt="Página del contrato" />
-
-              <!-- Crosshair que sigue el cursor (preview visual del punto) -->
-              <div *ngIf="pdfPickerVariable && cursorCoords"
-                style="position: absolute; pointer-events: none; z-index: 30; transform: translate(-50%, -50%);"
-                [style.left.%]="(cursorCoords.pdfX / pageData.width) * 100"
-                [style.top.%]="(cursorCoords.pdfY / pageData.height) * 100">
-                <div class="w-3 h-3 rounded-full border-2 border-indigo-500 bg-indigo-500/30 animate-pulse"></div>
+          <div class="np-ctr-grupos">
+            <div class="np-ctr-grupo" *ngFor="let g of gruposVariables">
+              <p class="np-sect np-sect--inline">{{ g.nombre }}</p>
+              <div class="np-ctr-vars">
+                <button type="button" class="np-ctr-var" *ngFor="let v of g.items" (click)="insertVar(v.clave)" [title]="v.ayuda">
+                  <b>{{ v.etiqueta }}</b>
+                  <em>{{ v.ejemplo || '—' }}</em>
+                </button>
               </div>
             </div>
+            <p class="np-muted" *ngIf="gruposVariables.length === 0">Ninguna variable coincide con la búsqueda.</p>
+          </div>
+        </section>
 
-            <!-- Debug: coordenadas del cursor en tiempo real -->
-            <div class="text-[10px] text-slate-400 mt-1 font-mono" *ngIf="cursorCoords">
-              Cursor: {{ cursorCoords.x }} , {{ cursorCoords.y }} (px DOM) → {{ cursorCoords.pdfX }} , {{ cursorCoords.pdfY }} (pts PDF)
+        <section>
+          <p class="np-sect">Texto del contrato</p>
+          <div class="np-ctr-editor" [class.np-ctr-editor--guia]="pdfGuideUrl">
+            <div class="np-ctr-guia" *ngIf="pdfGuideUrl">
+              <div class="np-ctr-guia-head"><span>PDF original (sólo de referencia)</span><button type="button" class="np-link" (click)="pdfGuideUrl = null">Cerrar</button></div>
+              <iframe [src]="safePdfUrl()" title="PDF de referencia"></iframe>
             </div>
+            <textarea id="contractContent" class="np-input np-ctr-texto" [(ngModel)]="templateForm.content" (input)="previaPendiente()"
+              placeholder="Escriba el contrato. Puede usar HTML sencillo: <h2>, <p>, <ul>, <table>…"></textarea>
           </div>
+        </section>
 
-          <!-- Tabla de campos configurados con edición manual -->
-          <div *ngIf="pdfFields.length > 0" class="space-y-2">
-            <label class="text-xs font-medium text-slate-600 dark:text-slate-300">Campos configurados (podés ajustar manualmente)</label>
-            <div class="overflow-x-auto rounded-2xl border border-slate-200/60 dark:border-slate-700/60">
-              <table class="w-full text-xs">
-                <thead class="bg-slate-50/80 dark:bg-slate-700/80 ">
-                  <tr>
-                    <th class="px-2 py-1 text-left">Variable</th>
-                    <th class="px-2 py-1 text-left">Pág</th>
-                    <th class="px-2 py-1 text-left">X (pts)</th>
-                    <th class="px-2 py-1 text-left">Y (pts)</th>
-                    <th class="px-2 py-1 text-left">Tamaño</th>
-                    <th class="px-2 py-1"></th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr *ngFor="let f of pdfFields; let i = index" class="border-t border-slate-100/80 dark:border-slate-700/60">
-                    <td class="px-2 py-1 font-medium">{{ f.variable }} <span class="text-slate-400 text-[10px] ml-0.5">#{{ i+1 }}</span></td>
-                    <td class="px-2 py-1">{{ f.page }}</td>
-                    <td class="px-2 py-1">
-                      <input type="number" [(ngModel)]="f.x" class="w-16 text-xs px-2 py-1 bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl border border-slate-200/60 dark:border-slate-700/60 rounded-lg text-slate-700 dark:text-slate-300 focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-400 transition-all shadow-sm" step="0.5">
-                    </td>
-                    <td class="px-2 py-1">
-                      <input type="number" [(ngModel)]="f.y" class="w-16 text-xs px-2 py-1 bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl border border-slate-200/60 dark:border-slate-700/60 rounded-lg text-slate-700 dark:text-slate-300 focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-400 transition-all shadow-sm" step="0.5">
-                    </td>
-                    <td class="px-2 py-1">
-                      <input type="number" [(ngModel)]="f.font_size" class="w-12 text-xs px-2 py-1 bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl border border-slate-200/60 dark:border-slate-700/60 rounded-lg text-slate-700 dark:text-slate-300 focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-400 transition-all shadow-sm" min="6" max="72">
-                    </td>
-                    <td class="px-2 py-1">
-                      <button (click)="removePdfField(i)" class="text-red-500 hover:text-red-700 font-bold px-1">×</button>
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-          </div>
+        <section>
+          <p class="np-sect">Texto de aceptación</p>
+          <p class="np-muted np-ctr-ayuda">Es la casilla obligatoria que el cliente marca antes de firmar. Se guarda como constancia con la fecha, la hora, la IP y el dispositivo, y sale impresa en el PDF firmado. Si lo deja vacío se usa el texto por defecto.</p>
+          <textarea class="np-input np-ctr-terminos" [(ngModel)]="templateForm.terminos" rows="3" [placeholder]="TERMINOS_POR_DEFECTO"></textarea>
+        </section>
 
-          <div class="flex justify-end gap-2">
-            <button (click)="pdfFields = []; savePdfFields();"
-              class="px-4 py-2 text-xs font-semibold rounded-md bg-red-50 text-red-600 hover:bg-red-100 transition border border-red-200">
-              Borrar todas
-            </button>
-            <button (click)="savePdfFields()"
-              class="px-4 py-2 text-xs font-semibold rounded-md bg-emerald-600 text-white hover:bg-emerald-700 transition">
-              Guardar coordenadas
-            </button>
-          </div>
-        </div>
-      </div>
+        <label class="np-check np-check--box" *ngIf="isEditing"><input type="checkbox" [(ngModel)]="templateForm.active" /><span>Plantilla activa (se puede asignar a clientes).</span></label>
+      </ng-container>
 
-      <!-- Variables rápidas -->
-      <div>
-        <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Variables de cliente</label>
-        <p class="text-xs text-slate-400 mb-2">Haga clic para insertar en el contenido. Se reemplazarán automáticamente con los datos del cliente.</p>
-        <div class="flex flex-wrap gap-2">
-          <button *ngFor="let v of quickVars" (click)="insertVar(v.code)"
-            class="px-2.5 py-1 text-xs font-medium rounded-full bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-indigo-100 dark:hover:bg-indigo-900/40 hover:text-indigo-700 dark:hover:text-indigo-300 transition border border-slate-200 dark:border-slate-700">
-            {{ v.label }}
-            <span class="text-slate-400 dark:text-slate-500 ml-1 font-mono">{{ v.code }}</span>
+      <!-- ── Vista previa ────────────────────────────────────────────────── -->
+      <ng-container *ngIf="seccion === 'previa'">
+        <p class="np-muted np-ctr-ayuda">Así se ve el contrato en el celular del cliente. Elija un cliente real para comprobar que todos los datos salen completos.</p>
+
+        <label class="np-field"><span>Probar con un cliente</span>
+          <input type="search" class="np-input" [(ngModel)]="previaBuscar" (input)="buscarClientePrevia()" placeholder="Nombre, cédula o usuario…" />
+        </label>
+        <div class="np-checklist" *ngIf="previaResultados.length > 0">
+          <button type="button" class="np-check np-check--btn" *ngFor="let c of previaResultados" (click)="elegirClientePrevia(c)">
+            <span class="np-strong">{{ c.names }} {{ c.lastname }}</span><span class="np-spacer"></span><span class="np-data">{{ c.dni }}</span>
           </button>
         </div>
-      </div>
+        <p class="np-notice np-notice--ok" *ngIf="previaCliente">Datos de <strong>{{ previaCliente.names }} {{ previaCliente.lastname }}</strong> · CC {{ previaCliente.dni }}</p>
+        <p class="np-notice np-notice--code" *ngIf="!previaCliente">Sin cliente elegido se usan datos de ejemplo.</p>
 
-      <!-- Contenido + Preview interactivo + PDF Guía -->
-      <div>
-        <div class="flex items-center justify-between mb-1">
-          <label class="block text-sm font-medium text-slate-700 dark:text-slate-300">Contenido del contrato</label>
-          <div class="flex items-center gap-2">
-            <button (click)="cleanStyles()"
-              class="text-xs px-2.5 py-1 rounded-lg bg-amber-50 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 hover:bg-amber-100 dark:hover:bg-amber-900/50 transition border border-amber-200 dark:border-amber-800"
-              title="Quita los estilos inline del HTML para que el contrato use el diseño formal de la página de firma">
-              <svg class="w-3 h-3 inline mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"/>
-              </svg>
-              Limpiar estilos
-            </button>
-            <button (click)="togglePreview()"
-              class="text-xs px-2.5 py-1 rounded-lg bg-slate-100/80 dark:bg-slate-800/80 text-slate-600 dark:text-slate-300 hover:bg-slate-200/60 dark:hover:bg-slate-700/50 transition">
-              {{ showPreview ? 'Ocultar vista previa' : 'Ver vista previa' }}
-            </button>
-          </div>
-        </div>
-        <p class="text-xs text-slate-400 mb-2">
-          Puedes escribir HTML para dar formato al texto.
-          <span *ngIf="pdfGuideUrl" class="text-indigo-500 font-medium">El PDF original está a la izquierda como guía.</span>
+        <p class="np-notice np-notice--warn" *ngIf="previaVacias.length">
+          <strong>Estas variables saldrían en blanco</strong> con este cliente:
+          <ng-container *ngFor="let v of previaVacias; let last = last">{{ etiquetaVar(v) }}<span *ngIf="!last">, </span></ng-container>.
+          Complete la ficha del cliente o quítelas del contrato.
+        </p>
+        <p class="np-notice np-notice--danger" *ngIf="previaDesconocidas.length">
+          <strong>Estas variables no existen</strong> y quedarán como una raya en blanco:
+          <ng-container *ngFor="let v of previaDesconocidas; let last = last">{{ v }}<span *ngIf="!last">, </span></ng-container>.
+        </p>
+        <p class="np-notice np-notice--ok" *ngIf="previaHtml && !previaVacias.length && !previaDesconocidas.length && previaUsadas.length">
+          Las {{ previaUsadas.length }} variables del contrato se llenan correctamente.
         </p>
 
-        <div class="grid gap-3"
-          [class.grid-cols-1]="!pdfGuideUrl && !showPreview"
-          [class.lg:grid-cols-2]="!pdfGuideUrl && showPreview"
-          [class.lg:grid-cols-3]="pdfGuideUrl">
-
-          <!-- PDF Original como guía -->
-          <div *ngIf="pdfGuideUrl" class="border border-slate-200/60 dark:border-slate-700/60 rounded-lg overflow-hidden flex flex-col h-[420px]">
-            <div class="bg-slate-50/80 dark:bg-slate-800/80 px-3 py-2 border-b border-slate-200/60 dark:border-slate-700/60 flex items-center justify-between">
-              <span class="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase">PDF original (guía)</span>
-              <button (click)="pdfGuideUrl = null" class="text-xs text-red-500 hover:text-red-700">Cerrar guía</button>
-            </div>
-            <iframe [src]="safePdfUrl()" class="flex-1 w-full border-0" title="PDF guía"></iframe>
-          </div>
-
-          <!-- Editor HTML -->
-          <textarea [(ngModel)]="templateForm.content" rows="12" id="contractContent"
-            placeholder="Escribe aquí el contenido del contrato..."
-            class="w-full px-3 py-2 text-sm border border-slate-200/60 dark:border-slate-700/60 rounded-lg bg-white dark:bg-slate-800/80 text-slate-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none resize-none font-mono"
-            [class.h-[420px]]="pdfGuideUrl || showPreview"
-            [class.h-[260px]]="!pdfGuideUrl && !showPreview"></textarea>
-
-          <!-- Preview interactivo con badges de variables -->
-          <div *ngIf="showPreview"
-            class="border border-slate-200/60 dark:border-slate-700/60 rounded-lg bg-white dark:bg-slate-800/80 p-4 overflow-y-auto h-[420px] flex flex-col">
-            <p class="text-xs font-semibold text-slate-400 dark:text-slate-500 uppercase mb-2 flex items-center gap-1.5">
-              <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-                <path d="M10 12a2 2 0 100-4 2 2 0 000 4z"/>
-                <path fill-rule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clip-rule="evenodd"/>
-              </svg>
-              Vista previa
-            </p>
-            <!-- Leyenda de variables -->
-            <div class="mb-2 flex flex-wrap gap-1">
-              <span *ngFor="let v of quickVars" class="text-[10px] px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 border border-slate-200 dark:border-slate-700">
-                {{ v.label }} = {{ v.code }}
-              </span>
-            </div>
-            <div class="flex-1 overflow-y-auto text-sm leading-relaxed"
-              style="font-family: Georgia, 'Times New Roman', serif; font-size: 14px; line-height: 1.85; color: #222; text-align: justify; background: #fff; padding: 12px 8px; border-radius: 6px;"
-              [innerHTML]="renderPreviewHtml()"></div>
-          </div>
+        <div class="np-btnrow">
+          <button type="button" class="np-btn np-btn--ghost np-btn--sm" (click)="pedirPrevia()" [disabled]="cargandoPrevia">{{ cargandoPrevia ? 'Actualizando…' : 'Actualizar vista previa' }}</button>
         </div>
-      </div>
 
-      <div *ngIf="isEditing" class="flex items-center gap-2">
-        <input type="checkbox" [(ngModel)]="templateForm.active" id="activeCheck"
-          class="w-4 h-4 rounded border-gray-300 text-indigo-600"/>
-        <label for="activeCheck" class="text-sm text-slate-700 dark:text-slate-300">Contrato activo</label>
-      </div>
+        <div class="np-ctr-papel" [innerHTML]="previaHtml"></div>
+        <p class="np-muted" *ngIf="!previaHtml && !cargandoPrevia">Todavía no hay contenido que mostrar.</p>
+      </ng-container>
+
+      <!-- ── PDF con coordenadas ─────────────────────────────────────────── -->
+      <ng-container *ngIf="seccion === 'pdf'">
+        <div class="np-ctr-subir" *ngIf="!hasPdfBase">
+          <h4>Suba el contrato de su empresa</h4>
+          <p>Elija el PDF que ya usa en papel. Se va a ver acá tal cual, y encima va a poder colocar los datos del cliente: nombre, cédula, dirección, plan, la firma…</p>
+          <label class="np-btn np-btn--primary">
+            {{ isUploadingPdfBase ? 'Subiendo…' : 'Elegir el PDF del contrato' }}
+            <input type="file" accept="application/pdf" hidden (change)="onPdfBaseSelected($event)" />
+          </label>
+          <p class="np-muted" *ngIf="!isEditing">Guarde primero la plantilla con su título para poder subir el PDF.</p>
+        </div>
+
+        <ng-container *ngIf="hasPdfBase">
+          <p class="np-notice np-notice--warn" *ngIf="avisoRotacion">{{ avisoRotacion }}</p>
+          <p class="np-notice np-notice--warn" *ngIf="avisoPdfCambiado">{{ avisoPdfCambiado }}</p>
+          <p class="np-notice np-notice--danger" *ngIf="camposFuera.length">
+            <strong>Estas variables se salen de la hoja</strong> y saldrían cortadas:
+            <ng-container *ngFor="let f of camposFuera; let last = last">{{ f }}<span *ngIf="!last">, </span></ng-container>.
+          </p>
+          <p class="np-notice np-notice--warn" *ngIf="faltanDatos.length">
+            <strong>Saldrían en blanco</strong> con {{ previaCliente ? 'este cliente' : 'los datos de ejemplo' }}:
+            <ng-container *ngFor="let f of faltanDatos; let last = last">{{ etiquetaVar(f) }}<span *ngIf="!last">, </span></ng-container>.
+          </p>
+
+          <p class="np-muted np-ctr-ayuda">
+            Elija una variable y haga clic sobre el PDF: el punto marcado es la <strong>esquina superior izquierda</strong> del texto.
+            Lo que ve dibujado es exactamente lo que se imprime. Después puede arrastrarlo, moverlo con las flechas
+            (1 mm, o 0,1 mm con Shift) y borrarlo con Supr.
+          </p>
+
+          <div class="np-subbar">
+            <label class="np-field np-field--inline np-ctr-varsel"><span>Variable a colocar</span>
+              <np-select [(ngModel)]="varElegida" [opciones]="variables" [presentacion]="presVariablesPdf"
+                         [permitirVacio]="true" textoVacio="— Elegir —" [valorVacio]="''" textoBuscar="Buscar variable…"
+                         tamano="sm" ariaLabel="Variable a colocar"></np-select>
+            </label>
+            <label class="np-field np-field--inline" *ngIf="pdfPaginas.length > 1"><span>Página</span>
+              <np-select [(ngModel)]="pdfPagina" (cambio)="cambiarPagina()" [opciones]="pdfPaginas" [presentacion]="presPaginasPdf"
+                         tamano="sm" ariaLabel="Página del PDF"></np-select>
+            </label>
+            <div class="np-ctr-nav" *ngIf="pdfPaginas.length > 1">
+              <button type="button" class="np-icobtn" (click)="paginaAnterior()" [disabled]="pdfPagina <= 1" aria-label="Página anterior"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 6l-6 6 6 6"/></svg></button>
+              <span class="np-data">{{ pdfPagina }} / {{ pdfPaginas.length }}</span>
+              <button type="button" class="np-icobtn" (click)="paginaSiguiente()" [disabled]="pdfPagina >= pdfPaginas.length" aria-label="Página siguiente"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 6l6 6-6 6"/></svg></button>
+            </div>
+            <div class="np-ctr-nav">
+              <button type="button" class="np-icobtn" (click)="cambiarZoom(-0.25)" aria-label="Alejar">−</button>
+              <span class="np-data">{{ (zoomPdf * 100) | number:'1.0-0' }}%</span>
+              <button type="button" class="np-icobtn" (click)="cambiarZoom(0.25)" aria-label="Acercar">+</button>
+            </div>
+            <span class="np-spacer"></span>
+            <span class="np-data np-data--dim" *ngIf="campoSel !== null">{{ etiquetaVar(pdfCampos[campoSel].variable) }} en {{ pdfCampos[campoSel].x }} × {{ pdfCampos[campoSel].y }} mm</span>
+            <button type="button" class="np-btn np-btn--ghost np-btn--sm" *ngIf="campoSel !== null" (click)="duplicarCampo()">Duplicar</button>
+            <button type="button" class="np-btn np-btn--ghost np-btn--sm" *ngIf="campoSel !== null && pdfPaginas.length > 1" (click)="duplicarEnTodas()">En todas las páginas</button>
+            <button type="button" class="np-btn np-btn--primary np-btn--sm" (click)="savePdfFields()" [disabled]="guardandoCampos">{{ guardandoCampos ? 'Guardando…' : (camposSucios ? 'Guardar posiciones •' : 'Guardar posiciones') }}</button>
+          </div>
+
+          <div class="np-ctr-lienzo" [style.--np-zoom]="zoomPdf">
+            <div class="np-loading" *ngIf="isRenderingPdf"><span class="np-spinner"></span> Dibujando el PDF…</div>
+            <canvas #pdfCanvas tabindex="0" [class.np-oculto]="isRenderingPdf"
+                    [class.is-colocando]="varElegida"
+                    (pointerdown)="alPresionar($event)" (keydown)="alTeclear($event)"
+                    aria-label="Página del contrato: haga clic para colocar la variable elegida"></canvas>
+          </div>
+
+          <section class="np-ctr-prueba">
+            <p class="np-sect">Probar con un cliente de verdad</p>
+            <p class="np-muted np-ctr-ayuda">Genera el PDF tal como le va a llegar al cliente, con sus datos reales y con las posiciones que tiene ahora en pantalla (aunque no las haya guardado).</p>
+            <label class="np-field"><span>Cliente</span>
+              <input type="search" class="np-input" [(ngModel)]="previaBuscar" (input)="buscarClientePrevia()" placeholder="Nombre, cédula o usuario… (vacío = datos de ejemplo)" />
+            </label>
+            <div class="np-checklist" *ngIf="previaResultados.length > 0">
+              <button type="button" class="np-check np-check--btn" *ngFor="let c of previaResultados" (click)="elegirClientePrevia(c)">
+                <span class="np-strong">{{ c.names }} {{ c.lastname }}</span><span class="np-spacer"></span><span class="np-data">{{ c.dni }}</span>
+              </button>
+            </div>
+            <div class="np-btnrow">
+              <button type="button" class="np-btn np-btn--primary np-btn--sm" (click)="probarConCliente()" [disabled]="generandoPrueba">{{ generandoPrueba ? 'Generando…' : (previaCliente ? 'Generar el PDF de ' + previaCliente.names : 'Generar PDF de prueba') }}</button>
+              <button type="button" class="np-btn np-btn--ghost np-btn--sm" (click)="openPdfPreview()">Con datos de ejemplo</button>
+            </div>
+          </section>
+
+          <p class="np-sect">Campos colocados <span class="np-sect-actions"><button type="button" class="np-link np-link--muted" *ngIf="pdfCampos.length" (click)="pdfCampos = []; campoCambiado()">Quitar todos</button></span></p>
+          <div class="np-tablewrap np-tablewrap--scroll" *ngIf="pdfCampos.length">
+            <table class="np-table np-table--compact">
+              <thead><tr><th>Variable</th><th>Pág</th><th>X mm</th><th>Y mm</th><th>Letra</th><th>Ancho mm</th><th>Color</th><th></th></tr></thead>
+              <tbody>
+                <tr *ngFor="let f of pdfCampos; let i = index" [attr.aria-selected]="campoSel === i" (click)="seleccionarCampo(i)">
+                  <td class="np-strong">{{ etiquetaVar(f.variable) }}</td>
+                  <td class="np-data">{{ f.page }}</td>
+                  <td><input class="np-input np-input--sm np-mono" type="number" step="0.1" [(ngModel)]="f.x" (change)="campoCambiado()" (click)="$event.stopPropagation()"></td>
+                  <td><input class="np-input np-input--sm np-mono" type="number" step="0.1" [(ngModel)]="f.y" (change)="campoCambiado()" (click)="$event.stopPropagation()"></td>
+                  <td><input class="np-input np-input--sm np-mono" type="number" min="5" max="72" [(ngModel)]="f.font_size" (change)="campoCambiado()" (click)="$event.stopPropagation()"></td>
+                  <td><input class="np-input np-input--sm np-mono" type="number" min="0" max="250" [(ngModel)]="f.max_width" (change)="campoCambiado()" (click)="$event.stopPropagation()"></td>
+                  <td><input class="np-ctr-color" type="color" [ngModel]="'#' + f.color" (ngModelChange)="f.color = $event.replace('#',''); campoCambiado()" (click)="$event.stopPropagation()" aria-label="Color del texto"></td>
+                  <td class="np-td-right"><button type="button" class="np-icobtn" (click)="quitarCampo(i); $event.stopPropagation()" aria-label="Quitar campo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 6l12 12M18 6 6 18"/></svg></button></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <p class="np-muted" *ngIf="!pdfCampos.length && !isRenderingPdf">Todavía no hay ninguna variable colocada sobre el PDF.</p>
+        </ng-container>
+      </ng-container>
     </div>
 
     <div class="np-modal-foot">
-      <button type="button" class="np-btn np-btn--ghost" (click)="showTemplateModal = false">Cancelar</button>
-      <button type="button" class="np-btn np-btn--primary" (click)="saveTemplate()" [disabled]="isSaving || !templateForm.title || !templateForm.content">{{ isSaving ? 'Guardando…' : (isEditing ? 'Guardar cambios' : 'Crear contrato') }}</button>
+      <button type="button" class="np-btn np-btn--ghost" (click)="cerrarPlantilla()">Cerrar</button>
+      <button type="button" class="np-btn np-btn--primary" (click)="saveTemplate()" [disabled]="isSaving || !templateForm.title">{{ isSaving ? 'Guardando…' : (isEditing ? 'Guardar cambios' : 'Crear plantilla') }}</button>
     </div>
   </div>
 </div>
@@ -469,7 +385,7 @@
     <div class="np-modal-body">
       <p *ngIf="errorMsg" class="np-notice np-notice--danger">{{ errorMsg }}</p>
       <label class="np-field"><span>Buscar cliente</span>
-        <input type="search" class="np-input" [(ngModel)]="clientSearch" (input)="searchClients()" placeholder="Nombre, DNI o usuario…" />
+        <input type="search" class="np-input" [(ngModel)]="clientSearch" (input)="searchClients()" placeholder="Nombre, cédula o usuario…" />
       </label>
       <div class="np-checklist" *ngIf="clientResults.length > 0">
         <button type="button" class="np-check np-check--btn" *ngFor="let c of clientResults" (click)="selectClient(c)">
@@ -481,7 +397,7 @@
         <np-select [(ngModel)]="selectedContractId" [opciones]="contracts" [presentacion]="presContratos"
                    placeholder="Seleccione…" [valorVacio]="0" ariaLabel="Plantilla de contrato"></np-select>
       </label>
-      <label class="np-check np-check--box"><input type="checkbox" [(ngModel)]="requireDocuments" /><span>Solicitar fotos del documento de identidad al firmar.</span></label>
+      <label class="np-check np-check--box"><input type="checkbox" [(ngModel)]="requireDocuments" /><span>Pedirle al cliente fotos de su documento de identidad antes de firmar.</span></label>
       <div class="np-btnrow np-btnrow--end">
         <button type="button" class="np-btn np-btn--ghost" (click)="showAssignModal = false">Cancelar</button>
         <button type="button" class="np-btn np-btn--primary" (click)="assign()" [disabled]="isAssigning || !selectedClient || !selectedContractId">{{ isAssigning ? 'Asignando…' : 'Asignar contrato' }}</button>
@@ -495,7 +411,7 @@
   <div class="np-modal np-modal--confirm" role="alertdialog" aria-modal="true" (click)="$event.stopPropagation()">
     <span class="np-confirm-icon is-danger"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/></svg></span>
     <h3>¿Quitar este contrato del cliente?</h3>
-    <p>Se elimina la asignación y el link de firma. Esta acción no se puede deshacer.</p>
+    <p>Se elimina la asignación y el link de firma deja de funcionar.</p>
     <div class="np-btnrow np-btnrow--center">
       <button type="button" class="np-btn np-btn--ghost" (click)="cancelDeleteAssigned()" [disabled]="isDeletingAssigned">Cancelar</button>
       <button type="button" class="np-btn np-btn--danger-solid" (click)="deleteAssignedContract()" [disabled]="isDeletingAssigned">{{ isDeletingAssigned ? 'Eliminando…' : 'Eliminar' }}</button>
@@ -506,11 +422,14 @@
 <!-- ══ Enviar link de firma ═════════════════════════════════════════════════ -->
 <div *ngIf="showSendModal" class="np-overlay" (click)="closeSend()">
   <div class="np-modal" role="dialog" aria-modal="true" aria-label="Enviar link de firma" (click)="$event.stopPropagation()">
-    <div class="np-modal-head"><div><p class="np-kicker">Contratos <b>/</b> Firma</p><h3>Enviar link de firma</h3></div>
+    <div class="np-modal-head"><div><p class="np-kicker">Contratos <b>/</b> Firma</p><h3>{{ showSendModal.sent_at ? 'Reenviar link de firma' : 'Enviar link de firma' }}</h3></div>
       <button type="button" class="np-icobtn" (click)="closeSend()" aria-label="Cerrar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
     </div>
     <div class="np-modal-body">
-      <p class="np-notice np-notice--code np-mono">{{ getSignUrl(showSendModal!.token) }}</p>
+      <p *ngIf="errorMsg" class="np-notice np-notice--danger">{{ errorMsg }}</p>
+      <p class="np-notice np-notice--code np-mono">{{ getSignUrl(showSendModal.token) }}</p>
+      <p class="np-muted" *ngIf="showSendModal.sent_at">Ya se envió {{ showSendModal.sent_at | date:'dd/MM/yy HH:mm' }}<ng-container *ngIf="canal(showSendModal)"> por {{ canal(showSendModal) }}</ng-container><ng-container *ngIf="showSendModal.opened_at">; el cliente lo abrió {{ showSendModal.opened_at | date:'dd/MM/yy HH:mm' }}</ng-container>.</p>
+      <div class="np-btnrow"><button type="button" class="np-btn np-btn--ghost np-btn--sm" (click)="copyLink(showSendModal)">{{ copiedId === showSendModal.id ? 'Link copiado' : 'Copiar link' }}</button></div>
       <div class="np-form np-form--row">
         <label class="np-field"><span>WhatsApp</span><input type="tel" class="np-input np-mono" [(ngModel)]="phoneInput" placeholder="573001234567" /></label>
         <button type="button" class="np-btn np-btn--primary" (click)="sendWhatsApp()" [disabled]="isSendingWa || !phoneInput">{{ isSendingWa ? 'Enviando…' : 'Enviar' }}</button>

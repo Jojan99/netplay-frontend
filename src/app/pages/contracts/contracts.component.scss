@@ -7,3 +7,76 @@
   img { max-height: 180px; width: 100%; object-fit: contain; border-radius: 4px; background: var(--surface); }
   figcaption { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; color: var(--text-3); } }
 @media (max-width: 640px) { .np-docs { grid-template-columns: 1fr; } }
+
+/* ─── Editor de plantilla ───────────────────────────────────────────── */
+.np-ctr-modo { line-height: 1.5; em { font-style: normal; font-weight: 700; } }
+.np-ctr-ayuda { font-size: 12px; line-height: 1.45; margin-bottom: 8px; }
+.np-ctr-archivos { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.np-ctr-logo { height: 34px; width: auto; max-width: 140px; object-fit: contain; border: 1px solid var(--line); border-radius: var(--radius); padding: 3px 6px; background: var(--surface-2); }
+.np-ctr-buscarvar { flex-basis: 100%; max-width: 340px; margin-bottom: 6px; }
+
+/* Catálogo de variables: la etiqueta manda, la clave no se muestra */
+.np-ctr-grupos { display: grid; gap: 10px; }
+.np-ctr-grupo { display: grid; gap: 5px; }
+.np-ctr-vars { display: flex; flex-wrap: wrap; gap: 5px; }
+.np-ctr-var { display: inline-grid; gap: 1px; justify-items: start; padding: 5px 9px; border: 1px solid var(--line); border-radius: var(--radius);
+  background: var(--surface); text-align: left; transition: border-color .12s, background .12s;
+  b { font-size: 12px; font-weight: 700; color: var(--text); }
+  em { font-style: normal; font-family: var(--font-mono); font-size: 10.5px; color: var(--text-3); }
+  &:hover { border-color: var(--accent); background: var(--accent-soft); b { color: var(--accent); } } }
+
+/* Texto del contrato, con el PDF de referencia al lado si lo hay */
+.np-ctr-editor { display: grid; gap: 10px; }
+.np-ctr-editor--guia { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+@media (max-width: 900px) { .np-ctr-editor--guia { grid-template-columns: 1fr; } }
+.np-ctr-guia { display: flex; flex-direction: column; border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; min-height: 420px;
+  iframe { flex: 1; width: 100%; border: 0; background: var(--surface-2); } }
+.np-ctr-guia-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 7px 10px;
+  background: var(--surface-2); border-bottom: 1px solid var(--line); font-size: 11px; font-weight: 700;
+  text-transform: uppercase; letter-spacing: .05em; color: var(--text-3); }
+.np-ctr-texto { height: 420px; padding: 10px 12px; font-family: var(--font-mono); font-size: 12.5px; line-height: 1.6; resize: vertical; }
+
+/* Hoja de la vista previa: se parece a lo que ve el cliente */
+.np-ctr-papel { background: #fff; color: #1c1e2e; border: 1px solid var(--line); border-radius: var(--radius);
+  padding: 22px 24px; max-height: 60vh; overflow-y: auto;
+  font-family: Georgia, 'Times New Roman', serif; font-size: 14px; line-height: 1.75; text-align: justify;
+  :is(h1, h2) { font-size: 1.05em; text-align: center; margin: 16px 0 8px; }
+  :is(h3, h4) { font-size: 1em; text-align: left; margin: 14px 0 6px; }
+  p { margin-bottom: 8px; }
+  table { width: 100%; border-collapse: collapse; margin: 10px 0; font-size: .9em; }
+  :is(th, td) { border: 1px solid #c9ccd6; padding: 5px 7px; text-align: left; }
+  :is(ul, ol) { margin: 8px 0 8px 20px; }
+  hr { border: 0; border-top: 1px solid #d5d8e2; margin: 12px 0; }
+  .dato { background: #fff6cc; border-radius: 3px; padding: 0 3px; font-weight: 700; }
+  .dato--vacio { background: transparent; border-bottom: 1.5px solid #9aa0b4; } }
+
+/* Editor de posiciones sobre el PDF */
+.np-ctr-varsel { min-width: 210px; }
+.np-ctr-lienzo { border: 1px solid var(--line); border-radius: var(--radius); background: var(--surface-2);
+  padding: 10px; margin-bottom: 14px; max-height: 66vh; overflow: auto; text-align: center;
+  canvas { display: block; width: 100%; max-width: 860px; height: auto; margin: 0 auto;
+    background: #fff; box-shadow: var(--shadow); border-radius: 3px; touch-action: none; cursor: grab;
+    &.is-colocando { cursor: crosshair; }
+    &:active { cursor: grabbing; }
+    &:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; } } }
+.np-oculto { display: none !important; }
+.np-table--compact tr[aria-selected='true'] { background: var(--accent-soft); }
+
+/* Subir el PDF propio: es el camino principal, así que se ve como tal */
+.np-ctr-subir { display: grid; gap: 10px; justify-items: center; text-align: center; padding: 34px 22px;
+  border: 1px dashed var(--line-strong); border-radius: var(--radius-lg); background: var(--surface-2);
+  h4 { font-family: var(--font-display); font-size: 16px; font-weight: 600; margin: 0; color: var(--text); }
+  p { max-width: 460px; font-size: 12.5px; color: var(--text-3); line-height: 1.5; margin: 0; }
+  label { cursor: pointer; } }
+
+.np-ctr-terminos { min-height: 74px; padding: 9px 11px; line-height: 1.5; resize: vertical; }
+.np-ctr-nav { display: inline-flex; align-items: center; gap: 4px;
+  .np-icobtn { border: 1px solid var(--line-strong); font-weight: 700; }
+  .np-data { min-width: 44px; text-align: center; } }
+.np-ctr-color { width: 34px; height: 26px; padding: 1px; border: 1px solid var(--line-strong);
+  border-radius: var(--radius); background: var(--surface); cursor: pointer; }
+.np-ctr-prueba { display: grid; gap: 8px; border: 1px solid var(--line); border-radius: var(--radius);
+  padding: 12px 14px; background: var(--surface-2); margin-bottom: 14px; }
+
+/* El zoom del lienzo es sólo visual: las coordenadas siguen en mm */
+.np-ctr-lienzo canvas { max-width: calc(860px * var(--np-zoom, 1)); }
