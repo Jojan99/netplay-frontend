@@ -271,6 +271,7 @@
                       <span *ngIf="a.que_hacer"><b>Qué hacer:</b> {{ a.que_hacer }}</span>
                       <small class="np-fine">Se lo sigue mirando 3 días: en cuanto el equipo se reporte al TR-069, se aprovisiona solo.</small>
                     </div>
+                    <p class="np-fine" *ngIf="a.estado === 'revertido'">El cliente quedó como estaba. Para intentarlo de nuevo, pedí el cambio desde su ficha.</p>
                     <ul class="ar-pasos-lista">
                       <li *ngFor="let p of a.pasos" [class.is-mal]="!p.ok && !p.omitido" [class.is-omitido]="p.omitido">
                         <span class="ar-tick" aria-hidden="true">{{ p.ok ? '✓' : (p.omitido ? '–' : '!') }}</span>

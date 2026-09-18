@@ -132,6 +132,7 @@
   &[data-estado="listo"] { background: var(--ok-soft); color: var(--ok); }
   &[data-estado="con_errores"], &[data-estado="error"], &[data-estado="vencido"] { background: var(--danger-soft); color: var(--danger); }
   &[data-estado="no_aplica"], &[data-estado="cancelado"] { background: var(--surface-3); color: var(--text-2); }
+  &[data-estado="revertido"] { background: var(--danger-soft); color: var(--danger); }
 }
 .cx-editar { margin-top: 10px; }
 .cx-mac { margin-top: 10px;

@@ -210,7 +210,7 @@ export class OltAccesoRemotoComponent implements OnInit {
 
   /** El color de la píldora de cada aprovisionamiento. */
   pillAprov(estado: string): string {
-    return estado === 'listo' ? 'listo' : this.esMalo(estado) ? 'error'
+    return estado === 'listo' ? 'listo' : (this.esMalo(estado) || estado === 'revertido') ? 'error'
       : (estado === 'reemplazado' || estado === 'cancelado') ? 'sin_leer' : estado === 'no_aplica' ? 'manual' : 'pendiente';
   }
 
@@ -227,6 +227,8 @@ export class OltAccesoRemotoComponent implements OnInit {
     esperando: 'Esperando al equipo', aplicando: 'Aplicando', listo: 'Listo', con_errores: 'Con fallas',
     vencido: 'No apareció', error: 'Falla', reemplazado: 'Reemplazado',
     no_aplica: 'No se configura solo', cancelado: 'Cancelado',
+    // Cambio de conexión que no se confirmó: quedó como estaba.
+    revertido: 'No se cambió',
   };
 
   esMalo(estado: string): boolean { return ['con_errores', 'vencido', 'error'].includes(estado); }

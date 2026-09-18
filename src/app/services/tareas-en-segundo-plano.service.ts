@@ -512,6 +512,8 @@ export class TareasEnSegundoPlanoService {
     if (estado === 'listo' || estado === 'reemplazado') return 'listo';
     if (estado === 'no_aplica') return 'no_aplica';
     if (estado === 'cancelado') return 'detenida';
+    // Cambio de conexión que no se confirmó y se deshizo: no se hizo lo pedido.
+    if (estado === 'revertido') return 'error';
     return 'error';
   }
 

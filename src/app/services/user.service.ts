@@ -311,7 +311,8 @@ export class UserService {
 
 
 /** Pasa un cliente de IP fija a PPPoE o al revés. */
-cambiarConexion(data: { user_id: number; connection_type: string; pppoe_user?: string; pppoe_password?: string; pppoe_profile?: string; ip?: string; vlan?: string }) {
+/** a_mano: el operador carga el cambio en el equipo; la plataforma cambia sólo el router. */
+cambiarConexion(data: { user_id: number; connection_type: string; pppoe_user?: string; pppoe_password?: string; pppoe_profile?: string; ip?: string; vlan?: string; a_mano?: boolean }) {
   const url = this.env.rootUrl + 'api/management/cambiar-conexion';
   return this.http.post<any>(url, data, { headers: this.getHeaders() });
 }
@@ -429,7 +430,7 @@ getIpzonebyZone(vlan: string, segment?: string | null, routerId?: number | null,
     return this.http.post<any>(url, parameter, { headers: this.getHeaders() });
   }
 
-  migrarIp(data: { service_id: number; new_ip: string; vlan: string; router_id?: number | null }): Observable<any> {
+  migrarIp(data: { service_id: number; new_ip: string; vlan: string; router_id?: number | null; a_mano?: boolean }): Observable<any> {
     const parameter = JSON.stringify(data);
     const url = this.env.rootUrl + 'api/management/migrarIp';
     return this.http.post<any>(url, parameter, { headers: this.getHeaders() });

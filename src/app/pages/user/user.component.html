@@ -322,10 +322,22 @@
                 <span class="cx-estado" *ngIf="!clienteEsPppoe && provCliente?.arp" [attr.data-ok]="!provCliente.arp.sin_mac">
                   <i aria-hidden="true"></i>{{ provCliente.arp.sin_mac ? 'Sin MAC en el router' : 'MAC cargada' }}
                 </span>
-                <button type="button" class="np-btn np-btn--ghost np-btn--sm cx-cambiar" (click)="editandoConexion = !editandoConexion; editandoConexion && prepararCambioConexion()">
+                <span class="cx-estado" *ngIf="provCliente?.cambio_en_curso as cc" data-ok="false">
+                  <i aria-hidden="true"></i>Cambiando a {{ cc.cambio?.a }}…
+                </span>
+                <button type="button" class="np-btn np-btn--ghost np-btn--sm cx-cambiar" [disabled]="!!provCliente?.cambio_en_curso"
+                        [title]="provCliente?.cambio_en_curso ? 'Hay un cambio de conexión en curso' : ''"
+                        (click)="editandoConexion = !editandoConexion; editandoConexion && prepararCambioConexion()">
                   {{ editandoConexion ? 'Cancelar' : 'Cambiar conexión' }}
                 </button>
               </div>
+
+              <!-- Cambio en curso: la ficha sigue con lo de antes hasta que lo nuevo se confirma -->
+              <p class="np-notice np-notice--inline" *ngIf="provCliente?.cambio_en_curso as cc">
+                <b>Cambio en curso: {{ cc.cambio?.de }} → {{ cc.cambio?.a }}.</b> {{ cc.detalle }}
+                Mientras tanto sigue con {{ cc.cambio?.de }}; si lo nuevo no se confirma, queda como estaba.
+                <button type="button" class="np-btn np-btn--ghost np-btn--sm" (click)="verAprovisionamiento(cc.id)">Ver detalle</button>
+              </p>
 
               <dl class="cx-datos">
                 <ng-container *ngIf="clienteEsPppoe">
@@ -419,10 +431,19 @@
                 </ng-container>
 
                 <p class="np-notice np-notice--inline np-field-full" [class.np-notice--warn]="!provCliente?.habilitado || !assignedOnt">
-                  <ng-container *ngIf="provCliente?.habilitado && assignedOnt">Al guardar, la ONT se reconfigura sola por TR-069{{ cambioTipo === 'static' ? ' y se carga su MAC en el MikroTik' : '' }}. El WiFi del cliente no se toca.</ng-container>
+                  <ng-container *ngIf="provCliente?.habilitado && assignedOnt">Al guardar se agrega lo nuevo en el router sin quitar lo de ahora, se cambia la ONT por TR-069{{ cambioTipo === 'static' ? ' (y su MAC en el MikroTik)' : '' }} y, cuando lo nuevo anda, se saca lo viejo. Si no se confirma, queda como estaba. El WiFi del cliente no se toca.</ng-container>
                   <ng-container *ngIf="!provCliente?.habilitado || !assignedOnt">La ONT no se reconfigura sola{{ !assignedOnt ? ' (el cliente no tiene ONT asignada)' : ' (el aprovisionamiento está apagado)' }}: hay que cargar el cambio en el equipo.</ng-container>
                 </p>
                 <p class="np-notice np-notice--warn np-notice--inline np-field-full" *ngIf="cambioAviso">{{ cambioAviso }}</p>
+                <!-- La plataforma no llega al equipo: se ofrece cambiar sólo el router, a conciencia -->
+                <div class="np-notice np-notice--warn np-notice--inline np-field-full" *ngIf="cambioAMano">
+                  <b>No se tocó nada.</b> {{ cambioAMano.motivo }}
+                  <ng-container *ngIf="cambioAMano.que_hacer"><br><b>Qué hacer:</b> {{ cambioAMano.que_hacer }}</ng-container>
+                  <br>
+                  <button type="button" class="np-btn np-btn--ghost np-btn--sm" (click)="aplicarConexion(true)" [disabled]="cambiandoConexion">
+                    Lo cargo en el equipo: cambiar sólo el router
+                  </button>
+                </div>
 
                 <div class="np-btnrow np-field-full">
                   <button type="button" class="np-btn np-btn--primary" (click)="aplicarConexion()" [disabled]="!puedeAplicarConexion">{{ etiquetaConexion }}</button>

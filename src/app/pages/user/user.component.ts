@@ -151,13 +151,45 @@ export class UserComponent implements OnInit {
   cargandoProv = false;
   reaplicando = false;
 
+  /** Mientras hay un cambio de conexión en curso, la ficha se relee sola. */
+  private sondeoCambio: ReturnType<typeof setTimeout> | null = null;
+  private habiaCambio = false;
+
   cargarProvCliente() {
     if (!this.selectedUserId) return;
+    const cliente = this.selectedUserId;
     this.cargandoProv = true;
-    this.gestionRemota.aprovisionamientoDeCliente(Number(this.selectedUserId)).subscribe({
-      next: (r: any) => { this.cargandoProv = false; this.provCliente = r?.error === 0 ? r.data : null; },
+    this.gestionRemota.aprovisionamientoDeCliente(Number(cliente)).subscribe({
+      next: (r: any) => {
+        this.cargandoProv = false;
+        if (cliente !== this.selectedUserId) return;
+        this.provCliente = r?.error === 0 ? r.data : null;
+        this.seguirCambioEnCurso(cliente);
+      },
       error: () => { this.cargandoProv = false; this.provCliente = null; },
     });
+  }
+
+  /**
+   * Un cambio de conexión tarda unos minutos (y puede deshacerse): la ficha
+   * sigue con el tipo de antes hasta que se confirma. Se relee cada 10 s y, al
+   * terminar, se recarga el cliente para que muestre cómo quedó.
+   */
+  private seguirCambioEnCurso(cliente: number) {
+    if (this.sondeoCambio) { clearTimeout(this.sondeoCambio); this.sondeoCambio = null; }
+    const enCurso = !!this.provCliente?.cambio_en_curso;
+
+    if (!enCurso && this.habiaCambio) {
+      this.habiaCambio = false;
+      this.loadModalUser(cliente);
+      this.getAllUser();
+      return;
+    }
+
+    this.habiaCambio = enCurso;
+    if (enCurso && this.showClienteModal) {
+      this.sondeoCambio = setTimeout(() => { if (this.selectedUserId === cliente) this.cargarProvCliente(); }, 10000);
+    }
   }
 
   reaplicarEnOnt() {
@@ -179,7 +211,7 @@ export class UserComponent implements OnInit {
   estadoAprov(e: string): string {
     return ({
       esperando: 'Esperando al equipo', aplicando: 'Aplicando', listo: 'Aplicado', con_errores: 'Con fallas', vencido: 'No apareció', error: 'Falla',
-      no_aplica: 'No se configura solo', cancelado: 'Cancelado',
+      no_aplica: 'No se configura solo', cancelado: 'Cancelado', revertido: 'No se cambió',
     } as Record<string, string>)[e] ?? e;
   }
 
@@ -705,6 +737,8 @@ export class UserComponent implements OnInit {
   cambioVlan: any = null;
   cambiandoConexion = false;
   cambioAviso = '';
+  /** La plataforma no puede cambiar el equipo sola: por qué, y la opción de cambiar sólo el router. */
+  cambioAMano: { motivo: string; que_hacer?: string | null } | null = null;
 
   get clienteEsPppoe(): boolean {
     return this.selectedUserData?.connection_type === 'pppoe';
@@ -723,6 +757,7 @@ export class UserComponent implements OnInit {
     this.cambioRedes = [];
     this.cambioSeg = null;
     this.cambioAviso = '';
+    this.cambioAMano = null;
 
     if (this.cambioTipo === 'pppoe' || this.clienteEsPppoe) this.cargarPppoeCliente();
   }
@@ -732,7 +767,7 @@ export class UserComponent implements OnInit {
     return this.cambioTipo !== (this.clienteEsPppoe ? 'pppoe' : 'static');
   }
 
-  async aplicarCambioConexion() {
+  async aplicarCambioConexion(aMano = false) {
     const aPppoe = this.cambioTipo === 'pppoe';
 
     // Editar las credenciales de un cliente que ya es PPPoE sí es un cambio
@@ -758,18 +793,22 @@ export class UserComponent implements OnInit {
     }
 
     const ok = await this.dialog.confirm(
-      aPppoe
-        ? `El cliente pasa a conectarse por PPPoE con el usuario «${this.cambioUsuario}» y se le quita la IP fija. ` +
-          `Si su ONT está en el TR-069, se reconfigura sola; si no, hay que cargarle las credenciales en el equipo. ¿Confirmás?`
-        : `El cliente pasa a IP fija con ${this.cambioIp} y se le borra la credencial PPPoE. ` + this.avisoHuerfana(this.migrIpzone, this.cambioIp) +
-          `Si su ONT está en el TR-069, se reconfigura sola y se carga su MAC en el MikroTik; si no, hay que configurarla en el equipo. ¿Confirmás?`,
-      { okLabel: 'Cambiar la conexión' },
+      aMano
+        ? `Se cambia sólo el router (${aPppoe ? `PPPoE «${this.cambioUsuario}»` : `IP fija ${this.cambioIp}`}) y se le quita ${this.clienteEsPppoe ? 'el PPPoE' : 'la IP fija'} ahora. ` +
+          `El equipo lo cargás vos: hasta que lo cargues, el cliente queda sin internet. ¿Confirmás?`
+        : aPppoe
+          ? `El cliente pasa a PPPoE con el usuario «${this.cambioUsuario}». Si su ONT está en el TR-069: se crea el usuario en el router sin quitarle la IP fija, ` +
+            `se cambia la ONT y, cuando la sesión PPPoE levanta, se saca la IP fija. Si no levanta, queda como estaba. ¿Confirmás?`
+          : `El cliente pasa a IP fija con ${this.cambioIp}. ` + this.avisoHuerfana(this.migrIpzone, this.cambioIp) +
+            `Si su ONT está en el TR-069: se agrega la IP al router sin quitarle el PPPoE, se cambia la ONT y, cuando anda con la IP nueva, se deshabilita el PPPoE. Si no anda, queda como estaba. ¿Confirmás?`,
+      { okLabel: aMano ? 'Cambiar sólo el router' : 'Cambiar la conexión' },
     );
 
     if (!ok) return;
 
     this.cambiandoConexion = true;
     this.cambioAviso = '';
+    this.cambioAMano = null;
 
     this.userSvc.cambiarConexion({
       user_id: this.selectedUserId,
@@ -779,19 +818,20 @@ export class UserComponent implements OnInit {
       pppoe_profile: aPppoe ? this.cambioPerfil : undefined,
       ip: !aPppoe ? this.cambioIp : undefined,
       vlan: !aPppoe ? this.cambioVlan?.names : undefined,
+      a_mano: aMano || undefined,
     }).subscribe({
       next: r => {
         this.cambiandoConexion = false;
         this.toast(r.message ?? 'Listo', r.error ? 'error' : 'success');
 
         if (!r.error) {
-          this.seguirReconfiguracion(r, 'Reconfigurando la ONT (cambio de conexión)');
+          this.seguirReconfiguracion(r, 'Cambio de conexión');
           this.editandoConexion = false;
           setTimeout(() => this.cargarProvCliente(), 800);
           this.loadModalUser(this.selectedUserId);
           this.getAllUser();
         } else {
-          this.cambioAviso = r.message ?? '';
+          this.mostrarRechazo(r);
         }
       },
       error: () => {
@@ -809,13 +849,23 @@ export class UserComponent implements OnInit {
    * Ahora: IP fija → IP fija es cambiar de IP; cualquier otro caso es cambiar
    * el tipo de conexión.
    */
-  aplicarConexion(): void {
+  aplicarConexion(aMano = false): void {
     if (this.cambioTipo === 'static' && !this.clienteEsPppoe) {
-      void this.cambiarIpFija();
+      void this.cambiarIpFija(aMano);
       return;
     }
 
-    void this.aplicarCambioConexion();
+    void this.aplicarCambioConexion(aMano);
+  }
+
+  /** No se pudo: si es porque la plataforma no llega al equipo, se ofrece cambiar sólo el router. */
+  private mostrarRechazo(r: any) {
+    if (r?.data?.requiere_a_mano) {
+      this.cambioAMano = { motivo: r.data.motivo || r.message || '', que_hacer: r.data.que_hacer };
+      this.cambioAviso = '';
+    } else {
+      this.cambioAviso = r?.message ?? '';
+    }
   }
 
   get etiquetaConexion(): string {
@@ -848,7 +898,7 @@ export class UserComponent implements OnInit {
   }
 
   /** Cliente de IP fija que cambia de IP (lo que hacía "Migración de IP"). */
-  private async cambiarIpFija(): Promise<void> {
+  private async cambiarIpFija(aMano = false): Promise<void> {
     if (!this.cambioIp || !this.cambioVlan) {
       this.toast('Elegí la VLAN y la IP', 'error');
       return;
@@ -856,27 +906,32 @@ export class UserComponent implements OnInit {
 
     const ok = await this.dialog.confirm(
       `El cliente pasa de ${this.selectedUserData?.ip || 'sin IP'} a ${this.cambioIp} (${this.cambioVlan.names}). ` + this.avisoHuerfana(this.migrIpzone, this.cambioIp) +
-      `Hay que reconfigurar su equipo con la IP nueva. ¿Confirmás?`,
-      { okLabel: 'Cambiar la IP' },
+      (aMano
+        ? `Se cambia sólo el router y se le quita la IP de ahora: el equipo lo cargás vos (hasta entonces queda sin internet). ¿Confirmás?`
+        : `Si su ONT está en el TR-069, se agrega la IP nueva sin quitar la de ahora, se cambia la ONT y, cuando anda, se saca la vieja; si no anda, queda como estaba. ` +
+          `Si no, hay que reconfigurar su equipo con la IP nueva. ¿Confirmás?`),
+      { okLabel: aMano ? 'Cambiar sólo el router' : 'Cambiar la IP' },
     );
 
     if (!ok) return;
 
     this.cambiandoConexion = true;
     this.cambioAviso = '';
+    this.cambioAMano = null;
 
     this.userSvc.migrarIp({
       service_id: this.selectedUserId,
       new_ip: this.cambioIp,
       vlan: this.cambioVlan.names,
       router_id: this.selectedRouterId,
+      a_mano: aMano || undefined,
     }).subscribe({
       next: r => {
         this.cambiandoConexion = false;
         this.toast(r.message ?? (r.error ? 'Error' : 'IP cambiada'), r.error ? 'error' : 'success');
 
         if (!r.error) {
-          this.seguirReconfiguracion(r, 'Reconfigurando la ONT (IP nueva)');
+          this.seguirReconfiguracion(r, 'Cambio de IP');
           this.editandoConexion = false;
           setTimeout(() => this.cargarProvCliente(), 800);
           this.cambioVlan = null;
@@ -887,7 +942,7 @@ export class UserComponent implements OnInit {
           this.loadModalUser(this.selectedUserId);
           this.getAllUser();
         } else {
-          this.cambioAviso = r.message ?? '';
+          this.mostrarRechazo(r);
         }
       },
       error: () => {
