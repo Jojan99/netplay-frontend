@@ -49,7 +49,7 @@
   <div class="np-modal" role="dialog" aria-modal="true" (click)="$event.stopPropagation()">
     <div class="np-modal-head"><div><p class="np-kicker">Instancia <b>/</b> {{ qrInstance.name }}</p><h3>Vincular con QR</h3></div><button type="button" class="np-icobtn" (click)="closeQR()" aria-label="Cerrar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div>
     <div class="np-modal-body">
-      <div class="np-qr-frame"><img *ngIf="!qrError" [src]="qrImageUrl" alt="Código QR" (error)="qrError = true" /><p class="np-muted" *ngIf="qrError">QR no disponible aún.</p></div>
+      <div class="np-qr-frame"><img *ngIf="qrImageUrl" [src]="qrImageUrl" alt="Código QR" (error)="qrError = true" /><p class="np-muted" *ngIf="!qrImageUrl">{{ qrError ? 'QR no disponible aún. Se vuelve a pedir solo.' : 'Pidiendo el QR…' }}</p></div>
       <ol class="np-steps"><li>Abrí WhatsApp en el celular.</li><li>Andá a <b>Dispositivos vinculados</b>.</li><li>Tocá <b>Vincular dispositivo</b>.</li><li>Apuntá la cámara al QR.</li></ol>
       <p class="np-fine">Se verifica la conexión cada 5 segundos.</p>
       <div class="np-btnrow np-btnrow--end"><button type="button" class="np-btn np-btn--ghost" (click)="refreshQrImage()">Refrescar</button><button type="button" class="np-btn np-btn--primary" (click)="closeQR()">Cerrar</button></div>
