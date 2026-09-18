@@ -4,7 +4,7 @@ import { authGuard } from './guards/auth.guard';
 import { roleGuard } from './guards/role.guard';
 import { panelYaConectadoGuard } from './guards/ya-conectado.guard';
 import { raizDelSitioGuard, soloEnLaRaizGuard } from './guards/sitio.guard';
-import { plataformaGuard } from './guards/plataforma.guard';
+import { fueraDeLaConsolaGuard } from './guards/consola.guard';
 
 import { SignInComponent }            from './pages/sign-in/sign-in/sign-in.component';
 import { RegisterCompanyComponent }   from './pages/register-company/register-company.component';
@@ -42,7 +42,7 @@ export const routes: Routes = [
   {
     path: 'dashboard',
     component: LayoutComponent,
-    canActivate: [authGuard],
+    canActivate: [fueraDeLaConsolaGuard, authGuard],
     children: [
       { path: 'home', component: DashboardComponent },
       { path: 'usuario',        component: UserComponent,              canActivate: [roleGuard], data: { module: 'usuario' } },
@@ -103,15 +103,6 @@ export const routes: Routes = [
         data: { module: 'whatsapp' },
       },
       { path: 'perfil', component: ProfileComponent },
-
-      // La consola de Netvula: sólo para el dueño de la plataforma. No es un
-      // módulo del panel a propósito: no se puede dar desde los permisos de
-      // ningún perfil. El servidor la vuelve a cerrar con su propio middleware.
-      {
-        path: 'consola',
-        loadChildren: () => import('./pages/consola/consola.routes').then(m => m.CONSOLA_ROUTES),
-        canActivate: [plataformaGuard],
-      },
       { path: 'contratos', component: ContractsComponent, canActivate: [roleGuard], data: { module: 'contratos' } },
       { path: 'empleados', component: EmployeesComponent, canActivate: [roleGuard], data: { module: 'empleados' } },
       { path: 'planes-internet', component: InternetPlansComponent, canActivate: [roleGuard], data: { module: 'planes-internet' } },
@@ -131,8 +122,21 @@ export const routes: Routes = [
       { path: '**', component: DashboardComponent },
     ],
   },
+  /**
+   * La consola de Netvula.
+   *
+   * Vive sola en admin.netvula.com, con sus propios usuarios y su propio
+   * token. No cuelga del panel de ninguna empresa y no comparte su sesión;
+   * desde cualquier otra dirección, sus guards mandan al login de siempre y
+   * la API ni siquiera tiene registradas sus rutas.
+   */
+  {
+    path: 'consola',
+    loadChildren: () => import('./pages/consola/consola.routes').then(m => m.CONSOLA_ROUTES),
+  },
   {
     path: 'portal',
+    canActivate: [fueraDeLaConsolaGuard],
     loadChildren: () => import('./portal/portal.routes').then(m => m.PORTAL_ROUTES),
   },
   {
@@ -141,10 +145,10 @@ export const routes: Routes = [
   },
   // Con sesión vigente se sigue de largo al panel: la raíz lleva a "inicio", que
   // es este mismo login, y parecía que había que entrar de nuevo cada vez.
-  { path: 'login',         component: SignInComponent, canActivate: [panelYaConectadoGuard] },
-  { path: 'inicio',        component: SignInComponent, canActivate: [panelYaConectadoGuard] },
+  { path: 'login',         component: SignInComponent, canActivate: [fueraDeLaConsolaGuard, panelYaConectadoGuard] },
+  { path: 'inicio',        component: SignInComponent, canActivate: [fueraDeLaConsolaGuard, panelYaConectadoGuard] },
   // El registro es de netvula.com: desde el subdominio de una empresa se manda a la raíz.
-  { path: 'register',      component: RegisterCompanyComponent, canActivate: [soloEnLaRaizGuard] },
+  { path: 'register',      component: RegisterCompanyComponent, canActivate: [fueraDeLaConsolaGuard, soloEnLaRaizGuard] },
   { path: 'confirm-email', component: ConfirmEmailComponent },
   // Llegada al subdominio después de iniciar sesión en la raíz (canjea el vale).
   { path: 'entrar',        loadComponent: () => import('./pages/entrar/entrar.component').then(m => m.EntrarComponent) },
@@ -153,7 +157,7 @@ export const routes: Routes = [
   {
     path: '',
     pathMatch: 'full',
-    canActivate: [raizDelSitioGuard],
+    canActivate: [fueraDeLaConsolaGuard, raizDelSitioGuard],
     loadComponent: () => import('./pages/plataforma/plataforma.component').then(m => m.PlataformaComponent),
   },
 

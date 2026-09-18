@@ -1,14 +1,21 @@
 import { Routes } from '@angular/router';
+import { consolaGuard, soloEnLaConsolaGuard } from '../../guards/consola.guard';
 
 /**
- * La consola de Netvula: la plataforma vista por su dueño.
+ * La consola de Netvula: su propia aplicación dentro del mismo paquete.
  *
- * Cuelga de /dashboard/consola y cada pantalla es una pestaña. El guard sólo
- * evita mostrar algo que no va a cargar: el permiso real lo pone el servidor.
+ * Cuelga de /consola y sólo existe en admin.netvula.com. No está debajo del
+ * layout del panel de empresas y no comparte su sesión.
  */
 export const CONSOLA_ROUTES: Routes = [
   {
+    path: 'ingresar',
+    canActivate: [soloEnLaConsolaGuard],
+    loadComponent: () => import('./ingresar/consola-ingresar.component').then(m => m.ConsolaIngresarComponent),
+  },
+  {
     path: '',
+    canActivate: [consolaGuard],
     loadComponent: () => import('./consola.component').then(m => m.ConsolaComponent),
     children: [
       { path: 'tablero',   loadComponent: () => import('./tablero/consola-tablero.component').then(m => m.ConsolaTableroComponent) },

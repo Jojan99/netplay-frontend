@@ -142,21 +142,15 @@ export class LayoutComponent implements OnInit {
     this.username    = user.username || '';
     this.nombre      = this.authService.getNombre();
 
-    // Las sesiones abiertas antes de este cambio no traían el nombre ni la
-    // marca de plataforma: se piden una vez y quedan guardados.
-    if (!user.nombre || user.es_plataforma === undefined) {
+    // Las sesiones abiertas antes de este cambio no traían el nombre: se pide
+    // una vez y queda guardado.
+    if (!user.nombre) {
       this.oauth.getMe().subscribe({
         next: (r: any) => {
-          this.authService.setPlataforma(!!r?.data?.es_plataforma);
-
           const n = `${r?.data?.names ?? ''} ${r?.data?.lastname ?? ''}`.trim();
-          if (n) {
-            this.authService.setNombre(n);
-            this.nombre = this.authService.getNombre();
-          }
-
-          // El menú se arma con la marca: hay que rehacerlo cuando llega.
-          this.buildMenu(this.authService.getAllowedModules());
+          if (!n) return;
+          this.authService.setNombre(n);
+          this.nombre = this.authService.getNombre();
           this.cdr.detectChanges();
         },
       });
@@ -197,7 +191,6 @@ export class LayoutComponent implements OnInit {
             // Usar module si existe, si no usar href como clave de módulo
             const key = child.module || child.href || '';
             if (child.soloAdmin && !this.authService.isAdmin()) return false;
-            if (child.soloPlataforma && !this.authService.esPlataforma()) return false;
             return !key || isAllowed(key);
           });
           if (filteredChildren.length === 0) return null;
@@ -206,10 +199,6 @@ export class LayoutComponent implements OnInit {
           if (groupKey && !isAllowed(groupKey)) return null;
           return { ...item, children: filteredChildren };
         }
-        // La consola de Netvula no es un módulo: se muestra sólo por la marca
-        // de plataforma y ningún perfil la puede habilitar.
-        if (item.soloPlataforma) return this.authService.esPlataforma() ? item : null;
-
         const key = item.module || item.href || '';
         if (!key || !isAllowed(key)) return null;
         return item;

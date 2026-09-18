@@ -1,0 +1,47 @@
+<div class="np-ingreso">
+  <div class="np-ingreso-caja">
+
+    <header class="np-ingreso-marca">
+      <span class="np-ingreso-logo">N</span>
+      <div>
+        <h1>Consola Netvula</h1>
+        <p class="np-fine">La plataforma, no una empresa.</p>
+      </div>
+      <span class="np-spacer"></span>
+      <flowbite-dark-theme-toggle></flowbite-dark-theme-toggle>
+    </header>
+
+    <form class="np-form" (ngSubmit)="ingresar()">
+      <label class="np-field np-field-full"><span>Correo</span>
+        <input type="email" class="np-input" [(ngModel)]="email" name="email"
+               autocomplete="username" autocapitalize="off" spellcheck="false" required />
+      </label>
+
+      <label class="np-field np-field-full"><span>Contraseña</span>
+        <span class="np-input-wrap">
+          <input [type]="verClave ? 'text' : 'password'" class="np-input" [(ngModel)]="password"
+                 name="password" autocomplete="current-password" required />
+          <button type="button" class="np-eye" (click)="verClave = !verClave"
+                  [attr.aria-label]="verClave ? 'Ocultar la contraseña' : 'Ver la contraseña'">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+              <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/>
+              <path *ngIf="!verClave" d="M3 3l18 18"/>
+            </svg>
+          </button>
+        </span>
+      </label>
+
+      <p *ngIf="error" class="np-notice np-notice--danger np-field-full">{{ error }}</p>
+
+      <button type="submit" class="np-btn np-btn--primary np-field-full" [disabled]="cargando">
+        <span *ngIf="cargando" class="np-spinner np-spinner--sm"></span>
+        {{ cargando ? 'Entrando…' : 'Entrar' }}
+      </button>
+    </form>
+
+    <p class="np-fine np-muted np-ingreso-pie">
+      Las cuentas de la consola se crean en el servidor con
+      <b class="np-mono">php artisan consola:usuario</b>. No hay registro ni recuperación automática.
+    </p>
+  </div>
+</div>

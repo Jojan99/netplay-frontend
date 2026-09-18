@@ -1,8 +1,23 @@
 <div class="np-consola">
-  <nav class="np-tabs" aria-label="Consola de Netvula">
-    <a *ngFor="let p of pestanas" class="np-tab" [routerLink]="['/dashboard/consola', p.ruta]"
-       routerLinkActive #activa="routerLinkActive" [attr.aria-selected]="activa.isActive">{{ p.titulo }}</a>
-  </nav>
+
+  <header class="np-consola-barra">
+    <span class="np-consola-logo">N</span>
+    <div class="np-consola-marca">
+      <b>Consola Netvula</b>
+      <span class="np-fine">la plataforma</span>
+    </div>
+
+    <nav class="np-tabs" aria-label="Consola de Netvula">
+      <a *ngFor="let p of pestanas" class="np-tab" [routerLink]="['/consola', p.ruta]"
+         routerLinkActive #activa="routerLinkActive" [attr.aria-selected]="activa.isActive">{{ p.titulo }}</a>
+    </nav>
+
+    <span class="np-spacer"></span>
+
+    <flowbite-dark-theme-toggle></flowbite-dark-theme-toggle>
+    <span class="np-fine np-only-desktop np-consola-quien">{{ usuario?.nombre || usuario?.email }}</span>
+    <button type="button" class="np-btn np-btn--sm" (click)="salir()">Salir</button>
+  </header>
 
   <router-outlet></router-outlet>
 </div>

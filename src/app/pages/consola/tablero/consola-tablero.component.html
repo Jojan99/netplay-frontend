@@ -120,7 +120,7 @@
           <tbody>
             <tr *ngIf="!enMora.length" class="np-empty"><td colspan="4"><strong>Nadie en mora.</strong></td></tr>
             <tr *ngFor="let m of enMora">
-              <td><a class="np-link" [routerLink]="['/dashboard/consola/empresas']" [queryParams]="{ empresa: m.company_id }">{{ m.empresa }}</a></td>
+              <td><a class="np-link" [routerLink]="['/consola/empresas']" [queryParams]="{ empresa: m.company_id }">{{ m.empresa }}</a></td>
               <td class="np-data np-data--dim">{{ m.periodo }}</td>
               <td class="np-td-right np-money">{{ pesos(m.saldo) }}</td>
               <td class="np-td-right"><span class="np-pill np-pill--suspended">{{ m.dias }}</span></td>
@@ -136,7 +136,7 @@
           <tbody>
             <tr *ngIf="!porVencer.length" class="np-empty"><td colspan="4"><strong>Nada por vencer esta semana.</strong></td></tr>
             <tr *ngFor="let v of porVencer">
-              <td><a class="np-link" [routerLink]="['/dashboard/consola/empresas']" [queryParams]="{ empresa: v.company_id }">{{ v.empresa }}</a></td>
+              <td><a class="np-link" [routerLink]="['/consola/empresas']" [queryParams]="{ empresa: v.company_id }">{{ v.empresa }}</a></td>
               <td class="np-data np-data--dim">{{ v.ciclo }}</td>
               <td class="np-data">{{ v.proxima }}</td>
               <td class="np-td-right"><span class="np-pill np-pill--info">{{ v.dias }} días</span></td>

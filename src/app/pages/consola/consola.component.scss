@@ -1,19 +1,58 @@
-/* El marco de la consola. Todo lo demás es del sistema np-*. */
+/* El marco de la consola. Todo lo de adentro es del sistema np-*. */
 .np-consola {
   display: flex;
   flex-direction: column;
-  min-height: 0;
-  height: 100%;
+  min-height: 100vh;
+  background: var(--bg);
 }
 
-.np-consola > .np-tabs {
+.np-consola-barra {
   position: sticky;
   top: 0;
-  z-index: 3;
-  background: var(--bg);
-  padding: 10px 16px 0;
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 16px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--line);
   overflow-x: auto;
-  flex: 0 0 auto;
 }
 
-.np-consola > .np-tabs .np-tab { text-decoration: none; white-space: nowrap; }
+.np-consola-logo {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  flex: 0 0 30px;
+  border-radius: var(--radius);
+  background: var(--accent);
+  color: var(--accent-ink);
+  font: 700 16px/1 var(--font-display);
+}
+
+.np-consola-marca {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.15;
+  white-space: nowrap;
+}
+
+.np-consola-marca b { font: 600 14px/1.2 var(--font-display); color: var(--text); }
+
+.np-consola-barra .np-tabs {
+  border: 0;
+  margin: 0 0 0 8px;
+  padding: 0;
+  flex: 0 1 auto;
+}
+
+.np-consola-barra .np-tab { text-decoration: none; white-space: nowrap; }
+
+.np-consola-quien { white-space: nowrap; }
+
+.np-consola > .np-page { flex: 1 1 auto; min-height: 0; }
+
+@media (max-width: 860px) {
+  .np-consola-marca, .np-consola-quien { display: none; }
+}

@@ -1,7 +1,8 @@
 import { Injectable, inject } from '@angular/core';
-import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../environments/environment';
+import { ConsolaAuthService } from './consola-auth.service';
 
 /** Lo que la consola muestra de cada empresa. */
 export interface EmpresaConsola {
@@ -116,26 +117,20 @@ export interface SimulacionCobro {
 /**
  * La consola de Netvula.
  *
- * Todo cuelga de /api/consola, detrás del middleware de plataforma: si el
- * usuario no tiene la marca, el servidor responde 403 y no hay pantalla que
- * valga.
+ * Todo cuelga de /api/consola, que sólo existe en admin.netvula.com y sólo
+ * responde con un token de la consola. El token del panel de una empresa no
+ * sirve acá, ni al revés.
  */
 @Injectable({ providedIn: 'root' })
 export class ConsolaService {
   private http = inject(HttpClient);
+  private sesion = inject(ConsolaAuthService);
   private readonly base = environment.rootUrl + 'api/consola/';
 
-  private cabeceras(): HttpHeaders {
-    return new HttpHeaders({
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${localStorage.getItem('token') ?? ''}`,
-    });
-  }
+  private cabeceras() { return this.sesion.cabeceras(); }
 
   /** Para subir el comprobante: sin Content-Type, lo pone el navegador. */
-  private cabecerasArchivo(): HttpHeaders {
-    return new HttpHeaders({ 'Authorization': `Bearer ${localStorage.getItem('token') ?? ''}` });
-  }
+  private cabecerasArchivo() { return this.sesion.cabecerasArchivo(); }
 
   // ── Tablero y empresas ────────────────────────────────────────────────
   tablero(refrescar = false): Observable<any> {

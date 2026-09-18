@@ -1,0 +1,57 @@
+/* El ingreso de la consola: una caja sola, sin nada del panel alrededor. */
+.np-ingreso {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  padding: 24px 16px;
+  background: var(--bg);
+}
+
+.np-ingreso-caja {
+  width: 100%;
+  max-width: 380px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+  padding: 26px 24px 20px;
+}
+
+.np-ingreso-marca {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 22px;
+}
+
+.np-ingreso-marca h1 {
+  font: 600 19px/1.2 var(--font-display);
+  margin: 0;
+  color: var(--text);
+}
+
+.np-ingreso-marca p { margin: 2px 0 0; }
+
+.np-ingreso-logo {
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  flex: 0 0 38px;
+  border-radius: var(--radius);
+  background: var(--accent);
+  color: var(--accent-ink);
+  font: 700 20px/1 var(--font-display);
+}
+
+.np-ingreso .np-btn--primary {
+  justify-content: center;
+  margin-top: 6px;
+}
+
+.np-ingreso-pie {
+  margin: 18px 0 0;
+  padding-top: 14px;
+  border-top: 1px solid var(--line);
+  text-align: center;
+}
