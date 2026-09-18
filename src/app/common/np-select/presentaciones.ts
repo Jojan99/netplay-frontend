@@ -6,15 +6,16 @@ import { InsigniaSelect, PresentacionSelect } from './np-select.component';
  * tiene con una barra frente a la VLAN que más tiene.
  */
 export const PRESENTACION_REDES: PresentacionSelect = {
-  // Se compara por la interfaz: el borrador del alta guarda otra copia del objeto.
-  clave: r => r?.names,
+  // Se compara por la interfaz y su red: el borrador del alta guarda otra copia
+  // del objeto, y una VLAN puede tener dos redes (vlan10 con la .10 y la .11).
+  clave: r => `${r?.names ?? ''}|${r?.network ?? ''}`,
   etiqueta: r => r?.names ?? '',
-  // El motivo de "otra" ya lo dice la insignia: abajo va la red y el comentario del router.
-  detalle: r => [r?.network, r?.comentario].filter(Boolean).join(' · '),
+  // El motivo de "otra" ya lo dice la insignia: abajo va la red (o las redes) y el comentario del router.
+  detalle: r => [r?.redes?.length > 1 ? r.redes.join(' · ') : r?.network, r?.comentario].filter(Boolean).join(' · '),
   prefijo: r => (r?.vlan_id ? String(r.vlan_id) : 'LAN'),
   grupo: r => (r?.tipo === 'otra' ? 'Otras redes del router' : 'Redes de clientes'),
   atenuada: r => r?.tipo === 'otra',
-  buscarEn: r => [r?.names, r?.network, r?.comentario, r?.vlan_id].filter(Boolean).join(' '),
+  buscarEn: r => [r?.names, ...(r?.redes ?? [r?.network]), r?.comentario, r?.vlan_id].filter(Boolean).join(' '),
   insignia: (r, todas) => {
     if (r?.tipo === 'otra') return { texto: 'No es de clientes', tono: 'warn' };
 
@@ -59,6 +60,50 @@ export const PRESENTACION_IPS: PresentacionSelect = {
 };
 
 /**
+ * Una fila por interfaz: getLanSegments devuelve una por cada red del router y
+ * una VLAN con dos redes salía dos veces con el mismo nombre. Queda la primera
+ * con la lista de sus redes (redes) y los clientes sumados; la red se elige
+ * después, con las IP.
+ */
+export function agruparRedesPorInterfaz(filas: any[]): any[] {
+  const porNombre = new Map<string, any>();
+
+  for (const f of filas ?? []) {
+    const ya = porNombre.get(f?.names);
+    if (!ya) {
+      porNombre.set(f?.names, { ...f, redes: [f?.network].filter(Boolean) });
+      continue;
+    }
+    if (f?.network && !ya.redes.includes(f.network)) ya.redes.push(f.network);
+    ya.clientes = Number(ya.clientes ?? 0) + Number(f?.clientes ?? 0);
+    if (f?.tipo === 'clientes') ya.tipo = 'clientes';
+  }
+
+  return [...porNombre.values()];
+}
+
+/**
+ * Como PRESENTACION_IPS, pero las IP que están en el router sin cliente de la
+ * plataforma se ven sin buscar, en su propio grupo, y se pueden elegir: al
+ * guardar se reutiliza esa entrada del router.
+ */
+export const PRESENTACION_IPS_ASIGNABLES: PresentacionSelect = {
+  ...PRESENTACION_IPS,
+  detalle: o => {
+    if (o?.estado === 'libre') return null;
+    if (o?.estado !== 'arp') return o?.detalle;
+    return [o?.mac, o?.comment ? `«${o.comment}»` : null, o?.desactivada ? 'desactivada en el router' : null].filter(Boolean).join(' · ') || 'Sin datos en el router';
+  },
+  insignia: o => (o?.estado === 'arp' ? { texto: 'Sin cliente', tono: 'info' } : PRESENTACION_IPS.insignia!(o, [])),
+  grupo: o => (o?.estado === 'libre' ? 'Libres' : o?.estado === 'arp' ? 'En el router, sin cliente en la plataforma' : 'Ocupadas'),
+  deshabilitada: o => o?.estado !== 'libre' && o?.estado !== 'arp',
+  soloAlBuscar: o => o?.estado !== 'libre' && o?.estado !== 'arp',
+  buscarEn: o => `${o?.ip ?? ''} ${o?.detalle ?? ''} ${o?.mac ?? ''}`,
+};
+
+const SIN_HUERFANAS = new Map<string, any>();
+
+/**
  * Arma las opciones de IP a partir de la lista de libres que ya usa la
  * pantalla, recordando las ocupadas que llegaron con ella. Se guarda por
  * referencia: mientras la lista no cambie, el selector recibe el mismo arreglo.
@@ -66,11 +111,23 @@ export const PRESENTACION_IPS: PresentacionSelect = {
 export class OpcionesDeIps {
   private ocupadas = new WeakMap<object, any[]>();
   private cache = new WeakMap<object, any[]>();
+  private huerfanasCache = new WeakMap<object, Map<string, any>>();
 
   /** Guarda las ocupadas de esta respuesta y devuelve la misma lista de libres. */
   recordar<T extends object>(libres: T, ocupadas: any[] | null | undefined): T {
     this.ocupadas.set(libres, ocupadas ?? []);
     return libres;
+  }
+
+  /** Las IP que llegaron con esta lista y están en el router sin cliente de la plataforma, por IP. */
+  huerfanas(libres: any[] | null | undefined): Map<string, any> {
+    if (!libres) return SIN_HUERFANAS;
+    let mapa = this.huerfanasCache.get(libres);
+    if (!mapa) {
+      mapa = new Map((this.ocupadas.get(libres) ?? []).filter(o => o?.estado === 'arp').map(o => [o.ip, o] as [string, any]));
+      this.huerfanasCache.set(libres, mapa);
+    }
+    return mapa;
   }
 
   de(libres: any[] | null | undefined): any[] {

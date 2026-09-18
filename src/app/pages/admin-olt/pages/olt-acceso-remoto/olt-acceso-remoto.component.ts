@@ -99,7 +99,7 @@ export class OltAccesoRemotoComponent implements OnInit {
       if (q.get('tab') === 'aprov') {
         this.tab = 'aprov';
         this.tabElegida = true;
-        this.filtroAprov = 'todos';
+        this.elegirFiltroAprov('todos');
         const id = Number(q.get('aprov'));
         if (id) { this.abiertoAprov = id; this.cargarAprov(); }
       }
@@ -149,15 +149,18 @@ export class OltAccesoRemotoComponent implements OnInit {
   readonly filtrosAprov = [
     { id: 'activos', label: 'En curso' },
     { id: 'fallas', label: 'Con fallas' },
+    { id: 'a_mano', label: 'A configurar en el equipo' },
     { id: 'listos', label: 'Listos' },
     { id: 'todos', label: 'Todos' },
   ] as const;
-  filtroAprov: 'activos' | 'fallas' | 'listos' | 'todos' = 'todos';
+  filtroAprov: 'activos' | 'fallas' | 'a_mano' | 'listos' | 'todos' = 'todos';
 
   private enFiltro(a: any, f: string): boolean {
     switch (f) {
       case 'activos': return ['esperando', 'aplicando'].includes(a.estado);
       case 'fallas':  return this.esMalo(a.estado);
+      // No se configuran solos (p. ej. un Huawei en una OLT C-Data).
+      case 'a_mano':  return a.estado === 'no_aplica';
       case 'listos':  return a.estado === 'listo';
       // «Todos» sin los reemplazados: son altas viejas de la misma ONT.
       default:        return a.estado !== 'reemplazado';
@@ -166,7 +169,22 @@ export class OltAccesoRemotoComponent implements OnInit {
 
   cuentaAprov(f: string): number { return this.aprovUltimos.filter(a => this.enFiltro(a, f)).length; }
 
-  get aprovFiltrados(): any[] { return this.aprovUltimos.filter(a => this.enFiltro(a, this.filtroAprov)); }
+  /** La lista que recorre la tabla: se arma al cambiar datos o filtro, no en cada ciclo. */
+  aprovFiltrados: any[] = [];
+
+  elegirFiltroAprov(f: 'activos' | 'fallas' | 'a_mano' | 'listos' | 'todos') {
+    this.filtroAprov = f;
+    this.filtrarAprov();
+  }
+
+  private ponerAprov(lista: any[]) {
+    this.aprovUltimos = lista;
+    this.filtrarAprov();
+  }
+
+  private filtrarAprov() {
+    this.aprovFiltrados = this.aprovUltimos.filter(a => this.enFiltro(a, this.filtroAprov));
+  }
 
   get resumenOpciones(): string {
     const f = this.aprovForm;
@@ -192,7 +210,8 @@ export class OltAccesoRemotoComponent implements OnInit {
 
   /** El color de la píldora de cada aprovisionamiento. */
   pillAprov(estado: string): string {
-    return estado === 'listo' ? 'listo' : this.esMalo(estado) ? 'error' : estado === 'reemplazado' ? 'sin_leer' : 'pendiente';
+    return estado === 'listo' ? 'listo' : this.esMalo(estado) ? 'error'
+      : (estado === 'reemplazado' || estado === 'cancelado') ? 'sin_leer' : estado === 'no_aplica' ? 'manual' : 'pendiente';
   }
 
   // ── Aprovisionamiento automático al autorizar ─────────────────────────
@@ -207,6 +226,7 @@ export class OltAccesoRemotoComponent implements OnInit {
   readonly estadosAprov: Record<string, string> = {
     esperando: 'Esperando al equipo', aplicando: 'Aplicando', listo: 'Listo', con_errores: 'Con fallas',
     vencido: 'No apareció', error: 'Falla', reemplazado: 'Reemplazado',
+    no_aplica: 'No se configura solo', cancelado: 'Cancelado',
   };
 
   esMalo(estado: string): boolean { return ['con_errores', 'vencido', 'error'].includes(estado); }
@@ -220,10 +240,28 @@ export class OltAccesoRemotoComponent implements OnInit {
       next: (r: any) => {
         this.reintentando = null;
         if (r?.error !== 0) { this.toast.error(r?.message ?? 'No se pudo reintentar'); return; }
-        this.aprovUltimos = r.data ?? this.aprovUltimos;
+        this.ponerAprov(r.data ?? this.aprovUltimos);
         this.toast.success('Se reintenta en menos de un minuto. Tocá "Actualizar" para ver cómo va.');
       },
       error: (e: any) => { this.reintentando = null; this.toast.error(e?.error?.message ?? 'No se pudo reintentar'); },
+    });
+  }
+
+  cancelandoAprov: number | null = null;
+
+  /** Cancela uno en curso (o uno que se vigila por si lo configuran a mano). */
+  cancelarAprov(a: any, ev: Event) {
+    ev.stopPropagation();
+    if (!confirm(`¿Cancelar el aprovisionamiento de ${a.cliente || a.ont}?\n\nNo se le aplica nada más al equipo. Lo que ya se le aplicó queda aplicado.`)) return;
+    this.cancelandoAprov = a.id;
+    this.api.cancelarAprovisionamiento(a.id).subscribe({
+      next: (r: any) => {
+        this.cancelandoAprov = null;
+        if (r?.error !== 0) { this.toast.error(r?.message ?? 'No se pudo cancelar'); return; }
+        this.toast.success('Aprovisionamiento cancelado');
+        this.cargarAprov();
+      },
+      error: (e: any) => { this.cancelandoAprov = null; this.toast.error(e?.error?.message ?? 'No se pudo cancelar'); },
     });
   }
 
@@ -232,7 +270,7 @@ export class OltAccesoRemotoComponent implements OnInit {
       next: (r: any) => {
         if (r?.error !== 0) return;
         this.aprov = r.data.ajustes;
-        this.aprovUltimos = r.data.ultimos ?? [];
+        this.ponerAprov(r.data.ultimos ?? []);
         this.aprovForm = {
           aprovisionar: !!this.aprov.aprovisionar, wan: !!this.aprov.wan, wifi: !!this.aprov.wifi, admin: !!this.aprov.admin,
           wifi_prefijo: this.aprov.wifi_prefijo ?? '', admin_usuario: this.aprov.admin_usuario ?? '', admin_clave: '',
@@ -514,6 +552,8 @@ export class OltAccesoRemotoComponent implements OnInit {
           this.tareas.seguir(id, `Preparando el perfil ${perfil.nombre}`, 'preparar_perfil').subscribe({
             next: (t: any) => {
               if (t?.estado === 'en_curso') { perfil.detalle = 'Preparando en la OLT…'; return; }
+              // Dejaron de seguirla desde la ventana: la cola no sigue a ciegas.
+              if (t?.estado === 'detenida') { this.preparando = ''; this.enCola = false; perfil.detalle = t?.detalle ?? ''; resolve(false); return; }
               const d = t?.resultado ?? {};
               const ok = t?.estado === 'listo' && d.ok !== false;
               cerrar(ok, d.detalle ?? t?.detalle ?? '', d.estado);
@@ -598,6 +638,7 @@ export class OltAccesoRemotoComponent implements OnInit {
         this.tareaAlDia = '';
         this.cargar();
         this.revisar();
+        if (t?.estado === 'detenida') { this.toast.info(t.detalle || 'Puesta al día detenida'); return; }
         t?.estado === 'listo' ? this.toast.success(t.detalle || 'Los equipos quedaron al día') : this.toast.error(t?.detalle || 'La puesta al día se detuvo');
       },
       error: () => { this.poniendoAlDia = false; this.toast.error('Se perdió el seguimiento; la puesta al día sigue en el servidor'); },

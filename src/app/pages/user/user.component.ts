@@ -8,8 +8,8 @@ import { OntEquipoComponent } from '../../components/ont-equipo/ont-equipo.compo
 import { FormsModule } from '@angular/forms';
 import { NpSelectComponent, PresentacionSelect } from '../../common/np-select/np-select.component';
 import {
-  OpcionesDeIps, PRESENTACION_IPS, PRESENTACION_REDES, PRESENTACION_PLANES, PRESENTACION_ROUTERS,
-  PRESENTACION_SEGMENTOS, PRESENTACION_PERSONAS, PRESENTACION_POR_PAGINA, conValor,
+  OpcionesDeIps, PRESENTACION_IPS_ASIGNABLES, PRESENTACION_REDES, PRESENTACION_PLANES, PRESENTACION_ROUTERS,
+  PRESENTACION_SEGMENTOS, PRESENTACION_PERSONAS, PRESENTACION_POR_PAGINA, agruparRedesPorInterfaz, conValor,
 } from '../../common/np-select/presentaciones';
 import { LayoutComponent } from '../../components/layout/layout.component';
 import { UserService } from '../../services/user.service';
@@ -46,8 +46,11 @@ export type ClientTab = 'resumen' | 'servicios' | 'facturacion' | 'tickets' | 'h
 export class UserComponent implements OnInit {
   /** Cómo se ven las redes en el selector de VLAN: número de VLAN, segmento y clientes. */
   readonly redes = PRESENTACION_REDES;
-  /** Selector de IP: todas las libres y, al buscar, las ocupadas con quién las tiene. */
-  readonly ipsPresentacion = PRESENTACION_IPS;
+  /**
+   * Selector de IP: las libres, las que están en el router sin cliente de la
+   * plataforma (se pueden asignar) y, al buscar, las ocupadas con quién las tiene.
+   */
+  readonly ipsPresentacion = PRESENTACION_IPS_ASIGNABLES;
   readonly opcionesIp = new OpcionesDeIps();
 
   readonly porPagina = [12, 25, 50];
@@ -65,12 +68,20 @@ export class UserComponent implements OnInit {
     buscarEn: d => String(d?.names ?? ''),
   };
 
-  /** Segmento de la VLAN: red, máscara y gateway, más la VLAN y cuántos clientes tiene. */
+  /**
+   * Segmento de la VLAN: red, máscara y gateway, más la VLAN y cuántos clientes
+   * tiene. Cuando la VLAN tiene varias redes, cada una dice cuántas IP le quedan.
+   */
   readonly presSegmentos: PresentacionSelect = {
     ...PRESENTACION_SEGMENTOS,
-    detalle: s => [s?.gateway ? `Puerta de enlace ${s.gateway}` : null, s?.vlan_id ? `VLAN ${s.vlan_id}` : null, s?.names]
+    detalle: s => [s?.gateway ? `Puerta de enlace ${s.gateway}` : null, s?.vlan_id ? `VLAN ${s.vlan_id}` : null, s?.names,
+      s?.sin_cliente ? `${s.sin_cliente} en el router sin cliente` : null]
       .filter(Boolean).join(' · ') || null,
     insignia: s => {
+      if (s?.libres != null) {
+        const l = Number(s.libres);
+        return { texto: l ? `${l} ${l === 1 ? 'libre' : 'libres'}` : 'Sin IP libres', tono: l ? 'ok' : 'warn' };
+      }
       if (s?.clientes == null) return null;
       const n = Number(s.clientes);
       return n ? { texto: `${n} ${n === 1 ? 'cliente' : 'clientes'}`, tono: 'ok' } : { texto: 'Sin clientes aún', tono: 'neutral' };
@@ -166,7 +177,10 @@ export class UserComponent implements OnInit {
   }
 
   estadoAprov(e: string): string {
-    return ({ esperando: 'Esperando al equipo', aplicando: 'Aplicando', listo: 'Aplicado', con_errores: 'Con fallas', vencido: 'No apareció', error: 'Falla' } as Record<string, string>)[e] ?? e;
+    return ({
+      esperando: 'Esperando al equipo', aplicando: 'Aplicando', listo: 'Aplicado', con_errores: 'Con fallas', vencido: 'No apareció', error: 'Falla',
+      no_aplica: 'No se configura solo', cancelado: 'Cancelado',
+    } as Record<string, string>)[e] ?? e;
   }
 
   /** Al pasar a PPPoE hacen falta los perfiles del router. */
@@ -706,6 +720,8 @@ export class UserComponent implements OnInit {
     this.cambioPerfil = this.selectedUserData?.pppoe_profile || '';
     this.cambioIp = '';
     this.cambioVlan = null;
+    this.cambioRedes = [];
+    this.cambioSeg = null;
     this.cambioAviso = '';
 
     if (this.cambioTipo === 'pppoe' || this.clienteEsPppoe) this.cargarPppoeCliente();
@@ -745,7 +761,7 @@ export class UserComponent implements OnInit {
       aPppoe
         ? `El cliente pasa a conectarse por PPPoE con el usuario «${this.cambioUsuario}» y se le quita la IP fija. ` +
           `Si su ONT está en el TR-069, se reconfigura sola; si no, hay que cargarle las credenciales en el equipo. ¿Confirmás?`
-        : `El cliente pasa a IP fija con ${this.cambioIp} y se le borra la credencial PPPoE. ` +
+        : `El cliente pasa a IP fija con ${this.cambioIp} y se le borra la credencial PPPoE. ` + this.avisoHuerfana(this.migrIpzone, this.cambioIp) +
           `Si su ONT está en el TR-069, se reconfigura sola y se carga su MAC en el MikroTik; si no, hay que configurarla en el equipo. ¿Confirmás?`,
       { okLabel: 'Cambiar la conexión' },
     );
@@ -824,6 +840,13 @@ export class UserComponent implements OnInit {
     return !!this.cambioUsuario.trim();
   }
 
+  /** Para la confirmación: si la IP está en el router sin cliente, se reutiliza esa entrada. */
+  private avisoHuerfana(lista: any[], ip: string): string {
+    const h = this.opcionesIp.huerfanas(lista).get(ip);
+    if (!h) return '';
+    return `Esa IP ya está en el router sin cliente${h.comment ? ` («${h.comment}»)` : ''}: se reutiliza esa entrada con su MAC${h.mac ? ` ${h.mac}` : ''}. `;
+  }
+
   /** Cliente de IP fija que cambia de IP (lo que hacía "Migración de IP"). */
   private async cambiarIpFija(): Promise<void> {
     if (!this.cambioIp || !this.cambioVlan) {
@@ -832,7 +855,7 @@ export class UserComponent implements OnInit {
     }
 
     const ok = await this.dialog.confirm(
-      `El cliente pasa de ${this.selectedUserData?.ip || 'sin IP'} a ${this.cambioIp} (${this.cambioVlan.names}). ` +
+      `El cliente pasa de ${this.selectedUserData?.ip || 'sin IP'} a ${this.cambioIp} (${this.cambioVlan.names}). ` + this.avisoHuerfana(this.migrIpzone, this.cambioIp) +
       `Hay que reconfigurar su equipo con la IP nueva. ¿Confirmás?`,
       { okLabel: 'Cambiar la IP' },
     );
@@ -859,6 +882,8 @@ export class UserComponent implements OnInit {
           this.cambioVlan = null;
           this.cambioIp = '';
           this.migrIpzone = [];
+          this.cambioRedes = [];
+          this.cambioSeg = null;
           this.loadModalUser(this.selectedUserId);
           this.getAllUser();
         } else {
@@ -872,15 +897,41 @@ export class UserComponent implements OnInit {
     });
   }
 
+  /** Las redes de la VLAN elegida, sólo si tiene más de una (vlan10 con la .10 y la .11). */
+  cambioRedes: any[] = [];
+  cambioSeg: any = null;
+
   onCambioVlanChange(iface: any) {
     this.cambioVlan = iface;
     this.cambioIp = '';
     this.migrIpzone = [];
+    this.cambioRedes = [];
+    this.cambioSeg = null;
 
     if (!iface) return;
 
-    this.userSvc.getIpzonebyZone(iface.names, iface.network, this.selectedRouterId).subscribe({
-      next: r => { this.migrIpzone = r?.error === 0 && r.data?.ips ? this.opcionesIp.recordar(r.data.ips.map((e: any) => ({ id: e.ip, names: e.ip })), r.data.ocupadas) : []; },
+    // Sin segmento: el servidor muestra la red de la IP que el cliente ya
+    // tiene, o la primera con IP libres.
+    this.cargarIpsCambio(null);
+  }
+
+  onCambioSegChange(seg: any) {
+    this.cambioSeg = seg;
+    this.cambioIp = '';
+    if (seg && this.cambioVlan) this.cargarIpsCambio(seg.network);
+  }
+
+  private cargarIpsCambio(segmento: string | null) {
+    const vlan = this.cambioVlan;
+
+    this.userSvc.getIpzonebyZone(vlan.names, segmento, this.selectedRouterId, this.selectedUserData?.ip || null).subscribe({
+      next: r => {
+        if (this.cambioVlan !== vlan) return;   // se eligió otra VLAN mientras tanto
+        this.migrIpzone = r?.error === 0 && r.data?.ips ? this.opcionesIp.recordar(r.data.ips.map((e: any) => ({ id: e.ip, names: e.ip })), r.data.ocupadas) : [];
+        const redes: any[] = r?.data?.redes ?? [];
+        this.cambioRedes = redes.length > 1 ? redes.map(x => ({ ...x, names: vlan.names, vlan_id: vlan.vlan_id })) : [];
+        this.cambioSeg = this.cambioRedes.find(x => x.elegida) ?? null;
+      },
       error: () => { this.migrIpzone = []; },
     });
   }
@@ -968,7 +1019,7 @@ export class UserComponent implements OnInit {
     this.migrIpzone = [];
     this.migrIp = '';
     this.userSvc.getneighborhoodAll(this.selectedRouterId).subscribe({
-      next: r => { this.interfaces = r.error === 0 && r.data ? Object.values(r.data) : []; }
+      next: r => { this.interfaces = r.error === 0 && r.data ? agruparRedesPorInterfaz(Object.values(r.data)) : []; }
     });
   }
 
@@ -1451,6 +1502,7 @@ export class UserComponent implements OnInit {
   onCreateRouterChange() {
     this.selectedVlan = null;
     this.segments = [];
+    this.segmentoElegido = null;
     this.selectedSeg = null;
     this.Ipzone = [];
     this.ipsError = null;
@@ -1474,7 +1526,8 @@ export class UserComponent implements OnInit {
     this.userSvc.getneighborhoodAll(this.selectedRouterId, this.todasLasRedes).subscribe({
       next: r => {
         this.loadingIfaces = false;
-        this.interfaces = r?.error === 0 && r.data ? Object.values(r.data) : [];
+        // Una fila por VLAN: si tiene varias redes, se elige cuál al lado.
+        this.interfaces = r?.error === 0 && r.data ? agruparRedesPorInterfaz(Object.values(r.data)) : [];
 
         if (!this.interfaces.length) {
           this.ifacesError = r?.message || 'El router no devolvió VLAN.';
@@ -1502,6 +1555,7 @@ export class UserComponent implements OnInit {
     const igual = this.interfaces.find((i: any) => i.names === this.selectedVlan.names);
     this.selectedVlan = igual ?? null;
     this.segments     = igual ? [igual] : [];
+    this.segmentoElegido = null;
     this.selectedSeg  = this.segments[0] ?? null;
 
     if (this.selectedSeg) this.cargarIps();
@@ -1511,6 +1565,7 @@ export class UserComponent implements OnInit {
   onInterfaceChange(iface: any) {
     this.selectedVlan = iface;
     this.segments = iface ? [iface] : [];
+    this.segmentoElegido = null;
     this.Ipzone = [];
     this.ipsError = null;
 
@@ -1524,6 +1579,9 @@ export class UserComponent implements OnInit {
 
   onSegmentChange(seg: any) {
     this.selectedSeg = seg;
+    // Sólo cuenta como elección si la VLAN tiene varias redes: con una, el
+    // segmento es la VLAN misma.
+    this.segmentoElegido = this.segments.length > 1 ? (seg?.network ?? null) : null;
 
     if (!seg || !this.selectedVlan) {
       this.Ipzone = [];
@@ -1542,15 +1600,21 @@ export class UserComponent implements OnInit {
    * primera y antes eso dejaba el alta trabada, sin más salida que cerrar el
    * modal y volver a abrirlo perdiendo todo lo escrito.
    */
+  /** La red que eligió el operador cuando la VLAN tiene varias; sin elegir, decide el servidor. */
+  segmentoElegido: string | null = null;
+
   cargarIps(intento = 1) {
     const seg = this.selectedSeg;
+    const vlan = this.selectedVlan;
 
-    if (!seg || !this.selectedVlan) { this.Ipzone = []; return; }
+    if (!seg || !vlan) { this.Ipzone = []; return; }
 
     this.loadingIps = true;
     this.ipsError   = null;
 
-    this.userSvc.getIpzonebyZone(seg.names, seg.network, this.selectedRouterId).subscribe({
+    // Sin segmento elegido, el servidor muestra la red de la IP del borrador
+    // o la primera con IP libres.
+    this.userSvc.getIpzonebyZone(vlan.names, this.segmentoElegido, this.selectedRouterId, this.newUser.ip ? String(this.newUser.ip) : null).subscribe({
       next: r => {
         // error !== 0 es el router que no respondió, no un segmento lleno.
         if (r?.error !== 0) {
@@ -1561,12 +1625,23 @@ export class UserComponent implements OnInit {
           return;
         }
 
+        if (this.selectedVlan !== vlan) return;   // se eligió otra VLAN mientras tanto
+
         this.loadingIps = false;
         this.Ipzone = this.opcionesIp.recordar((r?.data?.ips ?? []).map((e: any) => ({ id: e.ip, names: e.ip })), r?.data?.ocupadas);
-        this.ipsError = this.Ipzone.length ? null : 'No quedan IPs libres en este segmento.';
+        const huerfanas = this.opcionesIp.huerfanas(this.Ipzone);
+        this.ipsError = this.Ipzone.length || huerfanas.size ? null : 'No quedan IPs libres en este segmento.';
+
+        // Con varias redes en la VLAN, el segmento se elige entre ellas; con
+        // una sola queda como estaba.
+        const redes: any[] = r?.data?.redes ?? [];
+        if (redes.length > 1) {
+          this.segments    = redes.map(x => ({ ...x, names: vlan.names, vlan_id: vlan.vlan_id }));
+          this.selectedSeg = this.segments.find(x => x.elegida) ?? this.segments[0];
+        }
 
         // Si la IP que traía el borrador ya se la dieron a otro, se descarta.
-        if (this.newUser.ip && !this.Ipzone.some((i: any) => i.id === this.newUser.ip)) {
+        if (this.newUser.ip && !this.Ipzone.some((i: any) => i.id === this.newUser.ip) && !huerfanas.has(String(this.newUser.ip))) {
           this.newUser.ip = 0;
         }
       },
@@ -1647,6 +1722,7 @@ export class UserComponent implements OnInit {
     this.selectedVlan     = null;
     this.selectedSeg      = null;
     this.segments         = [];
+    this.segmentoElegido  = null;
     this.Ipzone           = [];
     this.ipsError         = null;
     this.showUserFormProfile = true;
@@ -1660,6 +1736,7 @@ export class UserComponent implements OnInit {
     this.selectedVlan     = b?.vlan ?? null;
     this.selectedSeg      = null;
     this.segments         = this.selectedVlan ? [this.selectedVlan] : [];
+    this.segmentoElegido  = null;
     this.Ipzone           = [];
     this.ipsError         = null;
     this.ifacesError      = null;

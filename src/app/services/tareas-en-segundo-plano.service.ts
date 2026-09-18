@@ -1,11 +1,16 @@
 import { Injectable, PLATFORM_ID, computed, inject, signal } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
-import { Observable, finalize, map, shareReplay, switchMap, take, takeWhile, tap, timer } from 'rxjs';
+import { Observable, Subject, Subscription, concat, finalize, map, merge, shareReplay, switchMap, take, takeUntil, takeWhile, tap, timer } from 'rxjs';
 import { GestionRemotaService } from './gestion-remota.service';
 import { AuthService } from './auth.service';
 import { ImportadorService } from './importador.service';
+import { OltService } from './olt.service';
 
-export type EstadoTarea = 'en_curso' | 'listo' | 'error';
+/**
+ * no_aplica: el equipo no se puede configurar solo (p. ej. un Huawei en una
+ * OLT C-Data): final, con el motivo y qué hacer. detenida: la paró el usuario.
+ */
+export type EstadoTarea = 'en_curso' | 'listo' | 'error' | 'no_aplica' | 'detenida';
 
 export interface TareaSeguida {
   id: string;
@@ -15,19 +20,72 @@ export interface TareaSeguida {
   detalle: string;
   inicio: number;
   fin?: number;
-  puedeParar: boolean;
+  /** Ya no se usa (lo decide comoSePara); queda por las tareas guardadas. */
+  puedeParar?: boolean;
+  /** El usuario pidió detenerla y el servidor todavía está terminando. */
+  pedidaParada?: boolean;
+  /** Qué hacer en vez de esperar (estado no_aplica). */
+  queHacer?: string;
   /** Dónde se ve el detalle completo. */
   enlace?: string;
 }
+
+/** Qué significa "detener" una tarea de ese tipo, dicho sin mentir. */
+export interface ComoSePara {
+  /** detener: se cancela de verdad. dejar: sigue en el servidor, sólo se deja de mirar. */
+  modo: 'detener' | 'dejar';
+  etiqueta: string;
+  aviso: string;
+}
+
+const DEJAR_DE_SEGUIR = 'Dejar de seguirla';
+
+/**
+ * Por tipo de tarea. Las que ya le mandaron comandos a la OLT no se pueden
+ * deshacer a mitad (ni se corta una sesión mientras escribe): se ofrece dejar
+ * de seguirlas, y el servidor igual las frena si todavía no llegaron a la OLT.
+ */
+const PARADAS: Record<string, ComoSePara> = {
+  al_dia: {
+    modo: 'detener', etiqueta: 'Detener',
+    aviso: 'Termina el equipo que está configurando y no sigue con los demás. Los que ya tienen acceso lo conservan.',
+  },
+  aprovisionamiento: {
+    modo: 'detener', etiqueta: 'Detener',
+    aviso: 'El aprovisionamiento queda cancelado y no se le aplica nada más al equipo. Lo que ya se le aplicó queda aplicado.',
+  },
+  importacion: {
+    modo: 'detener', etiqueta: 'Detener',
+    aviso: 'La importación se detiene. Los clientes que ya se importaron quedan importados.',
+  },
+  senal: {
+    modo: 'detener', etiqueta: 'Detener',
+    aviso: 'Se cancela la medición: la consulta que la OLT esté contestando termina sola en unos segundos, no se guarda nada y la OLT queda libre. Se sigue viendo la medición anterior.',
+  },
+  dar_acceso: {
+    modo: 'dejar', etiqueta: DEJAR_DE_SEGUIR,
+    aviso: 'Si todavía no le mandó nada a la OLT, no se le manda. Si ya empezó, termina sola en el servidor y lo que ya se hizo en la OLT queda hecho: no se corta una escritura a mitad.',
+  },
+  preparar_perfil: {
+    modo: 'dejar', etiqueta: DEJAR_DE_SEGUIR,
+    aviso: 'Si todavía no arrancó, no se hace. Si ya arrancó, termina sola en el servidor y lo que ya se hizo en la OLT queda hecho.',
+  },
+  reiniciar: {
+    modo: 'dejar', etiqueta: DEJAR_DE_SEGUIR,
+    aviso: 'Si la orden todavía no salió, no se reinicia. Si ya salió, el equipo se reinicia igual.',
+  },
+};
+
+const PARADA_GENERICA: ComoSePara = {
+  modo: 'dejar', etiqueta: DEJAR_DE_SEGUIR,
+  aviso: 'Termina sola en el servidor; sólo deja de mostrarse acá.',
+};
 
 /**
  * Las tareas se guardan por empresa y usuario. Con una sola clave, quien entraba
  * con otra empresa en el mismo navegador veía las tareas de la anterior.
  */
 const CLAVE_BASE = 'np_tareas_segundo_plano';
-
-/** Las que se pueden detener a mitad de camino (terminan el equipo en curso). */
-const SE_PUEDEN_PARAR = ['al_dia'];
 
 /**
  * Las tareas que corren en el servidor (dar acceso, preparar perfiles, poner
@@ -42,6 +100,7 @@ export class TareasEnSegundoPlanoService {
   private gestion = inject(GestionRemotaService);
   private auth = inject(AuthService);
   private importador = inject(ImportadorService);
+  private olt = inject(OltService);
   private enNavegador = isPlatformBrowser(inject(PLATFORM_ID));
 
   readonly tareas = signal<TareaSeguida[]>([]);
@@ -49,6 +108,9 @@ export class TareasEnSegundoPlanoService {
   readonly enCurso = computed(() => this.tareas().filter(t => t.estado === 'en_curso').length);
 
   private flujos = new Map<string, Observable<any>>();
+  /** Para cortar el seguimiento de cada tarea cuando el usuario la detiene. */
+  private paradas = new Map<string, Subject<void>>();
+  private suscripciones = new Map<string, Subscription>();
   /** La clave de la sesión cuyas tareas están cargadas. */
   private claveCargada = '';
 
@@ -76,7 +138,12 @@ export class TareasEnSegundoPlanoService {
 
     // Los seguimientos de la sesión anterior dejan de actualizar la lista.
     this.flujos.clear();
+    this.suscripciones.forEach(s => s.unsubscribe());
+    this.suscripciones.clear();
+    this.paradas.clear();
     this.medicionesActivas.clear();
+    this.relojesDeMedicion.forEach(r => clearTimeout(r));
+    this.relojesDeMedicion.clear();
     this.tareas.set([]);
     this.minimizado.set(false);
 
@@ -115,22 +182,38 @@ export class TareasEnSegundoPlanoService {
     if (!this.tareas().some(t => t.id === id)) {
       this.tareas.update(lista => [{
         id, tipo, titulo, estado: 'en_curso' as EstadoTarea, detalle: '', inicio: Date.now(),
-        puedeParar: SE_PUEDEN_PARAR.includes(tipo),
       }, ...lista].slice(0, 20));
     }
     this.minimizado.set(false);
     this.guardar();
 
-    const flujo = this.gestion.esperarTarea(id, cadaMs).pipe(
+    // Dejar de seguirla: la pantalla que la lanzó recibe un final "detenida"
+    // en vez de quedarse esperando.
+    const dejada$ = this.paradaDe(id).pipe(map(() => ({
+      estado: 'detenida',
+      detalle: `Dejaste de seguirla a las ${this.hora(new Date().toISOString())}. ${this.comoSePara({ tipo } as TareaSeguida).aviso}`,
+    })));
+
+    const flujo = merge(this.gestion.esperarTarea(id, cadaMs), dejada$).pipe(
+      takeWhile((t: any) => t?.estado === 'en_curso', true),
       tap({
-        next: (t: any) => this.actualizar(id, {
-          estado: (t?.estado === 'listo' || t?.estado === 'error') ? t.estado : 'en_curso',
-          detalle: t?.detalle ?? '',
-          ...(t?.estado && t.estado !== 'en_curso' ? { fin: Date.now() } : {}),
-        }),
+        next: (t: any) => {
+          const final = TareasEnSegundoPlanoService.esFinal(t?.estado);
+          const texto = String(t?.detalle ?? '');
+          this.actualizar(id, {
+            estado: final ? t.estado : 'en_curso',
+            // El servidor ya lo dice ("Detenida por el usuario…"); si no, se agrega la hora.
+            detalle: t?.estado === 'detenida' && !/^(Detenida|Dejaste)/.test(texto)
+              ? `Detenida por el usuario a las ${this.hora(new Date().toISOString())}. ${texto}`
+              // No se puede: el motivo arriba y qué hacer en su recuadro, sin repetirlo.
+              : (t?.estado === 'no_aplica' && t?.motivo ? t.motivo : texto),
+            queHacer: t?.que_hacer ?? undefined,
+            ...(final ? { fin: Date.now(), pedidaParada: false } : {}),
+          });
+        },
         error: () => this.actualizar(id, { estado: 'error', detalle: 'Se perdió el seguimiento; la tarea sigue en el servidor.', fin: Date.now() }),
       }),
-      finalize(() => this.flujos.delete(id)),
+      finalize(() => { this.flujos.delete(id); this.paradas.delete(id); }),
       shareReplay({ bufferSize: 1, refCount: false }),
     );
 
@@ -156,7 +239,7 @@ export class TareasEnSegundoPlanoService {
     if (!this.tareas().some(t => t.id === clave)) {
       this.tareas.update(lista => [{
         id: clave, tipo: 'aprovisionamiento', titulo, estado: 'en_curso' as EstadoTarea,
-        detalle: 'Esperando que el equipo aparezca en el TR-069…', inicio: Date.now(), puedeParar: false, enlace,
+        detalle: 'Revisando el equipo…', inicio: Date.now(), enlace,
       }, ...lista].slice(0, 20));
     } else {
       this.actualizar(clave, { enlace });
@@ -166,9 +249,10 @@ export class TareasEnSegundoPlanoService {
 
     const enCurso = (e: string) => e === 'esperando' || e === 'aplicando';
 
-    const flujo = timer(0, 5000).pipe(
-      // Quince minutos alcanzan: el servidor deja de esperar al equipo antes.
-      take(180),
+    // Cada 5 s los primeros 3 minutos y después cada 20 s: el servidor espera
+    // hasta 90 minutos a un equipo que sí se configura solo, y antes el
+    // seguimiento se cortaba a los 15 dejando la ruedita girando.
+    const flujo = concat(timer(0, 5000).pipe(take(36)), timer(20000, 20000).pipe(take(300))).pipe(
       switchMap(() => this.gestion.verAprovisionamiento(id)),
       map((r: any) => r?.data ?? null),
       tap((a: any) => {
@@ -179,18 +263,21 @@ export class TareasEnSegundoPlanoService {
           ? (ultimo && !ultimo.ok && !ultimo.omitido ? `${ultimo.paso}: ${ultimo.detalle}` : a.detalle)
           : a.detalle;
         this.actualizar(clave, {
-          estado: enCurso(a.estado) ? 'en_curso' : (a.estado === 'listo' || a.estado === 'reemplazado' ? 'listo' : 'error'),
-          detalle: detalle ?? '',
-          ...(!enCurso(a.estado) ? { fin: Date.now() } : {}),
+          estado: enCurso(a.estado) ? 'en_curso' : TareasEnSegundoPlanoService.estadoDeAprovisionamiento(a.estado),
+          // No se puede configurar solo: el motivo y qué hacer, sin ruedita.
+          detalle: (a.estado === 'no_aplica' ? (a.motivo || a.detalle) : detalle) ?? '',
+          queHacer: a.estado === 'no_aplica' ? (a.que_hacer ?? undefined) : undefined,
+          ...(!enCurso(a.estado) ? { fin: Date.now(), pedidaParada: false } : {}),
         });
       }),
       takeWhile((a: any) => !a || enCurso(a.estado), true),
-      finalize(() => this.flujos.delete(clave)),
+      takeUntil(this.paradaDe(clave)),
+      finalize(() => { this.flujos.delete(clave); this.paradas.delete(clave); this.suscripciones.delete(clave); }),
       shareReplay({ bufferSize: 1, refCount: false }),
     );
 
     this.flujos.set(clave, flujo);
-    flujo.subscribe({ error: () => this.actualizar(clave, { estado: 'error', detalle: 'Se perdió el seguimiento; mirá el detalle en Acceso remoto.', fin: Date.now() }) });
+    this.suscripciones.set(clave, flujo.subscribe({ error: () => this.actualizar(clave, { estado: 'error', detalle: 'Se perdió el seguimiento; mirá el detalle en Acceso remoto.', fin: Date.now() }) }));
   }
 
   /**
@@ -208,7 +295,7 @@ export class TareasEnSegundoPlanoService {
     if (!this.tareas().some(t => t.id === clave)) {
       this.tareas.update(lista => [{
         id: clave, tipo: 'importacion', titulo, estado: 'en_curso' as EstadoTarea,
-        detalle: 'Arrancando…', inicio: Date.now(), puedeParar: false, enlace,
+        detalle: 'Arrancando…', inicio: Date.now(), enlace,
       }, ...lista].slice(0, 20));
     }
     this.minimizado.set(false);
@@ -222,10 +309,11 @@ export class TareasEnSegundoPlanoService {
       tap((imp: any) => {
         if (!imp) return;
         const sigue = enCurso(imp.estado);
+        const detenida = imp.estado === 'cancelada';
         this.actualizar(clave, {
-          estado: sigue ? 'en_curso' : (imp.estado === 'error' ? 'error' : 'listo'),
-          detalle: imp.detalle ?? '',
-          ...(!sigue ? { fin: Date.now() } : {}),
+          estado: sigue ? 'en_curso' : (detenida ? 'detenida' : (imp.estado === 'error' ? 'error' : 'listo')),
+          detalle: detenida ? `Detenida por el usuario a las ${this.hora(new Date().toISOString())}. ${imp.detalle ?? ''}` : (imp.detalle ?? ''),
+          ...(!sigue ? { fin: Date.now(), pedidaParada: false } : {}),
         });
       }),
       takeWhile((imp: any) => !imp || enCurso(imp.estado), true),
@@ -244,10 +332,10 @@ export class TareasEnSegundoPlanoService {
     const existe = this.tareas().some(t => t.id === id);
 
     if (existe) {
-      this.actualizar(id, { titulo, estado: 'en_curso', detalle, inicio: Date.now(), fin: undefined });
+      this.actualizar(id, { titulo, estado: 'en_curso', detalle, inicio: Date.now(), fin: undefined, pedidaParada: false, queHacer: undefined }, true);
     } else {
       this.tareas.update(lista => [{
-        id, tipo, titulo, estado: 'en_curso' as EstadoTarea, detalle, inicio: Date.now(), puedeParar: false,
+        id, tipo, titulo, estado: 'en_curso' as EstadoTarea, detalle, inicio: Date.now(),
       }, ...lista].slice(0, 20));
       this.guardar();
     }
@@ -260,6 +348,11 @@ export class TareasEnSegundoPlanoService {
 
   terminar(id: string, ok: boolean, detalle: string): void {
     this.actualizar(id, { estado: ok ? 'listo' : 'error', detalle, fin: Date.now() });
+  }
+
+  /** ¿La siguen? Las pantallas que manejan su propia tarea (diagnóstico) lo miran. */
+  sigueEnCurso(id: string): boolean {
+    return this.tareas().find(t => t.id === id)?.estado === 'en_curso';
   }
 
   /**
@@ -277,12 +370,15 @@ export class TareasEnSegundoPlanoService {
 
     let intentos = 0;
     const revisar = () => {
+      this.relojesDeMedicion.delete(id);
       consultar().subscribe({
         next: (r: any) => {
+          // Detenida mientras esperaba la respuesta: no se pisa.
+          if (!this.medicionesActivas.has(id)) return;
           const d = r?.data ?? {};
           if (d.midiendo && ++intentos < 20) {
             this.avanzar(id, d.onts?.length ? `Mientras tanto se ve la medición de las ${this.hora(d.medido_en)}.` : 'La OLT le pregunta a cada ONT: tarda cerca de un minuto.');
-            setTimeout(revisar, 15000);
+            this.relojesDeMedicion.set(id, setTimeout(revisar, 15000));
             return;
           }
           this.medicionesActivas.delete(id);
@@ -290,14 +386,19 @@ export class TareasEnSegundoPlanoService {
             ? this.terminar(id, true, `${d.onts.length} ONT medidas a las ${this.hora(d.medido_en)}.`)
             : this.terminar(id, false, r?.message || 'La OLT no devolvió mediciones ópticas.');
         },
-        error: () => { this.medicionesActivas.delete(id); this.terminar(id, false, 'No se pudo consultar la medición.'); },
+        error: () => {
+          if (!this.medicionesActivas.has(id)) return;
+          this.medicionesActivas.delete(id);
+          this.terminar(id, false, 'No se pudo consultar la medición.');
+        },
       });
     };
 
-    setTimeout(revisar, 15000);
+    this.relojesDeMedicion.set(id, setTimeout(revisar, 15000));
   }
 
   private medicionesActivas = new Set<string>();
+  private relojesDeMedicion = new Map<string, ReturnType<typeof setTimeout>>();
 
   private hora(iso: string | null | undefined): string {
     if (!iso) return '—';
@@ -305,9 +406,113 @@ export class TareasEnSegundoPlanoService {
     return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
   }
 
-  parar(id: string): void {
-    this.actualizar(id, { detalle: 'Deteniendo después del equipo en curso…' });
-    this.gestion.pararTarea(id).subscribe({ error: () => {} });
+  // ── Detener ────────────────────────────────────────────────────────────
+
+  /** Qué hace "detener" con esta tarea (la ventana lo muestra y lo confirma). */
+  comoSePara(t: TareaSeguida): ComoSePara {
+    return PARADAS[t.tipo] ?? PARADA_GENERICA;
+  }
+
+  /**
+   * La detiene de verdad cuando se puede (medición, aprovisionamiento,
+   * importación, puesta al día) o deja de seguirla (las que ya le hablan a la
+   * OLT). Siempre queda en la ventana como detenida, con la hora.
+   */
+  detener(id: string): void {
+    const t = this.tareas().find(x => x.id === id);
+    if (!t || t.estado !== 'en_curso' || t.pedidaParada) return;
+
+    const ahora = this.hora(new Date().toISOString());
+    const detenida = (detalle: string) => this.actualizar(id, { estado: 'detenida', detalle, fin: Date.now(), pedidaParada: false });
+
+    switch (t.tipo) {
+      case 'al_dia':
+        // Termina el equipo en curso: el final llega por el seguimiento.
+        this.actualizar(id, { pedidaParada: true, detalle: 'Deteniendo después del equipo en curso…' });
+        this.gestion.pararTarea(id).subscribe({ error: () => {} });
+        return;
+
+      case 'aprovisionamiento': {
+        const numero = Number(id.replace('aprov-', ''));
+        this.actualizar(id, { pedidaParada: true, detalle: 'Cancelando…' });
+        this.paradaDe(id).next();
+        this.gestion.cancelarAprovisionamiento(numero).subscribe({
+          next: (r: any) => r?.error === 0
+            ? detenida(r?.data?.detalle || `Detenida por el usuario a las ${ahora}.`)
+            // Ya había terminado: se muestra cómo terminó.
+            : this.seguirAprovisionamientoUnaVez(numero, id, r?.message),
+          // No se pudo: se lo vuelve a seguir como antes.
+          error: () => {
+            this.actualizar(id, { pedidaParada: false, detalle: 'No se pudo cancelar; probá de nuevo.' });
+            this.seguirAprovisionamiento(numero, t.titulo);
+          },
+        });
+        return;
+      }
+
+      case 'importacion':
+        this.actualizar(id, { pedidaParada: true, detalle: 'Deteniendo…' });
+        this.importador.cancelar(Number(id.replace('importacion-', ''))).subscribe({
+          error: () => this.actualizar(id, { pedidaParada: false, detalle: 'No se pudo detener; probá de nuevo.' }),
+        });
+        return;
+
+      case 'senal': {
+        const oltId = Number(id.replace('senal-', ''));
+        this.medicionesActivas.delete(id);
+        const reloj = this.relojesDeMedicion.get(id);
+        if (reloj) clearTimeout(reloj);
+        this.relojesDeMedicion.delete(id);
+        detenida(`Detenida por el usuario a las ${ahora}. No se guardó la medición; sigue valiendo la anterior.`);
+        this.olt.cancelarSenal(oltId).subscribe({ error: () => {} });
+        return;
+      }
+
+      default:
+        // Dar acceso, preparar perfiles, reiniciar: el servidor la frena si
+        // todavía no le mandó nada a la OLT; si ya empezó, termina sola.
+        if (['dar_acceso', 'preparar_perfil', 'reiniciar'].includes(t.tipo)) {
+          this.gestion.pararTarea(id).subscribe({ error: () => {} });
+        }
+        if (this.paradas.has(id)) {
+          this.paradaDe(id).next();
+        } else {
+          detenida(`Dejaste de seguirla a las ${ahora}. ${this.comoSePara(t).aviso}`);
+        }
+    }
+  }
+
+  /** Un aprovisionamiento que ya había terminado cuando se lo quiso cancelar. */
+  private seguirAprovisionamientoUnaVez(numero: number, clave: string, mensaje?: string): void {
+    this.gestion.verAprovisionamiento(numero).subscribe({
+      next: (r: any) => {
+        const a = r?.data;
+        if (!a) return;
+        this.actualizar(clave, {
+          estado: TareasEnSegundoPlanoService.estadoDeAprovisionamiento(a.estado),
+          detalle: (a.estado === 'no_aplica' ? (a.motivo || a.detalle) : a.detalle) || mensaje || '',
+          queHacer: a.estado === 'no_aplica' ? (a.que_hacer ?? undefined) : undefined,
+          fin: Date.now(), pedidaParada: false,
+        });
+      },
+    });
+  }
+
+  private paradaDe(id: string): Subject<void> {
+    let s = this.paradas.get(id);
+    if (!s) { s = new Subject<void>(); this.paradas.set(id, s); }
+    return s;
+  }
+
+  private static esFinal(estado: string | undefined): estado is EstadoTarea {
+    return ['listo', 'error', 'no_aplica', 'detenida'].includes(estado ?? '');
+  }
+
+  private static estadoDeAprovisionamiento(estado: string): EstadoTarea {
+    if (estado === 'listo' || estado === 'reemplazado') return 'listo';
+    if (estado === 'no_aplica') return 'no_aplica';
+    if (estado === 'cancelado') return 'detenida';
+    return 'error';
   }
 
   quitar(id: string): void {
@@ -325,8 +530,12 @@ export class TareasEnSegundoPlanoService {
     this.guardar();
   }
 
-  private actualizar(id: string, cambios: Partial<TareaSeguida>): void {
-    this.tareas.update(lista => lista.map(t => t.id === id ? { ...t, ...cambios } : t));
+  /**
+   * Una detenida no cambia más (salvo que se la vuelva a iniciar): la pantalla
+   * que la lanzó puede seguir contando su avance o su final sin pisarla.
+   */
+  private actualizar(id: string, cambios: Partial<TareaSeguida>, reiniciar = false): void {
+    this.tareas.update(lista => lista.map(t => t.id === id && (reiniciar || t.estado !== 'detenida') ? { ...t, ...cambios } : t));
     this.guardar();
   }
 

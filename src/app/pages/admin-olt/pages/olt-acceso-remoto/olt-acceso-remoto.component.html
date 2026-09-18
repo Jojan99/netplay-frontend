@@ -172,8 +172,8 @@
         </div>
 
         <ul class="ar-lista" *ngIf="alDia.length">
-          <li *ngFor="let h of alDia" [class.is-mal]="!h.ok">
-            <span class="ar-tick" aria-hidden="true">{{ h.ok ? '✓' : '!' }}</span>
+          <li *ngFor="let h of alDia" [class.is-mal]="!h.ok && !h.no_aplica" [class.is-omitido]="h.no_aplica">
+            <span class="ar-tick" aria-hidden="true">{{ h.ok ? '✓' : (h.no_aplica ? '–' : '!') }}</span>
             <span><b>{{ h.nombre || h.ont }}</b><small>{{ h.ont }} · {{ h.detalle }}</small></span>
           </li>
         </ul>
@@ -237,7 +237,7 @@
           <h3 class="ar-panel-t">Equipos</h3>
           <div class="np-actions">
             <div class="np-chips" role="group" aria-label="Filtrar">
-              <button type="button" class="np-chip" *ngFor="let f of filtrosAprov" [attr.aria-pressed]="filtroAprov === f.id" (click)="filtroAprov = f.id">
+              <button type="button" class="np-chip" *ngFor="let f of filtrosAprov" [attr.aria-pressed]="filtroAprov === f.id" (click)="elegirFiltroAprov(f.id)">
                 {{ f.label }} <span class="np-c" *ngIf="cuentaAprov(f.id)">{{ cuentaAprov(f.id) }}</span>
               </button>
             </div>
@@ -265,6 +265,12 @@
                 <tr *ngIf="abiertoAprov === a.id" class="ar-fila-detalle">
                   <td colspan="5">
                     <p class="np-fine">{{ a.detalle }} <span class="np-data">· {{ a.serial }}</span></p>
+                    <!-- No se configura solo: el motivo y qué hacer, sin «Esperando…». -->
+                    <div class="np-notice np-notice--warn np-notice--inline ar-no-aplica" *ngIf="a.estado === 'no_aplica'">
+                      <b>No se puede aprovisionar solo.</b> {{ a.motivo || a.detalle }}
+                      <span *ngIf="a.que_hacer"><b>Qué hacer:</b> {{ a.que_hacer }}</span>
+                      <small class="np-fine">Se lo sigue mirando 3 días: en cuanto el equipo se reporte al TR-069, se aprovisiona solo.</small>
+                    </div>
                     <ul class="ar-pasos-lista">
                       <li *ngFor="let p of a.pasos" [class.is-mal]="!p.ok && !p.omitido" [class.is-omitido]="p.omitido">
                         <span class="ar-tick" aria-hidden="true">{{ p.ok ? '✓' : (p.omitido ? '–' : '!') }}</span>
@@ -273,6 +279,11 @@
                     </ul>
                     <button type="button" class="np-btn np-btn--ghost np-btn--sm" *ngIf="esMalo(a.estado)"
                             (click)="reintentarAprov(a, $event)" [disabled]="reintentando === a.id">{{ reintentando === a.id ? 'Pidiendo…' : 'Reintentar' }}</button>
+                    <button type="button" class="np-btn np-btn--ghost np-btn--sm" *ngIf="a.estado === 'no_aplica'"
+                            title="Por si la plataforma se equivocó con este equipo: se lo espera 90 minutos"
+                            (click)="reintentarAprov(a, $event)" [disabled]="reintentando === a.id">{{ reintentando === a.id ? 'Pidiendo…' : 'Esperarlo igual' }}</button>
+                    <button type="button" class="np-btn np-btn--ghost np-btn--sm" *ngIf="['esperando', 'aplicando', 'no_aplica'].includes(a.estado)"
+                            (click)="cancelarAprov(a, $event)" [disabled]="cancelandoAprov === a.id">{{ cancelandoAprov === a.id ? 'Cancelando…' : 'Cancelar' }}</button>
                   </td>
                 </tr>
               </ng-container>

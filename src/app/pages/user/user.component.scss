@@ -131,9 +131,16 @@
   border-radius: 999px; background: var(--warn-soft); color: var(--warn);
   &[data-estado="listo"] { background: var(--ok-soft); color: var(--ok); }
   &[data-estado="con_errores"], &[data-estado="error"], &[data-estado="vencido"] { background: var(--danger-soft); color: var(--danger); }
+  &[data-estado="no_aplica"], &[data-estado="cancelado"] { background: var(--surface-3); color: var(--text-2); }
 }
 .cx-editar { margin-top: 10px; }
 .cx-mac { margin-top: 10px;
   > summary { cursor: pointer; font-size: 12.5px; font-weight: 700; color: var(--text-2); }
   &[open] > summary { margin-bottom: 10px; }
 }
+
+/* Equipo que no se configura solo: qué hacer, debajo del estado. */
+.cx-que-hacer { display: block; margin-top: 4px; color: var(--text-2); line-height: 1.35; }
+
+/* IP en el router sin cliente: su MAC y el comentario que tenía, para reconocerla. */
+.np-huerfana { font-family: var(--font-mono); font-variant-numeric: tabular-nums; white-space: nowrap; }

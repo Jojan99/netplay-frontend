@@ -16,6 +16,7 @@
       <label class="np-search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg><input type="search" [(ngModel)]="searchTerm" (ngModelChange)="resetPage()" placeholder="Buscar…" /></label>
       <label class="np-pagesize">Puerto<np-select [(ngModel)]="filterPort" (ngModelChange)="resetPage()" [opciones]="uniquePorts" [presentacion]="presPuertos" [permitirVacio]="true" textoVacio="Todos" [valorVacio]="''" tamano="sm" ariaLabel="Puerto PON" style="min-width: 170px"></np-select></label>
       <button type="button" class="np-chip" *ngIf="hayMedicionesDeSenal" [attr.aria-pressed]="soloConFalla" (click)="soloConFalla = !soloConFalla; resetPage()">Señal en falla<span class="np-c">{{ cuantasConFalla }}</span></button>
+      <app-medicion-senal [medidoEn]="senalMedidaEn" [midiendo]="midiendoSenal" (medir)="medirSenal()"></app-medicion-senal>
       <span class="np-spacer"></span>
       <label class="np-pagesize">Mostrar<np-select [(ngModel)]="perPage" (ngModelChange)="changePerPage()" [opciones]="perPageOptions" [presentacion]="presPorPagina" tamano="sm" ariaLabel="Cantidad por página" style="width: 150px"></np-select></label>
     </ng-container>

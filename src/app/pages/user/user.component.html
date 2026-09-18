@@ -356,8 +356,10 @@
                   <ng-container *ngIf="provCliente?.habilitado && provCliente?.ultimo as u">
                     <small>
                       <em class="cx-pill" [attr.data-estado]="u.estado">{{ estadoAprov(u.estado) }}</em>
-                      {{ u.detalle }} · {{ u.creado | date:'dd/MM HH:mm' }}
+                      {{ u.estado === 'no_aplica' ? (u.motivo || u.detalle) : u.detalle }} · {{ u.creado | date:'dd/MM HH:mm' }}
                     </small>
+                    <!-- No se configura solo: qué hacer en vez de esperar. -->
+                    <small class="cx-que-hacer" *ngIf="u.estado === 'no_aplica' && u.que_hacer"><b>Qué hacer:</b> {{ u.que_hacer }}</small>
                   </ng-container>
                   <ng-container *ngIf="provCliente?.habilitado && !provCliente?.ultimo">
                     <small>Se reconfigura sola por TR-069 cuando cambies la conexión.</small>
@@ -403,9 +405,17 @@
                   <label class="np-field"><span>VLAN</span>
                     <np-select [(ngModel)]="cambioVlan" (ngModelChange)="onCambioVlanChange($event)" [opciones]="interfaces" [presentacion]="redes" placeholder="Seleccione VLAN…" ariaLabel="VLAN"></np-select>
                   </label>
-                  <label class="np-field"><span>IP <em>({{ migrIpzone.length }} disponibles)</em></span>
-                    <np-select [ngModel]="cambioIp || null" (ngModelChange)="cambioIp = $event || ''" [opciones]="opcionesIp.de(migrIpzone)" [presentacion]="ipsPresentacion" placeholder="Seleccione IP…" textoBuscar="Buscar IP: 50, .150, 192.168…" [buscable]="true" [deshabilitado]="!migrIpzone.length" ariaLabel="IP"></np-select>
+                  <!-- Sólo si la VLAN tiene más de una red (vlan10 con la .10 y la .11). -->
+                  <label class="np-field" *ngIf="cambioRedes.length > 1"><span>Segmento <em>({{ cambioRedes.length }} redes en la VLAN)</em></span>
+                    <np-select [ngModel]="cambioSeg" (ngModelChange)="onCambioSegChange($event)" [opciones]="cambioRedes" [presentacion]="presSegmentos" placeholder="Seleccione segmento…" ariaLabel="Segmento"></np-select>
                   </label>
+                  <label class="np-field"><span>IP <em>({{ migrIpzone.length }} disponibles<ng-container *ngIf="opcionesIp.huerfanas(migrIpzone).size"> · {{ opcionesIp.huerfanas(migrIpzone).size }} en el router sin cliente</ng-container>)</em></span>
+                    <np-select [ngModel]="cambioIp || null" (ngModelChange)="cambioIp = $event || ''" [opciones]="opcionesIp.de(migrIpzone)" [presentacion]="ipsPresentacion" placeholder="Seleccione IP…" textoBuscar="Buscar IP: 50, .150, 192.168…" [buscable]="true" [deshabilitado]="!migrIpzone.length && !opcionesIp.huerfanas(migrIpzone).size" ariaLabel="IP"></np-select>
+                  </label>
+                  <p class="np-notice np-notice--inline np-field-full" *ngIf="opcionesIp.huerfanas(migrIpzone).get(cambioIp) as h">
+                    Esta IP está en el router pero ningún cliente de la plataforma la tiene. Al asignarla, el cliente queda amarrado a esa entrada del router
+                    <span class="np-huerfana">({{ h.mac || 'sin MAC' }}{{ h.comment ? ' · «' + h.comment + '»' : '' }})</span>: se conserva su MAC y el comentario pasa a ser el documento del cliente.
+                  </p>
                 </ng-container>
 
                 <p class="np-notice np-notice--inline np-field-full" [class.np-notice--warn]="!provCliente?.habilitado || !assignedOnt">
@@ -784,7 +794,7 @@
           <np-select [(ngModel)]="selectedVlan" (ngModelChange)="onInterfaceChange($event)" [opciones]="interfaces" [presentacion]="redes"
                      [cargando]="loadingIfaces" textoCargando="Leyendo el router…" placeholder="Seleccione VLAN…" ariaLabel="VLAN"></np-select>
         </div>
-        <label class="np-field" *ngIf="!esPppoe"><span>Segmento</span>
+        <label class="np-field" *ngIf="!esPppoe"><span>Segmento <em *ngIf="segments.length > 1">({{ segments.length }} redes en la VLAN)</em></span>
           <np-select [(ngModel)]="selectedSeg" (ngModelChange)="onSegmentChange($event)" [opciones]="segments" [presentacion]="presSegmentos"
                      placeholder="Seleccione segmento…" [deshabilitado]="!segments.length" ariaLabel="Segmento"></np-select>
         </label>
@@ -799,13 +809,17 @@
         </div>
 
         <label class="np-field" *ngIf="!esPppoe"><span>IP
-          <em *ngIf="!loadingIps">({{ Ipzone.length }} disponibles)</em>
+          <em *ngIf="!loadingIps">({{ Ipzone.length }} disponibles<ng-container *ngIf="opcionesIp.huerfanas(Ipzone).size"> · {{ opcionesIp.huerfanas(Ipzone).size }} en el router sin cliente</ng-container>)</em>
           <em *ngIf="loadingIps">consultando el router…</em>
         </span>
           <np-select [ngModel]="newUser.ip || null" (ngModelChange)="newUser.ip = $event || 0; guardarBorrador()" [opciones]="opcionesIp.de(Ipzone)" [presentacion]="ipsPresentacion"
                      [cargando]="loadingIps" textoCargando="Buscando IPs libres…" placeholder="Seleccione IP…" textoBuscar="Buscar IP: 50, .150, 192.168…"
-                     [buscable]="true" [deshabilitado]="!loadingIps && !Ipzone.length" ariaLabel="IP"></np-select>
+                     [buscable]="true" [deshabilitado]="!loadingIps && !Ipzone.length && !opcionesIp.huerfanas(Ipzone).size" ariaLabel="IP"></np-select>
         </label>
+        <p class="np-notice np-notice--inline np-field-full" *ngIf="!esPppoe && newUser.ip && opcionesIp.huerfanas(Ipzone).get(newUser.ip) as h">
+          Esta IP está en el router pero ningún cliente de la plataforma la tiene. Al asignarla, el cliente queda amarrado a esa entrada del router
+          <span class="np-huerfana">({{ h.mac || 'sin MAC' }}{{ h.comment ? ' · «' + h.comment + '»' : '' }})</span>: se conserva su MAC y el comentario pasa a ser su documento.
+        </p>
         <ng-container *ngIf="esPppoe">
           <label class="np-field"><span>Usuario PPPoE</span>
             <input type="text" class="np-input np-mono" [(ngModel)]="newUser.pppoe_user"

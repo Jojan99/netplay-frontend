@@ -1,6 +1,7 @@
 import { Component, HostListener, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { OltNavComponent } from '../../shared/olt-nav.component';
+import { MedicionSenalComponent } from '../../shared/medicion-senal.component';
 import { FormsModule } from '@angular/forms';
 import { OltService } from '../../../../services/olt.service';
 import { UserService } from '../../../../services/user.service';
@@ -16,7 +17,7 @@ import { debounceTime, distinctUntilChanged, switchMap } from 'rxjs/operators';
 @Component({
   selector: 'app-olt-autorizadas',
   standalone: true,
-  imports: [CommonModule, FormsModule, NpSelectComponent, OltNavComponent],
+  imports: [CommonModule, FormsModule, NpSelectComponent, OltNavComponent, MedicionSenalComponent],
   templateUrl: './olt-autorizadas.component.html',
   styleUrls: ['../../shared/olt.scss', '../../shared/olt-movil.scss'],
   host: { class: 'np-console' },
@@ -123,6 +124,7 @@ export class OltAutorizadasComponent implements OnInit {
           next: (t: any) => {
             if (t?.estado === 'en_curso') return;
             this.reiniciando = false;
+            if (t?.estado === 'detenida') return;
             t?.estado === 'listo'
               ? this.toast.success('El equipo se está reiniciando: vuelve en un minuto')
               : this.toast.error(t?.detalle || 'No se pudo reiniciar');
@@ -164,6 +166,10 @@ export class OltAutorizadasComponent implements OnInit {
           next: (t: any) => {
             if (t?.estado === 'en_curso') return;
             this.dandoAcceso = false;
+            if (t?.estado === 'detenida') return;
+            // No se puede desde la OLT (p. ej. un Huawei en una C-Data): no es
+            // una falla, es un aviso con qué hacer. El detalle queda en la ventana.
+            if (t?.estado === 'no_aplica') { this.toast.warning(t?.motivo || t?.detalle || 'Este equipo no se puede configurar desde la OLT'); return; }
             t?.estado === 'listo'
               ? this.toast.success('El equipo ya puede reportar al TR-069')
               : this.toast.error(t?.detalle || 'No se pudo darle acceso');
@@ -461,6 +467,13 @@ export class OltAutorizadasComponent implements OnInit {
   /** Vuelve a preguntar por la señal mientras el servidor mide. */
   private reintentoSenal: any = null;
 
+  /** Hora de la medición de señal que se ve, y si hay una en curso. */
+  senalMedidaEn: string | null = null;
+  midiendoSenal = false;
+
+  /** Lo único que lanza un barrido de señal de la OLT. */
+  medirSenal(): void { this.cargarSenal(true); }
+
   cargarSenal(refrescar = false): void {
     if (!this.selectedOltId) return;
 
@@ -472,13 +485,17 @@ export class OltAutorizadasComponent implements OnInit {
         if (olt !== this.selectedOltId) return;
         const data = res?.data;
 
+        // De cuándo es lo que se ve. Abrir la pantalla no mide: sólo «Medir ahora».
+        this.senalMedidaEn = data?.medido_en ?? null;
+        this.midiendoSenal = !!data?.midiendo;
+
         // El barrido corre en el servidor: mientras mide se muestra la última
         // medición (si hay) y se vuelve a preguntar en un rato.
         if (data?.midiendo) {
           clearTimeout(this.reintentoSenal);
           this.reintentoSenal = setTimeout(() => this.cargarSenal(), 20000);
-          // A la ventana de tareas: sigue aunque se cambie de pestaña.
-          this.tareas.seguirMedicion(olt, this.olts.find(o => o.id === olt)?.name ?? 'OLT', () => this.oltService.getSenal(olt));
+          // A la ventana de tareas sólo la que pidió el usuario: sigue aunque se cambie de pestaña.
+          if (refrescar) this.tareas.seguirMedicion(olt, this.olts.find(o => o.id === olt)?.name ?? 'OLT', () => this.oltService.getSenal(olt));
         }
 
         this.cargandoSenal = !!data?.midiendo && !data?.onts?.length;

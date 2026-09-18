@@ -3,6 +3,7 @@ import { OltElegida } from '../../shared/olt-elegida';
 import { TareasEnSegundoPlanoService } from '../../../../services/tareas-en-segundo-plano.service';
 import { CommonModule } from '@angular/common';
 import { OltNavComponent } from '../../shared/olt-nav.component';
+import { MedicionSenalComponent } from '../../shared/medicion-senal.component';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
 import { OltService } from '../../../../services/olt.service';
@@ -13,7 +14,7 @@ import { PRESENTACION_OLTS, PRESENTACION_POR_PAGINA, conValor } from '../../../.
 @Component({
   selector: 'app-olt-online',
   standalone: true,
-  imports: [CommonModule, FormsModule, NpSelectComponent, OltNavComponent],
+  imports: [CommonModule, FormsModule, NpSelectComponent, OltNavComponent, MedicionSenalComponent],
   templateUrl: './olt-online.component.html',
   styleUrls: ['../../shared/olt.scss', '../../shared/olt-movil.scss'],
   host: { class: 'np-console' },
@@ -129,6 +130,13 @@ export class OltOnlineComponent implements OnInit {
   private reintentoSenal: any = null;
   private tareas = inject(TareasEnSegundoPlanoService);
 
+  /** Hora de la medición de señal que se ve, y si hay una en curso. */
+  senalMedidaEn: string | null = null;
+  midiendoSenal = false;
+
+  /** Lo único que lanza un barrido de señal de la OLT. */
+  medirSenal(): void { this.cargarSenal(true); }
+
   cargarSenal(refrescar = false): void {
     if (!this.selectedOltId) return;
 
@@ -140,13 +148,17 @@ export class OltOnlineComponent implements OnInit {
         if (olt !== this.selectedOltId) return;
         const data = res?.data;
 
+        // De cuándo es lo que se ve. Abrir la pantalla no mide: sólo «Medir ahora».
+        this.senalMedidaEn = data?.medido_en ?? null;
+        this.midiendoSenal = !!data?.midiendo;
+
         // El barrido corre en el servidor: mientras mide se muestra la última
         // medición (si hay) y se vuelve a preguntar en un rato.
         if (data?.midiendo) {
           clearTimeout(this.reintentoSenal);
           this.reintentoSenal = setTimeout(() => this.cargarSenal(), 20000);
-          // A la ventana de tareas: sigue aunque se cambie de pestaña.
-          this.tareas.seguirMedicion(olt, this.olts.find(o => o.id === olt)?.name ?? 'OLT', () => this.oltService.getSenal(olt));
+          // A la ventana de tareas sólo la que pidió el usuario: sigue aunque se cambie de pestaña.
+          if (refrescar) this.tareas.seguirMedicion(olt, this.olts.find(o => o.id === olt)?.name ?? 'OLT', () => this.oltService.getSenal(olt));
         }
 
         this.cargandoSenal = !!data?.midiendo && !data?.onts?.length;

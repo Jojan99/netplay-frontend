@@ -1,6 +1,6 @@
 import { Component, OnDestroy, OnInit, PLATFORM_ID, inject, signal } from '@angular/core';
 import { Router } from '@angular/router';
-import { isPlatformBrowser } from '@angular/common';
+import { DatePipe, isPlatformBrowser } from '@angular/common';
 import { TareaSeguida, TareasEnSegundoPlanoService } from '../../services/tareas-en-segundo-plano.service';
 
 /**
@@ -13,12 +13,21 @@ import { TareaSeguida, TareasEnSegundoPlanoService } from '../../services/tareas
 @Component({
   selector: 'app-tareas-flotantes',
   standalone: true,
+  imports: [DatePipe],
   templateUrl: './tareas-flotantes.component.html',
   styleUrl: './tareas-flotantes.component.scss',
 })
 export class TareasFlotantesComponent implements OnInit, OnDestroy {
   readonly svc = inject(TareasEnSegundoPlanoService);
   private router = inject(Router);
+
+  /** Siempre con confirmación, diciendo qué queda hecho. */
+  detener(t: TareaSeguida): void {
+    const como = this.svc.comoSePara(t);
+    const pregunta = como.modo === 'detener' ? `¿Detener «${t.titulo}»?` : `¿Dejar de seguir «${t.titulo}»?`;
+    if (!confirm(`${pregunta}\n\n${como.aviso}`)) return;
+    this.svc.detener(t.id);
+  }
 
   verDetalle(t: TareaSeguida): void {
     if (!t.enlace) return;
@@ -49,7 +58,9 @@ export class TareasFlotantesComponent implements OnInit, OnDestroy {
    */
   paso(t: TareaSeguida): string {
     const generico = !t.detalle || /^en cola$/i.test(t.detalle);
-    if (t.estado !== 'en_curso' || !generico) return t.detalle || (t.estado === 'listo' ? 'Listo' : 'No se pudo completar');
+    if (t.estado !== 'en_curso' || !generico) {
+      return t.detalle || ({ listo: 'Listo', detenida: 'Detenida', no_aplica: 'No se puede configurar solo' } as Record<string, string>)[t.estado] || 'No se pudo completar';
+    }
 
     const seg = (this.ahora() - t.inicio) / 1000;
     if (seg < 6) return 'Iniciando…';

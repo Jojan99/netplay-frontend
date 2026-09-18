@@ -73,6 +73,11 @@ export class OltService {
     return this.http.get<any>(`${this.env.rootUrl}api/management/olt/${oltId}/senal`, { headers: this.getHeaders(), params });
   }
 
+  /** Cancela la medición de señal pedida con «Medir ahora»: no guarda lo medido y libera la OLT. */
+  cancelarSenal(oltId: number): Observable<any> {
+    return this.http.post<any>(`${this.env.rootUrl}api/management/olt/${oltId}/senal/cancelar`, {}, { headers: this.getHeaders() });
+  }
+
   /** Cada puerto PON: ocupación, clientes en mora o suspendidos y alertas abiertas. */
   getPuertos(oltId: number): Observable<any> {
     return this.http.get<any>(`${this.env.rootUrl}api/management/olt/${oltId}/puertos`, { headers: this.getHeaders() });

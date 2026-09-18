@@ -14,7 +14,7 @@
     <div class="np-actions">
       <label class="np-pagesize">OLT<np-select [(ngModel)]="selectedOltId" (ngModelChange)="onOltChange()" [opciones]="olts" [presentacion]="presOlts" [cargando]="loadingOlts" [deshabilitado]="loadingOlts" placeholder="Seleccionar" ariaLabel="OLT" style="min-width: 220px"></np-select></label>
       <button type="button" class="np-btn np-btn--ghost" (click)="verEquipo = !verEquipo" [disabled]="!selectedOltId">{{ verEquipo ? 'Ocultar equipo' : 'Ver equipo' }}</button>
-      <button type="button" class="np-btn np-btn--ghost" (click)="consultarTodo(true)" [disabled]="!selectedOltId || loadingOnts || cargandoSenal"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 12a8 8 0 1 1-2.3-5.7M20 4v5h-5"/></svg>Actualizar</button>
+      <button type="button" class="np-btn np-btn--ghost" (click)="consultarTodo()" [disabled]="!selectedOltId || loadingOnts"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 12a8 8 0 1 1-2.3-5.7M20 4v5h-5"/></svg>Actualizar</button>
     </div>
   </header>
   <div class="np-toolbar"><app-olt-nav></app-olt-nav></div>
@@ -55,6 +55,16 @@
           <span class="np-kpi-s">con ONTs registradas</span>
         </div>
       </section>
+
+      <div class="olt-senal-barra" *ngIf="lastFetched">
+        <app-medicion-senal [medidoEn]="senal?.medido_en ?? null" [midiendo]="midiendoSenal" (medir)="medirSenal()"></app-medicion-senal>
+      </div>
+
+      <!-- Sin medición guardada: se ofrece medir, no se mide solo. -->
+      <div class="olt-aviso" *ngIf="sinMedicion && !midiendoSenal && !resumen?.medidas">
+        <strong>Todavía no hay una medición de señal.</strong>
+        <span>Abrir la pantalla no le pregunta nada a la OLT. Tocá «Medir ahora» para medir la señal de todas las ONT (tarda cerca de un minuto).</span>
+      </div>
 
       <div class="olt-aviso is-warn" *ngIf="errorSenal">
         <strong>No hay mediciones ópticas.</strong>
@@ -158,7 +168,7 @@
         <p class="np-hint" *ngIf="listado.length >= 200">Se muestran las 200 peores. Afiná con las clases de arriba.</p>
       </section>
 
-      <div *ngIf="cargandoSenal && !resumen" class="np-loading"><span class="np-spinner"></span> Midiendo la señal de todas las ONT… la primera vez tarda cerca de un minuto.</div>
+      <div *ngIf="cargandoSenal && midiendoSenal && !resumen" class="np-loading"><span class="np-spinner"></span> Midiendo la señal de todas las ONT… tarda cerca de un minuto.</div>
     </ng-container>
   </div>
 </div>

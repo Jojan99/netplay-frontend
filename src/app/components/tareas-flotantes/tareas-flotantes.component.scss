@@ -63,6 +63,20 @@
 .tf-paso { font-size: 12px; color: var(--text-2, #4b6072); line-height: 1.35; }
 .tf-tiempo { font: 11px var(--font-mono, ui-monospace, monospace); color: var(--text-3, #7f92a2); }
 .tf-item.is-error .tf-paso { color: var(--danger, #c0392b); }
+// No se puede configurar solo: final y sin ruedita, con el motivo y qué hacer.
+.tf-etiqueta {
+  justify-self: start;
+  font: 800 10px/1.6 var(--font-body, system-ui, sans-serif); letter-spacing: .3px; text-transform: uppercase;
+  padding: 0 7px; border-radius: 999px;
+  background: var(--warn-soft, #fdf3e1); color: var(--warn, #a15c00);
+}
+.tf-que-hacer {
+  font-size: 12px; line-height: 1.35; color: var(--text, #17293a);
+  padding: 6px 8px; margin-top: 2px; border-radius: 6px;
+  background: var(--surface-2, #f5f8f8); border: 1px solid var(--line, #d5e0e4);
+  overflow-wrap: anywhere;
+  b { font-size: 12px; }
+}
 
 // Marcas de estado: forma + color, nunca sólo color.
 .tf-giro {
@@ -80,6 +94,8 @@
   color: #fff;
   &.is-listo { background: var(--ok, #1f8a4c); }
   &.is-error { background: var(--danger, #c0392b); }
+  &.is-no-aplica { background: var(--warn, #a15c00); font-style: italic; font-family: Georgia, serif; }
+  &.is-detenida { background: var(--text-3, #7f92a2); font-size: 8px; }
 }
 
 // Barra indeterminada al pie de cada tarea en curso.
@@ -98,7 +114,9 @@
   background: var(--surface, #fff); color: var(--text, #17293a);
   font: 600 11.5px var(--font-body, system-ui, sans-serif);
   cursor: pointer;
+  white-space: nowrap;
   &:hover { background: var(--surface-2, #f5f8f8); }
+  &:disabled { opacity: .6; cursor: default; }
 }
 .tf-icobtn {
   width: 26px; height: 26px;

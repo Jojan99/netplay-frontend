@@ -115,3 +115,7 @@
   .olt-clases { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .np-card-actions { flex-wrap: wrap; }
 }
+
+/* De cuándo es la señal que se ve, y «Medir ahora» (lo único que mide). */
+.olt-senal-barra { display: flex; justify-content: flex-end; margin: 4px 0 10px; }
+@media (max-width: 760px) { .olt-senal-barra { justify-content: flex-start; } }

@@ -5,6 +5,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { OltNavComponent } from '../../shared/olt-nav.component';
+import { MedicionSenalComponent } from '../../shared/medicion-senal.component';
 import { OltEquipoComponent } from '../../shared/olt-equipo.component';
 import { OltService } from '../../../../services/olt.service';
 import { ToastService } from '../../../../services/toast.service';
@@ -48,7 +49,7 @@ interface PuertoConSenal {
 @Component({
   selector: 'app-olt-dashboard',
   standalone: true,
-  imports: [CommonModule, FormsModule, NpSelectComponent, OltNavComponent, OltEquipoComponent],
+  imports: [CommonModule, FormsModule, NpSelectComponent, OltNavComponent, OltEquipoComponent, MedicionSenalComponent],
   templateUrl: './olt-dashboard.component.html',
   styleUrls: ['../../shared/olt.scss', './olt-dashboard.component.scss', '../../shared/olt-movil.scss'],
   host: { class: 'np-console' },
@@ -114,11 +115,15 @@ export class OltDashboardComponent implements OnInit {
     if (this.selectedOltId) this.consultarTodo();
   }
 
-  consultarTodo(refrescar = false): void {
+  /** «Actualizar» vuelve a leer ONT, puertos y la medición guardada; medir es aparte. */
+  consultarTodo(): void {
     this.loadOnts();
-    this.cargarSenal(refrescar);
+    this.cargarSenal();
     this.cargarPuertos();
   }
+
+  /** Lo único que lanza un barrido de señal de la OLT. */
+  medirSenal(): void { this.cargarSenal(true); }
 
   /** Lo que sabe el sistema de cada puerto, por fsp: ocupación, mora y alertas. */
   puertos: Record<string, any> = {};
@@ -168,6 +173,9 @@ export class OltDashboardComponent implements OnInit {
     });
   }
 
+  midiendoSenal = false;
+  sinMedicion = false;
+
   cargarSenal(refrescar = false): void {
     if (!this.selectedOltId) return;
 
@@ -181,6 +189,8 @@ export class OltDashboardComponent implements OnInit {
         if (olt !== this.selectedOltId) return;
         const data = res?.data ?? null;
 
+        this.midiendoSenal = !!data?.midiendo;
+
         // El barrido corre en el servidor; mientras mide se muestra la última
         // medición (si hay) y se vuelve a preguntar en un rato.
         if (data?.midiendo) {
@@ -188,13 +198,15 @@ export class OltDashboardComponent implements OnInit {
           this.cargandoSenal = !data.onts?.length;
           clearTimeout(this.reintentoSenal);
           this.reintentoSenal = setTimeout(() => this.cargarSenal(), 20000);
-          // A la ventana de tareas: sigue aunque se cambie de pestaña.
-          this.tareas.seguirMedicion(olt, this.selectedOltName() || 'OLT', () => this.oltService.getSenal(olt));
+          // A la ventana de tareas sólo la que pidió el usuario: sigue aunque se cambie de pestaña.
+          if (refrescar) this.tareas.seguirMedicion(olt, this.selectedOltName() || 'OLT', () => this.oltService.getSenal(olt));
           return;
         }
 
         this.cargandoSenal = false;
         this.senal         = data;
+        // Nunca se midió: no es una falla, se ofrece medir.
+        this.sinMedicion   = !!data?.sin_medicion;
 
         if (res?.status === 1) this.errorSenal = this.senal?.error || res?.message || 'Sin mediciones ópticas';
       },

@@ -92,6 +92,9 @@ export class GestionRemotaService {
     /** Un aprovisionamiento, para seguirlo desde la ventana de tareas. */
   verAprovisionamiento(id: number): Observable<any> { return this.http.get(`${this.base}/aprovisionamiento/${id}`, this.h()); }
 
+  /** Lo cancela: queda "cancelado" y el servidor no le aplica nada más. */
+  cancelarAprovisionamiento(id: number): Observable<any> { return this.http.post(`${this.base}/aprovisionamiento/${id}/cancelar`, {}, this.h()); }
+
   /** Vuelve a aplicar un aprovisionamiento que terminó con fallas (lo toma la tarea de cada minuto). */
   reintentarAprovisionamiento(id: number): Observable<any> {
     return this.http.post(`${this.base}/aprovisionamiento/${id}/reintentar`, {}, this.h());

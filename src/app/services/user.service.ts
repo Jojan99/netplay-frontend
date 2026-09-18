@@ -323,8 +323,15 @@ getPppoe(routerId?: number | null) {
   return this.http.get<any>(url, { headers: this.getHeaders() });
 }
 
-getIpzonebyZone(vlan: string, segment: string, routerId?: number | null) {
-  const parameter: any = { vlan, segment };
+/**
+ * IP de la VLAN. Si la VLAN tiene varias redes, segment elige una; sin él, el
+ * servidor muestra la de ipActual (la IP que ya tiene el cliente) o la primera
+ * con IP libres. La respuesta trae todas en data.redes.
+ */
+getIpzonebyZone(vlan: string, segment?: string | null, routerId?: number | null, ipActual?: string | null) {
+  const parameter: any = { vlan };
+  if (segment) parameter.segment = segment;
+  if (ipActual) parameter.ip_actual = ipActual;
   if (routerId) parameter.router_id = routerId;
   const url = this.env.rootUrl + 'api/management/getIpAvalibles';
   return this.http.post<any>(url, parameter, { headers: this.getHeaders() });
