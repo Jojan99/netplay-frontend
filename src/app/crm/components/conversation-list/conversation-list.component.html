@@ -36,6 +36,7 @@
           </span>
           <span class="wa-row-badges">
             <span class="wa-wait" *ngIf="waitingMinutes(c) >= waitAlertMinutes" [title]="'El cliente espera respuesta hace ' + waitLabel(waitingMinutes(c))"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>{{ waitLabel(waitingMinutes(c)) }}</span>
+            <span class="wa-linea" *ngIf="mostrarLinea && c.linea" [title]="'Entró por la línea ' + c.linea.nombre + (c.linea.telefono ? ' (' + c.linea.telefono + ')' : '')">{{ c.linea.nombre }}</span>
             <span class="wa-labels" *ngIf="c.labels?.length"><i *ngFor="let l of c.labels" [style.background]="l.color || '#8696a0'" [title]="l.name"></i></span>
             <svg class="wa-pin-ico" *ngIf="isPinned(c.id)" viewBox="0 0 24 24" fill="currentColor"><path d="M14 3l7 7-3 1-3 3 1 6-2 1-4-5-5 5-1-1 5-5-5-4 1-2 6 1 3-3z"/></svg>
             <span class="wa-tag" *ngIf="c.assigned_user" [title]="'Agente: ' + c.assigned_user.names">{{ c.assigned_user.names }}</span>

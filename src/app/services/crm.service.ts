@@ -33,7 +33,7 @@ export class CrmService {
   /* =====================
      INBOX
   ====================== */
-  getInbox(filters?: { mine?: boolean; status?: string; search?: string; provider?: 'meta' | 'netplay'; grupos?: number }) {
+  getInbox(filters?: { mine?: boolean; status?: string; search?: string; provider?: 'meta' | 'netplay'; linea?: number | null; grupos?: number }) {
     let params = new HttpParams();
     if (filters) {
       Object.entries(filters).forEach(([k, v]) => {
@@ -89,10 +89,19 @@ export class CrmService {
     });
   }
 
-  createConversation(phone: string, name: string, provider?: 'meta' | 'netplay') {
-    return this.http.post<any>(this.apiUrl('conversations'), { phone, name, provider }, {
+  /** `linea` = id de la línea de WhatsApp Web; sin ella va la principal. */
+  createConversation(phone: string, name: string, provider?: 'meta' | 'netplay', linea?: number | null) {
+    return this.http.post<any>(this.apiUrl('conversations'), { phone, name, provider, linea }, {
       headers: this.getHeaders()
     });
+  }
+
+  /* =====================
+     LÍNEAS DE WHATSAPP WEB
+     La empresa puede tener varias; cada chat va por la suya.
+  ====================== */
+  getLineas() {
+    return this.http.get<any>(this.apiUrl('crm/lineas'), { headers: this.getHeaders() });
   }
 
   forwardMessage(sourceMessageId: number, targetConversationIds: number[]) {

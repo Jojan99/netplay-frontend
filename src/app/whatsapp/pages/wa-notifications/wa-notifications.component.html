@@ -47,6 +47,8 @@
                   [attr.aria-checked]="a.encendido" [attr.aria-label]="a.titulo"
                   (click)="alternarAviso(a)"></button>
 
+          <span class="np-aviso-ico" aria-hidden="true" [innerHTML]="a.icono | sanitizeHtml"></span>
+
           <div class="np-aviso-id">
             <h3>{{ a.titulo }}</h3>
             <p class="np-aviso-cuando">{{ a.cuando }}</p>
@@ -61,7 +63,7 @@
 
         <div class="np-destinos" *ngIf="a.destinos.length">
           <div class="np-destino" *ngFor="let d of a.destinos; trackBy: porDestino" [class.is-off]="!d.enabled">
-            <span class="np-destino-ico" [class.is-grupo]="d.esGrupo">{{ d.esGrupo ? '👥' : '📱' }}</span>
+            <span class="np-destino-ico" [class.is-grupo]="d.esGrupo" aria-hidden="true" [innerHTML]="d.icono | sanitizeHtml"></span>
 
             <div class="np-destino-id">
               <span class="np-destino-nombre">{{ d.texto }}</span>
@@ -110,14 +112,19 @@
     </div>
 
     <div class="np-modal-body">
-      <p class="np-notice np-notice--code" *ngIf="avisoEnEdicion">
-        <strong>{{ avisoEnEdicion.titulo }}</strong><br>{{ avisoEnEdicion.cuando }}
+      <p class="np-notice np-notice--code np-notice--aviso" *ngIf="avisoEnEdicion">
+        <span class="np-aviso-ico" aria-hidden="true" [innerHTML]="avisoEnEdicion.icono | sanitizeHtml"></span>
+        <span><strong>{{ avisoEnEdicion.titulo }}</strong><br>{{ avisoEnEdicion.cuando }}</span>
       </p>
 
       <div class="np-chips" role="group" aria-label="Tipo de destino">
-        <button type="button" class="np-chip" [attr.aria-pressed]="tipoDestino === 'grupo'" (click)="elegirTipo('grupo')">👥 Grupo de WhatsApp</button>
+        <button type="button" class="np-chip" [attr.aria-pressed]="tipoDestino === 'grupo'" (click)="elegirTipo('grupo')">
+          <span class="np-chip-ico" aria-hidden="true" [innerHTML]="iconoGrupo | sanitizeHtml"></span>Grupo de WhatsApp
+        </button>
         <button type="button" class="np-chip" [attr.aria-pressed]="tipoDestino === 'numero'"
-                [disabled]="avisoEnEdicion?.soloGrupo" (click)="elegirTipo('numero')">📱 Número</button>
+                [disabled]="avisoEnEdicion?.soloGrupo" (click)="elegirTipo('numero')">
+          <span class="np-chip-ico" aria-hidden="true" [innerHTML]="iconoNumero | sanitizeHtml"></span>Número
+        </button>
       </div>
 
       <p *ngIf="avisoEnEdicion?.soloGrupo" class="np-fine">

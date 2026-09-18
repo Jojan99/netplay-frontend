@@ -22,6 +22,12 @@
         </div>
       </span>
     </div>
+    <!-- Filtro por línea. Solo aparece si la empresa tiene más de una: con una
+         sola no hay nada que elegir y sería ruido en la barra. -->
+    <div class="np-chips wa-lineas" role="group" aria-label="Línea de WhatsApp" *ngIf="variasLineas && inboxProvider === 'netplay'">
+      <button type="button" class="np-chip" [attr.aria-pressed]="lineaFiltro === null" (click)="setLinea(null)">Todas las líneas</button>
+      <button type="button" class="np-chip" *ngFor="let l of lineas; trackBy: trackByLineaId" [attr.aria-pressed]="lineaFiltro === l.id" (click)="setLinea(l.id)" [title]="l.telefono || ''">{{ l.nombre }}<i class="wa-linea-dot" [class.is-on]="l.estado === 'connected'"></i></button>
+    </div>
     <button type="button" class="np-btn np-btn--ghost np-btn--sm" *ngIf="vista === 'grupos'" (click)="abrirGrupos()">Elegir grupos</button>
     <span class="np-spacer"></span>
     <button type="button" class="wa-sound" [attr.aria-pressed]="soundEnabled" (click)="toggleSound()" [title]="soundEnabled ? 'Silenciar notificaciones' : 'Activar sonido de notificaciones'">
@@ -48,7 +54,7 @@
 
   <div class="wa-layout" *ngIf="mainView === 'inbox'">
     <aside class="wa-list-pane">
-      <app-conversation-list [conversations]="inbox" [activeConversationId]="activeConversationId" [activeStatus]="inboxStatus" [mostrarEstados]="vista === 'clientes'" [labels]="labels" [waitAlertMinutes]="settings?.wait_alert_minutes || 15" (openChat)="openChat($event)" (statusChange)="setStatus($event)" (refresh)="loadInbox()" (markUnread)="markUnread($event)"></app-conversation-list>
+      <app-conversation-list [conversations]="inbox" [activeConversationId]="activeConversationId" [activeStatus]="inboxStatus" [mostrarEstados]="vista === 'clientes'" [labels]="labels" [mostrarLinea]="variasLineas" [waitAlertMinutes]="settings?.wait_alert_minutes || 15" (openChat)="openChat($event)" (statusChange)="setStatus($event)" (refresh)="loadInbox()" (markUnread)="markUnread($event)"></app-conversation-list>
     </aside>
     <section class="wa-chat-pane">
       <app-chat-window class="wa-chat-host" [conversationId]="activeConversationId" (conversationClosed)="onConversationClosed()" (openTransfer)="openTransfer()" (back)="backToList()" (openConversation)="openChat($event)" (startChat)="startChatWith($event)" (labelsChanged)="loadLabels()"></app-chat-window>
@@ -58,7 +64,7 @@
 </div>
 
 <app-crm-broadcast-modal *ngIf="showBroadcastModal" (closed)="showBroadcastModal = false"></app-crm-broadcast-modal>
-<app-crm-new-conversation-modal *ngIf="showNewConversationModal" (closed)="showNewConversationModal = false" (created)="onConversationCreated($event); showNewConversationModal = false"></app-crm-new-conversation-modal>
+<app-crm-new-conversation-modal *ngIf="showNewConversationModal" [lineas]="lineas" [provider]="inboxProvider" (closed)="showNewConversationModal = false" (created)="onConversationCreated($event); showNewConversationModal = false"></app-crm-new-conversation-modal>
 
 <!-- Avisos de mensajes nuevos -->
 <div class="wa-toasts" *ngIf="toasts.length">

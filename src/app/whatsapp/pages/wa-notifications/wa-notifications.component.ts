@@ -4,7 +4,36 @@ import { FormsModule }       from '@angular/forms';
 import { RouterModule }      from '@angular/router';
 import { CompanyWhatsappService } from '../../../services/company-whatsapp.service';
 import { ToastService }           from '../../../services/toast.service';
+import { SanitizeHtmlPipe }       from '../../../common/pipes';
 import { NpSelectComponent, PresentacionSelect } from '../../../common/np-select/np-select.component';
+
+/**
+ * Un icono por aviso, dibujado como los del resto del panel: trazo de 1.8,
+ * currentColor y viewBox 0 0 24 24. Antes el título del evento traía un emoji
+ * adelante y cada sección se veía de un color distinto.
+ *
+ * La clave la manda el backend en `icono` (NotificationRouterService::catalogo).
+ */
+const ICONOS_AVISO: Record<string, string> = {
+  // Tickets
+  ticket:      `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8V6a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v2a2 2 0 0 0 0 4v2a2 2 0 0 0 0 4v2a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-2a2 2 0 0 0 0-4v-2a2 2 0 0 0 0-4z"/><path d="M9 12h6"/></svg>`,
+  caja:        `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8l9-4 9 4-9 4-9-4z"/><path d="M3 8v8l9 4 9-4V8M12 12v8"/></svg>`,
+  estado:      `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 1.8"/></svg>`,
+  reabrir:     `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 4v6h6"/><path d="M3.6 14.5a9 9 0 1 0 2.1-9.2L3 10"/></svg>`,
+  // Clientes
+  cliente:     `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.5"/><path d="M3 20a6 6 0 0 1 12 0M17 11h4M19 9v4"/></svg>`,
+  agenda:      `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/><path d="m9.5 15 2 2 3.5-4"/></svg>`,
+  // Pagos
+  pago:        `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="6" width="19" height="12" rx="2"/><circle cx="12" cy="12" r="2.5"/><path d="M6 9.5h.01M18 14.5h.01"/></svg>`,
+  comprobante: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h12v18l-3-2-3 2-3-2-3 2z"/><path d="M9 8h6M9 12h6"/></svg>`,
+  // Red
+  alerta:      `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4.5 2.8 19.5h18.4z"/><path d="M12 10v4M12 17.3h.01"/></svg>`,
+  amanecer:    `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2.5v4M5.2 8.2l1.5 1.5M18.8 8.2l-1.5 1.5M2.5 16h3M18.5 16h3"/><path d="M8 16a4 4 0 0 1 8 0"/><path d="M3 20.5h18"/></svg>`,
+};
+
+/** Destinos: grupo o número, también en trazo y no en emoji. */
+const ICONO_GRUPO  = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.5"/><path d="M3 20a6 6 0 0 1 12 0"/><circle cx="17" cy="9" r="2.5"/><path d="M15.5 14.5A5 5 0 0 1 22 19"/></svg>`;
+const ICONO_NUMERO = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="6.5" y="2.5" width="11" height="19" rx="2.5"/><path d="M10.5 18.5h3"/></svg>`;
 
 /** Una fila de wa_notification_routes, con lo que la pantalla necesita ya calculado. */
 interface Destino {
@@ -17,12 +46,16 @@ interface Destino {
   texto: string;
   /** El identificador crudo, abajo en chico. */
   detalle: string;
+  /** SVG del tipo de destino, ya elegido: nunca se calcula en la plantilla. */
+  icono: string;
 }
 
 /** Un aviso del catálogo con sus destinos. */
 interface Aviso {
   clave: string;
   titulo: string;
+  /** SVG del aviso, ya resuelto contra ICONOS_AVISO. */
+  icono: string;
   cuando: string;
   soloGrupo: boolean;
   destinos: Destino[];
@@ -44,9 +77,10 @@ const ORDEN_SECCIONES = ['Tickets', 'Clientes', 'Pagos', 'Red'];
 @Component({
   selector: 'app-wa-notifications',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterModule, NpSelectComponent],
+  imports: [CommonModule, FormsModule, RouterModule, NpSelectComponent, SanitizeHtmlPipe],
   templateUrl: './wa-notifications.component.html',
   styleUrl: './wa-notifications.component.scss',
+  host: { class: 'np-console' },
 })
 export class WaNotificationsComponent implements OnInit {
   cargando = true;
@@ -84,7 +118,11 @@ export class WaNotificationsComponent implements OnInit {
     buscarEn:  g => `${g.name} ${g.jid}`,
   };
 
-  private catalogo: { clave: string; seccion: string; titulo: string; cuando: string; solo_grupo: boolean }[] = [];
+  /** Los dos iconos de destino, para la plantilla. */
+  readonly iconoGrupo  = ICONO_GRUPO;
+  readonly iconoNumero = ICONO_NUMERO;
+
+  private catalogo: { clave: string; seccion: string; titulo: string; icono?: string; cuando: string; solo_grupo: boolean }[] = [];
 
   constructor(
     private waService: CompanyWhatsappService,
@@ -156,6 +194,7 @@ export class WaNotificationsComponent implements OnInit {
       const aviso: Aviso = {
         clave:     e.clave,
         titulo:    e.titulo,
+        icono:     ICONOS_AVISO[e.icono ?? ''] ?? ICONOS_AVISO['ticket'],
         cuando:    e.cuando,
         soloGrupo: !!e.solo_grupo,
         destinos,
@@ -198,6 +237,7 @@ export class WaNotificationsComponent implements OnInit {
       esGrupo,
       texto:       label || (esGrupo ? 'Grupo de WhatsApp' : this.numeroLegible(destino)),
       detalle:     esGrupo ? 'Grupo · ' + destino.replace('@g.us', '') : this.numeroLegible(destino),
+      icono:       esGrupo ? ICONO_GRUPO : ICONO_NUMERO,
     };
   }
 

@@ -36,6 +36,17 @@ export class WaInstanciasComponent implements OnInit, OnDestroy {
   deleteInstance: any = null;
   deleting            = false;
 
+  /* ── Línea principal ─────────────────────────────────────────
+   *
+   * La empresa puede tener varias líneas vinculadas. La principal es la que
+   * usan las facturas, los avisos y todo lo que no cuelga de una conversación
+   * del CRM; los chats responden siempre por la línea por la que entraron.
+   */
+  marcando: string | null = null;
+
+  /** Catálogo de Laravel, por instance_id: dice cuál es la principal. */
+  private lineasPorInstancia: Record<string, any> = {};
+
   constructor(private wa: WhatsappService) {}
 
   ngOnInit(): void {
@@ -50,8 +61,48 @@ export class WaInstanciasComponent implements OnInit, OnDestroy {
     this.loading  = true;
     this.apiError = '';
     this.wa.getInstances().subscribe({
-      next: (r: any) => { this.instances = r.instances || []; this.loading = false; },
+      next: (r: any) => { this.instances = r.instances || []; this.loading = false; this.loadLineas(); },
       error: (e: any) => { this.loading = false; this.apiError = this.resolveAuthError(e); }
+    });
+  }
+
+  /**
+   * El catálogo de Laravel se sincroniza solo al pedirlo, así que esta llamada
+   * también es la que da de alta las líneas nuevas para el CRM.
+   */
+  loadLineas(): void {
+    this.wa.getLineas().subscribe({
+      next: (r: any) => {
+        const lineas = r?.data ?? [];
+        this.lineasPorInstancia = {};
+        for (const l of lineas) this.lineasPorInstancia[l.instance_id] = l;
+        this.marcarPrincipales();
+      },
+      // Sin catálogo todavía (migración sin correr): la pantalla anda igual,
+      // solo que sin la columna de línea principal.
+      error: () => { this.lineasPorInstancia = {}; this.marcarPrincipales(); },
+    });
+  }
+
+  /** Se precalcula sobre cada fila: un getter en *ngFor congela la pestaña. */
+  private marcarPrincipales(): void {
+    this.instances = this.instances.map(i => ({
+      ...i,
+      principal: !!this.lineasPorInstancia[i.instanceId]?.principal,
+      lineaId:   this.lineasPorInstancia[i.instanceId]?.id ?? null,
+    }));
+    this.hayCatalogo = Object.keys(this.lineasPorInstancia).length > 0;
+  }
+
+  /** Si Laravel ya tiene el catálogo (si no, no se ofrece cambiar la principal). */
+  hayCatalogo = false;
+
+  marcarPrincipal(inst: any): void {
+    if (!inst?.lineaId || inst.principal || this.marcando) return;
+    this.marcando = inst.instanceId;
+    this.wa.setLineaPrincipal(inst.lineaId).subscribe({
+      next: () => { this.marcando = null; this.loadLineas(); this.toast.success(`"${inst.name}" es ahora la línea principal.`); },
+      error: (e: any) => { this.marcando = null; this.toast.error(e.error?.message || 'No se pudo cambiar la línea principal.'); },
     });
   }
 
@@ -154,6 +205,8 @@ export class WaInstanciasComponent implements OnInit, OnDestroy {
       }
     });
   }
+
+  trackByInstanceId(i: number, inst: any): string { return inst?.instanceId ?? String(i); }
 
   get connectedCount(): number {
     return this.instances.filter(i => i.status === 'connected').length;

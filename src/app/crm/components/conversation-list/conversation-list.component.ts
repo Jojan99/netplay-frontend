@@ -21,6 +21,12 @@ export class ConversationListComponent implements OnChanges {
    */
   @Input() mostrarEstados = true;
 
+  /**
+   * Mostrar de qué línea de WhatsApp es cada chat. Solo con más de una línea:
+   * en el 99 % de las empresas hay una sola y el badge sería ruido.
+   */
+  @Input() mostrarLinea = false;
+
   @Output() statusChange = new EventEmitter<'all' | 'new' | 'in_progress' | 'closed'>();
   @Output() openChat     = new EventEmitter<number>();
   @Output() refresh      = new EventEmitter<void>();

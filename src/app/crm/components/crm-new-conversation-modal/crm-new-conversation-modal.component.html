@@ -4,6 +4,8 @@
     <div class="np-modal-body">
       <label class="np-field"><span>Teléfono <em>*</em></span><input type="tel" class="np-input np-mono" [(ngModel)]="phone" placeholder="573001234567" (keydown.enter)="submit()" /><small class="np-fine">Con código de país y sin el signo +. Colombia es 57.</small></label>
       <label class="np-field"><span>Nombre (opcional)</span><input type="text" class="np-input" [(ngModel)]="name" placeholder="Nombre del cliente" /></label>
+      <!-- Solo con más de una línea: el cliente verá el número que se elija acá. -->
+      <label class="np-field" *ngIf="mostrarLineas"><span>Línea</span><select class="np-input" [(ngModel)]="linea"><option *ngFor="let l of lineas" [ngValue]="l.id">{{ l.nombre }}{{ l.telefono ? ' · ' + l.telefono : '' }}{{ l.principal ? ' (principal)' : '' }}</option></select><small class="np-fine">El chat le va a llegar al cliente desde ese número.</small></label>
       <p *ngIf="error" class="np-notice np-notice--danger">{{ error }}</p>
       <div class="np-btnrow np-btnrow--end"><button type="button" class="np-btn np-btn--ghost" (click)="closed.emit()">Cancelar</button><button type="button" class="np-btn np-btn--primary" [disabled]="!phone.trim() || saving" (click)="submit()">{{ saving ? 'Creando…' : 'Iniciar conversación' }}</button></div>
     </div>

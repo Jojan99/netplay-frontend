@@ -80,6 +80,24 @@ export class WhatsappService {
     return this.http.delete(`${this.WA_PROXY}/crm/instances/${instanceId}`, this.h());
   }
 
+  // ── Líneas (catálogo en Laravel) ─────────────────────────────────────────────
+  //
+  // El servicio Node lista las instancias; el catálogo de Laravel es el que sabe
+  // cuál es la PRINCIPAL de la empresa (la que usan facturas y avisos) y el que
+  // permite que un mensaje entrado por cualquier línea llegue a la bandeja.
+  // Van por la API de Laravel, no por el proxy.
+  private get API(): string {
+    return `${environment.rootUrl}api/company/whatsapp`;
+  }
+
+  getLineas(): Observable<any> {
+    return this.http.get(`${this.API}/lineas`, this.h());
+  }
+
+  setLineaPrincipal(lineaId: number): Observable<any> {
+    return this.http.put(`${this.API}/lineas/${lineaId}/principal`, {}, this.h());
+  }
+
   // ── Envío ────────────────────────────────────────────────────────────────────
   sendText(instanceId: string, number: string, message: string): Observable<any> {
     return this.http.post(`${this.WA_PROXY}/instances/${instanceId}/send`, { number, message }, this.h());

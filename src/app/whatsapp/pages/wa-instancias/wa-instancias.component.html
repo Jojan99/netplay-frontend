@@ -3,7 +3,7 @@
     <div>
       <p class="np-kicker">WhatsApp <b>/</b> Web (QR) <b>/</b> Instancias</p>
       <h1 class="np-title">Instancias</h1>
-      <div class="np-ribbon"><span><i class="np-dot" style="background:var(--ok)"></i><span class="np-n">{{ connectedCount }}</span>de {{ instances.length }} conectadas</span><span class="np-fine" *ngIf="apiError">{{ apiError }}</span></div>
+      <div class="np-ribbon"><span><i class="np-dot" style="background:var(--ok)"></i><span class="np-n">{{ connectedCount }}</span>de {{ instances.length }} conectadas</span><span class="np-fine" *ngIf="instances.length > 1">Cada chat del CRM responde por la línea por la que entró; la principal es la que usan facturas y avisos.</span><span class="np-fine" *ngIf="apiError">{{ apiError }}</span></div>
     </div>
     <div class="np-actions"><button type="button" class="np-btn np-btn--primary" (click)="showCreate = true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M12 5v14M5 12h14"/></svg>Nueva instancia</button></div>
   </header>
@@ -11,18 +11,19 @@
   <div class="np-workspace">
     <section class="np-registry">
       <div class="np-registry-wrap"><table class="np-table np-table--registry">
-        <thead><tr><th class="np-th-stripe"></th><th>Instancia</th><th>Teléfono</th><th>Usuario</th><th>Estado</th><th class="np-th-right">Acciones</th></tr></thead>
+        <thead><tr><th class="np-th-stripe"></th><th>Línea</th><th>Teléfono</th><th>Usuario</th><th>Estado</th><th class="np-th-right">Acciones</th></tr></thead>
         <tbody>
           <tr *ngIf="loading && !instances.length" class="np-empty"><td colspan="6"><span class="np-spinner"></span></td></tr>
           <tr *ngIf="!loading && !instances.length" class="np-empty"><td colspan="6"><strong>No hay instancias.</strong><span>Creá la primera y vinculala escaneando el QR.</span></td></tr>
-          <tr *ngFor="let inst of instances" class="np-row np-row--static">
+          <tr *ngFor="let inst of instances; trackBy: trackByInstanceId" class="np-row np-row--static">
             <td class="np-stripe"><i [style.background]="inst.status === 'connected' ? 'var(--ok)' : inst.status === 'waiting_qr' ? 'var(--warn)' : 'var(--line-strong)'"></i></td>
-            <td><div class="np-name">{{ inst.name }}</div><div class="np-plan"><em>{{ inst.instanceId }}</em></div></td>
+            <td><div class="np-name">{{ inst.name }}<span class="np-pill np-pill--active np-wa-principal" *ngIf="inst.principal" title="Es la línea que usan las facturas, los avisos y todo lo que no sale de un chat">Principal</span></div><div class="np-plan"><em>{{ inst.instanceId }}</em></div></td>
             <td class="np-data">{{ inst.phone || '—' }}</td>
             <td>{{ inst.userName || '—' }}</td>
             <td><span class="np-pill" [ngClass]="inst.status === 'connected' ? 'np-pill--active' : inst.status === 'waiting_qr' ? 'np-pill--noip' : 'np-pill--neutral'">{{ inst.status === 'connected' ? 'Online' : inst.status === 'waiting_qr' ? 'QR pendiente' : 'Offline' }}</span><span class="np-fine" *ngIf="inst.hasQR && inst.status !== 'connected'">QR listo para escanear</span></td>
             <td class="np-td-right"><div class="np-rowacts is-visible">
               <button type="button" class="np-btn np-btn--warn np-btn--sm" *ngIf="inst.status !== 'connected'" (click)="openQR(inst)">Ver QR</button>
+              <button type="button" class="np-btn np-btn--ghost np-btn--sm" *ngIf="hayCatalogo && !inst.principal && inst.lineaId" (click)="marcarPrincipal(inst)" [disabled]="marcando === inst.instanceId" title="Las facturas y los avisos saldrán por esta línea">{{ marcando === inst.instanceId ? 'Cambiando…' : 'Hacer principal' }}</button>
               <button type="button" class="np-icobtn" (click)="refreshStatus(inst)" title="Actualizar estado"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 12a8 8 0 1 1-2.3-5.7M20 4v5h-5"/></svg></button>
               <button type="button" class="np-icobtn" (click)="confirmDelete(inst)" title="Eliminar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/></svg></button>
             </div></td>

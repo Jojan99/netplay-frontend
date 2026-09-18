@@ -29,6 +29,10 @@
 .wa-wait { display: inline-flex; align-items: center; gap: 3px; padding: 2px 6px; border-radius: 999px; background: #fff3e0; color: #e65100; font: 700 10.5px/1 var(--font-mono); svg { width: 12px; height: 12px; } }
 :host-context(.dark) .wa-wait { background: #3d2a12; color: #ffb74d; }
 .wa-labels { display: inline-flex; gap: 3px; i { width: 8px; height: 8px; border-radius: 50%; display: inline-block; } }
+
+/* Badge con la línea de WhatsApp por la que entró el chat. Solo se pinta en
+   empresas con más de una línea. */
+.wa-linea { display: inline-flex; align-items: center; padding: 2px 6px; border-radius: 999px; background: var(--surface-2); color: var(--wa-text-3); border: 1px solid var(--line); font: 600 10px/1 var(--font-mono); max-width: 92px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .wa-pin-ico { width: 13px; height: 13px; color: var(--wa-text-3); }
 .wa-avatar { @include wa.wa-avatar; position: relative; width: 46px; height: 46px; font-size: 15px; }
 .wa-avatar--in_progress { background: var(--wa-accent-soft); color: var(--wa-accent); }

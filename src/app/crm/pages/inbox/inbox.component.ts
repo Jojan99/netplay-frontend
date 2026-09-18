@@ -74,10 +74,42 @@ export class InboxComponent implements OnInit, OnDestroy {
     const existing = this.inbox.find(x => (x.customer?.phone || '').replace(/\D/g, '').endsWith(phone.replace(/\D/g, '').slice(-10)));
     if (existing) { this.openChat(existing.id); return; }
     if (!await this.dialog.confirm(`¿Iniciar un chat nuevo con ${c.name || phone} (${phone})?`)) return;
-    this.crmService.createConversation(phone, c.name || phone, this.inboxProvider).subscribe({
+    this.crmService.createConversation(phone, c.name || phone, this.inboxProvider, this.lineaFiltro).subscribe({
       next: res => { const id = res?.conversation_id ?? res?.data?.id; if (id) { this.loadInbox(); this.openChat(id); } },
       error: err => this.toast.error(err?.error?.message || err?.error?.error || 'No se pudo crear la conversación.')
     });
+  }
+
+  /* ── Líneas de WhatsApp Web ──────────────────────────────────── */
+  //
+  // La empresa puede tener varias (Ventas, Soporte…). Cada chat entra y sale
+  // por la suya. Con una sola línea —el 99 % de las empresas— no se muestra
+  // nada: ni filtro, ni badge, ni selector.
+  lineas: any[] = [];
+  /** Precalculado: un getter que devuelva un array nuevo congela la pestaña. */
+  variasLineas = false;
+  lineaFiltro: number | null = null;
+
+  trackByLineaId(_i: number, l: any): number { return l?.id ?? _i; }
+
+  loadLineas(): void {
+    this.crmService.getLineas().subscribe({
+      next: r => {
+        this.lineas = r.data ?? [];
+        this.variasLineas = this.lineas.length > 1;
+        if (!this.variasLineas) this.lineaFiltro = null;
+      },
+      // Sin WhatsApp Web o sin el catálogo todavía: se sigue como siempre.
+      error: () => { this.lineas = []; this.variasLineas = false; },
+    });
+  }
+
+  setLinea(id: number | null): void {
+    if (this.lineaFiltro === id) return;
+    this.lineaFiltro = id;
+    this.activeConversationId = null;
+    this.mobileView = 'list';
+    this.loadInbox();
   }
 
   /* ── Etiquetas (para filtrar la lista) ───────────────────────── */
@@ -197,6 +229,7 @@ export class InboxComponent implements OnInit, OnDestroy {
 
     this.loadInbox();
     this.loadLabels();
+    this.loadLineas();
     this.loadSettings();
     this.listenInboxRealtime();
     if (isPlatformBrowser(this.platformId)) this.loadRecepcion();
@@ -271,6 +304,12 @@ export class InboxComponent implements OnInit, OnDestroy {
         const filters: any = { provider };
         if (this.vista === 'clientes' && provider === this.inboxProvider && this.inboxStatus !== 'all') {
           filters.status = this.inboxStatus;
+        }
+
+        // La recarga tiene que respetar la línea que el agente está mirando; si
+        // no, un mensaje de otra línea le repuebla la lista con todos los chats.
+        if (this.lineaFiltro && provider === 'netplay' && this.inboxProvider === 'netplay') {
+          filters.linea = this.lineaFiltro;
         }
 
         // La recarga tiene que respetar la sección en la que está el agente.
@@ -405,6 +444,8 @@ export class InboxComponent implements OnInit, OnDestroy {
     }
 
     filters.provider = this.inboxProvider;
+    // El filtro de línea solo tiene sentido en WhatsApp Web: Meta es un único número.
+    if (this.lineaFiltro && this.inboxProvider === 'netplay') filters.linea = this.lineaFiltro;
     if (this.vista === 'grupos') filters.grupos = 1;
 
     this.crmService.getInbox(filters).subscribe(res => {
@@ -427,6 +468,8 @@ export class InboxComponent implements OnInit, OnDestroy {
   setProvider(provider: InboxProvider): void {
     if (this.inboxProvider === provider) return;
     this.inboxProvider = provider;
+    // Meta es un solo número: el filtro por línea no aplica ahí.
+    if (provider !== 'netplay') this.lineaFiltro = null;
     this.providerUnread = { ...this.providerUnread, [provider]: 0 };
     this.providerRecent = { ...this.providerRecent, [provider]: [] };
     this.activeConversationId = null;

@@ -82,3 +82,8 @@
 .wa-grupos { display: grid; gap: 4px; margin-top: 12px; }
 .wa-grupos .wa-set-switch { padding: 9px 2px; border-bottom: 1px solid var(--line); }
 .wa-grupos .wa-set-switch:last-child { border-bottom: 0; }
+
+/* Filtro por línea de WhatsApp Web (solo con más de una línea) */
+.wa-lineas .np-chip { gap: 6px; }
+.wa-linea-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--line-strong, #9aa0a6); display: inline-block; }
+.wa-linea-dot.is-on { background: var(--ok, #25d366); }
