@@ -22,6 +22,47 @@
     </p>
 
     <div class="np-cob-grid">
+      <!-- ── La IA: clave propia de Google o la de Netvula de prueba ── -->
+      <section class="np-card np-cob-ancha np-cob-ia">
+        <div class="np-card-h">
+          <h3>Conexión con la IA (Google Gemini)</h3>
+          <span class="np-tag" [ngClass]="ia.propia ? 'np-tag--ok' : 'np-tag--neutral'">{{ ia.propia ? 'Tu propia cuenta de Google' : 'IA de Netvula (prueba)' }}</span>
+        </div>
+
+        <p class="np-fine" *ngIf="!ia.propia">
+          Estás usando la IA de Netvula: <b>{{ ia.limite_prueba }} conversaciones nuevas por día</b> para probar
+          (hoy van <b>{{ ia.usadas_hoy }}</b>). Conectá la clave gratis de tu cuenta de Google y tenés tu propio cupo
+          —unas 70 a 100 conversaciones por día— y las conversaciones con tus clientes quedan en tu cuenta.
+        </p>
+        <p class="np-fine" *ngIf="ia.propia">
+          El asistente usa tu cuenta de Google: sin el límite de prueba. Tu cupo y tu consumo los ves en
+          <a class="np-cob-enlace" [href]="ia.url_limites" target="_blank" rel="noopener">aistudio.google.com/rate-limit ↗</a>.
+        </p>
+
+        <ol class="np-cob-pasos" *ngIf="!ia.propia">
+          <li>Entrá con la cuenta de Google de tu empresa a
+            <a class="np-cob-enlace" [href]="ia.url_clave" target="_blank" rel="noopener">aistudio.google.com/apikey ↗</a>
+            (es gratis y no pide tarjeta).</li>
+          <li>Tocá <b>«Crear clave de API»</b> y copiala.</li>
+          <li>Pegala acá abajo, tocá <b>Probar</b> y después <b>Guardar</b>.</li>
+        </ol>
+
+        <div class="np-cob-clave">
+          <label class="np-field"><span>{{ ia.propia ? 'Cambiar la clave' : 'Clave de API de Google' }} <em>se guarda cifrada y no se vuelve a mostrar</em></span>
+            <div class="np-cob-clave-in">
+              <input class="np-input np-mono" [type]="verClave ? 'text' : 'password'" [(ngModel)]="claveNueva" autocomplete="new-password"
+                     [placeholder]="ia.propia ? 'Guardada · pegá otra para cambiarla' : 'AIza…'" />
+              <button type="button" class="np-btn np-btn--ghost np-btn--sm" (click)="verClave = !verClave">{{ verClave ? 'Ocultar' : 'Ver' }}</button>
+            </div>
+          </label>
+          <div class="np-btnrow">
+            <button type="button" class="np-btn np-btn--ghost np-btn--sm" (click)="probarClave()" [disabled]="probando || (!claveNueva.trim() && !ia.propia)">{{ probando ? 'Probando…' : 'Probar' }}</button>
+            <button type="button" class="np-btn np-btn--ghost np-btn--sm" *ngIf="ia.propia" (click)="quitarClave()">Quitar mi clave</button>
+          </div>
+        </div>
+        <p class="np-notice np-notice--inline" *ngIf="resultadoPrueba" [ngClass]="resultadoPrueba.ok ? 'np-notice--ok' : 'np-notice--danger'">{{ resultadoPrueba.texto }}</p>
+      </section>
+
       <!-- ── Encendido y modo ── -->
       <section class="np-card">
         <div class="np-card-h">

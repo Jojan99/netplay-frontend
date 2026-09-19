@@ -26,6 +26,8 @@
       </div>
 
       <div class="app-shell-actions">
+        <!-- Cobranza: la pastilla vive en el encabezado, junto al buscador. -->
+        <app-cobranza-burbuja *ngIf="hasFinanzas"></app-cobranza-burbuja>
         <ng-container *ngIf="atajos.grande()">
           <button type="button" class="app-shell-search" (click)="atajos.abrirBuscador()" aria-label="Buscar (Ctrl K)" title="Buscar cliente, equipo o módulo">
             <span class="app-shell-search-ico" [innerHTML]="iconos.buscar | sanitizeHtml"></span>
@@ -168,7 +170,6 @@
 <app-crm-widget *ngIf="hasCrm"></app-crm-widget>
 <app-dialog-host></app-dialog-host>
 <app-tareas-flotantes></app-tareas-flotantes>
-<app-cobranza-burbuja *ngIf="hasFinanzas"></app-cobranza-burbuja>
 <app-ventanas-rapidas></app-ventanas-rapidas>
 <app-buscador-rapido></app-buscador-rapido>
 

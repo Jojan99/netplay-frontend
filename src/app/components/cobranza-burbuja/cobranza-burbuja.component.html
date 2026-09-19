@@ -1,16 +1,24 @@
 @if (visible) {
-  <!-- La pastilla: discreta, sólo cuando hay algo que mirar -->
-  @if (!abierta()) {
-    <button type="button" class="cb-pastilla" [class.cb-pastilla--nuevo]="pendientes > 0 || (resumen()?.no_vistos ?? 0) > 0"
-            (click)="abrir()" [attr.aria-label]="'Cobranza: ' + pendientes + ' para atender'">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+  <!-- La pastilla del encabezado: borde que gira si hay que decidir, puntos
+       que "escriben" si el asistente está conversando, apagada si no hay nada. -->
+  <button type="button" class="cb-pastilla"
+          [class.cb-pastilla--alerta]="pendientes > 0"
+          [class.cb-pastilla--viva]="!pendientes && (resumen()?.en_curso ?? 0) > 0"
+          [class.cb-pastilla--abierta]="abierta()"
+          (click)="abierta() ? cerrar() : abrir()" [attr.aria-expanded]="abierta()"
+          [attr.aria-label]="'Cobranza: ' + pendientes + ' para atender, ' + (resumen()?.en_curso ?? 0) + ' en curso'">
+    <span class="cb-orbe" aria-hidden="true">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
         <path d="M4 20l1.3-3.8A8 8 0 1 1 8 19.2L4 20z"/><path d="M12 8v8M10 10.2a2 2 0 0 1 2-1.2h.8a1.6 1.6 0 0 1 0 3.2h-1.6a1.6 1.6 0 0 0 0 3.2h.8a2 2 0 0 0 2-1.2"/>
       </svg>
-      <span class="cb-pastilla-txt">Cobranza</span>
-      @if (pendientes > 0) { <span class="cb-cuenta">{{ pendientes }}</span> }
-      @else if ((resumen()?.en_curso ?? 0) > 0) { <span class="cb-cuenta cb-cuenta--suave">{{ resumen()?.en_curso }}</span> }
-    </button>
-  }
+    </span>
+    <span class="cb-pastilla-txt">Cobranza</span>
+    @if (pendientes > 0) {
+      <span class="cb-cuenta">{{ pendientes }}</span>
+    } @else if ((resumen()?.en_curso ?? 0) > 0) {
+      <span class="cb-escribiendo" aria-hidden="true"><i></i><i></i><i></i></span>
+    }
+  </button>
 
   @if (abierta()) {
     <section class="cb-panel" role="dialog" aria-label="Cobranza">
@@ -38,7 +46,7 @@
       </header>
 
       @if (!resumen()?.ia_disponible) {
-        <p class="cb-nota cb-nota--aviso">El asistente todavía no está conectado: la plataforma detecta a quién cobrarle, pero no puede escribirle hasta que se configure la IA en el servidor.</p>
+        <p class="cb-nota cb-nota--aviso">El asistente todavía no está conectado: la plataforma detecta a quién cobrarle, pero para que le escriba hay que conectar la IA en Cobranza inteligente.</p>
       }
       @if (aviso(); as a) {
         <p class="cb-nota" [class.cb-nota--ok]="a.tipo === 'ok'" [class.cb-nota--error]="a.tipo === 'error'">{{ a.texto }}</p>
@@ -99,8 +107,8 @@
           @if (cargando()) {
             <p class="cb-vacio">Cargando…</p>
           } @else {
-            @for (c of casos(); track c.id) {
-              <article class="cb-caso" [class.cb-caso--nuevo]="!c.visto">
+            @for (c of casos(); track c.id; let i = $index) {
+              <article class="cb-caso" [class.cb-caso--nuevo]="!c.visto" [style.--i]="i < 12 ? i : 12">
                 <button type="button" class="cb-caso-cuerpo" (click)="verCaso(c)">
                   <div class="cb-caso-l1">
                     <b>{{ nombre(c) }}</b>

@@ -209,3 +209,7 @@
   .bc-agregar { flex-wrap: wrap; .np-input { flex: 1 1 100%; } .np-btn { flex: 1; } }
   .bc-lista li { flex-wrap: wrap; }
 }
+
+/* Enlaces directos a la página que hay que abrir en cada paso */
+.bc-enlace { color: var(--accent); font-weight: 600; text-decoration: none; white-space: nowrap;
+  &:hover { text-decoration: underline; } }

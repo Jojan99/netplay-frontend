@@ -21,3 +21,10 @@
 .np-cob-txt { min-height: 88px; resize: vertical; line-height: 1.5; padding: 9px 11px; }
 .np-cob-ejemplo { line-height: 1.5; }
 .np-err { color: var(--danger); }
+
+/* Conexión con la IA */
+.np-cob-pasos { margin: 0; padding-left: 18px; display: grid; gap: 4px; font-size: 13px; line-height: 1.5; }
+.np-cob-enlace { color: var(--accent); font-weight: 600; text-decoration: none; white-space: nowrap; &:hover { text-decoration: underline; } }
+.np-cob-clave { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 10px; align-items: end;
+  @media (max-width: 720px) { grid-template-columns: 1fr; } }
+.np-cob-clave-in { display: flex; gap: 6px; input { flex: 1; min-width: 0; } }

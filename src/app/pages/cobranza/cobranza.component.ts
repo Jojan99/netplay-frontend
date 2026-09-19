@@ -24,6 +24,14 @@ export class CobranzaComponent implements OnInit {
   pasarela = false;
   lineas: Array<{ id: number; nombre: string; telefono: string | null; principal: number }> = [];
 
+  /** La IA: la clave de Google de la empresa (nunca vuelve del servidor), o la de Netvula de prueba. */
+  ia = { propia: false, modelos: null as string | null, limite_prueba: 10, usadas_hoy: 0,
+    url_clave: 'https://aistudio.google.com/apikey', url_limites: 'https://aistudio.google.com/rate-limit' };
+  claveNueva = '';
+  verClave = false;
+  probando = false;
+  resultadoPrueba: { ok: boolean; texto: string } | null = null;
+
   cargando = true;
   guardando = false;
   revisando = false;
@@ -49,6 +57,8 @@ export class CobranzaComponent implements OnInit {
         this.iaDisponible = !!d.ia_disponible;
         this.pasarela = !!d.pasarela;
         this.lineas = d.lineas ?? [];
+        this.ia = { ...this.ia, ...(d.ia ?? {}) };
+        this.claveNueva = '';
         this.diasElegidos = new Set(String(this.cfg?.dias ?? '').split(',').map(Number).filter(Boolean));
       },
       error: () => { this.cargando = false; this.avisar('No se pudo cargar la configuración.', 'error'); },
@@ -66,10 +76,13 @@ export class CobranzaComponent implements OnInit {
     this.errores = {};
     this.cfg.dias = [...this.diasElegidos].sort().join(',');
 
-    this.svc.guardarConfig(this.cfg).subscribe({
+    const clave = this.claveNueva.trim();
+
+    this.svc.guardarConfig({ ...this.cfg, ...(clave ? { ia_clave: clave } : {}) }).subscribe({
       next: r => {
         this.guardando = false;
         this.avisar(r?.message ?? 'Guardado.', r?.error === 0 ? 'ok' : 'error');
+        if (r?.error === 0 && clave) this.cargar();
       },
       error: e => {
         this.guardando = false;
@@ -77,6 +90,23 @@ export class CobranzaComponent implements OnInit {
         this.errores = Object.fromEntries(Object.entries(errs).map(([k, v]: [string, any]) => [k, Array.isArray(v) ? v[0] : String(v)]));
         this.avisar(e?.error?.message && !Object.keys(errs).length ? e.error.message : 'Revisá los campos marcados.', 'error');
       },
+    });
+  }
+
+  probarClave(): void {
+    this.probando = true;
+    this.resultadoPrueba = null;
+    this.svc.probarIa(this.claveNueva.trim()).subscribe({
+      next: r => { this.probando = false; this.resultadoPrueba = { ok: r?.error === 0, texto: r?.message ?? '' }; },
+      error: () => { this.probando = false; this.resultadoPrueba = { ok: false, texto: 'No se pudo probar la clave.' }; },
+    });
+  }
+
+  quitarClave(): void {
+    if (!this.cfg || !confirm('¿Quitar la clave de Google de tu empresa? El asistente vuelve a la IA de Netvula, con ' + this.ia.limite_prueba + ' conversaciones de prueba por día.')) return;
+    this.svc.guardarConfig({ ...this.cfg, quitar_clave: true }).subscribe({
+      next: r => { this.avisar(r?.message ?? 'Listo.', r?.error === 0 ? 'ok' : 'error'); this.cargar(); },
+      error: () => this.avisar('No se pudo quitar la clave.', 'error'),
     });
   }
 

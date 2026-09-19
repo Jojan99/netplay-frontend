@@ -69,7 +69,11 @@ export class CobranzaService {
   }
 
   config(): Observable<any>                         { return this.http.get(`${this.base}/config`, { headers: this.headers() }); }
-  guardarConfig(c: CobranzaConfig): Observable<any> { return this.http.put(`${this.base}/config`, c, { headers: this.headers() }); }
+  /** La clave de Google va aparte: vacía = se conserva; quitar_clave la borra. */
+  guardarConfig(c: CobranzaConfig & { ia_clave?: string; quitar_clave?: boolean; ia_modelos?: string | null }): Observable<any> {
+    return this.http.put(`${this.base}/config`, c, { headers: this.headers() });
+  }
+  probarIa(clave?: string): Observable<any> { return this.http.post(`${this.base}/ia/probar`, { ia_clave: clave || undefined }, { headers: this.headers() }); }
   resumen(): Observable<any>                        { return this.http.get(`${this.base}/resumen`, { headers: this.headers() }); }
   marcarVistos(): Observable<any>                   { return this.http.post(`${this.base}/vistos`, {}, { headers: this.headers() }); }
   revisarAhora(): Observable<any>                   { return this.http.post(`${this.base}/revisar`, {}, { headers: this.headers() }); }
