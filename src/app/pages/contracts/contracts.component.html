@@ -105,14 +105,14 @@
 
 <!-- ══ Plantilla: crear / editar ════════════════════════════════════════════ -->
 <div *ngIf="showTemplateModal" class="np-overlay np-overlay--top">
-  <div class="np-modal np-modal--editor np-modal--editor-wide" role="dialog" aria-modal="true">
+  <div class="np-modal np-modal--editor np-modal--editor-wide" [class.np-modal--pdf]="seccion === 'pdf' && hasPdfBase" role="dialog" aria-modal="true">
     <div class="np-modal-head">
       <div><p class="np-kicker">Contratos <b>/</b> Plantilla</p><h3>{{ isEditing ? templateForm.title : 'Nueva plantilla de contrato' }}</h3></div>
       <button type="button" class="np-icobtn" (click)="cerrarPlantilla()" aria-label="Cerrar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
     </div>
 
     <div class="np-tabs" role="tablist">
-      <button type="button" class="np-tab" role="tab" *ngIf="isEditing" [attr.aria-selected]="seccion === 'pdf'" (click)="abrirSeccion('pdf')">Mi PDF y sus variables<span class="np-c" *ngIf="pdfCampos.length">{{ pdfCampos.length }}</span></button>
+      <button type="button" class="np-tab" role="tab" [attr.aria-selected]="seccion === 'pdf'" (click)="abrirSeccion('pdf')">Mi PDF y sus variables<span class="np-c" *ngIf="pdfCampos.length">{{ pdfCampos.length }}</span></button>
       <button type="button" class="np-tab" role="tab" [attr.aria-selected]="seccion === 'contenido'" (click)="abrirSeccion('contenido')">Datos y texto</button>
       <button type="button" class="np-tab" role="tab" [attr.aria-selected]="seccion === 'previa'" (click)="abrirSeccion('previa')">Cómo lo ve el cliente</button>
     </div>
@@ -157,13 +157,14 @@
             {{ logoPreview ? 'Cambiar logo' : 'Subir logo' }}
             <input type="file" accept="image/*" hidden (change)="onLogoSelected($event)" />
           </label>
-          <label class="np-btn np-btn--ghost np-btn--sm">
-            Transcribir desde un PDF
-            <input type="file" accept="application/pdf" hidden (change)="onPdfSelected($event)" />
-          </label>
-          <label class="np-btn np-btn--ghost np-btn--sm" *ngIf="isEditing">
-            {{ hasPdfBase ? 'Cambiar PDF base' : 'Subir PDF base' }}
+          <!-- Un solo PDF: queda como base y se transcribe al texto. -->
+          <label class="np-btn np-btn--ghost np-btn--sm" [title]="hasPdfBase ? 'Reemplaza el PDF sobre el que se colocan las variables' : 'Queda como base del contrato y su texto se transcribe acá'">
+            {{ hasPdfBase ? 'Cambiar el PDF del contrato' : 'Subir el PDF del contrato' }}
             <input type="file" accept="application/pdf" hidden (change)="onPdfBaseSelected($event)" />
+          </label>
+          <label class="np-btn np-btn--ghost np-btn--sm" *ngIf="hasPdfBase" title="Sólo reemplaza el texto; el PDF base sigue igual">
+            Transcribir otro PDF
+            <input type="file" accept="application/pdf" hidden (change)="onPdfSelected($event)" />
           </label>
           <span class="np-muted" *ngIf="isUploadingLogo || isUploadingPdf || isUploadingPdfBase"><span class="np-spinner np-spinner--sm"></span> Subiendo…</span>
           <span class="np-spacer"></span>
@@ -216,7 +217,30 @@
       </ng-container>
 
       <!-- ── Vista previa ────────────────────────────────────────────────── -->
-      <ng-container *ngIf="seccion === 'previa'">
+      <!-- Con PDF propio: el PDF tal como le llega al cliente para firmar. -->
+      <ng-container *ngIf="seccion === 'previa' && hasPdfBase">
+        <p class="np-muted np-ctr-ayuda">Así le llega el contrato al cliente para firmar: su PDF con los datos impresos donde los colocó. Elija un cliente real para ver sus datos; sin cliente se usan datos de ejemplo.</p>
+        <label class="np-field"><span>Probar con un cliente</span>
+          <input type="search" class="np-input" [(ngModel)]="previaBuscar" (input)="buscarClientePrevia()" placeholder="Nombre, cédula o usuario…" />
+        </label>
+        <div class="np-checklist" *ngIf="previaResultados.length > 0">
+          <button type="button" class="np-check np-check--btn" *ngFor="let c of previaResultados" (click)="elegirClientePrevia(c)">
+            <span class="np-strong">{{ c.names }} {{ c.lastname }}</span><span class="np-spacer"></span><span class="np-data">{{ c.dni }}</span>
+          </button>
+        </div>
+        <div class="np-btnrow">
+          <p class="np-notice np-notice--ok np-notice--inline" *ngIf="previaCliente">Datos de <strong>{{ previaCliente.names }} {{ previaCliente.lastname }}</strong> · CC {{ previaCliente.dni }}</p>
+          <p class="np-notice np-notice--code np-notice--inline" *ngIf="!previaCliente">Datos de ejemplo</p>
+          <span class="np-spacer"></span>
+          <button type="button" class="np-btn np-btn--ghost np-btn--sm" (click)="pedirPreviaPdf()" [disabled]="cargandoPreviaPdf">{{ cargandoPreviaPdf ? 'Armando…' : 'Actualizar' }}</button>
+        </div>
+        <div class="np-ctr-previapdf">
+          <div class="np-loading" *ngIf="cargandoPreviaPdf"><span class="np-spinner"></span> Armando el PDF con los datos…</div>
+          <iframe *ngIf="previaPdfUrl && !cargandoPreviaPdf" [src]="previaPdfUrl" title="Contrato como lo ve el cliente"></iframe>
+        </div>
+      </ng-container>
+
+      <ng-container *ngIf="seccion === 'previa' && !hasPdfBase">
         <p class="np-muted np-ctr-ayuda">Así se ve el contrato en el celular del cliente. Elija un cliente real para comprobar que todos los datos salen completos.</p>
 
         <label class="np-field"><span>Probar con un cliente</span>
@@ -255,65 +279,82 @@
       <ng-container *ngIf="seccion === 'pdf'">
         <div class="np-ctr-subir" *ngIf="!hasPdfBase">
           <h4>Suba el contrato de su empresa</h4>
-          <p>Elija el PDF que ya usa en papel. Se va a ver acá tal cual, y encima va a poder colocar los datos del cliente: nombre, cédula, dirección, plan, la firma…</p>
-          <label class="np-btn np-btn--primary">
-            {{ isUploadingPdfBase ? 'Subiendo…' : 'Elegir el PDF del contrato' }}
-            <input type="file" accept="application/pdf" hidden (change)="onPdfBaseSelected($event)" />
+          <p>Elija el PDF que ya usa en papel. Se va a ver acá tal cual, y encima va a poder colocar los datos del cliente: nombre, cédula, dirección, plan, la firma… Su texto también se copia a «Datos y texto»: no hace falta subirlo otra vez.</p>
+          <label class="np-btn np-btn--primary" [class.np-btn--busy]="isUploadingPdfBase || isUploadingPdf">
+            {{ isUploadingPdfBase ? 'Subiendo…' : (isUploadingPdf ? 'Leyendo el texto…' : 'Elegir el PDF del contrato') }}
+            <input type="file" accept="application/pdf" hidden (change)="onPdfBaseSelected($event)" [disabled]="isUploadingPdfBase || isUploadingPdf" />
           </label>
-          <p class="np-muted" *ngIf="!isEditing">Guarde primero la plantilla con su título para poder subir el PDF.</p>
+          <p class="np-muted" *ngIf="!isEditing">Si todavía no le puso título, se usa el nombre del archivo; lo puede cambiar después en «Datos y texto».</p>
         </div>
 
         <ng-container *ngIf="hasPdfBase">
-          <p class="np-notice np-notice--warn" *ngIf="avisoRotacion">{{ avisoRotacion }}</p>
-          <p class="np-notice np-notice--warn" *ngIf="avisoPdfCambiado">{{ avisoPdfCambiado }}</p>
-          <p class="np-notice np-notice--danger" *ngIf="camposFuera.length">
-            <strong>Estas variables se salen de la hoja</strong> y saldrían cortadas:
-            <ng-container *ngFor="let f of camposFuera; let last = last">{{ f }}<span *ngIf="!last">, </span></ng-container>.
-          </p>
-          <p class="np-notice np-notice--warn" *ngIf="faltanDatos.length">
-            <strong>Saldrían en blanco</strong> con {{ previaCliente ? 'este cliente' : 'los datos de ejemplo' }}:
-            <ng-container *ngFor="let f of faltanDatos; let last = last">{{ etiquetaVar(f) }}<span *ngIf="!last">, </span></ng-container>.
-          </p>
+          <!-- La hoja a la izquierda con todo el alto de la ventana; las herramientas al lado. -->
+          <div class="np-ctr-pdfed">
+            <div class="np-ctr-pdfed-hoja">
+              <div class="np-ctr-pdfed-barra">
+                <ng-container *ngIf="pdfPaginas.length > 1">
+                  <div class="np-ctr-nav">
+                    <button type="button" class="np-icobtn" (click)="paginaAnterior()" [disabled]="pdfPagina <= 1" aria-label="Página anterior"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 6l-6 6 6 6"/></svg></button>
+                    <span class="np-data">Pág. {{ pdfPagina }} / {{ pdfPaginas.length }}</span>
+                    <button type="button" class="np-icobtn" (click)="paginaSiguiente()" [disabled]="pdfPagina >= pdfPaginas.length" aria-label="Página siguiente"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 6l6 6-6 6"/></svg></button>
+                  </div>
+                </ng-container>
+                <div class="np-ctr-nav">
+                  <button type="button" class="np-icobtn" (click)="cambiarZoom(-0.25)" aria-label="Alejar">−</button>
+                  <span class="np-data">{{ (zoomPdf * 100) | number:'1.0-0' }}%</span>
+                  <button type="button" class="np-icobtn" (click)="cambiarZoom(0.25)" aria-label="Acercar">+</button>
+                </div>
+                <span class="np-spacer"></span>
+                <span class="np-data np-data--dim np-ctr-guardado" [class.np-ctr-guardado--pend]="camposSucios || guardandoCampos">{{ guardandoCampos ? 'Guardando…' : (camposSucios ? 'Sin guardar…' : (pdfCampos.length ? '✓ Guardado' : '')) }}</span>
+              </div>
 
-          <p class="np-muted np-ctr-ayuda">
-            Elija una variable y haga clic sobre el PDF: el punto marcado es la <strong>esquina superior izquierda</strong> del texto.
-            Lo que ve dibujado es exactamente lo que se imprime. Después puede arrastrarlo, moverlo con las flechas
-            (1 mm, o 0,1 mm con Shift) y borrarlo con Supr.
-          </p>
-
-          <div class="np-subbar">
-            <label class="np-field np-field--inline np-ctr-varsel"><span>Variable a colocar</span>
-              <np-select [(ngModel)]="varElegida" [opciones]="variables" [presentacion]="presVariablesPdf"
-                         [permitirVacio]="true" textoVacio="— Elegir —" [valorVacio]="''" textoBuscar="Buscar variable…"
-                         tamano="sm" ariaLabel="Variable a colocar"></np-select>
-            </label>
-            <label class="np-field np-field--inline" *ngIf="pdfPaginas.length > 1"><span>Página</span>
-              <np-select [(ngModel)]="pdfPagina" (cambio)="cambiarPagina()" [opciones]="pdfPaginas" [presentacion]="presPaginasPdf"
-                         tamano="sm" ariaLabel="Página del PDF"></np-select>
-            </label>
-            <div class="np-ctr-nav" *ngIf="pdfPaginas.length > 1">
-              <button type="button" class="np-icobtn" (click)="paginaAnterior()" [disabled]="pdfPagina <= 1" aria-label="Página anterior"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 6l-6 6 6 6"/></svg></button>
-              <span class="np-data">{{ pdfPagina }} / {{ pdfPaginas.length }}</span>
-              <button type="button" class="np-icobtn" (click)="paginaSiguiente()" [disabled]="pdfPagina >= pdfPaginas.length" aria-label="Página siguiente"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 6l6 6-6 6"/></svg></button>
+              <div class="np-ctr-lienzo" [style.--np-zoom]="zoomPdf">
+                <div class="np-loading" *ngIf="isRenderingPdf"><span class="np-spinner"></span> Dibujando el PDF…</div>
+                <canvas #pdfCanvas tabindex="0" [class.np-oculto]="isRenderingPdf"
+                        [class.is-colocando]="varElegida"
+                        (pointerdown)="alPresionar($event)" (keydown)="alTeclear($event)"
+                        aria-label="Página del contrato: haga clic para colocar la variable elegida"></canvas>
+              </div>
             </div>
-            <div class="np-ctr-nav">
-              <button type="button" class="np-icobtn" (click)="cambiarZoom(-0.25)" aria-label="Alejar">−</button>
-              <span class="np-data">{{ (zoomPdf * 100) | number:'1.0-0' }}%</span>
-              <button type="button" class="np-icobtn" (click)="cambiarZoom(0.25)" aria-label="Acercar">+</button>
-            </div>
-            <span class="np-spacer"></span>
-            <span class="np-data np-data--dim" *ngIf="campoSel !== null">{{ etiquetaVar(pdfCampos[campoSel].variable) }} en {{ pdfCampos[campoSel].x }} × {{ pdfCampos[campoSel].y }} mm</span>
-            <button type="button" class="np-btn np-btn--ghost np-btn--sm" *ngIf="campoSel !== null" (click)="duplicarCampo()">Duplicar</button>
-            <button type="button" class="np-btn np-btn--ghost np-btn--sm" *ngIf="campoSel !== null && pdfPaginas.length > 1" (click)="duplicarEnTodas()">En todas las páginas</button>
-            <button type="button" class="np-btn np-btn--primary np-btn--sm" (click)="savePdfFields()" [disabled]="guardandoCampos">{{ guardandoCampos ? 'Guardando…' : (camposSucios ? 'Guardar posiciones •' : 'Guardar posiciones') }}</button>
-          </div>
 
-          <div class="np-ctr-lienzo" [style.--np-zoom]="zoomPdf">
-            <div class="np-loading" *ngIf="isRenderingPdf"><span class="np-spinner"></span> Dibujando el PDF…</div>
-            <canvas #pdfCanvas tabindex="0" [class.np-oculto]="isRenderingPdf"
-                    [class.is-colocando]="varElegida"
-                    (pointerdown)="alPresionar($event)" (keydown)="alTeclear($event)"
-                    aria-label="Página del contrato: haga clic para colocar la variable elegida"></canvas>
+            <aside class="np-ctr-pdfed-panel">
+              <label class="np-field np-ctr-varsel"><span>Variable a colocar</span>
+                <np-select [(ngModel)]="varElegida" [opciones]="variables" [presentacion]="presVariablesPdf"
+                           [permitirVacio]="true" textoVacio="— Elegir —" [valorVacio]="''" textoBuscar="Buscar variable…"
+                           ariaLabel="Variable a colocar"></np-select>
+              </label>
+              <label class="np-field" *ngIf="pdfPaginas.length > 1"><span>Página</span>
+                <np-select [(ngModel)]="pdfPagina" (cambio)="cambiarPagina()" [opciones]="pdfPaginas" [presentacion]="presPaginasPdf"
+                           ariaLabel="Página del PDF"></np-select>
+              </label>
+
+              <p class="np-muted np-ctr-ayuda">
+                Elija una variable y haga clic sobre el PDF: el punto marcado es la <strong>esquina superior izquierda</strong> del texto.
+                Lo que ve dibujado es lo que se imprime. Después puede arrastrarlo, moverlo con las flechas
+                (1 mm, o 0,1 mm con Shift) y borrarlo con Supr. Se guarda solo.
+              </p>
+
+              <div class="np-ctr-sel" *ngIf="campoSel !== null">
+                <p class="np-strong">{{ etiquetaVar(pdfCampos[campoSel].variable) }}</p>
+                <p class="np-data np-data--dim">Página {{ pdfCampos[campoSel].page }} · {{ pdfCampos[campoSel].x }} × {{ pdfCampos[campoSel].y }} mm</p>
+                <div class="np-btnrow">
+                  <button type="button" class="np-btn np-btn--ghost np-btn--sm" (click)="duplicarCampo()">Duplicar</button>
+                  <button type="button" class="np-btn np-btn--ghost np-btn--sm" *ngIf="pdfPaginas.length > 1" (click)="duplicarEnTodas()">En todas las páginas</button>
+                  <button type="button" class="np-btn np-btn--ghost np-btn--sm" (click)="quitarCampo(campoSel)">Quitar</button>
+                </div>
+              </div>
+
+              <p class="np-notice np-notice--warn" *ngIf="avisoRotacion">{{ avisoRotacion }}</p>
+              <p class="np-notice np-notice--warn" *ngIf="avisoPdfCambiado">{{ avisoPdfCambiado }}</p>
+              <p class="np-notice np-notice--danger" *ngIf="camposFuera.length">
+                <strong>Estas variables se salen de la hoja</strong> y saldrían cortadas:
+                <ng-container *ngFor="let f of camposFuera; let last = last">{{ f }}<span *ngIf="!last">, </span></ng-container>.
+              </p>
+              <p class="np-notice np-notice--warn" *ngIf="faltanDatos.length">
+                <strong>Saldrían en blanco</strong> con {{ previaCliente ? 'este cliente' : 'los datos de ejemplo' }}:
+                <ng-container *ngFor="let f of faltanDatos; let last = last">{{ etiquetaVar(f) }}<span *ngIf="!last">, </span></ng-container>.
+              </p>
+            </aside>
           </div>
 
           <section class="np-ctr-prueba">

@@ -197,8 +197,13 @@ export class UserService {
   }
 
   /** Devuelve un cliente eliminado al registro de activos. */
-  reinstalarCliente(id: any): Observable<any> {
-    return this.http.post<any>(`${this.env.rootUrl}api/user/${id}/reinstalar`, {}, { headers: this.getHeaders() });
+  reinstalarCliente(id: any, ip?: { ip_accion: 'mantener' | 'cambiar' | 'ninguna'; ip?: string; interfaz?: string }): Observable<any> {
+    return this.http.post<any>(`${this.env.rootUrl}api/user/${id}/reinstalar`, ip ?? {}, { headers: this.getHeaders() });
+  }
+
+  /** Antes de reinstalar: si la IP que tenía sigue libre en la plataforma y en el MikroTik. */
+  revisarIpReinstalar(id: any): Observable<any> {
+    return this.http.get<any>(`${this.env.rootUrl}api/user/${id}/reinstalar/ip`, { headers: this.getHeaders() });
   }
 
   /** Lo que el cliente tiene en su MikroTik: credencial PPPoE, ARP, listas. */

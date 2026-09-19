@@ -3,6 +3,21 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { UserService } from '../../services/user.service';
+import { NpSelectComponent, PresentacionSelect } from '../../common/np-select/np-select.component';
+import {
+  OpcionesDeIps, PRESENTACION_IPS_ASIGNABLES, PRESENTACION_REDES, PRESENTACION_SEGMENTOS, agruparRedesPorInterfaz,
+} from '../../common/np-select/presentaciones';
+
+/** Lo que dijo el servidor de la IP que tenía antes de eliminarlo. */
+interface RevisionIp {
+  tipo: 'static' | 'pppoe';
+  ip: string | null;
+  router_id: number | null;
+  libre: boolean;
+  motivo: string | null;
+  interfaz: string | null;
+  router_revisado: boolean;
+}
 
 interface ClienteEliminado {
   id: number;
@@ -35,7 +50,7 @@ interface ClienteEliminado {
 @Component({
   selector: 'app-clientes-eliminados',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink],
+  imports: [CommonModule, FormsModule, RouterLink, NpSelectComponent],
   templateUrl: './clientes-eliminados.component.html',
   styleUrl: './clientes-eliminados.component.scss',
   host: { class: 'np-console' },
@@ -62,6 +77,30 @@ export class ClientesEliminadosComponent implements OnInit {
   avisos: string[] = [];
   mensaje = '';
   mensajeTipo: 'ok' | 'error' = 'ok';
+
+  // IP al reinstalar: mantener la de antes (si sigue libre) o darle otra.
+  revisandoIp = false;
+  revision: RevisionIp | null = null;
+  ipAccion: 'mantener' | 'cambiar' | 'ninguna' = 'mantener';
+  vlanes: any[] = [];
+  cargandoVlanes = false;
+  vlan: any = null;
+  redesVlan: any[] = [];
+  segmento: any = null;
+  ipsLibres: any[] = [];
+  cargandoIps = false;
+  ipNueva = '';
+  /** Lo que el servidor rechazó, dentro de la ventana (la de la página queda tapada). */
+  errorModal = '';
+
+  readonly presRedes = PRESENTACION_REDES;
+  readonly presIps = PRESENTACION_IPS_ASIGNABLES;
+  readonly opcionesIp = new OpcionesDeIps();
+  readonly presSegmentos: PresentacionSelect = {
+    ...PRESENTACION_SEGMENTOS,
+    detalle: s => [s?.gateway ? `Puerta de enlace ${s.gateway}` : null, s?.sin_cliente ? `${s.sin_cliente} en el router sin cliente` : null]
+      .filter(Boolean).join(' · ') || null,
+  };
 
   private buscarTimer: any = null;
 
@@ -105,17 +144,104 @@ export class ClientesEliminadosComponent implements OnInit {
   abrirReinstalar(c: ClienteEliminado): void {
     this.elegido   = c;
     this.showModal = true;
+    this.revision  = null;
+    this.ipAccion  = 'mantener';
+    this.vlan = null; this.redesVlan = []; this.segmento = null; this.ipsLibres = []; this.ipNueva = '';
+    this.errorModal = '';
+
+    // Con PPPoE la IP la da el pool: no hay nada que elegir.
+    if (c.connection_type === 'pppoe') return;
+
+    this.revisandoIp = true;
+    this.userSvc.revisarIpReinstalar(c.id).subscribe({
+      next: (res) => {
+        this.revisandoIp = false;
+        if (this.elegido?.id !== c.id) return;
+        this.revision = res?.data ?? null;
+        // Si la de antes no se puede, lo único que queda es darle otra.
+        if (!this.revision?.ip || !this.revision.libre) this.elegirAccion('cambiar');
+      },
+      error: () => {
+        this.revisandoIp = false;
+        this.revision = null;
+        this.elegirAccion('cambiar');
+      },
+    });
   }
 
   cerrar(): void { this.showModal = false; this.elegido = null; }
 
-  confirmarReinstalar(): void {
-    if (!this.elegido || this.reinstalando) return;
-    this.reinstalando = true;
+  elegirAccion(a: 'mantener' | 'cambiar' | 'ninguna'): void {
+    this.ipAccion = a;
+    if (a === 'cambiar' && !this.vlanes.length && !this.cargandoVlanes) this.cargarVlanes();
+  }
 
-    this.userSvc.reinstalarCliente(this.elegido.id).subscribe({
+  private cargarVlanes(): void {
+    const router = this.revision?.router_id ?? this.elegido?.router_id ?? null;
+    this.cargandoVlanes = true;
+    this.userSvc.getneighborhoodAll(router).subscribe({
+      next: (r) => {
+        this.cargandoVlanes = false;
+        this.vlanes = r?.error === 0 && r.data ? agruparRedesPorInterfaz(Object.values(r.data)) : [];
+      },
+      error: () => { this.cargandoVlanes = false; this.vlanes = []; },
+    });
+  }
+
+  onVlan(v: any): void {
+    this.vlan = v; this.redesVlan = []; this.segmento = null; this.ipsLibres = []; this.ipNueva = '';
+    if (v) this.cargarIps(null);
+  }
+
+  onSegmento(seg: any): void {
+    this.segmento = seg; this.ipsLibres = []; this.ipNueva = '';
+    if (seg && this.vlan) this.cargarIps(seg.network);
+  }
+
+  private cargarIps(segmento: string | null): void {
+    const vlan = this.vlan;
+    const router = this.revision?.router_id ?? this.elegido?.router_id ?? null;
+    this.cargandoIps = true;
+
+    this.userSvc.getIpzonebyZone(vlan.names, segmento, router, null).subscribe({
+      next: (r) => {
+        this.cargandoIps = false;
+        if (this.vlan !== vlan) return;   // se eligió otra VLAN mientras tanto
+        this.ipsLibres = r?.error === 0 && r.data?.ips
+          ? this.opcionesIp.recordar(r.data.ips.map((e: any) => ({ id: e.ip, names: e.ip })), r.data.ocupadas) : [];
+        const redes: any[] = r?.data?.redes ?? [];
+        this.redesVlan = redes.length > 1 ? redes.map(x => ({ ...x, names: vlan.names, vlan_id: vlan.vlan_id })) : [];
+        this.segmento = this.redesVlan.find(x => x.elegida) ?? this.segmento;
+      },
+      error: () => { this.cargandoIps = false; this.ipsLibres = []; },
+    });
+  }
+
+  /** Sin IP elegida no se deja reinstalar con "darle otra". */
+  get faltaIp(): boolean {
+    return !!this.elegido && this.elegido.connection_type !== 'pppoe' && this.ipAccion === 'cambiar' && (!this.ipNueva || !this.vlan);
+  }
+
+  confirmarReinstalar(): void {
+    if (!this.elegido || this.reinstalando || this.revisandoIp || this.faltaIp) return;
+    this.reinstalando = true;
+    this.errorModal = '';
+
+    const ip = this.elegido.connection_type === 'pppoe' ? undefined
+      : this.ipAccion === 'cambiar' ? { ip_accion: 'cambiar' as const, ip: this.ipNueva, interfaz: this.vlan?.names }
+      : { ip_accion: this.ipAccion };
+
+    this.userSvc.reinstalarCliente(this.elegido.id, ip).subscribe({
       next: (res) => {
         this.reinstalando = false;
+
+        // La IP elegida ya no se puede (otro la tomó mientras tanto): se queda
+        // en la ventana para elegir otra.
+        if (res?.error === 1) {
+          this.errorModal = res?.message ?? 'No se pudo reinstalar al cliente.';
+          return;
+        }
+
         this.showModal    = false;
         this.elegido      = null;
         this.avisos       = res?.data?.avisos ?? [];

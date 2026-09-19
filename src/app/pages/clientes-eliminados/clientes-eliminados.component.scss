@@ -6,3 +6,16 @@
 @media (max-width: 1100px) { .np-col-router { display: none; } }
 @media (max-width: 900px)  { .np-col-plan { display: none; } }
 @media (max-width: 720px)  { .np-col-doc { display: none; } }
+
+/* ─── IP al reinstalar ─────────────────────────────────────────────── */
+.np-ipbox { margin: 14px 0; padding: 14px; border: 1px solid var(--line); border-radius: 12px; display: grid; gap: 10px; }
+.np-ipbox-title { margin: 0; font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; opacity: .7; }
+.np-ipestado { margin: 0; font-size: 13px; }
+.np-ipestado .np-fine { display: block; margin-top: 2px; }
+.np-ipestado--ok b { color: var(--ok); }
+.np-ipestado--no b { color: var(--danger); text-decoration: line-through; }
+.np-ipopciones { display: grid; gap: 6px; }
+.np-ipopcion { display: flex; align-items: center; gap: 10px; padding: 9px 12px; border: 1px solid var(--line); border-radius: 10px; cursor: pointer; font-size: 13px; }
+.np-ipopcion input { margin: 0; accent-color: var(--accent); }
+.np-ipopcion--on { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 8%, transparent); }
+.np-ipelegir { display: grid; gap: 10px; }

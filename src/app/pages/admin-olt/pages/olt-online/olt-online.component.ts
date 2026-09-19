@@ -174,11 +174,27 @@ export class OltOnlineComponent implements OnInit {
     });
   }
 
+  /**
+   * Temperatura, voltaje y láser: de la medición de la OLT o, si no los trae
+   * (las ZTE no los dan por SNMP), de la ficha de la ONT, que los lee por consola.
+   */
+  optica(campo: 'temperatura' | 'voltaje' | 'corriente'): number | null {
+    return this.senalDe(this.detailOnt)?.[campo] ?? this.detailInfo?.[campo] ?? null;
+  }
+
   senalDe(ont: any): any { return this.senalPorOnt[`${ont.fsp}:${ont.ont_id}`] ?? null; }
 
-  potenciaDe(ont: any): number | null { return this.senalDe(ont)?.potencia ?? null; }
+  /**
+   * Lo leído en vivo al abrir la ficha, para la ONT abierta: una recién
+   * autorizada no está en la última medición de la OLT y salía sin potencia.
+   */
+  private enVivo(ont: any): any {
+    return ont && this.detailOnt && ont === this.detailOnt ? this.detailInfo : null;
+  }
 
-  estadoDeSenal(ont: any): string { return this.senalDe(ont)?.estado ?? 'sin_dato'; }
+  potenciaDe(ont: any): number | null { return this.senalDe(ont)?.potencia ?? this.enVivo(ont)?.potencia ?? null; }
+
+  estadoDeSenal(ont: any): string { return this.senalDe(ont)?.estado ?? this.enVivo(ont)?.estado ?? 'sin_dato'; }
 
   tonoDeSenal(ont: any): string {
     return {
@@ -218,7 +234,12 @@ export class OltOnlineComponent implements OnInit {
     });
 
     this.oltService.getOntInfo(this.selectedOltId!, ont.fsp, ont.ont_id).subscribe({
-      next: (res) => { this.detailInfo = res.data ?? null; done(); },
+      next: (res) => {
+        this.detailInfo = res.data ?? null;
+        // El estado en vivo corrige la fila (la guardada puede ser del alta).
+        if (this.detailInfo?.status && this.detailOnt) this.detailOnt.status = this.detailInfo.status;
+        done();
+      },
       error: () => done(),
     });
   }

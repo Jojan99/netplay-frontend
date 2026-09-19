@@ -1,0 +1,143 @@
+@if (visible) {
+  <!-- La pastilla: discreta, sólo cuando hay algo que mirar -->
+  @if (!abierta()) {
+    <button type="button" class="cb-pastilla" [class.cb-pastilla--nuevo]="pendientes > 0 || (resumen()?.no_vistos ?? 0) > 0"
+            (click)="abrir()" [attr.aria-label]="'Cobranza: ' + pendientes + ' para atender'">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M4 20l1.3-3.8A8 8 0 1 1 8 19.2L4 20z"/><path d="M12 8v8M10 10.2a2 2 0 0 1 2-1.2h.8a1.6 1.6 0 0 1 0 3.2h-1.6a1.6 1.6 0 0 0 0 3.2h.8a2 2 0 0 0 2-1.2"/>
+      </svg>
+      <span class="cb-pastilla-txt">Cobranza</span>
+      @if (pendientes > 0) { <span class="cb-cuenta">{{ pendientes }}</span> }
+      @else if ((resumen()?.en_curso ?? 0) > 0) { <span class="cb-cuenta cb-cuenta--suave">{{ resumen()?.en_curso }}</span> }
+    </button>
+  }
+
+  @if (abierta()) {
+    <section class="cb-panel" role="dialog" aria-label="Cobranza">
+      <header class="cb-cab">
+        @if (detalle(); as d) {
+          <button type="button" class="cb-ico" (click)="volver()" aria-label="Volver a la lista">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="m15 6-6 6 6 6"/></svg>
+          </button>
+          <div class="cb-cab-t">
+            <b>{{ nombre(d.cliente ?? {}) }}</b>
+            <small>{{ pesos(d.caso.deuda) }} · {{ d.caso.facturas }} factura(s) · {{ d.caso.dias_mora }} días</small>
+          </div>
+        } @else {
+          <div class="cb-cab-t">
+            <b>Cobranza</b>
+            <small>{{ resumen()?.modo === 'automatico' ? 'El asistente escribe solo' : 'Vos autorizás a quién le escribe' }}</small>
+          </div>
+        }
+        <button type="button" class="cb-ico" (click)="irAConfig()" aria-label="Configurar cobranza" title="Configurar">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>
+        </button>
+        <button type="button" class="cb-ico" (click)="cerrar()" aria-label="Cerrar">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M6 6l12 12M18 6 6 18"/></svg>
+        </button>
+      </header>
+
+      @if (!resumen()?.ia_disponible) {
+        <p class="cb-nota cb-nota--aviso">El asistente todavía no está conectado: la plataforma detecta a quién cobrarle, pero no puede escribirle hasta que se configure la IA en el servidor.</p>
+      }
+      @if (aviso(); as a) {
+        <p class="cb-nota" [class.cb-nota--ok]="a.tipo === 'ok'" [class.cb-nota--error]="a.tipo === 'error'">{{ a.texto }}</p>
+      }
+
+      <!-- ── Un caso: la conversación del asistente ── -->
+      @if (detalle(); as d) {
+        <div class="cb-detalle">
+          <div class="cb-det-estado">
+            <span class="cb-chip" [attr.data-tono]="estado(d.caso.estado).tono">{{ estado(d.caso.estado).texto }}</span>
+            @if (d.caso.resumen) { <span class="cb-fino">{{ d.caso.resumen }}</span> }
+            @else if (d.caso.motivo) { <span class="cb-fino">{{ d.caso.motivo }}</span> }
+          </div>
+
+          <div class="cb-chat">
+            @for (m of d.mensajes; track m.id) {
+              <div class="cb-msg" [class.cb-msg--yo]="m.sender_type !== 'customer'">
+                <p>{{ m.content || '(' + m.message_type + ')' }}</p>
+                <small>{{ m.sender_type === 'customer' ? 'Cliente' : (m.agent_signature || 'Equipo') }} · {{ m.created_at | date:'d MMM, HH:mm' }}</small>
+              </div>
+            } @empty {
+              <p class="cb-vacio">{{ d.caso.estado === 'detectado' ? 'Todavía no se le escribió.' : 'Sin mensajes todavía.' }}</p>
+            }
+          </div>
+
+          <div class="cb-acciones">
+            @if (d.caso.estado === 'detectado') {
+              <button type="button" class="cb-btn cb-btn--pri" (click)="hacer(d.caso, 'autorizar')" [disabled]="ocupado() === d.caso.id || !resumen()?.ia_disponible">Que lo atienda el asistente</button>
+              <button type="button" class="cb-btn" (click)="hacer(d.caso, 'descartar')" [disabled]="ocupado() === d.caso.id">Descartar</button>
+            }
+            @if (d.caso.estado === 'escalado') {
+              <button type="button" class="cb-btn cb-btn--pri" (click)="hacer(d.caso, 'tomar')" [disabled]="ocupado() === d.caso.id">Lo atiendo yo</button>
+              @if (d.caso.conversation_id) {
+                <button type="button" class="cb-btn" (click)="hacer(d.caso, 'devolver')" [disabled]="ocupado() === d.caso.id">Devolver al asistente</button>
+              }
+            }
+            @if (['contactado', 'negociando', 'acuerdo', 'autorizado'].includes(d.caso.estado)) {
+              <button type="button" class="cb-btn" (click)="hacer(d.caso, 'tomar')" [disabled]="ocupado() === d.caso.id">Lo atiendo yo</button>
+            }
+            <span class="cb-spacer"></span>
+            @if (d.caso.conversation_id) { <button type="button" class="cb-link" (click)="irAlChat(d.caso.conversation_id)">Abrir en el CRM</button> }
+            <button type="button" class="cb-link" (click)="irALaFicha(d.caso.user_id)">Ficha</button>
+          </div>
+        </div>
+      } @else {
+        <!-- ── La lista ── -->
+        <nav class="cb-tabs" role="tablist">
+          <button type="button" role="tab" [attr.aria-selected]="grupo() === 'atencion'" (click)="elegirGrupo('atencion')">
+            Para atender @if (pendientes) { <span>{{ pendientes }}</span> }
+          </button>
+          <button type="button" role="tab" [attr.aria-selected]="grupo() === 'curso'" (click)="elegirGrupo('curso')">
+            En curso @if (resumen()?.en_curso) { <span>{{ resumen()?.en_curso }}</span> }
+          </button>
+          <button type="button" role="tab" [attr.aria-selected]="grupo() === 'resultados'" (click)="elegirGrupo('resultados')">Resultados</button>
+        </nav>
+
+        <div class="cb-lista">
+          @if (cargando()) {
+            <p class="cb-vacio">Cargando…</p>
+          } @else {
+            @for (c of casos(); track c.id) {
+              <article class="cb-caso" [class.cb-caso--nuevo]="!c.visto">
+                <button type="button" class="cb-caso-cuerpo" (click)="verCaso(c)">
+                  <div class="cb-caso-l1">
+                    <b>{{ nombre(c) }}</b>
+                    <span class="cb-monto">{{ pesos(c.deuda) }}</span>
+                  </div>
+                  <div class="cb-caso-l2">
+                    <span class="cb-chip" [attr.data-tono]="estado(c.estado).tono">{{ c.resultado && grupo() === 'resultados' ? (RESULTADOS[c.resultado] || estado(c.estado).texto) : estado(c.estado).texto }}</span>
+                    <span class="cb-fino">{{ c.facturas }} fact. · {{ c.dias_mora }} días</span>
+                  </div>
+                  @if (c.estado === 'escalado' && c.motivo) { <p class="cb-motivo">{{ c.motivo }}</p> }
+                  @else if (c.resumen) { <p class="cb-motivo">{{ c.resumen }}</p> }
+                </button>
+                @if (c.estado === 'detectado') {
+                  <div class="cb-caso-acc">
+                    <button type="button" class="cb-btn cb-btn--pri cb-btn--sm" (click)="hacer(c, 'autorizar')" [disabled]="ocupado() === c.id || !resumen()?.ia_disponible"
+                            title="El asistente le escribe por WhatsApp y negocia dentro de tus límites">Que lo atienda el asistente</button>
+                    <button type="button" class="cb-btn cb-btn--sm" (click)="hacer(c, 'descartar')" [disabled]="ocupado() === c.id">Descartar</button>
+                  </div>
+                }
+                @if (c.estado === 'escalado') {
+                  <div class="cb-caso-acc">
+                    <button type="button" class="cb-btn cb-btn--pri cb-btn--sm" (click)="verCaso(c)">Ver conversación</button>
+                  </div>
+                }
+              </article>
+            } @empty {
+              <p class="cb-vacio">
+                @switch (grupo()) {
+                  @case ('atencion') { No hay nadie esperando. }
+                  @case ('curso') { El asistente no está conversando con nadie ahora. }
+                  @default { Sin resultados en los últimos 30 días. }
+                }
+              </p>
+            }
+          }
+        </div>
+      }
+    </section>
+  }
+}

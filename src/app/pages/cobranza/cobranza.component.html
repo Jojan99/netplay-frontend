@@ -1,0 +1,136 @@
+<div class="np-page np-cob">
+  <header class="np-head">
+    <div>
+      <p class="np-kicker">Finanzas <b>/</b> Cobranza inteligente</p>
+      <h1 class="np-title">Cobranza inteligente</h1>
+      <div class="np-ribbon">
+        <span class="np-fine">La plataforma detecta a quién cobrarle y avisa en la burbuja del panel. Con autorización, un asistente le escribe por WhatsApp y negocia sólo dentro de los límites de esta pantalla.</span>
+      </div>
+    </div>
+    <div class="np-actions" *ngIf="cfg">
+      <button type="button" class="np-btn np-btn--ghost" (click)="revisarAhora()" [disabled]="revisando || !cfg.activa">{{ revisando ? 'Revisando…' : 'Buscar deudores ahora' }}</button>
+      <button type="button" class="np-btn np-btn--primary" (click)="guardar()" [disabled]="guardando">{{ guardando ? 'Guardando…' : 'Guardar' }}</button>
+    </div>
+  </header>
+
+  <p *ngIf="mensaje" class="np-notice" [ngClass]="mensajeTipo === 'ok' ? 'np-notice--ok' : 'np-notice--danger'">{{ mensaje }}</p>
+  <p *ngIf="cargando" class="np-muted"><span class="np-spinner np-spinner--sm"></span> Cargando…</p>
+
+  <ng-container *ngIf="cfg && !cargando">
+    <p class="np-notice np-notice--warn" *ngIf="!iaDisponible">
+      <strong>El asistente todavía no está conectado.</strong> La plataforma igual detecta a los deudores y los muestra en la burbuja, pero para que el asistente escriba falta configurar la IA en el servidor.
+    </p>
+
+    <div class="np-cob-grid">
+      <!-- ── Encendido y modo ── -->
+      <section class="np-card">
+        <div class="np-card-h">
+          <h3>Estado</h3>
+          <button type="button" class="np-switch" role="switch" [attr.aria-checked]="cfg.activa" aria-label="Cobranza activa" (click)="cfg.activa = !cfg.activa"></button>
+        </div>
+        <p class="np-fine">{{ cfg.activa ? 'Activa: se revisa la cartera cada 5 minutos.' : 'Apagada: no se detecta ni se escribe a nadie.' }}</p>
+
+        <div class="np-cob-modos" role="radiogroup" aria-label="Quién decide a quién escribirle">
+          <label class="np-cob-modo" [class.is-on]="cfg.modo === 'manual'">
+            <input type="radio" name="modo" [checked]="cfg.modo === 'manual'" (change)="cfg.modo = 'manual'">
+            <span><b>Yo autorizo cada cliente</b><small>La burbuja avisa y alguien toca «Que lo atienda el asistente». Nadie recibe un mensaje sin aprobación.</small></span>
+          </label>
+          <label class="np-cob-modo" [class.is-on]="cfg.modo === 'automatico'">
+            <input type="radio" name="modo" [checked]="cfg.modo === 'automatico'" (change)="cfg.modo = 'automatico'">
+            <span><b>Automático</b><small>Si cumple las reglas, el asistente le escribe solo, dentro del horario y del tope diario.</small></span>
+          </label>
+        </div>
+      </section>
+
+      <!-- ── A quién ── -->
+      <section class="np-card">
+        <div class="np-card-h"><h3>A quién cobrarle</h3></div>
+        <div class="np-form">
+          <label class="np-field"><span>Facturas sin pagar (mínimo)</span>
+            <input class="np-input np-mono" type="number" min="1" max="24" [(ngModel)]="cfg.min_facturas">
+            <small class="np-fine np-err" *ngIf="errores['min_facturas']">{{ errores['min_facturas'] }}</small>
+          </label>
+          <label class="np-field"><span>Días desde la factura más vieja</span>
+            <input class="np-input np-mono" type="number" min="0" max="365" [(ngModel)]="cfg.min_dias_mora">
+          </label>
+          <label class="np-field"><span>Sin escribir si la mora pasa de (días)</span>
+            <input class="np-input np-mono" type="number" min="0" max="3650" [(ngModel)]="cfg.max_dias_mora">
+            <small class="np-fine">Deudas muy viejas suelen ser clientes que ya se fueron. 0 = sin tope.</small>
+          </label>
+          <label class="np-field"><span>Deuda mínima (pesos)</span>
+            <input class="np-input np-mono" type="number" min="0" step="1000" [(ngModel)]="cfg.min_monto">
+            <small class="np-fine">No se le escribe a quien ya tiene un compromiso de pago vigente, ni a quien pidió que no le escribieran.</small>
+          </label>
+        </div>
+      </section>
+
+      <!-- ── Límites ── -->
+      <section class="np-card np-cob-ancha">
+        <div class="np-card-h"><h3>Hasta dónde puede negociar</h3></div>
+        <div class="np-form np-form--3">
+          <label class="np-field"><span>Plazo máximo del compromiso (días)</span>
+            <input class="np-input np-mono" type="number" min="1" max="60" [(ngModel)]="cfg.plazo_max_dias">
+          </label>
+          <label class="np-field"><span>Cuotas máximas</span>
+            <input class="np-input np-mono" type="number" min="1" max="6" [(ngModel)]="cfg.cuotas_max">
+            <small class="np-fine">1 = sólo pago total. Las cuotas reparten las facturas.</small>
+          </label>
+          <label class="np-field"><span>Si no cumple el compromiso</span>
+            <select class="np-input" [(ngModel)]="cfg.compromiso_suspende">
+              <option [ngValue]="true">Se suspende automáticamente</option>
+              <option [ngValue]="false">No se suspende solo</option>
+            </select>
+          </label>
+          <label class="np-field"><span>Descuento máximo (%)</span>
+            <input class="np-input np-mono" type="number" min="0" max="50" [(ngModel)]="cfg.descuento_max_pct">
+            <small class="np-fine">0 = nunca ofrece descuento.</small>
+          </label>
+          <label class="np-field" *ngIf="+cfg.descuento_max_pct > 0"><span>El descuento vale si paga en (días)</span>
+            <input class="np-input np-mono" type="number" min="1" max="15" [(ngModel)]="cfg.descuento_dias">
+            <small class="np-fine">Si no paga a tiempo, el descuento se quita solo.</small>
+          </label>
+        </div>
+        <p class="np-notice np-notice--code np-cob-ejemplo"><b>Podrá ofrecer:</b> {{ ejemploOferta }} Nada más: cualquier otra cosa la pasa a una persona.</p>
+        <p class="np-notice np-notice--warn" *ngIf="!pasarela">La empresa no tiene pasarela de pago activa: el asistente no puede mandar links de pago, sólo acordar compromisos.</p>
+      </section>
+
+      <!-- ── Cuándo ── -->
+      <section class="np-card">
+        <div class="np-card-h"><h3>Cuándo escribe</h3></div>
+        <div class="np-cob-dias" role="group" aria-label="Días">
+          <button type="button" *ngFor="let d of DIAS" [class.is-on]="diasElegidos.has(d.n)" [attr.aria-pressed]="diasElegidos.has(d.n)" [title]="d.largo" (click)="alternarDia(d.n)">{{ d.t }}</button>
+        </div>
+        <div class="np-form">
+          <label class="np-field"><span>Desde</span><input class="np-input np-mono" type="time" [(ngModel)]="cfg.hora_desde"></label>
+          <label class="np-field"><span>Hasta</span>
+            <input class="np-input np-mono" type="time" [(ngModel)]="cfg.hora_hasta">
+            <small class="np-fine np-err" *ngIf="errores['hora_hasta']">{{ errores['hora_hasta'] }}</small>
+          </label>
+          <label class="np-field"><span>Clientes nuevos por día (tope)</span><input class="np-input np-mono" type="number" min="1" max="300" [(ngModel)]="cfg.max_contactos_dia"></label>
+          <label class="np-field"><span>Recordatorios si no contesta</span><input class="np-input np-mono" type="number" min="0" max="3" [(ngModel)]="cfg.recordatorios"></label>
+          <label class="np-field np-field-full"><span>Horas entre recordatorios</span><input class="np-input np-mono" type="number" min="4" max="168" [(ngModel)]="cfg.horas_entre_recordatorios"></label>
+        </div>
+        <p class="np-fine">Pocos mensajes por día y en horario cuidan la línea de WhatsApp de bloqueos.</p>
+      </section>
+
+      <!-- ── Cómo se presenta ── -->
+      <section class="np-card">
+        <div class="np-card-h"><h3>Cómo se presenta</h3></div>
+        <div class="np-form">
+          <label class="np-field np-field-full"><span>Nombre del asistente</span><input class="np-input" maxlength="60" [(ngModel)]="cfg.nombre_asistente"></label>
+          <label class="np-field np-field-full"><span>Línea de WhatsApp</span>
+            <select class="np-input" [(ngModel)]="cfg.wa_linea_id">
+              <option [ngValue]="null">La principal de la empresa</option>
+              <option *ngFor="let l of lineas" [ngValue]="l.id">{{ l.nombre }}{{ l.telefono ? ' · ' + l.telefono : '' }}{{ l.principal ? ' (principal)' : '' }}</option>
+            </select>
+          </label>
+          <label class="np-field np-field-full"><span>Indicaciones extra <em>(opcional)</em></span>
+            <textarea class="np-input np-cob-txt" maxlength="1500" [(ngModel)]="cfg.instrucciones"
+                      placeholder="Ej.: Menciona que puede pagar en nuestras oficinas de lunes a sábado. Si pregunta por reconexión, dile que es el mismo día del pago."></textarea>
+            <small class="np-fine">Tono o datos de la empresa. No puede cambiar los límites de arriba.</small>
+          </label>
+        </div>
+      </section>
+    </div>
+  </ng-container>
+</div>

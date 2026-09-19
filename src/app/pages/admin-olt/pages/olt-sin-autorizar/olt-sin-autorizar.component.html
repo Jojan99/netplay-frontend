@@ -157,10 +157,14 @@
         <label class="np-field np-field-full"><span>Descripción en la OLT <em>es lo que se ve en el equipo</em></span>
           <input class="np-input" [(ngModel)]="form.description" placeholder="Se completa con el nombre del cliente" />
         </label>
-        <label class="np-field"><span>Line profile</span><np-select [(ngModel)]="form.line_profile_id" [opciones]="lineProfiles" [presentacion]="presPerfilLinea" [permitirVacio]="true" textoVacio="Sin perfil" [cargando]="loadingProfiles" [deshabilitado]="loadingProfiles" ariaLabel="Line profile"></np-select></label>
+        <!-- ZTE: el tipo de ONU es el modelo del equipo (ALL sirve para cualquiera). -->
+        <label class="np-field np-field-full" *ngIf="capacidades.tipos_onu?.length"><span>Tipo de ONU <em>el modelo del equipo; ALL sirve para cualquiera</em></span>
+          <np-select [(ngModel)]="form.onu_type" [opciones]="capacidades.tipos_onu!" [presentacion]="presTextos" [buscable]="true" textoBuscar="Buscar modelo: F680, F601…" ariaLabel="Tipo de ONU"></np-select>
+        </label>
+        <label class="np-field"><span>{{ capacidades.etiqueta_perfil_linea || 'Line profile' }}</span><np-select [(ngModel)]="form.line_profile_id" [opciones]="lineProfiles" [presentacion]="presPerfilLinea" [permitirVacio]="true" textoVacio="Sin perfil" [cargando]="loadingProfiles" [deshabilitado]="loadingProfiles" ariaLabel="Line profile"></np-select></label>
         <!-- En EPON el perfil de servicio no se elige en el alta: lo asigna la
              OLT. Igual se muestra, porque define cómo pasa la VLAN. -->
-        <label class="np-field"><span>Service profile</span><np-select [(ngModel)]="form.srv_profile_id" [opciones]="srvProfiles" [presentacion]="presPerfilServicio" [permitirVacio]="true" textoVacio="Sin perfil" [cargando]="loadingProfiles" [deshabilitado]="loadingProfiles || !capacidades.perfil_servicio_en_alta" ariaLabel="Service profile"></np-select>
+        <label class="np-field"><span>{{ capacidades.etiqueta_perfil_servicio || 'Service profile' }}</span><np-select [(ngModel)]="form.srv_profile_id" [opciones]="srvProfiles" [presentacion]="presPerfilServicio" [permitirVacio]="true" textoVacio="Sin perfil" [cargando]="loadingProfiles" [deshabilitado]="loadingProfiles || !capacidades.perfil_servicio_en_alta" ariaLabel="Service profile"></np-select>
           <small class="np-fine" *ngIf="!capacidades.perfil_servicio_en_alta">Lo asigna la OLT al autorizar; en este equipo no se elige en el alta.</small></label>
         <label class="np-field np-field-full"><span>VLAN / segmento de red</span><np-select [(ngModel)]="selectedSegment" (ngModelChange)="onSegmentChange()" [opciones]="lanSegments" [presentacion]="redes" [permitirVacio]="true" textoVacio="Sin VLAN" [cargando]="loadingSegments" textoCargando="Cargando VLANs…" ariaLabel="VLAN / segmento de red"></np-select>
           <small class="np-fine np-pos" *ngIf="form.vlan && conServicePort">VLAN {{ form.vlan }}: el service port se crea automáticamente.</small>

@@ -63,9 +63,9 @@
           <div class="np-stats" *ngIf="senalDe(detailOnt) || detailInfo; else noInfo">
             <div class="np-stat"><span class="np-stat-l">Potencia recibida</span><span class="np-stat-v" [ngClass]="tonoDeSenal(detailOnt)">{{ potenciaDe(detailOnt) != null ? potenciaDe(detailOnt) + ' dBm' : '—' }}</span></div>
             <div class="np-stat"><span class="np-stat-l">Clasificación</span><span class="np-stat-v" [ngClass]="tonoDeSenal(detailOnt)">{{ etiquetaDeSenal(detailOnt) }}</span></div>
-            <div class="np-stat"><span class="np-stat-l">Temperatura</span><span class="np-stat-v">{{ senalDe(detailOnt)?.temperatura != null ? senalDe(detailOnt).temperatura + ' °C' : '—' }}</span></div>
-            <div class="np-stat"><span class="np-stat-l">Voltaje</span><span class="np-stat-v">{{ senalDe(detailOnt)?.voltaje != null ? senalDe(detailOnt).voltaje + ' V' : '—' }}</span></div>
-            <div class="np-stat"><span class="np-stat-l">Corriente láser</span><span class="np-stat-v">{{ senalDe(detailOnt)?.corriente != null ? senalDe(detailOnt).corriente + ' mA' : '—' }}</span></div>
+            <div class="np-stat"><span class="np-stat-l">Temperatura</span><span class="np-stat-v">{{ optica('temperatura') != null ? optica('temperatura') + ' °C' : '—' }}</span></div>
+            <div class="np-stat"><span class="np-stat-l">Voltaje</span><span class="np-stat-v">{{ optica('voltaje') != null ? optica('voltaje') + ' V' : '—' }}</span></div>
+            <div class="np-stat"><span class="np-stat-l">Corriente láser</span><span class="np-stat-v">{{ optica('corriente') != null ? optica('corriente') + ' mA' : '—' }}</span></div>
           </div>
           <ng-template #noInfo><p class="np-muted">No se pudo obtener la señal óptica.</p></ng-template>
         </section>

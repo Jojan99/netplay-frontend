@@ -80,3 +80,30 @@
 
 /* El zoom del lienzo es sólo visual: las coordenadas siguen en mm */
 .np-ctr-lienzo canvas { max-width: calc(860px * var(--np-zoom, 1)); }
+
+/* Editando sobre el PDF: la ventana usa casi toda la pantalla y el lienzo
+   todo el alto que queda, para ver la hoja grande y colocar con precisión. */
+.np-modal--pdf { max-width: min(1600px, calc(100vw - 32px)); width: calc(100vw - 32px); height: calc(100vh - 40px); max-height: calc(100vh - 40px); }
+
+/* Dos columnas: la hoja con todo el alto que deja la ventana (cabecera,
+   pestañas y pie ≈ 230 px) y el panel de herramientas al costado. */
+.np-ctr-pdfed { display: grid; grid-template-columns: minmax(0, 1fr) 320px; gap: 14px; margin-bottom: 14px;
+  height: max(520px, calc(100vh - 230px)); }
+.np-ctr-pdfed-hoja { display: flex; flex-direction: column; min-height: 0; gap: 8px; }
+.np-ctr-pdfed-barra { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.np-ctr-pdfed .np-ctr-lienzo { flex: 1; min-height: 0; max-height: none; margin: 0; }
+.np-ctr-pdfed .np-ctr-lienzo canvas { max-width: calc(1400px * var(--np-zoom, 1)); }
+.np-ctr-pdfed-panel { display: flex; flex-direction: column; gap: 12px; min-height: 0; overflow-y: auto; padding-right: 2px;
+  .np-ctr-varsel { min-width: 0; }
+  .np-ctr-ayuda { font-size: 12px; line-height: 1.5; margin: 0; } }
+.np-ctr-sel { border: 1px solid var(--accent); background: var(--accent-soft); border-radius: var(--radius); padding: 10px 12px; display: grid; gap: 4px;
+  p { margin: 0; } .np-btnrow { margin-top: 4px; flex-wrap: wrap; } }
+@media (max-width: 900px) {
+  .np-ctr-pdfed { grid-template-columns: 1fr; height: auto; }
+  .np-ctr-pdfed-hoja { height: 75vh; } }
+.np-ctr-guardado { white-space: nowrap; font-size: 12px; color: var(--ok); }
+.np-ctr-guardado--pend { color: var(--text-3); }
+
+/* Cómo lo ve el cliente, con PDF propio: el PDF relleno a todo el alto. */
+.np-ctr-previapdf { height: max(520px, calc(100vh - 330px)); border: 1px solid var(--line); border-radius: var(--radius); background: var(--surface-2); overflow: hidden; display: flex; align-items: center; justify-content: center;
+  iframe { width: 100%; height: 100%; border: 0; background: #fff; } }

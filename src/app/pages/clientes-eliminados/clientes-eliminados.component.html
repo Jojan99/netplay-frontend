@@ -116,7 +116,6 @@
           <b>Lo que no vuelve solo:</b>
           <ul class="np-avisos">
             <li>El MikroTik: al eliminarlo se le quitó o suspendió el servicio. Activalo desde su ficha en Clientes.</li>
-            <li *ngIf="elegido.ip_ocupada">Su IP {{ elegido.ip }} ya es de otro cliente activo: queda sin IP y hay que asignarle una nueva.</li>
             <li *ngIf="!elegido.router_id">No tiene MikroTik asignado: elegilo en la ficha.</li>
             <li *ngIf="!elegido.plan_name">No tiene plan de internet: asignale uno en la ficha.</li>
             <li>Si tenía una ONT enlazada, revisá la ONU en la OLT antes de darlo por instalado.</li>
@@ -124,9 +123,62 @@
         </div>
       </div>
 
+      <!-- ══ La IP: mantener la de antes o darle otra ══ -->
+      <div class="np-ipbox" *ngIf="elegido.connection_type !== 'pppoe'">
+        <p class="np-ipbox-title">IP del cliente</p>
+
+        <p class="np-fine" *ngIf="revisandoIp"><span class="np-spinner np-spinner--sm"></span> Revisando si su IP {{ elegido.ip }} sigue libre en la plataforma y en el MikroTik…</p>
+
+        <ng-container *ngIf="!revisandoIp">
+          <p class="np-ipestado np-ipestado--ok" *ngIf="revision?.ip && revision?.libre">
+            Su IP <b class="np-mono">{{ revision?.ip }}</b> sigue libre<ng-container *ngIf="revision?.interfaz"> ({{ revision?.interfaz }})</ng-container>.
+            <small class="np-fine" *ngIf="revision?.motivo">{{ revision?.motivo }}</small>
+          </p>
+          <p class="np-ipestado np-ipestado--no" *ngIf="revision?.ip && !revision?.libre">
+            Su IP <b class="np-mono">{{ revision?.ip }}</b> ya no se puede usar: {{ revision?.motivo }} Elegile otra.
+          </p>
+          <p class="np-ipestado" *ngIf="!revision?.ip">No tenía IP asignada: elegile una.</p>
+
+          <div class="np-ipopciones" role="radiogroup" aria-label="Qué IP va a tener">
+            <label class="np-ipopcion" *ngIf="revision?.ip && revision?.libre" [class.np-ipopcion--on]="ipAccion === 'mantener'">
+              <input type="radio" name="ipAccion" [checked]="ipAccion === 'mantener'" (change)="elegirAccion('mantener')">
+              <span>Seguir con su IP <b class="np-mono">{{ revision?.ip }}</b></span>
+            </label>
+            <label class="np-ipopcion" [class.np-ipopcion--on]="ipAccion === 'cambiar'">
+              <input type="radio" name="ipAccion" [checked]="ipAccion === 'cambiar'" (change)="elegirAccion('cambiar')">
+              <span>Darle otra IP</span>
+            </label>
+            <label class="np-ipopcion" [class.np-ipopcion--on]="ipAccion === 'ninguna'">
+              <input type="radio" name="ipAccion" [checked]="ipAccion === 'ninguna'" (change)="elegirAccion('ninguna')">
+              <span>Sin IP por ahora <small class="np-fine">(se elige después en la ficha)</small></span>
+            </label>
+          </div>
+
+          <div class="np-ipelegir" *ngIf="ipAccion === 'cambiar'">
+            <label class="np-field"><span>VLAN</span>
+              <np-select [ngModel]="vlan" (ngModelChange)="onVlan($event)" [opciones]="vlanes" [presentacion]="presRedes"
+                         [cargando]="cargandoVlanes" textoCargando="Leyendo el MikroTik…" placeholder="Seleccione VLAN…" ariaLabel="VLAN"></np-select>
+            </label>
+            <label class="np-field" *ngIf="redesVlan.length > 1"><span>Segmento <em>({{ redesVlan.length }} redes en la VLAN)</em></span>
+              <np-select [ngModel]="segmento" (ngModelChange)="onSegmento($event)" [opciones]="redesVlan" [presentacion]="presSegmentos" placeholder="Seleccione segmento…" ariaLabel="Segmento"></np-select>
+            </label>
+            <label class="np-field" *ngIf="vlan"><span>IP <em>({{ ipsLibres.length }} disponibles<ng-container *ngIf="opcionesIp.huerfanas(ipsLibres).size"> · {{ opcionesIp.huerfanas(ipsLibres).size }} en el router sin cliente</ng-container>)</em></span>
+              <np-select [ngModel]="ipNueva || null" (ngModelChange)="ipNueva = $event || ''" [opciones]="opcionesIp.de(ipsLibres)" [presentacion]="presIps"
+                         [cargando]="cargandoIps" textoCargando="Buscando IP libres…" placeholder="Seleccione IP…" textoBuscar="Buscar IP: 50, .150, 192.168…" [buscable]="true"
+                         [deshabilitado]="!ipsLibres.length && !opcionesIp.huerfanas(ipsLibres).size" ariaLabel="IP"></np-select>
+            </label>
+            <p class="np-fine" *ngIf="opcionesIp.huerfanas(ipsLibres).get(ipNueva) as h">
+              Esta IP está en el router sin cliente ({{ h.mac || 'sin MAC' }}{{ h.comment ? ' · «' + h.comment + '»' : '' }}): al activarlo se toma para él.
+            </p>
+          </div>
+        </ng-container>
+      </div>
+
+      <p class="np-notice np-notice--danger np-notice--inline" *ngIf="errorModal">{{ errorModal }}</p>
+
       <div class="np-btnrow np-btnrow--end">
         <button type="button" class="np-btn np-btn--ghost" (click)="cerrar()">Cancelar</button>
-        <button type="button" class="np-btn np-btn--primary" (click)="confirmarReinstalar()" [disabled]="reinstalando">
+        <button type="button" class="np-btn np-btn--primary" (click)="confirmarReinstalar()" [disabled]="reinstalando || revisandoIp || faltaIp">
           <span *ngIf="reinstalando" class="np-spinner np-spinner--sm"></span>{{ reinstalando ? 'Reinstalando…' : 'Reinstalar cliente' }}
         </button>
       </div>

@@ -256,6 +256,7 @@ export class ContractsComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
+    if (this.camposSucios && this.templateForm.id) this.savePdfFields(true);
     this.soltarPdf();
   }
 
@@ -313,18 +314,25 @@ export class ContractsComponent implements OnInit, OnDestroy {
   }
 
   openCreate(): void {
+    this.soltarPreviaPdf();
     this.isEditing     = false;
     this.templateForm  = { id: 0, title: '', content: '', active: true, installation_value: '', plazo: '12', terminos: '' };
     this.logoPreview   = null;
     this.hasPdfBase    = false;
     this.pdfGuideUrl   = null;
-    this.seccion       = 'contenido';
+    // El modo principal es el PDF propio: se empieza por subirlo.
+    this.seccion       = 'pdf';
+    this.pdfCampos     = [];
+    this.pdfPaginas    = [];
+    this.pdfListo      = false;
+    this.avisoPdfCambiado = '';
     this.limpiarPrevia();
     this.errorMsg      = '';
     this.showTemplateModal = true;
   }
 
   openEdit(c: Contract): void {
+    this.soltarPreviaPdf();
     this.isEditing    = true;
     this.templateForm = {
       id: c.id,
@@ -356,13 +364,21 @@ export class ContractsComponent implements OnInit, OnDestroy {
   }
 
   cerrarPlantilla(): void {
+    this.soltarPreviaPdf();
+    // Lo que quedó sin guardar de las posiciones se guarda igual.
+    if (this.camposSucios && this.templateForm.id) this.savePdfFields(true);
     this.showTemplateModal = false;
     this.soltarPdf();
   }
 
-  saveTemplate(): void {
+  async saveTemplate(): Promise<void> {
     this.isSaving = true;
     this.errorMsg = '';
+
+    if (this.camposSucios && this.templateForm.id && !(await this.savePdfFields(true))) {
+      this.isSaving = false;
+      return;
+    }
 
     const payload: any = { ...this.templateForm };
     if (this.logoPreview) payload.logo = this.logoPreview;
@@ -464,7 +480,40 @@ export class ContractsComponent implements OnInit, OnDestroy {
     this.previaResultados = [];
     this.previaBuscar = `${c.names} ${c.lastname}`;
     if (this.seccion === 'pdf') this.revisarDatos();
+    else if (this.hasPdfBase) this.pedirPreviaPdf();
     else this.pedirPrevia();
+  }
+
+  /** El PDF tal como le llega al cliente: el suyo con los datos impresos encima. */
+  previaPdfUrl: SafeResourceUrl | null = null;
+  private previaPdfCrudo: string | null = null;
+  cargandoPreviaPdf = false;
+
+  pedirPreviaPdf(): void {
+    if (!this.templateForm.id) return;
+    this.cargandoPreviaPdf = true;
+    this.errorMsg = '';
+
+    // Las posiciones de la pantalla si ya se abrió el editor (aunque falte
+    // guardarlas); si no, el servidor usa las guardadas.
+    const fields = this.pdfListo || this.pdfCampos.length ? this.pdfCampos : undefined;
+
+    this.contractService.pdfPrueba(this.templateForm.id, { user_id: this.previaCliente?.id, fields }).subscribe({
+      next: blob => {
+        this.cargandoPreviaPdf = false;
+        if (blob.type && !blob.type.includes('pdf')) { this.errorMsg = 'No se pudo armar el PDF del cliente.'; return; }
+        this.soltarPreviaPdf();
+        this.previaPdfCrudo = URL.createObjectURL(blob);
+        this.previaPdfUrl = this.sanitizer.bypassSecurityTrustResourceUrl(this.previaPdfCrudo + '#view=FitH');
+      },
+      error: () => { this.cargandoPreviaPdf = false; this.errorMsg = 'No se pudo armar el PDF del cliente.'; },
+    });
+  }
+
+  private soltarPreviaPdf(): void {
+    if (this.previaPdfCrudo) URL.revokeObjectURL(this.previaPdfCrudo);
+    this.previaPdfCrudo = null;
+    this.previaPdfUrl = null;
   }
 
   /** Mientras se escribe el contrato, la previa se refresca con calma. */
@@ -497,6 +546,8 @@ export class ContractsComponent implements OnInit, OnDestroy {
 
   abrirSeccion(s: 'contenido' | 'previa' | 'pdf'): void {
     this.seccion = s;
+    // Con PDF propio el cliente ve ese PDF con sus datos, no el texto.
+    if (s === 'previa' && this.hasPdfBase) { this.pedirPreviaPdf(); return; }
     if (s === 'previa' && !this.previaHtml) this.pedirPrevia();
     if (s === 'pdf' && this.hasPdfBase && !this.pdfListo) this.abrirEditorPdf();
     if (s === 'pdf' && this.pdfListo) setTimeout(() => this.pintar(), 0);
@@ -504,63 +555,125 @@ export class ContractsComponent implements OnInit, OnDestroy {
 
   // ── Subidas ───────────────────────────────────────────────────────────────
 
+  /**
+   * El PDF del contrato se pide UNA vez y sirve para las dos cosas: queda como
+   * base (las variables se colocan encima) y se transcribe al texto de la
+   * plantilla. Antes eran dos botones y en una plantilla nueva había que
+   * guardarla primero: el mismo archivo se terminaba subiendo dos veces.
+   */
   onPdfSelected(event: Event): void {
-    const input = event.target as HTMLInputElement;
-    const file = input.files?.[0];
-    if (!file) return;
-    this.isUploadingPdf = true;
-    this.contractService.uploadPdf(file).subscribe({
-      next: r => {
-        this.isUploadingPdf = false;
-        if (r.status === 0) {
-          if (r.data?.html) this.templateForm.content = r.data.html;
-          if (r.data?.guia) this.pdfGuideUrl = `${environment.rootUrl}api/contracts/guia/${r.data.guia}`;
-          this.toast('PDF transcrito. Revise el texto y coloque las variables donde corresponda.');
-        } else {
-          this.errorMsg = r.message || 'Error al convertir PDF.';
-        }
-      },
-      error: () => { this.isUploadingPdf = false; this.errorMsg = 'Error al subir PDF.'; },
-    });
-    input.value = '';
+    this.tomarPdf(event, false);
   }
 
   onPdfBaseSelected(event: Event): void {
+    this.tomarPdf(event, true);
+  }
+
+  /**
+   * @param comoBase true si lo eligió como PDF base (reemplaza el que haya);
+   *   false si fue "Transcribir": si la plantilla no tiene base, queda también
+   *   como base; si ya tiene, sólo se transcribe.
+   */
+  private async tomarPdf(event: Event, comoBase: boolean): Promise<void> {
     const input = event.target as HTMLInputElement;
     const file = input.files?.[0];
-    if (!file || !this.isEditing) return;
+    input.value = '';
+    if (!file) return;
+
+    const base = comoBase || !this.hasPdfBase;
 
     // Cambiar el PDF de una plantilla que ya tiene campos deja las posiciones
     // apuntando a un documento distinto: se avisa antes y después.
-    const teniaCampos = this.pdfCampos.length > 0;
+    const teniaCampos = base && this.hasPdfBase && this.pdfCampos.length > 0;
     if (teniaCampos && !confirm(
       `Esta plantilla ya tiene ${this.pdfCampos.length} variables colocadas sobre el PDF actual. ` +
       'Si sube otro archivo, las posiciones se conservan pero puede que no coincidan con el documento nuevo. ¿Continuar?')) {
-      input.value = '';
       return;
     }
 
+    this.errorMsg = '';
+
+    // Una plantilla nueva se guarda sola (con el nombre del archivo si no
+    // tiene título) para poder guardarle el PDF.
+    if (base && !this.isEditing && !(await this.guardarNueva(file))) return;
+
+    // El texto se transcribe si está vacío o si lo pidió ("Transcribir").
+    const transcribir = !comoBase || !(this.templateForm.content ?? '').trim();
+
+    if (base) await this.subirBase(file, teniaCampos);
+    if (transcribir) await this.transcribir(file, !base);
+  }
+
+  /** Crea la plantilla nueva con lo que tenga el formulario. */
+  private async guardarNueva(file: File): Promise<boolean> {
+    if (!(this.templateForm.title ?? '').trim()) {
+      this.templateForm.title = file.name.replace(/\.pdf$/i, '').replace(/[_-]+/g, ' ').trim() || 'Contrato';
+    }
+
+    const payload: any = { ...this.templateForm };
+    delete payload.id;
+    if (this.logoPreview) payload.logo = this.logoPreview;
+
     this.isUploadingPdfBase = true;
-    this.contractService.uploadPdfBase(this.templateForm.id, file).subscribe({
-      next: r => {
-        this.isUploadingPdfBase = false;
-        if (r.status === 0) {
-          this.hasPdfBase = true;
-          this.pdfListo = false;
-          this.avisoPdfCambiado = teniaCampos
-            ? 'Cambió el PDF base: revise una por una que las variables sigan cayendo donde deben y use “Probar con un cliente” antes de dejar la plantilla activa.'
-            : '';
-          this.soltarPdf();
-          this.seccion = 'pdf';
-          this.abrirEditorPdf();
-          this.toast('PDF guardado. Ahora coloque cada variable sobre el documento.');
-        } else {
-          this.errorMsg = r.message || 'Error al guardar PDF base.';
-        }
-      },
-      error: () => { this.isUploadingPdfBase = false; this.errorMsg = 'Error al subir PDF base.'; },
-    });
-    input.value = '';
+    try {
+      const r = await firstValueFrom(this.contractService.create(payload));
+      if (r?.status !== 0 || !r?.data?.id) {
+        this.errorMsg = r?.message || 'No se pudo crear la plantilla.';
+        return false;
+      }
+      this.templateForm.id = r.data.id;
+      this.isEditing = true;
+      this.loadContracts();
+      return true;
+    } catch {
+      this.errorMsg = 'No se pudo crear la plantilla.';
+      return false;
+    } finally {
+      this.isUploadingPdfBase = false;
+    }
+  }
+
+  private async subirBase(file: File, teniaCampos: boolean): Promise<void> {
+    this.isUploadingPdfBase = true;
+    try {
+      const r = await firstValueFrom(this.contractService.uploadPdfBase(this.templateForm.id, file));
+      if (r?.status !== 0) {
+        this.errorMsg = r?.message || 'Error al guardar el PDF.';
+        return;
+      }
+      this.hasPdfBase = true;
+      this.pdfListo = false;
+      this.avisoPdfCambiado = teniaCampos
+        ? 'Cambió el PDF base: revise una por una que las variables sigan cayendo donde deben y use “Probar con un cliente” antes de dejar la plantilla activa.'
+        : '';
+      this.soltarPdf();
+      this.seccion = 'pdf';
+      this.abrirEditorPdf();
+      this.toast('PDF guardado. Ahora coloque cada variable sobre el documento.');
+    } catch {
+      this.errorMsg = 'Error al subir el PDF.';
+    } finally {
+      this.isUploadingPdfBase = false;
+    }
+  }
+
+  /** @param avisar sólo cuando fue lo único que se hizo (si no, el aviso es el de la base). */
+  private async transcribir(file: File, avisar: boolean): Promise<void> {
+    this.isUploadingPdf = true;
+    try {
+      const r = await firstValueFrom(this.contractService.uploadPdf(file));
+      if (r?.status !== 0) {
+        if (avisar) this.errorMsg = r?.message || 'Error al convertir el PDF.';
+        return;
+      }
+      if (r.data?.html) this.templateForm.content = r.data.html;
+      if (r.data?.guia) this.pdfGuideUrl = `${environment.rootUrl}api/contracts/guia/${r.data.guia}`;
+      if (avisar) this.toast('PDF transcrito. Revise el texto y coloque las variables donde corresponda.');
+    } catch {
+      if (avisar) this.errorMsg = 'Error al subir el PDF.';
+    } finally {
+      this.isUploadingPdf = false;
+    }
   }
 
   onLogoSelected(event: Event): void {
@@ -621,6 +734,9 @@ export class ContractsComponent implements OnInit, OnDestroy {
         this.pdfPaginas = r.data.pages ?? [];
         this.pdfPagina = 1;
         this.pdfListo = true;
+        // Los campos pueden haber llegado antes que las páginas: sin esto los
+        // daba a todos por "página que no existe".
+        this.revisarBordes();
         this.renderPagina();
       },
       error: () => { this.isRenderingPdf = false; this.errorMsg = 'No se pudo leer el PDF base.'; },
@@ -961,7 +1077,7 @@ export class ContractsComponent implements OnInit, OnDestroy {
     const hoja = this.hojaActual()!;
     c.x = this.redondear(Math.min(Math.max(0, mm.x - this.agarre.dx), hoja.width));
     c.y = this.redondear(Math.min(Math.max(0, mm.y - this.agarre.dy), hoja.height));
-    this.camposSucios = true;
+    this.marcarSucio();
 
     // Un repintado por cuadro: arrastrar no debe recalcular el PDF entero.
     cancelAnimationFrame(this.repintado);
@@ -993,7 +1109,7 @@ export class ContractsComponent implements OnInit, OnDestroy {
 
     if (!usada) return;
     e.preventDefault();
-    this.camposSucios = true;
+    this.marcarSucio();
     this.pintar();
   }
 
@@ -1012,29 +1128,68 @@ export class ContractsComponent implements OnInit, OnDestroy {
   quitarCampo(i: number): void {
     this.pdfCampos.splice(i, 1);
     this.campoSel = null;
-    this.camposSucios = true;
+    this.marcarSucio();
     this.pintar();
   }
 
   campoCambiado(): void {
-    this.camposSucios = true;
+    this.marcarSucio();
     this.revisarBordes();
     this.revisarDatos();
     this.pintar();
   }
 
-  savePdfFields(): void {
-    if (!this.templateForm.id) return;
+  /**
+   * Las posiciones se guardan solas un momento después de cada cambio. Antes
+   * dependían de «Guardar posiciones»: el «Guardar» de la plantilla no las
+   * llevaba y al cerrar se perdían sin aviso (la plantilla 28 quedó con 0
+   * variables y el cliente veía el PDF en blanco).
+   */
+  private marcarSucio(): void {
+    this.camposSucios = true;
+    this.versionCampos++;
+    clearTimeout(this.guardarCamposTimer);
+    this.guardarCamposTimer = setTimeout(() => this.savePdfFields(true), 1500);
+  }
+
+  private guardarCamposTimer: any = null;
+
+  /** @param solo guardado automático: sin aviso de "guardadas" (el botón ya lo muestra). */
+  savePdfFields(solo = false): Promise<boolean> {
+    clearTimeout(this.guardarCamposTimer);
+    if (!this.templateForm.id) return Promise.resolve(false);
+
+    // Si ya hay uno en curso, al terminar se vuelve a guardar lo último.
+    if (this.guardandoCampos) {
+      this.guardarCamposTimer = setTimeout(() => this.savePdfFields(solo), 800);
+      return Promise.resolve(false);
+    }
+
+    const id = this.templateForm.id;
+    const campos = this.pdfCampos.map(c => ({ ...c }));
+    const version = ++this.versionCampos;
     this.guardandoCampos = true;
-    this.contractService.savePdfFields(this.templateForm.id, this.pdfCampos).subscribe({
-      next: r => {
-        this.guardandoCampos = false;
-        if (r.status === 0) { this.camposSucios = false; this.toast('Posiciones guardadas.'); }
-        else this.errorMsg = r.message || 'Error al guardar las posiciones.';
-      },
-      error: () => { this.guardandoCampos = false; this.errorMsg = 'Error de red al guardar las posiciones.'; },
+
+    return new Promise(resolve => {
+      this.contractService.savePdfFields(id, campos).subscribe({
+        next: r => {
+          this.guardandoCampos = false;
+          if (r.status === 0) {
+            // Si se movió algo mientras se guardaba, queda pendiente lo nuevo.
+            if (version === this.versionCampos) this.camposSucios = false;
+            if (!solo) this.toast('Posiciones guardadas.');
+            resolve(true);
+          } else {
+            this.errorMsg = r.message || 'Error al guardar las posiciones.';
+            resolve(false);
+          }
+        },
+        error: () => { this.guardandoCampos = false; this.errorMsg = 'Error de red al guardar las posiciones.'; resolve(false); },
+      });
     });
   }
+
+  private versionCampos = 0;
 
   openPdfPreview(): void {
     if (!this.templateForm.id) return;

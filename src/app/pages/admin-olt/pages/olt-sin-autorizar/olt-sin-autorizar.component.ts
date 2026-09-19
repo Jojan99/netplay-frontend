@@ -5,7 +5,7 @@ import { CommonModule } from '@angular/common';
 import { OltNavComponent } from '../../shared/olt-nav.component';
 import { FormsModule } from '@angular/forms';
 import { NpSelectComponent, PresentacionSelect } from '../../../../common/np-select/np-select.component';
-import { PRESENTACION_OLTS, PRESENTACION_POR_PAGINA, PRESENTACION_REDES, conValor } from '../../../../common/np-select/presentaciones';
+import { PRESENTACION_OLTS, PRESENTACION_POR_PAGINA, PRESENTACION_REDES, PRESENTACION_TEXTOS, conValor } from '../../../../common/np-select/presentaciones';
 import { OltService } from '../../../../services/olt.service';
 import { MikrotikService } from '../../../../services/mikrotik.service';
 import { ToastService } from '../../../../services/toast.service';
@@ -84,7 +84,10 @@ export class OltSinAutorizarComponent implements OnInit {
     line_profile_id: null as number | null,
     srv_profile_id:  null as number | null,
     vlan: null as number | null,
+    onu_type: null as string | null,
   };
+
+  readonly presTextos = PRESENTACION_TEXTOS;
 
   constructor(
     private oltService: OltService,
@@ -101,12 +104,19 @@ export class OltSinAutorizarComponent implements OnInit {
   capacidades: {
     tecnologia: string; identificador: 'mac' | 'serial'; service_port: boolean;
     perfil_servicio_en_alta: boolean; vlan: string; explicacion_vlan: string | null;
+    /** ZTE: los perfiles son de subida (tcont) y de bajada (traffic), y hay tipo de ONU. */
+    etiqueta_perfil_linea?: string; etiqueta_perfil_servicio?: string;
+    tipos_onu?: string[]; tipo_onu_defecto?: string;
   } = {
     tecnologia: 'gpon', identificador: 'serial', service_port: true,
     perfil_servicio_en_alta: true, vlan: 'service-port', explicacion_vlan: null,
   };
 
   private readonly capacidadesPorDefecto = { ...this.capacidades };
+
+  private perfilSiExiste(lista: any[], id: number | null | undefined): number | null {
+    return id != null && lista.some(p => p.profile_id === id) ? id : null;
+  }
 
   get porMac(): boolean { return this.capacidades.identificador === 'mac'; }
   get conServicePort(): boolean { return this.capacidades.service_port; }
@@ -115,7 +125,13 @@ export class OltSinAutorizarComponent implements OnInit {
     if (!this.selectedOltId) return;
 
     this.oltService.getCapacidades(this.selectedOltId).subscribe({
-      next: (res) => { this.capacidades = { ...this.capacidadesPorDefecto, ...(res?.data ?? {}) }; },
+      next: (res) => {
+        this.capacidades = { ...this.capacidadesPorDefecto, ...(res?.data ?? {}) };
+        // Llegaron con el formulario ya abierto: el tipo de ONU por defecto.
+        if (this.modal && !this.form.onu_type && this.capacidades.tipos_onu?.length) {
+          this.form.onu_type = this.capacidades.tipo_onu_defecto || 'ALL';
+        }
+      },
       error: () => { this.capacidades = { ...this.capacidadesPorDefecto }; },
     });
   }
@@ -340,9 +356,11 @@ export class OltSinAutorizarComponent implements OnInit {
       fsp:             ont.fsp    ?? '',
       serial:          ont.serial ?? '',
       description:     '',
-      line_profile_id: olt?.ont_lineprofile_id ?? (this.lineProfiles[0]?.profile_id ?? null),
-      srv_profile_id:  olt?.ont_srvprofile_id  ?? (this.srvProfiles[0]?.profile_id  ?? null),
+      // El de la OLT sólo si existe en ella: una ZTE traía el «10» de Huawei.
+      line_profile_id: this.perfilSiExiste(this.lineProfiles, olt?.ont_lineprofile_id) ?? (this.lineProfiles[0]?.profile_id ?? null),
+      srv_profile_id:  this.perfilSiExiste(this.srvProfiles, olt?.ont_srvprofile_id)  ?? (this.srvProfiles[0]?.profile_id  ?? null),
       vlan:            this.defaultVlan,
+      onu_type:        this.capacidades.tipos_onu?.length ? (this.capacidades.tipo_onu_defecto || 'ALL') : null,
     };
     this.modal = true;
     this.pasos = [];
@@ -395,6 +413,7 @@ export class OltSinAutorizarComponent implements OnInit {
       line_profile_id: this.form.line_profile_id,
       srv_profile_id:  this.form.srv_profile_id,
       vlan:            this.form.vlan,
+      onu_type:        this.form.onu_type || undefined,
       user_data_id:    this.clienteElegido?.id ?? undefined,
       // La red elegida (gateway y máscara) arma la IP fija del cliente en el equipo.
       aprovisionar:    aprovisionar ? {
@@ -652,6 +671,7 @@ export class OltSinAutorizarComponent implements OnInit {
       line_profile_id: this.form.line_profile_id,
       srv_profile_id:  this.form.srv_profile_id,
       vlan:            this.form.vlan,
+      onu_type:        this.form.onu_type || undefined,
       user_data_id:    this.clienteElegido?.id ?? undefined,
     }).subscribe({
       next: (res) => {

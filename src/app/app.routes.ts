@@ -15,6 +15,7 @@ import { FinanceComponent }           from './pages/finance/finance.component';
 import { LayoutComponent }            from './components/layout/layout.component';
 import { HistoryFactureComponent }    from './pages/history-facture/history-facture.component';
 import { EgresosComponent }           from './pages/egresos/egresos.component';
+import { CobranzaComponent }          from './pages/cobranza/cobranza.component';
 import { ReportPaidComponent }        from './pages/report-paid/report-paid.component';
 import { TaskTicketComponent }        from './pages/soport-client/task-ticket/task-ticket.component';
 import { OntDeviceComponent }         from './gestionClient/ont-device/ont-device.component';
@@ -84,6 +85,7 @@ export const routes: Routes = [
       { path: 'mikrotik',       component: MikrotikComponent,          canActivate: [roleGuard], data: { module: 'mikrotik' } },
       { path: 'resumen',        component: ResumenComponent,           canActivate: [roleGuard], data: { module: 'resumen' } },
       { path: 'cartera',        component: CarteraComponent,           canActivate: [roleGuard], data: { module: 'finanzas' } },
+      { path: 'cobranza',       component: CobranzaComponent,          canActivate: [roleGuard], data: { module: 'finanzas' } },
       {
         path: 'inventory',
         loadChildren: () => import('./pages/inventory/inventory.routes').then(m => m.INVENTORY_ROUTES),

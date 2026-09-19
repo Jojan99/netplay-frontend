@@ -30,6 +30,7 @@ import { CompanyService }            from '../../services/company.service';
 import { ToastService }             from '../../services/toast.service';
 import { OauthService }             from '../../services/oauth.service';
 import { TareasFlotantesComponent } from '../tareas-flotantes/tareas-flotantes.component';
+import { CobranzaBurbujaComponent } from '../cobranza-burbuja/cobranza-burbuja.component';
 import { AtajosService, ICONOS }    from '../../services/atajos.service';
 import { TareasEnSegundoPlanoService } from '../../services/tareas-en-segundo-plano.service';
 import { BuscadorRapidoComponent }  from '../atajos/buscador-rapido.component';
@@ -42,7 +43,7 @@ import { VentanasRapidasComponent, MenuDeVentanasComponent } from '../atajos/ven
     CommonModule, RouterOutlet, RouterModule,
     SidebarComponent, SidebarItemGroupComponent, SidebarItemComponent,
     DarkThemeToggleComponent, NavbarComponent, FooterComponent, CrmWidgetComponent, DialogHostComponent, TeamPanelComponent,
-    SanitizeHtmlPipe, TareasFlotantesComponent,
+    SanitizeHtmlPipe, TareasFlotantesComponent, CobranzaBurbujaComponent,
     BuscadorRapidoComponent, VentanasRapidasComponent, MenuDeVentanasComponent,
   ],
   templateUrl: './layout.component.html',
@@ -80,6 +81,9 @@ export class LayoutComponent implements OnInit {
   filteredComponents: RouteProps[] = [];
   /** El widget flotante de WhatsApp sólo para quienes tienen el módulo CRM en el menú. */
   get hasCrm(): boolean { return this.filteredComponents.some((c: any) => JSON.stringify(c).includes('crm')); }
+
+  /** La cobranza es de finanzas: sólo la ve quien tiene ese módulo. */
+  hasFinanzas = false;
   currentGroup = '';
   currentSection = '';
   now = new Date();
@@ -206,6 +210,7 @@ export class LayoutComponent implements OnInit {
       .filter((item): item is RouteProps => item !== null);
 
     this.filteredComponents = filtered;
+    this.hasFinanzas = allowedModules.some(m => m === 'finanzas');
     this.atajos.ponerMenu(filtered);
     this.updateSection(this.router.url);
 
