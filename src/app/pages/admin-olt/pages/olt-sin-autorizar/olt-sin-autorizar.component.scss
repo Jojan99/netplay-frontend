@@ -1,0 +1,12 @@
+
+/* Decidir si el alta le pisa el WiFi al equipo. Muchas ONT llegan instaladas
+   y andando: cambiarles la red deja a la familia sin conexión. */
+.olt-wifi-manda {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 4px 0 10px;
+
+  span { font-size: 13.5px; line-height: 1.4; }
+  em { display: block; font-style: normal; opacity: .7; font-size: 12.5px; }
+}

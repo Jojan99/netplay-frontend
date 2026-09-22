@@ -156,10 +156,14 @@
                 <input type="checkbox" name="todas" [(ngModel)]="c.todas" />
                 <span>Aplicar la contraseña a todas las redes del equipo (2.4 y 5 GHz)</span>
               </label>
+              <label class="oe-clave-todas" *ngIf="r.ruta_oculta">
+                <input type="checkbox" name="oculta" [(ngModel)]="c.oculta" />
+                <span>Ocultar esta red: el equipo deja de anunciar su nombre y sólo se conecta quien lo escriba a mano</span>
+              </label>
               <p class="oe-fine">El nombre se cambia sólo en esta red, para que 2.4 y 5 GHz sigan distinguiéndose. Los equipos conectados se desconectan y hay que volver a conectarlos.</p>
               <div class="oe-clave-botones">
                 <button type="button" class="np-btn np-btn--ghost" (click)="cambiandoClave = null">Cancelar</button>
-                <button type="submit" class="np-btn np-btn--primary" [disabled]="guardandoClave || (c.clave.trim().length < 8 && (c.ssid.trim() === '' || c.ssid.trim() === (r.ssid || '')))">{{ guardandoClave ? 'Guardando…' : 'Guardar' }}</button>
+                <button type="submit" class="np-btn np-btn--primary" [disabled]="guardandoClave || (c.clave.trim().length < 8 && (c.ssid.trim() === '' || c.ssid.trim() === (r.ssid || '')) && c.oculta === c.ocultaAntes)">{{ guardandoClave ? 'Guardando…' : 'Guardar' }}</button>
               </div>
             </form>
           </div>

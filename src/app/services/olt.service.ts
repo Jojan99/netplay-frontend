@@ -204,7 +204,7 @@ export class OltService {
   // ── ONT Write Operations ───────────────────────────────────────────────────
 
   registerONT(oltId: number, data: { fsp: string; serial?: string; description?: string; ont_id?: number | null; line_profile_id?: number | null; srv_profile_id?: number | null; vlan?: number | null; user_data_id?: number; onu_type?: string | null;
-    aprovisionar?: { gateway?: string | null; mascara?: string | null; wifi_ssid?: string | null; wifi_clave?: string | null } }): Observable<any> {
+    aprovisionar?: { gateway?: string | null; mascara?: string | null; wifi?: boolean; wifi_ssid?: string | null; wifi_clave?: string | null } }): Observable<any> {
     return this.http.post<any>(`${this.env.rootUrl}api/management/olt/${oltId}/register`, JSON.stringify(data), { headers: this.getHeaders() });
   }
 

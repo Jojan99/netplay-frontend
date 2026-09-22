@@ -175,9 +175,16 @@
         <!-- Aprovisionamiento: si la empresa lo tiene encendido en Acceso remoto -->
         <ng-container *ngIf="aprov?.aprovisionar && !pasos.length">
           <p class="np-fine np-field-full">
-            Al aparecer en el TR-069 se le carga<ng-container *ngIf="aprov.wan"> la conexión a internet del cliente{{ form.vlan ? ' en la VLAN ' + form.vlan : '' }}</ng-container><ng-container *ngIf="aprov.wifi">{{ aprov.wan ? ',' : '' }} el WiFi</ng-container><ng-container *ngIf="aprov.admin"> y la cuenta de administración</ng-container>.
+            Al aparecer en el TR-069 se le carga<ng-container *ngIf="aprov.wan"> la conexión a internet del cliente{{ form.vlan ? ' en la VLAN ' + form.vlan : '' }}</ng-container><ng-container *ngIf="aprov.wifi && wifi.mandar">{{ aprov.wan ? ',' : '' }} el WiFi</ng-container><ng-container *ngIf="aprov.admin"> y la cuenta de administración</ng-container>.
           </p>
           <ng-container *ngIf="aprov.wifi">
+            <label class="olt-wifi-manda">
+              <button type="button" class="np-switch" role="switch" [attr.aria-checked]="wifi.mandar"
+                      aria-label="Cargarle la red WiFi al equipo" (click)="wifi.mandar = !wifi.mandar"></button>
+              <span>Cargarle la red WiFi al equipo <em>{{ wifi.mandar ? 'se le escribe la red de abajo' : 'queda la que el equipo ya tiene' }}</em></span>
+            </label>
+          </ng-container>
+          <ng-container *ngIf="aprov.wifi && wifi.mandar">
             <label class="np-field"><span>Nombre del WiFi <em>vacío = {{ aprov.wifi_prefijo || aprov.prefijo_sugerido }}_APELLIDO</em></span>
               <input class="np-input" [(ngModel)]="wifi.ssid" maxlength="32" autocomplete="off" />
             </label>

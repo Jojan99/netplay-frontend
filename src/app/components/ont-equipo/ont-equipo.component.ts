@@ -61,7 +61,7 @@ export class OntEquipoComponent implements OnChanges {
   urlAcs = '';
 
   /** La red a la que se le está cambiando la contraseña. */
-  cambiandoClave: { indice: number; clave: string; ssid: string; todas: boolean } | null = null;
+  cambiandoClave: { indice: number; clave: string; ssid: string; todas: boolean; oculta: boolean; ocultaAntes: boolean } | null = null;
   guardandoClave = false;
   avisoClave: { texto: string; tipo: 'ok' | 'error' } | null = null;
 
@@ -80,7 +80,7 @@ export class OntEquipoComponent implements OnChanges {
   get redesConClave(): number { return this.redesAcs.filter((r: any) => !!r.ruta_clave && r.activo === true).length; }
 
   empezarCambioClave(r: any) {
-    this.cambiandoClave = { indice: r.indice, clave: '', ssid: r.ssid ?? '', todas: true };
+    this.cambiandoClave = { indice: r.indice, clave: '', ssid: r.ssid ?? '', todas: true, oculta: r.oculta === true, ocultaAntes: r.oculta === true };
     this.avisoClave = null;
   }
 
@@ -118,8 +118,12 @@ export class OntEquipoComponent implements OnChanges {
       return;
     }
 
-    if (clave === '' && ssid === null) {
-      this.avisoClave = { texto: 'Cambiá el nombre de la red, la contraseña, o las dos.', tipo: 'error' };
+    // Ocultar la red es un cambio por sí solo: se puede guardar sin tocar el
+    // nombre ni la contraseña.
+    const oculta = c.oculta !== c.ocultaAntes ? c.oculta : null;
+
+    if (clave === '' && ssid === null && oculta === null) {
+      this.avisoClave = { texto: 'Cambiá el nombre de la red, la contraseña, o si se muestra o no.', tipo: 'error' };
       return;
     }
 
@@ -127,14 +131,18 @@ export class OntEquipoComponent implements OnChanges {
     // nombre y el cliente no podría distinguirlas.
     const todas = c.todas && this.redesConClave > 1 && ssid === null;
     this.guardandoClave = true;
-    this.acsSvc.cambiarWifi(this.acs.id, c.indice, ssid, clave || null, todas).subscribe({
+    this.acsSvc.cambiarWifi(this.acs.id, c.indice, ssid, clave || null, todas, oculta).subscribe({
       next: (r: any) => {
         this.guardandoClave = false;
         if (r?.error !== 0) { this.avisoClave = { texto: r?.message || 'No se pudo cambiar el WiFi.', tipo: 'error' }; return; }
         this.cambiandoClave = null;
         const hecho = clave !== '' && ssid !== null ? 'Nombre y contraseña cambiados.'
-          : (ssid !== null ? `La red ahora se llama «${ssid}».` : (todas ? 'Contraseña cambiada en todas las redes.' : 'Contraseña cambiada.'));
-        this.avisoClave = { texto: hecho + ' Los equipos del cliente tienen que volver a conectarse.', tipo: 'ok' };
+          : (ssid !== null ? `La red ahora se llama «${ssid}».`
+          : (clave !== '' ? (todas ? 'Contraseña cambiada en todas las redes.' : 'Contraseña cambiada.')
+          : (oculta ? 'La red quedó oculta.' : 'La red vuelve a mostrarse.')));
+        const arrastre = clave !== '' || ssid !== null ? ' Los equipos del cliente tienen que volver a conectarse.' : '';
+        const nota = oculta === true ? ' Para conectarse hay que escribir el nombre a mano.' : '';
+        this.avisoClave = { texto: hecho + arrastre + nota, tipo: 'ok' };
         // El equipo tarda unos segundos en aplicarlo y reportarlo.
         setTimeout(() => this.acsSvc.deCliente(this.userId).subscribe({ next: (x: any) => { if (x?.error === 0) this.acs = x.data; } }), 5000);
       },

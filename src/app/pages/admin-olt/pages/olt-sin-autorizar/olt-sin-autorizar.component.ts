@@ -370,7 +370,7 @@ export class OltSinAutorizarComponent implements OnInit {
     this.mostrarLista = false;
     this.verificarSiYaExiste();
     this.cargarClientes();
-    this.wifi = { ssid: '', clave: '' };
+    this.wifi = { ssid: '', clave: '', mandar: true };
     this.cargarAprov();
   }
 
@@ -400,7 +400,7 @@ export class OltSinAutorizarComponent implements OnInit {
     const aprovisionar = this.aprov?.aprovisionar;
     const claveWifi = this.wifi.clave.trim();
 
-    if (aprovisionar && claveWifi && (claveWifi.length < 8 || claveWifi.length > 63)) {
+    if (aprovisionar && this.wifi.mandar && claveWifi && (claveWifi.length < 8 || claveWifi.length > 63)) {
       this.toast.error('La clave del WiFi debe tener entre 8 y 63 caracteres (o dejala vacía para generarla).');
       return;
     }
@@ -419,8 +419,9 @@ export class OltSinAutorizarComponent implements OnInit {
       aprovisionar:    aprovisionar ? {
         gateway:    this.selectedSegment?.gateway ?? null,
         mascara:    this.selectedSegment?.mask ?? null,
-        wifi_ssid:  this.wifi.ssid.trim() || null,
-        wifi_clave: claveWifi || null,
+        wifi:       this.wifi.mandar,
+        wifi_ssid:  this.wifi.mandar ? (this.wifi.ssid.trim() || null) : null,
+        wifi_clave: this.wifi.mandar ? (claveWifi || null) : null,
       } : undefined,
     }).subscribe({
       // El backend responde 200 aunque la OLT haya rechazado: el resultado
@@ -438,7 +439,13 @@ export class OltSinAutorizarComponent implements OnInit {
 
   /** Si la empresa aprovisiona al autorizar: entonces el alta pide el WiFi. */
   aprov: any = null;
-  wifi = { ssid: '', clave: '' };
+  /**
+   * `mandar` decide si el alta le carga la red WiFi al equipo.
+   *
+   * Muchas ONT ya llegan instaladas y andando: pisarles la red deja a la
+   * familia sin conexión hasta que alguien reconecta todos los teléfonos.
+   */
+  wifi = { ssid: '', clave: '', mandar: true };
 
   private cargarAprov(): void {
     this.gestion.aprovisionamiento().subscribe({
