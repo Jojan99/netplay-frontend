@@ -11,6 +11,15 @@ import { ThemeService } from '../common/services/theme/theme.service';
 import { OnboardingGuideComponent } from '../components/onboarding-guide/onboarding-guide.component';
 import { NpSelectComponent, PresentacionSelect } from '../common/np-select/np-select.component';
 import { ReferidosCardComponent } from '../components/referidos-card/referidos-card.component';
+import { Router } from '@angular/router';
+import { TableroService } from '../services/tablero.service';
+import { AlertasService } from '../services/alertas.service';
+import { CobranzaService } from '../services/cobranza.service';
+import { NovedadesService } from '../services/novedades.service';
+import { OltService } from '../services/olt.service';
+import { AcsService } from '../services/acs.service';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { environment } from '../../environments/environment';
 
 Chart.register(...registerables, ChartDataLabels);
 
@@ -80,7 +89,150 @@ export class DashboardComponent implements OnInit, OnDestroy {
     private authService: AuthService,
     private financeService: FinanceService,
     private themeService: ThemeService,
+    private router: Router,
+    private tableroSvc: TableroService,
+    private alertasSvc: AlertasService,
+    private cobranzaSvc: CobranzaService,
+    private novedadesSvc: NovedadesService,
+    private oltSvc: OltService,
+    private acsSvc: AcsService,
+    private http: HttpClient,
   ) {}
+
+  /* ── Armar el tablero ───────────────────────────────────────────────── */
+
+  private cargarTablero(): void {
+    this.tableroSvc.ver().subscribe({
+      next: (r: any) => {
+        this.paneles = r?.data?.paneles ?? [];
+        this.tableroArmado = !!r?.data?.armado;
+        this.pedirDatosDeLosPaneles();
+      },
+      // Sin tablero guardado no se deja la pantalla en blanco: se muestra
+      // lo de siempre.
+      error: () => {
+        this.paneles = ['resolver', 'plata', 'salud', 'vivo', 'deudores', 'tickets', 'novedades'];
+        this.pedirDatosDeLosPaneles();
+      },
+    });
+  }
+
+  tiene(id: string): boolean { return this.paneles.includes(id); }
+
+  /** Los paneles que este usuario puede poner, según su rol. */
+  get catalogoVisible() {
+    return this.catalogo.filter(p => !p.roles || p.roles.includes(this.role));
+  }
+
+  alternar(id: string): void {
+    this.paneles = this.tiene(id) ? this.paneles.filter(p => p !== id) : [...this.paneles, id];
+    if (this.tiene(id)) this.pedirDatosDeLosPaneles();
+  }
+
+  mover(i: number, paso: number): void {
+    const j = i + paso;
+    if (j < 0 || j >= this.paneles.length) return;
+    const copia = [...this.paneles];
+    [copia[i], copia[j]] = [copia[j], copia[i]];
+    this.paneles = copia;
+  }
+
+  guardarTablero(): void {
+    this.guardandoTablero = true;
+    this.tableroSvc.guardar(this.paneles).subscribe({
+      next: () => { this.guardandoTablero = false; this.armando = false; this.tableroArmado = true; setTimeout(() => this.redrawCharts(), 60); },
+      error: () => { this.guardandoTablero = false; },
+    });
+  }
+
+  volverAlDeFabrica(): void {
+    this.tableroSvc.olvidar().subscribe({
+      next: (r: any) => {
+        this.paneles = r?.data?.paneles ?? [];
+        this.tableroArmado = false;
+        this.armando = false;
+        this.pedirDatosDeLosPaneles();
+        setTimeout(() => this.redrawCharts(), 60);
+      },
+    });
+  }
+
+  /** Un panel lleva a la pantalla donde está el detalle. */
+  irA(id: string): void {
+    const ruta = this.catalogo.find(p => p.id === id)?.ruta;
+    if (ruta) this.router.navigate([ruta]);
+  }
+
+  tituloDe(id: string): string { return this.catalogo.find(p => p.id === id)?.titulo ?? id; }
+
+  /* ── Datos de cada panel ────────────────────────────────────────────────
+     Sólo se pide lo que está puesto: un tablero de tres paneles no tiene por
+     qué golpear trece endpoints. */
+
+  private pedirDatosDeLosPaneles(): void {
+    const h = { headers: new HttpHeaders({ Authorization: `Bearer ${localStorage.getItem('token')}` }) };
+
+    if (this.tiene('resolver') && !this.resolver) {
+      this.alertasSvc.lista().subscribe({
+        next: (r: any) => {
+          const abiertas = (r?.data ?? []).filter((a: any) => !a.resuelta_en);
+          this.resolver = { total: abiertas.length, ultimas: abiertas.slice(0, 4) };
+        },
+        error: () => { this.resolver = { total: 0, ultimas: [] }; },
+      });
+    }
+
+    if (this.tiene('vivo') && !this.vivo) {
+      this.oltSvc.getOntStatusAll().subscribe({
+        next: (r: any) => {
+          const filas = r?.data ?? r ?? [];
+          const online = filas.filter((o: any) => (o.status || o.estado || '').toString().toLowerCase().includes('online')).length;
+          this.vivo = { online, offline: filas.length - online, total: filas.length };
+        },
+        error: () => {},
+      });
+    }
+
+    if (this.tiene('mora') && !this.moraData) {
+      this.http.get(`${environment.rootUrl}api/cartera/mora`, h).subscribe({
+        next: (r: any) => this.moraData = r?.data ?? null, error: () => {},
+      });
+    }
+
+    if (this.tiene('deudores') && !this.deudoresData.length) {
+      this.http.get(`${environment.rootUrl}api/cartera/deudores?limite=5`, h).subscribe({
+        next: (r: any) => this.deudoresData = r?.data ?? [], error: () => {},
+      });
+    }
+
+    if (this.tiene('cobranza') && !this.cobranzaData) {
+      this.cobranzaSvc.resumen().subscribe({ next: (r: any) => this.cobranzaData = r?.data ?? null, error: () => {} });
+    }
+
+    if ((this.tiene('salud') || this.tiene('borde')) && !this.saludData) {
+      this.http.get(`${environment.rootUrl}api/management/red/salud`, h).subscribe({
+        next: (r: any) => this.saludData = r?.data ?? null, error: () => {},
+      });
+    }
+
+    if (this.tiene('equipos') && !this.equiposData) {
+      this.http.get(`${environment.rootUrl}api/management/equipos`, h).subscribe({
+        next: (r: any) => {
+          const filas = r?.data ?? [];
+          const corte = Date.now() - 30 * 60 * 1000;
+          this.equiposData = {
+            total: filas.length,
+            hablando: filas.filter((e: any) => e.ultimo_informe && new Date(e.ultimo_informe).getTime() > corte).length,
+          };
+        },
+        error: () => {},
+      });
+    }
+
+    if (this.tiene('novedades') && !this.novedadesData.length) {
+      this.novedadesSvc.lista().subscribe({ next: (r: any) => this.novedadesData = (r?.data?.novedades ?? []).slice(0, 4), error: () => {} });
+    }
+  }
 
   /** Lee un token de color del tema activo para usarlo en Chart.js. */
   private tok(name: string, fallback = '#0f766e'): string {
@@ -100,6 +252,50 @@ export class DashboardComponent implements OnInit, OnDestroy {
     return { text3, line, font: { family: "'IBM Plex Mono', monospace", size: 11 } };
   }
 
+  /* ── El tablero que arma cada uno ────────────────────────────────────────
+     El inicio dejó de ser una pantalla fija: cada usuario elige qué paneles
+     ve y en qué orden. Los nombres los valida el servidor contra su propia
+     lista, así que acá sólo hay presentación. */
+
+  /** Los paneles elegidos, en orden. */
+  paneles: string[] = [];
+  /** Modo de armado: se muestran las casillas para sumar, quitar y mover. */
+  armando = false;
+  guardandoTablero = false;
+  tableroArmado = false;
+
+  /**
+   * Qué es cada panel y a dónde lleva.
+   *
+   * El texto corto es el que se ve al armar el tablero: tiene que alcanzar
+   * para decidir sin tener que probarlo.
+   */
+  readonly catalogo: { id: string; titulo: string; resumen: string; ruta?: string; roles?: string[] }[] = [
+    { id: 'resolver',  titulo: 'Para resolver',      resumen: 'Lo que está fallando en la red y espera una mano', ruta: '/dashboard/admin-olt/alertas' },
+    { id: 'vivo',      titulo: 'La red en vivo',     resumen: 'Cuántos equipos están conectados ahora mismo',     ruta: '/dashboard/admin-olt/online' },
+    { id: 'plata',     titulo: 'La plata',           resumen: 'Caja, ingresos, egresos y lo que falta cobrar',    ruta: '/dashboard/finance',        roles: ['ADMIN', 'CONTADOR'] },
+    { id: 'mora',      titulo: 'Mora por antigüedad', resumen: 'Cuánto se debe en cada tramo y qué se recuperó',  ruta: '/dashboard/cartera',        roles: ['ADMIN', 'CONTADOR'] },
+    { id: 'metodos',   titulo: 'Medios de pago',     resumen: 'Por dónde entra la plata cada mes',                ruta: '/dashboard/finance',        roles: ['ADMIN', 'CONTADOR'] },
+    { id: 'deudores',  titulo: 'Quién debe más',     resumen: 'Los clientes con más deuda vencida',               ruta: '/dashboard/cartera',        roles: ['ADMIN', 'CONTADOR'] },
+    { id: 'cobranza',  titulo: 'Cobranza',           resumen: 'Los casos que la IA está atendiendo',              ruta: '/dashboard/cobranza',       roles: ['ADMIN', 'CONTADOR'] },
+    { id: 'salud',     titulo: 'Salud de la red',    resumen: 'Cómo viene cada puerto PON',                       ruta: '/dashboard/admin-olt/alertas' },
+    { id: 'borde',     titulo: 'Al borde',           resumen: 'Clientes a punto de quedarse sin servicio',        ruta: '/dashboard/admin-olt/alertas' },
+    { id: 'equipos',   titulo: 'Equipos',            resumen: 'Las ONT que responden por TR-069',                 ruta: '/dashboard/router' },
+    { id: 'tickets',   titulo: 'Tickets',            resumen: 'Cómo vienen los tickets y quién los atiende',      ruta: '/dashboard/ticket' },
+    { id: 'clientes',  titulo: 'Clientes',           resumen: 'Altas y bajas mes a mes',                          ruta: '/dashboard/client' },
+    { id: 'novedades', titulo: 'Novedades',          resumen: 'Lo último que agregamos a la plataforma' },
+  ];
+
+  /* Datos de los paneles nuevos. Cada uno se pide sólo si el panel está puesto. */
+  resolver: { total: number; ultimas: any[] } | null = null;
+  vivo: { online: number; offline: number; total: number } | null = null;
+  moraData: any = null;
+  deudoresData: any[] = [];
+  cobranzaData: any = null;
+  saludData: any = null;
+  equiposData: { total: number; hablando: number } | null = null;
+  novedadesData: any[] = [];
+
   ngOnInit(): void {
     const user = this.authService.getUser();
     if (user) {
@@ -115,6 +311,8 @@ export class DashboardComponent implements OnInit, OnDestroy {
     const currentYear = now.getFullYear();
     this.selectedYear = currentYear;
     this.availableYears = Array.from({ length: 5 }, (_, i) => currentYear - i);
+
+    this.cargarTablero();
 
     this.loadData();
     if (this.isAdmin || this.isContador) {
