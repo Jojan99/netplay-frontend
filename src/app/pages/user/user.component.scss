@@ -145,3 +145,10 @@
 
 /* IP en el router sin cliente: su MAC y el comentario que tenía, para reconocerla. */
 .np-huerfana { font-family: var(--font-mono); font-variant-numeric: tabular-nums; white-space: nowrap; }
+
+/* Factura electrónica: apagada casi invisible, encendida con marca clara. */
+.np-fe { position: relative; color: var(--text-3); opacity: .5;
+  &.is-on { color: var(--accent); background: var(--accent-soft); opacity: 1;
+    /* Punto de "activa", para verlo de un vistazo en la lista. */
+    &::after { content: ''; position: absolute; top: 3px; right: 3px; width: 7px; height: 7px; border-radius: 50%;
+      background: var(--ok); border: 1.5px solid var(--surface); } } }

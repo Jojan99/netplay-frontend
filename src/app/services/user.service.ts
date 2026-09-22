@@ -114,6 +114,11 @@ export class UserService {
     if (filtros.cliente_id) params['cliente_id'] = filtros.cliente_id;
     return this.http.get<any>(this.env.rootUrl + 'api/user/lista', { headers: this.getHeaders(), params });
   }
+  /** Facturación electrónica del cliente: la que cobra por la pasarela. */
+  facturacionElectronica(userId: string | number, activa: boolean): Observable<any> {
+    return this.http.post<any>(`${this.env.rootUrl}api/user/${userId}/facturacion-electronica`, { activa }, { headers: this.getHeaders() });
+  }
+
 
   searchClients(query: string): Observable<any> {
     const url = this.env.rootUrl + 'api/user/search?q=' + encodeURIComponent(query);

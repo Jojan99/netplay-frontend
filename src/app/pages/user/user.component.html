@@ -53,6 +53,8 @@
       <button type="button" class="np-chip" [attr.aria-pressed]="statusFilter === 'suspended'" (click)="setStatusFilter('suspended')">Suspendidos<span class="np-c">{{ countSuspended }}</span></button>
       <button type="button" class="np-chip" [attr.aria-pressed]="statusFilter === 'noip'" (click)="setStatusFilter('noip')">Sin IP<span class="np-c">{{ countNoIp }}</span></button>
       <button type="button" class="np-chip" *ngIf="companyHasWA" [attr.aria-pressed]="statusFilter === 'nowa'" (click)="setStatusFilter('nowa')">Sin WhatsApp<span class="np-c">{{ countNoWa }}</span></button>
+      <button type="button" class="np-chip" [attr.aria-pressed]="statusFilter === 'fe'" (click)="setStatusFilter('fe')"
+              title="Clientes con facturación electrónica: los que cobran por la pasarela">Factura electrónica<span class="np-c">{{ countConFe }}</span></button>
     </div>
     <span class="np-spacer"></span>
     <label class="np-pagesize">Mostrar
@@ -120,7 +122,15 @@
                         <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.373 0 0 5.373 0 12c0 2.089.534 4.049 1.475 5.762L0 24l6.435-1.44A11.945 11.945 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.818a9.818 9.818 0 01-5.007-1.373l-.36-.214-3.724.834.849-3.629-.236-.373A9.818 9.818 0 1112 21.818z"/></svg>
                       </span>
                     </ng-template>
-                    <!-- Suspender / Reactivar -->
+                    <!-- Facturación electrónica -->
+                    <button type="button" class="np-icobtn np-fe" [class.is-on]="!!user.billing_electronic"
+                            (click)="toggleFacturacionElectronica(user)"
+                            [title]="user.billing_electronic ? 'Factura electrónica activa: cobra por la pasarela' : 'Activar factura electrónica (cobra por la pasarela)'">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M6 3h9l4 4v14l-2.5-1.5L14 21l-2.5-1.5L9 21l-2.5-1.5L4 21V5a2 2 0 0 1 2-2z"/><path d="M9 8h6M9 12h6M9 16h3"/>
+                      </svg>
+                    </button>
+                                        <!-- Suspender / Reactivar -->
                     <button type="button" class="np-icobtn" (click)="openSuspendModal(user.dni, user.id_user, user.internet_status, user.router_id)"
                             [title]="user.internet_status === 'ACTIVE' ? 'Suspender servicio' : 'Reactivar servicio'">
                       <svg *ngIf="user.internet_status === 'ACTIVE'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="6" y="5" width="4" height="14" rx="1"/><rect x="14" y="5" width="4" height="14" rx="1"/></svg>

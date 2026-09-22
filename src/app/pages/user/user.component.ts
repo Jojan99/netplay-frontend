@@ -31,7 +31,7 @@ interface Toast {
   type: 'success' | 'error' | 'info';
 }
 
-export type ClientStatusFilter = 'all' | 'active' | 'suspended' | 'noip' | 'nowa';
+export type ClientStatusFilter = 'all' | 'active' | 'suspended' | 'noip' | 'nowa' | 'fe';
 export type ClientRowStatus = 'active' | 'suspended' | 'noip';
 export type ClientTab = 'resumen' | 'servicios' | 'facturacion' | 'tickets' | 'historial';
 
@@ -279,11 +279,12 @@ export class UserComponent implements OnInit {
    * Antes se contaba sobre la lista cargada, y "Sin WhatsApp" daba todos: la
    * lista no traía ese dato.
    */
-  conteos = { todos: 0, activos: 0, suspendidos: 0, sin_ip: 0, sin_wa: 0 };
+  conteos = { todos: 0, activos: 0, suspendidos: 0, sin_ip: 0, sin_wa: 0, con_fe: 0 };
   get countActive()    { return this.conteos.activos; }
   get countSuspended() { return this.conteos.suspendidos; }
   get countNoIp()      { return this.conteos.sin_ip; }
   get countNoWa()      { return this.conteos.sin_wa; }
+  get countConFe()     { return this.conteos.con_fe; }
 
   setStatusFilter(f: ClientStatusFilter) {
     if (f === this.statusFilter) return;
@@ -499,6 +500,7 @@ export class UserComponent implements OnInit {
       date_create: e.date_create,
       alias: e.alias,
       whatsapp_enabled: !!Number(e.whatsapp_enabled ?? 1),
+      billing_electronic: Number(e.billing_electronic ?? 0),
       router_id: e.router_id ?? null,
       connection_type: e.connection_type ?? 'static',
     };
@@ -529,6 +531,27 @@ export class UserComponent implements OnInit {
   }
 
   toggleDetails(user: UserInterface) { user.expanded = !user.expanded; }
+
+  /** Facturación electrónica: la marca que hace que cobre por la pasarela. */
+  toggleFacturacionElectronica(user: UserInterface) {
+    const val = !Number(user.billing_electronic);
+    user.billing_electronic = val ? 1 : 0;
+    this.conteos.con_fe += val ? 1 : -1;
+    this.userSvc.facturacionElectronica(user.id_user!, val).subscribe({
+      next: r => {
+        if (r?.error === 1 || r?.status === 1) {
+          user.billing_electronic = val ? 0 : 1;
+          this.conteos.con_fe += val ? -1 : 1;
+          this.toast(r?.message ?? 'No se pudo cambiar.', 'error');
+        }
+      },
+      error: () => {
+        user.billing_electronic = val ? 0 : 1;
+        this.conteos.con_fe += val ? -1 : 1;
+        this.toast('Error al cambiar la facturación electrónica', 'error');
+      },
+    });
+  }
 
   toggleWhatsapp(user: UserInterface) {
     const val = !user.whatsapp_enabled;

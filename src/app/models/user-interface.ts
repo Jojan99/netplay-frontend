@@ -22,6 +22,7 @@ export interface UserInterface {
     showDetails?: boolean
     expanded?: boolean
     whatsapp_enabled?: boolean
+    billing_electronic?: number | boolean
     vlan?: number
     router_id?: number | null
     /** 'static' (IP fija) o 'pppoe'. Un cliente PPPoE no tiene IP fija: la recibe al conectarse. */
