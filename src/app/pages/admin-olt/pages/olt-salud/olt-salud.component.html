@@ -1,105 +1,115 @@
-<app-olt-nav></app-olt-nav>
-
-<div class="np-page">
-
+<div class="np-page sal">
   <header class="np-head">
     <div>
-      <p class="np-kicker">Red <b>/</b> Salud</p>
+      <p class="np-kicker">Admin OLT <b>/</b> Salud de la red</p>
       <h1 class="np-title">Salud de la red</h1>
-      <div class="np-ribbon">
-        <span *ngIf="medidoEn">medido {{ medidoEn | date:'d MMM, HH:mm' }}</span>
-        <span *ngIf="dias">{{ dias }} día{{ dias === 1 ? '' : 's' }} de mediciones</span>
-        <span>al borde: bajo {{ limite }} dBm</span>
-      </div>
+      <p class="np-fine">
+        Cómo viene cada puerto, quién está al borde de quedarse sin servicio y qué equipos se caen todo el día.
+        Se anota solo cada 15 minutos, sin molestar a la OLT.
+      </p>
     </div>
     <div class="np-actions">
-      <button type="button" class="np-btn" (click)="cargar()" [disabled]="cargando">
-        {{ cargando ? 'Leyendo…' : 'Actualizar' }}
-      </button>
+      <button type="button" class="np-btn np-btn--ghost" (click)="cargar()" [disabled]="cargando">{{ cargando ? 'Cargando…' : 'Actualizar' }}</button>
     </div>
   </header>
 
+  <app-olt-nav />
+
   <div class="np-scroll">
+    <p class="np-notice np-notice--danger" *ngIf="error">{{ error }}</p>
 
-    <p class="np-empty-block" *ngIf="!cargando && !puertos.length">
-      Todavía no hay mediciones. Se toman solas cada día; mañana vas a ver cómo viene cada puerto.
-    </p>
-
-    <!-- ── Puertos ──────────────────────────────────────────────────────── -->
-    <section class="sal-puertos" *ngIf="puertos.length">
-      <h2 class="np-sect">Cada puerto</h2>
-      <div class="sal-grid">
-        <article class="sal-puerto" *ngFor="let p of puertos; trackBy: porPuerto"
-                 [attr.data-estado]="estado(p)" role="button" tabindex="0"
-                 (click)="verPuerto(p)" (keydown.enter)="verPuerto(p)">
-          <header>
-            <b>{{ p.fsp }}</b>
-            <span class="sal-chip">{{ etiqueta(p) }}</span>
-          </header>
-          <p class="sal-olt">{{ p.olt }}</p>
-          <dl>
-            <div><dt>Equipos</dt><dd>{{ p.onts }}</dd></div>
-            <div><dt>Caídos</dt><dd [class.es-malo]="p.offline">{{ p.offline }}</dd></div>
-            <div><dt>Al borde</dt><dd [class.es-ojo]="p.al_borde">{{ p.al_borde }}</dd></div>
-            <div><dt>Señal</dt><dd>{{ p.rx_mediana !== null ? (p.rx_mediana | number:'1.1-1') + ' dBm' : '—' }}</dd></div>
-          </dl>
-          <!-- La caída contra la semana pasada es lo que avisa temprano. -->
-          <p class="sal-cambio" *ngIf="p.cambio !== null" [class.es-baja]="p.cambio < -1">
-            {{ p.cambio > 0 ? '▲' : '▼' }} {{ (p.cambio < 0 ? -p.cambio : p.cambio) | number:'1.1-1' }} dB contra la semana pasada
-          </p>
-        </article>
-      </div>
+    <section class="np-kpis">
+      <div class="np-kpi" [class.np-kpi--accent]="puertosEnRiesgo"><span class="np-kpi-l">Puertos para revisar</span><b class="np-kpi-v">{{ puertosEnRiesgo }}</b><span class="np-kpi-s">de {{ puertos.length }}</span></div>
+      <div class="np-kpi"><span class="np-kpi-l">Clientes al borde</span><b class="np-kpi-v">{{ alBorde.length }}</b><span class="np-kpi-s">bajo {{ limite }} dBm hoy</span></div>
+      <div class="np-kpi"><span class="np-kpi-l">Equipos inestables</span><b class="np-kpi-v">{{ inestables.length }}</b><span class="np-kpi-s">se caen y vuelven</span></div>
+      <div class="np-kpi"><span class="np-kpi-l">Historia</span><b class="np-kpi-v">{{ dias }}</b><span class="np-kpi-s">día(s) guardados</span></div>
     </section>
 
-    <!-- ── Al borde ─────────────────────────────────────────────────────── -->
+    <p class="np-fine sal-cuando" *ngIf="medidoEn">Última medición: {{ medidoEn | date:'d MMM, HH:mm' }}</p>
+
+    <!-- ── Puertos PON ── -->
+    <section class="np-card">
+      <div class="np-card-h"><h3>Puertos PON</h3><span class="np-fine">ordenados por los que más clientes tienen al borde</span></div>
+
+      <div class="np-tablewrap" *ngIf="puertos.length; else sinDatos">
+        <table class="np-table">
+          <thead>
+            <tr>
+              <th>OLT</th><th>Puerto</th><th class="np-td-right">Equipos</th><th class="np-td-right">Apagados</th>
+              <th class="np-td-right">Al borde</th><th class="np-td-right">Mediana</th><th class="np-td-right">Peor</th><th class="np-td-right">7 días</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let p of puertos" [attr.data-tono]="tonoPuerto(p)">
+              <td class="np-data">{{ p.olt }}</td>
+              <td class="np-data"><b>{{ p.fsp }}</b></td>
+              <td class="np-td-right np-data np-data--dim">{{ p.onts }}</td>
+              <td class="np-td-right np-data" [class.sal-mal]="p.offline > 0">{{ p.offline || '—' }}</td>
+              <td class="np-td-right np-data" [class.sal-mal]="p.al_borde > 0">{{ p.al_borde || '—' }}</td>
+              <td class="np-td-right np-data"><span class="sal-dbm" [attr.data-tono]="tonoPuerto(p)">{{ dbm(p.rx_mediana) }}</span></td>
+              <td class="np-td-right np-data np-data--dim">{{ dbm(p.rx_min) }}</td>
+              <td class="np-td-right np-data">
+                <span class="sal-cambio" [attr.data-tono]="tonoCambio(p.cambio)" *ngIf="p.cambio !== null; else sinCambio">
+                  {{ p.cambio > 0 ? '▲' : (p.cambio < 0 ? '▼' : '=') }} {{ p.cambio > 0 ? '+' : '' }}{{ p.cambio }} dB
+                </span>
+                <ng-template #sinCambio><span class="np-data--dim">sin historia</span></ng-template>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <ng-template #sinDatos>
+        <p class="np-empty">Todavía no hay mediciones guardadas. La primera queda en cuanto corra la revisión de la red (cada 15 minutos).</p>
+      </ng-template>
+    </section>
+
+    <!-- ── Clientes al borde ── -->
     <section class="np-card" *ngIf="alBorde.length">
-      <div class="np-card-h">
-        <h2>Al borde de quedarse sin servicio</h2>
-        <span class="np-card-meta">{{ alBorde.length }} equipo{{ alBorde.length === 1 ? '' : 's' }} bajo {{ limite }} dBm</span>
-      </div>
+      <div class="np-card-h"><h3>Clientes al borde</h3><span class="np-fine">hoy trabajaron bajo {{ limite }} dBm: son los próximos en caerse</span></div>
+
       <div class="np-tablewrap">
-        <table class="np-table np-table--compact">
+        <table class="np-table">
           <thead>
-            <tr><th>Cliente</th><th>Puerto</th><th class="np-th-right">Peor señal</th><th class="np-th-right">Promedio</th><th class="np-th-right">Caídas</th></tr>
+            <tr><th>Cliente</th><th>Puerto</th><th class="np-td-right">Peor</th><th class="np-td-right">Promedio</th><th class="np-td-right">Caídas hoy</th><th class="np-td-right">Apagado</th></tr>
           </thead>
           <tbody>
-            <tr *ngFor="let c of alBorde; trackBy: porEquipo" role="button" tabindex="0"
-                (click)="verCliente(c)" (keydown.enter)="verCliente(c)">
-              <td class="np-strong">{{ c.cliente || c.descripcion || c.serial }}</td>
-              <td>{{ c.olt }} · {{ c.fsp }}</td>
-              <td class="np-data np-td-right es-malo">{{ c.rx_min | number:'1.1-1' }} dBm</td>
-              <td class="np-data np-td-right">{{ c.rx_prom !== null ? (c.rx_prom | number:'1.1-1') + ' dBm' : '—' }}</td>
-              <td class="np-data np-td-right">{{ c.caidas }}</td>
+            <tr *ngFor="let c of alBorde" class="sal-clic" (click)="verCliente(c.user_id)">
+              <td class="np-data">
+                <b>{{ c.cliente || c.descripcion || 'Sin cliente' }}</b>
+                <small class="np-data--dim" *ngIf="c.phone"> · {{ c.phone }}</small>
+              </td>
+              <td class="np-data np-data--dim">{{ c.olt }} · {{ c.fsp }}:{{ c.ont_id }}</td>
+              <td class="np-td-right np-data"><span class="sal-dbm" data-tono="malo">{{ dbm(c.rx_min) }}</span></td>
+              <td class="np-td-right np-data np-data--dim">{{ dbm(c.rx_prom) }}</td>
+              <td class="np-td-right np-data" [class.sal-mal]="c.caidas > 0">{{ c.caidas || '—' }}</td>
+              <td class="np-td-right np-data np-data--dim">{{ apagado(c.muestras_offline) }}</td>
             </tr>
           </tbody>
         </table>
       </div>
     </section>
 
-    <!-- ── Inestables ───────────────────────────────────────────────────── -->
+    <!-- ── Equipos inestables ── -->
     <section class="np-card" *ngIf="inestables.length">
-      <div class="np-card-h">
-        <h2>Se caen y vuelven todo el día</h2>
-        <span class="np-card-meta">casi siempre es la fibra o la energía</span>
-      </div>
+      <div class="np-card-h"><h3>Equipos inestables</h3><span class="np-fine">se apagan y vuelven: casi siempre es la acometida o la energía del cliente</span></div>
+
       <div class="np-tablewrap">
-        <table class="np-table np-table--compact">
+        <table class="np-table">
           <thead>
-            <tr><th>Cliente</th><th>Puerto</th><th class="np-th-right">Caídas</th><th class="np-th-right">Fuera</th><th class="np-th-right">Peor señal</th></tr>
+            <tr><th>Cliente</th><th>Puerto</th><th class="np-td-right">Caídas hoy</th><th class="np-td-right">Apagado</th><th class="np-td-right">Peor señal</th></tr>
           </thead>
           <tbody>
-            <tr *ngFor="let e of inestables; trackBy: porEquipo" role="button" tabindex="0"
-                (click)="verCliente(e)" (keydown.enter)="verCliente(e)">
-              <td class="np-strong">{{ e.cliente || e.descripcion }}</td>
-              <td>{{ e.olt }} · {{ e.fsp }}</td>
-              <td class="np-data np-td-right es-malo">{{ e.caidas }}</td>
-              <td class="np-data np-td-right">{{ e.muestras ? ((e.muestras_offline * 100 / e.muestras) | number:'1.0-0') + '%' : '—' }}</td>
-              <td class="np-data np-td-right">{{ e.rx_min !== null ? (e.rx_min | number:'1.1-1') + ' dBm' : '—' }}</td>
+            <tr *ngFor="let e of inestables" class="sal-clic" (click)="verCliente(e.user_id)">
+              <td class="np-data"><b>{{ e.cliente || e.descripcion || 'Sin cliente' }}</b></td>
+              <td class="np-data np-data--dim">{{ e.olt }} · {{ e.fsp }}:{{ e.ont_id }}</td>
+              <td class="np-td-right np-data sal-mal">{{ e.caidas }}</td>
+              <td class="np-td-right np-data np-data--dim">{{ apagado(e.muestras_offline) }}</td>
+              <td class="np-td-right np-data">{{ dbm(e.rx_min) }}</td>
             </tr>
           </tbody>
         </table>
       </div>
     </section>
-
   </div>
 </div>

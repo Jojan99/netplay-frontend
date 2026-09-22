@@ -1,4 +1,4 @@
-import { Component, Input, OnChanges, OnInit, SimpleChanges, inject } from '@angular/core';
+import { Component, Input, OnChanges, OnInit, SimpleChanges, inject, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -10,6 +10,7 @@ import { ToastService } from '../../services/toast.service';
 import { SelectorDeClienteComponent } from './selector-de-cliente.component';
 import { NpSelectComponent, PresentacionSelect } from '../../common/np-select/np-select.component';
 import { PRESENTACION_PERSONAS, conValor } from '../../common/np-select/presentaciones';
+import { Subscription } from 'rxjs';
 
 /** Tipos de servicio: el catálogo sólo trae id y nombre. Guarda el id numérico, como el [ngValue] anterior. */
 const PRESENTACION_TIPOS: PresentacionSelect = {
@@ -40,7 +41,7 @@ const PRESENTACION_PRIORIDADES: PresentacionSelect = {
   templateUrl: './ventana-rapida.component.html',
   styleUrls: ['./atajos.scss', './ventana-rapida.component.scss'],
 })
-export class VentanaRapidaComponent implements OnInit, OnChanges {
+export class VentanaRapidaComponent implements OnInit, OnChanges, OnDestroy {
   @Input({ required: true }) ventana!: VentanaRapida;
 
   readonly atajos = inject(AtajosService);
@@ -67,6 +68,76 @@ export class VentanaRapidaComponent implements OnInit, OnChanges {
   ticket = { tipo: 0, prioridad: 0, tecnico: 0, fecha: '', observacion: '', avisar: true };
   creando = false;
 
+  /* ── Ping ──────────────────────────────────────────────────────────────
+     Antes vivía en un modal de la ficha del cliente: había que entrar al
+     cliente, abrirlo, y quedarse mirando sin poder hacer otra cosa. Acá se
+     puede minimizar y seguir corriendo, y se le hace a cualquier cliente
+     buscándolo desde la misma ventana. */
+
+  pingCantidad = 5;
+  pingResultados: Array<{ host: string; time: string; received: string; estado: 'ok' | 'intermitente' | 'timeout' }> = [];
+  pingCorriendo = false;
+  pingError = '';
+  private pingSub: Subscription | null = null;
+
+  /** Lo que se le puede hacer ping: la IP fija, o la de la sesión PPPoE. */
+  get pingDestino(): string | null {
+    return this.ficha?.ip || this.ficha?.pppoe_ip || null;
+  }
+
+  iniciarPing(): void {
+    const dni = this.ficha?.dni;
+
+    if (!dni) { this.pingError = 'Este cliente no tiene cédula registrada, que es con lo que el router lo ubica.'; return; }
+
+    this.detenerPing();
+    this.pingResultados = [];
+    this.pingError = '';
+    this.pingCorriendo = true;
+
+    this.pingSub = this.users.getPingResults(this.pingCantidad, dni).subscribe({
+      next: (data: any) => {
+        if (data?.message === 'done') { this.pingCorriendo = false; return; }
+
+        const p = typeof data === 'string' ? JSON.parse(data) : data;
+        const perdida = p['packet-loss'];
+
+        this.pingResultados = [...this.pingResultados, {
+          ...p,
+          estado: perdida === '100' ? 'timeout' : perdida === '0' ? 'ok' : 'intermitente',
+        }];
+      },
+      error: () => { this.pingCorriendo = false; this.pingError = 'Se cortó la conexión con el router.'; },
+      complete: () => { this.pingCorriendo = false; },
+    });
+  }
+
+  detenerPing(): void {
+    this.pingSub?.unsubscribe();
+    this.pingSub = null;
+    this.pingCorriendo = false;
+  }
+
+  /** Cuántos respondieron, para el resumen de arriba. */
+  get pingVivos(): number { return this.pingResultados.filter(r => r.estado === 'ok').length; }
+
+  /**
+   * El tiempo de respuesta en milisegundos, que es como se lee un ping.
+   *
+   * El router lo manda en microsegundos, milisegundos o segundos según cuánto
+   * tarde, así que hay que mirar la unidad antes de convertir.
+   */
+  pingMs(t: string | undefined): string {
+    if (!t) return '—';
+    const n = parseFloat(t);
+    if (isNaN(n)) return '—';
+    if (t.includes('us')) return (n / 1000).toFixed(1) + ' ms';
+    if (t.includes('ms')) return n.toFixed(1) + ' ms';
+    return (n * 1000).toFixed(0) + ' ms';
+  }
+
+  ngOnDestroy(): void { this.detenerPing(); }
+
   ngOnInit(): void {
     if (this.ventana.tipo === 'alertas') this.cargarAlertas();
     if (this.ventana.tipo === 'ticket') this.cargarCatalogos();
@@ -83,6 +154,12 @@ export class VentanaRapidaComponent implements OnInit, OnChanges {
   }
 
   private cargarCliente(): void {
+    // Un ping corriendo es del cliente anterior: dejarlo andando mostraría
+    // respuestas de una IP que ya no es la que está en pantalla.
+    this.detenerPing();
+    this.pingResultados = [];
+    this.pingError = '';
+
     this.ficha = null;
     this.equipo = null;
     this.error = '';

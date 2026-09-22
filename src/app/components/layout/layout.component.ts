@@ -32,9 +32,11 @@ import { OauthService }             from '../../services/oauth.service';
 import { TareasFlotantesComponent } from '../tareas-flotantes/tareas-flotantes.component';
 import { CobranzaBurbujaComponent } from '../cobranza-burbuja/cobranza-burbuja.component';
 import { AtajosService, ICONOS }    from '../../services/atajos.service';
-import { NovedadesService }         from '../../services/novedades.service';
 import { TareasEnSegundoPlanoService } from '../../services/tareas-en-segundo-plano.service';
 import { BuscadorRapidoComponent }  from '../atajos/buscador-rapido.component';
+import { NotificacionesComponent }  from '../notificaciones/notificaciones.component';
+import { NovedadesComponent }       from '../novedades/novedades.component';
+import { TooltipsGlobales }         from '../../common/tooltips';
 import { VentanasRapidasComponent, MenuDeVentanasComponent } from '../atajos/ventanas-rapidas.component';
 
 @Component({
@@ -46,6 +48,7 @@ import { VentanasRapidasComponent, MenuDeVentanasComponent } from '../atajos/ven
     DarkThemeToggleComponent, NavbarComponent, FooterComponent, CrmWidgetComponent, DialogHostComponent, TeamPanelComponent,
     SanitizeHtmlPipe, TareasFlotantesComponent, CobranzaBurbujaComponent,
     BuscadorRapidoComponent, VentanasRapidasComponent, MenuDeVentanasComponent,
+    NotificacionesComponent, NovedadesComponent,
   ],
   templateUrl: './layout.component.html',
   styleUrl: './layout.component.scss',
@@ -60,58 +63,15 @@ export class LayoutComponent implements OnInit {
   /** Favoritos, buscador Ctrl+K y ventanas rápidas (sólo en pantallas grandes). */
   readonly atajos = inject(AtajosService);
   private tareasSegundoPlano = inject(TareasEnSegundoPlanoService);
+  /** Tooltips propios: cualquier `title` de la plataforma se pinta con nuestro
+      estilo en vez del recuadro gris del navegador. Con inyectarlo alcanza. */
+  private tooltips = inject(TooltipsGlobales);
   readonly iconos = ICONOS;
 
   alternarFavorito(item: RouteProps): void {
     if (!item.href) return;
     const quedo = this.atajos.alternarFavorito(item.href);
     this.toastService.info(quedo ? `${item.title} quedó en tus atajos` : `${item.title} salió de tus atajos`);
-  }
-
-  /* ── Novedades ─────────────────────────────────────────────────────────
-     Lo que Netvula le cuenta a la empresa. La campana venía siendo un botón
-     muerto con el puntito siempre encendido: ahora el puntito sale sólo si
-     hay algo sin leer, y al abrir la lista deja de ser nuevo. */
-  private novedadesSvc = inject(NovedadesService);
-  novedades: any[] = [];
-  novedadesSinVer = 0;
-  novedadesAbiertas = false;
-  cargandoNovedades = false;
-
-  verNovedades(): void {
-    this.novedadesAbiertas = !this.novedadesAbiertas;
-
-    if (!this.novedadesAbiertas) return;
-
-    this.cargandoNovedades = true;
-    this.novedadesSvc.lista().subscribe({
-      next: (r: any) => {
-        this.cargandoNovedades = false;
-        this.novedades = r?.data?.novedades ?? [];
-        // Se marcan vistas al abrir, no al cerrar: si el usuario se distrae y
-        // cambia de pantalla, igual las vio.
-        if (this.novedadesSinVer) {
-          this.novedadesSinVer = 0;
-          this.novedadesSvc.vistas().subscribe({ error: () => {} });
-        }
-        this.cdr.detectChanges();
-      },
-      error: () => { this.cargandoNovedades = false; this.cdr.detectChanges(); },
-    });
-  }
-
-  /** Una novedad puede llevar a la pantalla de la que habla. */
-  abrirNovedad(n: any): void {
-    this.novedadesAbiertas = false;
-    if (n?.ruta) this.router.navigate([n.ruta]);
-  }
-
-  /** El puntito del encabezado, sin abrir la lista. */
-  private contarNovedades(): void {
-    this.novedadesSvc.lista().subscribe({
-      next: (r: any) => { this.novedadesSinVer = r?.data?.sin_ver ?? 0; this.cdr.detectChanges(); },
-      error: () => {},
-    });
   }
 
   selectedItem: any;
@@ -169,7 +129,6 @@ export class LayoutComponent implements OnInit {
       }
     });
     if (isPlatformBrowser(this.platformId)) this.clockTimer = setInterval(() => { this.now = new Date(); }, 30000);
-    if (isPlatformBrowser(this.platformId)) this.contarNovedades();
     if (!isPlatformBrowser(this.platformId)) return;
     // Los técnicos comparten ubicación mientras tengan el panel abierto (también al recargar, no sólo al iniciar sesión)
     this.locationTracker.startTrackingIfTechnician();

@@ -36,6 +36,63 @@
     }
   }
 
+  <!-- ── Ping ────────────────────────────────────────────────────────── -->
+  @case ('ping') {
+    <app-selector-de-cliente [cliente]="ventana.cliente" (elegido)="elegirCliente($event)"></app-selector-de-cliente>
+
+    @if (cargando) { <p class="at-muted">Leyendo el cliente…</p> }
+    @if (error) { <p class="at-error">{{ error }}</p> }
+
+    @if (ficha) {
+      <div class="vr-ping">
+        <div class="vr-top">
+          <div>
+            <b>{{ ficha.nombre }}</b>
+            <small class="at-mono">{{ pingDestino || 'Sin IP asignada' }}</small>
+          </div>
+          <span class="at-pill" [ngClass]="'at-pill--' + tonoEstado(ficha.estado)">{{ ficha.estado || 'Sin estado' }}</span>
+        </div>
+
+        <div class="vr-ping-mandos">
+          <label class="vr-ping-cuantos">
+            <span>Paquetes</span>
+            <input type="number" class="at-input at-mono" [(ngModel)]="pingCantidad" min="1" max="20"
+                   [disabled]="pingCorriendo" aria-label="Cantidad de paquetes" />
+          </label>
+
+          @if (!pingCorriendo) {
+            <button type="button" class="at-btn at-btn--primary" (click)="iniciarPing()">Hacer ping</button>
+          } @else {
+            <button type="button" class="at-btn" (click)="detenerPing()">Detener</button>
+          }
+        </div>
+
+        @if (pingError) { <p class="at-error">{{ pingError }}</p> }
+
+        <!-- El resumen primero: casi siempre alcanza con saber si contesta. -->
+        @if (pingResultados.length) {
+          <p class="vr-ping-resumen" [attr.data-tono]="pingVivos === pingResultados.length ? 'ok' : pingVivos ? 'ojo' : 'mal'">
+            <b>{{ pingVivos }} de {{ pingResultados.length }}</b>
+            {{ pingVivos === pingResultados.length ? 'respondieron' : pingVivos ? 'respondieron · conexión intermitente' : 'sin respuesta' }}
+            @if (pingCorriendo) { <span class="vr-ping-vivo">midiendo…</span> }
+          </p>
+
+          <ol class="vr-ping-lista">
+            @for (r of pingResultados; track $index) {
+              <li [attr.data-estado]="r.estado">
+                <span class="vr-ping-n">{{ $index + 1 }}</span>
+                <span class="vr-ping-t at-mono">{{ pingMs(r.time) }}</span>
+                <span class="vr-ping-e">{{ r.estado === 'ok' ? 'Respondió' : r.estado === 'intermitente' ? 'Con pérdida' : 'Sin respuesta' }}</span>
+              </li>
+            }
+          </ol>
+        } @else if (pingCorriendo) {
+          <p class="at-muted">Esperando al router…</p>
+        }
+      </div>
+    }
+  }
+
   <!-- ── Equipo ──────────────────────────────────────────────────────── -->
   @case ('equipo') {
     <app-selector-de-cliente [cliente]="ventana.cliente" (elegido)="elegirCliente($event)"></app-selector-de-cliente>

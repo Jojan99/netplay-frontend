@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, inject, Input } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { OltNavComponent } from '../../shared/olt-nav.component';
 import { GestionRemotaService } from '../../../../services/gestion-remota.service';
@@ -37,6 +37,12 @@ interface PerfilesDeOlt {
   host: { class: 'np-console' },
 })
 export class OltAccesoRemotoComponent implements OnInit {
+  /**
+   * Dentro de «Gestión remota» esta pantalla es una sección más: el encabezado
+   * y el menú los pone la página de afuera, así que acá sobran.
+   */
+  @Input() embebido = false;
+
   private api = inject(GestionRemotaService);
   private toast = inject(ToastService);
   /** Las tareas lanzadas desde acá también se ven en la ventana flotante del panel. */

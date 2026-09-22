@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, inject, Input } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { OltNavComponent } from '../../shared/olt-nav.component';
 import { AcsSetupService } from '../../../../services/acs-setup.service';
@@ -21,6 +21,12 @@ import { ToastService } from '../../../../services/toast.service';
   host: { class: 'np-console' },
 })
 export class OltTr069Component implements OnInit {
+  /**
+   * Dentro de «Gestión remota» esta pantalla es una sección más: el encabezado
+   * y el menú los pone la página de afuera, así que acá sobran.
+   */
+  @Input() embebido = false;
+
   private api = inject(AcsSetupService);
   private toast = inject(ToastService);
 

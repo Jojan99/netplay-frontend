@@ -1,7 +1,7 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { CobranzaConfig, CobranzaService } from '../../services/cobranza.service';
+import { CobranzaConfig, CobranzaResumen, CobranzaService } from '../../services/cobranza.service';
 
 /**
  * Cobranza inteligente: a quién cobrarle, hasta dónde puede negociar el
@@ -24,13 +24,28 @@ export class CobranzaComponent implements OnInit {
   pasarela = false;
   lineas: Array<{ id: number; nombre: string; telefono: string | null; principal: number }> = [];
 
-  /** La IA: la clave de Google de la empresa (nunca vuelve del servidor), o la de Netvula de prueba. */
-  ia = { propia: false, modelos: null as string | null, limite_prueba: 10, usadas_hoy: 0,
-    url_clave: 'https://aistudio.google.com/apikey', url_limites: 'https://aistudio.google.com/rate-limit' };
-  claveNueva = '';
+  /** Cómo viene la cobranza: detectados, en curso y escalados. */
+  resumen: CobranzaResumen | null = null;
+
+  /**
+   * La conexión con la IA.
+   *
+   * Mientras no haya clave propia se usa la de Netvula, que tiene un tope
+   * diario: por eso se muestra el consumo. La clave del cliente no vuelve
+   * nunca desde el servidor, sólo si existe.
+   */
+  ia: { propia: boolean; modelos: string | null; limite_prueba: number; usadas_hoy: number; url_clave: string; url_limites: string } = {
+    propia: false, modelos: null, limite_prueba: 0, usadas_hoy: 0, url_clave: '', url_limites: '',
+  };
+
+  abrirClave = false;
   verClave = false;
+  claveNueva = '';
   probando = false;
   resultadoPrueba: { ok: boolean; texto: string } | null = null;
+
+  /** Las opciones que casi nadie toca, plegadas. */
+  avanzado = false;
 
   cargando = true;
   guardando = false;
@@ -45,7 +60,10 @@ export class CobranzaComponent implements OnInit {
   ];
   diasElegidos = new Set<number>();
 
-  ngOnInit(): void { this.cargar(); }
+  ngOnInit(): void {
+    this.cargar();
+    this.svc.resumen().subscribe({ next: r => this.resumen = r?.data ?? null, error: () => {} });
+  }
 
   cargar(): void {
     this.cargando = true;
@@ -58,12 +76,54 @@ export class CobranzaComponent implements OnInit {
         this.pasarela = !!d.pasarela;
         this.lineas = d.lineas ?? [];
         this.ia = { ...this.ia, ...(d.ia ?? {}) };
-        this.claveNueva = '';
         this.diasElegidos = new Set(String(this.cfg?.dias ?? '').split(',').map(Number).filter(Boolean));
       },
       error: () => { this.cargando = false; this.avisar('No se pudo cargar la configuración.', 'error'); },
     });
   }
+
+  /** Cuánto del cupo de prueba se usó hoy, para la barrita. */
+  get usoPct(): number {
+    if (this.ia.propia || !this.ia.limite_prueba) return 0;
+    return Math.min(100, Math.round(this.ia.usadas_hoy * 100 / this.ia.limite_prueba));
+  }
+
+  /** El primer mensaje, tal como le va a llegar al cliente. */
+  get ejemploMensaje(): string {
+    const c = this.cfg;
+    const quien = c?.nombre_asistente || 'Asistente';
+    const empresa = c?.nombre_empresa || 'tu proveedor de internet';
+
+    return `Hola, soy ${quien} de ${empresa}. Te escribo porque tenés una factura pendiente. ¿Querés que veamos cómo ponerte al día?`;
+  }
+
+  probarClave(): void {
+    this.probando = true;
+    this.resultadoPrueba = null;
+
+    this.svc.probarIa(this.claveNueva.trim() || undefined).subscribe({
+      next: r => {
+        this.probando = false;
+        const ok = r?.error === 0;
+        this.resultadoPrueba = { ok, texto: r?.message ?? (ok ? 'La clave responde.' : 'La clave no respondió.') };
+        if (ok) this.iaDisponible = true;
+      },
+      error: e => {
+        this.probando = false;
+        this.resultadoPrueba = { ok: false, texto: e?.error?.message ?? 'No se pudo probar la clave.' };
+      },
+    });
+  }
+
+  /** Vuelve a la IA de Netvula. Se aplica al guardar, como todo lo demás. */
+  quitarClave(): void {
+    this.claveNueva = '';
+    this.ia = { ...this.ia, propia: false };
+    this.resultadoPrueba = { ok: true, texto: 'Al guardar se quita tu clave y se vuelve a la IA de Netvula.' };
+    this.quitandoClave = true;
+  }
+
+  private quitandoClave = false;
 
   alternarDia(n: number): void {
     this.diasElegidos.has(n) ? this.diasElegidos.delete(n) : this.diasElegidos.add(n);
@@ -76,13 +136,14 @@ export class CobranzaComponent implements OnInit {
     this.errores = {};
     this.cfg.dias = [...this.diasElegidos].sort().join(',');
 
-    const clave = this.claveNueva.trim();
-
-    this.svc.guardarConfig({ ...this.cfg, ...(clave ? { ia_clave: clave } : {}) }).subscribe({
+    this.svc.guardarConfig({
+      ...this.cfg,
+      ...(this.claveNueva.trim() ? { ia_clave: this.claveNueva.trim() } : {}),
+      ...(this.quitandoClave ? { quitar_clave: true } : {}),
+    }).subscribe({
       next: r => {
         this.guardando = false;
         this.avisar(r?.message ?? 'Guardado.', r?.error === 0 ? 'ok' : 'error');
-        if (r?.error === 0 && clave) this.cargar();
       },
       error: e => {
         this.guardando = false;
@@ -90,23 +151,6 @@ export class CobranzaComponent implements OnInit {
         this.errores = Object.fromEntries(Object.entries(errs).map(([k, v]: [string, any]) => [k, Array.isArray(v) ? v[0] : String(v)]));
         this.avisar(e?.error?.message && !Object.keys(errs).length ? e.error.message : 'Revisá los campos marcados.', 'error');
       },
-    });
-  }
-
-  probarClave(): void {
-    this.probando = true;
-    this.resultadoPrueba = null;
-    this.svc.probarIa(this.claveNueva.trim()).subscribe({
-      next: r => { this.probando = false; this.resultadoPrueba = { ok: r?.error === 0, texto: r?.message ?? '' }; },
-      error: () => { this.probando = false; this.resultadoPrueba = { ok: false, texto: 'No se pudo probar la clave.' }; },
-    });
-  }
-
-  quitarClave(): void {
-    if (!this.cfg || !confirm('¿Quitar la clave de Google de tu empresa? El asistente vuelve a la IA de Netvula, con ' + this.ia.limite_prueba + ' conversaciones de prueba por día.')) return;
-    this.svc.guardarConfig({ ...this.cfg, quitar_clave: true }).subscribe({
-      next: r => { this.avisar(r?.message ?? 'Listo.', r?.error === 0 ? 'ok' : 'error'); this.cargar(); },
-      error: () => this.avisar('No se pudo quitar la clave.', 'error'),
     });
   }
 

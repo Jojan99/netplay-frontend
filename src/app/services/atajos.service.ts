@@ -8,7 +8,7 @@ import { AuthService } from './auth.service';
 
 export interface ModuloDelMenu { titulo: string; href: string; grupo: string; icono?: string; }
 
-export type TipoDeVentana = 'cliente' | 'equipo' | 'ticket' | 'facturas' | 'alertas';
+export type TipoDeVentana = 'cliente' | 'equipo' | 'ticket' | 'facturas' | 'alertas' | 'ping';
 
 export interface ClienteCorto { id: number; nombre: string; }
 
@@ -29,6 +29,10 @@ export const TIPOS_DE_VENTANA: Record<TipoDeVentana, { titulo: string; sub: stri
   ticket:   { titulo: 'Crear ticket',        sub: 'Con diagnóstico automático', modulo: 'created-ticket' },
   facturas: { titulo: 'Facturas pendientes', sub: 'Saldo y estado de cuenta',   modulo: 'finanzas' },
   alertas:  { titulo: 'Alertas de red',      sub: 'Abiertas ahora',             modulo: 'olt-admin' },
+  // El ping vive acá y no en un modal de la ficha: así se puede dejar
+  // corriendo minimizado mientras se hace otra cosa, y se le puede hacer a
+  // cualquier cliente sin tener que entrar a su ficha primero.
+  ping:     { titulo: 'Ping al cliente',     sub: 'Respuesta en vivo',          modulo: 'usuario' },
 };
 
 export const ICONOS = {
@@ -39,6 +43,7 @@ export const ICONOS = {
   ticket:    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h16v3a2 2 0 0 0 0 4v3H4v-3a2 2 0 0 0 0-4z"/><path d="M13 7v10" stroke-dasharray="2 2"/></svg>',
   facturas:  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="6" width="18" height="12" rx="2"/><circle cx="12" cy="12" r="2.5"/></svg>',
   alertas:   '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 3 2 20h20z"/><path d="M12 10v4M12 17h.01"/></svg>',
+  ping:      '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12h4l2.5-7 5 14L16 12h6"/></svg>',
   modulo:    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>',
   puerto:    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M5 12h14M12 5v14"/><circle cx="12" cy="12" r="9"/></svg>',
   buscar:    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>',

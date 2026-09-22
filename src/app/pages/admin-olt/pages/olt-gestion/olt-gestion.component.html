@@ -1,0 +1,28 @@
+<div class="np-page ges">
+  <header class="np-head">
+    <div>
+      <p class="np-kicker">Admin OLT <b>/</b> Gestión remota</p>
+      <h1 class="np-title">Gestión remota</h1>
+      <p class="np-fine">Cómo llegan los equipos de tus clientes al TR-069 y qué podés hacerles: WiFi, qué tienen conectado y reinicios.</p>
+    </div>
+  </header>
+
+  <app-olt-nav />
+
+  <!-- Los equipos: es lo que se usa todos los días. -->
+  <app-olt-acceso-remoto [embebido]="true" />
+
+  <!-- El servidor: se toca una vez y no se vuelve a mirar. -->
+  <section class="np-card ges-servidor" [class.is-open]="verServidor">
+    <button type="button" class="ges-toggle" (click)="verServidor = !verServidor" [attr.aria-expanded]="verServidor">
+      <span class="ges-toggle-t">
+        <b>Servidor TR-069</b>
+        <small>Dónde está tu servidor, a qué redes tiene que llegar y el script del router.</small>
+      </span>
+      <span class="ges-toggle-a">{{ verServidor ? 'Ocultar' : 'Ver' }}</span>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
+    </button>
+
+    <app-olt-tr069 *ngIf="verServidor" [embebido]="true" />
+  </section>
+</div>

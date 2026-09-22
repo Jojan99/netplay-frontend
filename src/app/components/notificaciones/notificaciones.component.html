@@ -1,0 +1,49 @@
+<button type="button" class="nt-boton" (click)="alternar()" [class.is-abierta]="abierta()"
+        [attr.aria-expanded]="abierta()"
+        [title]="sinVer() ? sinVer() + ' notificación(es) sin ver' : (lista().length ? 'Notificaciones' : 'Sin notificaciones')">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M6 16V11a6 6 0 1 1 12 0v5l1.5 2h-15L6 16zM10 20a2 2 0 0 0 4 0"/>
+  </svg>
+  @if (sinVer() > 0) { <span class="nt-cuenta">{{ sinVer() > 9 ? '9+' : sinVer() }}</span> }
+</button>
+
+@if (abierta()) {
+  <section class="nt-panel" role="dialog" aria-label="Notificaciones">
+    <header class="nt-cab">
+      <div>
+        <b>Notificaciones</b>
+        <small>{{ criticas ? criticas + ' para atender ya' : 'Nada urgente ahora' }}</small>
+      </div>
+      <button type="button" class="nt-x" (click)="abierta.set(false)" aria-label="Cerrar">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M6 6l12 12M18 6 6 18"/></svg>
+      </button>
+    </header>
+
+    <nav class="nt-tabs" role="tablist">
+      <button type="button" role="tab" [attr.aria-selected]="filtro() === 'todo'" (click)="filtro.set('todo')">
+        Todas <span>{{ lista().length }}</span>
+      </button>
+      <button type="button" role="tab" [attr.aria-selected]="filtro() === 'critico'" (click)="filtro.set('critico')">
+        Urgentes <span>{{ criticas }}</span>
+      </button>
+    </nav>
+
+    <div class="nt-lista">
+      @for (n of visibles; track n.titulo + n.cuando) {
+        <button type="button" class="nt-item" [class.is-nueva]="n.nueva" [attr.data-nivel]="n.nivel" (click)="ir(n)">
+          <span class="nt-marca"></span>
+          <span class="nt-item-c">
+            <span class="nt-item-t">
+              <b>{{ n.titulo }}</b>
+              <small class="nt-cuando">{{ n.cuando | date:'d MMM, HH:mm' }}</small>
+            </span>
+            <span class="nt-detalle">{{ n.detalle }}</span>
+            <span class="nt-origen">{{ ORIGENES[n.origen] }}</span>
+          </span>
+        </button>
+      } @empty {
+        <p class="nt-vacio">{{ filtro() === 'critico' ? 'Nada urgente: todo lo abierto puede esperar.' : 'No hay nada pendiente. La red y la cartera están al día.' }}</p>
+      }
+    </div>
+  </section>
+}

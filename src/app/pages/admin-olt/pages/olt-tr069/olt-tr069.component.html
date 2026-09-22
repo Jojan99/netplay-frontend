@@ -1,5 +1,5 @@
 <div class="np-page tr">
-  <header class="np-head">
+  <header class="np-head" *ngIf="!embebido">
     <div>
       <p class="np-kicker">Admin OLT <b>/</b> TR-069</p>
       <h1 class="np-title">Servidor TR-069</h1>
@@ -13,7 +13,7 @@
     </div>
   </header>
 
-  <app-olt-nav />
+  <app-olt-nav *ngIf="!embebido" />
 
   <div class="np-scroll tr-scroll">
     <p class="np-notice np-notice--danger" *ngIf="error">{{ error }}</p>

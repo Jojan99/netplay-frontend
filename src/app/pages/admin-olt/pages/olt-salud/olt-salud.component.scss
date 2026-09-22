@@ -1,76 +1,20 @@
-/* Salud de la red. Los puertos primero, como tarjetas que se leen de un
-   vistazo; los clientes en riesgo debajo, en tabla, porque ahí lo que importa
-   es comparar números. */
+/* ─── Salud de la red ─────────────────────────────────────────────────── */
+.sal-cuando { margin: 0 0 10px; }
 
-.sal-puertos { margin-bottom: 18px; }
+.sal-dbm { font-family: var(--font-mono); font-weight: 700; padding: 2px 8px; border-radius: 999px;
+  background: var(--ok-soft); color: var(--ok);
+  &[data-tono='aviso'] { background: var(--warn-soft); color: var(--warn); }
+  &[data-tono='malo']  { background: var(--danger-soft); color: var(--danger); } }
 
-.sal-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(216px, 1fr));
-  gap: 10px;
-}
+.sal-cambio { font-family: var(--font-mono); font-size: 11.5px; font-weight: 700; color: var(--ok);
+  &[data-tono='aviso'] { color: var(--warn); }
+  &[data-tono='malo']  { color: var(--danger); }
+  &[data-tono='nada']  { color: var(--text-3); font-weight: 500; } }
 
-.sal-puerto {
-  padding: 12px 14px;
-  border: 1px solid var(--linea, #e3e5ef);
-  border-left-width: 3px;
-  border-radius: 12px;
-  background: var(--sup, #fff);
-  cursor: pointer;
+.sal-mal { color: var(--danger); font-weight: 700; }
 
-  &:hover { border-color: var(--marca, #4f46e5); }
+/* La fila entera del puerto se tiñe apenas, para verlo de un vistazo. */
+tr[data-tono='malo']  { background: color-mix(in srgb, var(--danger) 6%, transparent); }
+tr[data-tono='aviso'] { background: color-mix(in srgb, var(--warn) 6%, transparent); }
 
-  header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 8px;
-    margin-bottom: 2px;
-
-    b { font-size: 15px; letter-spacing: -.01em; }
-  }
-
-  dl {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 6px 12px;
-    margin: 10px 0 0;
-
-    div { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
-    dt { font-size: 11.5px; color: var(--text-3); }
-    dd { margin: 0; font-size: 13px; font-weight: 600; font-variant-numeric: tabular-nums; }
-  }
-
-  /* El estado se ve en el borde, para poder barrer la grilla sin leer. */
-  &[data-estado="mal"]  { border-left-color: var(--danger, #b3261e); }
-  &[data-estado="ojo"]  { border-left-color: var(--aviso, #9a6200); }
-  &[data-estado="bien"] { border-left-color: var(--ok, #0f8a5f); }
-}
-
-.sal-olt { margin: 0; font-size: 12px; color: var(--text-3); }
-
-.sal-chip {
-  font-size: 10.5px;
-  font-weight: 700;
-  letter-spacing: .05em;
-  text-transform: uppercase;
-  padding: 3px 8px;
-  border-radius: 999px;
-  background: var(--sup-2, #f6f7fb);
-  color: var(--text-2);
-
-  .sal-puerto[data-estado="mal"] &  { background: var(--danger-suave, #fdecea); color: var(--danger, #b3261e); }
-  .sal-puerto[data-estado="ojo"] &  { background: var(--aviso-suave, #fff5e0); color: var(--aviso, #9a6200); }
-  .sal-puerto[data-estado="bien"] & { background: var(--ok-suave, #e6f6ef); color: var(--ok, #0f8a5f); }
-}
-
-.sal-cambio {
-  margin: 8px 0 0;
-  font-size: 11.5px;
-  color: var(--text-3);
-
-  &.es-baja { color: var(--aviso, #9a6200); font-weight: 600; }
-}
-
-.es-malo { color: var(--danger, #b3261e); font-weight: 600; }
-.es-ojo  { color: var(--aviso, #9a6200); font-weight: 600; }
+.sal-clic { cursor: pointer; &:hover { background: var(--surface-2); } }

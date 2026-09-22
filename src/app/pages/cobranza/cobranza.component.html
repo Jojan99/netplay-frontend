@@ -1,177 +1,228 @@
-<div class="np-page np-cob">
-  <header class="np-head">
-    <div>
-      <p class="np-kicker">Finanzas <b>/</b> Cobranza inteligente</p>
-      <h1 class="np-title">Cobranza inteligente</h1>
-      <div class="np-ribbon">
-        <span class="np-fine">La plataforma detecta a quién cobrarle y avisa en la burbuja del panel. Con autorización, un asistente le escribe por WhatsApp y negocia sólo dentro de los límites de esta pantalla.</span>
+<div class="ic">
+  <header class="ic-head">
+    <div class="ic-head-t">
+      <span class="ic-marca" aria-hidden="true">
+        <svg viewBox="0 0 24 24"><path d="M5 18.6 11.1 7.4a1 1 0 0 1 1.8 0L19 18.6" fill="none" stroke="currentColor" stroke-width="4.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </span>
+      <div>
+        <p class="ic-kicker">Finanzas / IA Cobranza</p>
+        <h1>IA Cobranza</h1>
+        <p class="ic-fine">Detecta quién debe y, con tu permiso, le escribe por WhatsApp y negocia sólo dentro de tus reglas.</p>
       </div>
     </div>
-    <div class="np-actions" *ngIf="cfg">
-      <button type="button" class="np-btn np-btn--ghost" (click)="revisarAhora()" [disabled]="revisando || !cfg.activa">{{ revisando ? 'Revisando…' : 'Buscar deudores ahora' }}</button>
-      <button type="button" class="np-btn np-btn--primary" (click)="guardar()" [disabled]="guardando">{{ guardando ? 'Guardando…' : 'Guardar' }}</button>
+    <div class="ic-head-acc" *ngIf="cfg">
+      <span class="ic-guardado" *ngIf="mensaje" [class.is-error]="mensajeTipo === 'error'">{{ mensaje }}</span>
+      <button type="button" class="ic-btn ic-btn--pri" (click)="guardar()" [disabled]="guardando">{{ guardando ? 'Guardando…' : 'Guardar' }}</button>
     </div>
   </header>
 
-  <p *ngIf="mensaje" class="np-notice" [ngClass]="mensajeTipo === 'ok' ? 'np-notice--ok' : 'np-notice--danger'">{{ mensaje }}</p>
   <p *ngIf="cargando" class="np-muted"><span class="np-spinner np-spinner--sm"></span> Cargando…</p>
 
   <ng-container *ngIf="cfg && !cargando">
-    <p class="np-notice np-notice--warn" *ngIf="!iaDisponible">
-      <strong>El asistente todavía no está conectado.</strong> La plataforma igual detecta a los deudores y los muestra en la burbuja, pero para que el asistente escriba falta configurar la IA en el servidor.
-    </p>
-
-    <div class="np-cob-grid">
-      <!-- ── La IA: clave propia de Google o la de Netvula de prueba ── -->
-      <section class="np-card np-cob-ancha np-cob-ia">
-        <div class="np-card-h">
-          <h3>Conexión con la IA (Google Gemini)</h3>
-          <span class="np-tag" [ngClass]="ia.propia ? 'np-tag--ok' : 'np-tag--neutral'">{{ ia.propia ? 'Tu propia cuenta de Google' : 'IA de Netvula (prueba)' }}</span>
+    <!-- ── Estado: encendido, modo y lo que está pasando ── -->
+    <section class="ic-card ic-estado">
+      <div class="ic-estado-l">
+        <button type="button" class="ic-switch" role="switch" [attr.aria-checked]="cfg.activa" (click)="cfg.activa = !cfg.activa" aria-label="IA Cobranza activa"></button>
+        <div>
+          <b>{{ cfg.activa ? 'Activa' : 'Apagada' }}</b>
+          <small>{{ cfg.activa ? 'Revisa la cartera cada 5 minutos.' : 'No detecta ni escribe a nadie.' }}</small>
         </div>
+      </div>
 
-        <p class="np-fine" *ngIf="!ia.propia">
-          Estás usando la IA de Netvula: <b>{{ ia.limite_prueba }} conversaciones nuevas por día</b> para probar
-          (hoy van <b>{{ ia.usadas_hoy }}</b>). Conectá la clave gratis de tu cuenta de Google y tenés tu propio cupo
-          —unas 70 a 100 conversaciones por día— y las conversaciones con tus clientes quedan en tu cuenta.
-        </p>
-        <p class="np-fine" *ngIf="ia.propia">
-          El asistente usa tu cuenta de Google: sin el límite de prueba. Tu cupo y tu consumo los ves en
-          <a class="np-cob-enlace" [href]="ia.url_limites" target="_blank" rel="noopener">aistudio.google.com/rate-limit ↗</a>.
-        </p>
+      <div class="ic-seg" role="radiogroup" aria-label="Quién decide a quién escribirle">
+        <button type="button" role="radio" [attr.aria-checked]="cfg.modo === 'manual'" [class.is-on]="cfg.modo === 'manual'" (click)="cfg.modo = 'manual'"
+                title="Nadie recibe un mensaje sin que alguien lo apruebe">Yo autorizo</button>
+        <button type="button" role="radio" [attr.aria-checked]="cfg.modo === 'automatico'" [class.is-on]="cfg.modo === 'automatico'" (click)="cfg.modo = 'automatico'"
+                title="Si el cliente cumple las reglas, el asistente le escribe solo">Automático</button>
+      </div>
 
-        <ol class="np-cob-pasos" *ngIf="!ia.propia">
-          <li>Entrá con la cuenta de Google de tu empresa a
-            <a class="np-cob-enlace" [href]="ia.url_clave" target="_blank" rel="noopener">aistudio.google.com/apikey ↗</a>
-            (es gratis y no pide tarjeta).</li>
-          <li>Tocá <b>«Crear clave de API»</b> y copiala.</li>
-          <li>Pegala acá abajo, tocá <b>Probar</b> y después <b>Guardar</b>.</li>
-        </ol>
+      <div class="ic-stats">
+        <div class="ic-stat"><b>{{ resumen?.detectados ?? 0 }}</b><span>para autorizar</span></div>
+        <div class="ic-stat"><b>{{ resumen?.en_curso ?? 0 }}</b><span>en conversación</span></div>
+        <div class="ic-stat" [class.is-alerta]="(resumen?.escalados ?? 0) > 0"><b>{{ resumen?.escalados ?? 0 }}</b><span>necesitan una persona</span></div>
+      </div>
+    </section>
 
-        <div class="np-cob-clave">
-          <label class="np-field"><span>{{ ia.propia ? 'Cambiar la clave' : 'Clave de API de Google' }} <em>se guarda cifrada y no se vuelve a mostrar</em></span>
-            <div class="np-cob-clave-in">
-              <input class="np-input np-mono" [type]="verClave ? 'text' : 'password'" [(ngModel)]="claveNueva" autocomplete="new-password"
-                     [placeholder]="ia.propia ? 'Guardada · pegá otra para cambiarla' : 'AIza…'" />
-              <button type="button" class="np-btn np-btn--ghost np-btn--sm" (click)="verClave = !verClave">{{ verClave ? 'Ocultar' : 'Ver' }}</button>
-            </div>
-          </label>
-          <div class="np-btnrow">
-            <button type="button" class="np-btn np-btn--ghost np-btn--sm" (click)="probarClave()" [disabled]="probando || (!claveNueva.trim() && !ia.propia)">{{ probando ? 'Probando…' : 'Probar' }}</button>
-            <button type="button" class="np-btn np-btn--ghost np-btn--sm" *ngIf="ia.propia" (click)="quitarClave()">Quitar mi clave</button>
+    <div class="ic-grid">
+      <!-- ── Reglas ── -->
+      <section class="ic-card">
+        <header class="ic-card-h"><h2>Reglas</h2><span class="ic-fine">El asistente nunca se sale de esto.</span></header>
+
+        <div class="ic-regla">
+          <span class="ic-regla-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0"/><path d="M16 4.5a3.5 3.5 0 0 1 0 7M18 14a6 6 0 0 1 3.5 6"/></svg></span>
+          <div class="ic-regla-c">
+            <small>A quién le cobra</small>
+            <p>Quien deba
+              <input class="ic-in" type="number" min="1" max="24" [(ngModel)]="cfg.min_facturas" aria-label="Facturas mínimas"> factura(s) o más,
+              desde <span class="ic-pesos">$<input class="ic-in ic-in--ancho" type="number" min="0" step="1000" [(ngModel)]="cfg.min_monto" aria-label="Deuda mínima"></span>
+            </p>
+            <small class="ic-err" *ngIf="errores['min_facturas']">{{ errores['min_facturas'] }}</small>
           </div>
         </div>
-        <p class="np-notice np-notice--inline" *ngIf="resultadoPrueba" [ngClass]="resultadoPrueba.ok ? 'np-notice--ok' : 'np-notice--danger'">{{ resultadoPrueba.texto }}</p>
+
+        <div class="ic-regla">
+          <span class="ic-regla-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M20.6 13.4 13.4 20.6a2 2 0 0 1-2.8 0L3 13V3h10l7.6 7.6a2 2 0 0 1 0 2.8z"/><circle cx="7.5" cy="7.5" r="1.5"/></svg></span>
+          <div class="ic-regla-c">
+            <small>Qué puede ofrecer</small>
+            <p>Hasta <input class="ic-in" type="number" min="1" max="60" [(ngModel)]="cfg.plazo_max_dias" aria-label="Plazo máximo en días"> día(s) para pagar,
+              en <input class="ic-in" type="number" min="1" max="6" [(ngModel)]="cfg.cuotas_max" aria-label="Cuotas máximas"> cuota(s),
+              con hasta <input class="ic-in" type="number" min="0" max="50" [(ngModel)]="cfg.descuento_max_pct" aria-label="Descuento máximo">% de descuento
+            </p>
+          </div>
+        </div>
+
+        <div class="ic-regla">
+          <span class="ic-regla-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></span>
+          <div class="ic-regla-c">
+            <small>Cuándo escribe</small>
+            <p>De <input class="ic-in ic-in--hora" type="time" [(ngModel)]="cfg.hora_desde" aria-label="Desde">
+              a <input class="ic-in ic-in--hora" type="time" [(ngModel)]="cfg.hora_hasta" aria-label="Hasta">
+            </p>
+            <div class="ic-dias" role="group" aria-label="Días">
+              <button type="button" *ngFor="let d of DIAS" [class.is-on]="diasElegidos.has(d.n)" [attr.aria-pressed]="diasElegidos.has(d.n)" [title]="d.largo" (click)="alternarDia(d.n)">{{ d.t }}</button>
+            </div>
+            <small class="ic-err" *ngIf="errores['hora_hasta']">{{ errores['hora_hasta'] }}</small>
+          </div>
+        </div>
+
+        <footer class="ic-oferta">
+          <span class="ic-oferta-t">Podrá ofrecer</span>
+          <span class="ic-chip" *ngIf="pasarela">Pagar todo con link</span>
+          <span class="ic-chip">Compromiso hasta {{ cfg.plazo_max_dias }} día(s)</span>
+          <span class="ic-chip" *ngIf="+cfg.cuotas_max > 1">Hasta {{ cfg.cuotas_max }} cuotas</span>
+          <span class="ic-chip" *ngIf="+cfg.descuento_max_pct > 0">{{ cfg.descuento_max_pct }}% si paga en {{ cfg.descuento_dias }} día(s)</span>
+          <span class="ic-chip ic-chip--mudo">Lo demás → una persona</span>
+        </footer>
+        <p class="ic-aviso" *ngIf="!pasarela">Sin pasarela de pago activa no manda links de pago: sólo acuerda compromisos.</p>
       </section>
 
-      <!-- ── Encendido y modo ── -->
-      <section class="np-card">
-        <div class="np-card-h">
-          <h3>Estado</h3>
-          <button type="button" class="np-switch" role="switch" [attr.aria-checked]="cfg.activa" aria-label="Cobranza activa" (click)="cfg.activa = !cfg.activa"></button>
-        </div>
-        <p class="np-fine">{{ cfg.activa ? 'Activa: se revisa la cartera cada 5 minutos.' : 'Apagada: no se detecta ni se escribe a nadie.' }}</p>
+      <!-- ── IA y vista previa ── -->
+      <div class="ic-col">
+        <section class="ic-card ic-ia">
+          <header class="ic-card-h">
+            <h2>Conexión con la IA</h2>
+            <span class="ic-estado-ia" [class.is-ok]="iaDisponible">{{ iaDisponible ? 'Conectada' : 'Sin conectar' }}</span>
+          </header>
 
-        <div class="np-cob-modos" role="radiogroup" aria-label="Quién decide a quién escribirle">
-          <label class="np-cob-modo" [class.is-on]="cfg.modo === 'manual'">
-            <input type="radio" name="modo" [checked]="cfg.modo === 'manual'" (change)="cfg.modo = 'manual'">
-            <span><b>Yo autorizo cada cliente</b><small>La burbuja avisa y alguien toca «Que lo atienda el asistente». Nadie recibe un mensaje sin aprobación.</small></span>
-          </label>
-          <label class="np-cob-modo" [class.is-on]="cfg.modo === 'automatico'">
-            <input type="radio" name="modo" [checked]="cfg.modo === 'automatico'" (change)="cfg.modo = 'automatico'">
-            <span><b>Automático</b><small>Si cumple las reglas, el asistente le escribe solo, dentro del horario y del tope diario.</small></span>
-          </label>
-        </div>
-      </section>
+          <p class="ic-ia-t">{{ ia.propia ? 'Tu cuenta de Google' : 'IA de Netvula · prueba' }}</p>
+          <ng-container *ngIf="!ia.propia">
+            <div class="ic-medidor" [title]="ia.usadas_hoy + ' de ' + ia.limite_prueba + ' conversaciones nuevas hoy'"><span [style.width.%]="usoPct"></span></div>
+            <p class="ic-fine">{{ ia.usadas_hoy }} de {{ ia.limite_prueba }} conversaciones hoy. Con tu clave gratis de Google tenés unas 70 a 100 por día.</p>
+          </ng-container>
+          <p class="ic-fine" *ngIf="ia.propia">Sin límite de prueba. <a class="ic-link" [href]="ia.url_limites" target="_blank" rel="noopener">Ver mi consumo ↗</a></p>
 
-      <!-- ── A quién ── -->
-      <section class="np-card">
-        <div class="np-card-h"><h3>A quién cobrarle</h3></div>
-        <div class="np-form">
-          <label class="np-field"><span>Facturas sin pagar (mínimo)</span>
-            <input class="np-input np-mono" type="number" min="1" max="24" [(ngModel)]="cfg.min_facturas">
-            <small class="np-fine np-err" *ngIf="errores['min_facturas']">{{ errores['min_facturas'] }}</small>
-          </label>
-          <label class="np-field"><span>Días desde la factura más vieja</span>
-            <input class="np-input np-mono" type="number" min="0" max="365" [(ngModel)]="cfg.min_dias_mora">
-          </label>
-          <label class="np-field"><span>Sin escribir si la mora pasa de (días)</span>
-            <input class="np-input np-mono" type="number" min="0" max="3650" [(ngModel)]="cfg.max_dias_mora">
-            <small class="np-fine">Deudas muy viejas suelen ser clientes que ya se fueron. 0 = sin tope.</small>
-          </label>
-          <label class="np-field"><span>Deuda mínima (pesos)</span>
-            <input class="np-input np-mono" type="number" min="0" step="1000" [(ngModel)]="cfg.min_monto">
-            <small class="np-fine">No se le escribe a quien ya tiene un compromiso de pago vigente, ni a quien pidió que no le escribieran.</small>
-          </label>
-        </div>
-      </section>
+          <button type="button" class="ic-btn" (click)="abrirClave = !abrirClave">
+            {{ abrirClave ? 'Cerrar' : (ia.propia ? 'Cambiar clave' : 'Conectar mi clave de Google') }}
+          </button>
 
-      <!-- ── Límites ── -->
-      <section class="np-card np-cob-ancha">
-        <div class="np-card-h"><h3>Hasta dónde puede negociar</h3></div>
-        <div class="np-form np-form--3">
-          <label class="np-field"><span>Plazo máximo del compromiso (días)</span>
-            <input class="np-input np-mono" type="number" min="1" max="60" [(ngModel)]="cfg.plazo_max_dias">
-          </label>
-          <label class="np-field"><span>Cuotas máximas</span>
-            <input class="np-input np-mono" type="number" min="1" max="6" [(ngModel)]="cfg.cuotas_max">
-            <small class="np-fine">1 = sólo pago total. Las cuotas reparten las facturas.</small>
-          </label>
-          <label class="np-field"><span>Si no cumple el compromiso</span>
-            <select class="np-input" [(ngModel)]="cfg.compromiso_suspende">
-              <option [ngValue]="true">Se suspende automáticamente</option>
-              <option [ngValue]="false">No se suspende solo</option>
-            </select>
-          </label>
-          <label class="np-field"><span>Descuento máximo (%)</span>
-            <input class="np-input np-mono" type="number" min="0" max="50" [(ngModel)]="cfg.descuento_max_pct">
-            <small class="np-fine">0 = nunca ofrece descuento.</small>
-          </label>
-          <label class="np-field" *ngIf="+cfg.descuento_max_pct > 0"><span>El descuento vale si paga en (días)</span>
-            <input class="np-input np-mono" type="number" min="1" max="15" [(ngModel)]="cfg.descuento_dias">
-            <small class="np-fine">Si no paga a tiempo, el descuento se quita solo.</small>
-          </label>
-        </div>
-        <p class="np-notice np-notice--code np-cob-ejemplo"><b>Podrá ofrecer:</b> {{ ejemploOferta }} Nada más: cualquier otra cosa la pasa a una persona.</p>
-        <p class="np-notice np-notice--warn" *ngIf="!pasarela">La empresa no tiene pasarela de pago activa: el asistente no puede mandar links de pago, sólo acordar compromisos.</p>
-      </section>
+          <div class="ic-clave" *ngIf="abrirClave">
+            <ol *ngIf="!ia.propia">
+              <li>Entrá a <a class="ic-link" [href]="ia.url_clave" target="_blank" rel="noopener">aistudio.google.com/apikey ↗</a> (gratis, sin tarjeta).</li>
+              <li>Tocá <b>«Crear clave de API»</b> y pegala acá.</li>
+            </ol>
+            <div class="ic-clave-in">
+              <input class="ic-input ic-mono" [type]="verClave ? 'text' : 'password'" [(ngModel)]="claveNueva" autocomplete="new-password"
+                     [placeholder]="ia.propia ? 'Pegá otra clave' : 'AIza…'" aria-label="Clave de API de Google" />
+              <button type="button" class="ic-ojo" (click)="verClave = !verClave" [title]="verClave ? 'Ocultar la clave' : 'Ver la clave'">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>
+              </button>
+            </div>
+            <div class="ic-clave-acc">
+              <button type="button" class="ic-btn" (click)="probarClave()" [disabled]="probando || (!claveNueva.trim() && !ia.propia)">{{ probando ? 'Probando…' : 'Probar' }}</button>
+              <button type="button" class="ic-btn ic-btn--quiet" *ngIf="ia.propia" (click)="quitarClave()">Quitar mi clave</button>
+            </div>
+            <p class="ic-fine">Se guarda cifrada al tocar <b>Guardar</b> y no se vuelve a mostrar.</p>
+            <p class="ic-resultado" *ngIf="resultadoPrueba" [class.is-ok]="resultadoPrueba.ok">{{ resultadoPrueba.texto }}</p>
+          </div>
+        </section>
 
-      <!-- ── Cuándo ── -->
-      <section class="np-card">
-        <div class="np-card-h"><h3>Cuándo escribe</h3></div>
-        <div class="np-cob-dias" role="group" aria-label="Días">
-          <button type="button" *ngFor="let d of DIAS" [class.is-on]="diasElegidos.has(d.n)" [attr.aria-pressed]="diasElegidos.has(d.n)" [title]="d.largo" (click)="alternarDia(d.n)">{{ d.t }}</button>
-        </div>
-        <div class="np-form">
-          <label class="np-field"><span>Desde</span><input class="np-input np-mono" type="time" [(ngModel)]="cfg.hora_desde"></label>
-          <label class="np-field"><span>Hasta</span>
-            <input class="np-input np-mono" type="time" [(ngModel)]="cfg.hora_hasta">
-            <small class="np-fine np-err" *ngIf="errores['hora_hasta']">{{ errores['hora_hasta'] }}</small>
-          </label>
-          <label class="np-field"><span>Clientes nuevos por día (tope)</span><input class="np-input np-mono" type="number" min="1" max="300" [(ngModel)]="cfg.max_contactos_dia"></label>
-          <label class="np-field"><span>Recordatorios si no contesta</span><input class="np-input np-mono" type="number" min="0" max="3" [(ngModel)]="cfg.recordatorios"></label>
-          <label class="np-field np-field-full"><span>Horas entre recordatorios</span><input class="np-input np-mono" type="number" min="4" max="168" [(ngModel)]="cfg.horas_entre_recordatorios"></label>
-        </div>
-        <p class="np-fine">Pocos mensajes por día y en horario cuidan la línea de WhatsApp de bloqueos.</p>
-      </section>
+        <section class="ic-card">
+          <header class="ic-card-h"><h2>Así le escribe</h2><span class="ic-fine">ejemplo</span></header>
+          <div class="ic-wa">
+            <div class="ic-wa-cab">
+              <span class="ic-wa-av">{{ (cfg.nombre_asistente || 'A').charAt(0).toUpperCase() }}</span>
+              <span><b>{{ cfg.nombre_asistente || 'Asistente' }}</b><small>WhatsApp</small></span>
+            </div>
+            <div class="ic-wa-msg">{{ ejemploMensaje }}<i>9:41</i></div>
+            <div class="ic-wa-msg ic-wa-msg--cli">¿Me puede dar unos días?<i>9:42</i></div>
+            <div class="ic-wa-msg">Claro. Puedo darle hasta {{ cfg.plazo_max_dias }} día(s){{ +cfg.cuotas_max > 1 ? ', y si quiere en ' + cfg.cuotas_max + ' cuotas' : '' }}. ¿Qué día le queda mejor?<i>9:42</i></div>
+          </div>
+        </section>
+      </div>
+    </div>
 
-      <!-- ── Cómo se presenta ── -->
-      <section class="np-card">
-        <div class="np-card-h"><h3>Cómo se presenta</h3></div>
-        <div class="np-form">
-          <label class="np-field np-field-full"><span>Nombre del asistente</span><input class="np-input" maxlength="60" [(ngModel)]="cfg.nombre_asistente"></label>
-          <label class="np-field np-field-full"><span>Línea de WhatsApp</span>
-            <select class="np-input" [(ngModel)]="cfg.wa_linea_id">
+    <!-- ── Opciones avanzadas: lista de ajustes por grupo ── -->
+    <section class="ic-card ic-avz" [class.is-open]="avanzado">
+      <button type="button" class="ic-avz-btn" (click)="avanzado = !avanzado" [attr.aria-expanded]="avanzado">
+        <span><b>Opciones avanzadas</b><small>Cómo se presenta, recordatorios, topes y filtros</small></span>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
+      </button>
+
+      <div class="ic-avz-cuerpo" *ngIf="avanzado">
+        <div class="ic-grupo">
+          <h3>Cómo se presenta</h3>
+          <div class="ic-set">
+            <div class="ic-set-t"><b>Nombre del asistente</b><small>Con este nombre saluda al cliente.</small></div>
+            <input class="ic-input ic-set-c" maxlength="60" [(ngModel)]="cfg.nombre_asistente" aria-label="Nombre del asistente">
+          </div>
+          <div class="ic-set">
+            <div class="ic-set-t"><b>Línea de WhatsApp</b><small>Desde qué número escribe.</small></div>
+            <select class="ic-input ic-set-c" [(ngModel)]="cfg.wa_linea_id" aria-label="Línea de WhatsApp">
               <option [ngValue]="null">La principal de la empresa</option>
               <option *ngFor="let l of lineas" [ngValue]="l.id">{{ l.nombre }}{{ l.telefono ? ' · ' + l.telefono : '' }}{{ l.principal ? ' (principal)' : '' }}</option>
             </select>
-          </label>
-          <label class="np-field np-field-full"><span>Indicaciones extra <em>(opcional)</em></span>
-            <textarea class="np-input np-cob-txt" maxlength="1500" [(ngModel)]="cfg.instrucciones"
+          </div>
+          <div class="ic-set ic-set--col">
+            <div class="ic-set-t"><b>Indicaciones extra</b><small>Opcional. Tono o datos de la empresa; no puede cambiar las reglas.</small></div>
+            <textarea class="ic-input ic-txt" maxlength="1500" [(ngModel)]="cfg.instrucciones" aria-label="Indicaciones extra"
                       placeholder="Ej.: Menciona que puede pagar en nuestras oficinas de lunes a sábado. Si pregunta por reconexión, dile que es el mismo día del pago."></textarea>
-            <small class="np-fine">Tono o datos de la empresa. No puede cambiar los límites de arriba.</small>
-          </label>
+          </div>
         </div>
-      </section>
-    </div>
+
+        <div class="ic-grupo">
+          <h3>Recordatorios y topes</h3>
+          <div class="ic-set">
+            <div class="ic-set-t"><b>Clientes nuevos por día</b><small>Pocos por día cuidan la línea de bloqueos.</small></div>
+            <div class="ic-num"><input class="ic-input ic-mono" type="number" min="1" max="300" [(ngModel)]="cfg.max_contactos_dia" aria-label="Clientes nuevos por día"><span>clientes</span></div>
+          </div>
+          <div class="ic-set">
+            <div class="ic-set-t"><b>Recordatorios si no contesta</b><small>0 = no le vuelve a escribir.</small></div>
+            <div class="ic-num"><input class="ic-input ic-mono" type="number" min="0" max="3" [(ngModel)]="cfg.recordatorios" aria-label="Recordatorios"><span>veces</span></div>
+          </div>
+          <div class="ic-set">
+            <div class="ic-set-t"><b>Tiempo entre recordatorios</b></div>
+            <div class="ic-num"><input class="ic-input ic-mono" type="number" min="4" max="168" [(ngModel)]="cfg.horas_entre_recordatorios" aria-label="Horas entre recordatorios"><span>horas</span></div>
+          </div>
+        </div>
+
+        <div class="ic-grupo">
+          <h3>Filtros y compromisos</h3>
+          <div class="ic-set">
+            <div class="ic-set-t"><b>Antigüedad mínima de la deuda</b><small>Días desde la factura más vieja.</small></div>
+            <div class="ic-num"><input class="ic-input ic-mono" type="number" min="0" max="365" [(ngModel)]="cfg.min_dias_mora" aria-label="Días desde la factura más vieja"><span>días</span></div>
+          </div>
+          <div class="ic-set">
+            <div class="ic-set-t"><b>No escribir si la mora pasa de</b><small>Deudas muy viejas suelen ser clientes que se fueron. 0 = sin tope.</small></div>
+            <div class="ic-num"><input class="ic-input ic-mono" type="number" min="0" max="3650" [(ngModel)]="cfg.max_dias_mora" aria-label="Mora máxima"><span>días</span></div>
+          </div>
+          <div class="ic-set" *ngIf="+cfg.descuento_max_pct > 0">
+            <div class="ic-set-t"><b>El descuento vale si paga en</b><small>Si no paga a tiempo, se quita solo.</small></div>
+            <div class="ic-num"><input class="ic-input ic-mono" type="number" min="1" max="15" [(ngModel)]="cfg.descuento_dias" aria-label="Días para el descuento"><span>días</span></div>
+          </div>
+          <div class="ic-set">
+            <div class="ic-set-t"><b>Si no cumple el compromiso</b></div>
+            <select class="ic-input ic-set-c" [(ngModel)]="cfg.compromiso_suspende" aria-label="Si no cumple el compromiso">
+              <option [ngValue]="true">Se suspende solo</option>
+              <option [ngValue]="false">No se suspende solo</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="ic-ahora">
+          <button type="button" class="ic-btn" (click)="revisarAhora()" [disabled]="revisando || !cfg.activa">{{ revisando ? 'Revisando…' : 'Buscar deudores ahora' }}</button>
+          <span class="ic-fine">No hace falta: se revisa sola cada 5 minutos.</span>
+        </div>
+      </div>
+    </section>
   </ng-container>
 </div>

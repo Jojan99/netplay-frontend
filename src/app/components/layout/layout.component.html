@@ -38,39 +38,8 @@
         </ng-container>
         <flowbite-dark-theme-toggle></flowbite-dark-theme-toggle>
         <app-team-panel></app-team-panel>
-        <div class="app-shell-novedades">
-          <button type="button" class="np-icobtn app-shell-notification" (click)="verNovedades()"
-                  [attr.aria-expanded]="novedadesAbiertas"
-                  [attr.aria-label]="novedadesSinVer ? novedadesSinVer + ' novedades sin leer' : 'Novedades'">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 16V11a6 6 0 1 1 12 0v5l1.5 2h-15L6 16zM10 20a2 2 0 0 0 4 0"/></svg>
-            <span class="app-shell-notification-dot" *ngIf="novedadesSinVer"></span>
-          </button>
-
-          <div class="app-shell-novedades-panel" *ngIf="novedadesAbiertas">
-            <header>
-              <b>Novedades</b>
-              <button type="button" class="np-icobtn np-icobtn--sm" (click)="novedadesAbiertas = false" aria-label="Cerrar">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"/></svg>
-              </button>
-            </header>
-
-            <p class="app-shell-novedades-vacio" *ngIf="cargandoNovedades">Cargando…</p>
-            <p class="app-shell-novedades-vacio" *ngIf="!cargandoNovedades && !novedades.length">
-              Por ahora no hay novedades. Acá te contamos lo que vamos agregando.
-            </p>
-
-            <ul *ngIf="!cargandoNovedades">
-              <li *ngFor="let n of novedades" [class.es-nueva]="n.nueva">
-                <button type="button" (click)="abrirNovedad(n)" [disabled]="!n.ruta">
-                  <span class="app-shell-novedad-tipo" [attr.data-tipo]="n.tipo">{{ n.tipo }}</span>
-                  <b>{{ n.titulo }}</b>
-                  <span class="app-shell-novedad-detalle" *ngIf="n.detalle">{{ n.detalle }}</span>
-                  <time>{{ n.publicada_en | date:'d MMM' }}</time>
-                </button>
-              </li>
-            </ul>
-          </div>
-        </div>
+        <app-novedades></app-novedades>
+        <app-notificaciones></app-notificaciones>
         <button #dropdownButton type="button" (click)="toggleDropdown()" class="app-shell-profile" [attr.aria-expanded]="isDropdownVisible">
           <div class="app-shell-user-monogram">{{ (nombre || username)?.charAt(0)?.toUpperCase() || 'U' }}</div>
           <div class="app-shell-profile-copy">

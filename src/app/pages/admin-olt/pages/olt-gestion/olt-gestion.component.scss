@@ -1,0 +1,29 @@
+/* ─── Gestión remota ──────────────────────────────────────────────────── */
+
+/* Acá scrollea la pantalla entera, no cada pedazo: las dos pantallas que
+   viven adentro traen su propio contenedor con scroll y su tarjeta del
+   servidor se les montaba encima. */
+:host { display: flex; flex-direction: column; height: 100%; min-height: 0; }
+.ges { flex: 1; min-height: 0; overflow-y: auto; display: block; padding-bottom: 8px; }
+
+:host ::ng-deep app-olt-acceso-remoto,
+:host ::ng-deep app-olt-tr069 { display: block; }
+
+:host ::ng-deep app-olt-acceso-remoto > .np-page,
+:host ::ng-deep app-olt-tr069 > .np-page { display: block; flex: none; min-height: 0; height: auto; }
+
+/* Su scroll interno pasa a ser parte del de la página. */
+:host ::ng-deep app-olt-acceso-remoto .np-scroll,
+:host ::ng-deep app-olt-tr069 .np-scroll { overflow: visible; flex: none; min-height: 0; height: auto; }
+
+.ges-servidor { padding: 0; margin-top: 14px; }
+.ges-toggle { width: 100%; display: flex; align-items: center; gap: 12px; padding: 14px 16px;
+  border: 0; background: transparent; color: var(--text); cursor: pointer; text-align: left;
+  b { display: block; font: 700 13.5px var(--font-display); }
+  small { font-size: 12px; color: var(--text-3); }
+  svg { width: 17px; height: 17px; flex-shrink: 0; color: var(--text-3); transition: transform .2s ease; }
+  &:hover svg { color: var(--accent); } }
+.ges-toggle-t { flex: 1; min-width: 0; }
+.ges-toggle-a { font-size: 12px; font-weight: 650; color: var(--accent); }
+.ges-servidor.is-open .ges-toggle { border-bottom: 1px solid var(--line); svg { transform: rotate(180deg); } }
+:host ::ng-deep .ges-servidor app-olt-tr069 > .np-page { padding: 14px 16px 16px; }

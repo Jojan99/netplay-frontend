@@ -8,7 +8,6 @@ export interface CobranzaConfig {
   modo: 'manual' | 'automatico';
   min_facturas: number;
   min_dias_mora: number;
-  max_dias_mora: number;
   min_monto: number;
   descuento_max_pct: number;
   descuento_dias: number;
@@ -22,8 +21,12 @@ export interface CobranzaConfig {
   recordatorios: number;
   horas_entre_recordatorios: number;
   nombre_asistente: string;
+  /** Cómo se presenta la empresa en el mensaje; si falta, se dice «tu proveedor». */
+  nombre_empresa: string | null;
   instrucciones: string | null;
   wa_linea_id: number | null;
+  /** 0 = sin tope: una deuda muy vieja suele ser un cliente que ya se fue. */
+  max_dias_mora: number;
 }
 
 export interface CobranzaResumen {
@@ -69,11 +72,18 @@ export class CobranzaService {
   }
 
   config(): Observable<any>                         { return this.http.get(`${this.base}/config`, { headers: this.headers() }); }
-  /** La clave de Google va aparte: vacía = se conserva; quitar_clave la borra. */
-  guardarConfig(c: CobranzaConfig & { ia_clave?: string; quitar_clave?: boolean; ia_modelos?: string | null }): Observable<any> {
-    return this.http.put(`${this.base}/config`, c, { headers: this.headers() });
+
+  /**
+   * Prueba una clave de Google contra la IA, antes de guardarla.
+   *
+   * Sin clave prueba la que esté configurada: sirve para saber si la conexión
+   * sigue viva sin tener que escribirle a un cliente para enterarse.
+   */
+  probarIa(clave?: string): Observable<any> {
+    return this.http.post(`${this.base}/ia/probar`, { ia_clave: clave || undefined }, { headers: this.headers() });
   }
-  probarIa(clave?: string): Observable<any> { return this.http.post(`${this.base}/ia/probar`, { ia_clave: clave || undefined }, { headers: this.headers() }); }
+
+  guardarConfig(c: CobranzaConfig & { ia_clave?: string; quitar_clave?: boolean }): Observable<any> { return this.http.put(`${this.base}/config`, c, { headers: this.headers() }); }
   resumen(): Observable<any>                        { return this.http.get(`${this.base}/resumen`, { headers: this.headers() }); }
   marcarVistos(): Observable<any>                   { return this.http.post(`${this.base}/vistos`, {}, { headers: this.headers() }); }
   revisarAhora(): Observable<any>                   { return this.http.post(`${this.base}/revisar`, {}, { headers: this.headers() }); }

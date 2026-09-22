@@ -1,4 +1,4 @@
-import { Component, ElementRef, HostListener, OnDestroy, OnInit, PLATFORM_ID, inject, signal } from '@angular/core';
+import { Component, OnDestroy, OnInit, PLATFORM_ID, inject, signal } from '@angular/core';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { Router } from '@angular/router';
 import { CobranzaCaso, CobranzaResumen, CobranzaService } from '../../services/cobranza.service';
@@ -22,18 +22,6 @@ export class CobranzaBurbujaComponent implements OnInit, OnDestroy {
   private svc = inject(CobranzaService);
   private router = inject(Router);
   private enNavegador = isPlatformBrowser(inject(PLATFORM_ID));
-  private el = inject(ElementRef<HTMLElement>);
-
-  /** Clic afuera o Esc: se cierra, como cualquier menú del encabezado. */
-  @HostListener('document:mousedown', ['$event'])
-  alHacerClic(e: MouseEvent): void {
-    if (this.abierta() && !this.el.nativeElement.contains(e.target as Node)) this.cerrar();
-  }
-
-  @HostListener('document:keydown.escape')
-  alEscape(): void {
-    if (this.abierta()) this.cerrar();
-  }
 
   readonly resumen = signal<CobranzaResumen | null>(null);
   readonly abierta = signal(false);
@@ -66,14 +54,15 @@ export class CobranzaBurbujaComponent implements OnInit, OnDestroy {
     return r ? r.detectados + r.escalados : 0;
   }
 
-  /** En el encabezado se ve siempre que la cobranza esté activa (apagada si no hay nada). */
+  /** La pastilla sólo se ve si la cobranza está activa y hay algo que mirar. */
   get visible(): boolean {
-    return !!this.resumen()?.activa;
+    const r = this.resumen();
+    return !!r?.activa && (this.pendientes > 0 || r.en_curso > 0 || r.no_vistos > 0 || this.abierta());
   }
 
   private cargarResumen(): void {
     this.svc.resumen().subscribe({
-      next: r => this.resumen.set(r?.data ?? null),
+      next: r => this.resumen.set(r?.error === 0 || r?.status === 0 ? r.data : r?.data ?? null),
       error: () => {},   // sin permiso o sin conexión: la pastilla no aparece
     });
   }

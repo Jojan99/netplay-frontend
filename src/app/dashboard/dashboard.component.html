@@ -1,332 +1,281 @@
-<div class="np-page np-dash">
-
-  <!-- Guía de primeros pasos: se muestra sola mientras quede algo por configurar -->
-  <app-onboarding-guide></app-onboarding-guide>
+<div class="np-page sala" [class.esta-armando]="armando">
 
   <header class="np-head">
     <div>
-      <p class="np-kicker">Operación <b>/</b> Centro de control</p>
+      <p class="np-kicker">Operación <b>/</b> {{ armando ? 'Armando mi tablero' : 'Centro de control' }}</p>
       <h1 class="np-title">Hola, {{ nombre || username || 'operador' }}</h1>
       <div class="np-ribbon">
         <span class="np-mono">{{ today }}</span>
-        <span><i class="np-dot" style="background:var(--accent)"></i>{{ companyName || 'Netplay' }}</span>
+        <span><i class="np-dot" style="background:var(--accent)"></i>{{ companyName || 'Netvula' }}</span>
         <span><span class="np-pill np-pill--neutral">{{ isAdmin ? 'Administrador' : isContador ? 'Contador' : isTecnico ? 'Técnico' : role }}</span></span>
       </div>
     </div>
+
     <div class="np-actions">
-      <label class="np-pagesize" *ngIf="(isAdmin || isContador) && (tiene('plata') || tiene('clientes'))">Año
-        <np-select [(ngModel)]="selectedYear" (ngModelChange)="onYearChange()" [opciones]="availableYears" [presentacion]="presAnios"
-                   tamano="sm" style="min-width: 150px" ariaLabel="Año de los gráficos"></np-select>
-      </label>
-      <button type="button" class="np-btn" [class.np-btn--primary]="armando" (click)="armando = !armando">
-        {{ armando ? 'Listo' : 'Armar mi tablero' }}
-      </button>
+      <ng-container *ngIf="!armando">
+        <span class="sala-estado" *ngIf="veLaRed">
+          <i class="np-dot" [style.background]="avisosCriticos ? 'var(--danger)' : 'var(--ok)'"></i>
+          {{ avisosCriticos ? avisosCriticos + ' cosas urgentes en la red' : 'La red está tranquila' }}
+        </span>
+        <label class="np-pagesize" *ngIf="hay('plata') || hay('clientes')">Año
+          <np-select [(ngModel)]="selectedYear" (ngModelChange)="onYearChange()" [opciones]="availableYears" [presentacion]="presAnios"
+                     tamano="sm" style="min-width: 138px" ariaLabel="Año del gráfico"></np-select>
+        </label>
+        <button type="button" class="np-btn np-btn--ghost" (click)="empezarAArmar()">Armar mi tablero</button>
+      </ng-container>
+
+      <ng-container *ngIf="armando">
+        <button type="button" class="np-btn np-btn--ghost" (click)="deFabrica()">Volver al de fábrica</button>
+        <button type="button" class="np-btn np-btn--primary" (click)="guardar()" [disabled]="guardando">
+          {{ guardando ? 'Guardando…' : 'Listo, guardar' }}
+        </button>
+      </ng-container>
     </div>
   </header>
 
-  <!-- ══ ARMADO ══════════════════════════════════════════════════════════
-       Se elige qué paneles van y en qué orden. Nada se guarda hasta que la
-       persona lo diga: puede probar y arrepentirse. -->
-  <section class="np-card dash-armar" *ngIf="armando">
-    <div class="np-card-h">
-      <h2>Tu tablero</h2>
-      <span class="np-card-meta">{{ paneles.length }} de {{ catalogoVisible.length }} paneles</span>
-    </div>
+  <div class="np-scroll sala-scroll">
 
-    <p class="np-muted dash-armar-ayuda">Elegí lo que querés ver al entrar. Las flechas cambian el orden.</p>
-
-    <ul class="dash-armar-lista">
-      <li *ngFor="let p of paneles; let i = index">
-        <span class="dash-armar-orden">{{ i + 1 }}</span>
-        <b>{{ tituloDe(p) }}</b>
-        <span class="dash-armar-botones">
-          <button type="button" class="np-icobtn np-icobtn--sm" (click)="mover(i, -1)" [disabled]="i === 0" aria-label="Subir">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m18 15-6-6-6 6"/></svg>
-          </button>
-          <button type="button" class="np-icobtn np-icobtn--sm" (click)="mover(i, 1)" [disabled]="i === paneles.length - 1" aria-label="Bajar">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
-          </button>
-          <button type="button" class="np-icobtn np-icobtn--sm" (click)="alternar(p)" aria-label="Quitar">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"/></svg>
-          </button>
-        </span>
-      </li>
-    </ul>
-
-    <p class="np-sect">Para sumar</p>
-    <div class="dash-armar-sumar">
-      <button type="button" *ngFor="let c of catalogoVisible" class="dash-armar-chip"
-              [class.es-puesto]="tiene(c.id)" (click)="alternar(c.id)">
-        <b>{{ c.titulo }}</b>
-        <span>{{ c.resumen }}</span>
-      </button>
-    </div>
-
-    <div class="dash-armar-pie">
-      <button type="button" class="np-btn np-btn--ghost" (click)="volverAlDeFabrica()" *ngIf="tableroArmado">Volver al de fábrica</button>
-      <button type="button" class="np-btn np-btn--primary" (click)="guardarTablero()" [disabled]="guardandoTablero">
-        {{ guardandoTablero ? 'Guardando…' : 'Guardar mi tablero' }}
-      </button>
-    </div>
-  </section>
-
-  <div class="np-scroll">
-
-    <ng-container *ngFor="let panel of paneles" [ngSwitch]="panel">
-
-      <!-- ── Para resolver ─────────────────────────────────────────────── -->
-      <section class="np-card dash-panel" *ngSwitchCase="'resolver'">
-        <div class="np-card-h">
-          <h2>Para resolver</h2>
-          <button type="button" class="np-linkbtn" (click)="irA('resolver')">Ver todo</button>
-        </div>
-        <p class="np-muted" *ngIf="resolver && !resolver.total">Nada pendiente. La red viene tranquila.</p>
-        <ul class="dash-lista" *ngIf="resolver?.ultimas?.length">
-          <li *ngFor="let a of resolver?.ultimas">
-            <b>{{ a.titulo || a.tipo }}</b>
-            <span>{{ a.detalle || a.mensaje }}</span>
-          </li>
-        </ul>
-      </section>
-
-      <!-- ── La red en vivo ────────────────────────────────────────────── -->
-      <section class="np-card dash-panel" *ngSwitchCase="'vivo'">
-        <div class="np-card-h">
-          <h2>La red en vivo</h2>
-          <button type="button" class="np-linkbtn" (click)="irA('vivo')">Ver equipos</button>
-        </div>
-        <div class="np-kpis np-kpis--3" *ngIf="vivo">
-          <div class="np-kpi np-kpi--accent"><span class="np-kpi-l">Conectados</span><span class="np-kpi-v np-kpi-v--ok">{{ vivo.online | number }}</span></div>
-          <div class="np-kpi"><span class="np-kpi-l">Caídos</span><span class="np-kpi-v np-kpi-v--danger">{{ vivo.offline | number }}</span></div>
-          <div class="np-kpi"><span class="np-kpi-l">Total</span><span class="np-kpi-v">{{ vivo.total | number }}</span></div>
-        </div>
-      </section>
-
-      <!-- ── La plata ──────────────────────────────────────────────────── -->
-      <ng-container *ngSwitchCase="'plata'">
-        <section class="np-kpis np-kpis--5" aria-label="Indicadores financieros">
-          <div class="np-kpi np-kpi--accent">
-            <span class="np-kpi-l">Caja</span>
-            <span class="np-kpi-v">$ {{ valorCaja | number:'1.0-0' }}</span>
-            <span class="np-kpi-s">ingresos menos egresos</span>
-          </div>
-          <div class="np-kpi">
-            <span class="np-kpi-l">Ingresos</span>
-            <span class="np-kpi-v np-kpi-v--ok">$ {{ valorIngreso | number:'1.0-0' }}</span>
-            <span class="np-kpi-s">{{ countPaid | number }} facturas pagadas</span>
-          </div>
-          <div class="np-kpi">
-            <span class="np-kpi-l">Pendiente</span>
-            <span class="np-kpi-v np-kpi-v--warn">$ {{ valorPendiente | number:'1.0-0' }}</span>
-            <span class="np-kpi-s">cartera por cobrar</span>
-          </div>
-          <div class="np-kpi">
-            <span class="np-kpi-l">Egresos</span>
-            <span class="np-kpi-v np-kpi-v--danger">$ {{ valorEgresos | number:'1.0-0' }}</span>
-            <span class="np-kpi-s">gastos registrados</span>
-          </div>
-          <div class="np-kpi">
-            <span class="np-kpi-l">Clientes</span>
-            <span class="np-kpi-v">{{ totalUsers | number }}</span>
-            <span class="np-kpi-s"><i class="np-dot" style="background:var(--ok)"></i>{{ active | number }} activos · <i class="np-dot" style="background:var(--danger)"></i>{{ inactive | number }} inactivos</span>
-          </div>
-        </section>
-        <section class="np-scroll-row" [class.np-grid-3]="isAdmin">
-          <div class="np-card np-card--wide">
-            <div class="np-card-h"><h2>Ingresos y egresos {{ selectedYear }}</h2><span class="np-legend"><i style="background:var(--ok)"></i>Ingresos <i style="background:var(--danger)"></i>Egresos</span></div>
-            <div class="np-chart np-chart--tall"><canvas id="incomeChart"></canvas></div>
-          </div>
-          <div class="np-card" *ngIf="isAdmin">
-            <div class="np-card-h"><h2>Estado de contratos</h2></div>
-            <div class="np-chart"><canvas id="contractsChart"></canvas></div>
-          </div>
-        </section>
-      </ng-container>
-
-      <!-- ── Mora por antigüedad ───────────────────────────────────────── -->
-      <section class="np-card dash-panel" *ngSwitchCase="'mora'">
-        <div class="np-card-h">
-          <h2>Mora por antigüedad</h2>
-          <span class="np-card-meta" *ngIf="moraData">{{ moraData.clientes | number }} clientes · {{ moraData.al_dia_pct }}% al día</span>
-        </div>
-        <div class="np-tablewrap" *ngIf="moraData?.antiguedad?.length">
-          <table class="np-table np-table--compact">
-            <thead><tr><th>Tramo</th><th class="np-th-right">Clientes</th><th class="np-th-right">Deuda</th></tr></thead>
-            <tbody>
-              <tr *ngFor="let t of moraData.antiguedad">
-                <td class="np-strong">{{ t.tramo }}</td>
-                <td class="np-data np-td-right">{{ t.clientes | number }}</td>
-                <td class="np-money">$ {{ t.deuda | number:'1.0-0' }}</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-        <p class="np-muted" *ngIf="moraData">Recuperado este mes: <b>$ {{ moraData.recuperado | number:'1.0-0' }}</b></p>
-      </section>
-
-      <!-- ── Medios de pago ────────────────────────────────────────────── -->
-      <section class="np-card dash-panel" *ngSwitchCase="'metodos'">
-        <div class="np-card-h"><h2>Recaudo por método de pago</h2>
-          <input type="month" class="np-input np-input--sm" [(ngModel)]="pmPeriod" (ngModelChange)="onPmPeriodChange()" aria-label="Período" />
-        </div>
-        <p class="np-muted" *ngIf="pmSummary.length === 0">No hay pagos registrados en este período.</p>
-        <div class="np-tablewrap" *ngIf="pmSummary.length > 0">
-          <table class="np-table np-table--compact">
-            <thead><tr><th>Método</th><th class="np-th-right">Pagos</th><th class="np-th-right">Total</th></tr></thead>
-            <tbody>
-              <tr *ngFor="let pm of pmSummary">
-                <td class="np-strong">{{ pm.name }}</td>
-                <td class="np-data np-td-right">{{ pm.count }}</td>
-                <td class="np-money">$ {{ pm.total | number:'1.0-0' }}</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </section>
-
-      <!-- ── Quién debe más ────────────────────────────────────────────── -->
-      <section class="np-card dash-panel" *ngSwitchCase="'deudores'">
-        <div class="np-card-h">
-          <h2>Quién debe más</h2>
-          <button type="button" class="np-linkbtn" (click)="irA('deudores')">Ver cartera</button>
-        </div>
-        <p class="np-muted" *ngIf="!deudoresData.length">Nadie con deuda vencida. Bien ahí.</p>
-        <ol class="np-rank" *ngIf="deudoresData.length">
-          <li *ngFor="let d of deudoresData">
-            <span class="np-rank-n">{{ d.nombre }} <em class="np-muted">{{ d.facturas }} factura{{ d.facturas === 1 ? '' : 's' }} · {{ d.dias }} días</em></span>
-            <span class="np-rank-c">$ {{ d.deuda | number:'1.0-0' }}</span>
-          </li>
-        </ol>
-      </section>
-
-      <!-- ── Cobranza ──────────────────────────────────────────────────── -->
-      <section class="np-card dash-panel" *ngSwitchCase="'cobranza'">
-        <div class="np-card-h">
-          <h2>Cobranza</h2>
-          <button type="button" class="np-linkbtn" (click)="irA('cobranza')">Ver casos</button>
-        </div>
-        <div class="np-kpis np-kpis--3" *ngIf="cobranzaData">
-          <div class="np-kpi np-kpi--accent"><span class="np-kpi-l">Necesitan atención</span><span class="np-kpi-v np-kpi-v--warn">{{ cobranzaData.atencion ?? cobranzaData.necesitan_atencion ?? 0 }}</span></div>
-          <div class="np-kpi"><span class="np-kpi-l">En curso</span><span class="np-kpi-v">{{ cobranzaData.curso ?? cobranzaData.en_curso ?? 0 }}</span></div>
-          <div class="np-kpi"><span class="np-kpi-l">Resueltos</span><span class="np-kpi-v np-kpi-v--ok">{{ cobranzaData.resueltos ?? 0 }}</span></div>
-        </div>
-      </section>
-
-      <!-- ── Salud de la red ───────────────────────────────────────────── -->
-      <section class="np-card dash-panel" *ngSwitchCase="'salud'">
-        <div class="np-card-h">
-          <h2>Salud de la red</h2>
-          <span class="np-card-meta" *ngIf="saludData?.medido_en">medido {{ saludData.medido_en | date:'d MMM, HH:mm' }}</span>
-        </div>
-        <div class="np-tablewrap" *ngIf="saludData?.puertos?.length">
-          <table class="np-table np-table--compact">
-            <thead><tr><th>Puerto</th><th class="np-th-right">ONT</th><th class="np-th-right">Caídas</th><th class="np-th-right">Señal</th></tr></thead>
-            <tbody>
-              <tr *ngFor="let p of saludData.puertos">
-                <td class="np-strong">{{ p.olt }} · {{ p.fsp }}</td>
-                <td class="np-data np-td-right">{{ p.onts }}</td>
-                <td class="np-data np-td-right" [class.np-kpi-v--danger]="p.offline">{{ p.offline }}</td>
-                <td class="np-data np-td-right">{{ p.rx_mediana !== null ? (p.rx_mediana | number:'1.1-1') + ' dBm' : '—' }}</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-        <p class="np-muted" *ngIf="saludData && !saludData.puertos?.length">Todavía no hay mediciones de la red.</p>
-      </section>
-
-      <!-- ── Al borde ──────────────────────────────────────────────────── -->
-      <section class="np-card dash-panel" *ngSwitchCase="'borde'">
-        <div class="np-card-h">
-          <h2>Al borde</h2>
-          <span class="np-card-meta" *ngIf="saludData?.limite">señal bajo {{ saludData.limite }} dBm</span>
-        </div>
-        <p class="np-muted" *ngIf="saludData && !saludData.al_borde?.length">Ningún cliente en riesgo ahora mismo.</p>
-        <ul class="dash-lista" *ngIf="saludData?.al_borde?.length">
-          <li *ngFor="let c of saludData.al_borde.slice(0, 6)">
-            <b>{{ c.cliente || c.descripcion || c.serial }}</b>
-            <span>{{ c.olt }} · {{ c.fsp }} · {{ c.rx_min | number:'1.1-1' }} dBm</span>
-          </li>
-        </ul>
-      </section>
-
-      <!-- ── Equipos ───────────────────────────────────────────────────── -->
-      <section class="np-card dash-panel" *ngSwitchCase="'equipos'">
-        <div class="np-card-h">
-          <h2>Equipos</h2>
-          <button type="button" class="np-linkbtn" (click)="irA('equipos')">Ver todos</button>
-        </div>
-        <div class="np-kpis np-kpis--3" *ngIf="equiposData">
-          <div class="np-kpi np-kpi--accent"><span class="np-kpi-l">Respondiendo</span><span class="np-kpi-v np-kpi-v--ok">{{ equiposData.hablando | number }}</span><span class="np-kpi-s">en la última media hora</span></div>
-          <div class="np-kpi"><span class="np-kpi-l">Callados</span><span class="np-kpi-v np-kpi-v--warn">{{ (equiposData.total - equiposData.hablando) | number }}</span></div>
-          <div class="np-kpi"><span class="np-kpi-l">Total</span><span class="np-kpi-v">{{ equiposData.total | number }}</span></div>
-        </div>
-      </section>
-
-      <!-- ── Tickets ───────────────────────────────────────────────────── -->
-      <ng-container *ngSwitchCase="'tickets'">
-        <section class="np-kpis" aria-label="Indicadores de tickets">
-          <div class="np-kpi np-kpi--accent"><span class="np-kpi-l">Total</span><span class="np-kpi-v">{{ ticketTotal }}</span><span class="np-kpi-s">tickets</span></div>
-          <div class="np-kpi"><span class="np-kpi-l">Pendientes</span><span class="np-kpi-v np-kpi-v--warn">{{ ticketPending }}</span><span class="np-kpi-s">sin asignar o sin iniciar</span></div>
-          <div class="np-kpi"><span class="np-kpi-l">En progreso</span><span class="np-kpi-v np-kpi-v--info">{{ ticketInProgress }}</span><span class="np-kpi-s">en atención</span></div>
-          <div class="np-kpi"><span class="np-kpi-l">Cerrados</span><span class="np-kpi-v np-kpi-v--ok">{{ ticketClosed }}</span><span class="np-kpi-s">{{ ticketClosedToday }} hoy · {{ ticketReopenPct }}% reabiertos</span></div>
-        </section>
-        <section class="np-grid-2">
-          <div class="np-card">
-            <div class="np-card-h"><h2>Estado de tickets</h2>
-              <span class="np-card-meta"><b>{{ ticketTotal }}</b> en total · <b>{{ ticketClosedToday }}</b> cerrados hoy</span>
-            </div>
-            <div class="np-chart"><canvas id="ticketBarChart"></canvas></div>
-          </div>
-          <div class="np-card">
-            <div class="np-card-h"><h2>Tickets activos</h2><span class="np-card-meta">por técnico y por cliente</span></div>
-            <div *ngIf="isLoadingTickets" class="np-loading np-loading--inline"><span class="np-spinner"></span> Cargando…</div>
-            <div class="np-rank-grid" *ngIf="!isLoadingTickets">
-              <div>
-                <p class="np-sect">Técnicos</p>
-                <ol class="np-rank" *ngIf="topTechnicians.length; else noTech">
-                  <li *ngFor="let t of topTechnicians"><span class="np-rank-n">{{ t.names }} {{ t.lastname }}</span><span class="np-rank-c">{{ t.count }}</span></li>
-                </ol>
-                <ng-template #noTech><p class="np-muted">Sin tickets activos.</p></ng-template>
-              </div>
-              <div>
-                <p class="np-sect">Clientes</p>
-                <ol class="np-rank" *ngIf="topClients.length; else noCli">
-                  <li *ngFor="let c of topClients"><span class="np-rank-n">{{ c.names }} {{ c.lastname }}</span><span class="np-rank-c">{{ c.count }}</span></li>
-                </ol>
-                <ng-template #noCli><p class="np-muted">Sin tickets activos.</p></ng-template>
-              </div>
-            </div>
-          </div>
-        </section>
-      </ng-container>
-
-      <!-- ── Clientes ──────────────────────────────────────────────────── -->
-      <section class="np-card dash-panel" *ngSwitchCase="'clientes'">
-        <div class="np-card-h"><h2>Clientes por mes {{ selectedYear }}</h2><span class="np-legend"><i style="background:var(--accent)"></i>Registrados <i style="background:var(--danger)"></i>Eliminados</span></div>
-        <div class="np-chart"><canvas id="clientsChart"></canvas></div>
-      </section>
-
-      <!-- ── Novedades ─────────────────────────────────────────────────── -->
-      <section class="np-card dash-panel" *ngSwitchCase="'novedades'">
-        <div class="np-card-h"><h2>Novedades</h2></div>
-        <p class="np-muted" *ngIf="!novedadesData.length">Por ahora no hay novedades.</p>
-        <ul class="dash-lista" *ngIf="novedadesData.length">
-          <li *ngFor="let n of novedadesData">
-            <b>{{ n.titulo }}</b>
-            <span>{{ n.detalle }}</span>
-          </li>
-        </ul>
-      </section>
-
-    </ng-container>
-
-    <p class="np-muted dash-vacio" *ngIf="!paneles.length">
-      Tu tablero está vacío. Tocá <b>Armar mi tablero</b> y elegí lo que querés ver al entrar.
+    <p class="sala-ayuda" *ngIf="armando">
+      Tocá un panel de la derecha para ponerlo o quitarlo, y arrastrá los de acá para moverlos.
+      Cuando guardes, así te va a quedar el inicio en cualquier computador donde entres.
     </p>
 
-    <!-- Programa de referidos de la plataforma: sólo lo ve el administrador,
-         y sólo si el programa está activo. -->
-    <section *ngIf="isAdmin"><app-referidos-card></app-referidos-card></section>
+    <section class="sala-kpis" aria-label="Indicadores de la empresa">
+      <a class="sala-kpi" *ngFor="let i of indicadores; trackBy: porClave" [routerLink]="i.ruta" [attr.data-tono]="i.tono">
+        <span class="sala-kpi-l">{{ i.etiqueta }}</span>
+        <b class="sala-kpi-v">{{ i.valor }}</b>
+        <span class="sala-kpi-s">{{ i.pie }}</span>
+      </a>
+    </section>
+
+    <div class="sala-cuerpo">
+
+      <!-- ── Los paneles ── -->
+      <div class="sala-grilla">
+        <article class="sala-panel" *ngFor="let p of paneles; let i = index; trackBy: porPanel"
+                 [style.grid-column]="'span ' + p.ancho"
+                 [attr.draggable]="armando ? true : null"
+                 (dragstart)="alTomar(i)" (dragover)="alPasarPor($event, i)" (dragend)="alSoltar()">
+
+          <div class="sala-mango" *ngIf="armando">
+            <span class="sala-mango-t">{{ p.titulo }}</span>
+            <button type="button" (click)="mover(i, -1)" [disabled]="i === 0" aria-label="Mover antes">←</button>
+            <button type="button" (click)="mover(i, 1)" [disabled]="i === paneles.length - 1" aria-label="Mover después">→</button>
+            <button type="button" class="es-quitar" (click)="alternar(p)" aria-label="Quitar este panel">Quitar</button>
+          </div>
+
+          <ng-container [ngSwitch]="p.id">
+
+            <!-- Lo que hay que resolver -->
+            <ng-container *ngSwitchCase="'resolver'">
+              <div class="sala-panel-h"><h2>Lo que hay que resolver</h2><span class="sala-fine">{{ acciones.length }} cosas hoy</span></div>
+              <div class="sala-acciones" *ngIf="acciones.length">
+                <button type="button" class="sala-accion" *ngFor="let a of acciones" (click)="ir(a.ruta)" [attr.data-tono]="a.tono">
+                  <b class="sala-accion-n">{{ a.cuantos }}</b>
+                  <span class="sala-accion-t"><b>{{ a.texto }}</b><small>{{ a.detalle }}</small></span>
+                  <span class="sala-ir">→</span>
+                </button>
+              </div>
+              <p class="sala-vacio" *ngIf="!acciones.length">Nada urgente. La red, la cartera y los tickets están al día.</p>
+            </ng-container>
+
+            <!-- Lo que está pasando -->
+            <ng-container *ngSwitchCase="'vivo'">
+              <div class="sala-panel-h"><h2>Lo que está pasando</h2><span class="sala-fine">en vivo</span></div>
+              <div class="sala-eventos" *ngIf="eventos.length">
+                <button type="button" class="sala-evento" *ngFor="let e of eventos" (click)="ir(e.ruta)" [attr.data-nivel]="e.nivel">
+                  <span class="sala-punto"></span>
+                  <span class="sala-evento-t">
+                    <b>{{ e.titulo }}</b>
+                    <small>{{ desde(e.cuando) }}<ng-container *ngIf="e.detalle"> · {{ e.detalle }}</ng-container></small>
+                  </span>
+                </button>
+              </div>
+              <p class="sala-vacio" *ngIf="!eventos.length">Nada pendiente. Todo lo que había se resolvió.</p>
+            </ng-container>
+
+            <!-- Ingresos y egresos -->
+            <ng-container *ngSwitchCase="'plata'">
+              <div class="sala-panel-h">
+                <h2>Ingresos y egresos {{ selectedYear }}</h2>
+                <a class="sala-ir" routerLink="/dashboard/finanzas">Finanzas →</a>
+              </div>
+              <div class="sala-chart"><canvas id="incomeChart"></canvas></div>
+              <div class="sala-tres">
+                <div><span class="sala-fine">Ingresos</span><b class="sala-num-g sala-ok">$ {{ plata(valorIngreso) }}</b></div>
+                <div><span class="sala-fine">Egresos</span><b class="sala-num-g sala-rojo">$ {{ plata(valorEgresos) }}</b></div>
+                <div><span class="sala-fine">Caja</span><b class="sala-num-g">$ {{ plata(valorCaja) }}</b></div>
+              </div>
+            </ng-container>
+
+            <!-- La mora por antigüedad -->
+            <ng-container *ngSwitchCase="'mora'">
+              <div class="sala-panel-h"><h2>La mora por antigüedad</h2><a class="sala-ir" routerLink="/dashboard/cartera">Cartera →</a></div>
+              <div class="sala-tramos" *ngIf="mora">
+                <div class="sala-tramo" *ngFor="let t of mora.antiguedad">
+                  <div class="sala-tramo-h"><span class="sala-fine">{{ t.tramo }}</span><span class="sala-mono">$ {{ t.texto }} · {{ t.clientes }}</span></div>
+                  <div class="sala-barra"><i [style.width.%]="t.ancho" [attr.data-tramo]="t.tramo"></i></div>
+                </div>
+              </div>
+              <div class="sala-pie" *ngIf="mora">
+                <span><b>{{ mora.al_dia_pct ?? '—' }}%</b> al día</span>
+                <span><b>$ {{ mora.recuperadoTexto }}</b> recuperado este mes</span>
+              </div>
+              <p class="sala-vacio" *ngIf="!mora">Leyendo la cartera…</p>
+            </ng-container>
+
+            <!-- Por dónde entra la plata -->
+            <ng-container *ngSwitchCase="'metodos'">
+              <div class="sala-panel-h"><h2>Por dónde entra la plata</h2><a class="sala-ir" routerLink="/dashboard/finanzas">Pagos →</a></div>
+              <div class="sala-tabla" *ngIf="pmSummary.length">
+                <div class="sala-tabla-h"><span>Método</span><span class="sala-num">Pagos</span><span class="sala-num">Total</span></div>
+                <div class="sala-fila es-quieta" *ngFor="let pm of pmSummary">
+                  <span class="sala-fila-n">{{ pm.name }}</span>
+                  <span class="sala-num">{{ pm.count }}</span>
+                  <span class="sala-num sala-plata-v">$ {{ pm.texto }}</span>
+                </div>
+              </div>
+              <p class="sala-vacio" *ngIf="!pmSummary.length">Sin pagos registrados este mes.</p>
+            </ng-container>
+
+            <!-- Los que más deben -->
+            <ng-container *ngSwitchCase="'deudores'">
+              <div class="sala-panel-h"><h2>Los que más deben</h2><a class="sala-ir" routerLink="/dashboard/cartera">Cartera →</a></div>
+              <div class="sala-tabla" *ngIf="deudores.length">
+                <div class="sala-tabla-h"><span>Cliente</span><span class="sala-num">Facturas</span><span class="sala-num">Deuda</span><span class="sala-num">Mora</span></div>
+                <button type="button" class="sala-fila" *ngFor="let d of deudores; trackBy: porFila" (click)="verCliente(d.user_id)">
+                  <span class="sala-fila-n">{{ d.nombre }}</span>
+                  <span class="sala-num">{{ d.facturas }}</span>
+                  <span class="sala-num sala-plata-v">$ {{ d.deuda_texto }}</span>
+                  <span class="sala-num" [class.sala-rojo]="d.dias > 90">{{ d.dias }} días</span>
+                </button>
+              </div>
+              <p class="sala-vacio" *ngIf="!deudores.length">Nadie en mora. La cartera está al día.</p>
+            </ng-container>
+
+            <!-- IA Cobranza -->
+            <ng-container *ngSwitchCase="'cobranza'">
+              <div class="sala-panel-h"><h2>IA Cobranza</h2><a class="sala-ir" routerLink="/dashboard/cobranza">Abrir →</a></div>
+              <div class="sala-lista" *ngIf="cobranza">
+                <div class="sala-fila es-quieta"><span class="sala-fila-n">Esperan tu autorización</span><span class="sala-num">{{ cobranza.esperan }}</span></div>
+                <div class="sala-fila es-quieta"><span class="sala-fila-n">Hablando ahora</span><span class="sala-num">{{ cobranza.trabajando ?? 0 }}</span></div>
+                <div class="sala-fila es-quieta"><span class="sala-fila-n">En curso</span><span class="sala-num">{{ cobranza.en_curso ?? 0 }}</span></div>
+                <div class="sala-fila es-quieta"><span class="sala-fila-n">Modo</span><span class="sala-num">{{ cobranza.modo === 'auto' ? 'automático' : 'manual' }}</span></div>
+              </div>
+              <p class="sala-vacio" *ngIf="!cobranza">La cobranza con IA todavía no está encendida.</p>
+            </ng-container>
+
+            <!-- Salud de la red -->
+            <ng-container *ngSwitchCase="'salud'">
+              <div class="sala-panel-h"><h2>Salud de la red</h2><a class="sala-ir" routerLink="/dashboard/olt/salud">Ver la historia →</a></div>
+              <p class="sala-fine">Cada cuadro es un puerto PON. El color es la peor noticia que da.</p>
+              <div class="sala-puertos" *ngIf="puertos.length">
+                <div class="sala-puerto" *ngFor="let p of puertos; trackBy: porPuerto" [attr.data-tono]="tonoPuerto(p)">
+                  <span class="sala-puerto-f">{{ p.fsp }}</span>
+                  <span class="sala-puerto-d">{{ p.onts }} · {{ dbm(p.rx_mediana) }}</span>
+                </div>
+              </div>
+              <p class="sala-vacio" *ngIf="!puertos.length">Todavía no hay mediciones. La primera llega en 15 minutos.</p>
+            </ng-container>
+
+            <!-- Clientes al borde -->
+            <ng-container *ngSwitchCase="'borde'">
+              <div class="sala-panel-h"><h2>Clientes al borde</h2><a class="sala-ir" routerLink="/dashboard/olt/salud">Ver todos →</a></div>
+              <div class="sala-lista" *ngIf="alBorde.length">
+                <button type="button" class="sala-fila" *ngFor="let c of alBorde; trackBy: porFila" (click)="verCliente(c.user_id)">
+                  <span class="sala-fila-n">{{ c.cliente || c.descripcion || ('ONT ' + c.ont_id) }}</span>
+                  <span class="sala-num sala-rojo">{{ dbm(c.rx_min) }} dBm</span>
+                </button>
+              </div>
+              <p class="sala-vacio" *ngIf="!alBorde.length">Ningún cliente por debajo del límite hoy.</p>
+            </ng-container>
+
+            <!-- Los equipos -->
+            <ng-container *ngSwitchCase="'equipos'">
+              <div class="sala-panel-h"><h2>Los equipos</h2><a class="sala-ir" routerLink="/dashboard/olt/autorizadas">Admin OLT →</a></div>
+              <div class="sala-lista">
+                <div class="sala-fila es-quieta"><span class="sala-fila-n">ONT en la red</span><span class="sala-num">{{ ontsTotal }}</span></div>
+                <div class="sala-fila es-quieta"><span class="sala-fila-n">Apagadas ahora</span><span class="sala-num" [class.sala-rojo]="ontsApagadas">{{ ontsApagadas }}</span></div>
+                <div class="sala-fila es-quieta"><span class="sala-fila-n">Clientes al borde</span><span class="sala-num sala-warn">{{ alBorde.length }}</span></div>
+                <div class="sala-fila es-quieta"><span class="sala-fila-n">Puertos sin medir</span><span class="sala-num">{{ puertosSinMedir }}</span></div>
+                <div class="sala-fila es-quieta"><span class="sala-fila-n">Equipos a medio configurar</span><span class="sala-num" [class.sala-rojo]="equiposAMedias">{{ equiposAMedias }}</span></div>
+              </div>
+            </ng-container>
+
+            <!-- Técnicos y tickets -->
+            <ng-container *ngSwitchCase="'tickets'">
+              <div class="sala-panel-h"><h2>Técnicos y tickets</h2><a class="sala-ir" routerLink="/dashboard/view-ticket">Tickets →</a></div>
+              <div class="sala-loading" *ngIf="cargandoTickets"><span class="np-spinner"></span> Cargando…</div>
+              <div class="sala-tecnicos-l" *ngIf="!cargandoTickets && topTechnicians.length">
+                <div class="sala-tecnico" *ngFor="let t of topTechnicians">
+                  <span class="sala-avatar">{{ (t.names || '?').charAt(0) }}{{ (t.lastname || '').charAt(0) }}</span>
+                  <span class="sala-tecnico-n">{{ t.names }} {{ t.lastname }}</span>
+                  <span class="sala-tecnico-c">{{ t.count }} abiertos</span>
+                </div>
+              </div>
+              <p class="sala-vacio" *ngIf="!cargandoTickets && !topTechnicians.length">Nadie tiene tickets abiertos.</p>
+              <div class="sala-pie">
+                <span><b>{{ ticketPending }}</b> pendientes</span>
+                <span><b>{{ ticketInProgress }}</b> en atención</span>
+                <span><b>{{ ticketClosedToday }}</b> cerrados hoy</span>
+              </div>
+            </ng-container>
+
+            <!-- Altas y bajas -->
+            <ng-container *ngSwitchCase="'clientes'">
+              <div class="sala-panel-h"><h2>Altas y bajas {{ selectedYear }}</h2><a class="sala-ir" routerLink="/dashboard/usuario">Clientes →</a></div>
+              <div class="sala-meses" *ngIf="porMes.length">
+                <div class="sala-mes" *ngFor="let m of porMes">
+                  <span class="sala-mes-b">
+                    <i class="es-alta" [style.height.%]="m.alto" [attr.title]="m.altas + ' nuevos'"></i>
+                    <i class="es-baja" [style.height.%]="m.altoBajas" [attr.title]="m.bajas + ' bajas'"></i>
+                  </span>
+                  <span class="sala-mes-t">{{ m.mes }}</span>
+                </div>
+              </div>
+              <div class="sala-pie">
+                <span><b>{{ active }}</b> activos</span>
+                <span><b>{{ inactive }}</b> cortados</span>
+              </div>
+            </ng-container>
+
+            <!-- Novedades -->
+            <ng-container *ngSwitchCase="'novedades'">
+              <div class="sala-panel-h"><h2>Novedades de Netvula</h2></div>
+              <div class="sala-lista" *ngIf="novedades.length">
+                <button type="button" class="sala-novedad" *ngFor="let n of novedades" (click)="ir(n.ruta)">
+                  <span class="sala-etiqueta">{{ n.tipo === 'nuevo' ? 'Nuevo' : n.tipo === 'mejora' ? 'Mejora' : 'Arreglo' }}</span>
+                  <span class="sala-novedad-t">{{ n.titulo }}</span>
+                </button>
+              </div>
+              <p class="sala-vacio" *ngIf="!novedades.length">Todavía no hay novedades publicadas.</p>
+            </ng-container>
+
+          </ng-container>
+        </article>
+
+        <p class="sala-hueco" *ngIf="armando">Arrastrá acá el panel que quieras mover</p>
+      </div>
+
+      <!-- ── El cajón de paneles ── -->
+      <aside class="sala-cajon" *ngIf="armando">
+        <div class="sala-panel-h"><h2>Paneles</h2><span class="sala-fine">{{ paneles.length }} de {{ CATALOGO.length }}</span></div>
+        <p class="sala-fine">Tocá uno para ponerlo o quitarlo.</p>
+
+        <div class="sala-cat" *ngFor="let g of catalogo">
+          <p class="sala-sect">{{ g.seccion }}</p>
+          <button type="button" class="sala-cat-i" *ngFor="let p of g.paneles" (click)="alternar(p)" [class.es-puesto]="puestos[p.id]">
+            <span class="sala-check" aria-hidden="true"></span>
+            <span class="sala-cat-t"><b>{{ p.titulo }}</b><small>{{ p.para }}</small></span>
+          </button>
+        </div>
+      </aside>
+    </div>
+
+    <!-- Lo de la empresa, al final: primero lo que pasa hoy -->
+    <app-onboarding-guide *ngIf="!armando"></app-onboarding-guide>
+
+    <section *ngIf="isAdmin && !armando"><app-referidos-card></app-referidos-card></section>
 
   </div>
 </div>
