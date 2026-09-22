@@ -22,10 +22,10 @@
 
     <div class="np-subbar">
       <div class="np-seg">
-        <button type="button" [attr.aria-pressed]="filtro === 'todo'" (click)="filtro = 'todo'">Todos</button>
-        <button type="button" [attr.aria-pressed]="filtro === 'critico'" (click)="filtro = 'critico'">Críticos</button>
-        <button type="button" [attr.aria-pressed]="filtro === 'senal'" (click)="filtro = 'senal'">Señal</button>
-        <button type="button" [attr.aria-pressed]="filtro === 'corte'" (click)="filtro = 'corte'">Red</button>
+        <button type="button" [attr.aria-pressed]="filtro === 'todo'" (click)="filtrar('todo')">Todos</button>
+        <button type="button" [attr.aria-pressed]="filtro === 'critico'" (click)="filtrar('critico')">Críticos</button>
+        <button type="button" [attr.aria-pressed]="filtro === 'senal'" (click)="filtrar('senal')">Señal</button>
+        <button type="button" [attr.aria-pressed]="filtro === 'corte'" (click)="filtrar('corte')">Red</button>
       </div>
       <span class="np-spacer"></span>
       <label class="np-check np-check--inline"><input type="checkbox" [(ngModel)]="historial" (ngModelChange)="cargar()" /> Ver también los resueltos</label>
@@ -39,8 +39,12 @@
     </p>
 
     <div class="ale-lista">
-      <article class="ale-item" *ngFor="let a of visibles" [attr.data-nivel]="a.nivel" [class.is-cerrada]="a.cerrada_en" [class.is-nueva]="!a.vista_en && !a.cerrada_en">
-        <span class="ale-ico" aria-hidden="true">{{ icono(a.tipo) }}</span>
+      <article class="ale-item" *ngFor="let a of visibles; trackBy: porId" [attr.data-nivel]="a.nivel" [class.is-cerrada]="a.cerrada_en" [class.is-nueva]="!a.vista_en && !a.cerrada_en">
+        <span class="ale-ico" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path [attr.d]="trazo(a.tipo)"/>
+          </svg>
+        </span>
         <div class="ale-txt">
           <b>{{ a.titulo }}</b>
           <small>{{ a.detalle }}</small>

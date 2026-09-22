@@ -9,7 +9,22 @@
   &.is-cerrada { opacity: .55; border-left-color: var(--ok); }
   &.is-nueva { background: color-mix(in srgb, var(--accent) 4%, var(--surface)); }
 }
-.ale-ico { font-size: 18px; line-height: 1; flex-shrink: 0; }
+/* Los dibujos de cada tipo de aviso: trazos propios, que siguen el color del
+   texto. Antes eran emojis y cada sistema los pintaba a su manera. */
+.ale-ico {
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+  width: 30px; height: 30px;
+  border-radius: 9px;
+  background: var(--sup-2, #f6f7fb);
+  color: var(--text-2);
+
+  svg { width: 17px; height: 17px; }
+}
+
+/* Un aviso crítico se ve desde lejos, sin tener que leerlo. */
+.ale-item[data-nivel="critico"] .ale-ico { background: var(--danger-suave, #fdecea); color: var(--danger, #b3261e); }
 .ale-txt {
   display: grid; gap: 2px; flex: 1; min-width: 0;
   b { font-size: 13.5px; }

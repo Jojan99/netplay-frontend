@@ -42,6 +42,7 @@ export class OltAlertasComponent implements OnInit {
         if (r?.error !== 0) { this.toast.error(r?.message || 'No se pudieron leer los avisos.'); return; }
         this.alertas = r.data?.alertas ?? [];
         this.resumen = r.data?.resumen ?? null;
+        this.calcularVisibles();
       },
       error: () => { this.cargando = false; },
     });
@@ -59,14 +60,33 @@ export class OltAlertasComponent implements OnInit {
     this.api.marcarVistas().subscribe({ next: () => { this.toast.success('Marcados como vistos'); this.cargar(); } });
   }
 
-  get visibles(): any[] {
-    return this.alertas.filter(a => {
+  /**
+   * Los avisos que se ven con el filtro puesto.
+   *
+   * Es un campo, no un getter. Un getter que devuelve un array nuevo se
+   * vuelve a evaluar en cada ciclo de detección, Angular ve una lista
+   * distinta cada vez y rehace las filas: el clic se pierde entre que se
+   * aprieta y se suelta, y el detalle no se abría nunca.
+   */
+  visibles: any[] = [];
+
+  private calcularVisibles(): void {
+    this.visibles = this.alertas.filter(a => {
       if (this.filtro === 'critico') return a.nivel === 'critico';
       if (this.filtro === 'senal') return a.tipo === 'senal';
       if (this.filtro === 'corte') return a.tipo === 'corte' || a.tipo === 'tunel' || a.tipo === 'olt';
       return true;
     });
   }
+
+  /** Cambió el filtro desde los botones de arriba. */
+  filtrar(filtro: 'todo' | 'critico' | 'senal' | 'corte'): void {
+    this.filtro = filtro;
+    this.calcularVisibles();
+  }
+
+  /** La lista no se rehace si los avisos son los mismos. */
+  porId(_: number, a: any): number { return a?.id ?? _; }
 
   /** "hace 3 h": lo que importa de un aviso es desde cuándo pasa. */
   desde(fecha: string): string {
@@ -77,8 +97,20 @@ export class OltAlertasComponent implements OnInit {
     return `hace ${Math.round(s / 86400)} días`;
   }
 
-  icono(tipo: string): string {
-    return ({ senal: '📶', corte: '✂️', tunel: '🔌', olt: '🖥️' } as any)[tipo] ?? '•';
+  /**
+   * El dibujo de cada tipo de aviso.
+   *
+   * Eran emojis: cada sistema los pinta distinto, en Windows la antena y el
+   * enchufe se ven de colores que no son los nuestros, y en algunos ni
+   * aparecen. Estos son trazos nuestros y siguen el color del texto.
+   */
+  trazo(tipo: string): string {
+    return ({
+      senal: 'M12 20h.01M8.5 16.4a5 5 0 0 1 7 0M5 12.9a10 10 0 0 1 14 0M1.5 9.4a15 15 0 0 1 21 0',
+      corte: 'M6 3v12M18 3v12M6 15a3 3 0 1 0 0 6 3 3 0 0 0 0-6ZM18 15a3 3 0 1 0 0 6 3 3 0 0 0 0-6Z',
+      tunel: 'M9 2v6M15 2v6M7 8h10v5a5 5 0 0 1-10 0V8ZM12 18v4',
+      olt:   'M4 5h16v6H4zM4 13h16v6H4zM8 8h.01M8 16h.01',
+    } as any)[tipo] ?? 'M12 8v5M12 16h.01';
   }
 
   abrirCliente(a: any) {
