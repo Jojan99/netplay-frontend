@@ -43,6 +43,7 @@ export class OltNavComponent implements AfterViewInit {
   readonly links = [
     { path: '/dashboard/olt',               label: 'OLTs',          exact: true },
     { path: '/dashboard/olt/dashboard',     label: 'Estado',        exact: false },
+    { path: '/dashboard/olt/salud',         label: 'Salud',         exact: false },
     { path: '/dashboard/olt/alertas',       label: 'Avisos',        exact: false },
     { path: '/dashboard/olt/autorizadas',   label: 'Autorizadas',   exact: false },
     { path: '/dashboard/olt/sin-autorizar', label: 'Sin autorizar', exact: false },

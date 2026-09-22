@@ -1,0 +1,105 @@
+<app-olt-nav></app-olt-nav>
+
+<div class="np-page">
+
+  <header class="np-head">
+    <div>
+      <p class="np-kicker">Red <b>/</b> Salud</p>
+      <h1 class="np-title">Salud de la red</h1>
+      <div class="np-ribbon">
+        <span *ngIf="medidoEn">medido {{ medidoEn | date:'d MMM, HH:mm' }}</span>
+        <span *ngIf="dias">{{ dias }} día{{ dias === 1 ? '' : 's' }} de mediciones</span>
+        <span>al borde: bajo {{ limite }} dBm</span>
+      </div>
+    </div>
+    <div class="np-actions">
+      <button type="button" class="np-btn" (click)="cargar()" [disabled]="cargando">
+        {{ cargando ? 'Leyendo…' : 'Actualizar' }}
+      </button>
+    </div>
+  </header>
+
+  <div class="np-scroll">
+
+    <p class="np-empty-block" *ngIf="!cargando && !puertos.length">
+      Todavía no hay mediciones. Se toman solas cada día; mañana vas a ver cómo viene cada puerto.
+    </p>
+
+    <!-- ── Puertos ──────────────────────────────────────────────────────── -->
+    <section class="sal-puertos" *ngIf="puertos.length">
+      <h2 class="np-sect">Cada puerto</h2>
+      <div class="sal-grid">
+        <article class="sal-puerto" *ngFor="let p of puertos; trackBy: porPuerto"
+                 [attr.data-estado]="estado(p)" role="button" tabindex="0"
+                 (click)="verPuerto(p)" (keydown.enter)="verPuerto(p)">
+          <header>
+            <b>{{ p.fsp }}</b>
+            <span class="sal-chip">{{ etiqueta(p) }}</span>
+          </header>
+          <p class="sal-olt">{{ p.olt }}</p>
+          <dl>
+            <div><dt>Equipos</dt><dd>{{ p.onts }}</dd></div>
+            <div><dt>Caídos</dt><dd [class.es-malo]="p.offline">{{ p.offline }}</dd></div>
+            <div><dt>Al borde</dt><dd [class.es-ojo]="p.al_borde">{{ p.al_borde }}</dd></div>
+            <div><dt>Señal</dt><dd>{{ p.rx_mediana !== null ? (p.rx_mediana | number:'1.1-1') + ' dBm' : '—' }}</dd></div>
+          </dl>
+          <!-- La caída contra la semana pasada es lo que avisa temprano. -->
+          <p class="sal-cambio" *ngIf="p.cambio !== null" [class.es-baja]="p.cambio < -1">
+            {{ p.cambio > 0 ? '▲' : '▼' }} {{ (p.cambio < 0 ? -p.cambio : p.cambio) | number:'1.1-1' }} dB contra la semana pasada
+          </p>
+        </article>
+      </div>
+    </section>
+
+    <!-- ── Al borde ─────────────────────────────────────────────────────── -->
+    <section class="np-card" *ngIf="alBorde.length">
+      <div class="np-card-h">
+        <h2>Al borde de quedarse sin servicio</h2>
+        <span class="np-card-meta">{{ alBorde.length }} equipo{{ alBorde.length === 1 ? '' : 's' }} bajo {{ limite }} dBm</span>
+      </div>
+      <div class="np-tablewrap">
+        <table class="np-table np-table--compact">
+          <thead>
+            <tr><th>Cliente</th><th>Puerto</th><th class="np-th-right">Peor señal</th><th class="np-th-right">Promedio</th><th class="np-th-right">Caídas</th></tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let c of alBorde; trackBy: porEquipo" role="button" tabindex="0"
+                (click)="verCliente(c)" (keydown.enter)="verCliente(c)">
+              <td class="np-strong">{{ c.cliente || c.descripcion || c.serial }}</td>
+              <td>{{ c.olt }} · {{ c.fsp }}</td>
+              <td class="np-data np-td-right es-malo">{{ c.rx_min | number:'1.1-1' }} dBm</td>
+              <td class="np-data np-td-right">{{ c.rx_prom !== null ? (c.rx_prom | number:'1.1-1') + ' dBm' : '—' }}</td>
+              <td class="np-data np-td-right">{{ c.caidas }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ── Inestables ───────────────────────────────────────────────────── -->
+    <section class="np-card" *ngIf="inestables.length">
+      <div class="np-card-h">
+        <h2>Se caen y vuelven todo el día</h2>
+        <span class="np-card-meta">casi siempre es la fibra o la energía</span>
+      </div>
+      <div class="np-tablewrap">
+        <table class="np-table np-table--compact">
+          <thead>
+            <tr><th>Cliente</th><th>Puerto</th><th class="np-th-right">Caídas</th><th class="np-th-right">Fuera</th><th class="np-th-right">Peor señal</th></tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let e of inestables; trackBy: porEquipo" role="button" tabindex="0"
+                (click)="verCliente(e)" (keydown.enter)="verCliente(e)">
+              <td class="np-strong">{{ e.cliente || e.descripcion }}</td>
+              <td>{{ e.olt }} · {{ e.fsp }}</td>
+              <td class="np-data np-td-right es-malo">{{ e.caidas }}</td>
+              <td class="np-data np-td-right">{{ e.muestras ? ((e.muestras_offline * 100 / e.muestras) | number:'1.0-0') + '%' : '—' }}</td>
+              <td class="np-data np-td-right">{{ e.rx_min !== null ? (e.rx_min | number:'1.1-1') + ' dBm' : '—' }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+  </div>
+</div>

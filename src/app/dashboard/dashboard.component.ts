@@ -271,15 +271,15 @@ export class DashboardComponent implements OnInit, OnDestroy {
    * para decidir sin tener que probarlo.
    */
   readonly catalogo: { id: string; titulo: string; resumen: string; ruta?: string; roles?: string[] }[] = [
-    { id: 'resolver',  titulo: 'Para resolver',      resumen: 'Lo que está fallando en la red y espera una mano', ruta: '/dashboard/admin-olt/alertas' },
-    { id: 'vivo',      titulo: 'La red en vivo',     resumen: 'Cuántos equipos están conectados ahora mismo',     ruta: '/dashboard/admin-olt/online' },
+    { id: 'resolver',  titulo: 'Para resolver',      resumen: 'Lo que está fallando en la red y espera una mano', ruta: '/dashboard/olt/alertas' },
+    { id: 'vivo',      titulo: 'La red en vivo',     resumen: 'Cuántos equipos están conectados ahora mismo',     ruta: '/dashboard/olt/online' },
     { id: 'plata',     titulo: 'La plata',           resumen: 'Caja, ingresos, egresos y lo que falta cobrar',    ruta: '/dashboard/finance',        roles: ['ADMIN', 'CONTADOR'] },
     { id: 'mora',      titulo: 'Mora por antigüedad', resumen: 'Cuánto se debe en cada tramo y qué se recuperó',  ruta: '/dashboard/cartera',        roles: ['ADMIN', 'CONTADOR'] },
     { id: 'metodos',   titulo: 'Medios de pago',     resumen: 'Por dónde entra la plata cada mes',                ruta: '/dashboard/finance',        roles: ['ADMIN', 'CONTADOR'] },
     { id: 'deudores',  titulo: 'Quién debe más',     resumen: 'Los clientes con más deuda vencida',               ruta: '/dashboard/cartera',        roles: ['ADMIN', 'CONTADOR'] },
     { id: 'cobranza',  titulo: 'Cobranza',           resumen: 'Los casos que la IA está atendiendo',              ruta: '/dashboard/cobranza',       roles: ['ADMIN', 'CONTADOR'] },
-    { id: 'salud',     titulo: 'Salud de la red',    resumen: 'Cómo viene cada puerto PON',                       ruta: '/dashboard/admin-olt/alertas' },
-    { id: 'borde',     titulo: 'Al borde',           resumen: 'Clientes a punto de quedarse sin servicio',        ruta: '/dashboard/admin-olt/alertas' },
+    { id: 'salud',     titulo: 'Salud de la red',    resumen: 'Cómo viene cada puerto PON',                       ruta: '/dashboard/olt/salud' },
+    { id: 'borde',     titulo: 'Al borde',           resumen: 'Clientes a punto de quedarse sin servicio',        ruta: '/dashboard/olt/salud' },
     { id: 'equipos',   titulo: 'Equipos',            resumen: 'Las ONT que responden por TR-069',                 ruta: '/dashboard/router' },
     { id: 'tickets',   titulo: 'Tickets',            resumen: 'Cómo vienen los tickets y quién los atiende',      ruta: '/dashboard/ticket' },
     { id: 'clientes',  titulo: 'Clientes',           resumen: 'Altas y bajas mes a mes',                          ruta: '/dashboard/client' },

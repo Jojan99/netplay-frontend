@@ -243,8 +243,8 @@
         <p class="np-muted" *ngIf="saludData && !saludData.al_borde?.length">Ningún cliente en riesgo ahora mismo.</p>
         <ul class="dash-lista" *ngIf="saludData?.al_borde?.length">
           <li *ngFor="let c of saludData.al_borde.slice(0, 6)">
-            <b>{{ c.cliente || c.nombre || c.serial }}</b>
-            <span>{{ c.fsp }} · {{ c.rx | number:'1.1-1' }} dBm</span>
+            <b>{{ c.cliente || c.descripcion || c.serial }}</b>
+            <span>{{ c.olt }} · {{ c.fsp }} · {{ c.rx_min | number:'1.1-1' }} dBm</span>
           </li>
         </ul>
       </section>
