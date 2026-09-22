@@ -114,6 +114,19 @@ export class InboxComponent implements OnInit, OnDestroy {
 
   /* ── Etiquetas (para filtrar la lista) ───────────────────────── */
   labels: any[] = [];
+  /**
+   * Cambiaron las etiquetas de un chat.
+   *
+   * Hay que recargar dos cosas distintas: el catálogo, por si se creó una
+   * etiqueta nueva, y la bandeja, porque la etiqueta se pinta en la fila del
+   * cliente y venía del servidor con la lista. Antes sólo se recargaba el
+   * catálogo y había que apretar actualizar para verla en la fila.
+   */
+  onLabelsChanged(): void {
+    this.loadLabels();
+    this.loadInbox();
+  }
+
   loadLabels(): void { this.crmService.getLabels().subscribe({ next: r => this.labels = r.data ?? [], error: () => {} }); }
 
   /* ── Configuración del CRM ───────────────────────────────────── */

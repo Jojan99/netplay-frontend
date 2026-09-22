@@ -221,6 +221,15 @@ export class ChatWindowComponent implements OnChanges, OnDestroy {
 
   /** Se creó o cambió una etiqueta: la bandeja refresca sus chips de filtro. */
   @Output() labelsChanged = new EventEmitter<void>();
+  /**
+   * Se mandó algo por este chat.
+   *
+   * La bandeja se entera por Echo, pero ese aviso puede tardar o perderse, y
+   * mientras tanto la fila del cliente sigue mostrando el último mensaje de
+   * él, como si el agente no hubiera contestado. Avisar desde acá la deja
+   * al día en el acto.
+   */
+  @Output() messageSent = new EventEmitter<void>();
   showLocationModal = false;
   locForm = { lat: '', lng: '', name: '', address: '', raw: '' };
   locError = ''; locLocating = false;
@@ -252,7 +261,7 @@ export class ChatWindowComponent implements OnChanges, OnDestroy {
     this.messages.push({ id: tempId, from: 'agent', content: `📍 Ubicación: lat ${lat}, lng ${lng}` + (where ? '\n' + where : ''), message_type: 'location', media_url: null, at: new Date().toISOString(), pending: true });
     this.scrollToBottom();
     this.crmService.sendMessage(this.conversationId, { message: '', type: 'location', latitude: lat, longitude: lng, name: this.locForm.name.trim() || null, address: this.locForm.address.trim() || null } as any)
-      .subscribe({ next: () => this.sending = false, error: () => { this.sending = false; this.markFailed(tempId); } });
+      .subscribe({ next: () => { this.sending = false; this.messageSent.emit(); }, error: () => { this.sending = false; this.markFailed(tempId); } });
   }
 
   // ── Emojis (compositor y reacciones) ─────────────────────────
@@ -885,6 +894,7 @@ export class ChatWindowComponent implements OnChanges, OnDestroy {
         next: (res: any) => {
           this.sending = false;
           this.focusComposer(0);   // el mensaje real llega por Echo y reemplaza al optimista
+          this.messageSent.emit();
 
           // WhatsApp identifica a algunos contactos solo por un número interno
           // (LID) y no por su teléfono. En ese caso el mensaje se direcciona
@@ -925,7 +935,7 @@ export class ChatWindowComponent implements OnChanges, OnDestroy {
 
     this.crmService.sendMedia(this.conversationId, formData)
       .subscribe({
-        next:  (res: any) => { this.sending = false; this.pendingPayloads.delete(tempId); this.upsertIncoming(res?.data, tempId); this.scrollToBottom(); this.focusComposer(0); },
+        next:  (res: any) => { this.sending = false; this.pendingPayloads.delete(tempId); this.upsertIncoming(res?.data, tempId); this.scrollToBottom(); this.focusComposer(0); this.messageSent.emit(); },
         error: () => { this.sending = false; this.markFailed(tempId); }
       });
   }
