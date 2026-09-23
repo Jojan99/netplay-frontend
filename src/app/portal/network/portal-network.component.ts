@@ -5,6 +5,7 @@ import { RouterLink } from '@angular/router';
 import { ClientApiService } from '../services/client-api.service';
 import { NpSelectComponent } from '../../common/np-select/np-select.component';
 import { OpcionSimple, PRESENTACION_SIMPLE } from '../../common/np-select/presentaciones';
+import { limpiarTextoWifi, problemaDeLaClaveWifi } from '../../common/wifi';
 
 /** En 2.4 GHz sólo estos tres canales no se superponen entre sí. */
 const CANALES_SIN_SUPERPOSICION = [1, 6, 11];
@@ -145,6 +146,9 @@ export class PortalNetworkComponent implements OnInit {
    */
   get redesConClave(): number { return (this.redes ?? []).filter((r: any) => r.puede_cambiar_clave && r.confirmada).length; }
 
+  /** Quita mientras escriben lo que el equipo no admite. */
+  filtrarClave(valor: string) { if (this.editando) { this.editando.clave = limpiarTextoWifi(valor); } }
+
   editar(r: any) { this.editando = { indice: r.indice, nombre: r.nombre ?? '', clave: '', todas: true }; this.aviso.set(null); }
 
   /** Sólo la contraseña: el nombre de la red lo define la empresa. */
@@ -153,7 +157,9 @@ export class PortalNetworkComponent implements OnInit {
     if (!ed) return;
     const clave = ed.clave.trim();
 
-    if (clave.length < 8 || clave.length > 63) { this.aviso.set({ texto: 'La contraseña debe tener entre 8 y 63 caracteres.', tipo: 'danger' }); return; }
+    const problema = problemaDeLaClaveWifi(clave);
+
+    if (problema) { this.aviso.set({ texto: problema, tipo: 'danger' }); return; }
 
     this.trabajando.set('wifi');
     this.api.cambiarWifiCliente(r.indice, null, clave, ed.todas && this.redesConClave > 1).subscribe({

@@ -128,8 +128,8 @@
               </ng-container>
 
               <form class="np-acs-form" *ngIf="editando?.indice === r.indice && editando as ed" (ngSubmit)="guardarWifi(r)">
-                <label class="np-field"><span>Nombre de la red</span><input class="np-input" name="ssid" [(ngModel)]="ed.ssid" maxlength="32" /></label>
-                <label class="np-field" *ngIf="r.ruta_clave"><span>Contraseña nueva (vacía = no cambiar)</span><input class="np-input np-mono" name="clave" [(ngModel)]="ed.clave" minlength="8" maxlength="63" autocomplete="off" /></label>
+                <label class="np-field"><span>Nombre de la red</span><input class="np-input" name="ssid" [ngModel]="ed.ssid" (ngModelChange)="filtrarSsid($event)" maxlength="32" /></label>
+                <label class="np-field" *ngIf="r.ruta_clave"><span>Contraseña nueva (vacía = no cambiar)</span><input class="np-input np-mono" name="clave" [ngModel]="ed.clave" (ngModelChange)="filtrarClave($event)" minlength="8" maxlength="63" autocomplete="off" placeholder="Sin eñes, tildes ni espacios" /></label>
                 <div class="np-btnrow">
                   <button type="button" class="np-btn np-btn--ghost np-btn--sm" (click)="editando = null">Cancelar</button>
                   <button type="submit" class="np-btn np-btn--primary np-btn--sm" [disabled]="trabajando === 'wifi'">{{ trabajando === 'wifi' ? 'Enviando…' : 'Guardar' }}</button>

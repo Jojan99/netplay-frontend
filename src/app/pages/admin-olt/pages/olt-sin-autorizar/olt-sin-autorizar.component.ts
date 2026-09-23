@@ -13,6 +13,7 @@ import { DialogService } from '../../../../services/dialog.service';
 import { AcsSetupService } from '../../../../services/acs-setup.service';
 
 import { GestionRemotaService } from '../../../../services/gestion-remota.service';
+import { limpiarTextoWifi, problemaDeLaClaveWifi, problemaDelNombreWifi } from '../../../../common/wifi';
 
 @Component({
   selector: 'app-olt-sin-autorizar',
@@ -400,9 +401,15 @@ export class OltSinAutorizarComponent implements OnInit {
     const aprovisionar = this.aprov?.aprovisionar;
     const claveWifi = this.wifi.clave.trim();
 
-    if (aprovisionar && this.wifi.mandar && claveWifi && (claveWifi.length < 8 || claveWifi.length > 63)) {
-      this.toast.error('La clave del WiFi debe tener entre 8 y 63 caracteres (o dejala vacía para generarla).');
-      return;
+    if (aprovisionar && this.wifi.mandar) {
+      const ssidWifi = this.wifi.ssid.trim();
+      const problema = (claveWifi ? problemaDeLaClaveWifi(claveWifi) : null)
+        ?? (ssidWifi ? problemaDelNombreWifi(ssidWifi) : null);
+
+      if (problema) {
+        this.toast.error(problema + ' Si la dejás vacía, la genera el sistema.');
+        return;
+      }
     }
 
     this.registering = true;
@@ -446,6 +453,11 @@ export class OltSinAutorizarComponent implements OnInit {
    * familia sin conexión hasta que alguien reconecta todos los teléfonos.
    */
   wifi = { ssid: '', clave: '', mandar: true };
+
+  /** Quita mientras escriben lo que el equipo no admite. */
+  filtrarClaveWifi(valor: string) { this.wifi.clave = limpiarTextoWifi(valor); }
+
+  filtrarSsidWifi(valor: string) { this.wifi.ssid = limpiarTextoWifi(valor, true).slice(0, 32); }
 
   private cargarAprov(): void {
     this.gestion.aprovisionamiento().subscribe({

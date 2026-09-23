@@ -78,7 +78,7 @@
       <form class="pt-form pt-red-form" *ngIf="editando?.indice === r.indice && editando as ed" (ngSubmit)="guardar(r)">
         <label class="pt-field">
           <span>Contraseña nueva de «{{ r.nombre }}»</span>
-          <input class="pt-input np-mono" name="clave" [(ngModel)]="ed.clave" minlength="8" maxlength="63" placeholder="Mínimo 8 caracteres" autocomplete="off" required />
+          <input class="pt-input np-mono" name="clave" [ngModel]="ed.clave" (ngModelChange)="filtrarClave($event)" minlength="8" maxlength="63" placeholder="Mínimo 8 caracteres, sin eñes ni espacios" autocomplete="off" required />
         </label>
         <label class="pt-check" *ngIf="r.puede_cambiar_clave && redesConClave > 1">
           <input type="checkbox" name="todas" [(ngModel)]="ed.todas" />

@@ -186,10 +186,10 @@
           </ng-container>
           <ng-container *ngIf="aprov.wifi && wifi.mandar">
             <label class="np-field"><span>Nombre del WiFi <em>vacío = {{ aprov.wifi_prefijo || aprov.prefijo_sugerido }}_APELLIDO</em></span>
-              <input class="np-input" [(ngModel)]="wifi.ssid" maxlength="32" autocomplete="off" />
+              <input class="np-input" [ngModel]="wifi.ssid" (ngModelChange)="filtrarSsidWifi($event)" maxlength="32" autocomplete="off" />
             </label>
             <label class="np-field"><span>Clave del WiFi <em>vacío = se genera</em></span>
-              <input class="np-input np-mono" [(ngModel)]="wifi.clave" maxlength="63" autocomplete="off" placeholder="Mínimo 8 caracteres" />
+              <input class="np-input np-mono" [ngModel]="wifi.clave" (ngModelChange)="filtrarClaveWifi($event)" maxlength="63" autocomplete="off" placeholder="Mínimo 8 caracteres, sin eñes ni tildes" />
             </label>
           </ng-container>
         </ng-container>

@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { AcsService } from '../../services/acs.service';
 import { DialogService } from '../../services/dialog.service';
+import { limpiarTextoWifi, problemaDeLaClaveWifi, problemaDelNombreWifi } from '../../common/wifi';
 
 /**
  * Router del cliente: los equipos de la empresa que reportan al servidor
@@ -42,6 +43,11 @@ export class OntDeviceComponent implements OnInit {
   trabajando = '';
 
   claveVisible: Record<number, boolean> = {};
+
+  /** Quita mientras escriben lo que el equipo no admite. */
+  filtrarClave(valor: string) { if (this.editando) { this.editando.clave = limpiarTextoWifi(valor); } }
+
+  filtrarSsid(valor: string) { if (this.editando) { this.editando.ssid = limpiarTextoWifi(valor, true).slice(0, 32); } }
   copiado = '';
   editando: { indice: number; ssid: string; clave: string } | null = null;
   verInactivos = false;
@@ -185,7 +191,9 @@ export class OntDeviceComponent implements OnInit {
     const ssid = ed.ssid.trim() !== (r.ssid ?? '') ? ed.ssid.trim() : '';
     const clave = ed.clave;
     if (!ssid && !clave) { this.editando = null; return; }
-    if (clave && (clave.length < 8 || clave.length > 63)) { this.aviso = { texto: 'La contraseña debe tener entre 8 y 63 caracteres.', tipo: 'danger' }; return; }
+    const problema = (clave ? problemaDeLaClaveWifi(clave) : null) ?? (ssid ? problemaDelNombreWifi(ssid) : null);
+
+    if (problema) { this.aviso = { texto: problema, tipo: 'danger' }; return; }
 
     const ok = await this.dialog.confirm(
       `¿Cambiar ${[ssid && 'el nombre', clave && 'la contraseña'].filter(Boolean).join(' y ')} de la red «${r.ssid}»? `

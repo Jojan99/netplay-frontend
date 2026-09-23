@@ -142,13 +142,13 @@
               <label class="oe-clave-campo">
                 <span>Nombre de la red</span>
                 <div>
-                  <input class="np-input" name="ssid" [(ngModel)]="c.ssid" maxlength="32" autocomplete="off" placeholder="Hasta 32 caracteres" />
+                  <input class="np-input" name="ssid" [ngModel]="c.ssid" (ngModelChange)="filtrarSsid($event)" maxlength="32" autocomplete="off" placeholder="Hasta 32 caracteres" />
                 </div>
               </label>
               <label class="oe-clave-campo">
                 <span>Contraseña nueva (vacía = no cambiarla)</span>
                 <div>
-                  <input class="np-input np-mono" name="clave" [(ngModel)]="c.clave" minlength="8" maxlength="63" autocomplete="off" placeholder="Entre 8 y 63 caracteres" />
+                  <input class="np-input np-mono" name="clave" [ngModel]="c.clave" (ngModelChange)="filtrarClave($event)" minlength="8" maxlength="63" autocomplete="off" placeholder="Entre 8 y 63 caracteres" />
                   <button type="button" class="np-btn np-btn--ghost" (click)="generarClave()">Generar</button>
                 </div>
               </label>
@@ -160,6 +160,7 @@
                 <input type="checkbox" name="oculta" [(ngModel)]="c.oculta" />
                 <span>Ocultar esta red: el equipo deja de anunciar su nombre y sólo se conecta quien lo escriba a mano</span>
               </label>
+              <p class="oe-fine">Sin eñes, tildes ni espacios en la contraseña: el equipo las rechaza. Se van solas mientras escribís.</p>
               <p class="oe-fine">El nombre se cambia sólo en esta red, para que 2.4 y 5 GHz sigan distinguiéndose. Los equipos conectados se desconectan y hay que volver a conectarlos.</p>
               <div class="oe-clave-botones">
                 <button type="button" class="np-btn np-btn--ghost" (click)="cambiandoClave = null">Cancelar</button>

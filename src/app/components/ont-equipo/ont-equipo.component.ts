@@ -4,6 +4,7 @@ import { OltService } from '../../services/olt.service';
 import { AcsService } from '../../services/acs.service';
 import { RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
+import { limpiarTextoWifi, problemaDeLaClaveWifi, problemaDelNombreWifi } from '../../common/wifi';
 
 /** Lo que se sabe de la ONT sin preguntarle a la OLT: sale de olt_onts. */
 export interface OntVinculada {
@@ -93,6 +94,15 @@ export class OntEquipoComponent implements OnChanges {
   }
 
   /** Una contraseña fácil de dictar por teléfono: sin 0/O ni 1/l. */
+  /** Quita mientras escriben lo que el equipo no admite. */
+  filtrarClave(valor: string) {
+    if (this.cambiandoClave) { this.cambiandoClave.clave = limpiarTextoWifi(valor); }
+  }
+
+  filtrarSsid(valor: string) {
+    if (this.cambiandoClave) { this.cambiandoClave.ssid = limpiarTextoWifi(valor, true).slice(0, 32); }
+  }
+
   generarClave() {
     if (!this.cambiandoClave) return;
     const letras = 'abcdefghijkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789';
@@ -108,13 +118,11 @@ export class OntEquipoComponent implements OnChanges {
     const clave = c.clave.trim();
     const ssid = this.ssidNuevo(c);
 
-    if (clave !== '' && (clave.length < 8 || clave.length > 63)) {
-      this.avisoClave = { texto: 'La contraseña debe tener entre 8 y 63 caracteres.', tipo: 'error' };
-      return;
-    }
+    const problema = (clave !== '' ? problemaDeLaClaveWifi(clave) : null)
+      ?? (ssid !== null ? problemaDelNombreWifi(ssid) : null);
 
-    if (ssid !== null && ssid.length > 32) {
-      this.avisoClave = { texto: 'El nombre de la red no puede pasar de 32 caracteres.', tipo: 'error' };
+    if (problema) {
+      this.avisoClave = { texto: problema, tipo: 'error' };
       return;
     }
 
