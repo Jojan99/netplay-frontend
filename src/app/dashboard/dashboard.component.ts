@@ -94,8 +94,8 @@ export class DashboardComponent implements OnInit, OnDestroy {
   // ── El catálogo de paneles ─────────────────────────────────────────────
 
   readonly CATALOGO: Panel[] = [
-    { id: 'resolver',  titulo: 'Lo que hay que resolver', seccion: 'La gente', ancho: 5, para: 'Lo urgente de hoy, ordenado por lo que le duele al cliente.' },
-    { id: 'vivo',      titulo: 'Lo que está pasando',     seccion: 'La gente', ancho: 3, para: 'Los últimos movimientos de la empresa, minuto a minuto.' },
+    { id: 'resolver',  titulo: 'Lo que hay que resolver', seccion: 'La gente', ancho: 5, modulo: 'usuario', para: 'Lo urgente de hoy, ordenado por lo que le duele al cliente.' },
+    { id: 'vivo',      titulo: 'Lo que está pasando',     seccion: 'La gente', ancho: 3, modulo: 'usuario', para: 'Los últimos movimientos de la empresa, minuto a minuto.' },
     { id: 'plata',     titulo: 'Ingresos y egresos',      seccion: 'La plata', ancho: 4, plata: true, modulo: 'finanzas', para: 'El año mes a mes, con el resumen de caja.' },
     { id: 'mora',      titulo: 'La mora por antigüedad',  seccion: 'La plata', ancho: 4, plata: true, modulo: 'finanzas', para: 'Cuánto se debe de 30, 60, 90 días y de más atrás.' },
     { id: 'metodos',   titulo: 'Por dónde entra la plata', seccion: 'La plata', ancho: 3, plata: true, modulo: 'finanzas', para: 'Qué método de pago usa la gente este mes.' },
@@ -210,7 +210,9 @@ export class DashboardComponent implements OnInit, OnDestroy {
   }
 
   private ponerPaneles(ids: string[]): void {
-    const deFabrica = ['resolver', 'plata', 'salud', 'vivo', 'deudores', 'tickets', 'novedades'];
+    const deFabrica = this.isTecnico
+      ? ['tickets', 'novedades']
+      : ['resolver', 'plata', 'salud', 'vivo', 'deudores', 'tickets', 'novedades'];
     const elegidos = (ids?.length ? ids : deFabrica)
       .map(id => this.CATALOGO.find(p => p.id === id))
       .filter((p): p is Panel => !!p && this.alcanza(p));
@@ -541,10 +543,14 @@ export class DashboardComponent implements OnInit, OnDestroy {
       );
     }
 
-    lista.push({
-      clave: 'clientes', etiqueta: 'Clientes', valor: this.totalUsers.toLocaleString('es-CO'),
-      pie: `${this.active} en línea · ${this.inactive} cortados`, ruta: '/dashboard/usuario', tono: 'neutro',
-    });
+    // El total de clientes de la empresa es un dato de gestión: el técnico
+    // entra a ver sus tickets, no el tamaño del negocio.
+    if (this.puede('usuario')) {
+      lista.push({
+        clave: 'clientes', etiqueta: 'Clientes', valor: this.totalUsers.toLocaleString('es-CO'),
+        pie: `${this.active} en línea · ${this.inactive} cortados`, ruta: '/dashboard/usuario', tono: 'neutro',
+      });
+    }
 
     if (this.veLaRed) {
       lista.push({

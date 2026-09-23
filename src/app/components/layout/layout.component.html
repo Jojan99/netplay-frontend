@@ -15,18 +15,16 @@
             <span class="app-shell-product">Plataforma de operación</span>
           </div>
         </a>
+        <!-- IA Cobranza: al final de la zona de la marca, donde sobra espacio. -->
+        <app-cobranza-burbuja *ngIf="hasFinanzas" class="app-shell-ia"></app-cobranza-burbuja>
       </div>
 
-      <div class="app-shell-centro">
       <div class="app-shell-context">
         <span class="app-shell-crumb"><b>{{ currentGroup || 'Operación' }}</b><i>/</i><span>{{ currentSection || 'Centro de control' }}</span></span>
         <span class="app-shell-context-divider"></span>
         <span class="app-shell-live"><i></i>en línea</span>
         <span class="app-shell-context-divider"></span>
         <span class="app-shell-clock">{{ now | date:'EEE d MMM · HH:mm' }}</span>
-      </div>
-        <!-- IA Cobranza: al centro del encabezado, donde hay espacio. -->
-        <app-cobranza-burbuja *ngIf="hasFinanzas"></app-cobranza-burbuja>
       </div>
 
       <div class="app-shell-actions">

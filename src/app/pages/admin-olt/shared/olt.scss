@@ -100,7 +100,7 @@
 .olt-modal {
   display: flex;
   flex-direction: column;
-  max-height: calc(100vh - 80px);
+  max-height: calc(100vh - 80px); max-height: calc(100dvh - 80px);
 }
 
 .olt-modal-body {
@@ -174,7 +174,7 @@
 .np-warn-text { color: var(--danger); }
 
 /* Script de RouterOS entregado al crear la OLT con su túnel. */
-.olt-script-modal { display: flex; flex-direction: column; max-height: calc(100vh - 60px); }
+.olt-script-modal { display: flex; flex-direction: column; max-height: calc(100vh - 60px); max-height: calc(100dvh - 60px); }
 
 .olt-script {
   margin: 10px 0 0;

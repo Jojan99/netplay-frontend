@@ -1,12 +1,24 @@
 :host {
     display: flex;
     flex-direction: column;
+
+    /* En Android —y sobre todo en los Samsung— «100vh» es la altura de la
+       pantalla SIN contar la barra de direcciones, que sí está ocupando
+       espacio. El panel quedaba más alto que lo visible, el contenedor que
+       scrollea calculaba su alto contra esa caja y el final de las listas
+       no se alcanzaba nunca: parecía que el scroll no funcionaba.
+       «dvh» mide lo que de verdad se ve. El 100vh queda de respaldo para
+       los navegadores viejos que no lo entienden. */
     height: 100vh;
+    height: 100dvh;
 }
 
 .flex-grow {
     flex-grow: 1;
     display: flex;
+    /* Sin esto un hijo con contenido largo estira al padre en vez de
+       scrollear adentro. */
+    min-height: 0;
 }
 
 main {
@@ -14,6 +26,10 @@ main {
     overflow-x: hidden;
     /* Mobile: always full width since sidebar is a fixed overlay */
     width: 100%;
+    min-height: 0;
+    /* El rebote de la página no se lleva el scroll de adentro. */
+    overscroll-behavior-y: contain;
+    -webkit-overflow-scrolling: touch;
 }
 
 /* Encabezado de grupo del menú: botón nativo, se ve igual que los ítems. */
@@ -46,7 +62,7 @@ main {
 .app-shell-company { overflow: hidden; color: var(--text); font-family: var(--font-display); font-size: 15px; font-weight: 600; letter-spacing: -0.01em; line-height: 1.1; text-overflow: ellipsis; white-space: nowrap; }
 .app-shell-product { color: var(--text-3); font-family: var(--font-mono); font-size: 10px; letter-spacing: .05em; text-transform: uppercase; white-space: nowrap; }
 
-.app-shell-centro { display: flex; align-items: center; justify-self: center; gap: 10px; min-width: 0; }
+.app-shell-ia { margin-left: auto; flex-shrink: 0; }
 .app-shell-context { display: flex; align-items: center; justify-self: center; gap: 12px; height: 32px; padding: 0 12px; border: 1px solid var(--line); border-radius: 999px; background: var(--surface-2); color: var(--text-3); font-family: var(--font-mono); font-size: 11px; white-space: nowrap; }
 .app-shell-crumb { display: inline-flex; align-items: center; gap: 6px; b { font-weight: 500; color: var(--text-3); } i { font-style: normal; color: var(--accent); } span { color: var(--text); font-weight: 500; } }
 .app-shell-context-divider { width: 1px; height: 12px; background: var(--line-strong); }
@@ -78,7 +94,7 @@ main {
 @media (min-width: 768px) { .app-shell-backdrop { display: none; } }
 /* Con el buscador en el encabezado no entra el contexto completo: queda sólo la ruta. */
 @media (max-width: 1279px) { .app-shell-live, .app-shell-clock, .app-shell-context-divider { display: none; } }
-@media (max-width: 900px) { .app-shell-context { display: none; } .app-shell-nav-inner { grid-template-columns: minmax(0, 1fr) auto auto; } }
+@media (max-width: 900px) { .app-shell-context { display: none; } .app-shell-nav-inner { grid-template-columns: minmax(0, 1fr) auto; } }
 @media (max-width: 640px) { .app-shell-profile-copy, .app-shell-chevron { display: none; } .app-shell-product { display: none; } }
 
 .app-shell-body { background: var(--bg); }
