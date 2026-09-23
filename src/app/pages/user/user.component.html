@@ -911,7 +911,8 @@
         <button type="button" class="np-btn np-btn--ghost np-btn--sm" (click)="cargarIps()" [disabled]="loadingIps">
           {{ loadingIps ? 'Reintentando…' : 'Reintentar' }}
         </button>
-  
+      </div>
+
       <div class="np-btnrow np-btnrow--end">
         <button type="button" class="np-btn np-btn--ghost" (click)="showCreateUser = false">Cancelar</button>
         <button type="button" class="np-btn np-btn--primary" (click)="createUser()" [disabled]="submittingNewUser">{{ submittingNewUser ? 'Registrando…' : 'Registrar cliente' }}</button>
@@ -920,7 +921,6 @@
   </div>
 </div>
 
-</div>
 <!-- ══ Cobrar una factura ════════════════════════════════════════════════
      Antes se cobraba con un «¿seguro?» y nada más, y después nadie sabía con
      qué se había pagado. Ahora se elige el medio y se puede dejar la
