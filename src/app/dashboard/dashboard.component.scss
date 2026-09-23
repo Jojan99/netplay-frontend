@@ -51,9 +51,10 @@ a.sala-panel:hover, a.sala-panel:focus-visible { border-color: var(--accent); bo
 a.sala-panel:hover .sala-ir { color: var(--accent); }
 
 .sala-panel-h {
-  display: flex; align-items: baseline; justify-content: space-between; gap: 12px;
+  display: flex; align-items: baseline; justify-content: space-between; gap: 12px; flex-wrap: wrap;
 
-  h2 { margin: 0; font-family: var(--font-display); font-size: 15px; font-weight: 700; }
+  /* El título no se parte: en pantallas angostas baja el enlace, no el nombre. */
+  h2 { margin: 0; font-family: var(--font-display); font-size: 15px; font-weight: 700; white-space: nowrap; }
 }
 
 .sala-ir { font-size: 12px; font-weight: 600; color: var(--text-2); text-decoration: none; white-space: nowrap; }

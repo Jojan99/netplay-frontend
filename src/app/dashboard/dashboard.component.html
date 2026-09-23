@@ -128,11 +128,11 @@
             <ng-container *ngSwitchCase="'metodos'">
               <div class="sala-panel-h"><h2>Por dónde entra la plata</h2><a class="sala-ir" routerLink="/dashboard/finanzas">Pagos →</a></div>
               <div class="sala-tabla" *ngIf="pmSummary.length">
-                <div class="sala-tabla-h"><span>Método</span><span class="sala-num">Pagos</span><span class="sala-num">Total</span></div>
+                <div class="sala-tabla-h"><span>Método</span><span class="sala-num">Pagos</span><span class="sala-num sala-ancho">Total</span></div>
                 <div class="sala-fila es-quieta" *ngFor="let pm of pmSummary">
                   <span class="sala-fila-n">{{ pm.name }}</span>
                   <span class="sala-num">{{ pm.count }}</span>
-                  <span class="sala-num sala-plata-v">$ {{ pm.texto }}</span>
+                  <span class="sala-num sala-ancho sala-plata-v">$ {{ pm.texto }}</span>
                 </div>
               </div>
               <p class="sala-vacio" *ngIf="!pmSummary.length">Sin pagos registrados este mes.</p>
@@ -142,11 +142,11 @@
             <ng-container *ngSwitchCase="'deudores'">
               <div class="sala-panel-h"><h2>Los que más deben</h2><a class="sala-ir" routerLink="/dashboard/cartera">Cartera →</a></div>
               <div class="sala-tabla" *ngIf="deudores.length">
-                <div class="sala-tabla-h"><span>Cliente</span><span class="sala-num">Facturas</span><span class="sala-num">Deuda</span><span class="sala-num">Mora</span></div>
+                <div class="sala-tabla-h"><span>Cliente</span><span class="sala-num">Facturas</span><span class="sala-num sala-ancho">Deuda</span><span class="sala-num">Mora</span></div>
                 <button type="button" class="sala-fila" *ngFor="let d of deudores; trackBy: porFila" (click)="verCliente(d.user_id)">
                   <span class="sala-fila-n">{{ d.nombre }}</span>
                   <span class="sala-num">{{ d.facturas }}</span>
-                  <span class="sala-num sala-plata-v">$ {{ d.deuda_texto }}</span>
+                  <span class="sala-num sala-ancho sala-plata-v">$ {{ d.deuda_texto }}</span>
                   <span class="sala-num" [class.sala-rojo]="d.dias > 90">{{ d.dias }} días</span>
                 </button>
               </div>
