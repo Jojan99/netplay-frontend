@@ -133,8 +133,12 @@ export class VentanasRapidasComponent {
     .mv-cabeza { padding: 6px 8px 4px; font: 500 10px var(--font-mono); letter-spacing: .1em; text-transform: uppercase; color: var(--text-3); }
   `],
   template: `
-    <button type="button" class="np-icobtn" (click)="abierto = !abierto" [attr.aria-expanded]="abierto" aria-label="Ventanas rápidas" title="Ventanas rápidas"
-            [innerHTML]="iconos.ventanas | sanitizeHtml"></button>
+    <!-- Sin ninguna ventana que pueda abrir, el botón sobra: a un técnico le
+         ocupaba lugar en el encabezado y no le servía para nada. -->
+    @if (atajos.hayVentanas()) {
+      <button type="button" class="np-icobtn" (click)="abierto = !abierto" [attr.aria-expanded]="abierto" aria-label="Ventanas rápidas" title="Ventanas rápidas"
+              [innerHTML]="iconos.ventanas | sanitizeHtml"></button>
+    }
     @if (abierto) {
       <div class="mv-lista" role="menu">
         <div class="mv-cabeza">Ventanas rápidas</div>

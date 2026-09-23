@@ -97,6 +97,26 @@ main {
 @media (max-width: 900px) { .app-shell-context { display: none; } .app-shell-nav-inner { grid-template-columns: minmax(0, 1fr) auto; } }
 @media (max-width: 640px) { .app-shell-profile-copy, .app-shell-chevron { display: none; } .app-shell-product { display: none; } }
 
+/* ── El encabezado en pantallas chicas ──────────────────────────────────────
+   Al angostarse, los iconos de la derecha quedaban hombro con hombro y se
+   leían como una mancha. Se les da aire, se achican un poco y lo que no es
+   imprescindible deja de mostrarse. */
+@media (max-width: 900px) {
+  .app-shell-nav-inner { padding: 0 10px; gap: 8px; }
+  .app-shell-actions { gap: 4px; }
+  .app-shell-actions .np-icobtn { width: 32px; height: 32px; }
+}
+
+@media (max-width: 560px) {
+  /* El aviso de versión nueva se queda sólo con su icono. */
+  .app-shell-nueva span { display: none; }
+  .app-shell-nueva { padding: 0 8px; }
+
+  /* La marca se achica para que la fila entre sin apretarse. */
+  .app-shell-logo, .app-shell-monogram { width: 28px; height: 28px; }
+  .app-shell-company { font-size: 13.5px; }
+}
+
 .app-shell-body { background: var(--bg); }
 
 /* ── Atajos: buscador del encabezado, estrellas del menú y "Mis atajos" ──

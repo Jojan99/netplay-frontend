@@ -8,8 +8,28 @@
 .sidebar-heading-status { display: inline-flex; align-items: center; gap: 5px; color: var(--ok); font-family: var(--font-mono); font-size: 10px; }
 .sidebar-heading-status i { width: 6px; height: 6px; border-radius: 50%; background: var(--ok); box-shadow: 0 0 0 3px var(--ok-soft); }
 @media (min-width: 768px) {
-  .sidebar-aside { position: relative; top: auto; left: auto; bottom: auto; height: 100%; box-shadow: none !important; transform: translateX(0) !important;
+  .sidebar-aside {
+    position: relative; top: auto; left: auto; bottom: auto; height: 100%;
+    box-shadow: none !important; transform: translateX(0) !important;
+
+    /* Al encogerse, lo de adentro se reacomodaba en cada cuadro: los textos
+       se partían en dos renglones, los iconos saltaban y la animación se
+       veía nerviosa. Recortando en vez de reacomodar, el contenido queda
+       quieto y sólo se corre el borde, como una cortina. */
+    overflow-x: hidden;
+
     &.sidebar-collapsed { width: 60px; }
-    &.sidebar-expanded { width: 256px; } }
+    &.sidebar-expanded { width: 256px; }
+  }
+
+  /* El contenido conserva su ancho mientras la barra se angosta. */
+  .sidebar-surface { width: 256px; box-sizing: border-box; }
   .sidebar-collapsed .sidebar-surface { padding: 12px 6px !important; }
+
+  /* Las etiquetas se apagan antes de que el borde las alcance: si se
+     recortaran a mitad de palabra se vería peor que si desaparecen. */
+  .sidebar-aside .sidebar-group-label,
+  .sidebar-aside .sidebar-heading { transition: opacity .12s ease; }
+  .sidebar-collapsed .sidebar-group-label,
+  .sidebar-collapsed .sidebar-heading { opacity: 0; pointer-events: none; }
 }

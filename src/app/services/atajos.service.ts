@@ -24,7 +24,7 @@ export interface VentanaRapida {
 }
 
 export const TIPOS_DE_VENTANA: Record<TipoDeVentana, { titulo: string; sub: string; modulo: string | null }> = {
-  cliente:  { titulo: 'Buscar cliente',      sub: 'Servicio, deuda y equipo',   modulo: null },
+  cliente:  { titulo: 'Buscar cliente',      sub: 'Servicio, deuda y equipo',   modulo: 'usuario' },
   equipo:   { titulo: 'Equipo del cliente',  sub: 'ONT y señal en vivo',        modulo: 'olt-admin' },
   ticket:   { titulo: 'Crear ticket',        sub: 'Con diagnóstico automático', modulo: 'created-ticket' },
   facturas: { titulo: 'Facturas pendientes', sub: 'Saldo y estado de cuenta',   modulo: 'finanzas' },
@@ -146,6 +146,11 @@ export class AtajosService {
   }
 
   puedeAbrir(tipo: TipoDeVentana): boolean { return this.tieneModulo(TIPOS_DE_VENTANA[tipo].modulo); }
+
+  /** ¿Tiene sentido ofrecerle las ventanas rápidas a esta persona? */
+  hayVentanas(): boolean {
+    return (Object.keys(TIPOS_DE_VENTANA) as TipoDeVentana[]).some(t => this.puedeAbrir(t));
+  }
 
   // ── Buscador ────────────────────────────────────────────────────────
 
