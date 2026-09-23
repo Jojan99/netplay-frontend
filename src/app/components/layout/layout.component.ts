@@ -37,6 +37,7 @@ import { BuscadorRapidoComponent }  from '../atajos/buscador-rapido.component';
 import { NotificacionesComponent }  from '../notificaciones/notificaciones.component';
 import { NovedadesComponent }       from '../novedades/novedades.component';
 import { TooltipsGlobales }         from '../../common/tooltips';
+import { ActualizacionService }     from '../../services/actualizacion.service';
 import { VentanasRapidasComponent, MenuDeVentanasComponent } from '../atajos/ventanas-rapidas.component';
 
 @Component({
@@ -66,6 +67,8 @@ export class LayoutComponent implements OnInit {
   /** Tooltips propios: cualquier `title` de la plataforma se pinta con nuestro
       estilo en vez del recuadro gris del navegador. Con inyectarlo alcanza. */
   private tooltips = inject(TooltipsGlobales);
+  /** Avisa cuando se publicó una versión nueva, para no quedarse con la vieja. */
+  readonly actualizacion = inject(ActualizacionService);
   readonly iconos = ICONOS;
 
   alternarFavorito(item: RouteProps): void {
@@ -129,6 +132,7 @@ export class LayoutComponent implements OnInit {
       }
     });
     if (isPlatformBrowser(this.platformId)) this.clockTimer = setInterval(() => { this.now = new Date(); }, 30000);
+    this.actualizacion.empezar();
     if (!isPlatformBrowser(this.platformId)) return;
     // Los técnicos comparten ubicación mientras tengan el panel abierto (también al recargar, no sólo al iniciar sesión)
     this.locationTracker.startTrackingIfTechnician();
