@@ -320,10 +320,76 @@ export class FinanceComponent implements OnInit, OnDestroy {
      Se pide el motivo: es lo que hace entendible, meses después, por qué una
      factura pagada volvió a deber. */
 
+  /**
+   * Con qué se pagó, para la lista de movimientos.
+   *
+   * Los pagos de pasarela no llevan método —nadie eligió uno— y decían «Sin
+   * método», que parecía un dato faltante. Cuando la nota dice por dónde
+   * entró, se muestra eso.
+   */
+  metodoDelMovimiento(log: any): string {
+    const propio = log?.payment_method?.name || log?.payment_method_name;
+    if (propio) return propio;
+
+    const porPasarela = /Pago online v[ií]a\s+([A-Za-zÁÉÍÓÚáéíóú]+)/i.exec(log?.notes || '');
+    if (porPasarela) return `En línea · ${porPasarela[1].toUpperCase()}`;
+
+    return 'Sin método';
+  }
+
+  /** La referencia larga de la pasarela se muestra aparte, no pegada al resto. */
+  referenciaDelMovimiento(log: any): string {
+    const n = (log?.notes || '').trim();
+    if (!n) return '';
+
+    return /^Pago online v[ií]a/i.test(n) ? (n.split(/Ref:\s*/i)[1] || '') : n;
+  }
+
   revertirModal = false;
   revirtiendoInvoice: any = null;
   motivoReverso = '';
   revirtiendo = false;
+
+  anularModal = false;
+  anulandoInvoice: any = null;
+  motivoAnulacion = '';
+  anulando = false;
+
+  abrirAnulacion(invoice: any): void {
+    this.anulandoInvoice = invoice;
+    this.motivoAnulacion = '';
+    this.anularModal = true;
+  }
+
+  confirmarAnulacion(): void {
+    if (!this.anulandoInvoice || this.anulando || !this.motivoAnulacion.trim()) return;
+
+    this.anulando = true;
+    this.financeService.anularFactura(this.anulandoInvoice.id, this.motivoAnulacion.trim()).subscribe({
+      next: (r: any) => {
+        this.anulando = false;
+        this.anularModal = false;
+        r?.status === 0 ? this.toast.success(r?.message || 'Factura anulada') : this.toast.error(r?.message || 'No se pudo anular');
+        this.openDrawer(this.selectedClient);
+      },
+      error: (e: any) => { this.anulando = false; this.toast.error(e?.error?.message || 'No se pudo anular la factura'); },
+    });
+  }
+
+  /** Borrar: sin vuelta y sólo si la factura no tocó plata. */
+  async borrarFactura(invoice: any): Promise<void> {
+    if (!invoice?.id) return;
+
+    if (!confirm(`¿Borrar la factura ${invoice.number_facture}? No se puede deshacer. Si querés dejar rastro, anulala.`)) return;
+
+    this.financeService.borrarFactura(invoice.id).subscribe({
+      next: (r: any) => {
+        r?.status === 0 ? this.toast.success(r?.message || 'Factura borrada') : this.toast.error(r?.message || 'No se pudo borrar');
+        this.openDrawer(this.selectedClient);
+      },
+      error: (e: any) => this.toast.error(e?.error?.message || 'No se pudo borrar la factura'),
+    });
+  }
 
   abrirReverso(invoice: any): void {
     this.revirtiendoInvoice = invoice;

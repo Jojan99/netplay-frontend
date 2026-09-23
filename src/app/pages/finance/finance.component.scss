@@ -75,3 +75,30 @@
   .np-page.is-open .np-workspace { grid-template-columns: minmax(0, 1fr); }
   .np-inspector { max-height: none; }
 }
+
+/* ── Movimientos ────────────────────────────────────────────────────────────
+   Con la referencia de la pasarela pegada al resto, los movimientos se leían
+   como un bloque continuo y uno parecía montado sobre el otro. La referencia
+   va en su renglón y cada movimiento queda separado del siguiente. */
+.fin-mov {
+  padding-bottom: 14px;
+
+  & + .fin-mov { border-top: 1px solid var(--line); padding-top: 10px; }
+
+  .np-tl-t { line-height: 1.35; }
+  .np-tl-d { line-height: 1.45; }
+}
+
+.fin-mov-ref {
+  grid-column: 1 / -1;
+  margin-top: 3px;
+  font-size: 10.5px;
+  color: var(--text-3);
+  opacity: .8;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Un reverso resta: se ve en rojo para no confundirlo con un cobro. */
+.np-tl--reverso::before { background: var(--danger); }

@@ -189,6 +189,12 @@
                       <button *ngIf="inv.paid === 1" type="button" class="np-icobtn" (click)="abrirReverso(inv)" title="Revertir el pago">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 4v4h4"/></svg>
                       </button>
+                      <button *ngIf="inv.paid !== 1" type="button" class="np-icobtn np-icobtn--danger" (click)="abrirAnulacion(inv)" title="Anular la factura">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="m5.6 5.6 12.8 12.8"/></svg>
+                      </button>
+                      <button *ngIf="inv.paid !== 1" type="button" class="np-icobtn np-icobtn--danger" (click)="borrarFactura(inv)" title="Borrar la factura">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M9 7V5h6v2M6 7l1 13h10l1-13"/></svg>
+                      </button>
                       <button type="button" class="np-icobtn" (click)="openEditModal(inv)" title="Editar factura">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 20h4L18 10l-4-4L4 16v4zM13 7l4 4"/></svg>
                       </button>
@@ -236,10 +242,18 @@
         <section *ngIf="paymentLogs.length">
           <p class="np-sect">Movimientos</p>
           <div class="np-timeline">
-            <div class="np-tl" *ngFor="let log of paymentLogs" [ngClass]="'np-tl--' + log.type">
+            <div class="np-tl fin-mov" *ngFor="let log of paymentLogs" [ngClass]="'np-tl--' + log.type">
               <span class="np-tl-t">{{ logTypeLabel(log.type) }} · <span class="np-mono">{{ log.number_facture }}</span></span>
-              <span class="np-tl-m">{{ formatCurrency(log.amount) }}</span>
-              <span class="np-tl-d">{{ log.created_at | date:'dd/MM/yy HH:mm' }} · {{ log.payment_method?.name || log.payment_method_name || 'Sin método' }} · por {{ log.recorded_by_name }}<ng-container *ngIf="log.notes"> · {{ log.notes }}</ng-container></span>
+              <span class="np-tl-m" [class.np-neg]="log.amount < 0">{{ formatCurrency(log.amount) }}</span>
+              <span class="np-tl-d">
+                {{ log.created_at | date:'dd/MM/yy HH:mm' }} · {{ metodoDelMovimiento(log) }}
+                <ng-container *ngIf="log.recorded_by_name"> · por {{ log.recorded_by_name }}</ng-container>
+              </span>
+              <!-- La referencia de la pasarela es larga: va en su propio
+                   renglón, si no empuja todo lo demás. -->
+              <span class="fin-mov-ref np-mono" *ngIf="referenciaDelMovimiento(log)" [title]="log.notes">
+                {{ referenciaDelMovimiento(log) }}
+              </span>
             </div>
           </div>
         </section>
@@ -457,6 +471,32 @@
       <div class="np-btnrow np-btnrow--end">
         <button type="button" class="np-btn np-btn--ghost" (click)="commitmentModal = false">Cancelar</button>
         <button type="button" class="np-btn np-btn--primary" (click)="saveCommitment()" [disabled]="savingCommitment">{{ savingCommitment ? 'Guardando…' : 'Crear compromiso' }}</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ Anular una factura ══════════════════════════════════════════════════
+     Deja de contar en la cartera pero sigue a la vista, con el motivo. -->
+<div *ngIf="anularModal" class="np-overlay" (click)="anularModal = false">
+  <div class="np-modal" role="dialog" aria-modal="true" aria-label="Anular la factura" (click)="$event.stopPropagation()">
+    <div class="np-modal-head">
+      <div>
+        <p class="np-kicker">Factura <b>/</b> <span class="np-mono">{{ anulandoInvoice?.number_facture }}</span></p>
+        <h3>Anular la factura</h3>
+      </div>
+    </div>
+    <div class="np-modal-body">
+      <p class="np-muted">Deja de contar en la cartera y de suspender, pero sigue a la vista y no se pierde el consecutivo.</p>
+      <label class="np-field"><span>Motivo <em>*</em></span>
+        <input class="np-input" [(ngModel)]="motivoAnulacion" maxlength="255"
+               placeholder="Se emitió por error" aria-label="Motivo de la anulación" />
+      </label>
+      <div class="np-btnrow np-btnrow--end">
+        <button type="button" class="np-btn np-btn--ghost" (click)="anularModal = false">Cancelar</button>
+        <button type="button" class="np-btn np-btn--primary" (click)="confirmarAnulacion()" [disabled]="anulando || !motivoAnulacion.trim()">
+          {{ anulando ? 'Anulando…' : 'Anular la factura' }}
+        </button>
       </div>
     </div>
   </div>
