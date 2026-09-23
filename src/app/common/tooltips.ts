@@ -20,6 +20,8 @@ export class TooltipsGlobales implements OnDestroy {
   private texto: HTMLSpanElement | null = null;
   private actual: HTMLElement | null = null;
   private espera: ReturnType<typeof setTimeout> | null = null;
+  /** Al que se le hizo clic: no vuelve a mostrar su tooltip hasta que el mouse salga. */
+  private silenciado: HTMLElement | null = null;
   private quitar: Array<() => void> = [];
 
   private static readonly DEMORA_MS = 280;
@@ -42,7 +44,7 @@ export class TooltipsGlobales implements OnDestroy {
       this.escuchar('focusin', e => this.entrar(e.target, true), true);
       this.escuchar('mouseout', e => this.salirDe(e as MouseEvent), true);
       this.escuchar('focusout', () => this.ocultar(), true);
-      this.escuchar('mousedown', () => this.ocultar(), true);
+      this.escuchar('mousedown', e => { this.silenciado = this.conTip(e.target); this.ocultar(); }, true);
       this.escuchar('keydown', e => { if ((e as KeyboardEvent).key === 'Escape') this.ocultar(); }, true);
       this.escuchar('scroll', () => this.ocultar(), true);
       this.escuchar('wheel', () => this.ocultar(), { capture: true, passive: true });
@@ -89,7 +91,8 @@ export class TooltipsGlobales implements OnDestroy {
 
     if (el === this.actual) return;
     this.ocultar();
-    if (!el) return;
+    if (el !== this.silenciado) this.silenciado = null;
+    if (!el || el === this.silenciado) return;
 
     this.actual = el;
     this.espera = setTimeout(() => this.mostrar(el), conTeclado ? 0 : TooltipsGlobales.DEMORA_MS);

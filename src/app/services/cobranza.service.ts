@@ -36,6 +36,7 @@ export interface CobranzaResumen {
   detectados: number;
   escalados: number;
   en_curso: number;
+  trabajando?: number;
   no_vistos: number;
 }
 

@@ -17,6 +17,7 @@
         </a>
       </div>
 
+      <div class="app-shell-centro">
       <div class="app-shell-context">
         <span class="app-shell-crumb"><b>{{ currentGroup || 'Operación' }}</b><i>/</i><span>{{ currentSection || 'Centro de control' }}</span></span>
         <span class="app-shell-context-divider"></span>
@@ -24,11 +25,13 @@
         <span class="app-shell-context-divider"></span>
         <span class="app-shell-clock">{{ now | date:'EEE d MMM · HH:mm' }}</span>
       </div>
+        <!-- IA Cobranza: al centro del encabezado, donde hay espacio. -->
+        <app-cobranza-burbuja *ngIf="hasFinanzas"></app-cobranza-burbuja>
+      </div>
 
       <div class="app-shell-actions">
         <!-- Cobranza: la pastilla vive en el encabezado, junto al buscador. -->
-        <app-cobranza-burbuja *ngIf="hasFinanzas"></app-cobranza-burbuja>
-        <ng-container *ngIf="atajos.grande()">
+                <ng-container *ngIf="atajos.grande()">
           <button type="button" class="app-shell-search" (click)="atajos.abrirBuscador()" aria-label="Buscar (Ctrl K)" title="Buscar cliente, equipo o módulo">
             <span class="app-shell-search-ico" [innerHTML]="iconos.buscar | sanitizeHtml"></span>
             <span class="app-shell-search-txt">Buscar</span>

@@ -46,6 +46,7 @@ main {
 .app-shell-company { overflow: hidden; color: var(--text); font-family: var(--font-display); font-size: 15px; font-weight: 600; letter-spacing: -0.01em; line-height: 1.1; text-overflow: ellipsis; white-space: nowrap; }
 .app-shell-product { color: var(--text-3); font-family: var(--font-mono); font-size: 10px; letter-spacing: .05em; text-transform: uppercase; white-space: nowrap; }
 
+.app-shell-centro { display: flex; align-items: center; justify-self: center; gap: 10px; min-width: 0; }
 .app-shell-context { display: flex; align-items: center; justify-self: center; gap: 12px; height: 32px; padding: 0 12px; border: 1px solid var(--line); border-radius: 999px; background: var(--surface-2); color: var(--text-3); font-family: var(--font-mono); font-size: 11px; white-space: nowrap; }
 .app-shell-crumb { display: inline-flex; align-items: center; gap: 6px; b { font-weight: 500; color: var(--text-3); } i { font-style: normal; color: var(--accent); } span { color: var(--text); font-weight: 500; } }
 .app-shell-context-divider { width: 1px; height: 12px; background: var(--line-strong); }
@@ -77,7 +78,7 @@ main {
 @media (min-width: 768px) { .app-shell-backdrop { display: none; } }
 /* Con el buscador en el encabezado no entra el contexto completo: queda sólo la ruta. */
 @media (max-width: 1279px) { .app-shell-live, .app-shell-clock, .app-shell-context-divider { display: none; } }
-@media (max-width: 900px) { .app-shell-context { display: none; } .app-shell-nav-inner { grid-template-columns: minmax(0, 1fr) auto; } }
+@media (max-width: 900px) { .app-shell-context { display: none; } .app-shell-nav-inner { grid-template-columns: minmax(0, 1fr) auto auto; } }
 @media (max-width: 640px) { .app-shell-profile-copy, .app-shell-chevron { display: none; } .app-shell-product { display: none; } }
 
 .app-shell-body { background: var(--bg); }
