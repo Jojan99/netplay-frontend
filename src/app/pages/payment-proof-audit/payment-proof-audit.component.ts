@@ -114,38 +114,83 @@ export class PaymentProofAuditComponent implements OnInit {
     });
   }
 
+  private aviso(texto: string, ok: boolean): void {
+    ok ? this.toast.success(texto) : this.toast.error(texto);
+  }
+
+  /* ── Aprobar ───────────────────────────────────────────────────────────
+     El monto leído de la imagen es una aproximación: una foto movida puede
+     dar «70.008» donde dice «70.000». Antes de mover plata se confirma, con
+     lo leído puesto para que casi siempre alcance con aceptar. */
+
+  aprobando: { item: any; monto: string; leido: number | null } | null = null;
+  guardandoAprobacion = false;
+
   approve(item: any): void {
     const monto = item.reported_amount ?? item.detected_amount ?? null;
 
-    // Sin monto no se puede aplicar nada a la factura: se pregunta antes de
-    // mandar, en vez de que el servidor lo rechace y no se entienda por qué.
-    // El monto leído de la imagen es una aproximación: una foto movida puede
-    // dar «70.008» donde dice «70.000». Antes de mover plata se confirma, con
-    // el valor leído puesto para que casi siempre alcance con aceptar.
-    const sugerido = monto ? String(Math.round(Number(monto))) : '';
-    const puesto = prompt(
-      monto
-        ? `¿De cuánto es el pago? Leímos ${sugerido} en la imagen; corregilo si hace falta.`
-        : 'No pudimos leer el monto. Escribilo, por ejemplo 70000',
-      sugerido,
-    );
+    this.aprobando = {
+      item,
+      leido: monto !== null && monto !== undefined ? Number(monto) : null,
+      monto: monto ? String(Math.round(Number(monto))) : '',
+    };
+  }
 
-    const escrito = puesto ? Number(String(puesto).replace(/[^\d]/g, '')) : null;
+  /** Lo que se va a aplicar, ya limpio de puntos y símbolos. */
+  get montoAAprobar(): number {
+    return Number(String(this.aprobando?.monto ?? '').replace(/[^\d]/g, '')) || 0;
+  }
 
-    if (!escrito) { this.aviso('Hace falta el monto para aprobar.', false); return; }
+  /** Si se corrigió lo que había leído la máquina, conviene decirlo. */
+  get montoCorregido(): boolean {
+    const l = this.aprobando?.leido;
 
-    this.paymentProofService.approve(item.id, {
+    return !!l && Math.round(l) !== this.montoAAprobar;
+  }
+
+  confirmarAprobacion(): void {
+    if (!this.aprobando || this.guardandoAprobacion || !this.montoAAprobar) return;
+
+    this.guardandoAprobacion = true;
+    this.paymentProofService.approve(this.aprobando.item.id, {
       reviewed_by: 1,
       reason: 'Aprobado por auditoría manual.',
-      amount: escrito,
+      amount: this.montoAAprobar,
     }).subscribe({
-      next: () => this.load(),
-      error: (e: any) => this.aviso(e?.error?.message ?? 'No se pudo aprobar', false),
+      next: () => {
+        this.guardandoAprobacion = false;
+        this.aprobando = null;
+        this.aviso('Comprobante aprobado y aplicado a la factura.', true);
+        this.load();
+      },
+      error: (e: any) => {
+        this.guardandoAprobacion = false;
+        this.aviso(e?.error?.message ?? 'No se pudo aprobar', false);
+      },
     });
   }
 
-  private aviso(texto: string, ok: boolean): void {
-    ok ? this.toast.success(texto) : this.toast.error(texto);
+  /** Releer sin cerrar la ventana: se actualiza el monto sugerido. */
+  releerDesdeAprobacion(): void {
+    if (!this.aprobando) return;
+
+    const id = this.aprobando.item.id;
+    this.releyendo = id;
+
+    this.paymentProofService.releer(id).subscribe({
+      next: (r: any) => {
+        this.releyendo = null;
+        const p = r?.data;
+        if (p && this.aprobando) {
+          this.aprobando.item = { ...this.aprobando.item, ...p };
+          const m = p.reported_amount ?? p.detected_amount ?? null;
+          this.aprobando.leido = m !== null && m !== undefined ? Number(m) : null;
+          if (m) this.aprobando.monto = String(Math.round(Number(m)));
+        }
+        this.aviso(r?.message ?? 'Listo', r?.status === 'success');
+      },
+      error: (e: any) => { this.releyendo = null; this.aviso(e?.error?.message ?? 'No se pudo leer la imagen', false); },
+    });
   }
 
   reject(item: any): void {

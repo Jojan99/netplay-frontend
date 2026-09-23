@@ -116,3 +116,74 @@
     </div>
   </div>
 </div>
+
+<!-- ══ Aprobar un comprobante ═══════════════════════════════════════════════
+     Lo que se lee de la imagen es una aproximación: una foto movida puede dar
+     «70.008» donde dice «70.000». Se muestra lo leído al lado de la imagen y
+     se confirma el monto antes de aplicarlo a la factura. -->
+<div *ngIf="aprobando" class="np-overlay" (click)="aprobando = null">
+  <div class="np-modal np-modal--lg" role="dialog" aria-modal="true" aria-label="Aprobar comprobante" (click)="$event.stopPropagation()">
+    <div class="np-modal-head">
+      <div>
+        <p class="np-kicker">Comprobante</p>
+        <h3>{{ aprobando.item.user?.names }} {{ aprobando.item.user?.lastname }}</h3>
+        <p class="np-meta">
+          CC {{ aprobando.item.user?.dni || 'sin documento' }}
+          <ng-container *ngIf="aprobando.item.invoice?.number_facture"> · factura <b class="np-mono">{{ aprobando.item.invoice.number_facture }}</b></ng-container>
+        </p>
+      </div>
+      <div class="np-insp-tools">
+        <button type="button" class="np-icobtn" (click)="aprobando = null" aria-label="Cerrar">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M6 6l12 12M18 6 6 18"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <div class="np-modal-body">
+      <div class="ap-grid">
+        <!-- La imagen, para poder comparar sin cambiar de pantalla. -->
+        <a class="ap-foto" *ngIf="aprobando.item.file_path" [href]="aprobando.item.file_path" target="_blank" rel="noopener"
+           title="Abrir la imagen en grande">
+          <img [src]="aprobando.item.file_path" alt="Comprobante" loading="lazy" />
+        </a>
+
+        <div class="ap-datos">
+          <dl class="np-dl">
+            <dt>Leído en la imagen</dt>
+            <dd class="np-money">{{ aprobando.leido ? formatAmount(aprobando.leido) : 'no se pudo leer' }}</dd>
+            <dt>Fecha</dt><dd>{{ formatDate(aprobando.item.payment_date) || '—' }}</dd>
+            <dt>Referencia</dt><dd class="np-mono">{{ aprobando.item.reference_number || '—' }}</dd>
+            <dt>Entidad</dt><dd>{{ aprobando.item.bank_name || '—' }}</dd>
+            <dt>Llegó por</dt><dd>{{ aprobando.item.linea_nombre || 'Principal' }}</dd>
+          </dl>
+
+          <label class="np-field">
+            <span>Monto a aplicar <em>*</em></span>
+            <input class="np-input np-mono" [(ngModel)]="aprobando.monto" inputmode="numeric"
+                   placeholder="70000" aria-label="Monto a aplicar" />
+          </label>
+
+          <p class="np-fine" *ngIf="montoCorregido">
+            Vas a aplicar <b>{{ formatAmount(montoAAprobar) }}</b> en lugar de lo leído.
+          </p>
+          <p class="np-fine" *ngIf="!aprobando.leido">
+            No pudimos leer el monto. Podés volver a intentarlo o escribirlo a mano.
+          </p>
+
+          <button type="button" class="np-btn np-btn--ghost np-btn--sm" (click)="releerDesdeAprobacion()"
+                  [disabled]="releyendo === aprobando.item.id">
+            {{ releyendo === aprobando.item.id ? 'Leyendo…' : 'Volver a leer la imagen' }}
+          </button>
+        </div>
+      </div>
+
+      <div class="np-btnrow np-btnrow--end">
+        <button type="button" class="np-btn np-btn--ghost" (click)="aprobando = null">Cancelar</button>
+        <button type="button" class="np-btn np-btn--primary" (click)="confirmarAprobacion()"
+                [disabled]="guardandoAprobacion || !montoAAprobar">
+          {{ guardandoAprobacion ? 'Aplicando…' : 'Aprobar y aplicar ' + formatAmount(montoAAprobar) }}
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

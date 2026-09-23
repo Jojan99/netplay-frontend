@@ -14,3 +14,35 @@
 .np-switchrow { gap: 8px; }
 @media (max-width: 1300px) { .np-audit.is-open .np-col-bank { display: none; } }
 @media (max-width: 760px) { .np-col-bank { display: none; } .np-table--registry { min-width: 0; } }
+
+/* ── Aprobar un comprobante ─────────────────────────────────────────────────
+   La imagen al lado de los datos: quien aprueba compara sin cambiar de
+   pantalla, que es justo lo que hace falta cuando el lector erró un dígito. */
+.ap-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 240px) minmax(0, 1fr);
+  gap: 18px;
+  align-items: start;
+
+  @media (max-width: 720px) { grid-template-columns: minmax(0, 1fr); }
+}
+
+.ap-foto {
+  display: block;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  overflow: hidden;
+  background: var(--surface-2);
+
+  img { display: block; width: 100%; height: auto; max-height: 340px; object-fit: contain; }
+
+  &:hover { border-color: var(--accent); }
+}
+
+.ap-datos {
+  display: grid;
+  gap: 12px;
+  align-content: start;
+
+  .np-money { font-size: 16px; font-weight: 700; }
+}
