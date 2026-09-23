@@ -93,6 +93,8 @@ export class FinanceComponent implements OnInit, OnDestroy {
   payModal = false;
   payingInvoice: any = null;
   payMethodId: number | null = null;
+  /** Referencia de la transferencia, número de recibo, lo que haga falta. */
+  payObservacion = '';
 
   // Abonar modal
   abonarModal = false;
@@ -307,9 +309,44 @@ export class FinanceComponent implements OnInit, OnDestroy {
   // ── Pay ──────────────────────────────────────────────────────────────────
 
   openPayModal(invoice: any): void {
-    this.payingInvoice = invoice;
-    this.payMethodId   = null;
+    this.payingInvoice  = invoice;
+    this.payMethodId    = null;
+    this.payObservacion = '';
     this.payModal      = true;
+  }
+
+  /* ── Revertir un pago ──────────────────────────────────────────────────
+     La factura vuelve a pendiente y el movimiento queda anotado como reverso.
+     Se pide el motivo: es lo que hace entendible, meses después, por qué una
+     factura pagada volvió a deber. */
+
+  revertirModal = false;
+  revirtiendoInvoice: any = null;
+  motivoReverso = '';
+  revirtiendo = false;
+
+  abrirReverso(invoice: any): void {
+    this.revirtiendoInvoice = invoice;
+    this.motivoReverso = '';
+    this.revertirModal = true;
+  }
+
+  confirmarReverso(): void {
+    if (!this.revirtiendoInvoice || this.revirtiendo || !this.motivoReverso.trim()) return;
+
+    this.revirtiendo = true;
+    this.financeService.revertirPago(this.revirtiendoInvoice.id, this.motivoReverso.trim()).subscribe({
+      next: (r: any) => {
+        this.revirtiendo = false;
+        this.revertirModal = false;
+        r?.status === 0 ? this.toast.success(r?.message || 'Pago revertido') : this.toast.error(r?.message || 'No se pudo revertir');
+        this.openDrawer(this.selectedClient);
+      },
+      error: (e: any) => {
+        this.revirtiendo = false;
+        this.toast.error(e?.error?.message || 'No se pudo revertir el pago');
+      },
+    });
   }
 
   confirmPay(): void {
@@ -318,7 +355,7 @@ export class FinanceComponent implements OnInit, OnDestroy {
       this.toast.error('Selecciona un método de pago'); return;
     }
     const clientName = `${this.selectedClient.names} ${this.selectedClient.lastname}`;
-    this.financeService.payInvoice(this.payingInvoice.id, clientName, this.payMethodId).subscribe({
+    this.financeService.payInvoice(this.payingInvoice.id, clientName, this.payMethodId, this.payObservacion.trim() || null).subscribe({
       next: () => {
         this.payModal = false;
         this.payingInvoice = null;

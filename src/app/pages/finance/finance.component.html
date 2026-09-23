@@ -186,6 +186,9 @@
                       <button *ngIf="inv.paid !== 1" type="button" class="np-icobtn" (click)="openAbonarModal(inv)" title="Registrar abono">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 5v14M5 12h14"/></svg>
                       </button>
+                      <button *ngIf="inv.paid === 1" type="button" class="np-icobtn" (click)="abrirReverso(inv)" title="Revertir el pago">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 4v4h4"/></svg>
+                      </button>
                       <button type="button" class="np-icobtn" (click)="openEditModal(inv)" title="Editar factura">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 20h4L18 10l-4-4L4 16v4zM13 7l4 4"/></svg>
                       </button>
@@ -257,6 +260,10 @@
       <label class="np-field" *ngIf="activePaymentMethods.length > 0"><span>Método de pago <em>*</em></span>
         <np-select [(ngModel)]="payMethodId" [opciones]="activePaymentMethods" [presentacion]="presMetodos"
                    [permitirVacio]="true" textoVacio="Seleccionar…" placeholder="Seleccionar…" ariaLabel="Método de pago"></np-select>
+      </label>
+      <label class="np-field"><span>Observación <em>opcional</em></span>
+        <input class="np-input" [(ngModel)]="payObservacion" maxlength="500"
+               placeholder="Referencia de la transferencia, número de recibo…" aria-label="Observación del pago" />
       </label>
       <div class="np-btnrow np-btnrow--end">
         <button type="button" class="np-btn np-btn--ghost" (click)="payModal = false">Cancelar</button>
@@ -450,6 +457,33 @@
       <div class="np-btnrow np-btnrow--end">
         <button type="button" class="np-btn np-btn--ghost" (click)="commitmentModal = false">Cancelar</button>
         <button type="button" class="np-btn np-btn--primary" (click)="saveCommitment()" [disabled]="savingCommitment">{{ savingCommitment ? 'Guardando…' : 'Crear compromiso' }}</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ Revertir un pago ═════════════════════════════════════════════════════
+     La factura vuelve a pendiente. El pago no se borra: queda anotado como
+     reverso, con el motivo, para que meses después se entienda qué pasó. -->
+<div *ngIf="revertirModal" class="np-overlay" (click)="revertirModal = false">
+  <div class="np-modal" role="dialog" aria-modal="true" aria-label="Revertir el pago" (click)="$event.stopPropagation()">
+    <div class="np-modal-head">
+      <div>
+        <p class="np-kicker">Factura <b>/</b> <span class="np-mono">{{ revirtiendoInvoice?.number_facture }}</span></p>
+        <h3>Revertir el pago</h3>
+      </div>
+    </div>
+    <div class="np-modal-body">
+      <p class="np-muted">La factura vuelve a quedar pendiente. El pago no se borra: queda anotado como reverso en los movimientos.</p>
+      <label class="np-field"><span>Motivo <em>*</em></span>
+        <input class="np-input" [(ngModel)]="motivoReverso" maxlength="255"
+               placeholder="Se registró en el cliente equivocado" aria-label="Motivo del reverso" />
+      </label>
+      <div class="np-btnrow np-btnrow--end">
+        <button type="button" class="np-btn np-btn--ghost" (click)="revertirModal = false">Cancelar</button>
+        <button type="button" class="np-btn np-btn--primary" (click)="confirmarReverso()" [disabled]="revirtiendo || !motivoReverso.trim()">
+          {{ revirtiendo ? 'Revirtiendo…' : 'Revertir el pago' }}
+        </button>
       </div>
     </div>
   </div>

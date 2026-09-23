@@ -45,3 +45,33 @@
   .np-mora i { width: 7px; height: 12px; }
   .np-table--registry { min-width: 0; }
 }
+
+/* ── La ficha lateral ───────────────────────────────────────────────────────
+   Adentro va una tabla de siete columnas con botones: con 420 px no entraba y
+   aparecía un scroll lateral. Se ensancha según la pantalla —sin comerse el
+   listado— y la tabla deja de forzar un ancho mínimo. */
+:host .np-page,
+.np-page {
+  --np-inspector-w: clamp(420px, 38vw, 620px);
+}
+
+.np-inspector {
+  .np-ledger {
+    font-size: 12.5px;
+
+    th, td { padding-left: 6px; padding-right: 6px; }
+
+    /* Los botones se acomodan en dos filas antes que estirar la tabla. */
+    .np-rowacts { flex-wrap: wrap; justify-content: flex-end; gap: 2px; }
+  }
+
+  /* El número de factura no necesita tanto: lo que importa es el saldo. */
+  .np-ledger td:first-child { max-width: 92px; overflow: hidden; text-overflow: ellipsis; }
+}
+
+/* En pantallas angostas la ficha ocupa todo el ancho, debajo del listado: es
+   preferible a una columna de 300 px con scroll lateral. */
+@media (max-width: 1100px) {
+  .np-page.is-open .np-workspace { grid-template-columns: minmax(0, 1fr); }
+  .np-inspector { max-height: none; }
+}

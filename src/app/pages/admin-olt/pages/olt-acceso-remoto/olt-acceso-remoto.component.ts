@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnInit, inject, Input } from '@angular/core';
+import { Component, OnInit, inject, Input, HostBinding } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { OltNavComponent } from '../../shared/olt-nav.component';
 import { GestionRemotaService } from '../../../../services/gestion-remota.service';
@@ -34,7 +34,6 @@ interface PerfilesDeOlt {
   imports: [CommonModule, FormsModule, NpSelectComponent, OltNavComponent],
   templateUrl: './olt-acceso-remoto.component.html',
   styleUrls: ['../../shared/olt.scss', './olt-acceso-remoto.component.scss', '../../shared/olt-movil.scss'],
-  host: { class: 'np-console' },
 })
 export class OltAccesoRemotoComponent implements OnInit {
   /**
@@ -42,6 +41,9 @@ export class OltAccesoRemotoComponent implements OnInit {
    * y el menú los pone la página de afuera, así que acá sobran.
    */
   @Input() embebido = false;
+
+  /** Anidada dentro de otra pantalla no debe traer su propio marco. */
+  @HostBinding('class.np-console') get esPantallaPropia(): boolean { return !this.embebido; }
 
   private api = inject(GestionRemotaService);
   private toast = inject(ToastService);
