@@ -172,3 +172,23 @@
 }
 .oe-clave-botones { display: flex; gap: 8px; justify-content: flex-end; flex-wrap: wrap; }
 .oe-aviso--ok { border-color: var(--ok); background: var(--ok-soft); color: var(--text); }
+
+/* ── Cuentas del equipo ─────────────────────────────────────────────────────
+   Las entrega el propio equipo por TR-069. La clave nace tapada: está a la
+   vista de cualquiera que pase por el escritorio. */
+.oe-cuentas { margin-top: 12px; }
+
+.oe-cuenta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 14px;
+  padding: 6px 0;
+  border-bottom: 1px solid var(--linea, #e3e5ef);
+  font-size: 13px;
+
+  &:last-child { border-bottom: 0; }
+}
+
+.oe-cuenta-u, .oe-cuenta-c { display: inline-flex; align-items: baseline; gap: 4px; }
+.oe-cuenta-c { margin-left: auto; }

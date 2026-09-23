@@ -171,6 +171,28 @@
       </div>
       <p class="oe-aviso" *ngIf="avisoClave" [class.oe-aviso--ok]="avisoClave.tipo === 'ok'">{{ avisoClave.texto }}</p>
     </ng-container>
+    <!-- ══ Cuentas del equipo ══════════════════════════════════════════
+         Las publica el propio equipo por TR-069. Sirven para entrar a su
+         página sin tener que pedírselas al cliente ni leer la etiqueta. -->
+    <div class="oe-cuentas" *ngIf="cuentasDelEquipo.length">
+      <p class="oe-sect">Entrar a la página del equipo</p>
+      <div class="oe-cuenta" *ngFor="let c of cuentasDelEquipo">
+        <span class="oe-cuenta-u">
+          <b>{{ c.usuario }}</b>
+          <button type="button" class="oe-ico" (click)="copiar(c.usuario, 'cu' + c.indice)"
+                  [attr.aria-label]="'Copiar el usuario ' + c.usuario">{{ copiado === 'cu' + c.indice ? '✓' : '⧉' }}</button>
+        </span>
+        <span class="oe-cuenta-c" *ngIf="c.clave">
+          <b class="np-mono">{{ cuentaVisible[c.indice] ? c.clave : '••••••••••' }}</b>
+          <button type="button" class="oe-ico" (click)="cuentaVisible[c.indice] = !cuentaVisible[c.indice]"
+                  aria-label="Mostrar u ocultar la contraseña">{{ cuentaVisible[c.indice] ? '◉' : '◎' }}</button>
+          <button type="button" class="oe-ico" (click)="copiar(c.clave, 'cc' + c.indice)"
+                  aria-label="Copiar la contraseña">{{ copiado === 'cc' + c.indice ? '✓' : '⧉' }}</button>
+        </span>
+        <span class="oe-fine" *ngIf="!c.clave">el equipo no entrega la clave</span>
+      </div>
+    </div>
+
     <a class="oe-linkbtn" *ngIf="acs" [routerLink]="['/dashboard/router']" [queryParams]="{ equipo: acs.id }">
       Ver en Router del cliente{{ acs.equipos?.length ? ' · ' + acs.equipos.length + ' dispositivos que conoce' : '' }}
     </a>

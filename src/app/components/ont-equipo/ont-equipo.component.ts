@@ -207,6 +207,18 @@ export class OntEquipoComponent implements OnChanges {
     return (this.acs?.wifi ?? []).filter((r: any) => r.activo !== false);
   }
 
+  /**
+   * Las cuentas para entrar a la página del equipo, según el propio equipo.
+   *
+   * Vienen por TR-069. Muchos las entregan en texto plano: un ZTE devuelve la
+   * del operador que lo vendió, la de administración y la suya propia. Hasta
+   * ahora había que pedírselas al cliente o leerlas de la etiqueta.
+   */
+  get cuentasDelEquipo(): any[] { return this.acs?.cuentas ?? []; }
+
+  /** Cada clave se muestra sola, y sólo si alguien la pide. */
+  cuentaVisible: Record<number, boolean> = {};
+
   get redesActivas(): any[] { return (this.wifi?.ssids ?? []).filter((s: any) => s.activo); }
   get redesApagadas(): any[] { return (this.wifi?.ssids ?? []).filter((s: any) => !s.activo); }
 
