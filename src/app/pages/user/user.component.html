@@ -561,6 +561,11 @@
                       <button *ngIf="item.paid !== 1 && !item.anulada_en" type="button" class="np-icobtn np-icobtn--danger" (click)="pedirMotivo('anular', item)" title="Anular la factura">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="m5.6 5.6 12.8 12.8"/></svg>
                       </button>
+                      <!-- Borrar es sin vuelta y pierde el consecutivo: va
+                           último y sólo para las que no tocaron plata. -->
+                      <button *ngIf="item.paid !== 1" type="button" class="np-icobtn np-icobtn--danger" (click)="borrarFactura(item)" title="Borrar la factura">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M9 7V5h6v2M6 7l1 13h10l1-13"/></svg>
+                      </button>
                     </div>
                   </td>
                 </tr>
@@ -915,6 +920,7 @@
   </div>
 </div>
 
+</div>
 <!-- ══ Cobrar una factura ════════════════════════════════════════════════
      Antes se cobraba con un «¿seguro?» y nada más, y después nadie sabía con
      qué se había pagado. Ahora se elige el medio y se puede dejar la

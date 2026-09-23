@@ -1236,6 +1236,29 @@ export class UserComponent implements OnInit {
     });
   }
 
+  /**
+   * Borrar una factura.
+   *
+   * Es el camino corto y sin vuelta: se ofrece sólo cuando la factura no tocó
+   * plata. Si tiene pagos o abonos, el servidor la rechaza y hay que anularla.
+   */
+  async borrarFactura(item: any): Promise<void> {
+    if (!item?.id) return;
+
+    if (!await this.dialog.confirm(
+      `¿Borrar la factura ${item.number_facture}? No se puede deshacer. Si querés dejar rastro, anulala en vez de borrarla.`,
+      { danger: true, okText: 'Borrar' } as any,
+    )) return;
+
+    this.financeSvc.borrarFactura(item.id).subscribe({
+      next: (r: any) => {
+        this.toast(r?.message || 'Factura borrada', r?.status === 0 ? 'success' : 'error');
+        this.loadFacturas(this.selectedUserCab);
+      },
+      error: (e: any) => this.toast(e?.error?.message || 'No se pudo borrar la factura', 'error'),
+    });
+  }
+
   /* ── Revertir y anular ─────────────────────────────────────────────────
      Las dos piden el motivo y las dos quedan en el historial: son las
      acciones que alguien va a tener que explicar dentro de tres meses. */

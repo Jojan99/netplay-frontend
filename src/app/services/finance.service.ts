@@ -203,6 +203,16 @@ export class FinanceService {
       JSON.stringify({ motivo }), { headers: this.getHeaders() });
   }
 
+  /**
+   * Borrar una factura que nunca debió existir.
+   *
+   * Sólo administración, y sólo si no se tocó plata. Para el resto está
+   * anular, que deja rastro y no pierde el consecutivo.
+   */
+  borrarFactura(detId: number): Observable<any> {
+    return this.http.delete<any>(`${this.env.rootUrl}api/facturation/invoices/${detId}`, { headers: this.getHeaders() });
+  }
+
   /** Anular una factura mal hecha, sin borrarla. */
   anularFactura(detId: number, motivo: string): Observable<any> {
     return this.http.post<any>(`${this.env.rootUrl}api/facturation/invoices/${detId}/anular`,
