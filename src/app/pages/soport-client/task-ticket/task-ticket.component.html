@@ -57,13 +57,13 @@
             <tr *ngIf="!loading && tickets.length === 0" class="np-empty"><td colspan="9"><strong>No hay tickets con estos filtros.</strong></td></tr>
             <tr *ngFor="let ticket of tickets" class="np-row" [ngClass]="'np-row--s' + ticket.status_id" [attr.aria-selected]="isSelected(ticket)" (click)="selectTicket(ticket)" tabindex="0" (keydown.enter)="selectTicket(ticket)">
               <td class="np-stripe"><i></i></td>
-              <td class="np-data np-strong">{{ ticket.id }}</td>
-              <td><div class="np-name">{{ ticket.name }} {{ ticket.last_name }}</div><div class="np-plan"><em>{{ ticket.cedula }}</em></div></td>
-              <td>{{ ticket.name_service }}</td>
-              <td *ngIf="isAdmin" class="np-col-tech">{{ ticket.tech_names }} {{ ticket.tech_lastname }}</td>
-              <td><span class="np-pill" [ngClass]="'np-pill--s' + ticket.status_id">{{ statusLabel(ticket.status_id) }}</span><span class="np-fine" *ngIf="ticket.reopened_count && ticket.reopened_count > 0">reabierto ×{{ ticket.reopened_count }}</span></td>
-              <td class="np-data" [class.np-pos-info]="ticket.status_id === 2">{{ ticket.status_id === 2 ? formatSecs(ticket.elapsedSeconds || 0) : formatDuration(ticket) }}</td>
-              <td><span class="np-pill" [ngClass]="priorityPill(ticket.name_priority)">{{ ticket.name_priority }}</span></td>
+              <td class="np-data np-strong" data-t="Ticket">{{ ticket.id }}</td>
+              <td data-t="Cliente"><div class="np-name">{{ ticket.name }} {{ ticket.last_name }}</div><div class="np-plan"><em>{{ ticket.cedula }}</em></div></td>
+              <td data-t="Servicio">{{ ticket.name_service }}</td>
+              <td *ngIf="isAdmin" class="np-col-tech" data-t="Técnico">{{ ticket.tech_names }} {{ ticket.tech_lastname }}</td>
+              <td data-t="Estado"><span class="np-pill" [ngClass]="'np-pill--s' + ticket.status_id">{{ statusLabel(ticket.status_id) }}</span><span class="np-fine" *ngIf="ticket.reopened_count && ticket.reopened_count > 0">reabierto ×{{ ticket.reopened_count }}</span></td>
+              <td class="np-data" data-t="Duración" [class.np-pos-info]="ticket.status_id === 2">{{ ticket.status_id === 2 ? formatSecs(ticket.elapsedSeconds || 0) : formatDuration(ticket) }}</td>
+              <td data-t="Prioridad"><span class="np-pill" [ngClass]="priorityPill(ticket.name_priority)">{{ ticket.name_priority }}</span></td>
               <td class="np-td-right"><div class="np-rowacts"><button type="button" class="np-icobtn" title="Abrir ticket"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 6 6 6-6 6"/></svg></button></div></td>
             </tr>
           </tbody>

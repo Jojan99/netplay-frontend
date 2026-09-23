@@ -32,3 +32,91 @@
 .np-stats-panel .np-card { max-height: 210px; display: flex; flex-direction: column; overflow: hidden; }
 .np-stats-panel .np-rank { min-height: 0; overflow-y: auto; }
 .np-tickets .np-workspace { min-height: 340px; }
+
+/* ── En el teléfono cada ticket es una ficha ────────────────────────────────
+   Una tabla de nueve columnas en 380 px obliga a arrastrar de lado para leer
+   una fila. Acá la fila se vuelve una ficha: arriba el cliente y el número,
+   debajo los datos con su etiqueta, y el estado y la prioridad a la vista. */
+@media (max-width: 760px) {
+  .np-table--registry {
+    display: block;
+
+    thead { display: none; }
+    tbody { display: block; }
+
+    tr.np-row {
+      display: grid;
+      grid-template-columns: auto 1fr;
+      gap: 2px 10px;
+      padding: 12px 14px 12px 12px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--surface);
+      margin-bottom: 8px;
+      position: relative;
+    }
+
+    td {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 10px;
+      grid-column: 1 / -1;
+      padding: 3px 0;
+      border: 0;
+
+      /* La etiqueta viene del encabezado que dejamos de mostrar. */
+      &[data-t]::before {
+        content: attr(data-t);
+        flex: none;
+        font-size: 10.5px;
+        font-weight: 700;
+        letter-spacing: .05em;
+        text-transform: uppercase;
+        color: var(--text-3);
+      }
+    }
+
+    /* El cliente encabeza la ficha: es lo que se busca con la vista. */
+    td[data-t="Cliente"] {
+      order: -2;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 0;
+      padding-top: 0;
+
+      &::before { display: none; }
+
+      .np-name { font-size: 14.5px; font-weight: 700; line-height: 1.25; }
+    }
+
+    td[data-t="Ticket"] {
+      order: -1;
+      justify-content: flex-start;
+      font-size: 11.5px;
+      color: var(--text-3);
+      padding-top: 0;
+
+      &::before { color: inherit; }
+    }
+
+    /* La franja de estado pasa a ser un borde de color a la izquierda. */
+    td.np-stripe {
+      position: absolute;
+      inset: 0 auto 0 0;
+      width: 3px;
+      padding: 0;
+
+      i { display: block; width: 100%; height: 100%; border-radius: var(--radius) 0 0 var(--radius); }
+    }
+
+    /* La flecha de abrir no aporta: toda la ficha ya es tocable. */
+    td.np-td-right { display: none; }
+
+    .np-empty td { justify-content: center; &::before { display: none; } }
+  }
+
+  /* Sin el marco de la tabla, las fichas respiran contra el fondo. */
+  .np-registry { background: none; border: 0; box-shadow: none; }
+  .np-registry-wrap { padding: 0; }
+}

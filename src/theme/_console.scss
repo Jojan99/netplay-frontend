@@ -244,6 +244,15 @@ select optgroup {
   .np-inspector { position: fixed; inset: 0; z-index: 55; border-radius: 0; border: 0; max-height: none; }
   .np-registry { max-height: none; }
   .np-insp-head { padding-top: max(16px, env(safe-area-inset-top)); }
+
+  /* En el celular la tabla no es su propio territorio de scroll: la página
+     entera scrollea. Con «overscroll-behavior: contain» el gesto moría dentro
+     de la tabla y había que tocar afuera para mover la pantalla. */
+  .np-registry-wrap {
+    overflow: visible;
+    overscroll-behavior: auto;
+    flex: none;
+  }
 }
 @media (max-width: 760px) {
   .np-head { flex-direction: column; align-items: stretch; gap: 12px; }
@@ -253,6 +262,10 @@ select optgroup {
   .np-pagesize { display: none; }
   .np-table--registry { min-width: 0; }
   .np-rowacts { opacity: 1; }
+
+  /* Un recuadro de 260 px con scroll propio, en una pantalla de teléfono,
+     se come el gesto y no deja mover la página. Se deja crecer. */
+  .np-tablewrap--scroll { max-height: none; overflow-y: visible; }
   .np-form { grid-template-columns: 1fr; }
   .np-form--row { grid-template-columns: 1fr auto; }
   .np-quick { grid-template-columns: 1fr; }
