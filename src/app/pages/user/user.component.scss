@@ -152,3 +152,39 @@
     /* Punto de "activa", para verlo de un vistazo en la lista. */
     &::after { content: ''; position: absolute; top: 3px; right: 3px; width: 7px; height: 7px; border-radius: 50%;
       background: var(--ok); border: 1.5px solid var(--surface); } } }
+
+/* ── La cabecera en el teléfono ─────────────────────────────────────────────
+   Son cuatro botones en una fila. La regla general los estira a todos por
+   igual, así que en 380 px se apretaban hasta salirse y «Nuevo cliente» —que
+   es a lo que se viene— quedaba fuera de la pantalla. */
+@media (max-width: 760px) {
+  .np-head .np-actions {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 8px;
+    width: 100%;
+
+    .np-btn {
+      flex: none;
+      min-width: 0;
+      justify-content: center;
+      padding: 0 10px;
+      font-size: 12px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    /* La acción principal, arriba y de lado a lado: es la que se busca. */
+    .np-btn--primary {
+      grid-column: 1 / -1;
+      order: -1;
+      font-size: 13.5px;
+    }
+  }
+}
+
+/* Debajo de 420 px tres columnas dejan los textos ilegibles: van de a dos. */
+@media (max-width: 420px) {
+  .np-head .np-actions { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
