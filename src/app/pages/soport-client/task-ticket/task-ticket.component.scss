@@ -50,7 +50,9 @@
       gap: 2px 10px;
       /* El borde de color come 3 px del lado izquierdo: sin este aire el
          nombre quedaba pegado a la línea. */
-      padding: 14px 14px 12px 18px;
+      padding: 14px 14px 12px 14px;
+      border-left-width: 3px;
+      border-left-color: var(--line);
       border: 1px solid var(--line);
       border-radius: var(--radius);
       background: var(--surface);
@@ -107,15 +109,11 @@
       &::before { color: inherit; }
     }
 
-    /* La franja de estado pasa a ser un borde de color a la izquierda. */
-    td.np-stripe {
-      position: absolute;
-      inset: 0 auto 0 0;
-      width: 3px;
-      padding: 0;
-
-      i { display: block; width: 100%; height: 100%; border-radius: var(--radius) 0 0 var(--radius); }
-    }
+    /* La franja de estado.
+       Estaba puesta por encima del contenido y cortaba el nombre del cliente:
+       una celda absoluta dentro de una fila no se ancla donde uno espera.
+       Ahora es el borde izquierdo de la ficha, que no puede pisar nada. */
+    td.np-stripe { display: none; }
 
     /* La flecha de abrir no aporta: toda la ficha ya es tocable. */
     td.np-td-right { display: none; }
@@ -126,4 +124,11 @@
   /* Sin el marco de la tabla, las fichas respiran contra el fondo. */
   .np-registry { background: none; border: 0; box-shadow: none; }
   .np-registry-wrap { padding: 0; }
+}
+
+/* El color del estado, ahora en el borde de la ficha. */
+@media (max-width: 760px) {
+  .np-table--registry tr.np-row--s1 { border-left-color: var(--warn); }
+  .np-table--registry tr.np-row--s2 { border-left-color: var(--info); }
+  .np-table--registry tr.np-row--s3 { border-left-color: var(--ok); }
 }
