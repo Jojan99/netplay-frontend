@@ -24,6 +24,20 @@ export class FinanceComponent implements OnInit, OnDestroy {
   // ── State ───────────────────────────────────────────────────────────────
   loading = true;
   clients: any[] = [];
+  /**
+   * Mostrar también a los que no deben nada.
+   *
+   * La cartera es para cobrar, así que por defecto sólo salen los que deben.
+   * Pero cuando hay que mirar el historial de alguien que ya pagó, antes no
+   * había manera: el cliente simplemente no estaba.
+   */
+  verAlDia = false;
+
+  alternarAlDia(): void {
+    this.verAlDia = !this.verAlDia;
+    this.page = 1;
+    this.loadClients();
+  }
   totalClients = 0;
   lastPage = 1;
   page = 1;
@@ -210,7 +224,7 @@ export class FinanceComponent implements OnInit, OnDestroy {
 
   loadClients(): void {
     this.loading = true;
-    this.financeService.getClientsPaginated(this.searchTerm, this.page, this.perPage)
+    this.financeService.getClientsPaginated(this.searchTerm, this.page, this.perPage, this.verAlDia)
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (res) => {

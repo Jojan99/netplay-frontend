@@ -17,4 +17,13 @@ export interface FactureInterface {
     descripcion?:number
     id_status_facture?:number
     _waSending?:boolean
+    /** Cuándo se pagó, tal como lo guardó el movimiento. */
+    paid_at?: string | null
+    /** Con qué se pagó: sale del último movimiento de la factura. */
+    metodo_pago?: string | null
+    /** Referencia de la transferencia, número de recibo, lo que se anotó. */
+    observacion?: string | null
+    /** Anulada: sigue a la vista, pero deja de contar en la cartera. */
+    anulada_en?: string | null
+    anulada_motivo?: string | null
 }

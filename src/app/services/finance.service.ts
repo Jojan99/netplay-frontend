@@ -166,11 +166,17 @@ export class FinanceService {
 
   // ── Finance v2 ─────────────────────────────────────────────────────────
 
-  getClientsPaginated(search: string, page: number, perPage: number): Observable<any> {
+  /**
+   * Los clientes de la cartera. Con `incluirAlDia` entran también los que no
+   * deben nada: sin eso, un cliente que termina de pagar desaparece de la
+   * pantalla y no hay forma de abrir su historial desde acá.
+   */
+  getClientsPaginated(search: string, page: number, perPage: number, incluirAlDia = false): Observable<any> {
     let params = new HttpParams()
       .set('page', page)
       .set('per_page', perPage);
     if (search) params = params.set('search', search);
+    if (incluirAlDia) params = params.set('al_dia', '1');
     return this.http.get<any>(this.env.rootUrl + 'api/facturation/clients', { headers: this.getHeaders(), params });
   }
 
@@ -178,9 +184,29 @@ export class FinanceService {
     return this.http.get<any>(`${this.env.rootUrl}api/facturation/clients/${cabId}/invoices`, { headers: this.getHeaders() });
   }
 
-  payInvoice(detId: number, clientName: string, paymentMethodId?: number | null): Observable<any> {
+  /**
+   * Cobrar una factura entera.
+   *
+   * La observación es para la referencia de la transferencia o el número de
+   * recibo: queda en el movimiento y en la factura, que es lo que después
+   * permite explicar un pago sin tener que acordarse.
+   */
+  payInvoice(detId: number, clientName: string, paymentMethodId?: number | null, observacion?: string | null): Observable<any> {
     return this.http.post<any>(`${this.env.rootUrl}api/facturation/invoices/${detId}/pay`,
-      JSON.stringify({ client_name: clientName, payment_method_id: paymentMethodId ?? null }), { headers: this.getHeaders() });
+      JSON.stringify({ client_name: clientName, payment_method_id: paymentMethodId ?? null, observacion: observacion || null }),
+      { headers: this.getHeaders() });
+  }
+
+  /** Deshacer un pago: la factura vuelve a quedar pendiente. */
+  revertirPago(detId: number, motivo: string): Observable<any> {
+    return this.http.post<any>(`${this.env.rootUrl}api/facturation/invoices/${detId}/revertir`,
+      JSON.stringify({ motivo }), { headers: this.getHeaders() });
+  }
+
+  /** Anular una factura mal hecha, sin borrarla. */
+  anularFactura(detId: number, motivo: string): Observable<any> {
+    return this.http.post<any>(`${this.env.rootUrl}api/facturation/invoices/${detId}/anular`,
+      JSON.stringify({ motivo }), { headers: this.getHeaders() });
   }
 
   abonarInvoice(detId: number, amount: number, clientName: string, paymentMethodId?: number | null): Observable<any> {

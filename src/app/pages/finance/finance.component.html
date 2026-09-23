@@ -33,6 +33,14 @@
       <kbd>/</kbd>
     </label>
     <span class="np-spacer"></span>
+    <!-- La cartera es para cobrar, así que por defecto sólo están los que
+         deben. Esto trae también a los que ya pagaron, para poder abrir su
+         historial sin tener que buscarlo por otro lado. -->
+    <label class="np-pagesize">
+      <button type="button" class="np-switch" role="switch" [attr.aria-checked]="verAlDia"
+              aria-label="Mostrar también los clientes al día" (click)="alternarAlDia()"></button>
+      <span>Ver también los que están al día</span>
+    </label>
     <label class="np-pagesize">Mostrar
       <np-select [(ngModel)]="perPage" (ngModelChange)="changePerPage()" [opciones]="perPageOptions" [presentacion]="presPorPagina"
                  tamano="sm" style="min-width: 140px" ariaLabel="Registros por página"></np-select>

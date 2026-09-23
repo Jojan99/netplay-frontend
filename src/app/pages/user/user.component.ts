@@ -1158,6 +1158,13 @@ export class UserComponent implements OnInit {
           updated_at: e.updated_at,
           restante: e.paid === 1 ? 0 : (e.price_total - e.price_abone),
           paid: e.paid,
+          paid_at: e.paid_at,
+          metodo_pago: e.metodo_pago,
+          // La observación del movimiento manda sobre la de la factura: es la
+          // que escribió quien cobró.
+          observacion: e.nota_pago || e.observacion,
+          anulada_en: e.anulada_en,
+          anulada_motivo: e.anulada_motivo,
           prueba: e.paid === 0 ? e.price_abone : (e.balance - e.price_discount),
         }));
         this.loadingFacture = false;
@@ -1183,25 +1190,91 @@ export class UserComponent implements OnInit {
 
   payingFactureId: number | null = null;
 
-  async payFacture(item: FactureInterface) {
-    if (!item.id || item.paid === 1) return;
+  /* ── Cobrar ────────────────────────────────────────────────────────────
+     La ficha cobraba por un camino propio que marcaba la factura pagada y no
+     dejaba ningún movimiento: por eso después no se sabía con qué se había
+     pagado. Ahora usa el mismo que Finanzas. */
 
-    // Registrar un pago mueve la cartera del cliente y no se deshace solo:
-    // se confirma antes, como el resto de acciones con consecuencia.
-    if (!await this.dialog.confirm(
-      `¿Registrar el pago de la factura ${item.number_facture} por $${Number(item.price_total || 0).toLocaleString('es-CO')}?`
-    )) return;
+  cobro: { factura: any; metodo: number | null; observacion: string } | null = null;
+  metodosDePago: Array<{ id: number; name: string }> = [];
+  cobrando = false;
 
-    this.payingFactureId = item.id;
-    this.financeSvc.createpaidFacturation(item.id, this.selectedUserId, item.price_total, item.number_facture)
-      .subscribe({
-        next: (r: any) => {
-          this.toast('Factura pagada exitosamente', 'success');
-          this.payingFactureId = null;
-          this.loadFacturas(this.selectedUserCab);
-        },
-        error: () => { this.toast('Error al registrar pago', 'error'); this.payingFactureId = null; }
-      });
+  private cargarMetodosDePago(): void {
+    if (this.metodosDePago.length) return;
+
+    this.financeSvc.getPaymentMethods().subscribe({
+      next: (r: any) => this.metodosDePago = r?.data ?? [],
+      error: () => {},
+    });
+  }
+
+  abrirCobro(item: FactureInterface): void {
+    if (!item.id || item.paid === 1 || (item as any).anulada_en) return;
+
+    this.cargarMetodosDePago();
+    this.cobro = { factura: item, metodo: null, observacion: '' };
+  }
+
+  confirmarCobro(): void {
+    const c = this.cobro;
+    if (!c || this.cobrando) return;
+
+    this.cobrando = true;
+    this.financeSvc.payInvoice(
+      c.factura.id,
+      `${this.selectedUserData?.names ?? ''} ${this.selectedUserData?.lastname ?? ''}`.trim(),
+      c.metodo,
+      c.observacion.trim() || null,
+    ).subscribe({
+      next: (r: any) => {
+        this.cobrando = false;
+        this.cobro = null;
+        this.toast(r?.message || 'Pago registrado', r?.status === 0 ? 'success' : 'error');
+        this.loadFacturas(this.selectedUserCab);
+      },
+      error: () => { this.cobrando = false; this.toast('No se pudo registrar el pago', 'error'); },
+    });
+  }
+
+  /* ── Revertir y anular ─────────────────────────────────────────────────
+     Las dos piden el motivo y las dos quedan en el historial: son las
+     acciones que alguien va a tener que explicar dentro de tres meses. */
+
+  motivoPedido: { que: 'revertir' | 'anular'; factura: any; texto: string } | null = null;
+  aplicandoMotivo = false;
+
+  pedirMotivo(que: 'revertir' | 'anular', item: any): void {
+    if (!item?.id) return;
+
+    if (que === 'anular' && item.paid === 1) {
+      this.toast('Está pagada: primero hay que revertir el pago.', 'error');
+      return;
+    }
+
+    this.motivoPedido = { que, factura: item, texto: '' };
+  }
+
+  confirmarMotivo(): void {
+    const m = this.motivoPedido;
+    if (!m || this.aplicandoMotivo || !m.texto.trim()) return;
+
+    this.aplicandoMotivo = true;
+    const llamada = m.que === 'revertir'
+      ? this.financeSvc.revertirPago(m.factura.id, m.texto.trim())
+      : this.financeSvc.anularFactura(m.factura.id, m.texto.trim());
+
+    llamada.subscribe({
+      next: (r: any) => {
+        this.aplicandoMotivo = false;
+        this.motivoPedido = null;
+        this.toast(r?.message || 'Listo', r?.status === 0 ? 'success' : 'error');
+        this.loadFacturas(this.selectedUserCab);
+      },
+      error: (e: any) => {
+        this.aplicandoMotivo = false;
+        this.toast(e?.error?.message || 'No se pudo completar la acción', 'error');
+      },
+    });
   }
 
   async downloadPdf(id: any) {

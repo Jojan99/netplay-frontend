@@ -516,19 +516,31 @@
           <div *ngIf="!loadingFacture" class="np-tablewrap">
             <table class="np-table np-table--compact">
               <thead><tr>
-                <th>N°</th><th>Emitido</th><th>Estado</th><th class="np-th-right">Total</th><th class="np-th-right">Restante</th><th>Pago</th><th class="np-th-right">Acciones</th>
+                <th>N°</th><th>Emitido</th><th>Estado</th><th class="np-th-right">Total</th><th class="np-th-right">Restante</th><th>Pago</th><th>Observación</th><th class="np-th-right">Acciones</th>
               </tr></thead>
               <tbody>
                 <tr *ngFor="let item of filteredFactures">
                   <td class="np-data np-strong">{{ item.number_facture }}</td>
                   <td class="np-data">{{ item.date_facturation | date:'dd/MM/yy' }}</td>
-                  <td><span class="np-pill" [ngClass]="item.paid === 1 ? 'np-pill--active' : 'np-pill--noip'">{{ item.paid === 1 ? 'Pagada' : 'Pendiente' }}</span></td>
+                  <td>
+                    <span class="np-pill" [ngClass]="item.anulada_en ? 'np-pill--neutral' : (item.paid === 1 ? 'np-pill--active' : 'np-pill--noip')"
+                          [title]="item.anulada_en ? 'Anulada: ' + (item.anulada_motivo || 'sin motivo') : ''">
+                      {{ item.anulada_en ? 'Anulada' : (item.paid === 1 ? 'Pagada' : 'Pendiente') }}
+                    </span>
+                  </td>
                   <td class="np-data np-td-right">$ {{ item.price_total | number:'1.0-0' }}</td>
                   <td class="np-data np-td-right" [class.np-neg]="(item.restante ?? 0) > 0">$ {{ item.restante | number:'1.0-0' }}</td>
-                  <td class="np-data np-data--dim">{{ item.paid === 1 ? (item.updated_at | date:'dd/MM/yy') : '—' }}</td>
+                  <td class="np-data np-data--dim">
+                    <ng-container *ngIf="item.paid === 1; else sinPago">
+                      {{ (item.paid_at || item.updated_at) | date:'dd/MM/yy' }}
+                      <b class="np-data--metodo" *ngIf="item.metodo_pago"> · {{ item.metodo_pago }}</b>
+                    </ng-container>
+                    <ng-template #sinPago>—</ng-template>
+                  </td>
+                  <td class="np-data np-data--dim" [title]="item.observacion || ''">{{ item.observacion || '—' }}</td>
                   <td class="np-td-right">
                     <div class="np-rowacts is-visible">
-                      <button *ngIf="item.paid !== 1" type="button" class="np-icobtn np-icobtn--ok" (click)="payFacture(item)" [disabled]="payingFactureId === item.id" title="Registrar pago">
+                      <button *ngIf="item.paid !== 1 && !item.anulada_en" type="button" class="np-icobtn np-icobtn--ok" (click)="abrirCobro(item)" title="Registrar pago">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v10M9.5 9.5h3.75a1.75 1.75 0 0 1 0 3.5H10.75a1.75 1.75 0 0 0 0 3.5H14.5"/></svg>
                       </button>
                       <button type="button" class="np-icobtn" (click)="downloadPdf(item.number_facture)" title="Descargar factura PDF">
@@ -541,10 +553,18 @@
                       <button *ngIf="item.paid === 1" type="button" class="np-icobtn" (click)="downloadPayPdf(item.id, item.prueba)" title="Descargar comprobante">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 12 2 2 4-4"/><circle cx="12" cy="12" r="9"/></svg>
                       </button>
+                      <!-- Revertir y anular: mueven plata, así que van al final
+                           y piden el motivo antes de hacer nada. -->
+                      <button *ngIf="item.paid === 1 && !item.anulada_en" type="button" class="np-icobtn" (click)="pedirMotivo('revertir', item)" title="Revertir el pago">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 4v4h4"/></svg>
+                      </button>
+                      <button *ngIf="item.paid !== 1 && !item.anulada_en" type="button" class="np-icobtn np-icobtn--danger" (click)="pedirMotivo('anular', item)" title="Anular la factura">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="m5.6 5.6 12.8 12.8"/></svg>
+                      </button>
                     </div>
                   </td>
                 </tr>
-                <tr *ngIf="filteredFactures.length === 0" class="np-empty"><td colspan="7">No hay facturas{{ factureFilter !== 'all' ? ' en este estado' : '' }}.</td></tr>
+                <tr *ngIf="filteredFactures.length === 0" class="np-empty"><td colspan="8">No hay facturas{{ factureFilter !== 'all' ? ' en este estado' : '' }}.</td></tr>
               </tbody>
             </table>
           </div>
@@ -892,6 +912,78 @@
         <button type="button" class="np-btn np-btn--ghost" (click)="showCreateUser = false">Cancelar</button>
         <button type="button" class="np-btn np-btn--primary" (click)="createUser()" [disabled]="submittingNewUser">{{ submittingNewUser ? 'Registrando…' : 'Registrar cliente' }}</button>
       </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ Cobrar una factura ════════════════════════════════════════════════
+     Antes se cobraba con un «¿seguro?» y nada más, y después nadie sabía con
+     qué se había pagado. Ahora se elige el medio y se puede dejar la
+     referencia, que es lo que permite explicar un pago meses después. -->
+<div class="np-modal-back" *ngIf="cobro" (click)="cobro = null">
+  <div class="np-modal np-modal--sm" role="dialog" aria-modal="true" aria-label="Registrar pago" (click)="$event.stopPropagation()">
+    <div class="np-modal-h">
+      <h3>Registrar pago</h3>
+      <p class="np-meta">Factura <b>{{ cobro.factura.number_facture }}</b> · $ {{ cobro.factura.price_total | number:'1.0-0' }}</p>
+    </div>
+
+    <div class="np-modal-b">
+      <label class="np-field">
+        <span>Medio de pago</span>
+        <select class="np-input" [(ngModel)]="cobro.metodo" aria-label="Medio de pago">
+          <option [ngValue]="null">Sin especificar</option>
+          <option *ngFor="let m of metodosDePago" [ngValue]="m.id">{{ m.name }}</option>
+        </select>
+      </label>
+
+      <label class="np-field">
+        <span>Observación <em>opcional</em></span>
+        <input class="np-input" [(ngModel)]="cobro.observacion" maxlength="500"
+               placeholder="Referencia de la transferencia, número de recibo…" aria-label="Observación del pago" />
+      </label>
+    </div>
+
+    <div class="np-modal-f">
+      <button type="button" class="np-btn np-btn--ghost" (click)="cobro = null">Cancelar</button>
+      <button type="button" class="np-btn np-btn--primary" (click)="confirmarCobro()" [disabled]="cobrando">
+        {{ cobrando ? 'Registrando…' : 'Registrar pago' }}
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ Motivo para revertir o anular ═════════════════════════════════════
+     Las dos acciones quedan en el historial con lo que se escriba acá. -->
+<div class="np-modal-back" *ngIf="motivoPedido" (click)="motivoPedido = null">
+  <div class="np-modal np-modal--sm" role="dialog" aria-modal="true" (click)="$event.stopPropagation()"
+       [attr.aria-label]="motivoPedido.que === 'revertir' ? 'Revertir el pago' : 'Anular la factura'">
+    <div class="np-modal-h">
+      <h3>{{ motivoPedido.que === 'revertir' ? 'Revertir el pago' : 'Anular la factura' }}</h3>
+      <p class="np-meta">Factura <b>{{ motivoPedido.factura.number_facture }}</b></p>
+    </div>
+
+    <div class="np-modal-b">
+      <p class="np-fine" *ngIf="motivoPedido.que === 'revertir'">
+        La factura vuelve a quedar pendiente. El pago no se borra: queda anotado como reverso.
+      </p>
+      <p class="np-fine" *ngIf="motivoPedido.que === 'anular'">
+        La factura deja de contar en la cartera, pero sigue a la vista y no se pierde el consecutivo.
+      </p>
+
+      <label class="np-field">
+        <span>Motivo</span>
+        <input class="np-input" [(ngModel)]="motivoPedido.texto" maxlength="255"
+               [placeholder]="motivoPedido.que === 'revertir' ? 'Se registró en el cliente equivocado' : 'Se emitió por error'"
+               aria-label="Motivo" />
+      </label>
+    </div>
+
+    <div class="np-modal-f">
+      <button type="button" class="np-btn np-btn--ghost" (click)="motivoPedido = null">Cancelar</button>
+      <button type="button" class="np-btn np-btn--primary" (click)="confirmarMotivo()"
+              [disabled]="aplicandoMotivo || !motivoPedido.texto.trim()">
+        {{ aplicandoMotivo ? 'Aplicando…' : (motivoPedido.que === 'revertir' ? 'Revertir el pago' : 'Anular la factura') }}
+      </button>
     </div>
   </div>
 </div>
