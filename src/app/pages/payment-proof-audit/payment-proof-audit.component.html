@@ -22,10 +22,10 @@
     <section class="np-registry" aria-label="Comprobantes">
       <div class="np-registry-wrap">
         <table class="np-table np-table--registry">
-          <thead><tr><th class="np-th-stripe"></th><th>Cliente</th><th>Factura</th><th class="np-th-right">Monto</th><th>Fecha pago</th><th>Referencia</th><th class="np-col-bank">Entidad</th><th>Estado</th><th class="np-th-right"></th></tr></thead>
+          <thead><tr><th class="np-th-stripe"></th><th>Cliente</th><th>Factura</th><th class="np-th-right">Monto</th><th>Fecha pago</th><th>Referencia</th><th class="np-col-bank">Entidad</th><th class="np-col-linea">Llegó por</th><th>Estado</th><th class="np-th-right"></th></tr></thead>
           <tbody>
-            <tr *ngIf="loading" class="np-empty"><td colspan="9"><span class="np-spinner"></span></td></tr>
-            <tr *ngIf="!loading && items.length === 0" class="np-empty"><td colspan="9"><strong>No hay comprobantes en este estado.</strong></td></tr>
+            <tr *ngIf="loading" class="np-empty"><td colspan="10"><span class="np-spinner"></span></td></tr>
+            <tr *ngIf="!loading && items.length === 0" class="np-empty"><td colspan="10"><strong>No hay comprobantes en este estado.</strong></td></tr>
             <tr *ngFor="let item of items" class="np-row" [ngClass]="'np-row--' + item.status" [attr.aria-selected]="selectedItem?.id === item.id" (click)="selectedItem = item" tabindex="0" (keydown.enter)="selectedItem = item">
               <td class="np-stripe"><i></i></td>
               <td><div class="np-name">{{ item.user?.names || 'Cliente' }} {{ item.user?.lastname || '' }}</div><div class="np-plan"><em>{{ item.user?.dni || 'sin documento' }}</em> · recibido {{ formatDateTime(item.created_at) }}</div></td>
@@ -34,6 +34,9 @@
               <td class="np-data">{{ formatDate(item.payment_date) }}</td>
               <td class="np-data">{{ item.reference_number || '—' }}</td>
               <td class="np-col-bank">{{ item.bank_name || '—' }}</td>
+              <!-- Con dos instancias recibiendo pagos, saber por cuál entró es
+                   la diferencia entre encontrar el chat o no. -->
+              <td class="np-col-linea np-data">{{ item.linea_nombre || 'Principal' }}</td>
               <td><span class="np-pill" [ngClass]="'np-pill--' + item.status">{{ statusLabel(item.status) }}</span></td>
               <td class="np-td-right"><div class="np-rowacts" (click)="$event.stopPropagation()">
                 <button type="button" class="np-icobtn np-icobtn--ok" *ngIf="item.status !== 'approved'" (click)="approve(item)" title="Aprobar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="m5 13 4 4L19 7"/></svg></button>

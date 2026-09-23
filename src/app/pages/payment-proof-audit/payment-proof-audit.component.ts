@@ -119,14 +119,20 @@ export class PaymentProofAuditComponent implements OnInit {
 
     // Sin monto no se puede aplicar nada a la factura: se pregunta antes de
     // mandar, en vez de que el servidor lo rechace y no se entienda por qué.
-    let escrito: number | null = monto ? Number(monto) : null;
+    // El monto leído de la imagen es una aproximación: una foto movida puede
+    // dar «70.008» donde dice «70.000». Antes de mover plata se confirma, con
+    // el valor leído puesto para que casi siempre alcance con aceptar.
+    const sugerido = monto ? String(Math.round(Number(monto))) : '';
+    const puesto = prompt(
+      monto
+        ? `¿De cuánto es el pago? Leímos ${sugerido} en la imagen; corregilo si hace falta.`
+        : 'No pudimos leer el monto. Escribilo, por ejemplo 70000',
+      sugerido,
+    );
 
-    if (!escrito) {
-      const puesto = prompt('¿De cuánto es el pago? Escribí sólo el número, por ejemplo 70000');
-      escrito = puesto ? Number(String(puesto).replace(/[^\d]/g, '')) : null;
+    const escrito = puesto ? Number(String(puesto).replace(/[^\d]/g, '')) : null;
 
-      if (!escrito) { this.aviso('Hace falta el monto para aprobar.', false); return; }
-    }
+    if (!escrito) { this.aviso('Hace falta el monto para aprobar.', false); return; }
 
     this.paymentProofService.approve(item.id, {
       reviewed_by: 1,
