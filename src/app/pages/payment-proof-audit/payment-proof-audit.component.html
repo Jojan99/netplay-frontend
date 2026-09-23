@@ -38,6 +38,12 @@
               <td class="np-td-right"><div class="np-rowacts" (click)="$event.stopPropagation()">
                 <button type="button" class="np-icobtn np-icobtn--ok" *ngIf="item.status !== 'approved'" (click)="approve(item)" title="Aprobar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="m5 13 4 4L19 7"/></svg></button>
                 <button type="button" class="np-icobtn" *ngIf="item.status !== 'rejected'" (click)="reject(item)" title="Rechazar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
+                <!-- Volver a leer la imagen: para los que entraron sin monto,
+                     o salieron movidos. -->
+                <button type="button" class="np-icobtn" (click)="releer(item)" [disabled]="releyendo === item.id"
+                        [title]="(item.detected_amount || item.reported_amount) ? 'Volver a leer la imagen' : 'Sin monto: volver a leer la imagen'">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 4v4h4"/></svg>
+                </button>
                 <button type="button" class="np-icobtn" (click)="selectedItem = item" title="Ver"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 6 6 6-6 6"/></svg></button>
               </div></td>
             </tr>

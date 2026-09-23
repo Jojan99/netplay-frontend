@@ -32,6 +32,11 @@ export class PaymentProofService {
     return this.http.get(`${this.baseUrl}/payment-proofs/${id}`, { headers: this.getHeaders() });
   }
 
+  /** Volver a leer la imagen: completa monto, fecha, referencia y entidad. */
+  releer(id: number): Observable<any> {
+    return this.http.post(`${this.baseUrl}/payment-proofs/${id}/releer`, '{}', { headers: this.getHeaders() });
+  }
+
   approve(id: number, payload: any = {}): Observable<any> {
     return this.http.post(`${this.baseUrl}/payment-proofs/${id}/approve`, JSON.stringify(payload), { headers: this.getHeaders() });
   }

@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { PaymentProofService } from '../../services/payment-proof.service';
+import { ToastService } from '../../services/toast.service';
 import { NpSelectComponent } from '../../common/np-select/np-select.component';
 import { PRESENTACION_TEXTOS } from '../../common/np-select/presentaciones';
 
@@ -34,7 +35,7 @@ export class PaymentProofAuditComponent implements OnInit {
     { value: 'suspicious', label: 'Sospechosos' }, { value: 'rejected', label: 'Rechazados' }, { value: 'reverted', label: 'Revertidos' }
   ];
 
-  constructor(private paymentProofService: PaymentProofService) {}
+  constructor(private paymentProofService: PaymentProofService, private toast: ToastService) {}
 
   ngOnInit(): void {
     this.load();
@@ -96,8 +97,49 @@ export class PaymentProofAuditComponent implements OnInit {
     };
   }
 
+  releyendo: number | null = null;
+
+  /**
+   * Volver a leer la imagen.
+   *
+   * Los comprobantes que entraron antes de que el servidor tuviera lector
+   * quedaron sin monto; y una foto movida puede leerse mejor al segundo
+   * intento.
+   */
+  releer(item: any): void {
+    this.releyendo = item.id;
+    this.paymentProofService.releer(item.id).subscribe({
+      next: (r: any) => { this.releyendo = null; this.aviso(r?.message ?? 'Listo', r?.status === 'success'); this.load(); },
+      error: (e: any) => { this.releyendo = null; this.aviso(e?.error?.message ?? 'No se pudo leer la imagen', false); },
+    });
+  }
+
   approve(item: any): void {
-    this.paymentProofService.approve(item.id, { reviewed_by: 1, reason: 'Aprobado por auditoría manual.' }).subscribe(() => this.load());
+    const monto = item.reported_amount ?? item.detected_amount ?? null;
+
+    // Sin monto no se puede aplicar nada a la factura: se pregunta antes de
+    // mandar, en vez de que el servidor lo rechace y no se entienda por qué.
+    let escrito: number | null = monto ? Number(monto) : null;
+
+    if (!escrito) {
+      const puesto = prompt('¿De cuánto es el pago? Escribí sólo el número, por ejemplo 70000');
+      escrito = puesto ? Number(String(puesto).replace(/[^\d]/g, '')) : null;
+
+      if (!escrito) { this.aviso('Hace falta el monto para aprobar.', false); return; }
+    }
+
+    this.paymentProofService.approve(item.id, {
+      reviewed_by: 1,
+      reason: 'Aprobado por auditoría manual.',
+      amount: escrito,
+    }).subscribe({
+      next: () => this.load(),
+      error: (e: any) => this.aviso(e?.error?.message ?? 'No se pudo aprobar', false),
+    });
+  }
+
+  private aviso(texto: string, ok: boolean): void {
+    ok ? this.toast.success(texto) : this.toast.error(texto);
   }
 
   reject(item: any): void {
