@@ -1,11 +1,12 @@
 import { CommonModule } from '@angular/common';
-import { Component, ElementRef, HostListener, OnDestroy, OnInit, ViewChild } from '@angular/core';
+import { Component, ElementRef, HostListener, OnDestroy, OnInit, ViewChild, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
 import { Subject } from 'rxjs';
 import { debounceTime, distinctUntilChanged, takeUntil } from 'rxjs/operators';
 import { FinanceService } from '../../services/finance.service';
 import { ToastService }   from '../../services/toast.service';
+import { FichaClienteService } from '../../services/ficha-cliente.service';
 import { NpSelectComponent } from '../../common/np-select/np-select.component';
 import { PRESENTACION_METODOS_PAGO, PRESENTACION_POR_PAGINA, conValor } from '../../common/np-select/presentaciones';
 
@@ -165,7 +166,20 @@ export class FinanceComponent implements OnInit, OnDestroy {
     this.commitmentSelected.has(id) ? this.commitmentSelected.delete(id) : this.commitmentSelected.add(id);
   }
 
+  private ficha = inject(FichaClienteService);
+
   constructor(private financeService: FinanceService, private toast: ToastService, private route: ActivatedRoute) {}
+
+  /**
+   * El nombre lleva a la ficha del cliente.
+   *
+   * El clic en la fila abre su cartera, que es lo que se viene a hacer acá;
+   * el del nombre es para cuando lo que se necesita es el cliente entero
+   * —plan, equipo, contrato— y no sólo lo que debe.
+   */
+  verFicha(c: any): void {
+    this.ficha.abrir({ user_id: c?.user_id, nombre: `${c?.names ?? ''} ${c?.lastname ?? ''}`, cedula: c?.dni });
+  }
 
   ngOnInit(): void {
     this.searchSubject.pipe(

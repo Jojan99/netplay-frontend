@@ -31,3 +31,7 @@
   small { font-size: 12.5px; color: var(--text-2); line-height: 1.5; }
 }
 .ale-meta { font-size: 11.5px; color: var(--text-3); }
+
+/* Las dos acciones del aviso, una debajo de la otra en el teléfono. */
+.ale-acciones { flex: none; display: flex; gap: 6px; align-items: flex-start; }
+@media (max-width: 640px) { .ale-acciones { flex-direction: column; width: 100%; .np-btn { width: 100%; } } }

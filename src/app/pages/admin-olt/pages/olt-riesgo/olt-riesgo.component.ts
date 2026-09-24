@@ -1,9 +1,11 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnInit, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Router } from '@angular/router';
 import { OltNavComponent } from '../../shared/olt-nav.component';
+import { NuevoTicketComponent } from '../../../soport-client/nuevo-ticket/nuevo-ticket.component';
+import { recomendacionDeRed } from '../../shared/recomendacion';
 import { ToastService } from '../../../../services/toast.service';
+import { FichaClienteService } from '../../../../services/ficha-cliente.service';
 import { environment } from '../../../../../environments/environment';
 
 /**
@@ -17,14 +19,14 @@ import { environment } from '../../../../../environments/environment';
 @Component({
   selector: 'app-olt-riesgo',
   standalone: true,
-  imports: [CommonModule, OltNavComponent],
+  imports: [CommonModule, OltNavComponent, NuevoTicketComponent],
   templateUrl: './olt-riesgo.component.html',
   styleUrls: ['../../shared/olt.scss', './olt-riesgo.component.scss', '../../shared/olt-movil.scss'],
 })
 export class OltRiesgoComponent implements OnInit {
   private http = inject(HttpClient);
   private toast = inject(ToastService);
-  private router = inject(Router);
+  private ficha = inject(FichaClienteService);
 
   cargando = false;
   error = '';
@@ -67,14 +69,33 @@ export class OltRiesgoComponent implements OnInit {
     return '$ ' + Math.round(n || 0).toLocaleString('es-CO');
   }
 
-  /**
-   * La ficha se abre sola con ?cliente=<id>, pero sólo si el cliente viene en
-   * la página que se carga: por eso va también ?q=… con la cédula (o el
-   * nombre), que es lo que deja la lista filtrada en uno solo.
-   */
   verCliente(c: any): void {
-    const q = (c?.cedula || c?.nombre || '').toString().trim();
-    this.router.navigate(['/dashboard/usuario'], { queryParams: { cliente: c.user_id, q } });
+    this.ficha.abrir({ user_id: c?.user_id, nombre: c?.nombre, cedula: c?.cedula });
+  }
+
+  /**
+   * El ticket que se está creando desde esta pantalla, o null.
+   *
+   * El modal va al final de la página y no dentro de la fila: es un overlay
+   * `position: fixed` y metido en una celda queda atrapado por el scroll de
+   * la tabla.
+   */
+  ticketPara: { userId: number; observacion: string; nombre: string } | null = null;
+
+  crearTicket(c: any): void {
+    this.ticketPara = {
+      userId: c.user_id,
+      nombre: c.nombre,
+      observacion: recomendacionDeRed({
+        cliente: c.nombre, fsp: c.fsp, ont_id: c.ont_id, serial: c.serial,
+        rx_prom: c.rx_prom, rx_min: c.rx_min, caidas: c.caidas, apagado: c.apagado,
+      }),
+    };
+  }
+
+  ticketCreado(): void {
+    this.ticketPara = null;
+    this.toast.success('Ticket creado.');
   }
 
   copiarTelefonos(grupo: any): void {

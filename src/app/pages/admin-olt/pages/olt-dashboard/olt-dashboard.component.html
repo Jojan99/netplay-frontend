@@ -150,17 +150,24 @@
 
         <div class="np-tablewrap" *ngIf="listado.length">
           <table class="np-table np-table--compact np-tabla-movil">
-            <thead><tr><th>Puerto</th><th>ID</th><th>Cliente</th><th class="np-th-right">Potencia</th><th>Señal</th><th class="np-th-right">Temp.</th><th class="np-th-right">Voltaje</th><th>Estado</th></tr></thead>
+            <thead><tr><th>Puerto</th><th>ID</th><th>Cliente</th><th class="np-th-right">Potencia</th><th>Señal</th><th class="np-th-right">Temp.</th><th class="np-th-right">Voltaje</th><th>Estado</th><th class="np-th-right"></th></tr></thead>
             <tbody>
               <tr *ngFor="let o of listado">
                 <td class="np-data np-strong" data-label="Puerto">{{ o.fsp }}</td>
                 <td class="np-data" data-label="ID">{{ o.ont_id }}</td>
-                <td class="es-principal"><div class="np-name">{{ o.description || '—' }}</div><div class="np-plan" *ngIf="o.serial"><em>{{ o.serial }}</em></div></td>
+                <td class="es-principal">
+                  <button type="button" class="np-name np-name--link" *ngIf="o.user_id; else sinDueno" (click)="verFicha(o)">{{ o.cliente || o.description || '—' }}</button>
+                  <ng-template #sinDueno><div class="np-name">{{ o.description || '—' }}</div></ng-template>
+                  <div class="np-plan" *ngIf="o.serial"><em>{{ o.serial }}</em></div>
+                </td>
                 <td class="np-data np-td-right" data-label="Potencia" [ngClass]="tonoDe(o.estado)">{{ o.potencia != null ? o.potencia + ' dBm' : '—' }}</td>
                 <td data-label="Señal"><span class="np-pill" [ngClass]="tonoDe(o.estado)">{{ etiquetaDe(o.estado) }}</span></td>
                 <td class="np-data np-td-right" data-label="Temperatura">{{ o.temperatura != null ? o.temperatura + ' °C' : '—' }}</td>
                 <td class="np-data np-td-right" data-label="Voltaje">{{ o.voltaje != null ? o.voltaje + ' V' : '—' }}</td>
                 <td data-label="Estado"><span class="np-pill" [ngClass]="o.status === 'online' ? 'np-pill--active' : 'np-pill--neutral'">{{ o.status === 'online' ? 'en línea' : 'fuera' }}</span></td>
+                <td class="np-td-right es-acciones" data-label="">
+                  <div class="np-rowacts"><button type="button" class="np-btn np-btn--ghost np-btn--sm" *ngIf="o.user_id" (click)="crearTicket(o)">Crear ticket</button></div>
+                </td>
               </tr>
             </tbody>
           </table>
@@ -171,4 +178,10 @@
       <div *ngIf="cargandoSenal && midiendoSenal && !resumen" class="np-loading"><span class="np-spinner"></span> Midiendo la señal de todas las ONT… tarda cerca de un minuto.</div>
     </ng-container>
   </div>
+
+  <app-nuevo-ticket *ngIf="ticketPara"
+                    [clienteId]="ticketPara.userId"
+                    [observacionSugerida]="ticketPara.observacion"
+                    (cerrado)="ticketPara = null"
+                    (creado)="ticketCreado()"></app-nuevo-ticket>
 </div>

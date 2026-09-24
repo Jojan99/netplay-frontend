@@ -7,6 +7,9 @@ import { Router } from '@angular/router';
 import { OltNavComponent } from '../../shared/olt-nav.component';
 import { MedicionSenalComponent } from '../../shared/medicion-senal.component';
 import { OltEquipoComponent } from '../../shared/olt-equipo.component';
+import { NuevoTicketComponent } from '../../../soport-client/nuevo-ticket/nuevo-ticket.component';
+import { recomendacionDeRed } from '../../shared/recomendacion';
+import { FichaClienteService } from '../../../../services/ficha-cliente.service';
 import { OltService } from '../../../../services/olt.service';
 import { ToastService } from '../../../../services/toast.service';
 import { NpSelectComponent } from '../../../../common/np-select/np-select.component';
@@ -25,6 +28,9 @@ interface OntConSenal {
   description: string | null;
   status: string | null;
   estado: EstadoSenal;
+  /** El cliente de esa ONT, para poder abrirle la ficha o crearle el ticket. */
+  user_id: number | null;
+  cliente: string | null;
 }
 
 interface PuertoConSenal {
@@ -49,7 +55,7 @@ interface PuertoConSenal {
 @Component({
   selector: 'app-olt-dashboard',
   standalone: true,
-  imports: [CommonModule, FormsModule, NpSelectComponent, OltNavComponent, OltEquipoComponent, MedicionSenalComponent],
+  imports: [CommonModule, FormsModule, NpSelectComponent, OltNavComponent, OltEquipoComponent, MedicionSenalComponent, NuevoTicketComponent],
   templateUrl: './olt-dashboard.component.html',
   styleUrls: ['../../shared/olt.scss', './olt-dashboard.component.scss', '../../shared/olt-movil.scss'],
   host: { class: 'np-console' },
@@ -85,11 +91,51 @@ export class OltDashboardComponent implements OnInit {
     { id: 'sin_dato', label: 'Sin medir', ayuda: 'La ONT no reportó potencia' },
   ];
 
+  private ficha = inject(FichaClienteService);
+
   constructor(
     private oltService: OltService,
     private toast: ToastService,
     private router: Router,
   ) {}
+
+  /** El nombre de la OLT elegida, para que el ticket diga a cuál ir. */
+  private get nombreOlt(): string | null {
+    return this.olts.find(o => o.id === this.selectedOltId)?.name ?? null;
+  }
+
+  verFicha(o: any): void {
+    this.ficha.abrir({ user_id: o?.user_id, nombre: o?.cliente || o?.description });
+  }
+
+  /**
+   * Crear el ticket con la medición adentro.
+   *
+   * El modal se pone al final de la página: es un overlay fijo y, dentro de
+   * una celda, el scroll de la tabla se lo come.
+   */
+  ticketPara: { userId: number; observacion: string } | null = null;
+
+  crearTicket(o: any): void {
+    if (!o?.user_id) { this.toast.info('Esa ONT no tiene cliente asignado.'); return; }
+
+    this.ticketPara = {
+      userId: o.user_id,
+      observacion: recomendacionDeRed({
+        cliente: o.cliente || o.description, olt: this.nombreOlt, fsp: o.fsp, ont_id: o.ont_id,
+        serial: o.serial, rx_prom: o.potencia, rx_min: o.potencia,
+        // Acá se ve una foto, no una semana: decir "apagado el 100% del
+        // tiempo" por una sola lectura sería inventar. Si está fuera, se dice
+        // eso y nada más.
+        detalle: o.status === 'online' ? null : 'La ONT figura fuera de línea en la OLT. Qué revisar: energía del cliente, fuente de la ONT y acometida.',
+      }),
+    };
+  }
+
+  ticketCreado(): void {
+    this.ticketPara = null;
+    this.toast.success('Ticket creado.');
+  }
 
   ngOnInit(): void { this.loadOlts(); }
 

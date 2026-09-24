@@ -1,4 +1,4 @@
-import { Component, EventEmitter, HostListener, OnDestroy, OnInit, Output, inject } from '@angular/core';
+import { Component, EventEmitter, HostListener, Input, OnDestroy, OnInit, Output, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Subscription } from 'rxjs';
@@ -59,6 +59,17 @@ export class NuevoTicketComponent implements OnInit, OnDestroy {
   @Output() cerrado = new EventEmitter<void>();
   @Output() creado = new EventEmitter<void>();
 
+  /**
+   * Con quién y por qué, cuando el ticket nace de otra pantalla.
+   *
+   * Las pantallas de red (salud, estado, avisos, clientes en riesgo) ya saben
+   * a quién le pasa qué: «potencia promedio -30,5 dBm». Copiar eso a mano al
+   * abrir el ticket es donde se pierde el dato —o se escribe mal— y después
+   * el técnico llega sin saber qué iba a revisar.
+   */
+  @Input() clienteId: number | null = null;
+  @Input() observacionSugerida = '';
+
   readonly presClientes = PRESENTACION_CLIENTES;
   readonly presServicios = PRESENTACION_SERVICIOS;
   readonly presTecnicos = conValor(PRESENTACION_PERSONAS, t => t?.user_id);
@@ -84,12 +95,21 @@ export class NuevoTicketComponent implements OnInit, OnDestroy {
   private pingSub: Subscription | null = null;
 
   ngOnInit(): void {
+    if (this.observacionSugerida) this.observacion = this.observacionSugerida;
+
     this.users.getAllUser().subscribe({
       next: r => {
         this.clientes = (r?.data || []).map((e: any) => ({
           id_user: e.id, names: e.names, lastname: e.lastname, address: e.address, dni: e.dni, phone: e.phone,
         }));
         this.cargandoClientes = false;
+
+        // Viene elegido de otra pantalla: se deja puesto y con el ping hecho,
+        // para que lo único que quede sea elegir técnico y prioridad.
+        if (this.clienteId) {
+          const ya = this.clientes.find(c => Number(c.id_user) === Number(this.clienteId));
+          if (ya) this.elegirCliente(ya);
+        }
       },
       error: () => { this.cargandoClientes = false; },
     });

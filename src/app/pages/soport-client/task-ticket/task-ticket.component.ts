@@ -10,6 +10,7 @@ import { NpSelectComponent, PresentacionSelect } from '../../../common/np-select
 import { PRESENTACION_PERSONAS, PRESENTACION_POR_PAGINA, conValor } from '../../../common/np-select/presentaciones';
 import { ActivatedRoute, Router } from '@angular/router';
 import { NuevoTicketComponent } from '../nuevo-ticket/nuevo-ticket.component';
+import { FichaClienteService } from '../../../services/ficha-cliente.service';
 
 @Component({
   selector: 'app-task-ticket',
@@ -21,6 +22,17 @@ import { NuevoTicketComponent } from '../nuevo-ticket/nuevo-ticket.component';
 })
 export class TaskTicketComponent implements OnInit, OnDestroy {
   private toast = inject(ToastService);
+  private ficha = inject(FichaClienteService);
+
+  /**
+   * El nombre del cliente lleva a su ficha.
+   *
+   * El ticket dice qué le pasa; la ficha dice quién es, qué plan tiene y con
+   * qué equipo está. Hasta ahora había que salir a Clientes y buscarlo a mano.
+   */
+  verFicha(t: any): void {
+    this.ficha.abrir({ user_id: t?.user_id, nombre: `${t?.name ?? ''} ${t?.last_name ?? ''}`, cedula: t?.cedula });
+  }
 
   // ── Role ─────────────────────────────────────────────────────────────────
   isAdmin   = false;

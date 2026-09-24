@@ -1,8 +1,10 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnInit, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
 import { OltNavComponent } from '../../shared/olt-nav.component';
+import { NuevoTicketComponent } from '../../../soport-client/nuevo-ticket/nuevo-ticket.component';
+import { recomendacionDeRed } from '../../shared/recomendacion';
+import { FichaClienteService } from '../../../../services/ficha-cliente.service';
 import { AlertasService } from '../../../../services/alertas.service';
 import { ToastService } from '../../../../services/toast.service';
 
@@ -15,7 +17,7 @@ import { ToastService } from '../../../../services/toast.service';
 @Component({
   selector: 'app-olt-alertas',
   standalone: true,
-  imports: [CommonModule, FormsModule, OltNavComponent],
+  imports: [CommonModule, FormsModule, OltNavComponent, NuevoTicketComponent],
   templateUrl: './olt-alertas.component.html',
   styleUrls: ['../../shared/olt.scss', './olt-alertas.component.scss', '../../shared/olt-movil.scss'],
   host: { class: 'np-console' },
@@ -23,7 +25,7 @@ import { ToastService } from '../../../../services/toast.service';
 export class OltAlertasComponent implements OnInit {
   private api = inject(AlertasService);
   private toast = inject(ToastService);
-  private router = inject(Router);
+  private ficha = inject(FichaClienteService);
 
   alertas: any[] = [];
   resumen: any = null;
@@ -114,7 +116,41 @@ export class OltAlertasComponent implements OnInit {
   }
 
   abrirCliente(a: any) {
-    if (!a.user_id) return;
-    this.router.navigate(['/dashboard/usuario'], { queryParams: { cliente: a.user_id, tab: 'servicios' } });
+    this.ficha.abrir({ user_id: a?.user_id, nombre: a?.datos?.cliente || a?.titulo }, 'servicios');
+  }
+
+  /**
+   * El aviso ya dice qué pasa y a quién; el ticket nace con eso escrito.
+   *
+   * Es el paso que se perdía: alguien veía el aviso, llamaba al técnico por
+   * WhatsApp y no quedaba nada. Ahora el aviso se convierte en trabajo
+   * asignado, con la medición adentro.
+   *
+   * El modal va al final de la página porque es un overlay fijo.
+   */
+  ticketPara: { userId: number; observacion: string } | null = null;
+
+  crearTicket(a: any): void {
+    if (!a?.user_id) return;
+
+    this.ticketPara = {
+      userId: a.user_id,
+      observacion: recomendacionDeRed({
+        cliente: a?.datos?.cliente ?? null,
+        olt: a?.datos?.olt ?? null,
+        fsp: a?.datos?.fsp ?? null,
+        ont_id: a?.datos?.ont_id ?? null,
+        serial: a?.datos?.serial ?? null,
+        rx_prom: a?.datos?.rx_prom ?? a?.datos?.potencia ?? null,
+        rx_min: a?.datos?.rx_min ?? null,
+        caidas: a?.datos?.caidas ?? 0,
+        detalle: [a?.titulo, a?.detalle].filter(Boolean).join(': '),
+      }),
+    };
+  }
+
+  ticketCreado(): void {
+    this.ticketPara = null;
+    this.toast.success('Ticket creado.');
   }
 }

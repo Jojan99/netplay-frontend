@@ -82,7 +82,8 @@
                   (click)="openDrawer(c)" tabindex="0" (keydown.enter)="openDrawer(c)">
                 <td class="np-stripe"><i></i></td>
                 <td>
-                  <div class="np-name">{{ c.names }} {{ c.lastname }}</div>
+                  <button type="button" class="np-name np-name--link" (click)="$event.stopPropagation(); verFicha(c)"
+                          [title]="'Ver la ficha de ' + c.names">{{ c.names }} {{ c.lastname }}</button>
                   <div class="np-plan"><em>{{ c.dni }}</em><span class="np-plan-mobile" *ngIf="c.phone"> · <em>{{ c.phone }}</em></span></div>
                 </td>
                 <td class="np-data np-col-phone">{{ c.phone || '—' }}</td>
@@ -126,7 +127,7 @@
       <div class="np-insp-head">
         <div class="np-avatar">{{ initialOf(selectedClient.names) }}</div>
         <div class="np-insp-id">
-          <h2>{{ selectedClient.names }} {{ selectedClient.lastname }}</h2>
+          <h2><button type="button" class="np-name--link" (click)="verFicha(selectedClient)" title="Ver la ficha del cliente">{{ selectedClient.names }} {{ selectedClient.lastname }}</button></h2>
           <div class="np-meta">CC <b>{{ selectedClient.dni || '—' }}</b> · Tel <b>{{ selectedClient.phone || '—' }}</b></div>
           <div class="np-meta np-meta--addr" *ngIf="selectedClient.address">{{ selectedClient.address }}</div>
         </div>

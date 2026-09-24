@@ -55,8 +55,17 @@
             <ng-container *ngIf="a.cerrada_en"> · resuelto {{ desde(a.cerrada_en) }}</ng-container>
           </span>
         </div>
-        <button type="button" class="np-btn np-btn--ghost np-btn--sm" *ngIf="a.user_id" (click)="abrirCliente(a)">Ver cliente</button>
+        <div class="ale-acciones" *ngIf="a.user_id">
+          <button type="button" class="np-btn np-btn--ghost np-btn--sm" (click)="abrirCliente(a)">Ver cliente</button>
+          <button type="button" class="np-btn np-btn--ghost np-btn--sm" *ngIf="!a.cerrada_en" (click)="crearTicket(a)">Crear ticket</button>
+        </div>
       </article>
     </div>
   </div>
+
+  <app-nuevo-ticket *ngIf="ticketPara"
+                    [clienteId]="ticketPara.userId"
+                    [observacionSugerida]="ticketPara.observacion"
+                    (cerrado)="ticketPara = null"
+                    (creado)="ticketCreado()"></app-nuevo-ticket>
 </div>

@@ -66,24 +66,25 @@
 
     <!-- ── Clientes al borde ── -->
     <section class="np-card" *ngIf="alBorde.length">
-      <div class="np-card-h"><h3>Clientes al borde</h3><span class="np-fine">hoy trabajaron bajo {{ limite }} dBm: son los próximos en caerse</span></div>
+      <div class="np-card-h"><h3>Clientes al borde</h3><span class="np-fine">hoy promediaron bajo {{ limite }} dBm: son los próximos en caerse</span></div>
 
       <div class="np-tablewrap">
         <table class="np-table">
           <thead>
-            <tr><th>Cliente</th><th>Puerto</th><th class="np-td-right">Peor</th><th class="np-td-right">Promedio</th><th class="np-td-right">Caídas hoy</th><th class="np-td-right">Apagado</th></tr>
+            <tr><th>Cliente</th><th>Puerto</th><th class="np-td-right">Promedio</th><th class="np-td-right">Peor</th><th class="np-td-right">Caídas hoy</th><th class="np-td-right">Apagado</th><th class="np-th-right"></th></tr>
           </thead>
           <tbody>
-            <tr *ngFor="let c of alBorde" class="sal-clic" (click)="verCliente(c.user_id)">
+            <tr *ngFor="let c of alBorde">
               <td class="np-data">
-                <b>{{ c.cliente || c.descripcion || 'Sin cliente' }}</b>
+                <button type="button" class="np-name--link" (click)="verCliente(c)">{{ c.cliente || c.descripcion || 'Sin cliente' }}</button>
                 <small class="np-data--dim" *ngIf="c.phone"> · {{ c.phone }}</small>
               </td>
               <td class="np-data np-data--dim">{{ c.olt }} · {{ c.fsp }}:{{ c.ont_id }}</td>
-              <td class="np-td-right np-data"><span class="sal-dbm" data-tono="malo">{{ dbm(c.rx_min) }}</span></td>
-              <td class="np-td-right np-data np-data--dim">{{ dbm(c.rx_prom) }}</td>
+              <td class="np-td-right np-data"><span class="sal-dbm" data-tono="malo">{{ dbm(c.rx_prom) }}</span></td>
+              <td class="np-td-right np-data np-data--dim" title="La peor lectura del día">{{ dbm(c.rx_min) }}</td>
               <td class="np-td-right np-data" [class.sal-mal]="c.caidas > 0">{{ c.caidas || '—' }}</td>
               <td class="np-td-right np-data np-data--dim">{{ apagado(c.muestras_offline) }}</td>
+              <td class="np-td-right es-acciones"><div class="np-rowacts"><button type="button" class="np-btn np-btn--ghost np-btn--sm" (click)="crearTicket(c)">Crear ticket</button></div></td>
             </tr>
           </tbody>
         </table>
@@ -97,19 +98,26 @@
       <div class="np-tablewrap">
         <table class="np-table">
           <thead>
-            <tr><th>Cliente</th><th>Puerto</th><th class="np-td-right">Caídas hoy</th><th class="np-td-right">Apagado</th><th class="np-td-right">Peor señal</th></tr>
+            <tr><th>Cliente</th><th>Puerto</th><th class="np-td-right">Caídas hoy</th><th class="np-td-right">Apagado</th><th class="np-td-right">Peor señal</th><th class="np-th-right"></th></tr>
           </thead>
           <tbody>
-            <tr *ngFor="let e of inestables" class="sal-clic" (click)="verCliente(e.user_id)">
-              <td class="np-data"><b>{{ e.cliente || e.descripcion || 'Sin cliente' }}</b></td>
+            <tr *ngFor="let e of inestables">
+              <td class="np-data"><button type="button" class="np-name--link" (click)="verCliente(e)">{{ e.cliente || e.descripcion || 'Sin cliente' }}</button></td>
               <td class="np-data np-data--dim">{{ e.olt }} · {{ e.fsp }}:{{ e.ont_id }}</td>
               <td class="np-td-right np-data sal-mal">{{ e.caidas }}</td>
               <td class="np-td-right np-data np-data--dim">{{ apagado(e.muestras_offline) }}</td>
               <td class="np-td-right np-data">{{ dbm(e.rx_min) }}</td>
+              <td class="np-td-right es-acciones"><div class="np-rowacts"><button type="button" class="np-btn np-btn--ghost np-btn--sm" (click)="crearTicket(e)">Crear ticket</button></div></td>
             </tr>
           </tbody>
         </table>
       </div>
     </section>
   </div>
+
+  <app-nuevo-ticket *ngIf="ticketPara"
+                    [clienteId]="ticketPara.userId"
+                    [observacionSugerida]="ticketPara.observacion"
+                    (cerrado)="ticketPara = null"
+                    (creado)="ticketCreado()"></app-nuevo-ticket>
 </div>

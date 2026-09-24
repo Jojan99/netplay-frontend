@@ -1,8 +1,11 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnInit, inject } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
-import { Router } from '@angular/router';
 import { OltNavComponent } from '../../shared/olt-nav.component';
+import { NuevoTicketComponent } from '../../../soport-client/nuevo-ticket/nuevo-ticket.component';
+import { recomendacionDeRed } from '../../shared/recomendacion';
+import { FichaClienteService } from '../../../../services/ficha-cliente.service';
+import { ToastService } from '../../../../services/toast.service';
 import { environment } from '../../../../../environments/environment';
 
 interface Puerto {
@@ -17,14 +20,15 @@ interface Puerto {
 @Component({
   selector: 'app-olt-salud',
   standalone: true,
-  imports: [CommonModule, OltNavComponent],
+  imports: [CommonModule, OltNavComponent, NuevoTicketComponent],
   templateUrl: './olt-salud.component.html',
   styleUrls: ['../../shared/olt.scss', './olt-salud.component.scss', '../../shared/olt-movil.scss'],
   host: { class: 'np-console' },
 })
 export class OltSaludComponent implements OnInit {
   private http = inject(HttpClient);
-  private router = inject(Router);
+  private ficha = inject(FichaClienteService);
+  private toast = inject(ToastService);
 
   puertos: Puerto[] = [];
   alBorde: any[] = [];
@@ -87,7 +91,33 @@ export class OltSaludComponent implements OnInit {
     return minutos < 60 ? `${minutos} min` : `${Math.round(minutos / 60)} h`;
   }
 
-  verCliente(userId: number | null) {
-    if (userId) this.router.navigate(['/dashboard/usuario'], { queryParams: { cliente: userId } });
+  verCliente(c: any) {
+    this.ficha.abrir({ user_id: c?.user_id, nombre: c?.cliente || c?.descripcion });
+  }
+
+  /**
+   * El ticket se arma acá y no en la cabeza del que lo escribe.
+   *
+   * El modal va al final de la página: es un overlay fijo y, metido en una
+   * celda, el scroll de la tabla se lo come.
+   */
+  ticketPara: { userId: number; observacion: string } | null = null;
+
+  crearTicket(c: any): void {
+    if (!c?.user_id) { this.toast.info('Esa ONT no tiene cliente asignado.'); return; }
+
+    this.ticketPara = {
+      userId: c.user_id,
+      observacion: recomendacionDeRed({
+        cliente: c.cliente || c.descripcion, olt: c.olt, fsp: c.fsp, ont_id: c.ont_id, serial: c.serial,
+        rx_prom: c.rx_prom ?? null, rx_min: c.rx_min ?? null, caidas: c.caidas ?? 0,
+        apagado: c.muestras ? Math.round((c.muestras_offline || 0) * 100 / c.muestras) : null,
+      }),
+    };
+  }
+
+  ticketCreado(): void {
+    this.ticketPara = null;
+    this.toast.success('Ticket creado.');
   }
 }
