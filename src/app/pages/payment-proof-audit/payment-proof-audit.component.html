@@ -30,7 +30,13 @@
               <td class="np-stripe"><i></i></td>
               <td><div class="np-name">{{ item.user?.names || 'Cliente' }} {{ item.user?.lastname || '' }}</div><div class="np-plan"><em>{{ item.user?.dni || 'sin documento' }}</em> · recibido {{ formatDateTime(item.created_at) }}</div></td>
               <td class="np-data">{{ item.invoice?.number_facture || '—' }}</td>
-              <td class="np-money np-pos">{{ formatAmount(item.reported_amount ?? item.detected_amount) }}</td>
+              <td class="np-money np-pos">
+                {{ formatAmount(item.reported_amount ?? item.detected_amount) }}
+                <!-- El lector leyó la imagen de tres formas y no coincidieron:
+                     el número puede estar mal y hay que mirar la foto. -->
+                <span class="ppa-dudoso" *ngIf="(item.dudosos || []).includes('amount')"
+                      title="El lector no pudo confirmar este monto: revisá la imagen antes de aprobar">sin confirmar</span>
+              </td>
               <td class="np-data">{{ formatDate(item.payment_date) }}</td>
               <td class="np-data">{{ item.reference_number || '—' }}</td>
               <td class="np-col-bank">{{ item.bank_name || '—' }}</td>
@@ -82,7 +88,8 @@
           <dl class="np-dl">
             <dt>Factura</dt><dd><button type="button" class="np-link np-mono" *ngIf="it.invoice?.number_facture; else noInv" (click)="openFinanceModal(it)">{{ it.invoice.number_facture }}</button><ng-template #noInv>Sin factura</ng-template></dd>
             <dt>Fecha del pago</dt><dd class="np-mono">{{ formatDate(it.payment_date) }}</dd>
-            <dt>Referencia</dt><dd class="np-mono">{{ it.reference_number || 'No identificada' }}</dd>
+            <dt>Referencia</dt><dd class="np-mono">{{ it.reference_number || 'No identificada' }}
+              <span class="ppa-dudoso" *ngIf="(it.dudosos || []).includes('reference')">sin confirmar</span></dd>
             <dt>Entidad</dt><dd>{{ it.bank_name || 'No identificada' }}</dd>
             <ng-container *ngIf="hasExtractedDetails(it)">
               <dt>Destinatario</dt><dd>{{ it.raw_payload?.ocr_extraction?.recipient || 'No identificado' }}</dd>

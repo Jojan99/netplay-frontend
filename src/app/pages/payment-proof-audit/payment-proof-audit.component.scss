@@ -46,3 +46,15 @@
 
   .np-money { font-size: 16px; font-weight: 700; }
 }
+
+/* Un dato que el lector no pudo confirmar.
+   La imagen se lee de tres formas; si no coinciden, el número puede estar
+   mal —pasó con una foto de pantalla rota que dio 70.008 donde decía
+   70.000— y quien revisa tiene que mirar la foto antes de aprobar. */
+.ppa-dudoso {
+  display: inline-block; margin-left: 6px; padding: 1px 7px; border-radius: 999px;
+  background: var(--warn-soft); color: var(--warn);
+  border: 1px solid color-mix(in srgb, var(--warn) 30%, transparent);
+  font-family: var(--font-body); font-size: 10px; font-weight: 700;
+  letter-spacing: .02em; vertical-align: middle; white-space: nowrap;
+}
