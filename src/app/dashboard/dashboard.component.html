@@ -195,7 +195,8 @@
               <div class="sala-panel-h"><h2>Los equipos</h2><a class="sala-ir" routerLink="/dashboard/olt/autorizadas">Admin OLT →</a></div>
               <div class="sala-lista">
                 <div class="sala-fila es-quieta"><span class="sala-fila-n">ONT en la red</span><span class="sala-num">{{ ontsTotal }}</span></div>
-                <div class="sala-fila es-quieta"><span class="sala-fila-n">Apagadas ahora</span><span class="sala-num" [class.sala-rojo]="ontsApagadas">{{ ontsApagadas }}</span></div>
+                <div class="sala-fila es-quieta"><span class="sala-fila-n">Clientes sin servicio</span><span class="sala-num" [class.sala-rojo]="ontsApagadas">{{ ontsApagadas }}</span></div>
+                <div class="sala-fila es-quieta"><span class="sala-fila-n">Equipos sin cliente <em class="sala-fine">altas viejas o reemplazos</em></span><span class="sala-num">{{ ontsSinDueno }}</span></div>
                 <div class="sala-fila es-quieta"><span class="sala-fila-n">Clientes al borde</span><span class="sala-num sala-warn">{{ alBorde.length }}</span></div>
                 <div class="sala-fila es-quieta"><span class="sala-fila-n">Puertos sin medir</span><span class="sala-num">{{ puertosSinMedir }}</span></div>
                 <div class="sala-fila es-quieta"><span class="sala-fila-n">Equipos a medio configurar</span><span class="sala-num" [class.sala-rojo]="equiposAMedias">{{ equiposAMedias }}</span></div>

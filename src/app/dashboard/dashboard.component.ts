@@ -22,7 +22,7 @@ Chart.register(...registerables, ChartDataLabels);
 
 /** Un puerto PON con su señal, como lo guarda Salud de la red. */
 interface Puerto {
-  olt_id: number; olt: string; fsp: string; onts: number; offline: number; al_borde: number;
+  olt_id: number; olt: string; fsp: string; onts: number; offline: number; sin_cliente?: number; al_borde: number;
   rx_mediana: number | null; rx_min: number | null; cambio: number | null;
 }
 
@@ -134,7 +134,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
   puertos: Puerto[] = [];
   alBorde: any[] = [];
-  ontsTotal = 0; ontsApagadas = 0; puertosSinMedir = 0;
+  ontsTotal = 0; ontsApagadas = 0; ontsSinDueno = 0; puertosSinMedir = 0;
   avisosCriticos = 0; avisosTotal = 0; clientesAfectados = 0; equiposAMedias = 0;
 
   mora: any = null;
@@ -417,7 +417,12 @@ export class DashboardComponent implements OnInit, OnDestroy {
         this.puertos = puertos.slice(0, 20);
         this.alBorde = (d.al_borde ?? []).slice(0, 5);
         this.ontsTotal = puertos.reduce((n, p) => n + (p.onts || 0), 0);
+        // «offline» ahora son los clientes que deberían estar navegando y no
+        // lo están. Los equipos sin cliente vinculado van aparte: son altas
+        // viejas o equipos reemplazados, no caídas. Antes se sumaban juntos y
+        // Waonet aparecía con 69 apagadas cuando el cliente afectado era uno.
         this.ontsApagadas = puertos.reduce((n, p) => n + (p.offline || 0), 0);
+        this.ontsSinDueno = puertos.reduce((n, p) => n + (p.sin_cliente || 0), 0);
         this.puertosSinMedir = puertos.filter(p => p.rx_mediana === null).length;
       },
       error: () => {},
