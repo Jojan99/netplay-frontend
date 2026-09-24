@@ -45,7 +45,7 @@
               <thead><tr>
                 <th>Cliente</th><th>Teléfono</th>
                 <th class="np-th-right">Apagado</th><th class="np-th-right">Caídas</th>
-                <th class="np-th-right">Señal prom.</th><th class="np-th-right">Debe</th><th class="np-th-right"></th>
+                <th class="np-th-right">Señal</th><th class="np-th-right">Debe</th><th class="np-th-right"></th>
               </tr></thead>
               <tbody>
                 <tr *ngFor="let c of g.clientes; trackBy: porCliente" class="np-row" (click)="verCliente(c)" tabindex="0" (keydown.enter)="verCliente(c)">
@@ -56,8 +56,10 @@
                   <td class="np-mono" data-label="Teléfono">{{ c.telefono || '—' }}</td>
                   <td class="np-td-right np-data" data-label="Apagado" [class.ori-mal]="c.apagado >= 85">{{ c.apagado }}%</td>
                   <td class="np-td-right np-data" data-label="Caídas">{{ c.caidas || '—' }}</td>
-                  <td class="np-td-right np-data" data-label="Señal" [class.ori-mal]="c.rx_prom !== null && c.rx_prom < -26"
-                      [title]="c.rx_min !== null ? 'Peor lectura de la semana: ' + c.rx_min + ' dBm' : ''">{{ c.rx_prom !== null ? c.rx_prom + ' dBm' : '—' }}</td>
+                  <td class="np-td-right np-data" data-label="Señal" [class.ori-mal]="c.rx_ahora !== null && c.rx_ahora < -26">
+                    {{ c.rx_ahora !== null ? c.rx_ahora + ' dBm' : (c.rx_prom !== null ? c.rx_prom + ' dBm' : '—') }}
+                    <small class="ori-prom" *ngIf="c.rx_ahora !== null && c.rx_prom !== null">prom. {{ c.rx_prom }}</small>
+                  </td>
                   <td class="np-money" data-label="Debe">{{ c.deuda > 0 ? plata(c.deuda) : '—' }}</td>
                   <td class="np-td-right es-acciones" data-label="">
                     <div class="np-rowacts" (click)="$event.stopPropagation()">

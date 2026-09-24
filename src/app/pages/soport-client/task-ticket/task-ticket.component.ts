@@ -141,6 +141,13 @@ export class TaskTicketComponent implements OnInit, OnDestroy {
       this.router.navigate([], { relativeTo: this.route, queryParams: {}, replaceUrl: true });
     }
 
+    // ?ticket=<id> abre ese ticket en cuanto llega la lista (lo usa la burbuja
+    // del cliente, que se ve en toda la plataforma).
+    this.abrirAlCargar = Number(this.route.snapshot.queryParamMap.get('ticket')) || 0;
+    if (this.abrirAlCargar) {
+      this.router.navigate([], { relativeTo: this.route, queryParams: {}, replaceUrl: true });
+    }
+
     if (this.isAdmin) this.loadTechnicians();
     this.loadTickets();
     if (this.isAdmin) this.loadStats();
@@ -251,6 +258,26 @@ export class TaskTicketComponent implements OnInit, OnDestroy {
           if (fresh) this.selectedTicket = fresh;
           else if (!silencioso) this.closeDetail();
         }
+
+        // Llegó con ?ticket=<id>: se abre solo. Si no cayó en esta página, se
+        // busca por número para no dejar al operador mirando una lista.
+        if (this.abrirAlCargar) {
+          const pedido = this.tickets.find(t => t.id === this.abrirAlCargar);
+          if (pedido) {
+            this.abrirAlCargar = 0;
+            this.selectTicket(pedido);
+          } else if (!this.filterSearch) {
+            this.filterStatus = null;
+            this.filterSearch = String(this.abrirAlCargar);
+            this.page = 1;
+            this.loading = false;
+            this.loadTickets();
+            return;
+          } else {
+            this.abrirAlCargar = 0;
+          }
+        }
+
         this.loading = false;
       },
       error: () => { if (carga === this.cargaActual) this.loading = false; }
@@ -322,6 +349,9 @@ export class TaskTicketComponent implements OnInit, OnDestroy {
   }
 
   // ── Selection ─────────────────────────────────────────────────────────────
+
+  /** El ticket que hay que abrir apenas llegue la lista (viene por la URL). */
+  private abrirAlCargar = 0;
 
   selectTicket(ticket: TicketInterface) {
     this.selectedTicket    = ticket;

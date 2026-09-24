@@ -52,3 +52,7 @@
   .ori-deuda { align-items: flex-start; }
   .ori-t { flex-basis: 100%; order: 3; }
 }
+
+/* La lectura de ahora manda; el promedio de la semana va abajo, chiquito, que
+   es el contexto: «-30,5 ahora, venía en -29». */
+.ori-prom { display: block; font-size: 10.5px; color: var(--text-3); font-weight: 500; }

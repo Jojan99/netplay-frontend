@@ -66,12 +66,12 @@
 
     <!-- ── Clientes al borde ── -->
     <section class="np-card" *ngIf="alBorde.length">
-      <div class="np-card-h"><h3>Clientes al borde</h3><span class="np-fine">hoy promediaron bajo {{ limite }} dBm: son los próximos en caerse</span></div>
+      <div class="np-card-h"><h3>Clientes al borde</h3><span class="np-fine">promediaron hoy bajo {{ limite }} dBm y la última medición los sigue viendo así</span></div>
 
       <div class="np-tablewrap">
         <table class="np-table">
           <thead>
-            <tr><th>Cliente</th><th>Puerto</th><th class="np-td-right">Promedio</th><th class="np-td-right">Peor</th><th class="np-td-right">Caídas hoy</th><th class="np-td-right">Apagado</th><th class="np-th-right"></th></tr>
+            <tr><th>Cliente</th><th>Puerto</th><th class="np-td-right">Ahora</th><th class="np-td-right">Promedio hoy</th><th class="np-td-right">Peor</th><th class="np-td-right">Caídas hoy</th><th class="np-td-right">Apagado</th><th class="np-th-right"></th></tr>
           </thead>
           <tbody>
             <tr *ngFor="let c of alBorde">
@@ -80,8 +80,9 @@
                 <small class="np-data--dim" *ngIf="c.phone"> · {{ c.phone }}</small>
               </td>
               <td class="np-data np-data--dim">{{ c.olt }} · {{ c.fsp }}:{{ c.ont_id }}</td>
-              <td class="np-td-right np-data"><span class="sal-dbm" data-tono="malo">{{ dbm(c.rx_prom) }}</span></td>
-              <td class="np-td-right np-data np-data--dim" title="La peor lectura del día">{{ dbm(c.rx_min) }}</td>
+              <td class="np-td-right np-data"><span class="sal-dbm" data-tono="malo">{{ dbm(c.rx_ahora) }}</span></td>
+              <td class="np-td-right np-data np-data--dim">{{ dbm(c.rx_prom) }}</td>
+              <td class="np-td-right np-data np-data--dim">{{ dbm(c.rx_min) }}</td>
               <td class="np-td-right np-data" [class.sal-mal]="c.caidas > 0">{{ c.caidas || '—' }}</td>
               <td class="np-td-right np-data np-data--dim">{{ apagado(c.muestras_offline) }}</td>
               <td class="np-td-right es-acciones"><div class="np-rowacts"><button type="button" class="np-btn np-btn--ghost np-btn--sm" (click)="crearTicket(c)">Crear ticket</button></div></td>

@@ -10,8 +10,14 @@ export interface TicketsDelCliente {
   en_curso: number;
   /** Desde cuándo está abierto el más viejo. */
   desde: string | null;
-  /** El número de ticket más alto, para poder abrirlo. */
-  ultimo: number | null;
+  /** Hasta cinco, para la tarjeta que se abre al pasar por encima del punto. */
+  tickets: {
+    id: number;
+    status_id: number;
+    servicio: string | null;
+    tecnico: string | null;
+    desde: string;
+  }[];
 }
 
 /**
