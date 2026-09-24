@@ -102,7 +102,7 @@
                   (click)="openRow(user)" tabindex="0" (keydown.enter)="openRow(user)">
                 <td class="np-stripe"><i></i></td>
                 <td>
-                  <div class="np-name">{{ user.names }} {{ user.lastname }}</div>
+                  <div class="np-name">{{ user.names }} {{ user.lastname }}<app-burbuja-ticket [userId]="user.id_user" /></div>
                   <div class="np-plan">{{ user.plan_name || 'Sin plan' }}<span class="np-plan-mobile"> · <em>{{ user.dni }}</em><ng-container *ngIf="user.ip"> · <em>{{ user.ip }}</em></ng-container></span></div>
                 </td>
                 <td class="np-data np-col-doc">{{ user.dni }}</td>
@@ -172,7 +172,7 @@
       <div class="np-insp-head">
         <div class="np-avatar">{{ initialOf(selectedUserData?.names) }}</div>
         <div class="np-insp-id">
-          <h2>{{ selectedUserData?.names || '…' }} {{ selectedUserData?.lastname || '' }}</h2>
+          <h2>{{ selectedUserData?.names || '…' }} {{ selectedUserData?.lastname || '' }}<app-burbuja-ticket [userId]="selectedUserId" /></h2>
           <div class="np-meta">CC <b>{{ selectedUserData?.dni || '—' }}</b> · IP <b>{{ ipCabecera }}</b></div>
         </div>
         <div class="np-insp-tools">

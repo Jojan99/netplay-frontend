@@ -38,6 +38,24 @@
           </button>
         </div>
 
+        <!-- Lo que ya se le pidió y sigue sin cerrar: para no mandar dos veces
+             al mismo técnico al mismo lugar por lo mismo. -->
+        <div class="nt-abiertos" *ngIf="cliente && abiertos.length" role="status">
+          <p class="nt-abiertos-t">
+            <span class="nt-punto" [attr.data-estado]="abiertos[0].status_id === 2 ? 'en_curso' : 'por_hacer'"></span>
+            Este cliente ya tiene {{ abiertos.length }} ticket{{ abiertos.length > 1 ? 's' : '' }} sin cerrar
+          </p>
+          <ul>
+            <li *ngFor="let t of abiertos">
+              <span class="np-pill" [ngClass]="'np-pill--s' + t.status_id">{{ t.status }}</span>
+              <b>#{{ t.id }}</b>
+              <span class="nt-abiertos-q">{{ t.service }}</span>
+              <small>{{ desde(t.created_at) }} · {{ t.tech_names }} {{ t.tech_lastname }}</small>
+            </li>
+          </ul>
+          <small class="nt-abiertos-f">Si es por lo mismo, conviene agregar una nota al ticket que ya existe en vez de abrir otro.</small>
+        </div>
+
         <div class="nt-ping" *ngIf="cliente && (ping.length || haciendoPing)" aria-live="polite">
           <span class="nt-ping-p" *ngFor="let p of ping" [ngClass]="'is-' + p.estado" [title]="p.host + ' · ' + p.tiempo"></span>
           <small>{{ resumenPing }}</small>

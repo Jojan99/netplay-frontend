@@ -10,6 +10,7 @@ import { OltEquipoComponent } from '../../shared/olt-equipo.component';
 import { NuevoTicketComponent } from '../../../soport-client/nuevo-ticket/nuevo-ticket.component';
 import { recomendacionDeRed } from '../../shared/recomendacion';
 import { FichaClienteService } from '../../../../services/ficha-cliente.service';
+import { BurbujaTicketComponent } from '../../../../common/burbuja-ticket/burbuja-ticket.component';
 import { OltService } from '../../../../services/olt.service';
 import { ToastService } from '../../../../services/toast.service';
 import { NpSelectComponent } from '../../../../common/np-select/np-select.component';
@@ -55,7 +56,7 @@ interface PuertoConSenal {
 @Component({
   selector: 'app-olt-dashboard',
   standalone: true,
-  imports: [CommonModule, FormsModule, NpSelectComponent, OltNavComponent, OltEquipoComponent, MedicionSenalComponent, NuevoTicketComponent],
+  imports: [CommonModule, FormsModule, NpSelectComponent, OltNavComponent, OltEquipoComponent, MedicionSenalComponent, NuevoTicketComponent, BurbujaTicketComponent],
   templateUrl: './olt-dashboard.component.html',
   styleUrls: ['../../shared/olt.scss', './olt-dashboard.component.scss', '../../shared/olt-movil.scss'],
   host: { class: 'np-console' },

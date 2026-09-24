@@ -5,6 +5,7 @@ import { DialogService } from '../../services/dialog.service';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
 import { OntEquipoComponent } from '../../components/ont-equipo/ont-equipo.component';
+import { BurbujaTicketComponent } from '../../common/burbuja-ticket/burbuja-ticket.component';
 import { FormsModule } from '@angular/forms';
 import { NpSelectComponent, PresentacionSelect } from '../../common/np-select/np-select.component';
 import {
@@ -39,7 +40,7 @@ export type ClientTab = 'resumen' | 'servicios' | 'facturacion' | 'tickets' | 'h
   selector: 'app-user',
   templateUrl: './user.component.html',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink, NpSelectComponent, HttpClientModule, LayoutComponent, FooterComponent, OntEquipoComponent],
+  imports: [CommonModule, FormsModule, RouterLink, NpSelectComponent, HttpClientModule, LayoutComponent, FooterComponent, OntEquipoComponent, BurbujaTicketComponent],
   styleUrls: ['./user.component.scss'],
   host: { class: 'np-console' }
 })

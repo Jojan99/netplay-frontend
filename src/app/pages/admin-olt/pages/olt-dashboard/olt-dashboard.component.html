@@ -156,7 +156,7 @@
                 <td class="np-data np-strong" data-label="Puerto">{{ o.fsp }}</td>
                 <td class="np-data" data-label="ID">{{ o.ont_id }}</td>
                 <td class="es-principal">
-                  <button type="button" class="np-name np-name--link" *ngIf="o.user_id; else sinDueno" (click)="verFicha(o)">{{ o.cliente || o.description || '—' }}</button>
+                  <button type="button" class="np-name np-name--link" *ngIf="o.user_id; else sinDueno" (click)="verFicha(o)">{{ o.cliente || o.description || '—' }}</button><app-burbuja-ticket [userId]="o.user_id" />
                   <ng-template #sinDueno><div class="np-name">{{ o.description || '—' }}</div></ng-template>
                   <div class="np-plan" *ngIf="o.serial"><em>{{ o.serial }}</em></div>
                 </td>

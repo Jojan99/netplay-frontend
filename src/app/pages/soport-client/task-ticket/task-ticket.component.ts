@@ -11,11 +11,13 @@ import { PRESENTACION_PERSONAS, PRESENTACION_POR_PAGINA, conValor } from '../../
 import { ActivatedRoute, Router } from '@angular/router';
 import { NuevoTicketComponent } from '../nuevo-ticket/nuevo-ticket.component';
 import { FichaClienteService } from '../../../services/ficha-cliente.service';
+import { TicketsAbiertosService } from '../../../services/tickets-abiertos.service';
+import { BurbujaTicketComponent } from '../../../common/burbuja-ticket/burbuja-ticket.component';
 
 @Component({
   selector: 'app-task-ticket',
   standalone: true,
-  imports: [CommonModule, FormsModule, NpSelectComponent, NuevoTicketComponent],
+  imports: [CommonModule, FormsModule, NpSelectComponent, NuevoTicketComponent, BurbujaTicketComponent],
   templateUrl: './task-ticket.component.html',
   styleUrls: ['./task-ticket.component.scss'],
   host: { class: 'np-console' },
@@ -23,6 +25,7 @@ import { FichaClienteService } from '../../../services/ficha-cliente.service';
 export class TaskTicketComponent implements OnInit, OnDestroy {
   private toast = inject(ToastService);
   private ficha = inject(FichaClienteService);
+  private ticketsAbiertos = inject(TicketsAbiertosService);
 
   /**
    * El nombre del cliente lleva a su ficha.
@@ -148,6 +151,7 @@ export class TaskTicketComponent implements OnInit, OnDestroy {
 
   onTicketCreado() {
     this.mostrarNuevo = false;
+    this.ticketsAbiertos.cargar(true);
     this.loadTickets();
     if (this.isAdmin) this.loadStats();
   }
@@ -194,6 +198,10 @@ export class TaskTicketComponent implements OnInit, OnDestroy {
     if (this.filterStatus)  filters.status_id    = this.filterStatus;
     if (this.filterTechId)  filters.technical_id  = this.filterTechId;
     if (this.filterSearch)  filters.search        = this.filterSearch.trim();
+
+    // El punto de color de cada cliente se recalcula con la lista: acá es
+    // donde cambia, cuando alguien inicia o cierra un ticket.
+    this.ticketsAbiertos.cargar(true);
 
     this.userService.getAllTickets(filters).subscribe({
       next: (res) => {

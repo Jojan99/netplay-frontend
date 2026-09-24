@@ -76,7 +76,7 @@
           <tbody>
             <tr *ngFor="let c of alBorde">
               <td class="np-data">
-                <button type="button" class="np-name--link" (click)="verCliente(c)">{{ c.cliente || c.descripcion || 'Sin cliente' }}</button>
+                <button type="button" class="np-name--link" (click)="verCliente(c)">{{ c.cliente || c.descripcion || 'Sin cliente' }}</button><app-burbuja-ticket [userId]="c.user_id" />
                 <small class="np-data--dim" *ngIf="c.phone"> · {{ c.phone }}</small>
               </td>
               <td class="np-data np-data--dim">{{ c.olt }} · {{ c.fsp }}:{{ c.ont_id }}</td>
@@ -102,7 +102,7 @@
           </thead>
           <tbody>
             <tr *ngFor="let e of inestables">
-              <td class="np-data"><button type="button" class="np-name--link" (click)="verCliente(e)">{{ e.cliente || e.descripcion || 'Sin cliente' }}</button></td>
+              <td class="np-data"><button type="button" class="np-name--link" (click)="verCliente(e)">{{ e.cliente || e.descripcion || 'Sin cliente' }}</button><app-burbuja-ticket [userId]="e.user_id" /></td>
               <td class="np-data np-data--dim">{{ e.olt }} · {{ e.fsp }}:{{ e.ont_id }}</td>
               <td class="np-td-right np-data sal-mal">{{ e.caidas }}</td>
               <td class="np-td-right np-data np-data--dim">{{ apagado(e.muestras_offline) }}</td>

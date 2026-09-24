@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { Subscription } from 'rxjs';
 import { UserService } from '../../../services/user.service';
 import { ToastService } from '../../../services/toast.service';
+import { TicketsAbiertosService } from '../../../services/tickets-abiertos.service';
 import { NpSelectComponent, PresentacionSelect } from '../../../common/np-select/np-select.component';
 import { PRESENTACION_PERSONAS, conValor } from '../../../common/np-select/presentaciones';
 
@@ -55,6 +56,7 @@ interface Ping {
 export class NuevoTicketComponent implements OnInit, OnDestroy {
   private users = inject(UserService);
   private toast = inject(ToastService);
+  private ticketsAbiertos = inject(TicketsAbiertosService);
 
   @Output() cerrado = new EventEmitter<void>();
   @Output() creado = new EventEmitter<void>();
@@ -155,6 +157,7 @@ export class NuevoTicketComponent implements OnInit, OnDestroy {
   elegirCliente(c: any): void {
     this.cliente = c;
     this.ping = [];
+    this.buscarAbiertos(c?.id_user);
   }
 
   cambiarCliente(): void {
@@ -162,6 +165,41 @@ export class NuevoTicketComponent implements OnInit, OnDestroy {
     this.haciendoPing = false;
     this.cliente = null;
     this.ping = [];
+    this.abiertos = [];
+  }
+
+  /**
+   * Los tickets que este cliente ya tiene sin cerrar.
+   *
+   * Es lo que evita el ticket repetido: alguien ve la señal baja en la
+   * pantalla de red, abre el ticket, y resulta que el técnico ya va en
+   * camino desde ayer por lo mismo. Se muestran antes de guardar, no después.
+   */
+  abiertos: any[] = [];
+  buscandoAbiertos = false;
+
+  private buscarAbiertos(userId: number | null | undefined): void {
+    this.abiertos = [];
+    if (!userId) return;
+
+    this.buscandoAbiertos = true;
+
+    this.users.getTicketsByUser(userId).subscribe({
+      next: (r: any) => {
+        this.buscandoAbiertos = false;
+        this.abiertos = (r?.data || []).filter((t: any) => Number(t.status_id) === 1 || Number(t.status_id) === 2);
+      },
+      // Que no se pueda mirar el historial no impide crear el ticket.
+      error: () => { this.buscandoAbiertos = false; },
+    });
+  }
+
+  /** «hace 3 días»: de un ticket abierto lo que importa es cuánto lleva así. */
+  desde(fecha: string): string {
+    const s = Math.max(0, (Date.now() - new Date(String(fecha).replace(' ', 'T')).getTime()) / 1000);
+    if (s < 3600) return `hace ${Math.round(s / 60)} min`;
+    if (s < 86400) return `hace ${Math.round(s / 3600)} h`;
+    return `hace ${Math.round(s / 86400)} días`;
   }
 
   probarConexion(): void {
@@ -219,6 +257,8 @@ export class NuevoTicketComponent implements OnInit, OnDestroy {
         this.guardando = false;
         if (r?.error) { this.toast.error(r?.message || 'No se pudo crear el ticket.'); return; }
         this.toast.success(`Ticket creado para ${this.nombreCliente}`);
+        // Para que el punto de color aparezca ya, sin esperar el minuto.
+        this.ticketsAbiertos.cargar(true);
         this.creado.emit();
       },
       error: (e: any) => {

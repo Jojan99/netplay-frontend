@@ -6,6 +6,7 @@ import { NuevoTicketComponent } from '../../../soport-client/nuevo-ticket/nuevo-
 import { recomendacionDeRed } from '../../shared/recomendacion';
 import { FichaClienteService } from '../../../../services/ficha-cliente.service';
 import { ToastService } from '../../../../services/toast.service';
+import { BurbujaTicketComponent } from '../../../../common/burbuja-ticket/burbuja-ticket.component';
 import { environment } from '../../../../../environments/environment';
 
 interface Puerto {
@@ -20,7 +21,7 @@ interface Puerto {
 @Component({
   selector: 'app-olt-salud',
   standalone: true,
-  imports: [CommonModule, OltNavComponent, NuevoTicketComponent],
+  imports: [CommonModule, OltNavComponent, NuevoTicketComponent, BurbujaTicketComponent],
   templateUrl: './olt-salud.component.html',
   styleUrls: ['../../shared/olt.scss', './olt-salud.component.scss', '../../shared/olt-movil.scss'],
   host: { class: 'np-console' },

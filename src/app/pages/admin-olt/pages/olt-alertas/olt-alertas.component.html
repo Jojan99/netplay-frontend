@@ -46,7 +46,7 @@
           </svg>
         </span>
         <div class="ale-txt">
-          <b>{{ a.titulo }}</b>
+          <b>{{ a.titulo }}<app-burbuja-ticket [userId]="a.user_id" /></b>
           <small>{{ a.detalle }}</small>
           <span class="ale-meta">
             {{ desde(a.abierta_en) }}

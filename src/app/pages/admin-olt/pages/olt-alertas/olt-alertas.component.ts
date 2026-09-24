@@ -5,6 +5,7 @@ import { OltNavComponent } from '../../shared/olt-nav.component';
 import { NuevoTicketComponent } from '../../../soport-client/nuevo-ticket/nuevo-ticket.component';
 import { recomendacionDeRed } from '../../shared/recomendacion';
 import { FichaClienteService } from '../../../../services/ficha-cliente.service';
+import { BurbujaTicketComponent } from '../../../../common/burbuja-ticket/burbuja-ticket.component';
 import { AlertasService } from '../../../../services/alertas.service';
 import { ToastService } from '../../../../services/toast.service';
 
@@ -17,7 +18,7 @@ import { ToastService } from '../../../../services/toast.service';
 @Component({
   selector: 'app-olt-alertas',
   standalone: true,
-  imports: [CommonModule, FormsModule, OltNavComponent, NuevoTicketComponent],
+  imports: [CommonModule, FormsModule, OltNavComponent, NuevoTicketComponent, BurbujaTicketComponent],
   templateUrl: './olt-alertas.component.html',
   styleUrls: ['../../shared/olt.scss', './olt-alertas.component.scss', '../../shared/olt-movil.scss'],
   host: { class: 'np-console' },

@@ -58,7 +58,7 @@
             <tr *ngFor="let ticket of tickets" class="np-row" [ngClass]="'np-row--s' + ticket.status_id" [attr.aria-selected]="isSelected(ticket)" (click)="selectTicket(ticket)" tabindex="0" (keydown.enter)="selectTicket(ticket)">
               <td class="np-stripe"><i></i></td>
               <td class="np-data np-strong" data-t="Ticket">{{ ticket.id }}</td>
-              <td data-t="Cliente"><button type="button" class="np-name np-name--link" (click)="$event.stopPropagation(); verFicha(ticket)" [title]="'Ver la ficha de ' + ticket.name">{{ ticket.name }} {{ ticket.last_name }}</button><div class="np-plan"><em>{{ ticket.cedula }}</em></div></td>
+              <td data-t="Cliente"><button type="button" class="np-name np-name--link" (click)="$event.stopPropagation(); verFicha(ticket)" [title]="'Ver la ficha de ' + ticket.name">{{ ticket.name }} {{ ticket.last_name }}</button><app-burbuja-ticket [userId]="ticket.user_id" /><div class="np-plan"><em>{{ ticket.cedula }}</em></div></td>
               <td data-t="Servicio">{{ ticket.name_service }}</td>
               <td *ngIf="isAdmin" class="np-col-tech" data-t="Técnico">{{ ticket.tech_names }} {{ ticket.tech_lastname }}</td>
               <td data-t="Estado"><span class="np-pill" [ngClass]="'np-pill--s' + ticket.status_id">{{ statusLabel(ticket.status_id) }}</span><span class="np-fine" *ngIf="ticket.reopened_count && ticket.reopened_count > 0">reabierto ×{{ ticket.reopened_count }}</span></td>
@@ -81,7 +81,7 @@
       <div class="np-insp-head">
         <div class="np-avatar">{{ (selectedTicket.name || 'T').charAt(0).toUpperCase() }}</div>
         <div class="np-insp-id">
-          <h2><button type="button" class="np-name--link" (click)="verFicha(selectedTicket)" title="Ver la ficha del cliente">{{ selectedTicket.name }} {{ selectedTicket.last_name }}</button></h2>
+          <h2><button type="button" class="np-name--link" (click)="verFicha(selectedTicket)" title="Ver la ficha del cliente">{{ selectedTicket.name }} {{ selectedTicket.last_name }}</button><app-burbuja-ticket [userId]="selectedTicket.user_id" /></h2>
           <div class="np-meta">Ticket <b>#{{ selectedTicket.id }}</b> · CC <b>{{ selectedTicket.cedula }}</b> · Tel <b>{{ selectedTicket.phone }}</b></div>
         </div>
         <div class="np-insp-tools">

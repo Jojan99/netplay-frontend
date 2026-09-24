@@ -7,13 +7,14 @@ import { debounceTime, distinctUntilChanged, takeUntil } from 'rxjs/operators';
 import { FinanceService } from '../../services/finance.service';
 import { ToastService }   from '../../services/toast.service';
 import { FichaClienteService } from '../../services/ficha-cliente.service';
+import { BurbujaTicketComponent } from '../../common/burbuja-ticket/burbuja-ticket.component';
 import { NpSelectComponent } from '../../common/np-select/np-select.component';
 import { PRESENTACION_METODOS_PAGO, PRESENTACION_POR_PAGINA, conValor } from '../../common/np-select/presentaciones';
 
 @Component({
   selector: 'app-finance',
   standalone: true,
-  imports: [CommonModule, FormsModule, NpSelectComponent],
+  imports: [CommonModule, FormsModule, NpSelectComponent, BurbujaTicketComponent],
   templateUrl: './finance.component.html',
   styleUrl: './finance.component.scss',
   host: { class: 'np-console' },

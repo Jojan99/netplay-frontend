@@ -50,7 +50,7 @@
               <tbody>
                 <tr *ngFor="let c of g.clientes; trackBy: porCliente" class="np-row" (click)="verCliente(c)" tabindex="0" (keydown.enter)="verCliente(c)">
                   <td class="es-principal" data-label="Cliente">
-                    <div class="np-name">{{ c.nombre }}</div>
+                    <div class="np-name">{{ c.nombre }}<app-burbuja-ticket [userId]="c.user_id" /></div>
                     <div class="np-plan" *ngIf="c.direccion">{{ c.direccion }}</div>
                   </td>
                   <td class="np-mono" data-label="Teléfono">{{ c.telefono || '—' }}</td>

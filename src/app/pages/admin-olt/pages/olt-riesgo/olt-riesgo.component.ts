@@ -6,6 +6,7 @@ import { NuevoTicketComponent } from '../../../soport-client/nuevo-ticket/nuevo-
 import { recomendacionDeRed } from '../../shared/recomendacion';
 import { ToastService } from '../../../../services/toast.service';
 import { FichaClienteService } from '../../../../services/ficha-cliente.service';
+import { BurbujaTicketComponent } from '../../../../common/burbuja-ticket/burbuja-ticket.component';
 import { environment } from '../../../../../environments/environment';
 
 /**
@@ -19,7 +20,7 @@ import { environment } from '../../../../../environments/environment';
 @Component({
   selector: 'app-olt-riesgo',
   standalone: true,
-  imports: [CommonModule, OltNavComponent, NuevoTicketComponent],
+  imports: [CommonModule, OltNavComponent, NuevoTicketComponent, BurbujaTicketComponent],
   templateUrl: './olt-riesgo.component.html',
   styleUrls: ['../../shared/olt.scss', './olt-riesgo.component.scss', '../../shared/olt-movil.scss'],
 })
