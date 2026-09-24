@@ -603,7 +603,13 @@ export class BillingConfigComponent implements OnInit {
         this.gwForm.gateway  = res.data?.gateway ?? 'wompi';
         this.gwForm.sandbox  = res.data?.sandbox ?? true;
         this.gwForm.active   = res.data?.active  ?? false;
-        this.gwForm.office_id = res.data?.office_id ?? '';
+        // El campo que se ve es el mismo que se edita: se precarga con lo
+        // guardado. Antes había un recuadro de sólo lectura al lado de un
+        // input vacío y no quedaba claro cuál de los dos mandaba.
+        for (const f of ['public_key', 'private_key', 'events_secret', 'integrity_secret', 'client_id', 'office_id', 'webhook_token']) {
+          this.gwForm[f] = res.data?.[f] ?? '';
+        }
+
         this.gwForm.template_id = res.data?.template_id ?? '';
         this.loadGatewayTransactions();
 
@@ -646,10 +652,8 @@ export class BillingConfigComponent implements OnInit {
       next: (res) => {
         this.gwSaving = false;
         this.gwMsg    = res.message ?? 'Configuración guardada.';
-        // Limpiar campos de contraseña (office_id no es secreto y se conserva a la vista)
-        for (const f of ['public_key', 'private_key', 'events_secret', 'integrity_secret', 'client_id', 'webhook_token']) {
-          this.gwForm[f] = '';
-        }
+        // No se vacían: loadGatewayConfig los vuelve a poner con lo guardado,
+        // que es lo que el operador espera ver después de guardar.
         this.loadGatewayConfig();
         setTimeout(() => { this.gwMsg = ''; }, 4000);
       },

@@ -439,21 +439,27 @@
           <input type="text" style="display:none" aria-hidden="true" tabindex="-1" name="username_fake">
           <input type="password" style="display:none" aria-hidden="true" tabindex="-1" name="password_fake" autocomplete="new-password">
 
+          <!-- Un solo campo por credencial: muestra la guardada y es el mismo
+               donde se escribe la nueva. Antes había dos —uno de sólo lectura
+               y otro vacío para reemplazar— y no se entendía cuál mandaba. -->
           <ng-template #clave let-titulo="titulo" let-ayuda="ayuda" let-campo="campo" let-guardado="guardado" let-ver="ver" let-tipo="tipo" let-vacio="vacio">
             <div class="np-field">
               <span>{{ titulo }} <em *ngIf="ayuda">{{ ayuda }}</em></span>
-              <div class="bc-guardada" *ngIf="gwConfig[guardado]">
-                <span class="np-mono">{{ gwShowKeys[ver] ? gwConfig[guardado] : maskKey(gwConfig[guardado]) }}</span>
-                <button type="button" class="np-icobtn" (click)="toggleKey(ver)" [title]="gwShowKeys[ver] ? 'Ocultar' : 'Ver'" [attr.aria-label]="gwShowKeys[ver] ? 'Ocultar' : 'Ver'">
+              <div class="bc-clave">
+                <input [type]="tipo === 'password' && !gwShowKeys[ver] ? 'password' : 'text'"
+                       class="np-input np-mono" [(ngModel)]="gwForm[campo]"
+                       [autocomplete]="tipo === 'password' ? 'new-password' : 'off'"
+                       [placeholder]="vacio" [attr.aria-label]="titulo" />
+                <button type="button" class="np-icobtn" *ngIf="tipo === 'password'" (click)="toggleKey(ver)"
+                        [title]="gwShowKeys[ver] ? 'Ocultar' : 'Ver'" [attr.aria-label]="gwShowKeys[ver] ? 'Ocultar' : 'Ver'">
                   <svg *ngIf="!gwShowKeys[ver]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>
                   <svg *ngIf="gwShowKeys[ver]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3l18 18M10.6 10.6a2 2 0 0 0 2.8 2.8M9.9 5.1A10 10 0 0 1 12 5c6.5 0 10 7 10 7a17 17 0 0 1-3.2 3.9M6.1 6.1C3.6 7.8 2 12 2 12s3.5 7 10 7a9.7 9.7 0 0 0 4-.9"/></svg>
                 </button>
-                <button type="button" class="np-icobtn" (click)="copyText(gwConfig[guardado])" title="Copiar" aria-label="Copiar">
+                <button type="button" class="np-icobtn" *ngIf="gwForm[campo]" (click)="copyText(gwForm[campo])" title="Copiar" aria-label="Copiar">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg>
                 </button>
               </div>
-              <input [type]="tipo" class="np-input np-mono" [(ngModel)]="gwForm[campo]" [autocomplete]="tipo === 'password' ? 'new-password' : 'off'"
-                     [placeholder]="gwConfig['has_' + guardado] ? 'Nuevo valor (vacío = conservar)' : vacio" />
+              <small class="np-fine" *ngIf="gwConfig['has_' + guardado]">Para cambiarla, reemplazá el contenido. Si la dejás vacía se conserva la que está guardada.</small>
             </div>
           </ng-template>
 

@@ -115,6 +115,11 @@
   span { flex: 1; min-width: 0; font-size: 12px; color: var(--text-2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .np-icobtn { width: 26px; height: 26px; }
 }
+.bc-clave {
+  display: flex; align-items: center; gap: 4px;
+  .np-input { flex: 1; min-width: 0; }
+  .np-icobtn { flex: none; width: 32px; height: 32px; }
+}
 .bc-webhook {
   display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-radius: var(--radius);
   background: var(--info-soft); border: 1px solid color-mix(in srgb, var(--info) 30%, transparent);
@@ -205,7 +210,12 @@
   .bc-cortes-h { flex-direction: column; }
   .bc-inline { flex-wrap: wrap; }
   .bc-cifras { grid-template-columns: 1fr; > div + div { border-top: 1px solid var(--line); } }
-  .bc-webhook { flex-direction: column; align-items: stretch; }
+  .bc-clave {
+  display: flex; align-items: center; gap: 4px;
+  .np-input { flex: 1; min-width: 0; }
+  .np-icobtn { flex: none; width: 32px; height: 32px; }
+}
+.bc-webhook { flex-direction: column; align-items: stretch; }
   .bc-agregar { flex-wrap: wrap; .np-input { flex: 1 1 100%; } .np-btn { flex: 1; } }
   .bc-lista li { flex-wrap: wrap; }
 }
