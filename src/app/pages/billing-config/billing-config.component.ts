@@ -151,7 +151,17 @@ export class BillingConfigComponent implements OnInit {
   gwAvailable: any[] = [];
   gwForm: any = { gateway: 'wompi', sandbox: true, active: false,
                   public_key: '', private_key: '', events_secret: '',
-                  integrity_secret: '', client_id: '', office_id: '' };
+                  integrity_secret: '', client_id: '', office_id: '',
+                  // OnePay: token fijo del aviso y plantilla de WhatsApp.
+                  webhook_token: '', template_id: '' };
+
+  // OnePay: las plantillas aprobadas por Meta con las que puede cobrar, y el
+  // resultado de la revisión de configuración.
+  onepayPlantillas: any[] = [];
+  onepayCargandoPlantillas = false;
+  onepayErrorPlantillas = '';
+  onepayRevision: any = null;
+  onepayRevisando = false;
   gwShowKeys: Record<string, boolean> = {};
   gwTxLoading   = false;
   gwTransactions: any[] = [];
@@ -594,7 +604,10 @@ export class BillingConfigComponent implements OnInit {
         this.gwForm.sandbox  = res.data?.sandbox ?? true;
         this.gwForm.active   = res.data?.active  ?? false;
         this.gwForm.office_id = res.data?.office_id ?? '';
+        this.gwForm.template_id = res.data?.template_id ?? '';
         this.loadGatewayTransactions();
+
+        if (this.gwForm.gateway === 'onepay') { this.cargarPlantillasOnepay(); }
       },
       error: () => { this.gwLoading = false; },
     });
@@ -620,15 +633,21 @@ export class BillingConfigComponent implements OnInit {
       active:  this.gwForm.active,
     };
     // Solo enviar claves que el usuario completó
-    for (const f of ['public_key', 'private_key', 'events_secret', 'integrity_secret', 'client_id', 'office_id']) {
+    for (const f of ['public_key', 'private_key', 'events_secret', 'integrity_secret', 'client_id', 'office_id', 'webhook_token']) {
       if (String(this.gwForm[f] ?? '').trim()) body[f] = String(this.gwForm[f]).trim();
+    }
+
+    // La plantilla se manda siempre, incluso vacía: dejarla en blanco es una
+    // decisión («que OnePay elija»), no un campo sin tocar.
+    if (this.gwForm.gateway === 'onepay') {
+      body.template_id = String(this.gwForm.template_id ?? '').trim() || null;
     }
     this.http.put<any>(GW_API + 'config', JSON.stringify(body), { headers: this.getHeaders() }).subscribe({
       next: (res) => {
         this.gwSaving = false;
         this.gwMsg    = res.message ?? 'Configuración guardada.';
         // Limpiar campos de contraseña (office_id no es secreto y se conserva a la vista)
-        for (const f of ['public_key', 'private_key', 'events_secret', 'integrity_secret', 'client_id']) {
+        for (const f of ['public_key', 'private_key', 'events_secret', 'integrity_secret', 'client_id', 'webhook_token']) {
           this.gwForm[f] = '';
         }
         this.loadGatewayConfig();
@@ -777,8 +796,55 @@ export class BillingConfigComponent implements OnInit {
     });
   }
 
+  // ── OnePay ────────────────────────────────────────────────────────────────
+
+  /** Las plantillas de WhatsApp con las que OnePay puede mandar el cobro. */
+  cargarPlantillasOnepay(): void {
+    this.onepayCargandoPlantillas = true;
+    this.onepayErrorPlantillas = '';
+    this.onepayPlantillas = [];
+
+    this.http.get<any>(environment.rootUrl + 'api/onepay/plantillas', { headers: this.getHeaders() }).subscribe({
+      next: (res) => {
+        this.onepayCargandoPlantillas = false;
+
+        if (res?.error === 1 || res?.status === 1) {
+          this.onepayErrorPlantillas = res?.message ?? 'No se pudieron leer las plantillas.';
+          return;
+        }
+
+        this.onepayPlantillas = res?.data ?? [];
+
+        if (this.onepayPlantillas.length === 0) {
+          this.onepayErrorPlantillas = 'OnePay no devolvió plantillas para cobrar. Hay que tener una aprobada por Meta de categoría PAYMENT.';
+        }
+      },
+      error: (err) => {
+        this.onepayCargandoPlantillas = false;
+        this.onepayErrorPlantillas = err?.error?.message ?? 'No se pudieron leer las plantillas.';
+      },
+    });
+  }
+
+  /** Revisa la configuración de OnePay sin cobrarle a nadie. */
+  revisarOnepay(): void {
+    this.onepayRevisando = true;
+    this.onepayRevision = null;
+
+    this.http.get<any>(environment.rootUrl + 'api/onepay/diagnostico', { headers: this.getHeaders() }).subscribe({
+      next: (res) => {
+        this.onepayRevisando = false;
+        this.onepayRevision = res?.data ?? { todo_bien: false, revisiones: [{ que: 'Respuesta', ok: false, detalle: res?.message ?? 'Sin datos' }] };
+      },
+      error: (err) => {
+        this.onepayRevisando = false;
+        this.onepayRevision = { todo_bien: false, revisiones: [{ que: 'Conexión', ok: false, detalle: err?.error?.message ?? 'No se pudo consultar.' }] };
+      },
+    });
+  }
+
   gatewayLabel(g: string): string {
-    return { wompi: 'Wompi', epayco: 'ePayco', zonapago: 'ZonaPago', efipay: 'EfiPay' }[g] ?? g;
+    return { wompi: 'Wompi', epayco: 'ePayco', zonapago: 'ZonaPago', efipay: 'EfiPay', onepay: 'OnePay' }[g] ?? g;
   }
 
   /**

@@ -411,6 +411,7 @@
               <small *ngIf="gw.id === 'epayco'">Tarjeta, PSE y efectivo</small>
               <small *ngIf="gw.id === 'zonapago'">Requiere contacto previo</small>
               <small *ngIf="gw.id === 'efipay'">Tarjeta, PSE, Bre-B y efectivo</small>
+              <small *ngIf="gw.id === 'onepay'">Cobra por WhatsApp · Nequi, PSE, tarjeta, Bre-B</small>
             </button>
           </div>
         </section>
@@ -523,6 +524,53 @@
               <li [class.is-ok]="gwConfig.has_office_id">Sucursal</li>
             </ul>
             <ng-container *ngTemplateOutlet="webhook; context: { titulo: 'URL de webhook', ayuda: 'Se manda en cada cobro; registrala también en EfiPay si tu comercio lo pide.', url: gwWebhookUrl() }"></ng-container>
+          </ng-container>
+
+          <ng-container *ngIf="gwForm.gateway === 'onepay'">
+            <p class="np-notice np-notice--info">
+              Las llaves se sacan de OnePay en <b>Perfil → Desarrolladores → API Keys</b>. OnePay usa la misma
+              dirección para prueba y producción: lo que separa un entorno del otro es la llave. Una que empieza en
+              <span class="np-mono">sk_test_</span> es de prueba; cualquier otra cobra de verdad.
+            </p>
+            <div class="np-form">
+              <ng-container *ngTemplateOutlet="clave; context: { titulo: 'Llave privada', ayuda: 'con ésta se crean los cobros', campo: 'private_key', guardado: 'private_key', ver: 'onepay_private_key', tipo: 'password', vacio: 'sk_live_… o sk_test_…' }"></ng-container>
+              <ng-container *ngTemplateOutlet="clave; context: { titulo: 'Llave pública', ayuda: 'sólo para capturar tarjetas desde el navegador', campo: 'public_key', guardado: 'public_key', ver: 'onepay_public_key', tipo: 'text', vacio: 'pk_live_… (opcional)' }"></ng-container>
+              <ng-container *ngTemplateOutlet="clave; context: { titulo: 'Secreto del webhook', ayuda: 'firma cada aviso; sin él se rechazan todos los pagos', campo: 'events_secret', guardado: 'events_secret', ver: 'onepay_events_secret', tipo: 'password', vacio: 'whsec_…' }"></ng-container>
+              <ng-container *ngTemplateOutlet="clave; context: { titulo: 'Token del webhook', ayuda: 'opcional; una comprobación más sobre el aviso', campo: 'webhook_token', guardado: 'webhook_token', ver: 'onepay_webhook_token', tipo: 'password', vacio: 'whtok_… (opcional)' }"></ng-container>
+
+              <div class="np-field np-field-full">
+                <span>Plantilla de WhatsApp <em>con la que llega el cobro</em></span>
+                <div class="bc-sucursal">
+                  <select class="np-input" [(ngModel)]="gwForm.template_id" aria-label="Plantilla de WhatsApp">
+                    <option value="">Que OnePay elija la que corresponda</option>
+                    <option *ngFor="let p of onepayPlantillas" [value]="p.id">{{ p.nombre }}{{ p.de_onepay ? ' · de OnePay' : '' }}</option>
+                  </select>
+                  <button type="button" class="np-btn np-btn--ghost np-btn--sm" (click)="cargarPlantillasOnepay()" [disabled]="onepayCargandoPlantillas">{{ onepayCargandoPlantillas ? 'Consultando…' : 'Ver mis plantillas' }}</button>
+                </div>
+                <small class="bc-mal" *ngIf="onepayErrorPlantillas">{{ onepayErrorPlantillas }}</small>
+                <small class="np-fine">Guardá primero la llave privada. Sólo salen las aprobadas por Meta de categoría PAYMENT: son las únicas que sirven para cobrar.</small>
+              </div>
+            </div>
+
+            <ul class="bc-check">
+              <li [class.is-ok]="gwConfig.has_private_key">Llave privada</li>
+              <li [class.is-ok]="gwConfig.has_events_secret">Secreto del webhook</li>
+              <li [class.is-ok]="gwConfig.has_webhook_token">Token del webhook <em>(opcional)</em></li>
+            </ul>
+
+            <ng-container *ngTemplateOutlet="webhook; context: { titulo: 'URL para los avisos', ayuda: 'Registrala en OnePay en Desarrolladores → Webhooks. Sin esto los pagos no se acreditan solos.', url: gwWebhookUrl() }"></ng-container>
+
+            <div class="np-btnrow">
+              <button type="button" class="np-btn np-btn--ghost" (click)="revisarOnepay()" [disabled]="onepayRevisando">
+                {{ onepayRevisando ? 'Revisando…' : 'Revisar la configuración' }}
+              </button>
+            </div>
+
+            <ul class="bc-check" *ngIf="onepayRevision">
+              <li *ngFor="let r of onepayRevision.revisiones" [class.is-ok]="r.ok">
+                <b>{{ r.que }}:</b> {{ r.detalle }}
+              </li>
+            </ul>
           </ng-container>
         </section>
 
