@@ -230,6 +230,57 @@ export class CrmInfoPanelComponent implements OnChanges {
   ticketPhone      = '';
   savingTicket     = false;
 
+  /* ── Asociar el número a un cliente ──────────────────────────────────── */
+  buscandoVinculo = false;
+  vinculoBusqueda = '';
+  vinculoResultados: any[] = [];
+  vinculoCargando = false;
+  vinculoMensaje = '';
+
+  abrirVinculo(): void {
+    this.buscandoVinculo = true;
+    this.vinculoResultados = [];
+    this.vinculoMensaje = '';
+    // El nombre que puso el cliente en WhatsApp suele ser el suyo: se ofrece
+    // como primera búsqueda para no hacerlo escribir de nuevo.
+    this.vinculoBusqueda = (this.customerName || '').trim().length >= 3 ? this.customerName.trim() : '';
+    if (this.vinculoBusqueda) { this.buscarParaVincular(); }
+  }
+
+  buscarParaVincular(): void {
+    const q = this.vinculoBusqueda.trim();
+    if (q.length < 3) { this.vinculoMensaje = 'Escribí al menos 3 letras.'; return; }
+
+    this.vinculoCargando = true;
+    this.vinculoMensaje = '';
+
+    this.crmService.buscarClienteParaVincular(q).subscribe({
+      next: (r) => {
+        this.vinculoCargando = false;
+        this.vinculoResultados = r?.data ?? [];
+        if (!this.vinculoResultados.length) { this.vinculoMensaje = 'Ningún cliente coincide con eso.'; }
+      },
+      error: (e) => {
+        this.vinculoCargando = false;
+        this.vinculoMensaje = e?.error?.message ?? 'No se pudo buscar.';
+      },
+    });
+  }
+
+  asociar(cliente: any): void {
+    this.crmService.vincularCliente(this.conversationId, cliente.user_id).subscribe({
+      next: (r) => {
+        this.buscandoVinculo = false;
+        this.vinculoResultados = [];
+        this.toast.success(r?.message ?? 'Número asociado.');
+        this.customerNameChanged.emit(cliente.nombre);
+        // La ficha se vuelve a pedir: ahora sí trae plan, deuda y facturas.
+        this.refreshSummary.emit();
+      },
+      error: (e) => this.toast.error(e?.error?.message ?? 'No se pudo asociar.'),
+    });
+  }
+
   constructor(private crmService: CrmService) {}
 
   ngOnChanges(changes: SimpleChanges): void {

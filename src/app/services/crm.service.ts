@@ -31,6 +31,22 @@ export class CrmService {
   }
 
   /* =====================
+     ASOCIAR UN NÚMERO A UN CLIENTE
+  ====================== */
+
+  /** Busca clientes por nombre, cédula o teléfono para asociarles el número. */
+  buscarClienteParaVincular(q: string) {
+    return this.http.get<any>(this.apiUrl('crm/clientes-para-vincular'),
+      { headers: this.getHeaders(), params: new HttpParams().set('q', q) });
+  }
+
+  /** Deja la conversación apuntando a ese cliente. */
+  vincularCliente(conversationId: number, userId: number) {
+    return this.http.post<any>(this.apiUrl(`conversations/${conversationId}/vincular-cliente`),
+      { user_id: userId }, { headers: this.getHeaders() });
+  }
+
+  /* =====================
      INBOX
   ====================== */
   getInbox(filters?: { mine?: boolean; status?: string; search?: string; provider?: 'meta' | 'netplay'; linea?: number | null; grupos?: number }) {

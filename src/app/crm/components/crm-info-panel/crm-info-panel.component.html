@@ -21,7 +21,37 @@
       <section class="wa-info-sec">
         <p class="wa-info-k">Cliente en Netplay</p>
         <div *ngIf="summaryLoading" class="np-loading np-loading--inline"><span class="np-spinner"></span> Buscando cliente…</div>
-        <p class="np-muted" *ngIf="!summaryLoading && summary && !summary.linked">Este número no coincide con ningún cliente registrado.</p>
+        <!-- El número no está en ninguna ficha: la gente escribe desde el
+             celular de la hija, del vecino o del trabajo. Sin esto el agente
+             atiende a ciegas, sin saber qué plan tiene ni qué debe. -->
+        <div class="wa-vincular" *ngIf="!summaryLoading && summary && !summary.linked">
+          <p class="np-muted">Este número no está en ninguna ficha.</p>
+
+          <button type="button" class="np-btn np-btn--ghost np-btn--sm" *ngIf="!buscandoVinculo" (click)="abrirVinculo()">
+            Asociarlo a un cliente
+          </button>
+
+          <div class="wa-vincular-caja" *ngIf="buscandoVinculo">
+            <input class="np-input np-input--sm" [(ngModel)]="vinculoBusqueda" (keyup.enter)="buscarParaVincular()"
+                   placeholder="Nombre, cédula o teléfono…" autocomplete="off" aria-label="Buscar cliente" />
+
+            <div class="np-btnrow">
+              <button type="button" class="np-btn np-btn--primary np-btn--sm" (click)="buscarParaVincular()"
+                      [disabled]="vinculoCargando || vinculoBusqueda.trim().length < 3">
+                {{ vinculoCargando ? 'Buscando…' : 'Buscar' }}
+              </button>
+              <button type="button" class="np-btn np-btn--ghost np-btn--sm" (click)="buscandoVinculo = false">Cancelar</button>
+            </div>
+
+            <p class="np-fine wa-vincular-msg" *ngIf="vinculoMensaje">{{ vinculoMensaje }}</p>
+
+            <button type="button" class="wa-vincular-op" *ngFor="let c of vinculoResultados" (click)="asociar(c)">
+              <b>{{ c.nombre }}</b>
+              <small>{{ c.cedula }}<ng-container *ngIf="c.telefono"> · {{ c.telefono }}</ng-container>
+                <ng-container *ngIf="!c.activo"> · cortado</ng-container></small>
+            </button>
+          </div>
+        </div>
         <ng-container *ngIf="summary?.linked">
           <div class="wa-cust">
             <div class="wa-cust-top"><b>{{ summary.name }}</b><span class="np-pill" [ngClass]="(summary.service_status || '').toUpperCase().startsWith('ACT') ? 'np-pill--active' : 'np-pill--suspended'">{{ summary.service_status }}</span></div>

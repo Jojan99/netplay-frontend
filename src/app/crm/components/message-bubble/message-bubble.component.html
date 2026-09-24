@@ -32,7 +32,7 @@
 
     <span class="wa-tail"></span>
     <div class="wa-fwd" *ngIf="message.is_forwarded"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 5l7 7-7 7M21 12H8a5 5 0 0 0-5 5v2"/></svg>Reenviado</div>
-    <div class="wa-bot" *ngIf="message.from === 'system'">Bot automático</div>
+    <div class="wa-bot" *ngIf="message.from === 'system' || message.from === 'bot'">Bot automático</div>
     <button type="button" class="wa-quote" *ngIf="message.quoted as q" [class.is-agent]="q.sender_type !== 'customer'" (click)="jumpTo.emit(q.id)" title="Ir al mensaje original">
       <b>{{ q.sender_type === 'customer' ? 'Cliente' : 'Vos' }}</b>
       <span>{{ quotedLabel(q) }}</span>

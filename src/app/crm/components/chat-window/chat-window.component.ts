@@ -28,7 +28,7 @@ import { ChatMessage } from '../message-bubble/message-bubble.component';
 export interface NewMessageEventPayload {
   message: {
     id: number;
-    sender_type: 'customer' | 'agent' | 'system';
+    sender_type: 'customer' | 'agent' | 'system' | 'bot';
     content: string | null;
     message_type: string;
     media_url: string | null;
@@ -685,7 +685,11 @@ export class ChatWindowComponent implements OnChanges, OnDestroy {
       if (tempId != null) this.messages = this.messages.filter(x => !(x.pending && x.id === tempId));
       return;
     }
-    const isAgent = m.sender_type === 'agent' || m.sender_type === 'system' || tempId != null;
+    // El bot habla de nuestro lado: va a la derecha como el agente, pero se
+    // marca distinto para que se vea qué contestó la máquina y qué una
+    // persona. Sin esto la conversación parecía empezar a la mitad.
+    const isAgent = m.sender_type === 'agent' || m.sender_type === 'system'
+      || m.sender_type === 'bot' || tempId != null;
     let pendingIndex = -1;
     if (isAgent) {
       if (tempId != null) pendingIndex = this.messages.findIndex(x => x.pending && x.id === tempId);

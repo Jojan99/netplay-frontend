@@ -62,3 +62,22 @@
   .np-fine { text-transform: uppercase; letter-spacing: .06em; font-size: 10.5px; }
   .np-dl { margin-top: 6px; }
 }
+
+/* ── Asociar el número a un cliente ──────────────────────────────────────
+   Aparece cuando el número no está en ninguna ficha: la gente escribe desde
+   el celular de la hija, del vecino o del trabajo, y el agente necesita
+   poder decir de quién se trata sin salir de la conversación. */
+.wa-vincular { display: flex; flex-direction: column; gap: 8px; }
+.wa-vincular-caja { display: flex; flex-direction: column; gap: 7px; }
+.wa-vincular-msg { margin: 0; }
+
+.wa-vincular-op {
+  display: flex; flex-direction: column; gap: 1px; width: 100%;
+  padding: 8px 10px; border: 1px solid var(--line); border-radius: var(--radius);
+  background: var(--surface); font: inherit; color: inherit; text-align: left; cursor: pointer;
+
+  &:hover, &:focus-visible { border-color: var(--accent); background: var(--surface-2); }
+
+  b { font-size: 12.5px; font-weight: 600; }
+  small { font-size: 11px; color: var(--text-3); }
+}
