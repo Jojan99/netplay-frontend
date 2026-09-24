@@ -192,3 +192,11 @@
 
 .oe-cuenta-u, .oe-cuenta-c { display: inline-flex; align-items: baseline; gap: 4px; }
 .oe-cuenta-c { margin-left: auto; }
+
+/* Los dos seriales: el de la OLT y el que dice el equipo. */
+.oe-seriales {
+  display: flex; flex-wrap: wrap; gap: 3px 14px;
+  span { display: inline-flex; align-items: baseline; gap: 5px; }
+  em { font-style: normal; font-size: 10px; letter-spacing: .06em; text-transform: uppercase; color: var(--text-3); }
+  b { font-weight: 600; }
+}

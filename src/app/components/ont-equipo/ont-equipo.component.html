@@ -52,7 +52,14 @@
       <p class="oe-ubic" *ngIf="ont">
         {{ ont.olt || 'OLT' }} · Puerto <span class="np-mono">{{ ont.fsp }}</span> · ONT <span class="np-mono">{{ ont.ont_id }}</span>
       </p>
-      <p class="oe-ubic np-mono" *ngIf="ont?.serial">{{ ont?.serial }}</p>
+      <!-- Dos seriales, y no son lo mismo. La OLT identifica al equipo por su
+           MAC del PON; el equipo se presenta al TR-069 con el suyo de fábrica.
+           En EPON son distintos y el técnico necesita los dos: la MAC para
+           reconocerlo en la caja, el de fábrica para la garantía. -->
+      <p class="oe-ubic oe-seriales" *ngIf="ont?.serial || serialDelEquipo">
+        <span *ngIf="ont?.serial"><em>en la OLT</em> <b class="np-mono">{{ ont?.serial }}</b></span>
+        <span *ngIf="serialDelEquipo"><em>del equipo</em> <b class="np-mono">{{ serialDelEquipo }}</b></span>
+      </p>
       <div class="oe-chips" *ngIf="version">
         <span *ngIf="version.hardware">HW <b>{{ version.hardware }}</b></span>
         <span *ngIf="version.software">SW <b>{{ version.software }}</b></span>

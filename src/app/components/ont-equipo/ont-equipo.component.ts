@@ -193,6 +193,29 @@ export class OntEquipoComponent implements OnChanges {
     return this.version?.fabricante ?? '';
   }
 
+  /**
+   * El serial que dice el propio equipo, cuando aporta algo nuevo.
+   *
+   * La OLT lo identifica por la MAC de su PON y el equipo se presenta al
+   * TR-069 con el suyo de fábrica: en EPON no coinciden. Si son el mismo no
+   * se repite.
+   *
+   * El de fábrica viene en hexadecimal —48575443 es «HWTC»—, así que se
+   * muestra como lo dice la etiqueta del equipo.
+   */
+  get serialDelEquipo(): string {
+    const crudo = (this.acs?.serial || '').toString().toUpperCase();
+    if (!crudo) { return ''; }
+
+    const legible = /^[0-9A-F]{16}$/.test(crudo)
+      ? (crudo.slice(0, 8).match(/../g) || []).map((h: string) => String.fromCharCode(parseInt(h, 16))).join('') + crudo.slice(8)
+      : crudo;
+
+    const deLaOlt = (this.ont?.serial || '').toString().toUpperCase().replace(/[^0-9A-Z]/g, '');
+
+    return legible.replace(/[^0-9A-Z]/g, '') === deLaOlt ? '' : legible;
+  }
+
   get modelo(): string {
     return this.version?.modelo ?? this.vivo?.modelo ?? '';
   }
