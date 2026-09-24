@@ -132,3 +132,7 @@
   .np-table--registry tr.np-row--s2 { border-left-color: var(--info); }
   .np-table--registry tr.np-row--s3 { border-left-color: var(--ok); }
 }
+
+/* La observación viene con renglones (las que crea la red traen «Qué revisar»
+   y «Dónde» en párrafos aparte): sin esto se leía todo pegado en una línea. */
+.tk-obs { white-space: pre-line; }
