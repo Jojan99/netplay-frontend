@@ -1,10 +1,15 @@
 /* ── Sala de control ───────────────────────────────────────────────────────
-   Una pantalla para tener abierta todo el día: la cinta de indicadores, la
-   plata, la red, lo que está pasando y a quién hay que cobrarle. Todo lo que
-   se ve lleva a la pantalla donde se resuelve.
+   Una pantalla para tener abierta todo el día: la cinta de indicadores, lo
+   que hay que resolver, la plata, la red y a quién cobrarle. Todo lo que se
+   ve lleva a la pantalla donde se resuelve.
+
+   Los paneles los arma cada quien («Armar mi tablero»), así que el ancho de
+   cada uno lo pone el componente con `grid-column: span N` sobre una rejilla
+   de 12. Sin esa rejilla los span no hacen nada y los paneles se apilan como
+   bloques sueltos: eso era exactamente lo que se veía mal.
 ──────────────────────────────────────────────────────────────────────────── */
 
-.sala-scroll { display: flex; flex-direction: column; gap: 12px; }
+.sala-scroll { display: flex; flex-direction: column; gap: 14px; }
 
 .sala-estado {
   display: inline-flex; align-items: center; gap: 8px;
@@ -12,110 +17,137 @@
   background: var(--surface); font-size: 12px; color: var(--text-2); white-space: nowrap;
 }
 
-/* ── La cinta ── */
-.sala-kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; }
+.sala-ayuda {
+  margin: 0; padding: 11px 14px; border-radius: var(--radius-lg);
+  background: var(--accent-soft); border: 1px solid var(--accent-line);
+  font-size: 12.5px; color: var(--accent);
+}
+
+/* ── La cinta de indicadores ───────────────────────────────────────────── */
+.sala-kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(158px, 1fr)); gap: 10px; }
 
 .sala-kpi {
-  display: flex; flex-direction: column; gap: 3px;
-  padding: 12px 14px; border: 1px solid var(--line); border-radius: var(--radius-lg);
+  position: relative; overflow: hidden;
+  display: flex; flex-direction: column; gap: 2px;
+  padding: 13px 15px 14px; border: 1px solid var(--line); border-radius: var(--radius-lg);
   background: var(--surface); color: inherit; text-decoration: none;
-  transition: border-color .12s ease, box-shadow .12s ease;
+  transition: border-color .14s ease, box-shadow .14s ease, transform .14s ease;
 
-  &:hover, &:focus-visible { border-color: var(--accent); box-shadow: var(--shadow); }
+  /* Un filo de color a la izquierda en vez de teñir la tarjeta entera: se
+     distingue el tono de un vistazo sin que la cinta parezca un semáforo. */
+  &::before {
+    content: ''; position: absolute; inset: 0 auto 0 0; width: 3px;
+    background: var(--line-strong);
+  }
 
-  &[data-tono='accent'] { border-color: var(--accent-line); background: var(--accent-soft); }
-  &[data-tono='accent'] .sala-kpi-v, &[data-tono='accent'] .sala-kpi-l, &[data-tono='accent'] .sala-kpi-s { color: var(--accent); }
+  &:hover, &:focus-visible { border-color: var(--accent); box-shadow: var(--shadow); transform: translateY(-1px); }
+
+  &[data-tono='accent']::before { background: var(--accent); }
+  &[data-tono='accent'] .sala-kpi-v { color: var(--accent); }
+  &[data-tono='ok']::before     { background: var(--ok); }
   &[data-tono='ok'] .sala-kpi-v { color: var(--ok); }
+  &[data-tono='warn']::before   { background: var(--warn); }
   &[data-tono='warn'] .sala-kpi-v { color: var(--warn); }
-  &[data-tono='danger'] { border-color: color-mix(in srgb, var(--danger) 35%, transparent); }
-  &[data-tono='danger'] .sala-kpi-v { color: var(--danger); }
+  &[data-tono='danger']::before, &[data-tono='critico']::before { background: var(--danger); }
+  &[data-tono='danger'] .sala-kpi-v, &[data-tono='critico'] .sala-kpi-v { color: var(--danger); }
+  &[data-tono='info']::before   { background: var(--info); }
   &[data-tono='info'] .sala-kpi-v { color: var(--info); }
 }
 
 .sala-kpi-l { font-size: 10px; letter-spacing: .08em; text-transform: uppercase; color: var(--text-3); }
-.sala-kpi-v { font-family: var(--font-mono); font-size: 22px; font-weight: 500; line-height: 1.15; }
+.sala-kpi-v { font-family: var(--font-mono); font-variant-numeric: tabular-nums; font-size: 23px; font-weight: 600; line-height: 1.15; }
 .sala-kpi-s { font-size: 11px; color: var(--text-3); }
 
-/* ── Los paneles ── */
-.sala-medio { display: flex; gap: 12px; align-items: stretch; }
-.sala-bajo { display: flex; gap: 12px; align-items: stretch; }
+/* ── El cuerpo: rejilla + cajón de paneles ─────────────────────────────── */
+.sala-cuerpo { display: flex; align-items: flex-start; gap: 14px; }
 
+.sala-grilla {
+  flex: 1; min-width: 0;
+  display: grid; grid-template-columns: repeat(12, minmax(0, 1fr));
+  gap: 14px; align-items: start;
+}
+
+/* ── Un panel ──────────────────────────────────────────────────────────── */
 .sala-panel {
   display: flex; flex-direction: column; min-width: 0;
-  padding: 14px 16px; border: 1px solid var(--line); border-radius: var(--radius-lg);
+  padding: 15px 17px 16px; border: 1px solid var(--line); border-radius: var(--radius-lg);
   background: var(--surface); color: inherit; text-decoration: none;
 }
 
-a.sala-panel { transition: border-color .12s ease, box-shadow .12s ease; }
-a.sala-panel:hover, a.sala-panel:focus-visible { border-color: var(--accent); box-shadow: var(--shadow); }
-a.sala-panel:hover .sala-ir { color: var(--accent); }
-
 .sala-panel-h {
-  display: flex; align-items: baseline; justify-content: space-between; gap: 12px; flex-wrap: wrap;
+  display: flex; align-items: baseline; justify-content: space-between; gap: 12px;
+  padding-bottom: 10px; margin-bottom: 2px; border-bottom: 1px solid var(--line);
 
-  /* El título no se parte: en pantallas angostas baja el enlace, no el nombre. */
-  h2 { margin: 0; font-family: var(--font-display); font-size: 15px; font-weight: 700; white-space: nowrap; }
+  h2 { margin: 0; font-family: var(--font-display); font-size: 14.5px; font-weight: 700; white-space: nowrap; }
 }
 
 .sala-ir { font-size: 12px; font-weight: 600; color: var(--text-2); text-decoration: none; white-space: nowrap; }
 a.sala-ir:hover { color: var(--accent); }
-.sala-fine { margin: 4px 0 0; font-size: 11px; color: var(--text-3); }
-.sala-sect { margin: 0 0 6px; font-size: 10px; letter-spacing: .08em; text-transform: uppercase; color: var(--text-3); }
-.sala-vacio { margin: 10px 0 0; font-size: 12px; color: var(--text-3); }
+.sala-fine { margin: 6px 0 0; font-size: 11px; color: var(--text-3); }
+.sala-sect { margin: 12px 0 6px; font-size: 10px; letter-spacing: .08em; text-transform: uppercase; color: var(--text-3); }
+.sala-vacio { margin: 12px 0 0; font-size: 12px; color: var(--text-3); }
 .sala-loading { display: flex; align-items: center; gap: 8px; margin-top: 12px; font-size: 12px; color: var(--text-3); }
+.sala-mono { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+.sala-ok { color: var(--ok); }
+.sala-warn { color: var(--warn); }
+.sala-rojo { color: var(--danger); }
 
-.sala-leyenda {
+/* El pie de un panel: los totales, pegados abajo aunque el panel sea alto. */
+.sala-pie {
+  display: flex; flex-wrap: wrap; gap: 6px 16px;
+  margin-top: auto; padding-top: 11px; border-top: 1px dashed var(--line);
   font-size: 11px; color: var(--text-3);
-  i { display: inline-block; width: 8px; height: 8px; border-radius: 2px; margin: 0 4px 0 8px; }
+
+  b { font-family: var(--font-mono); font-variant-numeric: tabular-nums; font-size: 13px; color: var(--text); margin-right: 3px; }
 }
 
-/* ── Plata ── */
-.sala-plata { width: 480px; flex-shrink: 0; }
-.sala-chart { flex-grow: 1; min-height: 170px; margin-top: 10px; position: relative; }
+/* ── «Lo que hay que resolver» ─────────────────────────────────────────── */
+.sala-acciones { display: flex; flex-direction: column; gap: 6px; margin-top: 11px; }
 
-.sala-metodos {
-  display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px 16px;
-  margin-top: 12px; padding-top: 10px; border-top: 1px dashed var(--line);
+.sala-accion {
+  display: flex; align-items: center; gap: 12px; width: 100%;
+  padding: 10px 12px; border: 1px solid var(--line); border-radius: var(--radius);
+  background: var(--surface); font: inherit; color: inherit; text-align: left; cursor: pointer;
+  transition: border-color .12s ease, background .12s ease;
+
+  &:hover, &:focus-visible { border-color: var(--accent); background: var(--surface-2); }
+  &:hover .sala-ir { color: var(--accent); transform: translateX(2px); }
+
+  .sala-ir { margin-left: auto; font-size: 14px; transition: transform .12s ease, color .12s ease; }
+
+  &[data-tono='critico'] { border-color: color-mix(in srgb, var(--danger) 32%, transparent); background: var(--danger-soft); }
+  &[data-tono='critico'] .sala-accion-n { color: var(--danger); }
+  &[data-tono='aviso']   { border-color: color-mix(in srgb, var(--warn) 32%, transparent); background: var(--warn-soft); }
+  &[data-tono='aviso'] .sala-accion-n { color: var(--warn); }
+  &[data-tono='info'] .sala-accion-n { color: var(--info); }
 }
-.sala-metodo { display: flex; justify-content: space-between; gap: 10px; font-size: 12px; min-width: 0; }
-.sala-metodo-n { color: var(--text-2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.sala-metodo-v { font-family: var(--font-mono); flex-shrink: 0; }
 
-/* ── Red ── */
-.sala-red { flex-grow: 1; }
-
-.sala-puertos { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 6px; margin-top: 10px; }
-
-.sala-puerto {
-  padding: 8px 6px; border-radius: var(--radius); text-align: center;
-  background: var(--surface-2); color: var(--text-2);
-
-  &[data-tono='ok'] { background: var(--ok-soft); color: var(--ok); }
-  &[data-tono='aviso'] { background: var(--warn-soft); color: var(--warn); }
-  &[data-tono='malo'] { background: var(--danger-soft); color: var(--danger); }
+.sala-accion-n {
+  flex-shrink: 0; min-width: 30px; text-align: center;
+  font-family: var(--font-mono); font-variant-numeric: tabular-nums;
+  font-size: 21px; font-weight: 600; line-height: 1;
 }
-.sala-puerto-f { display: block; font-family: var(--font-mono); font-size: 11px; }
-.sala-puerto-d { display: block; font-size: 10px; opacity: .85; }
 
-.sala-borde { margin-top: 14px; padding-top: 10px; border-top: 1px dashed var(--line); }
-.sala-borde-f { display: flex; justify-content: space-between; gap: 10px; padding: 3px 0; font-size: 12px; }
-.sala-borde-n { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--text-2); }
-.sala-borde-v { font-family: var(--font-mono); color: var(--danger); flex-shrink: 0; }
+.sala-accion-t {
+  min-width: 0; display: flex; flex-direction: column; gap: 2px;
 
-/* ── En vivo ── */
-.sala-vivo { width: 340px; flex-shrink: 0; }
-.sala-eventos { display: flex; flex-direction: column; gap: 2px; margin-top: 10px; }
+  b { font-size: 12.5px; font-weight: 600; }
+  small { font-size: 11px; color: var(--text-3); }
+}
+
+/* ── «Lo que está pasando» ─────────────────────────────────────────────── */
+.sala-eventos { display: flex; flex-direction: column; gap: 1px; margin-top: 9px; }
 
 .sala-evento {
   display: flex; align-items: flex-start; gap: 9px; width: 100%;
-  padding: 7px 8px; margin: 0 -8px; border: 0; border-radius: var(--radius);
+  padding: 7px 9px; margin: 0 -9px; border: 0; border-radius: var(--radius);
   background: none; font: inherit; color: inherit; text-align: left; cursor: pointer;
 
   &:hover, &:focus-visible { background: var(--surface-2); }
 
   .sala-punto { width: 7px; height: 7px; border-radius: 999px; margin-top: 5px; flex-shrink: 0; background: var(--text-3); }
-  &[data-nivel='critico'] .sala-punto { background: var(--danger); }
-  &[data-nivel='aviso'] .sala-punto { background: var(--warn); }
+  &[data-nivel='critico'] .sala-punto { background: var(--danger); box-shadow: 0 0 0 3px var(--danger-soft); }
+  &[data-nivel='aviso'] .sala-punto { background: var(--warn); box-shadow: 0 0 0 3px var(--warn-soft); }
 }
 
 .sala-evento-t {
@@ -125,12 +157,57 @@ a.sala-ir:hover { color: var(--accent); }
   small { font-size: 11px; color: var(--text-3); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 }
 
-/* ── Deudores ── */
-.sala-deudores { flex-grow: 1; }
-.sala-tabla { margin-top: 8px; }
+/* ── Plata: el gráfico y los tres totales ──────────────────────────────── */
+.sala-chart { flex-grow: 1; min-height: 172px; margin-top: 12px; position: relative; }
+
+.sala-tres {
+  display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px;
+  margin-top: auto; padding-top: 12px; border-top: 1px dashed var(--line);
+
+  > div { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+}
+
+.sala-num-g {
+  font-family: var(--font-mono); font-variant-numeric: tabular-nums;
+  font-size: 16px; font-weight: 600; line-height: 1.2;
+  overflow: hidden; text-overflow: ellipsis;
+}
+
+/* ── Mora por antigüedad ───────────────────────────────────────────────── */
+.sala-tramos { display: flex; flex-direction: column; gap: 11px; margin-top: 13px; }
+.sala-tramo { display: flex; flex-direction: column; gap: 5px; }
+
+.sala-tramo-h {
+  display: flex; align-items: baseline; justify-content: space-between; gap: 10px;
+  .sala-fine { margin: 0; }
+  .sala-mono { font-size: 11.5px; color: var(--text-2); }
+}
+
+.sala-barra {
+  height: 7px; border-radius: 999px; background: var(--surface-3); overflow: hidden;
+
+  i {
+    display: block; height: 100%; border-radius: 999px; background: var(--accent);
+    /* La barra crece sola al entrar: se lee cuál tramo pesa más sin comparar
+       números uno por uno. */
+    transition: width .45s cubic-bezier(.2, .7, .3, 1);
+    min-width: 2px;
+  }
+
+  /* Cuanto más vieja la deuda, más caliente el color. El nombre del tramo lo
+     pone el backend, así que se cubren las dos formas en que puede venir. */
+  i[data-tramo*='30'] { background: var(--ok); }
+  i[data-tramo*='60'] { background: var(--warn); }
+  i[data-tramo*='90'] { background: color-mix(in srgb, var(--danger) 70%, var(--warn)); }
+  i[data-tramo*='+'], i[data-tramo*='más'], i[data-tramo*='mas'] { background: var(--danger); }
+}
+
+/* ── Tablas y listas ───────────────────────────────────────────────────── */
+.sala-tabla { margin-top: 10px; }
+.sala-lista { margin-top: 10px; }
 
 .sala-tabla-h {
-  display: flex; gap: 12px; padding: 4px 0; border-bottom: 1px solid var(--line);
+  display: flex; gap: 12px; padding: 0 0 6px; border-bottom: 1px solid var(--line);
   font-size: 10px; letter-spacing: .08em; text-transform: uppercase; color: var(--text-3);
 
   span:first-child { flex-grow: 1; }
@@ -138,71 +215,195 @@ a.sala-ir:hover { color: var(--accent); }
 
 .sala-fila {
   display: flex; gap: 12px; align-items: center; width: 100%;
-  padding: 7px 0; border: 0; border-bottom: 1px solid var(--surface-3);
+  padding: 8px 9px; margin: 0 -9px; border: 0; border-radius: var(--radius);
   background: none; font: inherit; color: inherit; text-align: left; cursor: pointer;
+  border-bottom: 1px solid var(--surface-3);
 
   &:hover, &:focus-visible { background: var(--surface-2); }
   &:last-child { border-bottom: 0; }
+
+  /* Las filas que no llevan a ningún lado no se comportan como botón. */
+  &.es-quieta { cursor: default; &:hover { background: none; } }
 }
 
-.sala-fila-n { flex-grow: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 12px; }
-.sala-num { width: 78px; flex-shrink: 0; text-align: right; font-size: 12px; font-family: var(--font-mono); color: var(--text-2); }
-.sala-tabla-h .sala-num { font-family: var(--font-body); }
-.sala-plata-v { color: var(--text); }
-.sala-rojo { color: var(--danger); }
+.sala-fila-n { flex-grow: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 12.5px; }
+.sala-num { width: 74px; flex-shrink: 0; text-align: right; font-size: 12px; font-family: var(--font-mono); font-variant-numeric: tabular-nums; color: var(--text-2); }
+.sala-ancho { width: 98px; }
+.sala-tabla-h .sala-num { font-family: var(--font-body); font-variant-numeric: normal; }
+.sala-plata-v { color: var(--text); font-weight: 600; }
 
-/* ── Técnicos ── */
-.sala-tecnicos { width: 380px; flex-shrink: 0; }
-.sala-tecnicos-l { display: flex; flex-direction: column; gap: 9px; margin-top: 12px; }
-.sala-tecnico { display: flex; align-items: center; gap: 10px; font-size: 12px; }
+/* ── Red: los puertos PON ──────────────────────────────────────────────── */
+.sala-puertos { display: grid; grid-template-columns: repeat(auto-fill, minmax(74px, 1fr)); gap: 7px; margin-top: 11px; }
+
+.sala-puerto {
+  padding: 9px 6px; border-radius: var(--radius); text-align: center;
+  background: var(--surface-2); color: var(--text-2); border: 1px solid transparent;
+
+  &[data-tono='ok']    { background: var(--ok-soft); color: var(--ok); border-color: color-mix(in srgb, var(--ok) 22%, transparent); }
+  &[data-tono='aviso'] { background: var(--warn-soft); color: var(--warn); border-color: color-mix(in srgb, var(--warn) 25%, transparent); }
+  &[data-tono='malo']  { background: var(--danger-soft); color: var(--danger); border-color: color-mix(in srgb, var(--danger) 28%, transparent); }
+}
+.sala-puerto-f { display: block; font-family: var(--font-mono); font-size: 11.5px; font-weight: 600; }
+.sala-puerto-d { display: block; font-size: 10px; opacity: .85; margin-top: 1px; }
+
+/* ── Técnicos ──────────────────────────────────────────────────────────── */
+.sala-tecnicos-l { display: flex; flex-direction: column; gap: 9px; margin: 12px 0 14px; }
+.sala-tecnico { display: flex; align-items: center; gap: 10px; font-size: 12.5px; }
 
 .sala-avatar {
-  width: 26px; height: 26px; border-radius: 999px; flex-shrink: 0;
+  width: 27px; height: 27px; border-radius: 999px; flex-shrink: 0;
   display: flex; align-items: center; justify-content: center;
   background: var(--accent-soft); color: var(--accent); font-size: 11px; font-weight: 700;
 }
 
 .sala-tecnico-n { flex-grow: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.sala-tecnico-c { color: var(--text-3); flex-shrink: 0; }
+.sala-tecnico-c { color: var(--text-3); flex-shrink: 0; font-size: 11.5px; }
 
-.sala-tickets-pie {
-  display: flex; gap: 14px; margin-top: auto; padding-top: 10px; border-top: 1px dashed var(--line);
-  font-size: 11px; color: var(--text-3);
-
-  b { font-family: var(--font-mono); font-size: 13px; color: var(--text); margin-right: 3px; }
+/* ── Altas y bajas: dos barras por mes ─────────────────────────────────── */
+.sala-meses {
+  display: flex; align-items: flex-end; gap: 4px;
+  margin: 14px 0 12px; height: 118px;
 }
 
-/* ── Novedades ── */
-.sala-novedades { width: 280px; flex-shrink: 0; border-color: var(--accent-line); background: var(--accent-soft); }
-.sala-novedades .sala-panel-h h2 { color: var(--accent); }
+.sala-mes { flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: center; gap: 5px; height: 100%; }
 
+.sala-mes-b {
+  flex: 1; width: 100%; min-height: 0;
+  display: flex; align-items: flex-end; justify-content: center; gap: 2px;
+
+  i {
+    display: block; width: 44%; max-width: 13px; min-height: 2px;
+    border-radius: 3px 3px 0 0;
+    transition: height .45s cubic-bezier(.2, .7, .3, 1);
+  }
+  .es-alta { background: var(--ok); }
+  .es-baja { background: color-mix(in srgb, var(--danger) 75%, transparent); }
+}
+
+.sala-mes-t { font-size: 10px; color: var(--text-3); white-space: nowrap; }
+
+/* ── Novedades ─────────────────────────────────────────────────────────── */
 .sala-novedad {
-  display: flex; align-items: center; gap: 8px; width: 100%;
-  padding: 6px 8px; margin: 2px -8px 0; border: 0; border-radius: var(--radius);
-  background: none; font: inherit; color: var(--accent); text-align: left; cursor: pointer;
+  display: flex; align-items: center; gap: 9px; width: 100%;
+  padding: 7px 9px; margin: 2px -9px 0; border: 0; border-radius: var(--radius);
+  background: none; font: inherit; color: inherit; text-align: left; cursor: pointer;
 
-  &:hover, &:focus-visible { background: color-mix(in srgb, var(--surface) 55%, transparent); }
+  &:hover, &:focus-visible { background: var(--surface-2); }
 }
 
 .sala-etiqueta {
-  flex-shrink: 0; padding: 2px 7px; border-radius: 999px;
-  background: var(--surface); font-size: 10px; font-weight: 700; color: var(--accent);
+  flex-shrink: 0; padding: 2px 8px; border-radius: 999px;
+  background: var(--accent-soft); font-size: 10px; font-weight: 700; color: var(--accent);
 }
 
-.sala-novedad-t { min-width: 0; font-size: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.sala-novedad-t { min-width: 0; font-size: 12.5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
-/* ── Pantallas chicas y portátiles al 150% ── */
+/* ── Modo «Armar mi tablero» ───────────────────────────────────────────── */
+.esta-armando .sala-panel { border-style: dashed; border-color: var(--accent-line); }
+.esta-armando .sala-panel:hover { border-color: var(--accent); }
+
+.sala-mango {
+  display: flex; align-items: center; gap: 4px;
+  margin: -6px -8px 9px; padding: 5px 8px; border-radius: var(--radius);
+  background: var(--accent-soft); cursor: grab;
+
+  &:active { cursor: grabbing; }
+
+  button {
+    flex-shrink: 0; width: 24px; height: 24px; padding: 0;
+    border: 1px solid var(--accent-line); border-radius: var(--radius);
+    background: var(--surface); color: var(--accent); font: inherit; font-size: 12px; cursor: pointer;
+
+    &:hover:not(:disabled) { background: var(--accent); color: var(--accent-ink); }
+    &:disabled { opacity: .35; cursor: not-allowed; }
+  }
+
+  .es-quitar { width: auto; padding: 0 9px; font-size: 11px; border-color: color-mix(in srgb, var(--danger) 35%, transparent); color: var(--danger);
+    &:hover { background: var(--danger); color: #fff; } }
+}
+
+.sala-mango-t {
+  flex-grow: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  font-size: 11.5px; font-weight: 600; color: var(--accent);
+}
+
+.sala-hueco {
+  grid-column: span 12; margin: 0; padding: 22px; text-align: center;
+  border: 1px dashed var(--accent-line); border-radius: var(--radius-lg);
+  font-size: 12px; color: var(--text-3);
+}
+
+/* ── El cajón de paneles ───────────────────────────────────────────────── */
+.sala-cajon {
+  width: 286px; flex-shrink: 0; position: sticky; top: 0;
+  padding: 15px 16px 17px; border: 1px solid var(--line); border-radius: var(--radius-lg);
+  background: var(--surface);
+
+  .sala-fine { margin-bottom: 4px; }
+}
+
+.sala-cat { display: flex; flex-direction: column; gap: 3px; }
+
+.sala-cat-i {
+  display: flex; align-items: flex-start; gap: 9px; width: 100%;
+  padding: 8px 9px; border: 1px solid transparent; border-radius: var(--radius);
+  background: none; font: inherit; color: inherit; text-align: left; cursor: pointer;
+
+  &:hover { background: var(--surface-2); }
+
+  &.es-puesto {
+    background: var(--accent-soft); border-color: var(--accent-line);
+    .sala-check { background: var(--accent); border-color: var(--accent); }
+    .sala-check::after { opacity: 1; }
+    .sala-cat-t b { color: var(--accent); }
+  }
+}
+
+.sala-check {
+  position: relative; flex-shrink: 0; width: 15px; height: 15px; margin-top: 1px;
+  border: 1.5px solid var(--line-strong); border-radius: 4px; background: var(--surface);
+
+  /* La palomita se dibuja con dos bordes girados: sin imágenes ni fuentes. */
+  &::after {
+    content: ''; position: absolute; left: 4px; top: 1px; width: 4px; height: 8px;
+    border: solid var(--accent-ink); border-width: 0 2px 2px 0; transform: rotate(45deg);
+    opacity: 0; transition: opacity .1s ease;
+  }
+}
+
+.sala-cat-t {
+  min-width: 0; display: flex; flex-direction: column; gap: 1px;
+
+  b { font-size: 12px; font-weight: 600; }
+  small { font-size: 11px; color: var(--text-3); line-height: 1.35; }
+}
+
+/* ── Pantallas chicas ──────────────────────────────────────────────────── */
 @media (max-width: 1400px) {
-  .sala-plata { width: 420px; }
-  .sala-vivo { width: 300px; }
-  .sala-tecnicos { width: 320px; }
-  .sala-novedades { width: 240px; }
-  .sala-kpi-v { font-size: 19px; }
-  .sala-puertos { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  .sala-kpi-v { font-size: 20px; }
+  .sala-cajon { width: 250px; }
 }
 
-@media (max-width: 1150px) {
-  .sala-medio, .sala-bajo { flex-wrap: wrap; }
-  .sala-plata, .sala-vivo, .sala-tecnicos, .sala-novedades { width: 100%; flex-shrink: 1; }
-  .sala-red { width: 100%; }
+/* De acá para abajo la rejilla de 12 no alcanza: un panel de 3 quedaría
+   ilegible. Se pasa a 6 columnas y cada panel ocupa media pantalla o entera. */
+@media (max-width: 1100px) {
+  .sala-grilla { grid-template-columns: repeat(6, minmax(0, 1fr)); }
+  .sala-panel { grid-column: span 6 !important; }
+  .sala-cuerpo { flex-direction: column; }
+  .sala-cajon { width: 100%; position: static; }
+  .sala-hueco { grid-column: span 6; }
+}
+
+@media (max-width: 720px) {
+  .sala-scroll { gap: 11px; }
+  .sala-grilla { gap: 11px; }
+  .sala-kpis { grid-template-columns: repeat(auto-fit, minmax(134px, 1fr)); gap: 8px; }
+  .sala-kpi { padding: 11px 13px; }
+  .sala-kpi-v { font-size: 18px; }
+  .sala-panel { padding: 13px 14px 14px; }
+  .sala-tres { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; }
+  .sala-num-g { font-size: 13.5px; }
+  .sala-ancho { width: 84px; }
+  .sala-num { width: 60px; }
+  .sala-meses { height: 96px; }
 }
