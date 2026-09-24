@@ -1,0 +1,54 @@
+/* ── Clientes en riesgo ───────────────────────────────────────────────────
+   Cuatro grupos, cada uno con su decisión. El número grande a la izquierda
+   es lo primero que se lee: cuántos hay que atender. */
+.ori-grupo { padding: 0; overflow: hidden; }
+
+.ori-cab {
+  display: flex; align-items: center; gap: 14px; width: 100%;
+  padding: 14px 16px; border: 0; background: none; font: inherit; color: inherit;
+  text-align: left; cursor: pointer;
+
+  &:hover { background: var(--surface-2); }
+
+  &[data-tono='danger'] .ori-n { color: var(--danger); background: var(--danger-soft); }
+  &[data-tono='warn'] .ori-n   { color: var(--warn);   background: var(--warn-soft); }
+  &[data-tono='info'] .ori-n   { color: var(--info);   background: var(--info-soft); }
+}
+
+.ori-n {
+  flex: none; min-width: 46px; padding: 6px 10px; border-radius: var(--radius);
+  font-family: var(--font-mono); font-variant-numeric: tabular-nums;
+  font-size: 21px; font-weight: 700; text-align: center; line-height: 1.1;
+}
+
+.ori-t {
+  flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px;
+  b { font-family: var(--font-display); font-size: 14.5px; }
+  small { font-size: 12px; color: var(--text-2); line-height: 1.4; }
+}
+
+.ori-deuda {
+  flex: none; display: flex; flex-direction: column; align-items: flex-end; gap: 1px;
+  font-family: var(--font-mono); font-variant-numeric: tabular-nums; font-size: 14px; font-weight: 600;
+  em { font-style: normal; font-family: var(--font-body); font-size: 10px;
+       letter-spacing: .06em; text-transform: uppercase; color: var(--text-3); }
+}
+
+.ori-flecha { flex: none; color: var(--text-3); font-size: 13px; }
+
+.ori-cuerpo { padding: 0 16px 16px; display: flex; flex-direction: column; gap: 11px; }
+
+.ori-quehacer {
+  margin: 0; padding: 10px 12px; border-radius: var(--radius);
+  background: var(--surface-2); border: 1px solid var(--line);
+  font-size: 12.5px; color: var(--text-2);
+  b { color: var(--text); }
+}
+
+.ori-mal { color: var(--danger); font-weight: 600; }
+
+@media (max-width: 720px) {
+  .ori-cab { flex-wrap: wrap; gap: 10px; }
+  .ori-deuda { align-items: flex-start; }
+  .ori-t { flex-basis: 100%; order: 3; }
+}

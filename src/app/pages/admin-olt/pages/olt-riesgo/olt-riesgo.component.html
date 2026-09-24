@@ -1,0 +1,69 @@
+<div class="np-page">
+  <header class="np-head">
+    <div>
+      <p class="np-kicker">Red <b>/</b> Clientes en riesgo</p>
+      <h1 class="np-title">Quién necesita una decisión hoy</h1>
+      <p class="np-fine" *ngIf="medidoDesde">Cruzando lo que la red vio desde el {{ medidoDesde }} con lo que cada cliente debe.</p>
+    </div>
+    <div class="np-actions">
+      <button type="button" class="np-btn np-btn--ghost" (click)="cargar()" [disabled]="cargando">
+        {{ cargando ? 'Mirando…' : 'Volver a mirar' }}
+      </button>
+    </div>
+  </header>
+
+  <app-olt-nav></app-olt-nav>
+
+  <div class="np-scroll">
+    <div *ngIf="cargando" class="np-loading"><span class="np-spinner"></span> Cruzando red y cartera…</div>
+    <p class="np-notice np-notice--warn" *ngIf="error && !cargando">{{ error }}</p>
+
+    <section class="np-card ori-grupo" *ngFor="let clave of orden">
+      <ng-container *ngIf="grupos[clave] as g">
+        <button type="button" class="ori-cab" [attr.data-tono]="g.tono" (click)="alternar(clave)"
+                [attr.aria-expanded]="abierto[clave] === true">
+          <span class="ori-n">{{ g.cuantos }}</span>
+          <span class="ori-t">
+            <b>{{ g.titulo }}</b>
+            <small>{{ g.que_es }}</small>
+          </span>
+          <span class="ori-deuda" *ngIf="g.deuda > 0">{{ plata(g.deuda) }}<em>en juego</em></span>
+          <span class="ori-flecha">{{ abierto[clave] ? '▾' : '▸' }}</span>
+        </button>
+
+        <div class="ori-cuerpo" *ngIf="abierto[clave]">
+          <p class="ori-quehacer"><b>Qué hacer:</b> {{ g.que_hacer }}</p>
+
+          <p class="np-muted" *ngIf="!g.cuantos">Ninguno. Por acá está todo bien.</p>
+
+          <ng-container *ngIf="g.cuantos">
+            <div class="np-btnrow">
+              <button type="button" class="np-btn np-btn--ghost np-btn--sm" (click)="copiarTelefonos(g)">Copiar sus teléfonos</button>
+            </div>
+
+            <div class="np-tablewrap"><table class="np-table np-tabla-movil">
+              <thead><tr>
+                <th>Cliente</th><th>Teléfono</th>
+                <th class="np-th-right">Apagado</th><th class="np-th-right">Caídas</th>
+                <th class="np-th-right">Señal</th><th class="np-th-right">Debe</th>
+              </tr></thead>
+              <tbody>
+                <tr *ngFor="let c of g.clientes; trackBy: porCliente" class="np-row" (click)="verCliente(c)" tabindex="0" (keydown.enter)="verCliente(c)">
+                  <td class="es-principal" data-label="Cliente">
+                    <div class="np-name">{{ c.nombre }}</div>
+                    <div class="np-plan" *ngIf="c.direccion">{{ c.direccion }}</div>
+                  </td>
+                  <td class="np-mono" data-label="Teléfono">{{ c.telefono || '—' }}</td>
+                  <td class="np-td-right np-data" data-label="Apagado" [class.ori-mal]="c.apagado >= 85">{{ c.apagado }}%</td>
+                  <td class="np-td-right np-data" data-label="Caídas">{{ c.caidas || '—' }}</td>
+                  <td class="np-td-right np-data" data-label="Señal" [class.ori-mal]="c.rx_min !== null && c.rx_min < -28">{{ c.rx_min !== null ? c.rx_min + ' dBm' : '—' }}</td>
+                  <td class="np-money" data-label="Debe">{{ c.deuda > 0 ? plata(c.deuda) : '—' }}</td>
+                </tr>
+              </tbody>
+            </table></div>
+          </ng-container>
+        </div>
+      </ng-container>
+    </section>
+  </div>
+</div>

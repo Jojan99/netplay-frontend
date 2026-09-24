@@ -10,6 +10,10 @@ export const OLT_ROUTES: Routes = [
     loadComponent: () => import('./pages/olt-dashboard/olt-dashboard.component').then(m => m.OltDashboardComponent),
   },
   {
+    path: 'riesgo',
+    loadComponent: () => import('./pages/olt-riesgo/olt-riesgo.component').then(m => m.OltRiesgoComponent),
+  },
+  {
     path: 'autorizadas',
     loadComponent: () => import('./pages/olt-autorizadas/olt-autorizadas.component').then(m => m.OltAutorizadasComponent),
   },

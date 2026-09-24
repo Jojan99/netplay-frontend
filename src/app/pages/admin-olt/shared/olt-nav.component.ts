@@ -45,6 +45,7 @@ export class OltNavComponent implements AfterViewInit {
     { path: '/dashboard/olt/dashboard',     label: 'Estado',        exact: false },
     { path: '/dashboard/olt/salud',         label: 'Salud',         exact: false },
     { path: '/dashboard/olt/alertas',       label: 'Avisos',        exact: false },
+    { path: '/dashboard/olt/riesgo',        label: 'En riesgo',     exact: false },
     { path: '/dashboard/olt/autorizadas',   label: 'Autorizadas',   exact: false },
     { path: '/dashboard/olt/sin-autorizar', label: 'Sin autorizar', exact: false },
     { path: '/dashboard/olt/online',        label: 'En línea',      exact: false },
@@ -59,7 +60,7 @@ export class OltNavComponent implements AfterViewInit {
 
   /**
    * En el teléfono la sección actual puede quedar fuera de la vista (CLI es
-   * la última de catorce): se desplaza la barra hasta dejarla a la vista.
+   * la última de quince): se desplaza la barra hasta dejarla a la vista.
    */
   ngAfterViewInit(): void {
     this.mostrarActiva();
