@@ -16,3 +16,15 @@
     input { width: 22px; height: 22px; } }
   .np-tabla-movil td.es-principal { padding-right: 36px !important; }
 }
+
+/* ── Asignar a mano las que no se pueden adivinar ──────────────────────── */
+.ov-buscar { display: flex; gap: 6px; align-items: center;
+  .np-input { flex: 1; min-width: 0; } }
+.ov-elegido { margin: 5px 0 0; color: var(--ok); }
+.ov-op {
+  display: flex; flex-direction: column; gap: 1px; width: 100%; margin-top: 4px;
+  padding: 6px 9px; border: 1px solid var(--line); border-radius: var(--radius);
+  background: var(--surface); font: inherit; color: inherit; text-align: left; cursor: pointer;
+  &:hover, &:focus-visible { border-color: var(--accent); background: var(--surface-2); }
+  b { font-size: 12.5px; } small { font-size: 11px; color: var(--text-3); }
+}

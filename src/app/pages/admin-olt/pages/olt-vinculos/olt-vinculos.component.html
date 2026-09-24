@@ -85,5 +85,46 @@
         </tbody>
       </table></div>
     </section>
+    <!-- Las que ningún dato permite emparejar: se asignan a mano.
+         Las EPON de la CDATA no traen descripción en la OLT, así que no hay
+         de dónde deducir el cliente. Sin esto quedaban invisibles y la ficha
+         del cliente decía «sin equipo asignado» con la ONT ahí puesta. -->
+    <section class="np-card" *ngIf="huerfanas.length">
+      <div class="np-card-h">
+        <div>
+          <h2>Sin forma de adivinar el cliente</h2>
+          <p class="np-fine">{{ huerfanas.length }} equipos que la OLT no describe. Buscá el cliente y asignalo a mano; el serial es el que te sirve para reconocerlo en la caja.</p>
+        </div>
+        <button type="button" class="np-btn np-btn--primary" (click)="vincularHuerfanas()" [disabled]="guardando">
+          {{ guardando ? 'Guardando…' : 'Vincular los elegidos' }}
+        </button>
+      </div>
+
+      <div class="np-tablewrap"><table class="np-table">
+        <thead><tr><th>Equipo</th><th>Serial</th><th>Estado</th><th>Cliente</th></tr></thead>
+        <tbody>
+          <tr *ngFor="let o of huerfanas; trackBy: porOnt">
+            <td data-label="Equipo">{{ o.olt }} · <span class="np-mono">{{ o.fsp }}</span> · ONT <span class="np-mono">{{ o.ont_id }}</span></td>
+            <td class="np-mono" data-label="Serial">{{ o.serial || '—' }}</td>
+            <td data-label="Estado"><span class="np-pill" [ngClass]="o.estado === 'online' ? 'np-pill--active' : 'np-pill--noip'">{{ o.estado === 'online' ? 'En línea' : 'Apagada' }}</span></td>
+            <td class="es-ancha" data-label="Cliente">
+              <div class="ov-buscar">
+                <input class="np-input np-input--sm" [(ngModel)]="buscando[o.id]" (keyup.enter)="buscarCliente(o)"
+                       placeholder="Nombre, cédula o teléfono…" autocomplete="off" [attr.aria-label]="'Cliente para la ONT ' + o.ont_id" />
+                <button type="button" class="np-btn np-btn--ghost np-btn--sm" (click)="buscarCliente(o)" [disabled]="buscandoAhora[o.id]">
+                  {{ buscandoAhora[o.id] ? '…' : 'Buscar' }}
+                </button>
+              </div>
+
+              <p class="np-fine ov-elegido" *ngIf="elegido[o.id]">Se vinculará con <b>{{ elegido[o.id].nombre }}</b> ({{ elegido[o.id].cedula }})</p>
+
+              <button type="button" class="ov-op" *ngFor="let c of resultados[o.id]" (click)="elegirCliente(o, c)">
+                <b>{{ c.nombre }}</b><small>{{ c.cedula }}<ng-container *ngIf="c.direccion"> · {{ c.direccion }}</ng-container></small>
+              </button>
+            </td>
+          </tr>
+        </tbody>
+      </table></div>
+    </section>
   </div>
 </div>

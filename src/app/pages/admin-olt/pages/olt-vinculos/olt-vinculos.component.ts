@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { OltNavComponent } from '../../shared/olt-nav.component';
 import { OltService } from '../../../../services/olt.service';
 import { ToastService } from '../../../../services/toast.service';
+import { CrmService } from '../../../../services/crm.service';
 import { NpSelectComponent, PresentacionSelect } from '../../../../common/np-select/np-select.component';
 
 /**
@@ -24,10 +25,21 @@ import { NpSelectComponent, PresentacionSelect } from '../../../../common/np-sel
 })
 export class OltVinculosComponent implements OnInit {
   private olt = inject(OltService);
+  private crm = inject(CrmService);
   private toast = inject(ToastService);
 
   propuestas: any[] = [];
   resumen: any = null;
+
+  /* ── Las que no se pueden adivinar ─────────────────────────────────────
+     Sin descripción en la OLT no hay con qué emparejarlas: las 55 de la
+     CDATA son así. Antes sólo se contaban y no se mostraban, y la ficha de
+     esos clientes decía «sin equipo asignado» aunque la ONT estuviera ahí. */
+  huerfanas: any[] = [];
+  elegido: Record<number, any> = {};
+  buscando: Record<number, string> = {};
+  resultados: Record<number, any[]> = {};
+  buscandoAhora: Record<number, boolean> = {};
   cargando = false;
   guardando = false;
   error = '';
@@ -57,6 +69,7 @@ export class OltVinculosComponent implements OnInit {
         this.cargando = false;
         if (r?.error !== 0) { this.error = r?.message || 'No se pudieron calcular las propuestas.'; return; }
         this.propuestas = r.data?.propuestas ?? [];
+        this.huerfanas = r.data?.huerfanas ?? [];
         this.resumen = r.data?.resumen ?? null;
         // Las de confianza alta vienen marcadas: son las que casi siempre se aplican.
         this.marcadas = {};
@@ -82,6 +95,52 @@ export class OltVinculosComponent implements OnInit {
   get cuantasMarcadas(): number { return Object.values(this.marcadas).filter(Boolean).length; }
 
   marcarVisibles(valor: boolean) { this.visibles.forEach(p => this.marcadas[p.ont.id] = valor); }
+
+  /** Por id, para que escribir en un campo no vuelva a dibujar toda la tabla. */
+  porOnt = (_: number, o: any) => o.id;
+
+  /** Busca el cliente para una ONT que nadie pudo emparejar. */
+  buscarCliente(ont: any) {
+    const q = (this.buscando[ont.id] || '').trim();
+    if (q.length < 3) { this.toast.error('Escribí al menos 3 letras.'); return; }
+
+    this.buscandoAhora[ont.id] = true;
+    this.crm.buscarClienteParaVincular(q).subscribe({
+      next: (r: any) => {
+        this.buscandoAhora[ont.id] = false;
+        this.resultados[ont.id] = r?.data ?? [];
+        if (!this.resultados[ont.id].length) { this.toast.error('Ningún cliente coincide.'); }
+      },
+      error: () => { this.buscandoAhora[ont.id] = false; this.toast.error('No se pudo buscar.'); },
+    });
+  }
+
+  elegirCliente(ont: any, cliente: any) {
+    this.elegido[ont.id] = cliente;
+    this.resultados[ont.id] = [];
+    this.buscando[ont.id] = cliente.nombre;
+  }
+
+  /** Guarda los vínculos armados a mano. */
+  vincularHuerfanas() {
+    const pares = this.huerfanas
+      .filter(o => this.elegido[o.id])
+      .map(o => ({ ont: o.id, user_id: this.elegido[o.id].user_id }));
+
+    if (!pares.length) { this.toast.error('No elegiste ningún cliente.'); return; }
+
+    this.guardando = true;
+    this.olt.aplicarVinculos(pares).subscribe({
+      next: (r: any) => {
+        this.guardando = false;
+        if (r?.error !== 0) { this.toast.error(r?.message || 'No se pudo vincular.'); return; }
+        this.toast.success(r.message);
+        this.elegido = {}; this.buscando = {}; this.resultados = {};
+        this.cargar();
+      },
+      error: () => { this.guardando = false; this.toast.error('No se pudo vincular.'); },
+    });
+  }
 
   vincular() {
     const pares = this.propuestas
