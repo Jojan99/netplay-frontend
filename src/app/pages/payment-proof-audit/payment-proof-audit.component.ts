@@ -30,8 +30,13 @@ export class PaymentProofAuditComponent implements OnInit {
   searchFilters = { client: '', amount: '', reference: '', bank: '' };
   readonly banks = ['Bancolombia', 'Nequi', 'Daviplata', 'Davivienda', 'Banco de Bogotá', 'BBVA'];
   readonly presBancos = PRESENTACION_TEXTOS;
+  /* «Aplicados solos» son los que llegaron completos y sin dudas: la
+     plataforma les aplicó el pago sin hacer mirar a nadie. Van aparte de los
+     que revisó una persona, para poder auditarlos cuando se quiera. */
   readonly filters = [
-    { value: 'pending', label: 'Pendientes' }, { value: 'approved', label: 'Aprobados' },
+    { value: 'pending', label: 'Pendientes' },
+    { value: 'aplicado_solo', label: 'Aplicados solos' },
+    { value: 'approved', label: 'Revisados a mano' },
     { value: 'suspicious', label: 'Sospechosos' }, { value: 'rejected', label: 'Rechazados' }, { value: 'reverted', label: 'Revertidos' }
   ];
 
@@ -49,7 +54,13 @@ export class PaymentProofAuditComponent implements OnInit {
 
   load(): void {
     this.loading = true;
-    const payload = { ...(this.statusFilter ? { status: this.statusFilter } : {}), ...this.searchFilters, page: this.currentPage, per_page: 8 };
+    // Las dos pestañas de aprobados miran el mismo estado y se separan por
+    // quién lo decidió: la plataforma o una persona.
+    const porVia = this.statusFilter === 'aplicado_solo'
+      ? { status: 'approved', aplicado_solo: 1 }
+      : (this.statusFilter === 'approved' ? { status: 'approved', aplicado_solo: 0 } : (this.statusFilter ? { status: this.statusFilter } : {}));
+
+    const payload = { ...porVia, ...this.searchFilters, page: this.currentPage, per_page: 8 };
 
     this.paymentProofService.list(payload).subscribe({
       next: (res) => {

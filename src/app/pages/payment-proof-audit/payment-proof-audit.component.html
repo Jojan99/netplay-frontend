@@ -32,6 +32,7 @@
               <td class="np-data">{{ item.invoice?.number_facture || '—' }}</td>
               <td class="np-money np-pos">
                 {{ formatAmount(item.reported_amount ?? item.detected_amount) }}
+                <span class="ppa-solo" *ngIf="item.aplicado_solo" title="Lo aplicó la plataforma: llegó completo y sin dudas">automático</span>
                 <!-- El lector leyó la imagen de tres formas y no coincidieron:
                      el número puede estar mal y hay que mirar la foto. -->
                 <span class="ppa-dudoso" *ngIf="(item.dudosos || []).includes('amount')"
