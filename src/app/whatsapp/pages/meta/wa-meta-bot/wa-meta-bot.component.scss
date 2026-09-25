@@ -7,6 +7,12 @@
 
 .bot { display: flex; flex-direction: column; min-height: 0; flex: 1; gap: 10px; }
 
+/* Las tres columnas necesitan una altura de verdad.
+   Con sólo `flex: 1` dependen de que toda la cadena de padres tenga altura
+   resuelta; cuando no la tiene, el sobrante es cero, las columnas se aplastan
+   y queda media pantalla vacía. El `min-height` es el piso que lo evita. */
+.bot-cuerpo { min-height: clamp(520px, calc(100vh - 215px), 1000px); }
+
 .bot-barra { flex-wrap: wrap; gap: 8px; }
 .bot-titulo { display: flex; align-items: center; gap: 9px;
   h2 { margin: 0; font: 700 16px/1.2 var(--font-display); color: var(--text); } }
@@ -87,11 +93,17 @@
 }
 .bot-plano { position: relative; transform-origin: 0 0; }
 
-.bot-hilos {
-  position: absolute; inset: 0; pointer-events: none;
+/* El tema aplasta todo `svg` a 15×15 (`.np-console svg`), que es lo que
+   necesitan los iconos. Al lienzo de conexiones eso lo dejaba invisible: las
+   líneas existían, apretadas en un cuadradito de la esquina. Hace falta más
+   especificidad que la regla global, de ahí `.bot-plano svg.bot-hilos`. */
+.bot-plano svg.bot-hilos {
+  position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none;
   .bot-hilo { color: var(--line-strong);
-    path { stroke: currentColor; stroke-width: 1.8; }
-    text { fill: var(--text-3); font: 700 9px var(--font-body); text-anchor: middle; }
+    path { stroke: currentColor; stroke-width: 1.9; }
+    polygon { fill: currentColor; }
+    text { fill: var(--text-2); font: 700 9.5px var(--font-body); text-anchor: middle;
+      paint-order: stroke; stroke: var(--bg); stroke-width: 3px; stroke-linejoin: round; }
     &[data-tono="si"]     { color: var(--ok); }
     &[data-tono="no"]     { color: var(--danger); }
     &[data-tono="error"]  { color: var(--warn); path { stroke-dasharray: 4 3; } }

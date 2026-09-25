@@ -10,6 +10,19 @@ import {
 } from './bot-modelo';
 import { Aviso, bloqueDeArranque, revisar, variablesDisponibles } from './bot-revision';
 
+/** Una conexión entre dos bloques, ya resuelta para dibujar. */
+interface Linea {
+  d: string;
+  etiqueta: string;
+  tono: string;
+  /** Dónde va la etiqueta. */
+  x: number;
+  y: number;
+  /** La punta de flecha, al final de la línea. */
+  px: number;
+  py: number;
+}
+
 /** Un mensaje de la prueba, como lo vería el cliente. */
 interface MensajeProbado {
   tipo: string;
@@ -247,8 +260,9 @@ export class WaMetaBotComponent implements OnInit {
 
     // Se engancha al último bloque suelto: dibujar es poner cosas en orden, no
     // conectar a mano cada vez.
+    const sinSalida: TipoBloque[] = ['end', 'transfer_agent', 'condition', 'goto'];
     const suelto = [...this.flujo.steps].reverse().find(x =>
-      !x.next_step && x.type !== 'end' && x.type !== 'transfer_agent' && x.type !== 'condition' && !FICHAS[x.type].espera);
+      !x.next_step && !sinSalida.includes(x.type) && !FICHAS[x.type].espera);
 
     if (suelto) suelto.next_step = b.id;
 
@@ -300,6 +314,7 @@ export class WaMetaBotComponent implements OnInit {
       case 'delay': return `Pausa de ${b.delay_seconds ?? 0} s`;
       case 'image': case 'document': return b.media_caption || b.media_url || '—';
       case 'link': return `${b.button_text || 'Abrir'} → ${b.url || '—'}`;
+      case 'goto': return `Sigue en «${this.config.flows.find(f => f.id === b.flow_id)?.name ?? '—'}»`;
       case 'transfer_agent': return `Área: ${b.agent_department || 'soporte'}`;
       default: return b.message || FICHAS[b.type].para;
     }
@@ -479,23 +494,33 @@ export class WaMetaBotComponent implements OnInit {
   }
 
   /** Las líneas entre bloques: de dónde a dónde, y con qué etiqueta. */
-  get lineas(): { d: string; etiqueta: string; tono: string; x: number; y: number }[] {
+  get lineas(): Linea[] {
     const porId = new Map(this.flujo.steps.map(b => [b.id, b]));
-    const salida: { d: string; etiqueta: string; tono: string; x: number; y: number }[] = [];
+    const salida: Linea[] = [];
+    /** Cuántas salidas ya salieron de cada bloque, para no superponerlas. */
+    const salidas = new Map<string, number>();
 
     const unir = (a: Bloque, bId: string | null | undefined, etiqueta: string, tono: string) => {
       if (!bId) return;
       const b = porId.get(bId);
       if (!b) return;
 
-      const x1 = a.x + 115, y1 = a.y + 92;
-      const x2 = b.x + 115, y2 = b.y - 4;
-      const curva = Math.max(30, Math.abs(y2 - y1) / 2);
+      // Un bloque de botones tiene varias salidas: se reparten a lo ancho de su
+      // borde inferior, si no se dibujarían una encima de la otra.
+      const n = salidas.get(a.id) ?? 0;
+      salidas.set(a.id, n + 1);
+
+      const x1 = a.x + 60 + Math.min(n, 3) * 40, y1 = a.y + 94;
+      const x2 = b.x + 115, y2 = b.y - 6;
+      const curva = Math.max(34, Math.abs(y2 - y1) / 2);
 
       salida.push({
         d: `M ${x1} ${y1} C ${x1} ${y1 + curva}, ${x2} ${y2 - curva}, ${x2} ${y2}`,
         etiqueta, tono,
-        x: (x1 + x2) / 2, y: (y1 + y2) / 2,
+        x: (x1 + x2) / 2, y: (y1 + y2) / 2 - 3,
+        // La punta se dibuja a mano: dentro de un <marker>, currentColor no
+        // hereda el color de la línea y todas las flechas salían negras.
+        px: x2, py: y2,
       });
     };
 
@@ -527,6 +552,8 @@ export class WaMetaBotComponent implements OnInit {
   probando = false;
   charla: MensajeProbado[] = [];
   private pasoProbado: string | null = null;
+  /** El flujo en el que va la prueba; puede cambiar si hay un salto. */
+  private flujoProbado = '';
   private datosProbados: any = {};
   terminoLaPrueba = false;
   escribiendo = '';
@@ -544,6 +571,7 @@ export class WaMetaBotComponent implements OnInit {
   reiniciarPrueba(): void {
     this.charla = [];
     this.pasoProbado = null;
+    this.flujoProbado = this.flujo.id;
     this.datosProbados = {};
     this.terminoLaPrueba = false;
     this.correrPrueba();
@@ -563,7 +591,7 @@ export class WaMetaBotComponent implements OnInit {
     this.probando = true;
 
     this.api.probarBot({
-      flow_id: this.flujo.id,
+      flow_id: this.flujoProbado || this.flujo.id,
       flows: this.config.flows,
       paso: this.pasoProbado,
       datos: this.datosProbados,
@@ -574,6 +602,8 @@ export class WaMetaBotComponent implements OnInit {
         const d = r?.data ?? {};
         this.charla.push(...(d.mensajes ?? []));
         this.pasoProbado = d.paso ?? null;
+        // Pudo haber saltado a otro flujo: se sigue por ahí.
+        if (d.flujo && d.flujo !== this.flujoProbado) this.flujoProbado = d.flujo;
         this.datosProbados = d.datos ?? {};
         this.terminoLaPrueba = !!d.terminado;
 

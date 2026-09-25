@@ -9,7 +9,7 @@
 export type TipoBloque =
   | 'message' | 'buttons' | 'list' | 'input' | 'cliente'
   | 'api_call' | 'condition' | 'delay' | 'image' | 'document'
-  | 'link' | 'transfer_agent' | 'end';
+  | 'link' | 'goto' | 'transfer_agent' | 'end';
 
 /** Botón de respuesta rápida de Meta. */
 export interface BotonBloque {
@@ -82,6 +82,9 @@ export interface Bloque {
   url?: string;
 
   agent_department?: string;
+
+  /** «Ir a otro flujo»: con qué flujo sigue la conversación. */
+  flow_id?: string;
 
   // Rutas
   next_step?: string | null;
@@ -184,6 +187,10 @@ export const FICHAS: Record<TipoBloque, FichaBloque> = {
     label: 'Botón con enlace', tono: 'violeta', para: 'Abre una dirección dentro de WhatsApp.',
     trazo: 'M10 13a5 5 0 0 0 7 0l2-2a5 5 0 0 0-7-7l-1 1M14 11a5 5 0 0 0-7 0l-2 2a5 5 0 0 0 7 7l1-1',
   },
+  goto: {
+    label: 'Ir a otro flujo', tono: 'violeta', para: 'Sigue en otro flujo, para armar el bot por piezas.',
+    trazo: 'M4 12h13M13 6l6 6-6 6M20 4v16',
+  },
   transfer_agent: {
     label: 'Pasar a un agente', tono: 'turquesa', para: 'Calla al bot y avisa a una persona.',
     trazo: 'M17 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2M9.5 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8ZM17 4h5M19.5 1.5v5',
@@ -197,7 +204,7 @@ export const FICHAS: Record<TipoBloque, FichaBloque> = {
 /** El orden en que se ofrecen; primero lo que más se usa. */
 export const PALETA: TipoBloque[] = [
   'message', 'buttons', 'list', 'input', 'cliente',
-  'condition', 'api_call', 'link', 'image', 'document',
+  'condition', 'api_call', 'link', 'goto', 'image', 'document',
   'delay', 'transfer_agent', 'end',
 ];
 
@@ -269,6 +276,9 @@ export function nuevoBloque(type: TipoBloque, x = 80, y = 80): Bloque {
       b.message = 'Podés pagar desde acá:';
       b.url = 'https://';
       b.button_text = 'Pagar ahora';
+      break;
+    case 'goto':
+      b.flow_id = '';
       break;
     case 'transfer_agent':
       b.agent_department = 'soporte';

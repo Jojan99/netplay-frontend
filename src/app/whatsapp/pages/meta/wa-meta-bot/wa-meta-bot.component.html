@@ -84,14 +84,10 @@
       <div class="bot-lienzo" #lienzo>
         <div class="bot-plano" [style.width.px]="anchoLienzo" [style.height.px]="altoLienzo"
              [style.transform]="'scale(' + zoom + ')'">
-          <svg class="bot-hilos" [attr.width]="anchoLienzo" [attr.height]="altoLienzo">
-            <defs>
-              <marker id="bot-punta" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
-                <path d="M0 0 L10 5 L0 10 z" fill="currentColor"/>
-              </marker>
-            </defs>
+          <svg class="bot-hilos" [attr.viewBox]="'0 0 ' + anchoLienzo + ' ' + altoLienzo" preserveAspectRatio="none">
             <g *ngFor="let l of lineas" [attr.data-tono]="l.tono" class="bot-hilo">
-              <path [attr.d]="l.d" fill="none" marker-end="url(#bot-punta)"/>
+              <path [attr.d]="l.d" fill="none"/>
+              <polygon [attr.points]="(l.px - 4) + ',' + (l.py - 6) + ' ' + (l.px + 4) + ',' + (l.py - 6) + ' ' + l.px + ',' + (l.py + 2)"/>
               <text *ngIf="l.etiqueta" [attr.x]="l.x" [attr.y]="l.y">{{ l.etiqueta }}</text>
             </g>
           </svg>
@@ -305,6 +301,17 @@
               <label class="np-field"><span>Texto del botón</span><input class="np-input" [(ngModel)]="bloque.button_text" (ngModelChange)="toco()" [maxlength]="META.LARGO_BOTON" /></label>
             </ng-container>
 
+            <!-- Ir a otro flujo -->
+            <ng-container *ngIf="bloque.type === 'goto'">
+              <label class="np-field"><span>Sigue en el flujo</span>
+                <select class="np-input" [(ngModel)]="bloque.flow_id" (ngModelChange)="toco()">
+                  <option value="">— elegir flujo —</option>
+                  <option *ngFor="let f of config.flows" [value]="f.id" [disabled]="f.id === flujo.id">{{ f.name }}</option>
+                </select>
+              </label>
+              <p class="np-notice np-notice--info">La conversación arranca por el primer bloque de ese flujo y se lleva las variables ya cargadas. Sirve para armar el bot por piezas: uno que identifica al cliente, otro que cobra.</p>
+            </ng-container>
+
             <!-- Agente -->
             <label class="np-field" *ngIf="bloque.type === 'transfer_agent'"><span>Área</span>
               <input class="np-input" [(ngModel)]="bloque.agent_department" (ngModelChange)="toco()" placeholder="soporte" />
@@ -312,7 +319,7 @@
             <p class="np-notice np-notice--info" *ngIf="bloque.type === 'transfer_agent'">El bot se calla con ese número hasta que alguien lo reactive desde el CRM: si siguiera contestando, le hablaría encima al agente.</p>
 
             <!-- Salida común -->
-            <label class="np-field" *ngIf="!['buttons','list','condition','end','transfer_agent'].includes(bloque.type)">
+            <label class="np-field" *ngIf="!['buttons','list','condition','end','transfer_agent','goto'].includes(bloque.type)">
               <span>Cuando termine, ir a</span>
               <select class="np-input" [(ngModel)]="bloque.next_step" (ngModelChange)="toco()">
                 <option [ngValue]="null">— terminar la conversación —</option>

@@ -122,6 +122,10 @@ export function revisar(flujo: Flujo): Aviso[] {
       avisos.push({ nivel: 'error', bloque: b.id, texto: `«${nombre}» necesita una dirección pública del archivo.` });
     }
 
+    if (b.type === 'goto' && !b.flow_id) {
+      avisos.push({ nivel: 'error', bloque: b.id, texto: 'No dice a qué flujo hay que ir.' });
+    }
+
     if (b.type === 'link' && !/^https?:\/\/.+/i.test(b.url ?? '')) {
       avisos.push({ nivel: 'error', bloque: b.id, texto: 'El botón con enlace necesita una dirección válida.' });
     }
@@ -131,7 +135,7 @@ export function revisar(flujo: Flujo): Aviso[] {
     }
 
     // Un bloque que no espera nada y no tiene salida deja la charla colgada.
-    const cierra = b.type === 'end' || b.type === 'transfer_agent';
+    const cierra = b.type === 'end' || b.type === 'transfer_agent' || b.type === 'goto';
     const decide = b.type === 'condition';
     const espera = FICHAS[b.type]?.espera;
 
