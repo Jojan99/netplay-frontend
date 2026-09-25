@@ -29,7 +29,13 @@ import { RouterModule } from '@angular/router';
     .np-seg a:hover { background: var(--surface-3); }
     .np-seg a.is-active { background: var(--text); color: var(--bg); }
     .np-wa-outlet { flex: 1; min-height: 0; display: flex; flex-direction: column; }
-    .np-wa-outlet > * { flex: 1; min-height: 0; display: flex; flex-direction: column; }
+    /* Angular deja el <router-outlet> en el DOM y cuelga el componente a su
+       lado, como hermano. Con el selector de hijos el outlet —que está vacío—
+       también recibía
+       flex:1 y se quedaba con la mitad del alto: eso era la media pantalla en
+       blanco arriba de cada pestaña. */
+    .np-wa-outlet > router-outlet { display: none; }
+    .np-wa-outlet > *:not(router-outlet) { flex: 1; min-height: 0; display: flex; flex-direction: column; }
   `],
 })
 export class MetaLayoutComponent {

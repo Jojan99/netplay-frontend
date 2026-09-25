@@ -7,12 +7,6 @@
 
 .bot { display: flex; flex-direction: column; min-height: 0; flex: 1; gap: 10px; }
 
-/* Las tres columnas necesitan una altura de verdad.
-   Con sólo `flex: 1` dependen de que toda la cadena de padres tenga altura
-   resuelta; cuando no la tiene, el sobrante es cero, las columnas se aplastan
-   y queda media pantalla vacía. El `min-height` es el piso que lo evita. */
-.bot-cuerpo { min-height: clamp(520px, calc(100vh - 215px), 1000px); }
-
 .bot-barra { flex-wrap: wrap; gap: 8px; }
 .bot-titulo { display: flex; align-items: center; gap: 9px;
   h2 { margin: 0; font: 700 16px/1.2 var(--font-display); color: var(--text); } }
@@ -27,7 +21,9 @@
 [data-tono="turquesa"] { --bt: #0d9488;      --bt-soft: color-mix(in srgb, #0d9488 14%, transparent); }
 
 .bot-cuerpo {
-  flex: 1; min-height: 0;
+  /* `flex: 1` reparte lo que sobra de alto; el piso es para que las columnas
+     no se aplasten en una pantalla baja. Cada columna hace su propio scroll. */
+  flex: 1; min-height: 420px;
   display: grid; grid-template-columns: 232px minmax(0, 1fr) 340px; gap: 10px;
 }
 
