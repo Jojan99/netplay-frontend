@@ -125,38 +125,39 @@
       <div class="np-btnrow np-btnrow--end"><button type="button" class="np-btn np-btn--ghost" (click)="assignModal = false">Cancelar</button><button type="button" class="np-btn np-btn--primary" (click)="confirmAssign()" [disabled]="assigning || !selectedClient">{{ assigning ? 'Asignando…' : 'Confirmar asignación' }}</button></div>
     </div>
   </div>
-  <!-- Cambiar el nombre de la ONT en la OLT -->
-  <div class="np-overlay" *ngIf="renombrarOnt" (click)="renombrarOnt = null">
-    <div class="np-modal" (click)="$event.stopPropagation()" role="dialog" aria-label="Cambiar el nombre de la ONT">
-      <div class="np-modal-head">
-        <div>
-          <p class="np-kicker">ONT <b>/</b> {{ renombrarOnt.fsp }}:{{ renombrarOnt.ont_id }}</p>
-          <h3>Cambiarle el nombre</h3>
-        </div>
-      </div>
 
-      <div class="np-modal-body">
-        <p class="np-fine">Es el nombre con el que la OLT identifica al equipo, y el que se ve en toda la plataforma. Se cambia en la OLT, no sólo acá.</p>
+</div>
 
-        <label class="np-field"><span>Nombre</span>
-          <input class="np-input" [(ngModel)]="nombreNuevo" maxlength="64" placeholder="JUAN_PEREZ" (keydown.enter)="guardarNombre()" autofocus />
-        </label>
-
-        <p class="np-notice np-notice--info" *ngIf="nombreComoQueda && nombreComoQueda !== nombreNuevo">
-          Va a quedar como <b class="np-mono">{{ nombreComoQueda }}</b>: la OLT no admite espacios, acentos ni comillas.
-        </p>
-        <p class="np-notice np-notice--warn" *ngIf="!nombreComoQueda">Escribí un nombre. No puede quedar vacío.</p>
-
-        <p class="np-fine" *ngIf="renombrarOnt.serial">Serial <span class="np-mono">{{ renombrarOnt.serial }}</span></p>
-      </div>
-
-      <div class="np-modal-foot">
-        <button type="button" class="np-btn np-btn--ghost" (click)="renombrarOnt = null" [disabled]="renombrando">Cancelar</button>
-        <button type="button" class="np-btn np-btn--primary" (click)="guardarNombre()" [disabled]="renombrando || !nombreComoQueda">
-          {{ renombrando ? 'Cambiando en la OLT…' : 'Cambiar nombre' }}
-        </button>
+<!-- Cambiar el nombre de la ONT en la OLT -->
+<div class="np-overlay" *ngIf="renombrarOnt" (click)="renombrarOnt = null">
+  <div class="np-modal" (click)="$event.stopPropagation()" role="dialog" aria-label="Cambiar el nombre de la ONT">
+    <div class="np-modal-head">
+      <div>
+        <p class="np-kicker">ONT <b>/</b> {{ renombrarOnt.fsp }}:{{ renombrarOnt.ont_id }}</p>
+        <h3>Cambiarle el nombre</h3>
       </div>
     </div>
-  </div>
 
+    <div class="np-modal-body">
+      <p class="np-fine">Es el nombre con el que la OLT identifica al equipo, y el que se ve en toda la plataforma. Se cambia en la OLT, no sólo acá.</p>
+
+      <label class="np-field"><span>Nombre</span>
+        <input class="np-input" [(ngModel)]="nombreNuevo" maxlength="64" placeholder="JUAN_PEREZ" (keydown.enter)="guardarNombre()" autofocus />
+      </label>
+
+      <p class="np-notice np-notice--info" *ngIf="nombreComoQueda && nombreComoQueda !== nombreNuevo">
+        Va a quedar como <b class="np-mono">{{ nombreComoQueda }}</b>: la OLT no admite espacios, acentos ni comillas.
+      </p>
+      <p class="np-notice np-notice--warn" *ngIf="!nombreComoQueda">Escribí un nombre. No puede quedar vacío.</p>
+
+      <p class="np-fine" *ngIf="renombrarOnt.serial">Serial <span class="np-mono">{{ renombrarOnt.serial }}</span></p>
+    </div>
+
+    <div class="np-modal-foot">
+      <button type="button" class="np-btn np-btn--ghost" (click)="renombrarOnt = null" [disabled]="renombrando">Cancelar</button>
+      <button type="button" class="np-btn np-btn--primary" (click)="guardarNombre()" [disabled]="renombrando || !nombreComoQueda">
+        {{ renombrando ? 'Cambiando en la OLT…' : 'Cambiar nombre' }}
+      </button>
+    </div>
+  </div>
 </div>
