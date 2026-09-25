@@ -10,7 +10,7 @@
 
 /* La barra de pasos: dónde estoy, qué ya quedó listo, y clic para volver. */
 .inf-barra {
-  display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px;
+  display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 6px;
   background: var(--surface); border: 1px solid var(--border);
   border-radius: var(--radius); padding: 6px;
 }
@@ -55,6 +55,6 @@
 
 @media (max-width: 620px) {
   .inf-paso-t { display: none; }
-  .inf-barra { grid-template-columns: repeat(4, 1fr); }
+  .inf-barra { grid-template-columns: repeat(5, 1fr); }
   .inf-resumen > div { grid-template-columns: 1fr; gap: 2px; }
 }

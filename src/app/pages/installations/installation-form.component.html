@@ -15,7 +15,6 @@
 
     <div class="inf-wiz">
 
-      <!-- Los cuatro pasos, para saber dónde se está y qué falta -->
       <nav class="inf-barra" aria-label="Pasos">
         <button type="button" class="inf-paso" *ngFor="let p of PASOS"
                 [class.es-aqui]="p.n === paso"
@@ -60,81 +59,154 @@
           </label>
         </div>
 
-        <!-- ── 2 · Servicio y conexión ──────────────────────────────────── -->
+        <!-- ── 2 · Servicio ─────────────────────────────────────────────── -->
         <div class="np-form" *ngIf="paso === 2">
-          <label class="np-field"><span>Plan <em class="np-req">*</em></span>
-            <select class="np-input" [(ngModel)]="form.internet_plan_id" name="plan">
-              <option value="">Elegir…</option>
-              <option *ngFor="let p of plans" [value]="p.id">{{ p.plan_name }}</option>
-            </select>
+          <label class="np-field np-field-full"><span>Plan de internet <em class="np-req">*</em></span>
+            <np-select [(ngModel)]="form.internet_plan_id" [opciones]="plans" [presentacion]="presPlanes"
+                       [valorVacio]="''" placeholder="Seleccione plan…" textoBuscar="Buscar plan, velocidad o precio…"
+                       ariaLabel="Plan de internet"></np-select>
           </label>
-          <label class="np-field"><span>Día de corte <em class="np-req">*</em></span>
-            <select class="np-input" [(ngModel)]="form.grupo_facturacion" name="grupo">
-              <option value="1">15 de cada mes</option>
-              <option value="2">30 de cada mes</option>
-              <option value="3">Los dos (15 y 30)</option>
-            </select>
-          </label>
-
-          <p class="np-subhead np-field-full">Cómo entra a la red</p>
-
-          <label class="np-field"><span>Tipo de conexión <em class="np-req">*</em></span>
-            <select class="np-input" [(ngModel)]="form.connection_type" name="conexion">
-              <option value="pppoe">PPPoE</option>
-              <option value="static">IP fija</option>
-            </select>
-          </label>
-
-          <label class="np-field" *ngIf="esPppoe"><span>Usuario PPPoE <em class="np-req">*</em></span>
-            <input class="np-input np-mono" [(ngModel)]="form.pppoe_user" name="pppoeuser" [placeholder]="form.client_dni || 'la cédula'" />
-          </label>
-          <label class="np-field" *ngIf="esPppoe"><span>Clave PPPoE</span>
-            <input class="np-input np-mono" [(ngModel)]="form.pppoe_password" name="pppoepass" />
-          </label>
-          <label class="np-field" *ngIf="esPppoe"><span>Perfil</span>
-            <input class="np-input" [(ngModel)]="form.pppoe_profile" name="pppoeprof" />
-          </label>
-
-          <label class="np-field" *ngIf="!esPppoe"><span>IP asignada <em class="np-req">*</em></span>
-            <input class="np-input np-mono" [(ngModel)]="form.ip_asignada" name="ip" placeholder="10.0.0.25" />
-          </label>
-
-          <label class="np-field"><span>OLT por la que entra <em class="np-req" *ngIf="olts.length">*</em></span>
-            <select class="np-input" [(ngModel)]="form.olt_id" name="olt">
-              <option value="">Elegir…</option>
-              <option *ngFor="let o of olts" [value]="o.id">{{ o.name }}</option>
-            </select>
-            <small class="np-fine np-muted">Sin esto el técnico no puede autorizar el equipo desde la calle.</small>
-          </label>
-          <label class="np-field"><span>VLAN</span>
-            <input type="number" class="np-input np-mono" [(ngModel)]="form.vlan" name="vlan" />
+          <label class="np-field np-field-full"><span>Día de corte <em class="np-req">*</em></span>
+            <np-select [(ngModel)]="form.grupo_facturacion" [opciones]="cortes" [presentacion]="presCortes"
+                       [valorVacio]="''" placeholder="Seleccione…" ariaLabel="Día de corte"></np-select>
           </label>
         </div>
 
-        <!-- ── 3 · WiFi y visita ────────────────────────────────────────── -->
+        <!-- ── 3 · Conexión ─────────────────────────────────────────────── -->
         <div class="np-form" *ngIf="paso === 3">
-          <label class="np-field np-field-full"><span>Nombre de la red WiFi</span>
+          <!-- Con IP fija el cliente vive en el ARP del router; con PPPoE entra
+               con usuario y contraseña y la IP se la da el pool. -->
+          <div class="np-field np-field-full np-tipoconex">
+            <span>Tipo de conexión</span>
+            <div class="np-seg" role="group">
+              <button type="button" [attr.aria-pressed]="!esPppoe" (click)="cambiarTipoConexion('static')">IP fija</button>
+              <button type="button" [attr.aria-pressed]="esPppoe" (click)="cambiarTipoConexion('pppoe')">PPPoE</button>
+            </div>
+          </div>
+
+          <label class="np-field np-field-full" *ngIf="routers.length > 1 || cargandoRouters"><span>Router <em class="np-req">*</em></span>
+            <np-select [(ngModel)]="form.router_id" (ngModelChange)="alCambiarRouter()" [opciones]="routers" [presentacion]="presRouters"
+                       [cargando]="cargandoRouters" textoCargando="Cargando routers…" placeholder="Seleccione router…"
+                       [deshabilitado]="cargandoRouters" ariaLabel="Router"></np-select>
+          </label>
+
+          <label class="np-field" [class.np-field-full]="esPppoe"><span>VLAN <em class="np-req">*</em></span>
+            <np-select [ngModel]="vlanElegida" (ngModelChange)="alCambiarVlan($event)" [opciones]="interfaces" [presentacion]="presRedes"
+                       [cargando]="cargandoRedes" textoCargando="Leyendo el router…" placeholder="Seleccione VLAN…" ariaLabel="VLAN"></np-select>
+            <small class="np-fine np-muted" *ngIf="form.vlan">VLAN {{ form.vlan }}: con ella la OLT le arma el service port.</small>
+          </label>
+
+          <label class="np-field" *ngIf="!esPppoe && segments.length > 1"><span>Segmento <em>({{ segments.length }} redes en la VLAN)</em></span>
+            <np-select [ngModel]="segElegido" (ngModelChange)="alCambiarSegmento($event)" [opciones]="segments" [presentacion]="presSegmentos"
+                       placeholder="Seleccione segmento…" ariaLabel="Segmento"></np-select>
+          </label>
+
+          <label class="np-field np-field-full" *ngIf="!esPppoe"><span>IP <em class="np-req">*</em>
+            <em *ngIf="!cargandoIps && ips.length">({{ ips.length }} disponibles)</em></span>
+            <np-select [ngModel]="form.ip_asignada || null" (ngModelChange)="form.ip_asignada = $event || ''"
+                       [opciones]="opcionesIp.de(ips)" [presentacion]="presIps"
+                       [cargando]="cargandoIps" textoCargando="Buscando IP libres…" placeholder="Seleccione IP…"
+                       textoBuscar="Buscar IP: 50, .150, 192.168…" [buscable]="true"
+                       [deshabilitado]="!cargandoIps && !ips.length" ariaLabel="IP"></np-select>
+          </label>
+
+          <div *ngIf="avisoRedes" class="np-notice np-notice--warn np-notice--inline np-field-full">
+            <span>{{ avisoRedes }}</span>
+            <button type="button" class="np-btn np-btn--ghost np-btn--sm" (click)="cargarRedes()" [disabled]="cargandoRedes">
+              {{ cargandoRedes ? 'Reintentando…' : 'Reintentar' }}
+            </button>
+          </div>
+          <div *ngIf="avisoIps && !esPppoe" class="np-notice np-notice--warn np-notice--inline np-field-full">
+            <span>{{ avisoIps }}</span>
+            <button type="button" class="np-btn np-btn--ghost np-btn--sm" (click)="cargarIps()" [disabled]="cargandoIps">
+              {{ cargandoIps ? 'Reintentando…' : 'Reintentar' }}
+            </button>
+          </div>
+
+          <ng-container *ngIf="esPppoe">
+            <label class="np-field"><span>Usuario PPPoE <em class="np-req">*</em></span>
+              <input type="text" class="np-input np-mono" [(ngModel)]="form.pppoe_user" name="pppoeuser" placeholder="Suele ser el documento" />
+            </label>
+
+            <label class="np-field"><span>Contraseña PPPoE</span>
+              <span class="np-input-wrap">
+                <input type="text" class="np-input np-mono" [(ngModel)]="form.pppoe_password" name="pppoepass" placeholder="Contraseña del cliente" />
+                <button type="button" class="np-eye" (click)="generarClavePppoe()" title="Generar una contraseña">GENERAR</button>
+              </span>
+            </label>
+
+            <label class="np-field np-field-full"><span>Perfil PPP <em>define la velocidad</em></span>
+              <np-select [(ngModel)]="form.pppoe_profile" [opciones]="perfilesPpp" [presentacion]="presPerfilesPpp"
+                         [valorVacio]="''" [cargando]="cargandoPerfilesPpp" textoCargando="Leyendo el router…"
+                         [placeholder]="perfilesPpp.length ? 'Seleccione perfil…' : 'Sin perfiles en el router'"
+                         [deshabilitado]="!perfilesPpp.length" ariaLabel="Perfil PPP"></np-select>
+            </label>
+
+            <p class="np-notice np-notice--warn np-notice--inline np-field-full" *ngIf="avisoPpp">{{ avisoPpp }}</p>
+          </ng-container>
+        </div>
+
+        <!-- ── 4 · Equipo y WiFi ────────────────────────────────────────── -->
+        <div class="np-form" *ngIf="paso === 4">
+          <label class="np-field np-field-full"><span>OLT por la que entra <em class="np-req" *ngIf="olts.length">*</em></span>
+            <np-select [(ngModel)]="form.olt_id" (ngModelChange)="alCambiarOlt()" [opciones]="olts" [presentacion]="presOlts"
+                       placeholder="Seleccione OLT…" ariaLabel="OLT"></np-select>
+            <small class="np-fine np-muted">Sin esto el técnico no puede autorizar el equipo desde la calle.</small>
+          </label>
+
+          <label class="np-field"><span>{{ capacidades.etiqueta_perfil_linea || 'Perfil de línea' }}</span>
+            <np-select [(ngModel)]="form.line_profile_id" [opciones]="lineProfiles" [presentacion]="presPerfilLinea"
+                       [permitirVacio]="true" textoVacio="El de la OLT" [cargando]="cargandoPerfilesOlt"
+                       [deshabilitado]="cargandoPerfilesOlt || !form.olt_id" ariaLabel="Perfil de línea"></np-select>
+          </label>
+
+          <label class="np-field"><span>{{ capacidades.etiqueta_perfil_servicio || 'Perfil de servicio' }}</span>
+            <np-select [(ngModel)]="form.srv_profile_id" [opciones]="srvProfiles" [presentacion]="presPerfilServicio"
+                       [permitirVacio]="true" textoVacio="El de la OLT" [cargando]="cargandoPerfilesOlt"
+                       [deshabilitado]="cargandoPerfilesOlt || !form.olt_id || capacidades.perfil_servicio_en_alta === false"
+                       ariaLabel="Perfil de servicio"></np-select>
+            <small class="np-fine np-muted" *ngIf="capacidades.perfil_servicio_en_alta === false">Lo asigna la OLT al autorizar; en este equipo no se elige antes.</small>
+          </label>
+
+          <label class="np-field" *ngIf="capacidades.tipos_onu?.length"><span>Tipo de ONU</span>
+            <np-select [(ngModel)]="form.onu_type" [opciones]="capacidades.tipos_onu" [presentacion]="presTextos"
+                       [buscable]="true" textoBuscar="Buscar modelo: F680, F601…" ariaLabel="Tipo de ONU"></np-select>
+          </label>
+
+          <p class="np-notice np-notice--warn np-notice--inline np-field-full"
+             *ngIf="form.olt_id && !cargandoPerfilesOlt && !lineProfiles.length && !srvProfiles.length">
+            Esta OLT no tiene perfiles sincronizados. En <strong>OLT → Perfiles</strong> hacé clic en Sincronizar desde OLT.
+          </p>
+
+          <p class="np-subhead np-field-full">El WiFi que va a quedar puesto</p>
+
+          <label class="np-field np-field-full"><span>Nombre de la red</span>
             <input class="np-input" [(ngModel)]="form.wifi_ssid" name="ssid" maxlength="32" placeholder="CASA_PEREZ" />
             <small class="np-fine np-pos-danger" *ngIf="problemaDelNombreWifi">{{ problemaDelNombreWifi }}</small>
           </label>
           <label class="np-field np-field-full"><span>Clave del WiFi</span>
-            <input class="np-input np-mono" [(ngModel)]="form.wifi_password" name="wifipass" maxlength="63" />
+            <span class="np-input-wrap">
+              <input class="np-input np-mono" [(ngModel)]="form.wifi_password" name="wifipass" maxlength="63" />
+              <button type="button" class="np-eye" (click)="generarClaveWifi()" title="Generar una clave">GENERAR</button>
+            </span>
             <small class="np-fine np-pos-danger" *ngIf="problemaDeLaClaveWifi">{{ problemaDeLaClaveWifi }}</small>
             <small class="np-fine np-muted" *ngIf="!problemaDeLaClaveWifi">Sin ñ, tildes ni espacios: el equipo las rechaza.</small>
           </label>
-
-          <p class="np-subhead np-field-full">Cuándo se va</p>
-
-          <label class="np-field"><span>Fecha <em class="np-req">*</em></span>
-            <input type="date" class="np-input" [(ngModel)]="form.scheduled_date" name="fecha" />
-          </label>
-          <label class="np-field"><span>Hora <em class="np-req">*</em></span>
-            <input type="time" class="np-input np-mono" [(ngModel)]="form.scheduled_time" name="hora" />
-          </label>
         </div>
 
-        <!-- ── 4 · Técnicos, costos y resumen ───────────────────────────── -->
-        <ng-container *ngIf="paso === 4">
+        <!-- ── 5 · Visita, técnicos y resumen ───────────────────────────── -->
+        <ng-container *ngIf="paso === 5">
+          <div class="np-form">
+            <label class="np-field"><span>Fecha <em class="np-req">*</em></span>
+              <input type="date" class="np-input" [(ngModel)]="form.scheduled_date" name="fecha" />
+            </label>
+            <label class="np-field"><span>Hora <em class="np-req">*</em></span>
+              <input type="time" class="np-input np-mono" [(ngModel)]="form.scheduled_time" name="hora" />
+            </label>
+          </div>
+
+          <p class="np-subhead">Quién la hace</p>
+
           <div class="np-checklist">
             <label class="np-check" *ngFor="let t of technicians">
               <input type="checkbox" [checked]="form.technician_ids?.includes(t.id)" (change)="toggleTechnician(t.id)" />
@@ -158,18 +230,19 @@
           </div>
 
           <!-- Lo que se va a guardar, antes de guardarlo -->
+          <p class="np-subhead">Así queda la orden</p>
           <dl class="inf-resumen">
             <div><dt>Cliente</dt><dd>{{ form.client_name }} · {{ form.client_dni }}</dd></div>
             <div><dt>Dirección</dt><dd>{{ form.address }}<ng-container *ngIf="form.neighborhood">, {{ form.neighborhood }}</ng-container></dd></div>
-            <div><dt>Plan</dt><dd>{{ nombreDelPlan }}</dd></div>
-            <div><dt>Conexión</dt><dd>{{ esPppoe ? 'PPPoE · ' + form.pppoe_user : 'IP fija · ' + form.ip_asignada }}</dd></div>
-            <div><dt>OLT</dt><dd>{{ nombreDeLaOlt }}<ng-container *ngIf="form.vlan"> · VLAN {{ form.vlan }}</ng-container></dd></div>
+            <div><dt>Plan</dt><dd>{{ nombreDelPlan }} · corte {{ nombreDelCorte }}</dd></div>
+            <div><dt>Conexión</dt><dd>{{ esPppoe ? 'PPPoE · ' + form.pppoe_user + (form.pppoe_profile ? ' · perfil ' + form.pppoe_profile : '') : 'IP fija · ' + form.ip_asignada }}</dd></div>
+            <div><dt>Router y VLAN</dt><dd>{{ nombreDelRouter }} · VLAN {{ form.vlan || '—' }}</dd></div>
+            <div><dt>OLT</dt><dd>{{ nombreDeLaOlt }}</dd></div>
             <div><dt>WiFi</dt><dd>{{ form.wifi_ssid || 'lo pone el técnico' }}</dd></div>
             <div><dt>Visita</dt><dd>{{ form.scheduled_date }} a las {{ form.scheduled_time }}</dd></div>
           </dl>
         </ng-container>
 
-        <!-- ── Navegación ───────────────────────────────────────────────── -->
         <div class="np-btnrow inf-pies">
           <button type="button" class="np-btn np-btn--ghost" (click)="atras()" [disabled]="paso === 1">Atrás</button>
 
