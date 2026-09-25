@@ -69,7 +69,9 @@
         <div class="seg-qr">
           <div class="seg-qr-img">
             <img *ngIf="imagenQr" [src]="imagenQr" alt="Código QR del authenticator" width="200" height="200" />
-            <p class="np-fine np-muted" *ngIf="!imagenQr">Escribí el código de abajo a mano en la app.</p>
+            <p class="np-fine np-muted" *ngIf="!imagenQr">
+              No se pudo dibujar el código QR acá. Usá el código de al lado: sirve igual.
+            </p>
           </div>
 
           <div class="seg-qr-lado">

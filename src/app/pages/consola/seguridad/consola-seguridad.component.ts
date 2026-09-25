@@ -213,14 +213,31 @@ export class ConsolaSeguridadComponent implements OnInit {
   imagenQr = '';
 
   private async dibujarQr(): Promise<void> {
-    if (!this.direccionQr) { this.imagenQr = ''; return; }
+    this.imagenQr = '';
+
+    if (!this.direccionQr) {
+      return;
+    }
 
     try {
-      const QRCode = await import('qrcode');
-      this.imagenQr = await QRCode.toDataURL(this.direccionQr, { width: 200, margin: 1 });
-    } catch {
-      // Sin QR todavía se puede activar escribiendo el secreto a mano.
-      this.imagenQr = '';
+      // La librería es CommonJS: según cómo la empaquete el compilador, lo
+      // que se busca queda en la raíz o dentro de `default`. Se prueban las
+      // dos en vez de dar por hecha una.
+      // La entrada de navegador, explícita: «qrcode» a secas resuelve a la
+      // versión de Node, que arrastra pngjs y dibuja de otra manera.
+      const modulo: any = await import('qrcode/lib/browser');
+      const qr = typeof modulo?.toDataURL === 'function' ? modulo : modulo?.default;
+
+      if (typeof qr?.toDataURL !== 'function') {
+        throw new Error('la librería de QR no expone toDataURL');
+      }
+
+      this.imagenQr = await qr.toDataURL(this.direccionQr, { width: 200, margin: 1 });
+    } catch (e) {
+      // Que el dibujo falle no puede impedir activar el authenticator: se
+      // muestra el código para escribirlo a mano, que es igual de válido.
+      this.verSecreto = true;
+      console.warn('[2FA] No se pudo dibujar el QR, se muestra el código:', e);
     }
   }
 }
