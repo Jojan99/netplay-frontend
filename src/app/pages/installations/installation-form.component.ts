@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
 import { InstallationService } from '../../services/installation.service';
+import { OltService } from '../../services/olt.service';
 import { UserService } from '../../services/user.service';
 
 @Component({
@@ -32,6 +33,7 @@ export class InstallationFormComponent implements OnInit {
   constructor(
     private svc: InstallationService,
     private userSvc: UserService,
+    private oltSvc: OltService,
     private router: Router
   ) {}
 
@@ -48,6 +50,21 @@ export class InstallationFormComponent implements OnInit {
       client_email: '',
       address: '',
       neighborhood: '',
+      // El servicio que se le va a instalar. Se acuerda acá, al tomar el
+      // pedido, para que el técnico no tenga que llamar desde la casa.
+      internet_plan_id: '',
+      grupo_facturacion: '1',
+      connection_type: 'pppoe',
+      pppoe_user: '',
+      pppoe_password: '',
+      pppoe_profile: '',
+      ip_asignada: '',
+      router_id: '',
+      wifi_ssid: '',
+      wifi_password: '',
+      olt_id: '',
+      vlan: '',
+
       scheduled_date: '',
       scheduled_time: '09:00',
       installation_cost: '0',
@@ -57,8 +74,41 @@ export class InstallationFormComponent implements OnInit {
     };
   }
 
+  plans: any[] = [];
+  olts: any[] = [];
+
+  /** Con PPPoE no hay IP fija que pedir, y al revés. */
+  get esPppoe(): boolean { return this.form.connection_type === 'pppoe'; }
+
+  /**
+   * La clave del WiFi tiene que entrar en el equipo.
+   *
+   * La OLT y las ONT rechazan la ñ, los acentos y varios signos, y toda la
+   * orden se manda junta: una clave con ñ hace fallar también el nombre de la
+   * red. Mejor que se sepa acá y no con el técnico en la casa del cliente.
+   */
+  get problemaDeLaClaveWifi(): string {
+    const c = this.form.wifi_password ?? '';
+    if (!c) return '';
+    if (c.length < 8) return 'Al menos 8 caracteres.';
+    if (!/^[A-Za-z0-9\-_.@#$%&*+=!?():,]+$/.test(c)) return 'Sin ñ, sin tildes y sin espacios: el equipo la rechaza.';
+    return '';
+  }
+
+  get problemaDelNombreWifi(): string {
+    const n = this.form.wifi_ssid ?? '';
+    if (!n) return '';
+    if (!/^[A-Za-z0-9\-_. ]+$/.test(n)) return 'Sin ñ ni tildes: el equipo lo rechaza.';
+    return '';
+  }
+
   loadOptions(): void {
     this.svc.getTechnicians().subscribe(r => this.technicians = r?.data || r || []);
+    this.svc.getPlans().subscribe((r: any) => this.plans = r?.data || r || []);
+    this.oltSvc.listOlts().subscribe({
+      next: (r: any) => this.olts = r?.data ?? [],
+      error: () => { /* sin OLT se puede tomar el pedido igual */ },
+    });
     this.userSvc.getAllUser().subscribe((r: any) => {
       this.clients = r.data || r || [];
     });

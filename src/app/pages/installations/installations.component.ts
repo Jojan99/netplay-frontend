@@ -5,12 +5,13 @@ import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
 import { InstallationService, InstallationOrder, InstallationLog } from '../../services/installation.service';
 import { InsigniaSelect, NpSelectComponent } from '../../common/np-select/np-select.component';
+import { ProvisionarInstalacionComponent } from './provisionar/provisionar-instalacion.component';
 import { OpcionSimple, PRESENTACION_METODOS_PAGO, PRESENTACION_SIMPLE, conValor } from '../../common/np-select/presentaciones';
 
 @Component({
   selector: 'app-installations',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterModule, NpSelectComponent],
+  imports: [CommonModule, FormsModule, RouterModule, NpSelectComponent, ProvisionarInstalacionComponent],
   templateUrl: './installations.component.html',
   styleUrl: './installations.component.scss',
   host: { class: 'np-console' },
@@ -239,6 +240,21 @@ export class InstallationsComponent implements OnInit {
       },
       complete: () => { delete this.actionLoading[id]; }
     });
+  }
+
+  /**
+   * La instalación que el técnico está terminando.
+   *
+   * Va en su propia pantalla porque es lo que se hace en la calle, con el
+   * equipo en la mano: esta lista es para la oficina.
+   */
+  provisionando: any = null;
+
+  abrirProvisionar(inst: any): void { this.provisionando = inst; }
+
+  terminoLaInstalacion(): void {
+    this.provisionando = null;
+    this.load();
   }
 
   start(id: number): void {

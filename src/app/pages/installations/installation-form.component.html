@@ -35,6 +35,68 @@
         </div>
       </section>
 
+      <section class="np-card">
+        <div class="np-card-h"><h2>Servicio y conexión</h2><span class="np-card-meta">Lo que el técnico va a dejar configurado</span></div>
+        <div class="np-form">
+          <label class="np-field"><span>Plan <em>*</em></span>
+            <select class="np-input" [(ngModel)]="form.internet_plan_id" name="plan">
+              <option value="">Elegir…</option>
+              <option *ngFor="let p of plans" [value]="p.id">{{ p.plan_name }} — {{ p.monthly_price | currency:'COP':'symbol-narrow':'1.0-0' }}</option>
+            </select>
+          </label>
+
+          <label class="np-field"><span>Día de corte <em>*</em></span>
+            <select class="np-input" [(ngModel)]="form.grupo_facturacion" name="grupo">
+              <option value="1">15 de cada mes</option>
+              <option value="2">30 de cada mes</option>
+              <option value="3">Los dos (15 y 30)</option>
+            </select>
+          </label>
+
+          <label class="np-field"><span>Tipo de conexión <em>*</em></span>
+            <select class="np-input" [(ngModel)]="form.connection_type" name="conexion">
+              <option value="pppoe">PPPoE</option>
+              <option value="static">IP fija</option>
+            </select>
+          </label>
+
+          <label class="np-field"><span>OLT por la que entra</span>
+            <select class="np-input" [(ngModel)]="form.olt_id" name="olt">
+              <option value="">Elegir…</option>
+              <option *ngFor="let o of olts" [value]="o.id">{{ o.name }}</option>
+            </select>
+          </label>
+
+          <label class="np-field"><span>VLAN</span><input type="number" class="np-input np-mono" [(ngModel)]="form.vlan" name="vlan" /></label>
+
+          <!-- PPPoE -->
+          <ng-container *ngIf="esPppoe">
+            <label class="np-field"><span>Usuario PPPoE <em>*</em></span><input class="np-input np-mono" [(ngModel)]="form.pppoe_user" name="pppoeuser" [placeholder]="form.client_dni || 'la cédula'" /></label>
+            <label class="np-field"><span>Clave PPPoE</span><input class="np-input np-mono" [(ngModel)]="form.pppoe_password" name="pppoepass" /></label>
+            <label class="np-field"><span>Perfil</span><input class="np-input" [(ngModel)]="form.pppoe_profile" name="pppoeprof" /></label>
+          </ng-container>
+
+          <!-- IP fija -->
+          <ng-container *ngIf="!esPppoe">
+            <label class="np-field"><span>IP <em>*</em></span><input class="np-input np-mono" [(ngModel)]="form.ip_asignada" name="ip" placeholder="10.0.0.25" /></label>
+          </ng-container>
+
+          <label class="np-field"><span>Nombre del WiFi</span>
+            <input class="np-input" [(ngModel)]="form.wifi_ssid" name="ssid" maxlength="32" placeholder="CASA_PEREZ" />
+            <small class="np-fine np-pos-danger" *ngIf="problemaDelNombreWifi">{{ problemaDelNombreWifi }}</small>
+          </label>
+
+          <label class="np-field"><span>Clave del WiFi</span>
+            <input class="np-input np-mono" [(ngModel)]="form.wifi_password" name="wifipass" maxlength="63" />
+            <small class="np-fine np-pos-danger" *ngIf="problemaDeLaClaveWifi">{{ problemaDeLaClaveWifi }}</small>
+          </label>
+        </div>
+
+        <p class="np-fine np-muted">
+          Todo esto viaja con la orden: el técnico lo aplica desde la casa del cliente sin llamar a la oficina.
+        </p>
+      </section>
+
       <div class="np-form-col">
         <section class="np-card">
           <div class="np-card-h"><h2>Programación</h2></div>

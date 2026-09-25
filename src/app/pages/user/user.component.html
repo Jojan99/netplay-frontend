@@ -878,8 +878,15 @@
           ]">
           <span>{{ f.label }}</span>
           <input [type]="f.type" class="np-input" [(ngModel)]="newUser[f.key]"
-                 (ngModelChange)="guardarBorrador()" [placeholder]="f.ph" />
+                 (ngModelChange)="guardarBorrador(); f.key === 'dni' && buscarInstalacion()" [placeholder]="f.ph" />
         </label>
+        <!-- Lo que ya se cargó al tomar el pedido: no hay por qué escribirlo
+             dos veces, y es donde aparecen las diferencias. -->
+        <p class="np-notice np-notice--info np-field-full" *ngIf="instalacionEncontrada">
+          Este cliente ya tiene una orden de instalación<ng-container *ngIf="instalacionEncontrada.estado_orden === 'completed'"> (ya instalada)</ng-container>.
+          <button type="button" class="np-link" (click)="usarLaInstalacion()">Traer sus datos</button>
+        </p>
+
         <label class="np-field"><span>Periodo de facturación</span>
           <np-select [ngModel]="comoTexto(newUser.periode_facturation)" (ngModelChange)="newUser.periode_facturation = $event; guardarBorrador()"
                      [opciones]="DataCortes" [presentacion]="presCortes" [valorVacio]="'0'" placeholder="Seleccione…" ariaLabel="Periodo de facturación"></np-select>

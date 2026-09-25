@@ -66,6 +66,7 @@
               <td class="np-td-right"><div class="np-rowacts" (click)="$event.stopPropagation()">
                 <button type="button" class="np-icobtn np-icobtn--ok" *ngIf="inst.status === 'pending'" (click)="confirm(inst.id!)" [disabled]="actionLoading[inst.id!]" title="Confirmar"><span *ngIf="actionLoading[inst.id!] === 'confirm'" class="np-spinner np-spinner--sm"></span><svg *ngIf="actionLoading[inst.id!] !== 'confirm'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="m5 13 4 4L19 7"/></svg></button>
                 <button type="button" class="np-icobtn np-icobtn--ok" *ngIf="inst.status === 'confirmed'" (click)="start(inst.id!)" [disabled]="actionLoading[inst.id!]" title="Iniciar"><span *ngIf="actionLoading[inst.id!] === 'start'" class="np-spinner np-spinner--sm"></span><svg *ngIf="actionLoading[inst.id!] !== 'start'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 5l12 7-12 7z"/></svg></button>
+                <button type="button" class="np-icobtn np-icobtn--ok" *ngIf="inst.status === 'in_progress'" (click)="abrirProvisionar(inst)" title="Instalar el equipo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16v10H4zM8 11h8M12 17v3M9 20h6"/></svg></button>
                 <button type="button" class="np-icobtn np-icobtn--ok" *ngIf="inst.status === 'in_progress'" (click)="openComplete(inst.id!)" title="Completar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="m8.5 12.5 2.5 2.5 4.5-5"/></svg></button>
                 <button type="button" class="np-icobtn" (click)="openPayment(inst.id!)" [disabled]="actionLoading[inst.id!]" title="Pago"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v10M9.5 9.5h3.75a1.75 1.75 0 0 1 0 3.5H10.75a1.75 1.75 0 0 0 0 3.5H14.5"/></svg></button>
                 <button type="button" class="np-icobtn" (click)="openDetail(inst)" title="Abrir ficha"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 6 6 6-6 6"/></svg></button>
@@ -111,6 +112,8 @@
           <div class="np-quick">
             <button type="button" class="np-btn np-btn--ok" *ngIf="selected.status === 'pending'" (click)="confirm(selected.id!)" [disabled]="actionLoading[selected.id!]">Confirmar</button>
             <button type="button" class="np-btn np-btn--ok" *ngIf="selected.status === 'confirmed'" (click)="start(selected.id!)" [disabled]="actionLoading[selected.id!]">Iniciar</button>
+            <!-- El paso de la calle: elegir el equipo y dejar todo hecho. -->
+            <button type="button" class="np-btn np-btn--primary" *ngIf="selected.status === 'in_progress'" (click)="abrirProvisionar(selected)">Instalar el equipo</button>
             <button type="button" class="np-btn np-btn--ok" *ngIf="selected.status === 'in_progress'" (click)="openComplete(selected.id!)">Completar</button>
             <button type="button" class="np-btn np-btn--ghost" (click)="openAssign(selected.id!)" *ngIf="selected.status !== 'completed' && selected.status !== 'cancelled'">Asignar técnicos</button>
             <button type="button" class="np-btn np-btn--ghost" (click)="openPayment(selected.id!)">Registrar pago</button>
@@ -276,3 +279,9 @@
     </div>
   </div>
 </div>
+
+<!-- El técnico terminando la instalación, con el equipo en la mano. -->
+<app-provisionar-instalacion *ngIf="provisionando"
+                             [orden]="provisionando"
+                             (cerrado)="provisionando = null"
+                             (listo)="terminoLaInstalacion()"></app-provisionar-instalacion>

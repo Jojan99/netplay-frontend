@@ -122,6 +122,24 @@ export class InstallationService {
     return this.http.get(`${this.baseUrl}/${id}/commission`);
   }
 
+  /** Las ONT que la OLT ve sin autorizar, y el inventario con stock. */
+  equiposDisponibles(id: number): Observable<any> {
+    return this.http.get(`${this.baseUrl}/${id}/equipos`);
+  }
+
+  /**
+   * Lo que hace el técnico al terminar: crea el cliente, autoriza el equipo,
+   * lo descuenta del inventario y deja programada la configuración.
+   */
+  provisionar(id: number, equipo: { fsp: string; ont_id: number; serial: string; inventory_id?: number | null }): Observable<any> {
+    return this.http.post(`${this.baseUrl}/${id}/provisionar`, equipo);
+  }
+
+  /** Lo que ya se sabe de una cédula por su orden de instalación. */
+  porCedula(dni: string): Observable<any> {
+    return this.http.get(`${this.baseUrl}/por-cedula/${encodeURIComponent(dni)}`);
+  }
+
   getDashboard(): Observable<any> {
     return this.http.get(`${this.baseUrl}/dashboard`);
   }

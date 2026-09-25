@@ -7,6 +7,7 @@ import { AuthService } from '../../services/auth.service';
 import { OntEquipoComponent } from '../../components/ont-equipo/ont-equipo.component';
 import { BurbujaTicketComponent } from '../../common/burbuja-ticket/burbuja-ticket.component';
 import { TicketsAbiertosService } from '../../services/tickets-abiertos.service';
+import { InstallationService } from '../../services/installation.service';
 import { FormsModule } from '@angular/forms';
 import { NpSelectComponent, PresentacionSelect } from '../../common/np-select/np-select.component';
 import {
@@ -144,6 +145,7 @@ export class UserComponent implements OnInit {
   private tareas = inject(TareasEnSegundoPlanoService);
   private gestionRemota = inject(GestionRemotaService);
   private ticketsAbiertos = inject(TicketsAbiertosService);
+  private instalacionSvc = inject(InstallationService);
   private router = inject(Router);
   /** Importar clientes (WispHub, Mikrowisp) es sólo del administrador. */
   readonly esAdmin = inject(AuthService).isAdmin();
@@ -1647,6 +1649,63 @@ export class UserComponent implements OnInit {
   private readonly BORRADOR_ALTA = 'np:alta-cliente';
 
   newUser: any = this.usuarioEnBlanco();
+  // ── Lo que ya se sabe por la orden de instalación ───────────────────────
+
+  /**
+   * La orden de instalación de esa cédula, si la hay.
+   *
+   * Los datos se cargaron una vez al tomar el pedido: plan, tipo de conexión,
+   * credencial, VLAN, día de corte. Volver a escribirlos es donde aparecen las
+   * diferencias entre lo que se acordó y lo que quedó en el sistema.
+   */
+  instalacionEncontrada: any = null;
+  private buscandoInstalacion: any = null;
+
+  buscarInstalacion(): void {
+    const dni = String(this.newUser?.dni ?? '').trim();
+
+    this.instalacionEncontrada = null;
+    clearTimeout(this.buscandoInstalacion);
+
+    if (dni.length < 5) return;
+
+    // Se espera a que termine de escribir: si no, una consulta por tecla.
+    this.buscandoInstalacion = setTimeout(() => {
+      this.instalacionSvc.porCedula(dni).subscribe({
+        next: (r: any) => { this.instalacionEncontrada = r?.data ?? null; },
+        error: () => { this.instalacionEncontrada = null; },
+      });
+    }, 450);
+  }
+
+  /** Vuelca la orden en el formulario, sin pisar lo que ya se escribió. */
+  usarLaInstalacion(): void {
+    const o = this.instalacionEncontrada;
+    if (!o) return;
+
+    const poner = (campo: string, valor: any) => {
+      if (valor !== null && valor !== undefined && valor !== '' && !this.newUser[campo]) {
+        this.newUser[campo] = valor;
+      }
+    };
+
+    poner('names', o.names);
+    poner('phone', o.phone);
+    poner('email', o.email);
+    poner('address', o.address);
+    poner('internet_plans_id', o.internet_plans_id);
+    poner('periode_facturation', o.group);
+    poner('connection_type', o.connection_type);
+    poner('pppoe_user', o.pppoe_user);
+    poner('pppoe_profile', o.pppoe_profile);
+    poner('ip', o.ip_assignment_id);
+    poner('router_id', o.router_id);
+    poner('vlan', o.vlan);
+
+    this.guardarBorrador();
+    this.toast('Datos traídos de la orden de instalación.', 'success');
+  }
+
   submittingNewUser = false;
   showUserFormProfile = true;
   selectedVlan: any = null;
