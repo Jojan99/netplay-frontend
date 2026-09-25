@@ -1,20 +1,60 @@
-/* ─── Nueva instalación: sólo lo propio ─────────────────────────────── */
-.np-form-grid { align-items: start; }
-.np-form-col { display: grid; gap: 16px; }
+/* ─── Nueva instalación: el pedido en cuatro pasos ───────────────────────── */
 .np-crumb { color: inherit; text-decoration: none; &:hover { color: var(--accent); } }
 .np-req { color: var(--warn); font-style: normal; }
 
-/* Cada tarjeta es un paso de la orden, numerado: se llena de arriba abajo y
-   se ve de un vistazo qué falta. */
+/* Un solo panel angosto en el medio: veinte campos desparramados en tarjetas
+   no dejaban ver por dónde empezar. */
+.inf-wiz { max-width: 720px; margin: 0 auto; display: grid; gap: 14px; }
+.inf-panel { display: grid; gap: 12px; align-content: start; }
+.inf-ayuda { margin: -4px 0 0; }
+
+/* La barra de pasos: dónde estoy, qué ya quedó listo, y clic para volver. */
+.inf-barra {
+  display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px;
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 6px;
+}
+.inf-paso {
+  display: flex; align-items: center; justify-content: center; gap: 7px;
+  min-height: 42px; padding: 6px 8px; border: 0; border-radius: calc(var(--radius) - 4px);
+  background: transparent; color: var(--text-2); cursor: pointer;
+  font: 600 12px var(--font-body); text-align: left;
+  &:hover { background: var(--surface-2); }
+}
+.inf-paso.es-aqui { background: var(--accent); color: #fff; }
+.inf-paso.es-listo { color: var(--ok, var(--text-1)); }
+
 .inf-n {
   display: grid; place-items: center; flex: none;
-  width: 21px; height: 21px; border-radius: 50%;
-  background: var(--accent-soft, var(--surface-3)); color: var(--accent, var(--text-2));
+  width: 20px; height: 20px; border-radius: 50%;
+  background: var(--surface-3); color: var(--text-2);
   font: 800 11px var(--font-body);
+  .inf-paso.es-aqui & { background: rgba(255, 255, 255, .25); color: #fff; }
+  .inf-paso.es-listo & { background: var(--ok-soft, var(--surface-3)); color: var(--ok, currentColor); }
+  svg { width: 12px; height: 12px; }
 }
-.np-inst-form .np-card-h { display: flex; align-items: center; gap: 8px; }
 
-/* Técnicos y costos ocupa el ancho: la lista de técnicos y los tres montos no
-   caben en media pantalla sin quedar apretados. */
-.np-card--ancha { grid-column: 1 / -1; }
-@media (max-width: 760px) { .np-card--ancha { grid-column: auto; } }
+/* Separador dentro de un paso, cuando junta dos cosas distintas. */
+.np-subhead {
+  margin: 6px 0 0; padding-top: 10px; border-top: 1px solid var(--border);
+  font: 700 11px var(--font-body); letter-spacing: .06em; text-transform: uppercase;
+  color: var(--text-3);
+}
+
+/* Lo que se va a guardar, para revisarlo antes de apretar el botón. */
+.inf-resumen {
+  margin: 4px 0 0; display: grid; gap: 1px;
+  background: var(--border); border: 1px solid var(--border); border-radius: var(--radius);
+  overflow: hidden;
+  > div { display: grid; grid-template-columns: 120px 1fr; gap: 10px; padding: 7px 10px; background: var(--surface-2); }
+  dt { font: 600 12px var(--font-body); color: var(--text-3); }
+  dd { margin: 0; font: 600 12px var(--font-body); color: var(--text-1); word-break: break-word; }
+}
+
+.inf-pies { justify-content: space-between; padding-top: 4px; border-top: 1px solid var(--border); margin-top: 2px; }
+
+@media (max-width: 620px) {
+  .inf-paso-t { display: none; }
+  .inf-barra { grid-template-columns: repeat(4, 1fr); }
+  .inf-resumen > div { grid-template-columns: 1fr; gap: 2px; }
+}
