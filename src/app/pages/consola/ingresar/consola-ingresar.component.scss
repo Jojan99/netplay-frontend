@@ -104,13 +104,6 @@
   margin-top: 6px;
 }
 
-.np-ingreso-pie {
-  margin: 18px 0 0;
-  padding-top: 14px;
-  border-top: 1px solid var(--line);
-  text-align: center;
-  line-height: 1.5;
-}
 
 @media (max-width: 940px) {
   .np-ingreso { grid-template-columns: minmax(0, 420px); justify-items: center; }
