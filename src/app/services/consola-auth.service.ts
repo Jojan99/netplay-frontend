@@ -86,6 +86,35 @@ export class ConsolaAuthService {
     } catch { /* sin almacenamiento no se guarda la sesión, pero el pedido salió bien */ }
   }
 
+  // ── Passkeys ──────────────────────────────────────────────────────────────
+
+  /** El desafío para entrar con passkey, sin escribir el correo. */
+  opcionesDePasskey(): Observable<any> {
+    return this.http.post<any>(this.base + 'login/passkey/opciones', {});
+  }
+
+  loginConPasskey(pase: string, respuesta: string): Observable<any> {
+    return this.http.post<any>(this.base + 'login/passkey', { pase, respuesta }).pipe(
+      tap(r => this.guardarSesion(r)),
+    );
+  }
+
+  verPasskeys(): Observable<any> {
+    return this.http.get<any>(this.base + 'passkeys', { headers: this.cabeceras() });
+  }
+
+  opcionesDeAltaDePasskey(): Observable<any> {
+    return this.http.post<any>(this.base + 'passkeys/opciones', {}, { headers: this.cabeceras() });
+  }
+
+  guardarPasskey(respuesta: string, nombre: string): Observable<any> {
+    return this.http.post<any>(this.base + 'passkeys', { respuesta, nombre }, { headers: this.cabeceras() });
+  }
+
+  borrarPasskey(id: number): Observable<any> {
+    return this.http.delete<any>(this.base + 'passkeys/' + id, { headers: this.cabeceras() });
+  }
+
   // ── Authenticator ─────────────────────────────────────────────────────────
 
   verSegundoFactor(): Observable<any> {

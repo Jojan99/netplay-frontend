@@ -10,6 +10,55 @@
   <div class="np-scroll">
     <div *ngIf="cargando" class="np-loading"><span class="np-spinner"></span> Leyendo…</div>
 
+    <!-- ── Passkeys: primero, porque es lo que conviene usar ── -->
+    <section class="np-card seg-card" *ngIf="!cargando && puedePasskey">
+      <div class="np-card-h">
+        <h3>Passkeys</h3>
+        <span class="np-tag" [attr.data-tono]="passkeys.length ? 'ok' : 'neutral'">
+          {{ passkeys.length ? passkeys.length + ' registrada(s)' : 'Ninguna' }}
+        </span>
+      </div>
+
+      <p class="np-fine">
+        Entrás con la huella, la cara o el PIN del dispositivo, sin escribir nada. Y es lo único que no se puede
+        robar con una página falsa: la llave está atada a <b>{{ dominio }}</b> y el navegador se niega a usarla
+        en otro sitio.
+      </p>
+
+      <div class="np-tablewrap" *ngIf="passkeys.length">
+        <table class="np-table np-table--compact">
+          <thead><tr><th>Dispositivo</th><th>Último uso</th><th>Agregada</th><th class="np-th-right"></th></tr></thead>
+          <tbody>
+            <tr *ngFor="let p of passkeys">
+              <td><b>{{ p.nombre }}</b></td>
+              <td class="np-data">{{ p.ultimo_uso_en ? (p.ultimo_uso_en | date:'d MMM, HH:mm') : 'todavía no' }}</td>
+              <td class="np-data np-data--dim">{{ p.created_at | date:'d MMM y' }}</td>
+              <td class="np-td-right">
+                <button type="button" class="np-icobtn" (click)="borrarPasskey(p)" [title]="'Eliminar ' + p.nombre">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/></svg>
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <label class="np-field"><span>Cómo llamar a este dispositivo <em>(opcional)</em></span>
+        <input class="np-input" [(ngModel)]="nombrePasskey" maxlength="110" placeholder="Mi laptop, el teléfono de trabajo…" />
+      </label>
+
+      <div class="np-btnrow">
+        <button type="button" class="np-btn np-btn--primary" (click)="agregarPasskey()" [disabled]="agregandoPasskey">
+          {{ agregandoPasskey ? 'Esperando tu huella…' : 'Agregar una passkey' }}
+        </button>
+      </div>
+
+      <p class="np-notice np-notice--info" *ngIf="passkeys.length">
+        Conviene registrar <b>más de un dispositivo</b>. Si la passkey vive sólo en tu teléfono y lo perdés,
+        te quedan la contraseña y los códigos.
+      </p>
+    </section>
+
     <section class="np-card seg-card" *ngIf="!cargando">
       <div class="np-card-h">
         <h3>Authenticator</h3>

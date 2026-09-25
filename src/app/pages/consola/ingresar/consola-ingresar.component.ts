@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { ConsolaAuthService } from '../../../services/consola-auth.service';
 import { DarkThemeToggleComponent } from '../../../common/dark-theme-toggle.component';
+import { hayAlgunaGuardada, hayPasskeys, porQueFallo, usarPasskey } from '../../../services/webauthn';
 
 /**
  * El ingreso a la consola de Netvula.
@@ -40,9 +41,54 @@ export class ConsolaIngresarComponent implements OnInit {
   pase = '';
   codigo = '';
 
+  /**
+   * Si este navegador puede usar passkeys.
+   *
+   * El botón no se muestra donde no va a funcionar: uno que siempre falla es
+   * peor que no tenerlo.
+   */
+  puedePasskey = false;
+  conPasskey = false;
+
   ngOnInit(): void {
     // Si la sesión sigue viva, no hay nada que pedir.
-    if (this.sesion.estaDentro()) this.router.navigate(['/consola/tablero']);
+    if (this.sesion.estaDentro()) { this.router.navigate(['/consola/tablero']); return; }
+
+    if (hayPasskeys()) hayAlgunaGuardada().then(puede => this.puedePasskey = puede);
+  }
+
+  /**
+   * Entrar con la huella, la cara o el PIN del dispositivo.
+   *
+   * No pide correo: la passkey ya sabe de quién es. Y no se puede usar en una
+   * página que imite a Netvula, porque está atada a este dominio — que es lo
+   * que la hace mejor que un código escrito a mano.
+   */
+  async entrarConPasskey(): Promise<void> {
+    this.error = '';
+    this.conPasskey = true;
+
+    try {
+      const desafio: any = await new Promise((listo, falla) =>
+        this.sesion.opcionesDePasskey().subscribe({ next: listo, error: falla }));
+
+      const respuesta = await usarPasskey(desafio.data.opciones);
+
+      const r: any = await new Promise((listo, falla) =>
+        this.sesion.loginConPasskey(desafio.data.pase, respuesta).subscribe({ next: listo, error: falla }));
+
+      this.conPasskey = false;
+
+      if (r?.error || !r?.data?.token) {
+        this.error = r?.message || 'No se pudo entrar con la passkey.';
+        return;
+      }
+
+      this.router.navigate(['/consola/tablero']);
+    } catch (e: any) {
+      this.conPasskey = false;
+      this.error = porQueFallo(e);
+    }
   }
 
   ingresar(): void {

@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { ConsolaAuthService } from '../../../services/consola-auth.service';
 import { ToastService } from '../../../services/toast.service';
 import { DialogService } from '../../../services/dialog.service';
+import { crearPasskey, hayPasskeys, porQueFallo } from '../../../services/webauthn';
 
 /**
  * El authenticator de la cuenta de consola.
@@ -50,6 +51,95 @@ export class ConsolaSeguridadComponent implements OnInit {
   ngOnInit(): void {
     this.mirar();
     this.avisoDeRecuperacion();
+    this.puedePasskey = hayPasskeys();
+    this.mirarPasskeys();
+  }
+
+  // ── Passkeys ────────────────────────────────────────────────────────────
+
+  /**
+   * Las llaves que guarda el navegador o el teléfono.
+   *
+   * Son mejores que el código de seis dígitos en lo que de verdad importa: no
+   * se pueden robar por engaño. Un código se escribe en una página falsa que
+   * imite a Netvula; una passkey está atada al dominio y el navegador se
+   * niega a usarla en otro sitio.
+   */
+  puedePasskey = false;
+  /** El dominio al que quedan atadas; se muestra para que se entienda el porqué. */
+  readonly dominio = typeof window !== 'undefined' ? window.location.hostname : '';
+  passkeys: any[] = [];
+  agregandoPasskey = false;
+  nombrePasskey = '';
+
+  private mirarPasskeys(): void {
+    this.sesion.verPasskeys().subscribe({
+      next: (r: any) => this.passkeys = r?.data ?? [],
+      error: () => { /* si no se pueden leer, la sección queda vacía */ },
+    });
+  }
+
+  async agregarPasskey(): Promise<void> {
+    this.agregandoPasskey = true;
+
+    try {
+      const opciones: any = await new Promise((listo, falla) =>
+        this.sesion.opcionesDeAltaDePasskey().subscribe({ next: listo, error: falla }));
+
+      const respuesta = await crearPasskey(opciones.data);
+
+      const nombre = this.nombrePasskey.trim() || this.nombreDeEsteEquipo();
+
+      const r: any = await new Promise((listo, falla) =>
+        this.sesion.guardarPasskey(respuesta, nombre).subscribe({ next: listo, error: falla }));
+
+      this.agregandoPasskey = false;
+
+      if (r?.error !== 0) { this.toast.error(r?.message || 'No se pudo guardar.'); return; }
+
+      this.passkeys = r.data ?? [];
+      this.nombrePasskey = '';
+      this.toast.success('Passkey guardada. Ya podés entrar con ella.');
+    } catch (e: any) {
+      this.agregandoPasskey = false;
+      this.toast.error(porQueFallo(e));
+    }
+  }
+
+  async borrarPasskey(p: any): Promise<void> {
+    const ultima = this.passkeys.length === 1;
+
+    if (!await this.dialog.confirm(
+      ultima
+        ? `Es tu única passkey. Si la borrás, vas a entrar con contraseña${this.activo ? ' y código' : ''}. ¿Seguir?`
+        : `¿Eliminar «${p.nombre}»?`,
+      { okLabel: 'Sí, eliminar' },
+    )) return;
+
+    this.sesion.borrarPasskey(p.id).subscribe({
+      next: (r: any) => {
+        if (r?.error !== 0) { this.toast.error(r?.message || 'No se pudo.'); return; }
+        this.passkeys = r.data ?? [];
+        this.toast.success('Passkey eliminada.');
+      },
+      error: () => this.toast.error('No se pudo eliminar.'),
+    });
+  }
+
+  /** Un nombre que se entienda en la lista, sacado del navegador. */
+  private nombreDeEsteEquipo(): string {
+    const ua = navigator.userAgent;
+    const sistema = /Windows/i.test(ua) ? 'Windows'
+      : /Android/i.test(ua) ? 'Android'
+      : /iPhone|iPad/i.test(ua) ? 'iPhone o iPad'
+      : /Mac/i.test(ua) ? 'Mac'
+      : /Linux/i.test(ua) ? 'Linux' : 'Este equipo';
+    const navegador = /Edg\//i.test(ua) ? 'Edge'
+      : /Chrome/i.test(ua) ? 'Chrome'
+      : /Firefox/i.test(ua) ? 'Firefox'
+      : /Safari/i.test(ua) ? 'Safari' : '';
+
+    return navegador ? `${sistema} · ${navegador}` : sistema;
   }
 
   private mirar(): void {

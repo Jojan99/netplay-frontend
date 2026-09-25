@@ -127,3 +127,13 @@
   text-align: center;
   padding-left: .34em;   /* compensa el espaciado del último dígito */
 }
+
+/* El separador entre la contraseña y la passkey. */
+.ci-o {
+  display: flex; align-items: center; gap: 10px; margin: 2px 0;
+  color: var(--text-3); font-size: 11px; text-transform: uppercase; letter-spacing: .08em;
+  &::before, &::after { content: ''; flex: 1; height: 1px; background: var(--line); }
+}
+
+.ci-passkey { display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  svg { width: 17px; height: 17px; } }

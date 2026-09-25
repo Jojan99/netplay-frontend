@@ -99,6 +99,21 @@
         <span *ngIf="cargando" class="np-spinner np-spinner--sm"></span>
         {{ cargando ? 'Entrando…' : 'Entrar a la consola' }}
       </button>
+
+      <!-- Passkey: no pide contraseña ni código, y no se la puede robar una
+           página que imite a Netvula. Sólo aparece donde va a funcionar. -->
+      <ng-container *ngIf="puedePasskey">
+        <div class="ci-o np-field-full"><span>o</span></div>
+
+        <button type="button" class="np-btn np-btn--ghost np-field-full ci-passkey"
+                (click)="entrarConPasskey()" [disabled]="conPasskey || cargando">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 11a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7Z"/>
+            <path d="M12 11v3M9.5 20c0-3 1-5 2.5-6M15 14.5c1 .8 1.6 2.3 1.6 4M19 9h3M20.5 7.5v3"/>
+          </svg>
+          {{ conPasskey ? 'Esperando tu huella…' : 'Iniciar sesión con Passkey' }}
+        </button>
+      </ng-container>
     </form>
     </ng-template>
 
