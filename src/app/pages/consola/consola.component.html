@@ -48,3 +48,9 @@
     <router-outlet></router-outlet>
   </main>
 </div>
+
+<!-- La consola tiene su armazón aparte del panel: sin esto, sus confirmaciones
+     nunca aparecían —y «Cerrar sesión» se quedaba esperando una respuesta que
+     no llegaba— y sus avisos no se veían. -->
+<app-dialog-host></app-dialog-host>
+<app-toast-host></app-toast-host>

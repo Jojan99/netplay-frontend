@@ -3,6 +3,8 @@ import { CommonModule } from '@angular/common';
 import { Router, RouterModule } from '@angular/router';
 import { ConsolaAuthService, UsuarioConsola } from '../../services/consola-auth.service';
 import { DialogService } from '../../services/dialog.service';
+import { DialogHostComponent } from '../../components/dialog-host/dialog-host.component';
+import { ToastHostComponent } from '../../components/toast-host/toast-host.component';
 import { DarkThemeToggleComponent } from '../../common/dark-theme-toggle.component';
 
 /**
@@ -16,7 +18,7 @@ import { DarkThemeToggleComponent } from '../../common/dark-theme-toggle.compone
 @Component({
   selector: 'app-consola',
   standalone: true,
-  imports: [CommonModule, RouterModule, DarkThemeToggleComponent],
+  imports: [CommonModule, RouterModule, DarkThemeToggleComponent, DialogHostComponent, ToastHostComponent],
   templateUrl: './consola.component.html',
   styleUrl: './consola.component.scss',
   host: { class: 'np-console' },
