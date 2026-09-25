@@ -447,6 +447,61 @@ export class OltAutorizadasComponent implements OnInit {
     });
   }
 
+  // ── Cambiar el nombre de la ONT ───────────────────────────────────────────
+
+  /**
+   * El nombre que la OLT le tiene puesto al equipo.
+   *
+   * Cuando una ONT cambia de dueño sigue llamándose como el anterior en toda
+   * la plataforma y en la consola. Arreglarlo obligaba a entrar por telnet a
+   * hacer «ont modify … desc», que es justo lo que no queremos.
+   */
+  renombrarOnt: any = null;
+  nombreNuevo = '';
+  renombrando = false;
+
+  abrirRenombrar(ont: any): void {
+    this.renombrarOnt = ont;
+    this.nombreNuevo = ont.description || '';
+  }
+
+  /**
+   * Cómo va a quedar guardado.
+   *
+   * Se muestra mientras se escribe porque el backend sanea el texto —ninguna
+   * OLT lleva bien espacios, acentos ni comillas— y ver «JOSE_PEREZ» después
+   * de haber escrito «José Pérez» sorprende si no se avisó antes.
+   */
+  get nombreComoQueda(): string {
+    const sinAcentos = (this.nombreNuevo ?? '').normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+    return sinAcentos.replace(/[^A-Za-z0-9 _.\-]/g, '').trim().replace(/\s+/g, '_').replace(/^_+|_+$/g, '').slice(0, 32);
+  }
+
+  guardarNombre(): void {
+    if (!this.renombrarOnt || !this.selectedOltId || !this.nombreComoQueda) return;
+    this.renombrando = true;
+
+    this.oltService.cambiarDescripcionDeOnt(
+      this.selectedOltId, this.renombrarOnt.fsp, this.renombrarOnt.ont_id, this.nombreNuevo,
+    ).subscribe({
+      next: (res: any) => {
+        this.renombrando = false;
+
+        this.resultado(res, () => {
+          const idx = this.onts.findIndex(o => o.fsp === this.renombrarOnt.fsp && o.ont_id === this.renombrarOnt.ont_id);
+          if (idx >= 0) {
+            this.onts[idx] = { ...this.onts[idx], description: res?.data?.description ?? this.nombreComoQueda };
+          }
+          this.renombrarOnt = null;
+        }, 'Nombre cambiado en la OLT.');
+      },
+      error: (err: any) => {
+        this.renombrando = false;
+        this.toast.error(err?.error?.message || 'La OLT no aceptó el cambio de nombre.');
+      },
+    });
+  }
+
   /** El nombre de quien tiene esa ONT hoy, para poder nombrarlo al preguntar. */
   nombreAsignado(ont: any): string {
     const c = ont?.assigned_client;

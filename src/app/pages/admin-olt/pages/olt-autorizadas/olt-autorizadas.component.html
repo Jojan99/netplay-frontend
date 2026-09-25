@@ -49,6 +49,7 @@
                 <button type="button" class="np-icobtn" (click)="openAssign(ont)" [title]="ont.user_data_id || ont.assigned_client ? 'Cambiar de cliente' : 'Asignar cliente'"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="8" r="3.5"/><path d="M3 20a6 6 0 0 1 12 0M17 11h4M19 9v4"/></svg></button>
                 <button type="button" class="np-icobtn au-soltar" *ngIf="ont.user_data_id || ont.assigned_client" (click)="soltarDesdeLaFila(ont)" [disabled]="assigning"
                         [title]="'Quitarle la ONT a ' + (nombreAsignado(ont) || 'este cliente')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="8" r="3.5"/><path d="M3 20a6 6 0 0 1 12 0M17 11h4"/></svg></button>
+                <button type="button" class="np-icobtn" (click)="abrirRenombrar(ont)" title="Cambiarle el nombre en la OLT"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg></button>
                 <button type="button" class="np-icobtn" (click)="openDetail(ont)" title="Señal y service ports"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12h4l3-8 4 16 3-8h4"/></svg></button>
                 <button type="button" class="np-icobtn" (click)="openDelete(ont)" title="Eliminar ONT"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/></svg></button>
               </div></td>
@@ -124,4 +125,38 @@
       <div class="np-btnrow np-btnrow--end"><button type="button" class="np-btn np-btn--ghost" (click)="assignModal = false">Cancelar</button><button type="button" class="np-btn np-btn--primary" (click)="confirmAssign()" [disabled]="assigning || !selectedClient">{{ assigning ? 'Asignando…' : 'Confirmar asignación' }}</button></div>
     </div>
   </div>
+  <!-- Cambiar el nombre de la ONT en la OLT -->
+  <div class="np-overlay" *ngIf="renombrarOnt" (click)="renombrarOnt = null">
+    <div class="np-modal" (click)="$event.stopPropagation()" role="dialog" aria-label="Cambiar el nombre de la ONT">
+      <div class="np-modal-head">
+        <div>
+          <p class="np-kicker">ONT <b>/</b> {{ renombrarOnt.fsp }}:{{ renombrarOnt.ont_id }}</p>
+          <h3>Cambiarle el nombre</h3>
+        </div>
+      </div>
+
+      <div class="np-modal-body">
+        <p class="np-fine">Es el nombre con el que la OLT identifica al equipo, y el que se ve en toda la plataforma. Se cambia en la OLT, no sólo acá.</p>
+
+        <label class="np-field"><span>Nombre</span>
+          <input class="np-input" [(ngModel)]="nombreNuevo" maxlength="64" placeholder="JUAN_PEREZ" (keydown.enter)="guardarNombre()" autofocus />
+        </label>
+
+        <p class="np-notice np-notice--info" *ngIf="nombreComoQueda && nombreComoQueda !== nombreNuevo">
+          Va a quedar como <b class="np-mono">{{ nombreComoQueda }}</b>: la OLT no admite espacios, acentos ni comillas.
+        </p>
+        <p class="np-notice np-notice--warn" *ngIf="!nombreComoQueda">Escribí un nombre. No puede quedar vacío.</p>
+
+        <p class="np-fine" *ngIf="renombrarOnt.serial">Serial <span class="np-mono">{{ renombrarOnt.serial }}</span></p>
+      </div>
+
+      <div class="np-modal-foot">
+        <button type="button" class="np-btn np-btn--ghost" (click)="renombrarOnt = null" [disabled]="renombrando">Cancelar</button>
+        <button type="button" class="np-btn np-btn--primary" (click)="guardarNombre()" [disabled]="renombrando || !nombreComoQueda">
+          {{ renombrando ? 'Cambiando en la OLT…' : 'Cambiar nombre' }}
+        </button>
+      </div>
+    </div>
+  </div>
+
 </div>

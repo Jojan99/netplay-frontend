@@ -275,6 +275,16 @@ export class OltService {
       JSON.stringify({ fsp, ont_id: ontId, user_data_id: userDataId, liberar_anterior: liberarAnterior }), { headers: this.getHeaders() });
   }
 
+  /**
+   * Le cambia el nombre a la ONT en la OLT («ont modify … desc» en Huawei).
+   * El texto se sanea en el backend: ninguna marca lleva bien espacios,
+   * acentos ni comillas.
+   */
+  cambiarDescripcionDeOnt(oltId: number, fsp: string, ontId: number, description: string): Observable<any> {
+    return this.http.post<any>(`${this.env.rootUrl}api/management/olt/${oltId}/ont/description`,
+      JSON.stringify({ fsp, ont_id: ontId, description }), { headers: this.getHeaders() });
+  }
+
   getOntByUserId(userId: number): Observable<any> {
     return this.http.get<any>(`${this.env.rootUrl}api/management/olt/ont/by-user/${userId}`, { headers: this.getHeaders() });
   }
