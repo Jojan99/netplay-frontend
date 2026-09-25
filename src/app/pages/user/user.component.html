@@ -599,8 +599,12 @@
                            [valorVacio]="0" placeholder="Seleccione…" textoSinOpciones="No hay técnicos cargados." ariaLabel="Técnico"></np-select>
               </label>
               <label class="np-field"><span>Fecha</span><input type="datetime-local" class="np-input" [(ngModel)]="ticketForm.date" /></label>
-              <label class="np-field np-field-full"><span>Dirección</span><input type="text" class="np-input" [(ngModel)]="ticketForm.address" [placeholder]="selectedUserData?.address || ''" /></label>
-              <label class="np-field np-field-full"><span>Observación <em>*</em></span><input type="text" class="np-input" [(ngModel)]="ticketForm.observation" placeholder="Descripción del problema" /></label>
+              <label class="np-field np-field-full"><span>Observación <em>*</em></span>
+                <textarea class="np-input np-textarea" rows="3" [(ngModel)]="ticketForm.observation" placeholder="Qué le pasa y qué hay que revisar"></textarea>
+              </label>
+              <p class="np-fine np-field-full">
+                La visita va a <b>{{ selectedUserData?.address || 'la dirección que tenga en su ficha' }}</b><ng-container *ngIf="selectedUserData?.phone">, tel. {{ selectedUserData?.phone }}</ng-container>.
+              </p>
               <div class="np-field-full np-btnrow">
                 <button type="button" class="np-btn np-btn--primary" (click)="createTicket()" [disabled]="submittingTicket">{{ submittingTicket ? 'Creando…' : 'Crear ticket' }}</button>
                 <button type="button" class="np-btn np-btn--ghost" (click)="showNewTicketForm = false">Cancelar</button>

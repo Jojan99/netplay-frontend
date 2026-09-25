@@ -6,6 +6,7 @@ import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
 import { OntEquipoComponent } from '../../components/ont-equipo/ont-equipo.component';
 import { BurbujaTicketComponent } from '../../common/burbuja-ticket/burbuja-ticket.component';
+import { TicketsAbiertosService } from '../../services/tickets-abiertos.service';
 import { FormsModule } from '@angular/forms';
 import { NpSelectComponent, PresentacionSelect } from '../../common/np-select/np-select.component';
 import {
@@ -142,6 +143,7 @@ export class UserComponent implements OnInit {
   private dialog = inject(DialogService);
   private tareas = inject(TareasEnSegundoPlanoService);
   private gestionRemota = inject(GestionRemotaService);
+  private ticketsAbiertos = inject(TicketsAbiertosService);
   private router = inject(Router);
   /** Importar clientes (WispHub, Mikrowisp) es sólo del administrador. */
   readonly esAdmin = inject(AuthService).isAdmin();
@@ -1379,9 +1381,15 @@ export class UserComponent implements OnInit {
     return this.userTickets.slice(s, s + this.ticketPerPage);
   }
 
+  /**
+   * Dirección, cédula y teléfono no están acá: son del cliente y los resuelve
+   * el backend desde su ficha. El formulario los pedía y después los
+   * ignoraba —escribir otra dirección no cambiaba nada—, igual que en el modal
+   * de tickets y en el CRM, que nunca los pidieron.
+   */
   ticketForm = {
-    address: '', date: new Date().toISOString().substring(0, 10), type_service: 0, priority: 0, status: 1,
-    tecnichal: 0, observation: '', cedula: '', phone: ''
+    date: new Date().toISOString().substring(0, 10), type_service: 0, priority: 0, status: 1,
+    tecnichal: 0, observation: '',
   };
 
   loadTickets(userId: number) {
@@ -1411,17 +1419,16 @@ export class UserComponent implements OnInit {
     this.userSvc.createdTicket({
       ...this.ticketForm,
       user_id: this.selectedUserId,
-      cedula: d?.dni ?? '',
-      phone:  d?.phone ?? '',
-      address: d?.address || '',
       client_name: `${d?.names ?? ''} ${d?.lastname ?? ''}`,
       technician_name: this.getTechnicianName(),
       search: '',
     }).subscribe({
       next: r => {
         this.toast(r.message ?? 'Ticket creado', r.error ? 'error' : 'success');
+        // Para que el punto del cliente aparezca ya, sin esperar el minuto.
+        if (!r.error) this.ticketsAbiertos.cargar(true);
         this.showNewTicketForm = false;
-        this.ticketForm = { address: '', date: new Date().toISOString().substring(0, 10), type_service: 0, priority: 0, status: 1, tecnichal: 0, observation: '', cedula: '', phone: '' };
+        this.ticketForm = { date: new Date().toISOString().substring(0, 10), type_service: 0, priority: 0, status: 1, tecnichal: 0, observation: '' };
         this.submittingTicket = false;
         this.loadTickets(this.selectedUserId);
       },
