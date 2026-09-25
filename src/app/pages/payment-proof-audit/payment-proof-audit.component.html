@@ -8,6 +8,34 @@
     <div class="np-actions"><button type="button" class="np-btn np-btn--ghost" (click)="load()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 12a8 8 0 1 1-2.3-5.7M20 4v5h-5"/></svg>Actualizar</button></div>
   </header>
 
+  <!-- Aplicación automática: lo que decide si un comprobante limpio toca la
+       factura solo o se queda esperando a que alguien lo mire. -->
+  <div class="np-panel ppa-auto" [class.is-on]="autoActivo">
+    <label class="np-check">
+      <input type="checkbox" [checked]="autoActivo" (change)="cambiarAutomatico()" [disabled]="autoCargando" />
+      <span class="np-check-copy">
+        <span>Aplicar los pagos automáticamente</span>
+        <small class="np-fine">
+          {{ autoActivo
+            ? 'Los comprobantes que pasan la revisión se aplican solos a la factura y aparecen acá como «automático».'
+            : 'Los comprobantes quedan esperando que alguien los revise y los aplique a mano.' }}
+        </small>
+      </span>
+    </label>
+
+    <span class="np-spacer"></span>
+
+    <div class="ppa-auto-listos" *ngIf="autoListos">
+      <b>{{ autoListos }}</b> pendiente(s) pasarían la revisión
+      <small>{{ autoMonto | currency:'COP':'symbol-narrow':'1.0-0' }}</small>
+    </div>
+
+    <button type="button" class="np-btn np-btn--ghost np-btn--sm" *ngIf="autoListos"
+            (click)="aplicarPendientes()" [disabled]="autoCargando">
+      Aplicar los que ya esperan
+    </button>
+  </div>
+
   <form class="np-toolbar" (ngSubmit)="search()">
     <div class="np-chips" role="group" aria-label="Estado"><button type="button" class="np-chip" *ngFor="let f of filters" [attr.aria-pressed]="statusFilter === f.value" (click)="setFilter(f.value)">{{ f.label }}</button></div>
     <label class="np-search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg><input name="client" type="search" [(ngModel)]="searchFilters.client" placeholder="Cliente o cédula…" /></label>

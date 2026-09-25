@@ -1,9 +1,10 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { PaymentProofService } from '../../services/payment-proof.service';
 import { ToastService } from '../../services/toast.service';
+import { DialogService } from '../../services/dialog.service';
 import { NpSelectComponent } from '../../common/np-select/np-select.component';
 import { PRESENTACION_TEXTOS } from '../../common/np-select/presentaciones';
 
@@ -40,9 +41,84 @@ export class PaymentProofAuditComponent implements OnInit {
     { value: 'suspicious', label: 'Sospechosos' }, { value: 'rejected', label: 'Rechazados' }, { value: 'reverted', label: 'Revertidos' }
   ];
 
+  private dialog = inject(DialogService);
+
   constructor(private paymentProofService: PaymentProofService, private toast: ToastService) {}
 
+  // ── Aplicación automática ───────────────────────────────────────────────
+
+  /**
+   * Si los comprobantes limpios se aplican solos a la factura.
+   *
+   * Es una decisión de la empresa y no del código: hay quien prefiere mirar
+   * cada pago antes de tocar una factura. Arranca apagado a propósito —
+   * encenderlo empieza a mover plata sola—.
+   */
+  autoActivo = false;
+  autoListos = 0;
+  autoMonto = 0;
+  autoCargando = false;
+
+  private verAutomatico(): void {
+    this.paymentProofService.verAutomatico().subscribe({
+      next: (r: any) => {
+        const d = r?.data ?? {};
+        this.autoActivo = !!d.activo;
+        this.autoListos = Number(d.listos ?? 0);
+        this.autoMonto = Number(d.monto_listos ?? 0);
+      },
+      error: () => { /* si no se puede leer, la tarjeta no se muestra */ },
+    });
+  }
+
+  async cambiarAutomatico(): Promise<void> {
+    const encender = !this.autoActivo;
+
+    if (encender && !await this.dialog.confirm(
+      'Con esto, los comprobantes que pasen la revisión se van a aplicar solos a la factura, sin que nadie los mire. ¿Lo enciendo?',
+      { okLabel: 'Sí, encender', cancelLabel: 'Cancelar' },
+    )) return;
+
+    this.autoCargando = true;
+
+    this.paymentProofService.cambiarAutomatico(encender).subscribe({
+      next: (r: any) => {
+        this.autoCargando = false;
+        const d = r?.data ?? {};
+        this.autoActivo = !!d.activo;
+        this.autoListos = Number(d.listos ?? 0);
+        this.autoMonto = Number(d.monto_listos ?? 0);
+        this.toast.success(this.autoActivo
+          ? 'Listo: los comprobantes limpios se van a aplicar solos.'
+          : 'Apagado: van a quedar esperando que alguien los revise.');
+      },
+      error: () => { this.autoCargando = false; this.toast.error('No se pudo cambiar.'); },
+    });
+  }
+
+  /** Los que ya estaban esperando: encender el automático no los toca. */
+  async aplicarPendientes(): Promise<void> {
+    if (!await this.dialog.confirm(
+      `Se van a aplicar ${this.autoListos} comprobante(s) a sus facturas. ¿Seguimos?`,
+      { okLabel: 'Sí, aplicarlos' },
+    )) return;
+
+    this.autoCargando = true;
+
+    this.paymentProofService.aplicarPendientes().subscribe({
+      next: (r: any) => {
+        this.autoCargando = false;
+        this.toast.success(r?.message || 'Listo.');
+        this.verAutomatico();
+        this.load();
+      },
+      error: () => { this.autoCargando = false; this.toast.error('No se pudieron aplicar.'); },
+    });
+  }
+
+
   ngOnInit(): void {
+    this.verAutomatico();
     this.load();
   }
 

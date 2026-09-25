@@ -16,6 +16,24 @@ export class PaymentProofService {
     });
   }
 
+  /**
+   * Si los comprobantes que pasan la revisión se aplican solos a la factura.
+   * Devuelve además cuántos pendientes se aplicarían ahora mismo, que es lo
+   * que uno quiere saber antes de encenderlo.
+   */
+  verAutomatico(): Observable<any> {
+    return this.http.get(`${this.baseUrl}/payment-proofs/automatico`, { headers: this.getHeaders() });
+  }
+
+  cambiarAutomatico(activo: boolean): Observable<any> {
+    return this.http.post(`${this.baseUrl}/payment-proofs/automatico`, JSON.stringify({ activo }), { headers: this.getHeaders() });
+  }
+
+  /** Aplica de una los que ya estaban esperando y pasan la revisión. */
+  aplicarPendientes(): Observable<any> {
+    return this.http.post(`${this.baseUrl}/payment-proofs/aplicar-pendientes`, '{}', { headers: this.getHeaders() });
+  }
+
   list(params?: any): Observable<any> {
     const query = new URLSearchParams();
     if (params) {
