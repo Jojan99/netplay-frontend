@@ -119,6 +119,19 @@ export class UserService {
     return this.http.post<any>(`${this.env.rootUrl}api/user/${userId}/facturacion-electronica`, { activa }, { headers: this.getHeaders() });
   }
 
+  /**
+   * El trato especial del cliente: el descuento que la facturación le aplica
+   * sola todos los meses. Tipo en null lo quita.
+   */
+  guardarDescuento(userId: string | number, trato: {
+    descuento_tipo: 'porcentaje' | 'valor' | null;
+    descuento_valor: number;
+    descuento_motivo: string | null;
+    descuento_hasta: string | null;
+  }): Observable<any> {
+    return this.http.post<any>(`${this.env.rootUrl}api/user/${userId}/descuento`, trato, { headers: this.getHeaders() });
+  }
+
 
   searchClients(query: string): Observable<any> {
     const url = this.env.rootUrl + 'api/user/search?q=' + encodeURIComponent(query);

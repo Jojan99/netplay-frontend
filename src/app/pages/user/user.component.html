@@ -489,6 +489,62 @@
 
         <!-- ── Facturación ─────────────────────────────────────────────── -->
         <ng-container *ngIf="modalTab === 'facturacion'">
+          <!-- ── Trato especial: el descuento de todos los meses ── -->
+          <div class="np-panel de-panel" [class.is-activo]="descuento.tipo">
+            <div class="de-cab">
+              <p class="np-sect np-sect--inline">Trato especial</p>
+              <span class="np-tag" *ngIf="descuento.tipo" data-tono="ok">{{ resumenDescuento }}</span>
+              <span class="np-spacer"></span>
+              <button type="button" class="np-link" (click)="mostrarDescuento = !mostrarDescuento">
+                {{ mostrarDescuento ? 'Cerrar' : (descuento.tipo ? 'Cambiar' : 'Ponerle un descuento') }}
+              </button>
+            </div>
+
+            <p class="np-fine" *ngIf="!mostrarDescuento">
+              <ng-container *ngIf="descuento.tipo; else sinTrato">
+                Cada factura le sale con este descuento aplicado solo<ng-container *ngIf="descuento.motivo">: {{ descuento.motivo }}</ng-container><ng-container *ngIf="descuento.hasta">, hasta el {{ descuento.hasta }}</ng-container>.
+              </ng-container>
+              <ng-template #sinTrato>Sin descuento: paga el plan completo.</ng-template>
+            </p>
+
+            <div class="np-form" *ngIf="mostrarDescuento">
+              <label class="np-field"><span>Tipo</span>
+                <select class="np-input" [(ngModel)]="descuento.tipo">
+                  <option [ngValue]="null">Sin descuento</option>
+                  <option value="porcentaje">Un porcentaje de la factura</option>
+                  <option value="valor">Un valor fijo en pesos</option>
+                </select>
+              </label>
+
+              <label class="np-field" *ngIf="descuento.tipo">
+                <span>{{ descuento.tipo === 'porcentaje' ? 'Porcentaje' : 'Valor a descontar' }}</span>
+                <input type="number" class="np-input np-mono" [(ngModel)]="descuento.valor" min="0"
+                       [max]="descuento.tipo === 'porcentaje' ? 100 : null" [placeholder]="descuento.tipo === 'porcentaje' ? '50' : '20000'" />
+              </label>
+
+              <label class="np-field" *ngIf="descuento.tipo"><span>Hasta cuándo <em>(opcional)</em></span>
+                <input type="date" class="np-input" [(ngModel)]="descuento.hasta" />
+              </label>
+
+              <label class="np-field np-field-full" *ngIf="descuento.tipo"><span>Por qué <em>(opcional)</em></span>
+                <input class="np-input" [(ngModel)]="descuento.motivo" maxlength="160" placeholder="Acuerdo con el barrio, cliente antiguo, convenio…" />
+              </label>
+
+              <p class="np-notice np-notice--info np-field-full" *ngIf="descuento.tipo && selectedUserData?.monthly_price">
+                Con el plan de <b>{{ selectedUserData?.monthly_price | currency:'COP':'symbol-narrow':'1.0-0' }}</b>,
+                la factura le va a quedar en <b>{{ facturaConDescuento | currency:'COP':'symbol-narrow':'1.0-0' }}</b>
+                (se le descuentan {{ montoDelDescuento | currency:'COP':'symbol-narrow':'1.0-0' }}).
+              </p>
+
+              <div class="np-field-full np-btnrow">
+                <button type="button" class="np-btn np-btn--primary" (click)="guardarDescuento()" [disabled]="guardandoDescuento">
+                  {{ guardandoDescuento ? 'Guardando…' : 'Guardar' }}
+                </button>
+                <button type="button" class="np-btn np-btn--ghost" (click)="mostrarDescuento = false">Cancelar</button>
+              </div>
+            </div>
+          </div>
+
           <div class="np-subbar">
             <button type="button" class="np-btn np-btn--primary" (click)="showCreateFactureForm = !showCreateFactureForm">+ Nueva factura</button>
             <div class="np-seg" role="group" aria-label="Filtrar facturas">

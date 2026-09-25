@@ -714,6 +714,7 @@ export class UserComponent implements OnInit {
 
         const e = r.data;
         this.selectedUserData = e;
+        this.cargarDescuento(e);
         this.sesionPppoe = null;
         if (e?.connection_type === 'pppoe') this.cargarPppoeCliente(e?.router_id ? Number(e.router_id) : null);
         this.controlVelocidad = e?.control_velocidad === 'sin_limite' ? 'sin_limite' : 'plan';
@@ -1391,6 +1392,84 @@ export class UserComponent implements OnInit {
     date: new Date().toISOString().substring(0, 10), type_service: 0, priority: 0, status: 1,
     tecnichal: 0, observation: '',
   };
+
+  // ── Trato especial: el descuento de todos los meses ─────────────────────
+
+  /**
+   * El descuento fijo del cliente.
+   *
+   * El descuento existía por factura y había que ponerlo a mano cada mes; el
+   * mes que alguien se olvidaba, el cliente pagaba de más y había que
+   * devolverle. Acá se acuerda una vez y la facturación lo aplica sola.
+   */
+  descuento: { tipo: 'porcentaje' | 'valor' | null; valor: number; motivo: string; hasta: string | null } =
+    { tipo: null, valor: 0, motivo: '', hasta: null };
+
+  mostrarDescuento = false;
+  guardandoDescuento = false;
+
+  /** Lo que la ficha trajo del backend, para el formulario. */
+  private cargarDescuento(e: any): void {
+    this.descuento = {
+      tipo: e?.descuento_tipo ?? null,
+      valor: Number(e?.descuento_valor ?? 0) || 0,
+      motivo: e?.descuento_motivo ?? '',
+      hasta: e?.descuento_hasta ? String(e.descuento_hasta).substring(0, 10) : null,
+    };
+    this.mostrarDescuento = false;
+  }
+
+  get montoDelDescuento(): number {
+    const precio = Number(this.selectedUserData?.monthly_price ?? 0);
+    const valor = Number(this.descuento.valor ?? 0);
+
+    if (!precio || !this.descuento.tipo || valor <= 0) return 0;
+
+    const bruto = this.descuento.tipo === 'porcentaje' ? precio * (Math.min(valor, 100) / 100) : valor;
+
+    // Nunca más que la factura: el backend hace el mismo tope, pero acá se ve
+    // antes de guardar y no después.
+    return Math.round(Math.min(bruto, precio));
+  }
+
+  get facturaConDescuento(): number {
+    return Math.max(0, Number(this.selectedUserData?.monthly_price ?? 0) - this.montoDelDescuento);
+  }
+
+  get resumenDescuento(): string {
+    if (!this.descuento.tipo) return '';
+    return this.descuento.tipo === 'porcentaje'
+      ? `${this.descuento.valor}% menos`
+      : `$ ${Math.round(this.descuento.valor).toLocaleString('es-CO')} menos`;
+  }
+
+  guardarDescuento(): void {
+    if (!this.selectedUserId) return;
+    this.guardandoDescuento = true;
+
+    this.userSvc.guardarDescuento(this.selectedUserId, {
+      descuento_tipo: this.descuento.tipo,
+      descuento_valor: this.descuento.tipo ? this.descuento.valor : 0,
+      descuento_motivo: this.descuento.tipo ? this.descuento.motivo : null,
+      descuento_hasta: this.descuento.tipo ? this.descuento.hasta : null,
+    }).subscribe({
+      next: (r: any) => {
+        this.guardandoDescuento = false;
+
+        if (r?.error !== 0) { this.toast(r?.message || 'No se pudo guardar el descuento.', 'error'); return; }
+
+        this.toast(r.message, 'success');
+        this.mostrarDescuento = false;
+        if (this.selectedUserData) {
+          this.selectedUserData = { ...this.selectedUserData, ...(r.data ?? {}) };
+        }
+      },
+      error: (e: any) => {
+        this.guardandoDescuento = false;
+        this.toast(e?.error?.message || 'No se pudo guardar el descuento.', 'error');
+      },
+    });
+  }
 
   loadTickets(userId: number) {
     this.loadingTickets = true;

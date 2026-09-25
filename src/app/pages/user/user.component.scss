@@ -188,3 +188,8 @@
 @media (max-width: 420px) {
   .np-head .np-actions { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
+
+/* ─── Trato especial: el descuento de todos los meses ──────────────────── */
+.de-panel { display: grid; gap: 8px; margin-bottom: 12px;
+  &.is-activo { border-left: 3px solid var(--ok); } }
+.de-cab { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
