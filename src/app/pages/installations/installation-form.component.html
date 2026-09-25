@@ -3,7 +3,7 @@
     <div>
       <p class="np-kicker"><a routerLink="/dashboard/installations" class="np-crumb">Instalaciones</a> <b>/</b> Nueva orden</p>
       <h1 class="np-title">Nueva instalación</h1>
-      <div class="np-ribbon"><span>Buscá un cliente existente o cargá los datos a mano. Los campos con <em class="np-req">*</em> son obligatorios.</span></div>
+      <div class="np-ribbon"><span>Todo lo que se cargue acá viaja con la orden: el técnico lo aplica desde la casa del cliente. Los campos con <em class="np-req">*</em> son obligatorios.</span></div>
     </div>
     <div class="np-actions">
       <a routerLink="/dashboard/installations" class="np-btn np-btn--ghost">Cancelar</a>
@@ -16,48 +16,69 @@
     <p *ngIf="errorMsg" class="np-notice np-notice--danger">{{ errorMsg }}</p>
 
     <div class="np-grid-2 np-form-grid">
+
+      <!-- 1 · Quién ────────────────────────────────────────────────────── -->
       <section class="np-card">
-        <div class="np-card-h"><h2>Cliente</h2><span class="np-card-meta" *ngIf="selectedClient">vinculado a <b>{{ selectedClient.names }} {{ selectedClient.lastname }}</b> <button type="button" class="np-link np-link--muted" (click)="clearClient()">cambiar</button></span></div>
-        <label class="np-field np-field--search"><span>Buscar cliente existente</span>
-          <input type="search" class="np-input" [(ngModel)]="clientSearchQuery" (input)="searchClients()" (focus)="searchClients()" placeholder="Nombre, documento o dirección…" />
-          <div class="np-checklist np-checklist--float" *ngIf="showClientSearch && clientSearchQuery">
-            <button type="button" class="np-check np-check--btn" *ngFor="let c of clients" (click)="selectClient(c)"><span class="np-strong">{{ c.names }} {{ c.lastname }}</span><span class="np-fine">CC {{ c.dni }} · {{ c.address }}</span></button>
-            <p class="np-muted np-check" *ngIf="clients.length === 0">Sin resultados.</p>
-          </div>
-        </label>
+        <div class="np-card-h"><span class="inf-n">1</span><h2>Cliente</h2></div>
+        <p class="np-fine np-muted">Se da de alta solo cuando el técnico termine la instalación.</p>
         <div class="np-form">
-          <label class="np-field"><span>Nombre <em>*</em></span><input type="text" class="np-input" [(ngModel)]="form.client_name" /></label>
-          <label class="np-field"><span>Documento <em>*</em></span><input type="text" class="np-input np-mono" [(ngModel)]="form.client_dni" /></label>
-          <label class="np-field"><span>Teléfono <em>*</em></span><input type="tel" class="np-input np-mono" [(ngModel)]="form.client_phone" /></label>
-          <label class="np-field"><span>Correo</span><input type="email" class="np-input" [(ngModel)]="form.client_email" /></label>
-          <label class="np-field"><span>Dirección <em>*</em></span><input type="text" class="np-input" [(ngModel)]="form.address" /></label>
-          <label class="np-field"><span>Barrio</span><input type="text" class="np-input" [(ngModel)]="form.neighborhood" /></label>
+          <label class="np-field"><span>Nombre <em>*</em></span><input type="text" class="np-input" [(ngModel)]="form.client_name" name="nombre" /></label>
+          <label class="np-field"><span>Documento <em>*</em></span><input type="text" class="np-input np-mono" [(ngModel)]="form.client_dni" name="dni" /></label>
+          <label class="np-field"><span>Teléfono <em>*</em></span><input type="tel" class="np-input np-mono" [(ngModel)]="form.client_phone" name="tel" /></label>
+          <label class="np-field"><span>Correo</span><input type="email" class="np-input" [(ngModel)]="form.client_email" name="mail" /></label>
+          <label class="np-field np-field-full"><span>Dirección <em>*</em></span><input type="text" class="np-input" [(ngModel)]="form.address" name="dir" /></label>
+          <label class="np-field np-field-full"><span>Barrio</span><input type="text" class="np-input" [(ngModel)]="form.neighborhood" name="barrio" /></label>
         </div>
       </section>
+      <div class="np-form-col">
+        <!-- 2 · Qué se le vende ──────────────────────────────────────────── -->
+        <section class="np-card">
+          <div class="np-card-h"><span class="inf-n">2</span><h2>Servicio</h2></div>
+          <div class="np-form">
+            <label class="np-field np-field-full"><span>Plan <em>*</em></span>
+              <select class="np-input" [(ngModel)]="form.internet_plan_id" name="plan">
+                <option value="">Elegir…</option>
+                <option *ngFor="let p of plans" [value]="p.id">{{ p.plan_name }} — {{ p.monthly_price | currency:'COP':'symbol-narrow':'1.0-0' }}</option>
+              </select>
+            </label>
+            <label class="np-field np-field-full"><span>Día de corte <em>*</em></span>
+              <select class="np-input" [(ngModel)]="form.grupo_facturacion" name="grupo">
+                <option value="1">15 de cada mes</option>
+                <option value="2">30 de cada mes</option>
+                <option value="3">Los dos (15 y 30)</option>
+              </select>
+            </label>
+          </div>
+        </section>
+        <!-- 5 · Cuándo ───────────────────────────────────────────────────── -->
+        <section class="np-card">
+          <div class="np-card-h"><span class="inf-n">3</span><h2>Programación</h2></div>
+          <div class="np-form">
+            <label class="np-field"><span>Fecha <em>*</em></span><input type="date" class="np-input" [(ngModel)]="form.scheduled_date" name="fecha" /></label>
+            <label class="np-field"><span>Hora <em>*</em></span><input type="time" class="np-input np-mono" [(ngModel)]="form.scheduled_time" name="hora" /></label>
+          </div>
+        </section>
+      </div>
 
+      <!-- 3 · Cómo se conecta ──────────────────────────────────────────── -->
       <section class="np-card">
-        <div class="np-card-h"><h2>Servicio y conexión</h2><span class="np-card-meta">Lo que el técnico va a dejar configurado</span></div>
+        <div class="np-card-h"><span class="inf-n">4</span><h2>Conexión</h2></div>
         <div class="np-form">
-          <label class="np-field"><span>Plan <em>*</em></span>
-            <select class="np-input" [(ngModel)]="form.internet_plan_id" name="plan">
-              <option value="">Elegir…</option>
-              <option *ngFor="let p of plans" [value]="p.id">{{ p.plan_name }} — {{ p.monthly_price | currency:'COP':'symbol-narrow':'1.0-0' }}</option>
-            </select>
-          </label>
-
-          <label class="np-field"><span>Día de corte <em>*</em></span>
-            <select class="np-input" [(ngModel)]="form.grupo_facturacion" name="grupo">
-              <option value="1">15 de cada mes</option>
-              <option value="2">30 de cada mes</option>
-              <option value="3">Los dos (15 y 30)</option>
-            </select>
-          </label>
-
-          <label class="np-field"><span>Tipo de conexión <em>*</em></span>
+          <label class="np-field"><span>Tipo <em>*</em></span>
             <select class="np-input" [(ngModel)]="form.connection_type" name="conexion">
               <option value="pppoe">PPPoE</option>
               <option value="static">IP fija</option>
             </select>
+          </label>
+
+          <label class="np-field" *ngIf="esPppoe"><span>Usuario PPPoE <em>*</em></span>
+            <input class="np-input np-mono" [(ngModel)]="form.pppoe_user" name="pppoeuser" [placeholder]="form.client_dni || 'la cédula'" />
+          </label>
+          <label class="np-field" *ngIf="esPppoe"><span>Clave PPPoE</span><input class="np-input np-mono" [(ngModel)]="form.pppoe_password" name="pppoepass" /></label>
+          <label class="np-field" *ngIf="esPppoe"><span>Perfil</span><input class="np-input" [(ngModel)]="form.pppoe_profile" name="pppoeprof" /></label>
+
+          <label class="np-field" *ngIf="!esPppoe"><span>IP <em>*</em></span>
+            <input class="np-input np-mono" [(ngModel)]="form.ip_asignada" name="ip" placeholder="10.0.0.25" />
           </label>
 
           <label class="np-field"><span>OLT por la que entra</span>
@@ -66,61 +87,43 @@
               <option *ngFor="let o of olts" [value]="o.id">{{ o.name }}</option>
             </select>
           </label>
-
           <label class="np-field"><span>VLAN</span><input type="number" class="np-input np-mono" [(ngModel)]="form.vlan" name="vlan" /></label>
-
-          <!-- PPPoE -->
-          <ng-container *ngIf="esPppoe">
-            <label class="np-field"><span>Usuario PPPoE <em>*</em></span><input class="np-input np-mono" [(ngModel)]="form.pppoe_user" name="pppoeuser" [placeholder]="form.client_dni || 'la cédula'" /></label>
-            <label class="np-field"><span>Clave PPPoE</span><input class="np-input np-mono" [(ngModel)]="form.pppoe_password" name="pppoepass" /></label>
-            <label class="np-field"><span>Perfil</span><input class="np-input" [(ngModel)]="form.pppoe_profile" name="pppoeprof" /></label>
-          </ng-container>
-
-          <!-- IP fija -->
-          <ng-container *ngIf="!esPppoe">
-            <label class="np-field"><span>IP <em>*</em></span><input class="np-input np-mono" [(ngModel)]="form.ip_asignada" name="ip" placeholder="10.0.0.25" /></label>
-          </ng-container>
-
-          <label class="np-field"><span>Nombre del WiFi</span>
+        </div>
+      </section>
+      <!-- 4 · El WiFi que va a quedar ──────────────────────────────────── -->
+      <section class="np-card">
+        <div class="np-card-h"><span class="inf-n">5</span><h2>WiFi</h2></div>
+        <p class="np-fine np-muted">El técnico lo deja puesto sin llamar a la oficina.</p>
+        <div class="np-form">
+          <label class="np-field np-field-full"><span>Nombre de la red</span>
             <input class="np-input" [(ngModel)]="form.wifi_ssid" name="ssid" maxlength="32" placeholder="CASA_PEREZ" />
             <small class="np-fine np-pos-danger" *ngIf="problemaDelNombreWifi">{{ problemaDelNombreWifi }}</small>
           </label>
-
-          <label class="np-field"><span>Clave del WiFi</span>
+          <label class="np-field np-field-full"><span>Clave</span>
             <input class="np-input np-mono" [(ngModel)]="form.wifi_password" name="wifipass" maxlength="63" />
             <small class="np-fine np-pos-danger" *ngIf="problemaDeLaClaveWifi">{{ problemaDeLaClaveWifi }}</small>
+            <small class="np-fine np-muted" *ngIf="!problemaDeLaClaveWifi">Sin ñ, tildes ni espacios: el equipo las rechaza.</small>
           </label>
         </div>
-
-        <p class="np-fine np-muted">
-          Todo esto viaja con la orden: el técnico lo aplica desde la casa del cliente sin llamar a la oficina.
-        </p>
+      </section>
+      <!-- 6 · Quién la hace ────────────────────────────────────────────── -->
+      <section class="np-card np-card--ancha">
+        <div class="np-card-h"><span class="inf-n">6</span><h2>Técnicos y costos</h2>
+          <span class="np-card-meta" *ngIf="form.technician_ids?.length"><b>{{ form.technician_ids.length }}</b> asignados</span>
+        </div>
+        <div class="np-checklist">
+          <label class="np-check" *ngFor="let t of technicians"><input type="checkbox" [checked]="form.technician_ids?.includes(t.id)" (change)="toggleTechnician(t.id)" /><span class="np-strong">{{ t.first_name }} {{ t.last_name }}</span><span class="np-fine">{{ t.job_title }}</span></label>
+          <p class="np-muted np-check" *ngIf="technicians.length === 0">No hay técnicos disponibles.</p>
+        </div>
+        <div class="np-form">
+          <label class="np-field"><span>Costo de instalación</span><input type="number" class="np-input np-mono" [(ngModel)]="form.installation_cost" name="costo" /></label>
+          <label class="np-field"><span>Comisión total</span><input type="number" class="np-input np-mono" [value]="totalCommission" (input)="onCommissionChange($event)" />
+            <small class="np-fine" *ngIf="form.technician_ids?.length">{{ form.technician_ids.length }} técnico(s) · {{ totalCommission / (form.technician_ids?.length || 1) | number:'1.0-0' }} cada uno</small>
+          </label>
+          <label class="np-field np-field-full"><span>Observaciones</span><textarea class="np-input np-textarea" rows="3" [(ngModel)]="form.observations" name="obs" placeholder="Notas adicionales…"></textarea></label>
+        </div>
       </section>
 
-      <div class="np-form-col">
-        <section class="np-card">
-          <div class="np-card-h"><h2>Programación</h2></div>
-          <div class="np-form">
-            <label class="np-field"><span>Fecha <em>*</em></span><input type="date" class="np-input" [(ngModel)]="form.scheduled_date" /></label>
-            <label class="np-field"><span>Hora <em>*</em></span><input type="time" class="np-input np-mono" [(ngModel)]="form.scheduled_time" /></label>
-          </div>
-        </section>
-
-        <section class="np-card">
-          <div class="np-card-h"><h2>Técnicos y costos</h2><span class="np-card-meta" *ngIf="form.technician_ids?.length"><b>{{ form.technician_ids.length }}</b> asignados</span></div>
-          <div class="np-checklist">
-            <label class="np-check" *ngFor="let t of technicians"><input type="checkbox" [checked]="form.technician_ids?.includes(t.id)" (change)="toggleTechnician(t.id)" /><span class="np-strong">{{ t.first_name }} {{ t.last_name }}</span><span class="np-fine">{{ t.job_title }}</span></label>
-            <p class="np-muted np-check" *ngIf="technicians.length === 0">No hay técnicos disponibles.</p>
-          </div>
-          <div class="np-form">
-            <label class="np-field"><span>Costo de instalación</span><input type="number" class="np-input np-mono" [(ngModel)]="form.installation_cost" /></label>
-            <label class="np-field"><span>Comisión total</span><input type="number" class="np-input np-mono" [value]="totalCommission" (input)="onCommissionChange($event)" />
-              <small class="np-fine" *ngIf="form.technician_ids?.length">{{ form.technician_ids.length }} técnico(s) · {{ totalCommission / (form.technician_ids?.length || 1) | number:'1.0-0' }} cada uno</small>
-            </label>
-            <label class="np-field np-field-full"><span>Observaciones</span><textarea class="np-input np-textarea" rows="3" [(ngModel)]="form.observations" placeholder="Notas adicionales…"></textarea></label>
-          </div>
-        </section>
-      </div>
     </div>
   </div>
 </div>

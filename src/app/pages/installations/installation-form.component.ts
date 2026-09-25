@@ -4,7 +4,6 @@ import { FormsModule } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
 import { InstallationService } from '../../services/installation.service';
 import { OltService } from '../../services/olt.service';
-import { UserService } from '../../services/user.service';
 
 @Component({
   selector: 'app-installation-form',
@@ -20,19 +19,13 @@ export class InstallationFormComponent implements OnInit {
   errorMsg = '';
   successMsg = '';
 
-  clients: any[] = [];
   technicians: any[] = [];
   paymentMethods: any[] = [];
-
-  selectedClient: any = null;
-  showClientSearch = false;
-  clientSearchQuery = '';
 
   form = this.emptyForm();
 
   constructor(
     private svc: InstallationService,
-    private userSvc: UserService,
     private oltSvc: OltService,
     private router: Router
   ) {}
@@ -109,44 +102,6 @@ export class InstallationFormComponent implements OnInit {
       next: (r: any) => this.olts = r?.data ?? [],
       error: () => { /* sin OLT se puede tomar el pedido igual */ },
     });
-    this.userSvc.getAllUser().subscribe((r: any) => {
-      this.clients = r.data || r || [];
-    });
-  }
-
-  searchClients(): void {
-    if (!this.clientSearchQuery) {
-      this.showClientSearch = false;
-      return;
-    }
-    this.showClientSearch = true;
-  }
-
-  selectClient(c: any): void {
-    this.selectedClient = c;
-    this.form = {
-      ...this.emptyForm(),
-      user_data_id: c.id?.toString() || '',
-      client_name: c.names || '',
-      client_dni: c.dni || '',
-      client_phone: c.phone || '',
-      client_email: c.email || '',
-      address: c.address || '',
-      neighborhood: '',
-      scheduled_date: '',
-      scheduled_time: '09:00',
-      installation_cost: '0',
-      technician_ids: [],
-      commission_amount: '0',
-      observations: '',
-    };
-    this.showClientSearch = false;
-    this.clientSearchQuery = '';
-  }
-
-  clearClient(): void {
-    this.selectedClient = null;
-    this.form = this.emptyForm();
   }
 
   toggleTechnician(id: number): void {

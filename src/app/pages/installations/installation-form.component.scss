@@ -3,5 +3,18 @@
 .np-form-col { display: grid; gap: 16px; }
 .np-crumb { color: inherit; text-decoration: none; &:hover { color: var(--accent); } }
 .np-req { color: var(--warn); font-style: normal; }
-.np-field--search { position: relative; }
-.np-checklist--float { position: absolute; top: 100%; left: 0; right: 0; z-index: 5; background: var(--surface); box-shadow: var(--shadow-lg); margin-top: 4px; }
+
+/* Cada tarjeta es un paso de la orden, numerado: se llena de arriba abajo y
+   se ve de un vistazo qué falta. */
+.inf-n {
+  display: grid; place-items: center; flex: none;
+  width: 21px; height: 21px; border-radius: 50%;
+  background: var(--accent-soft, var(--surface-3)); color: var(--accent, var(--text-2));
+  font: 800 11px var(--font-body);
+}
+.np-inst-form .np-card-h { display: flex; align-items: center; gap: 8px; }
+
+/* Técnicos y costos ocupa el ancho: la lista de técnicos y los tres montos no
+   caben en media pantalla sin quedar apretados. */
+.np-card--ancha { grid-column: 1 / -1; }
+@media (max-width: 760px) { .np-card--ancha { grid-column: auto; } }
