@@ -146,4 +146,13 @@ export class MetaWhatsappService {
   updateBotConfig(data: any): Observable<any> {
     return this.http.put(`${environment.rootUrl}api/company/whatsapp/bot-config`, JSON.stringify(data), this.h());
   }
+
+  /**
+   * Corre un flujo sin mandarle nada a nadie y devuelve lo que el cliente
+   * habría recibido. El estado va y vuelve en la petición: probar no toca
+   * ninguna conversación de verdad.
+   */
+  probarBot(cuerpo: { flow_id: string; flows: any[]; paso?: string | null; datos?: any; mensaje?: string }): Observable<any> {
+    return this.http.post(`${environment.rootUrl}api/company/whatsapp/bot-config/probar`, JSON.stringify(cuerpo), this.h());
+  }
 }

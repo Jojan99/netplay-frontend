@@ -1,0 +1,453 @@
+<div class="bot">
+  <!-- ── Barra de arriba ── -->
+  <header class="np-toolbar bot-barra">
+    <div class="bot-titulo">
+      <h2>Constructor de bots</h2>
+      <span class="np-tag" [attr.data-tono]="config.enabled ? 'ok' : 'neutral'">
+        {{ config.enabled ? 'Publicado' : 'Borrador' }}
+      </span>
+      <span class="np-fine" *ngIf="sucio">· sin guardar</span>
+    </div>
+
+    <span class="np-spacer"></span>
+
+    <button type="button" class="np-btn np-btn--ghost np-btn--sm" (click)="exportar()">Exportar</button>
+    <button type="button" class="np-btn np-btn--ghost np-btn--sm" (click)="abrirProbador()">Probar el flujo</button>
+    <button type="button" class="np-btn np-btn--sm" [class.np-btn--warn]="config.enabled" [class.np-btn--ok]="!config.enabled" (click)="alternarBot()">
+      {{ config.enabled ? 'Pausar bot' : 'Activar bot' }}
+    </button>
+    <button type="button" class="np-btn np-btn--primary np-btn--sm" (click)="guardar()" [disabled]="guardando || !sucio">
+      {{ guardando ? 'Guardando…' : 'Guardar' }}
+    </button>
+  </header>
+
+  <div *ngIf="cargando" class="np-loading"><span class="np-spinner"></span> Leyendo la configuración del bot…</div>
+
+  <p class="np-notice np-notice--warn" *ngIf="!cargando && !config.enabled">
+    El bot está en <b>borrador</b>: nadie lo está usando todavía. Probalo y después activalo.
+  </p>
+
+  <div class="bot-cuerpo" *ngIf="!cargando">
+
+    <!-- ── Flujos ── -->
+    <aside class="bot-flujos">
+      <div class="bot-lado-h">
+        <span>Flujos</span>
+        <button type="button" class="np-icobtn" (click)="agregarFlujo()" title="Nuevo flujo">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
+        </button>
+      </div>
+
+      <div class="bot-lista">
+        <button type="button" *ngFor="let f of config.flows" class="bot-flujo" [class.is-sel]="f.id === flujo.id" (click)="elegirFlujo(f)">
+          <span class="bot-flujo-n">
+            <b>{{ f.name }}</b>
+            <small>{{ f.steps.length }} bloque(s)<ng-container *ngIf="enElMenu(f)"> · en el menú</ng-container></small>
+          </span>
+          <i class="bot-punto" [class.is-off]="f.is_active === false" [title]="f.is_active === false ? 'Desactivado' : 'Activo'"></i>
+        </button>
+      </div>
+
+      <div class="bot-lado-f">
+        <label class="np-field"><span>Nombre del flujo</span>
+          <input class="np-input" [(ngModel)]="flujo.name" (ngModelChange)="toco()" />
+        </label>
+        <label class="np-check"><input type="checkbox" [(ngModel)]="flujo.is_active" (ngModelChange)="toco()" /><span class="np-check-copy"><span>Flujo activo</span></span></label>
+        <div class="np-btnrow">
+          <button type="button" class="np-btn np-btn--ghost np-btn--sm" (click)="duplicarFlujo()">Duplicar</button>
+          <button type="button" class="np-btn np-btn--ghost np-btn--sm" (click)="borrarFlujo()">Eliminar</button>
+        </div>
+      </div>
+    </aside>
+
+    <!-- ── Lienzo ── -->
+    <section class="bot-centro">
+      <div class="bot-lienzo-barra">
+        <div class="bot-paleta">
+          <button type="button" *ngFor="let t of PALETA" class="bot-chip" [attr.data-tono]="FICHAS[t].tono"
+                  (click)="agregar(t)" [title]="FICHAS[t].para">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path [attr.d]="FICHAS[t].trazo"/></svg>
+            <span>{{ FICHAS[t].label }}</span>
+          </button>
+        </div>
+
+        <span class="np-spacer"></span>
+
+        <div class="bot-zoom">
+          <button type="button" class="np-icobtn" (click)="zoom = zoom > 0.6 ? zoom - 0.1 : zoom" title="Alejar">−</button>
+          <span class="np-data">{{ zoom * 100 | number:'1.0-0' }}%</span>
+          <button type="button" class="np-icobtn" (click)="zoom = zoom < 1.4 ? zoom + 0.1 : zoom" title="Acercar">+</button>
+          <button type="button" class="np-btn np-btn--ghost np-btn--sm" (click)="ordenar()" title="Acomoda los bloques siguiendo las rutas">Ordenar</button>
+        </div>
+      </div>
+
+      <div class="bot-lienzo" #lienzo>
+        <div class="bot-plano" [style.width.px]="anchoLienzo" [style.height.px]="altoLienzo"
+             [style.transform]="'scale(' + zoom + ')'">
+          <svg class="bot-hilos" [attr.width]="anchoLienzo" [attr.height]="altoLienzo">
+            <defs>
+              <marker id="bot-punta" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+                <path d="M0 0 L10 5 L0 10 z" fill="currentColor"/>
+              </marker>
+            </defs>
+            <g *ngFor="let l of lineas" [attr.data-tono]="l.tono" class="bot-hilo">
+              <path [attr.d]="l.d" fill="none" marker-end="url(#bot-punta)"/>
+              <text *ngIf="l.etiqueta" [attr.x]="l.x" [attr.y]="l.y">{{ l.etiqueta }}</text>
+            </g>
+          </svg>
+
+          <article *ngFor="let b of flujo.steps; trackBy: trackBloque" class="bot-nodo"
+                   [class.is-sel]="b.id === bloque?.id" [attr.data-tono]="ficha(b).tono"
+                   [style.left.px]="b.x" [style.top.px]="b.y" (click)="elegirBloque(b)">
+            <header (pointerdown)="empezarArrastre($event, b)">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path [attr.d]="ficha(b).trazo"/></svg>
+              <b>{{ ficha(b).label }}</b>
+              <span class="bot-inicio" *ngIf="esInicio(b)">inicio</span>
+              <button type="button" class="np-icobtn" (click)="$event.stopPropagation(); borrarBloque(b)" title="Quitar bloque">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M6 6l12 12M18 6 6 18"/></svg>
+              </button>
+            </header>
+            <p>{{ resumen(b) }}</p>
+            <span class="bot-espera" *ngIf="ficha(b).espera">espera respuesta</span>
+          </article>
+
+          <p class="bot-vacio" *ngIf="!flujo.steps.length">
+            <b>Este flujo está vacío.</b>
+            <span>Elegí un bloque de la barra de arriba para empezar.</span>
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── Inspector ── -->
+    <aside class="bot-inspector">
+      <div class="np-seg bot-tabs">
+        <button type="button" [attr.aria-pressed]="panel === 'bloque'" (click)="panel = 'bloque'">Bloque</button>
+        <button type="button" [attr.aria-pressed]="panel === 'menu'" (click)="panel = 'menu'">Menú</button>
+        <button type="button" [attr.aria-pressed]="panel === 'ajustes'" (click)="panel = 'ajustes'">Ajustes</button>
+        <button type="button" [attr.aria-pressed]="panel === 'revision'" (click)="panel = 'revision'">
+          Revisión<i class="bot-badge" *ngIf="avisos.length" [class.is-mal]="errores">{{ avisos.length }}</i>
+        </button>
+      </div>
+
+      <div class="bot-insp-cuerpo">
+
+        <!-- ── Bloque ── -->
+        <ng-container *ngIf="panel === 'bloque'">
+          <p class="np-empty-block" *ngIf="!bloque"><strong>Ningún bloque elegido.</strong><span>Hacé clic en uno del lienzo.</span></p>
+
+          <ng-container *ngIf="bloque">
+            <div class="bot-insp-h" [attr.data-tono]="ficha(bloque).tono">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path [attr.d]="ficha(bloque).trazo"/></svg>
+              <div><b>{{ ficha(bloque).label }}</b><small>{{ ficha(bloque).para }}</small></div>
+            </div>
+
+            <button type="button" class="np-link" (click)="marcarInicio(bloque)" *ngIf="!esInicio(bloque)">Que el flujo empiece por acá</button>
+
+            <!-- Mensaje / botones / lista / input / link comparten el texto -->
+            <label class="np-field" *ngIf="['message','buttons','list','input','link','transfer_agent','end'].includes(bloque.type)">
+              <span>{{ bloque.type === 'input' ? 'Pregunta' : 'Texto del mensaje' }}</span>
+              <textarea class="np-input np-textarea" rows="4" [(ngModel)]="bloque.message" (ngModelChange)="toco()"
+                        [placeholder]="bloque.type === 'end' ? 'Despedida (opcional)' : 'Lo que le llega al cliente'"></textarea>
+            </label>
+
+            <!-- Botones -->
+            <ng-container *ngIf="bloque.type === 'buttons'">
+              <label class="np-field"><span>Encabezado <em>(opcional)</em></span><input class="np-input" [(ngModel)]="bloque.header" (ngModelChange)="toco()" maxlength="60" /></label>
+
+              <p class="np-sect">Botones <small class="np-fine">hasta {{ META.MAX_BOTONES }}, {{ META.LARGO_BOTON }} caracteres cada uno</small></p>
+              <div class="bot-opcion" *ngFor="let x of bloque.buttons; let i = index">
+                <div class="bot-opcion-h"><b>{{ i + 1 }}</b>
+                  <input class="np-input" [(ngModel)]="x.title" (ngModelChange)="toco()" [maxlength]="META.LARGO_BOTON" placeholder="Texto del botón" />
+                  <button type="button" class="np-icobtn" (click)="quitarDe(bloque.buttons, i)" title="Quitar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
+                </div>
+                <label class="np-field"><span>Lleva a</span>
+                  <select class="np-input" [(ngModel)]="x.next_step" (ngModelChange)="toco()">
+                    <option [ngValue]="null">— nada (se corta acá) —</option>
+                    <option *ngFor="let d of destinos" [ngValue]="d.id" [disabled]="d.id === bloque.id">{{ FICHAS[d.type].label }} · {{ resumen(d) | slice:0:34 }}</option>
+                  </select>
+                </label>
+              </div>
+              <button type="button" class="np-link" (click)="agregarBoton(bloque)">+ Agregar botón</button>
+            </ng-container>
+
+            <!-- Lista -->
+            <ng-container *ngIf="bloque.type === 'list'">
+              <label class="np-field"><span>Texto del botón que abre la lista</span><input class="np-input" [(ngModel)]="bloque.button_text" (ngModelChange)="toco()" [maxlength]="META.LARGO_BOTON" /></label>
+
+              <ng-container *ngFor="let s of bloque.sections">
+                <label class="np-field"><span>Título de la sección</span><input class="np-input" [(ngModel)]="s.title" (ngModelChange)="toco()" maxlength="24" /></label>
+
+                <p class="np-sect">Opciones <small class="np-fine">hasta {{ META.MAX_FILAS }}; título {{ META.LARGO_TITULO_FILA }}, detalle {{ META.LARGO_DESC_FILA }}</small></p>
+                <div class="bot-opcion" *ngFor="let f of s.rows; let i = index">
+                  <div class="bot-opcion-h"><b>{{ i + 1 }}</b>
+                    <input class="np-input" [(ngModel)]="f.title" (ngModelChange)="toco()" [maxlength]="META.LARGO_TITULO_FILA" placeholder="Título" />
+                    <button type="button" class="np-icobtn" (click)="quitarDe(s.rows, i)" title="Quitar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
+                  </div>
+                  <input class="np-input" [(ngModel)]="f.description" (ngModelChange)="toco()" [maxlength]="META.LARGO_DESC_FILA" placeholder="Detalle (opcional)" />
+                  <label class="np-field"><span>Lleva a</span>
+                    <select class="np-input" [(ngModel)]="f.next_step" (ngModelChange)="toco()">
+                      <option [ngValue]="null">— nada (se corta acá) —</option>
+                      <option *ngFor="let d of destinos" [ngValue]="d.id" [disabled]="d.id === bloque.id">{{ FICHAS[d.type].label }} · {{ resumen(d) | slice:0:34 }}</option>
+                    </select>
+                  </label>
+                </div>
+                <button type="button" class="np-link" (click)="agregarFila(bloque)">+ Agregar opción</button>
+              </ng-container>
+            </ng-container>
+
+            <!-- Pedir dato -->
+            <ng-container *ngIf="bloque.type === 'input'">
+              <label class="np-field"><span>Guardar la respuesta en</span><input class="np-input np-mono" [(ngModel)]="bloque.variable_name" (ngModelChange)="toco()" placeholder="cedula" /></label>
+              <label class="np-field"><span>Qué tipo de dato es</span>
+                <select class="np-input" [(ngModel)]="bloque.input_type" (ngModelChange)="toco()">
+                  <option value="text">Texto libre</option><option value="number">Sólo números</option>
+                  <option value="email">Correo</option><option value="phone">Teléfono</option><option value="date">Fecha</option>
+                </select>
+              </label>
+              <label class="np-field"><span>Qué decir si no sirve</span><input class="np-input" [(ngModel)]="bloque.validation_message" (ngModelChange)="toco()" /></label>
+            </ng-container>
+
+            <!-- Buscar cliente -->
+            <ng-container *ngIf="bloque.type === 'cliente'">
+              <p class="np-notice np-notice--info">Carga en variables <b>nombre</b>, <b>cedula</b>, <b>direccion</b>, <b>saldo</b>, <b>saldo_texto</b> y <b>facturas_pendientes</b>, listas para usar en los mensajes.</p>
+              <label class="np-field"><span>Buscar por</span>
+                <select class="np-input" [(ngModel)]="bloque.lookup_by" (ngModelChange)="toco()">
+                  <option value="phone">El teléfono desde el que escribe</option><option value="dni">Una cédula</option>
+                </select>
+              </label>
+              <label class="np-field"><span>Valor a buscar</span><input class="np-input np-mono" [(ngModel)]="bloque.lookup_value" (ngModelChange)="toco()" placeholder="{{ '{{cedula}}' }}" /></label>
+              <label class="np-field"><span>Qué decir si no lo encuentra</span><input class="np-input" [(ngModel)]="bloque.error_message" (ngModelChange)="toco()" /></label>
+            </ng-container>
+
+            <!-- Petición -->
+            <ng-container *ngIf="bloque.type === 'api_call'">
+              <label class="np-field"><span>Dirección</span>
+                <span class="bot-url">
+                  <select class="np-input" [(ngModel)]="bloque.method" (ngModelChange)="toco()"><option>GET</option><option>POST</option><option>PUT</option><option>PATCH</option></select>
+                  <input class="np-input np-mono" [(ngModel)]="bloque.endpoint" (ngModelChange)="toco()" placeholder="https://api.tuservicio.com/saldo" />
+                </span>
+              </label>
+
+              <p class="np-sect">Parámetros</p>
+              <div class="bot-par" *ngFor="let p of bloque.params; let i = index">
+                <input class="np-input np-mono" [(ngModel)]="p.key" (ngModelChange)="toco()" placeholder="clave" />
+                <input class="np-input np-mono" [(ngModel)]="p.value" (ngModelChange)="toco()" placeholder="{{ '{{cedula}}' }}" />
+                <button type="button" class="np-icobtn" (click)="quitarDe(bloque.params, i)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
+              </div>
+              <button type="button" class="np-link" (click)="agregarPar('params', bloque)">+ Agregar parámetro</button>
+
+              <p class="np-sect">Cabeceras</p>
+              <div class="bot-par" *ngFor="let h of bloque.headers; let i = index">
+                <input class="np-input np-mono" [(ngModel)]="h.key" (ngModelChange)="toco()" placeholder="Authorization" />
+                <input class="np-input np-mono" [(ngModel)]="h.value" (ngModelChange)="toco()" placeholder="Bearer …" />
+                <button type="button" class="np-icobtn" (click)="quitarDe(bloque.headers, i)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
+              </div>
+              <button type="button" class="np-link" (click)="agregarPar('headers', bloque)">+ Agregar cabecera</button>
+
+              <label class="np-field"><span>Guardar la respuesta en</span><input class="np-input np-mono" [(ngModel)]="bloque.save_response_to" (ngModelChange)="toco()" placeholder="respuesta" /></label>
+              <label class="np-field"><span>Quedarse sólo con <em>(opcional)</em></span><input class="np-input np-mono" [(ngModel)]="bloque.response_path" (ngModelChange)="toco()" placeholder="data.0.total" /></label>
+              <label class="np-field"><span>Qué decir si falla</span><input class="np-input" [(ngModel)]="bloque.error_message" (ngModelChange)="toco()" /></label>
+              <label class="np-field"><span>O irse a este bloque si falla</span>
+                <select class="np-input" [(ngModel)]="bloque.error_step" (ngModelChange)="toco()">
+                  <option [ngValue]="null">— avisar y terminar —</option>
+                  <option *ngFor="let d of destinos" [ngValue]="d.id" [disabled]="d.id === bloque.id">{{ FICHAS[d.type].label }} · {{ resumen(d) | slice:0:34 }}</option>
+                </select>
+              </label>
+            </ng-container>
+
+            <!-- Condición -->
+            <ng-container *ngIf="bloque.type === 'condition'">
+              <label class="np-field"><span>Variable</span>
+                <select class="np-input" [(ngModel)]="bloque.condition_variable" (ngModelChange)="toco()">
+                  <option *ngFor="let v of variables" [value]="v">{{ v }}</option>
+                </select>
+              </label>
+              <label class="np-field"><span>Comparación</span>
+                <select class="np-input" [(ngModel)]="bloque.condition_operator" (ngModelChange)="toco()">
+                  <option value="eq">es igual a</option><option value="neq">no es</option>
+                  <option value="contains">contiene</option><option value="gt">es mayor que</option><option value="lt">es menor que</option>
+                  <option value="empty">está vacío</option><option value="not_empty">tiene algo</option>
+                </select>
+              </label>
+              <label class="np-field" *ngIf="!['empty','not_empty'].includes(bloque.condition_operator || '')">
+                <span>Valor</span><input class="np-input np-mono" [(ngModel)]="bloque.condition_value" (ngModelChange)="toco()" />
+              </label>
+              <label class="np-field"><span class="bot-ruta-si">Si se cumple, ir a</span>
+                <select class="np-input" [(ngModel)]="bloque.true_step" (ngModelChange)="toco()">
+                  <option [ngValue]="null">— terminar —</option>
+                  <option *ngFor="let d of destinos" [ngValue]="d.id" [disabled]="d.id === bloque.id">{{ FICHAS[d.type].label }} · {{ resumen(d) | slice:0:34 }}</option>
+                </select>
+              </label>
+              <label class="np-field"><span class="bot-ruta-no">Si no se cumple, ir a</span>
+                <select class="np-input" [(ngModel)]="bloque.false_step" (ngModelChange)="toco()">
+                  <option [ngValue]="null">— terminar —</option>
+                  <option *ngFor="let d of destinos" [ngValue]="d.id" [disabled]="d.id === bloque.id">{{ FICHAS[d.type].label }} · {{ resumen(d) | slice:0:34 }}</option>
+                </select>
+              </label>
+            </ng-container>
+
+            <!-- Esperar -->
+            <label class="np-field" *ngIf="bloque.type === 'delay'"><span>Segundos <em>(máximo 3)</em></span>
+              <input type="number" class="np-input" min="0" max="3" [(ngModel)]="bloque.delay_seconds" (ngModelChange)="toco()" />
+            </label>
+
+            <!-- Medios -->
+            <ng-container *ngIf="bloque.type === 'image' || bloque.type === 'document'">
+              <label class="np-field"><span>Dirección del archivo</span><input class="np-input np-mono" [(ngModel)]="bloque.media_url" (ngModelChange)="toco()" placeholder="https://…" /></label>
+              <label class="np-field" *ngIf="bloque.type === 'document'"><span>Nombre con que lo recibe</span><input class="np-input" [(ngModel)]="bloque.media_name" (ngModelChange)="toco()" placeholder="factura.pdf" /></label>
+              <label class="np-field"><span>Texto que acompaña</span><input class="np-input" [(ngModel)]="bloque.media_caption" (ngModelChange)="toco()" /></label>
+            </ng-container>
+
+            <!-- Enlace -->
+            <ng-container *ngIf="bloque.type === 'link'">
+              <label class="np-field"><span>Dirección que abre</span><input class="np-input np-mono" [(ngModel)]="bloque.url" (ngModelChange)="toco()" placeholder="https://…" /></label>
+              <label class="np-field"><span>Texto del botón</span><input class="np-input" [(ngModel)]="bloque.button_text" (ngModelChange)="toco()" [maxlength]="META.LARGO_BOTON" /></label>
+            </ng-container>
+
+            <!-- Agente -->
+            <label class="np-field" *ngIf="bloque.type === 'transfer_agent'"><span>Área</span>
+              <input class="np-input" [(ngModel)]="bloque.agent_department" (ngModelChange)="toco()" placeholder="soporte" />
+            </label>
+            <p class="np-notice np-notice--info" *ngIf="bloque.type === 'transfer_agent'">El bot se calla con ese número hasta que alguien lo reactive desde el CRM: si siguiera contestando, le hablaría encima al agente.</p>
+
+            <!-- Salida común -->
+            <label class="np-field" *ngIf="!['buttons','list','condition','end','transfer_agent'].includes(bloque.type)">
+              <span>Cuando termine, ir a</span>
+              <select class="np-input" [(ngModel)]="bloque.next_step" (ngModelChange)="toco()">
+                <option [ngValue]="null">— terminar la conversación —</option>
+                <option *ngFor="let d of destinos" [ngValue]="d.id" [disabled]="d.id === bloque.id">{{ FICHAS[d.type].label }} · {{ resumen(d) | slice:0:34 }}</option>
+              </select>
+            </label>
+
+            <div class="bot-vars">
+              <p class="np-sect">Variables <small class="np-fine">clic para insertarla donde está el cursor</small></p>
+              <div class="bot-vars-lista">
+                <button type="button" class="np-tag" *ngFor="let v of variables" (click)="ponerVariable(v)">{{ v }}</button>
+              </div>
+            </div>
+          </ng-container>
+        </ng-container>
+
+        <!-- ── Menú principal ── -->
+        <ng-container *ngIf="panel === 'menu'">
+          <p class="np-fine">Es lo primero que ve el cliente cuando escribe. Cada opción abre un flujo.</p>
+
+          <label class="np-field"><span>Palabras que lo despiertan</span>
+            <input class="np-input" [(ngModel)]="config.trigger_word" (ngModelChange)="toco()" placeholder="hola, buenas, menu" />
+          </label>
+          <label class="np-field"><span>Saludo</span>
+            <textarea class="np-input np-textarea" rows="4" [(ngModel)]="config.welcome_message" (ngModelChange)="toco()"></textarea>
+          </label>
+          <label class="np-field"><span>Cómo se muestran las opciones</span>
+            <select class="np-input" [(ngModel)]="config.menu_type" (ngModelChange)="toco()">
+              <option value="buttons">Botones de WhatsApp (hasta {{ META.MAX_BOTONES }})</option>
+              <option value="list">Lista desplegable (hasta {{ META.MAX_FILAS }})</option>
+              <option value="text">Texto numerado</option>
+            </select>
+          </label>
+
+          <p class="np-notice np-notice--warn" *ngIf="demasiadosBotonesEnMenu">
+            Hay {{ config.options.length }} opciones y WhatsApp sólo muestra {{ META.MAX_BOTONES }} botones: se va a mandar como lista.
+          </p>
+
+          <p class="np-sect">Opciones</p>
+          <div class="bot-opcion" *ngFor="let o of config.options; let i = index">
+            <div class="bot-opcion-h"><b>{{ i + 1 }}</b>
+              <input class="np-input" [(ngModel)]="o.label" (ngModelChange)="toco()" placeholder="Consultar mi factura" />
+              <button type="button" class="np-icobtn" (click)="quitarDe(config.options, i)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
+            </div>
+            <label class="np-field"><span>Abre el flujo</span>
+              <select class="np-input" [(ngModel)]="o.flow_id" (ngModelChange)="toco()">
+                <option value="">— elegir —</option>
+                <option *ngFor="let f of config.flows" [value]="f.id">{{ f.name }}</option>
+              </select>
+            </label>
+          </div>
+          <button type="button" class="np-link" (click)="agregarOpcion()">+ Agregar opción</button>
+        </ng-container>
+
+        <!-- ── Ajustes ── -->
+        <ng-container *ngIf="panel === 'ajustes'">
+          <label class="np-field"><span>Si no entiende</span>
+            <textarea class="np-input np-textarea" rows="3" [(ngModel)]="config.settings.fallback_message" (ngModelChange)="toco()"></textarea>
+          </label>
+          <label class="np-field"><span>Cuántas veces vuelve a preguntar</span>
+            <input type="number" class="np-input" min="1" max="5" [(ngModel)]="config.settings.max_retries" (ngModelChange)="toco()" />
+          </label>
+          <label class="np-field"><span>Minutos que espera una respuesta</span>
+            <input type="number" class="np-input" min="1" max="60" [(ngModel)]="config.settings.session_timeout_minutes" (ngModelChange)="toco()" />
+          </label>
+          <p class="np-notice np-notice--info">Pasado ese tiempo la conversación se cierra sola, para no dejar al cliente atrapado en un flujo a medias.</p>
+        </ng-container>
+
+        <!-- ── Revisión ── -->
+        <ng-container *ngIf="panel === 'revision'">
+          <p class="np-empty-block" *ngIf="!avisos.length"><strong>El flujo está sano.</strong><span>Ninguna ruta suelta y nada que WhatsApp vaya a rechazar.</span></p>
+
+          <div class="bot-aviso" *ngFor="let a of avisos" [attr.data-nivel]="a.nivel" (click)="irAlBloque(a.bloque)" [class.is-clic]="a.bloque">
+            <b>{{ a.nivel === 'error' ? 'Rompe la conversación' : 'Conviene revisar' }}</b>
+            <span>{{ a.texto }}</span>
+          </div>
+        </ng-container>
+      </div>
+    </aside>
+  </div>
+
+  <!-- ── Probador ── -->
+  <div class="np-overlay" *ngIf="probadorAbierto" (click)="cerrarProbador()">
+    <div class="np-modal bot-probador" (click)="$event.stopPropagation()" role="dialog" aria-label="Probar el flujo">
+      <div class="np-modal-head">
+        <div><p class="np-kicker">Bot <b>/</b> {{ flujo.name }}</p><h3>Probar sin escribirle a nadie</h3></div>
+        <div class="np-btnrow">
+          <button type="button" class="np-btn np-btn--ghost np-btn--sm" (click)="reiniciarPrueba()">Empezar de nuevo</button>
+          <button type="button" class="np-icobtn" (click)="cerrarProbador()" aria-label="Cerrar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
+        </div>
+      </div>
+
+      <div class="bot-charla">
+        <div class="bot-msj" *ngFor="let m of charla" [class.es-mio]="m.mio" [attr.data-tipo]="m.tipo">
+          <ng-container *ngIf="m.tipo === 'aviso'"><i>{{ m.texto }}</i></ng-container>
+
+          <ng-container *ngIf="m.tipo !== 'aviso'">
+            <small class="bot-msj-h" *ngIf="m.encabezado">{{ m.encabezado }}</small>
+            <p *ngIf="m.texto">{{ m.texto }}</p>
+
+            <span class="bot-msj-adj" *ngIf="m.tipo === 'imagen'">🖼 {{ m.url }}</span>
+            <span class="bot-msj-adj" *ngIf="m.tipo === 'documento'">📄 {{ m.nombre }}</span>
+
+            <div class="bot-msj-botones" *ngIf="m.botones?.length">
+              <button type="button" *ngFor="let x of m.botones" (click)="enviarEnPrueba(x.id)">{{ x.title }}</button>
+            </div>
+
+            <div class="bot-msj-lista" *ngIf="m.secciones?.length">
+              <small>{{ m.boton }}</small>
+              <ng-container *ngFor="let s of m.secciones">
+                <button type="button" *ngFor="let f of s.rows" (click)="enviarEnPrueba(f.id)">
+                  <b>{{ f.title }}</b><em *ngIf="f.description">{{ f.description }}</em>
+                </button>
+              </ng-container>
+            </div>
+
+            <a class="bot-msj-enlace" *ngIf="m.tipo === 'enlace'" [href]="m.url" target="_blank" rel="noopener">{{ m.boton }}</a>
+          </ng-container>
+        </div>
+
+        <div class="bot-msj" *ngIf="probando"><span class="np-spinner np-spinner--sm"></span></div>
+      </div>
+
+      <div class="bot-probador-pie">
+        <input class="np-input" [(ngModel)]="escribiendo" (keydown.enter)="enviarEnPrueba()" [disabled]="terminoLaPrueba"
+               [placeholder]="terminoLaPrueba ? 'El flujo terminó. Empezá de nuevo para probar otra vez.' : 'Escribí como si fueras el cliente…'" />
+        <button type="button" class="np-btn np-btn--primary np-btn--sm" (click)="enviarEnPrueba()" [disabled]="terminoLaPrueba || probando">Enviar</button>
+      </div>
+
+      <details class="bot-probador-vars" *ngIf="variablesDeLaPrueba.length">
+        <summary>Variables cargadas ({{ variablesDeLaPrueba.length }})</summary>
+        <dl class="np-dl">
+          <ng-container *ngFor="let v of variablesDeLaPrueba"><dt>{{ v.nombre }}</dt><dd class="np-mono">{{ v.valor }}</dd></ng-container>
+        </dl>
+      </details>
+    </div>
+  </div>
+</div>
