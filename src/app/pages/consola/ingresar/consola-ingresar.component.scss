@@ -117,3 +117,13 @@
   .np-ingreso-marca { display: none; }
   .np-ingreso-caja { justify-self: center; }
 }
+
+/* El código del authenticator: grande y espaciado, que es como se lee un
+   número de seis dígitos que se está copiando de otra pantalla. */
+.ci-codigo {
+  font-family: var(--font-mono);
+  font-size: 22px;
+  letter-spacing: .34em;
+  text-align: center;
+  padding-left: .34em;   /* compensa el espaciado del último dígito */
+}

@@ -37,6 +37,7 @@ export class ConsolaComponent implements OnInit {
     { ruta: 'cupones',   titulo: 'Cupones',   icono: 'M4 8a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2 2 2 0 0 0 0 4 2 2 0 0 0 0 4 2 2 0 0 1-2 2H6a2 2 0 0 1-2-2 2 2 0 0 0 0-4 2 2 0 0 0 0-4ZM14 6.5v2M14 11v2M14 15.5v2' },
     { ruta: 'referidos', titulo: 'Referidos', icono: 'M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2M9 3a4 4 0 1 0 0 8 4 4 0 0 0 0-8M22 21v-2a4 4 0 0 0-3-3.9M16 3.1a4 4 0 0 1 0 7.8' },
     { ruta: 'bitacora',  titulo: 'Bitácora',  icono: 'M8 6h12M8 12h12M8 18h12M3.5 6h.01M3.5 12h.01M3.5 18h.01' },
+    { ruta: 'seguridad', titulo: 'Seguridad', icono: 'M12 3l8 4v5c0 5-3.4 8.4-8 9.5C7.4 20.4 4 17 4 12V7l8-4Zm-3 9 2 2 4-4' },
   ];
 
   /** La letra del avatar de quien está adentro. */

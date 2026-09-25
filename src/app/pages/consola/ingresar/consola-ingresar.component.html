@@ -43,6 +43,35 @@
       <flowbite-dark-theme-toggle></flowbite-dark-theme-toggle>
     </header>
 
+    <!-- ── Paso 2: el código del authenticator ── -->
+    <form class="np-form" *ngIf="pase; else pedirClave" (ngSubmit)="comprobarCodigo()">
+      <div class="np-notice np-notice--info np-field-full">
+        <b>Tu contraseña está bien.</b> Ahora poné el código de seis dígitos que muestra tu authenticator.
+      </div>
+
+      <label class="np-field np-field-full"><span>Código</span>
+        <input #campoCodigo type="text" class="np-input ci-codigo" [(ngModel)]="codigo" name="codigo"
+               (ngModelChange)="soloDigitos()" maxlength="9" inputmode="numeric"
+               autocomplete="one-time-code" autocapitalize="off" spellcheck="false"
+               placeholder="000000" required />
+      </label>
+
+      <p class="np-fine np-field-full">
+        ¿Perdiste el teléfono? Poné uno de tus códigos de recuperación, del estilo <b class="np-mono">A1B2-C3D4</b>.
+      </p>
+
+      <p *ngIf="error" class="np-notice np-notice--danger np-field-full" role="alert">{{ error }}</p>
+
+      <button type="submit" class="np-btn np-btn--primary np-field-full np-ingreso-entrar" [disabled]="cargando">
+        <span *ngIf="cargando" class="np-spinner np-spinner--sm"></span>
+        {{ cargando ? 'Comprobando…' : 'Entrar' }}
+      </button>
+
+      <button type="button" class="np-link np-field-full" (click)="volverAlPrincipio()">Volver</button>
+    </form>
+
+    <!-- ── Paso 1: correo y contraseña ── -->
+    <ng-template #pedirClave>
     <form class="np-form" (ngSubmit)="ingresar()">
       <label class="np-field np-field-full"><span>Correo</span>
         <input type="email" class="np-input" [(ngModel)]="email" name="email"
@@ -71,6 +100,7 @@
         {{ cargando ? 'Entrando…' : 'Entrar a la consola' }}
       </button>
     </form>
+    </ng-template>
 
     <p class="np-fine np-muted np-ingreso-pie">
       Las cuentas de la consola se crean en el servidor con

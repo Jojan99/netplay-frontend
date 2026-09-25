@@ -25,6 +25,7 @@ export const CONSOLA_ROUTES: Routes = [
       { path: 'cupones',   loadComponent: () => import('./cupones/consola-cupones.component').then(m => m.ConsolaCuponesComponent) },
       { path: 'referidos', loadComponent: () => import('./referidos/consola-referidos.component').then(m => m.ConsolaReferidosComponent) },
       { path: 'bitacora',  loadComponent: () => import('./bitacora/consola-bitacora.component').then(m => m.ConsolaBitacoraComponent) },
+      { path: 'seguridad', loadComponent: () => import('./seguridad/consola-seguridad.component').then(m => m.ConsolaSeguridadComponent) },
       { path: '', redirectTo: 'tablero', pathMatch: 'full' },
     ],
   },
