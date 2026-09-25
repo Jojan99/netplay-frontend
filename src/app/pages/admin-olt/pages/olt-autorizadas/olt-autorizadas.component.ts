@@ -6,6 +6,7 @@ import { FormsModule } from '@angular/forms';
 import { OltService } from '../../../../services/olt.service';
 import { UserService } from '../../../../services/user.service';
 import { ToastService } from '../../../../services/toast.service';
+import { DialogService } from '../../../../services/dialog.service';
 import { GestionRemotaService } from '../../../../services/gestion-remota.service';
 import { TareasEnSegundoPlanoService } from '../../../../services/tareas-en-segundo-plano.service';
 import { OltElegida } from '../../shared/olt-elegida';
@@ -95,6 +96,7 @@ export class OltAutorizadasComponent implements OnInit {
     private oltService: OltService,
     private userService: UserService,
     private toast: ToastService,
+    private dialog: DialogService,
     private gestion: GestionRemotaService,
   ) {}
 
@@ -398,15 +400,34 @@ export class OltAutorizadasComponent implements OnInit {
     this.clientResults   = [];
   }
 
-  confirmAssign(): void {
+  confirmAssign(liberarAnterior = false): void {
     if (!this.assignOnt || !this.selectedOltId) return;
     this.assigning = true;
+
     this.oltService.assignClientToOnt(
       this.selectedOltId, this.assignOnt.fsp, this.assignOnt.ont_id,
-      this.selectedClient?.id ?? null,
+      this.selectedClient?.id ?? null, liberarAnterior,
     ).subscribe({
-      next: (res) => {
+      next: async (res) => {
         this.assigning = false;
+
+        // El cliente ya tiene otro equipo. No se asigna a ciegas: con dos ONT
+        // la ficha muestra cualquiera de las dos, y eso ya pasó en Netplay.
+        const otras = res?.data?.ya_tiene;
+
+        if (res?.error !== 0 && Array.isArray(otras) && otras.length) {
+          const cual = otras.map((o: any) => `${o.olt ?? 'OLT'} ${o.fsp}:${o.ont_id}`).join(', ');
+          const nombre = `${this.selectedClient?.names ?? ''} ${this.selectedClient?.lastname ?? ''}`.trim();
+
+          if (await this.dialog.confirm(
+            `${nombre} ya tiene ${cual}. ¿Se la quito y le dejo esta? La otra queda libre.`,
+            { okLabel: 'Sí, cambiarle el equipo', cancelLabel: 'Cancelar' },
+          )) {
+            this.confirmAssign(true);
+          }
+
+          return;
+        }
 
         this.resultado(res, () => {
           this.assignModal = false;
@@ -414,6 +435,9 @@ export class OltAutorizadasComponent implements OnInit {
           if (idx >= 0) {
             this.onts[idx] = { ...this.onts[idx], assigned_client: this.selectedClient, user_data_id: this.selectedClient?.id ?? null };
           }
+
+          // Si se le soltó el equipo anterior, esa fila también cambió.
+          if (res?.data?.soltadas) this.loadOnts(true);
         }, 'Cliente asignado a la ONT.');
       },
       error: (err) => {
@@ -423,20 +447,54 @@ export class OltAutorizadasComponent implements OnInit {
     });
   }
 
+  /** El nombre de quien tiene esa ONT hoy, para poder nombrarlo al preguntar. */
+  nombreAsignado(ont: any): string {
+    const c = ont?.assigned_client;
+    return c ? `${c.names ?? ''} ${c.lastname ?? ''}`.trim() : '';
+  }
+
+  /**
+   * Suelta la ONT desde la propia fila.
+   *
+   * Es el paso que faltaba para cambiar un equipo de dueño: antes había que
+   * abrir el modal de asignar para encontrar el enlace de desasignar, y no se
+   * veía desde la lista.
+   */
+  async soltarDesdeLaFila(ont: any): Promise<void> {
+    const quien = this.nombreAsignado(ont);
+
+    if (!await this.dialog.confirm(
+      quien
+        ? `¿Quitarle esta ONT a ${quien}? Queda libre para asignársela a otro cliente.`
+        : '¿Dejar esta ONT sin cliente?',
+      { okLabel: 'Sí, dejarla libre', cancelLabel: 'Cancelar' },
+    )) return;
+
+    this.desasignar(ont, () => this.openAssign(this.onts.find(o => o.fsp === ont.fsp && o.ont_id === ont.ont_id) ?? ont));
+  }
+
   removeAssign(): void {
-    if (!this.assignOnt || !this.selectedOltId) return;
+    if (!this.assignOnt) return;
+    this.desasignar(this.assignOnt, () => { this.assignModal = false; });
+  }
+
+  /** Quita el cliente de una ONT y refleja el cambio en la lista. */
+  private desasignar(ont: any, despues: () => void): void {
+    if (!ont || !this.selectedOltId) return;
     this.assigning = true;
-    this.oltService.assignClientToOnt(this.selectedOltId, this.assignOnt.fsp, this.assignOnt.ont_id, null).subscribe({
+
+    this.oltService.assignClientToOnt(this.selectedOltId, ont.fsp, ont.ont_id, null).subscribe({
       next: (res) => {
         this.assigning = false;
 
         this.resultado(res, () => {
-          this.assignModal = false;
-          const idx = this.onts.findIndex(o => o.fsp === this.assignOnt.fsp && o.ont_id === this.assignOnt.ont_id);
+          const idx = this.onts.findIndex(o => o.fsp === ont.fsp && o.ont_id === ont.ont_id);
           if (idx >= 0) {
             this.onts[idx] = { ...this.onts[idx], assigned_client: null, user_data_id: null };
           }
-        }, 'Cliente desvinculado de la ONT.');
+          this.selectedClient = null;
+          despues();
+        }, 'La ONT quedó libre.');
       },
       error: (err) => {
         this.assigning = false;

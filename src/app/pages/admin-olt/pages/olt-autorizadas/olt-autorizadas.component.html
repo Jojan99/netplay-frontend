@@ -46,7 +46,9 @@
               <td class="np-col-sp es-ancha" data-label="Service ports"><span class="np-tags" *ngIf="ont.service_ports?.length; else noSp"><span class="np-tag" *ngFor="let sp of ont.service_ports">SP{{ sp.index }} / V{{ sp.vlan }}</span></span><ng-template #noSp><span class="np-muted">Sin SP</span></ng-template></td>
               <td class="es-ancha" data-label="Cliente"><ng-container *ngIf="ont.user_data_id || ont.assigned_client; else noClient"><div class="np-name">{{ ont.assigned_client?.names }} {{ ont.assigned_client?.lastname }}</div><div class="np-plan"><em>{{ ont.assigned_client?.dni }}</em></div></ng-container><ng-template #noClient><span class="np-muted">Sin asignar</span></ng-template></td>
               <td class="np-td-right es-acciones"><div class="np-rowacts" (click)="$event.stopPropagation()">
-                <button type="button" class="np-icobtn" (click)="openAssign(ont)" title="Asignar cliente"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="8" r="3.5"/><path d="M3 20a6 6 0 0 1 12 0M17 11h4M19 9v4"/></svg></button>
+                <button type="button" class="np-icobtn" (click)="openAssign(ont)" [title]="ont.user_data_id || ont.assigned_client ? 'Cambiar de cliente' : 'Asignar cliente'"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="8" r="3.5"/><path d="M3 20a6 6 0 0 1 12 0M17 11h4M19 9v4"/></svg></button>
+                <button type="button" class="np-icobtn au-soltar" *ngIf="ont.user_data_id || ont.assigned_client" (click)="soltarDesdeLaFila(ont)" [disabled]="assigning"
+                        [title]="'Quitarle la ONT a ' + (nombreAsignado(ont) || 'este cliente')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="8" r="3.5"/><path d="M3 20a6 6 0 0 1 12 0M17 11h4"/></svg></button>
                 <button type="button" class="np-icobtn" (click)="openDetail(ont)" title="Señal y service ports"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12h4l3-8 4 16 3-8h4"/></svg></button>
                 <button type="button" class="np-icobtn" (click)="openDelete(ont)" title="Eliminar ONT"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/></svg></button>
               </div></td>
@@ -112,7 +114,10 @@
     <div class="np-modal-head"><div><p class="np-kicker">ONT <b>/</b> {{ assignOnt?.fsp }} · ID {{ assignOnt?.ont_id }}</p><h3>Asignar cliente</h3></div>
       <button type="button" class="np-icobtn" (click)="assignModal = false" aria-label="Cerrar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div>
     <div class="np-modal-body">
-      <p class="np-notice np-notice--ok" *ngIf="assignOnt?.user_data_id || assignOnt?.assigned_client">Asignada a <strong>{{ assignOnt?.assigned_client?.names }} {{ assignOnt?.assigned_client?.lastname }}</strong> <button type="button" class="np-link" (click)="removeAssign()" [disabled]="assigning">Desasignar</button></p>
+      <p class="np-notice np-notice--warn" *ngIf="assignOnt?.user_data_id || assignOnt?.assigned_client">
+        Hoy la tiene <strong>{{ nombreAsignado(assignOnt) || 'un cliente' }}</strong>. Si elegís otro, la ONT se le pasa a ese.
+        <button type="button" class="np-link" (click)="removeAssign()" [disabled]="assigning">Dejarla libre</button>
+      </p>
       <label class="np-field"><span>Buscar cliente</span><input type="search" class="np-input" [(ngModel)]="clientSearch" (input)="onClientSearch()" placeholder="Nombre o DNI…" /><small class="np-fine" *ngIf="searchingClients">Buscando…</small></label>
       <div class="np-checklist" *ngIf="clientResults.length > 0"><button type="button" class="np-check np-check--btn" *ngFor="let c of clientResults" (click)="selectClient(c)"><span class="np-strong">{{ c.names }} {{ c.lastname }}</span><span class="np-spacer"></span><span class="np-data">{{ c.dni }}</span></button></div>
       <p class="np-notice np-notice--code" *ngIf="selectedClient && clientResults.length === 0 && clientSearch">Seleccionado: <strong>{{ selectedClient.names }} {{ selectedClient.lastname }}</strong> · <span class="np-mono">{{ selectedClient.dni }}</span></p>

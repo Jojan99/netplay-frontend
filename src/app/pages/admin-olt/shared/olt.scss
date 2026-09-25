@@ -248,3 +248,7 @@
   display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
   code { font-size: 13.5px; font-weight: 600; color: var(--text); overflow-wrap: anywhere; }
 }
+
+/* Soltar la ONT de su cliente (Autorizadas): en rojo porque deshace una
+   asignación, y sólo aparece cuando hay alguien a quien quitársela. */
+.au-soltar { color: var(--danger); &:hover:not(:disabled) { background: var(--danger-soft); } }

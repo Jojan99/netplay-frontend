@@ -262,9 +262,17 @@ export class OltService {
     return this.http.post<any>(`${this.env.rootUrl}api/management/olt/${oltId}/profiles/sync`, '{}', { headers: this.getHeaders() });
   }
 
-  assignClientToOnt(oltId: number, fsp: string, ontId: number, userDataId: number | null): Observable<any> {
+  /**
+   * Pone o quita el cliente de una ONT. Con `user_data_id` en null la deja
+   * libre para dársela a otro.
+   *
+   * `liberarAnterior` es la confirmación de que al cliente se le puede soltar
+   * el equipo que ya tenía: sin eso el backend no asigna, porque un cliente
+   * con dos ONT deja la ficha mostrando cualquiera de las dos.
+   */
+  assignClientToOnt(oltId: number, fsp: string, ontId: number, userDataId: number | null, liberarAnterior = false): Observable<any> {
     return this.http.post<any>(`${this.env.rootUrl}api/management/olt/${oltId}/ont/assign-client`,
-      JSON.stringify({ fsp, ont_id: ontId, user_data_id: userDataId }), { headers: this.getHeaders() });
+      JSON.stringify({ fsp, ont_id: ontId, user_data_id: userDataId, liberar_anterior: liberarAnterior }), { headers: this.getHeaders() });
   }
 
   getOntByUserId(userId: number): Observable<any> {
