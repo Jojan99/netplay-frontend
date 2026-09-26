@@ -3,9 +3,15 @@
 .np-req { color: var(--warn); font-style: normal; }
 
 /* Un solo panel en el medio: veinte campos desparramados en tarjetas no dejaban
-   ver por dónde empezar. A 720 px quedaba una tira angosta con media pantalla
-   vacía a los lados. */
-.inf-wiz { max-width: 1040px; margin: 0 auto; display: grid; gap: 14px; }
+   ver por dónde empezar. Ancho de verdad: a 720 px era una tira angosta con
+   media pantalla vacía a los lados. */
+.inf-wiz { max-width: 1280px; margin: 0 auto; display: grid; gap: 14px; }
+
+/* Con el panel ancho, los campos de a tres. A dos, cada uno quedaba de 600 px
+   para escribir un documento o un teléfono. */
+.inf-panel .np-form { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+@media (max-width: 1100px) { .inf-panel .np-form { grid-template-columns: 1fr 1fr; } }
+@media (max-width: 640px)  { .inf-panel .np-form { grid-template-columns: 1fr; } }
 .inf-panel { display: grid; gap: 12px; align-content: start; }
 .inf-ayuda { margin: -4px 0 0; }
 
