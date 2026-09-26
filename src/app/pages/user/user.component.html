@@ -85,12 +85,12 @@
             <ng-container *ngIf="skeletor">
               <tr class="np-skel" *ngFor="let i of [1,2,3,4,5,6,7,8]">
                 <td class="np-stripe"><i></i></td>
-                <td><span class="np-skel-bar" style="width:62%"></span><span class="np-skel-bar np-skel-bar--sm" style="width:38%"></span></td>
-                <td class="np-col-doc"><span class="np-skel-bar" style="width:70%"></span></td>
-                <td class="np-col-phone"><span class="np-skel-bar" style="width:60%"></span></td>
-                <td class="np-col-ip"><span class="np-skel-bar" style="width:55%"></span></td>
-                <td><span class="np-skel-bar" style="width:52px"></span></td>
-                <td></td>
+                <td class="es-principal"><span class="np-skel-bar" style="width:62%"></span><span class="np-skel-bar np-skel-bar--sm" style="width:38%"></span></td>
+                <td class="np-col-doc" data-label="Documento"><span class="np-skel-bar" style="width:70%"></span></td>
+                <td class="np-col-phone" data-label="Teléfono"><span class="np-skel-bar" style="width:60%"></span></td>
+                <td class="np-col-ip" data-label="IP"><span class="np-skel-bar" style="width:55%"></span></td>
+                <td data-label="Estado"><span class="np-skel-bar" style="width:52px"></span></td>
+                <td class="es-acciones"></td>
               </tr>
             </ng-container>
 

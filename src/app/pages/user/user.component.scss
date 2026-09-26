@@ -257,3 +257,27 @@
 .np-modal--alta .np-modal-body > .np-form { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 @media (max-width: 1000px) { .np-modal--alta .np-modal-body > .np-form { grid-template-columns: 1fr 1fr; } }
 @media (max-width: 640px) { .np-modal--alta .np-modal-body > .np-form { grid-template-columns: 1fr; } }
+
+/* ─── La ficha del cliente en el teléfono ────────────────────────────────── */
+@media (max-width: 760px) {
+  /* Los datos de la conexión eran un flex que envolvía con 22 px de hueco: en
+     un teléfono caían de a uno, de a dos y de a uno otra vez. De a dos,
+     parejo. */
+  .cx-datos {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 10px 12px;
+    > div { min-width: 0; }
+    dd { overflow-wrap: anywhere; }
+  }
+
+  /* La tarjeta de conexión al ancho de la pantalla, sin márgenes que la
+     angosten, y el botón de cambiar abajo y entero en vez de apretado al lado
+     del estado. */
+  .cx-card { padding: 12px 14px; }
+  .cx-cab { gap: 6px 10px; }
+  .cx-valor { font-size: 16px; }
+  .cx-cambiar { width: 100%; margin-top: 2px; }
+
+  /* El equipo y sus acciones, uno debajo del otro. */
+  .cx-ont { flex-direction: column; align-items: stretch; }
+  .cx-ont-acc { .np-btn { flex: 1 1 auto; } }
+}

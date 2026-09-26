@@ -1,8 +1,6 @@
 /* ─── Admin OLT en el teléfono ─────────────────────────────────────────────
-   Las pantallas del módulo están pensadas para escritorio: tablas anchas con
-   su propio desplazamiento dentro de un alto fijo, íconos de 28 px y ventanas
-   centradas. En un teléfono eso se traba y no se puede tocar con el dedo.
-   Esta hoja la incluyen todas las pantallas del módulo. */
+   Lo táctil y las ventanas que suben desde abajo viven en el tema: eran
+   genéricas y las necesita todo el panel. Acá queda sólo lo del módulo. */
 
 @media (max-width: 760px) {
   /* Una sola barra de desplazamiento, la de la página. Una tabla que se
@@ -22,51 +20,12 @@
     np-select { flex: 1; min-width: 0; width: auto !important; }
   }
 
-  .np-actions { flex-wrap: wrap; > * { flex: 1 1 auto; } }
-  .np-toolbar { gap: 8px; }
-
   /* Donde la barra de secciones no va dentro de la barra de herramientas,
      quedaba pegada a lo que sigue. */
   app-olt-nav { display: block; margin-bottom: 12px; }
   .np-toolbar app-olt-nav { margin-bottom: 0; }
-  .np-search { height: 42px; input { font-size: 16px; } }
   .np-subbar { gap: 10px; }
   .np-spacer { display: none; }
-
-  /* Todo lo que se toca, del tamaño de un dedo. */
-  .np-btn { height: 42px; }
-  .np-btn--sm { height: 38px; }
-  .np-icobtn { width: 40px; height: 40px; }
-  .np-rowacts { opacity: 1; gap: 4px; flex-wrap: wrap; }
-  .np-link { display: inline-block; padding-block: 6px; }
-  .np-chip, .np-seg button { height: 38px; }
-
-  /* 16 px en los campos: con menos, el teléfono agranda la pantalla al tocarlos. */
-  .np-input, select.np-input, textarea.np-input { font-size: 16px; min-height: 42px; }
-
-  .np-title { font-size: 22px; }
-  .np-ribbon { gap: 4px 14px; }
-
-  /* Ventanas: suben desde abajo y ocupan el ancho. */
-  .np-overlay { align-items: flex-end; padding: 0; }
-  .np-modal {
-    max-width: 100% !important; max-height: 94dvh;
-    border-radius: 16px 16px 0 0; border-bottom: 0;
-    display: flex; flex-direction: column;
-  }
-  .np-modal--confirm { padding-bottom: max(22px, env(safe-area-inset-bottom)); }
-  .np-modal-body { overflow-y: auto; min-height: 0; }
-  .np-modal-foot {
-    flex-wrap: wrap; padding-bottom: max(12px, env(safe-area-inset-bottom));
-    .np-btn { flex: 1 1 auto; }
-  }
-  .np-tabs { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; &::-webkit-scrollbar { display: none; } }
-  .np-tab { flex-shrink: 0; min-height: 42px; }
-  .np-btnrow .np-btn { flex: 1 1 auto; }
-
-  /* La ficha lateral ocupa la pantalla: su cierre, lejos del borde. */
-  .np-insp-head { position: sticky; top: 0; z-index: 2; background: var(--surface); }
-  .np-quick { gap: 8px; .np-btn { width: 100%; } }
 }
 
 /* Las tablas que se vuelven tarjetas en el celular viven en el tema

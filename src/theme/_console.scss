@@ -283,7 +283,24 @@ select optgroup {
   .np-quick { grid-template-columns: 1fr; }
   .np-stats { grid-template-columns: 1fr; }
   .np-stat { border-right: 0; border-bottom: 1px solid var(--line); &:last-child { border-bottom: 0; } }
-  .np-dl { grid-template-columns: 1fr; row-gap: 2px; dt { margin-top: 6px; } }
+  /* La lista de datos en una columna quedaba plana: etiqueta y valor con el
+     mismo peso, uno debajo del otro, sin saber dónde termina cada par. Ahora la
+     etiqueta va chica arriba, el valor grande debajo, y una línea los separa. */
+  .np-dl {
+    grid-template-columns: 1fr; row-gap: 0; align-items: stretch;
+    dt {
+      margin: 0; padding: 9px 0 0;
+      font-size: 10.5px; font-weight: 800; letter-spacing: .05em; text-transform: uppercase;
+      color: var(--text-3);
+    }
+    dd {
+      padding: 1px 0 9px; border-bottom: 1px solid var(--line);
+      font-size: 14px; font-weight: 600; color: var(--text);
+      &:last-of-type { border-bottom: 0; padding-bottom: 0; }
+    }
+    dd.np-mono { font-size: 13.5px; }
+    &.is-editing dd { padding-bottom: 11px; }
+  }
 }
 
 /* ─── Piezas agregadas con Finanzas (genéricas) ──────────────────────── */
@@ -664,4 +681,52 @@ input.np-input:-webkit-autofill:active {
 
     tr.np-empty td { display: block; width: 100%; text-align: center !important; padding: 28px 16px !important; }
   }
+}
+
+/* ─── El panel en el teléfono ───────────────────────────────────────────────
+   Todo esto nació en el módulo de OLT y no tenía nada de OLT: lo que se toca,
+   del tamaño de un dedo; los campos a 16 px para que el teléfono no agrande la
+   pantalla al tocarlos; y las ventanas subiendo desde abajo, como las del
+   sistema. Vale para todo el panel. */
+@media (max-width: 760px) {
+  .np-actions { flex-wrap: wrap; > * { flex: 1 1 auto; } }
+  .np-toolbar { gap: 8px; }
+  .np-search { height: 42px; input { font-size: 16px; } }
+
+  /* Todo lo que se toca, del tamaño de un dedo. */
+  .np-btn { height: 42px; }
+  .np-btn--sm { height: 38px; }
+  .np-icobtn { width: 40px; height: 40px; }
+  .np-rowacts { opacity: 1; gap: 4px; flex-wrap: wrap; }
+  .np-link { display: inline-block; padding-block: 6px; }
+  .np-chip, .np-seg button { height: 38px; }
+
+  /* 16 px en los campos: con menos, el teléfono agranda la pantalla al tocarlos. */
+  .np-input, select.np-input, textarea.np-input { font-size: 16px; min-height: 42px; }
+
+  .np-title { font-size: 22px; }
+  .np-ribbon { gap: 4px 14px; }
+
+  /* Ventanas: suben desde abajo y ocupan el ancho. */
+  .np-overlay { align-items: flex-end; padding: 0; }
+  .np-modal {
+    max-width: 100% !important; max-height: 94dvh;
+    border-radius: 16px 16px 0 0; border-bottom: 0;
+    display: flex; flex-direction: column;
+  }
+  .np-modal--confirm { padding-bottom: max(22px, env(safe-area-inset-bottom)); }
+  .np-modal-body { overflow-y: auto; min-height: 0; }
+  .np-modal-foot {
+    flex-wrap: wrap; padding-bottom: max(12px, env(safe-area-inset-bottom));
+    .np-btn { flex: 1 1 auto; }
+  }
+
+  /* Cinco pestañas no entran de frente: se desplazan de costado. */
+  .np-tabs { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; &::-webkit-scrollbar { display: none; } }
+  .np-tab { flex-shrink: 0; min-height: 42px; }
+  .np-btnrow .np-btn { flex: 1 1 auto; }
+
+  /* La ficha ocupa la pantalla: su cierre queda a la vista aunque se baje. */
+  .np-insp-head { position: sticky; top: 0; z-index: 2; background: var(--surface); }
+  .np-quick { gap: 8px; .np-btn { width: 100%; } }
 }
