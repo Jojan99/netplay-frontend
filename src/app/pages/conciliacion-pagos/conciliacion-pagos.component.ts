@@ -178,7 +178,7 @@ export class ConciliacionPagosComponent implements OnInit {
       next: (r: any) => {
         l.trabajando = false;
 
-        if (r?.status !== 0) { l.error = r?.message || 'No se pudo leer la lista.'; l.noLeidas = r?.data?.no_leidas ?? []; return; }
+        if (r?.error !== 0) { l.error = r?.message || 'No se pudo leer la lista.'; l.noLeidas = r?.data?.no_leidas ?? []; return; }
 
         l.filas = (r.data.filas as FilaCruce[]).map(f => ({ ...f, incluir: f.est !== 'Revisar' && !!f.cedula, forzar: false }));
         l.noLeidas = r.data.no_leidas ?? [];
@@ -281,7 +281,7 @@ export class ConciliacionPagosComponent implements OnInit {
     this.svc.simular(this.peticion(l)).subscribe({
       next: (r: any) => {
         l.trabajando = false;
-        if (r?.status !== 0) { l.error = r?.message || 'No se pudo simular.'; return; }
+        if (r?.error !== 0) { l.error = r?.message || 'No se pudo simular.'; return; }
         l.reporte = r.data; l.reporteTipo = 'simulacion';
       },
       error: (e: any) => { l.trabajando = false; l.error = this.mensaje(e, 'No se pudo simular.'); },
@@ -310,7 +310,7 @@ export class ConciliacionPagosComponent implements OnInit {
     this.svc.aplicar(this.peticion(l)).subscribe({
       next: (res: any) => {
         l.trabajando = false;
-        if (res?.status !== 0) { l.error = res?.message || 'No se pudo aplicar.'; return; }
+        if (res?.error !== 0) { l.error = res?.message || 'No se pudo aplicar.'; return; }
         l.reporte = res.data; l.reporteTipo = 'aplicado'; l.aplicada = true;
         this.toast.success(`Aplicado: ${this.peso(res.data.resumen.aplicado)} en ${res.data.resumen.pagos_aplicados} pagos.`);
       },
