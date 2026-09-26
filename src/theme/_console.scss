@@ -251,11 +251,27 @@ select optgroup {
   &.is-danger { background: var(--danger-soft); color: var(--danger); } }
 
 /* ─── Responsive ─────────────────────────────────────────────────────── */
-@media (max-width: 1000px) {
+
+/* La ficha al lado de la tabla necesita 1280 px para que ninguna de las dos
+   quede apretada: la tabla tiene siete columnas y la ficha 420 px. Por debajo
+   de eso, la ficha ocupa la pantalla y la tabla queda entera detrás. Antes el
+   corte estaba en 1000 y en una laptop se abrían las dos, apretadas. */
+@media (max-width: 1280px) {
   .np-page.is-open .np-workspace, .np-page.is-wide .np-workspace { grid-template-columns: minmax(0, 1fr); }
   .np-inspector { position: fixed; inset: 0; z-index: 55; border-radius: 0; border: 0; max-height: none; }
-  .np-registry { max-height: none; }
   .np-insp-head { padding-top: max(16px, env(safe-area-inset-top)); }
+
+  /* Ampliar o reducir no significa nada cuando ya ocupa la pantalla. */
+  .np-inspector .np-only-desktop { display: none !important; }
+
+  /* A pantalla completa, el contenido no se estira de borde a borde: una línea
+     de texto de 1200 px no se lee. Se centra con un ancho cómodo. */
+  .np-insp-body { max-width: 960px; margin-inline: auto; width: 100%; }
+  .np-insp-head, .np-switchrow, .np-tabs { padding-inline: max(16px, calc((100% - 960px) / 2)); }
+}
+
+@media (max-width: 1000px) {
+  .np-registry { max-height: none; }
 
   /* En el celular la tabla no es su propio territorio de scroll: la página
      entera scrollea. Con «overscroll-behavior: contain» el gesto moría dentro
