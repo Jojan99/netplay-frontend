@@ -193,3 +193,40 @@
 .de-panel { display: grid; gap: 8px; margin-bottom: 12px;
   &.is-activo { border-left: 3px solid var(--ok); } }
 .de-cab { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+
+/* ─── Alta: el modal y el cruce con la orden de instalación ──────────────── */
+
+/* Más ancho que el resto: son dos columnas de campos más los selectores del
+   router, y a 720px todo quedaba en una tira angosta. */
+.np-modal--alta { max-width: 960px; }
+
+/* Lo que ya se cargó al tomar el pedido. Antes era una línea de texto que
+   decía sólo que la orden existía: no se veía qué iba a traer. */
+.ux-orden {
+  border: 1px solid var(--accent); border-radius: var(--radius);
+  background: var(--accent-soft, var(--surface-2)); overflow: hidden;
+}
+.ux-orden-h {
+  display: flex; align-items: center; gap: 10px; padding: 10px 12px;
+  b { display: block; font: 700 13px var(--font-body); color: var(--text-1); }
+  small { display: block; font: 600 11px var(--font-body); color: var(--text-3); }
+  > div { flex: 1; min-width: 0; }
+  > button { flex: none; }
+}
+.ux-orden-i {
+  display: grid; place-items: center; flex: none; width: 28px; height: 28px;
+  border-radius: 50%; background: var(--accent); color: #fff;
+  svg { width: 15px; height: 15px; }
+}
+.ux-orden-d {
+  margin: 0; display: grid; gap: 1px; background: var(--line); border-top: 1px solid var(--line);
+  > div { display: grid; grid-template-columns: 96px 1fr; gap: 10px; padding: 6px 12px; background: var(--surface); }
+  dt { font: 600 12px var(--font-body); color: var(--text-3); }
+  dd { margin: 0; font: 600 12px var(--font-body); color: var(--text-1); word-break: break-word; }
+}
+
+@media (max-width: 620px) {
+  .ux-orden-h { flex-wrap: wrap; }
+  .ux-orden-h > button { width: 100%; }
+  .ux-orden-d > div { grid-template-columns: 1fr; gap: 2px; }
+}

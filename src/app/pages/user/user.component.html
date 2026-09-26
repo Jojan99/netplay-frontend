@@ -845,7 +845,7 @@
 
 <!-- ══ Nuevo cliente ═══════════════════════════════════════════════════════ -->
 <div *ngIf="showCreateUser" class="np-overlay" (click)="showCreateUser = false">
-  <div class="np-modal np-modal--lg" role="dialog" aria-modal="true" aria-label="Registrar nuevo cliente" (click)="$event.stopPropagation()">
+  <div class="np-modal np-modal--editor np-modal--alta" role="dialog" aria-modal="true" aria-label="Registrar nuevo cliente" (click)="$event.stopPropagation()">
     <div class="np-modal-head">
       <div>
         <p class="np-kicker">Clientes <b>/</b> Alta</p>
@@ -859,7 +859,7 @@
       <button type="button" class="np-tab" role="tab" [attr.aria-selected]="showUserFormProfile" (click)="showUserFormProfile = true">Datos personales</button>
       <button type="button" class="np-tab" role="tab" [attr.aria-selected]="!showUserFormProfile" (click)="showUserFormProfile = false">Conexión</button>
     </div>
-    <div class="np-modal-body">
+    <div class="np-modal-body np-modal-body--scroll">
       <!-- El alta se guarda sola: si el router falla o se cierra el modal, no
            hay que volver a escribir todo. -->
       <div *ngIf="borradorRestaurado" class="np-notice np-notice--info np-notice--inline np-field-full np-aviso">
@@ -868,24 +868,36 @@
       </div>
 
       <div *ngIf="showUserFormProfile" class="np-form">
-        <label class="np-field" *ngFor="let f of [
-            {label:'Nombres',   key:'names',    type:'text',  ph:'Nombres'},
-            {label:'Apellidos', key:'lastname', type:'text',  ph:'Apellidos'},
-            {label:'Documento', key:'dni',      type:'text',  ph:'DNI / CC'},
-            {label:'Teléfono',  key:'phone',    type:'tel',   ph:'Teléfono'},
-            {label:'Correo',    key:'email',    type:'email', ph:'correo@dominio.com'},
-            {label:'Dirección', key:'address',  type:'text',  ph:'Calle, número, barrio'}
-          ]">
-          <span>{{ f.label }}</span>
-          <input [type]="f.type" class="np-input" [(ngModel)]="newUser[f.key]"
+        <label class="np-field" [class.np-field-full]="f.ancho" *ngFor="let f of CAMPOS_PERSONALES">
+          <span>{{ f.label }} <em *ngIf="f.ayuda">{{ f.ayuda }}</em></span>
+          <input [type]="f.type" class="np-input" [class.np-mono]="f.mono" [(ngModel)]="newUser[f.key]"
                  (ngModelChange)="guardarBorrador(); f.key === 'dni' && buscarInstalacion()" [placeholder]="f.ph" />
         </label>
         <!-- Lo que ya se cargó al tomar el pedido: no hay por qué escribirlo
              dos veces, y es donde aparecen las diferencias. -->
-        <p class="np-notice np-notice--info np-field-full" *ngIf="instalacionEncontrada">
-          Este cliente ya tiene una orden de instalación<ng-container *ngIf="instalacionEncontrada.estado_orden === 'completed'"> (ya instalada)</ng-container>.
-          <button type="button" class="np-link" (click)="usarLaInstalacion()">Traer sus datos</button>
-        </p>
+        <!-- El cruce por documento: lo que se cargó al tomar el pedido ya está
+             escrito en algún lado, y volver a escribirlo es donde aparecen las
+             diferencias. Se muestra qué trae antes de traerlo. -->
+        <div class="np-field-full ux-orden" *ngIf="instalacionEncontrada">
+          <div class="ux-orden-h">
+            <span class="ux-orden-i" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+            </span>
+            <div>
+              <b>Tiene una orden de instalación</b>
+              <small>Orden #{{ instalacionEncontrada.installation_id }} · {{ estadoDeLaOrden }}</small>
+            </div>
+            <button type="button" class="np-btn np-btn--primary np-btn--sm" (click)="usarLaInstalacion()">Traer sus datos</button>
+          </div>
+          <dl class="ux-orden-d">
+            <div *ngIf="instalacionEncontrada.names"><dt>Nombre</dt><dd>{{ instalacionEncontrada.names }}</dd></div>
+            <div *ngIf="instalacionEncontrada.phone"><dt>Teléfono</dt><dd class="np-mono">{{ instalacionEncontrada.phone }}</dd></div>
+            <div *ngIf="instalacionEncontrada.address"><dt>Dirección</dt><dd>{{ instalacionEncontrada.address }}<ng-container *ngIf="instalacionEncontrada.neighborhood">, {{ instalacionEncontrada.neighborhood }}</ng-container></dd></div>
+            <div *ngIf="planDeLaOrden"><dt>Plan</dt><dd>{{ planDeLaOrden }}</dd></div>
+            <div *ngIf="instalacionEncontrada.connection_type"><dt>Conexión</dt><dd>{{ conexionDeLaOrden }}</dd></div>
+            <div *ngIf="instalacionEncontrada.wifi_ssid"><dt>WiFi</dt><dd class="np-mono">{{ instalacionEncontrada.wifi_ssid }}</dd></div>
+          </dl>
+        </div>
 
         <label class="np-field"><span>Periodo de facturación</span>
           <np-select [ngModel]="comoTexto(newUser.periode_facturation)" (ngModelChange)="newUser.periode_facturation = $event; guardarBorrador()"

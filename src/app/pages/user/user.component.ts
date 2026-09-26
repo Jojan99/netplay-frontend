@@ -1658,6 +1658,22 @@ export class UserComponent implements OnInit {
    * credencial, VLAN, día de corte. Volver a escribirlos es donde aparecen las
    * diferencias entre lo que se acordó y lo que quedó en el sistema.
    */
+  /**
+   * Los campos personales del alta.
+   *
+   * Los placeholder repetían la etiqueta —«Nombres» debajo de «Nombres»— y el
+   * formulario se veía plano: no decían nada sobre cómo escribir el dato. Acá
+   * va un ejemplo real de cada uno.
+   */
+  readonly CAMPOS_PERSONALES = [
+    { label: 'Nombres',   key: 'names',    type: 'text',  ph: 'Juan Carlos',                 ayuda: 'sin apellidos', mono: false, ancho: false },
+    { label: 'Apellidos', key: 'lastname', type: 'text',  ph: 'Pérez Gómez',                 ayuda: '',              mono: false, ancho: false },
+    { label: 'Documento', key: 'dni',      type: 'text',  ph: '1045123456',                  ayuda: 'sin puntos',    mono: true,  ancho: false },
+    { label: 'Teléfono',  key: 'phone',    type: 'tel',   ph: '3001234567',                  ayuda: 'a 10 dígitos',  mono: true,  ancho: false },
+    { label: 'Correo',    key: 'email',    type: 'email', ph: 'juan.perez@gmail.com',        ayuda: 'opcional',      mono: false, ancho: true  },
+    { label: 'Dirección', key: 'address',  type: 'text',  ph: 'Calle 12 # 4-56, Centro',     ayuda: '',              mono: false, ancho: true  },
+  ];
+
   instalacionEncontrada: any = null;
   private buscandoInstalacion: any = null;
 
@@ -1679,6 +1695,33 @@ export class UserComponent implements OnInit {
   }
 
   /** Vuelca la orden en el formulario, sin pisar lo que ya se escribió. */
+  /** El estado de la orden en palabras, para el aviso del cruce. */
+  get estadoDeLaOrden(): string {
+    switch (this.instalacionEncontrada?.estado_orden) {
+      case 'completed':   return 'ya instalada';
+      case 'in_progress': return 'el técnico la está haciendo';
+      case 'confirmed':   return 'confirmada, sin hacer';
+      default:            return 'agendada, sin hacer';
+    }
+  }
+
+  get planDeLaOrden(): string {
+    const id = this.instalacionEncontrada?.internet_plans_id;
+    const p = id ? this.PlanInternet.find((x: any) => String(x.id) === String(id)) : null;
+    return p ? String((p as any).plan_name ?? p.names ?? '') : '';
+  }
+
+  get conexionDeLaOrden(): string {
+    const o = this.instalacionEncontrada;
+    if (!o) return '';
+
+    if (o.connection_type === 'pppoe') {
+      return ['PPPoE', o.pppoe_user, o.pppoe_profile ? 'perfil ' + o.pppoe_profile : null].filter(Boolean).join(' · ');
+    }
+
+    return ['IP fija', o.ip_assignment_id, o.vlan ? 'VLAN ' + o.vlan : null].filter(Boolean).join(' · ');
+  }
+
   usarLaInstalacion(): void {
     const o = this.instalacionEncontrada;
     if (!o) return;
@@ -1689,7 +1732,16 @@ export class UserComponent implements OnInit {
       }
     };
 
-    poner('names', o.names);
+    // La orden guarda el nombre completo en un solo campo; el alta lo tiene
+    // partido. Sin esto el apellido quedaba vacío y el nombre traía los dos.
+    const partes = String(o.names ?? '').trim().split(/\s+/);
+    if (partes.length > 1) {
+      poner('names', partes.slice(0, partes.length > 2 ? 2 : 1).join(' '));
+      poner('lastname', partes.slice(partes.length > 2 ? 2 : 1).join(' '));
+    } else {
+      poner('names', o.names);
+    }
+
     poner('phone', o.phone);
     poner('email', o.email);
     poner('address', o.address);
@@ -1704,7 +1756,51 @@ export class UserComponent implements OnInit {
 
     this.guardarBorrador();
     this.toast('Datos traídos de la orden de instalación.', 'success');
+
+    // Los datos solos no alcanzaban: los selectores de router, VLAN e IP
+    // seguían vacíos y había que volver a elegir a mano justo lo que la orden
+    // ya traía.
+    this.engancharLaConexionDeLaOrden(o);
   }
+
+  /**
+   * Deja elegidos en los selectores el router, la VLAN y la IP de la orden.
+   *
+   * La orden guarda el número de VLAN; el selector trabaja con la interfaz del
+   * router, así que hay que esperar a que las redes lleguen y buscar la que
+   * lleva ese número.
+   */
+  private engancharLaConexionDeLaOrden(o: any): void {
+    if (o.connection_type === 'pppoe') {
+      this.newUser.connection_type = 'pppoe';
+      if (!this.pppoePerfiles.length) this.cargarPppoe();
+      return;
+    }
+
+    if (!o.vlan || !this.routers.length) return;
+
+    if (o.router_id && this.routers.some((r: any) => r.id === o.router_id)) {
+      this.selectedRouterId = o.router_id;
+    }
+
+    this.cargarInterfaces(() => {
+      // "vlan100" → 100: la misma cuenta que hace el alta al revés.
+      const iface = this.interfaces.find((i: any) => {
+        const m = String(i?.names ?? '').match(/\d+/);
+        return (m ? +m[0] : i?.vlan_id) === +o.vlan;
+      });
+
+      if (!iface) return;
+
+      this.onInterfaceChange(iface);
+      // La IP se aplica cuando lleguen las libres: si ya se la dieron a otro,
+      // el selector no la va a tener y hay que elegir otra.
+      if (o.ip_assignment_id) this.ipDeLaOrden = String(o.ip_assignment_id);
+    });
+  }
+
+  /** La IP que traía la orden, hasta que lleguen las libres del segmento. */
+  private ipDeLaOrden: string | null = null;
 
   submittingNewUser = false;
   showUserFormProfile = true;
@@ -1839,7 +1935,7 @@ export class UserComponent implements OnInit {
   }
 
   /** VLAN del router elegido, con aviso si el router no responde. */
-  cargarInterfaces() {
+  cargarInterfaces(luego?: () => void) {
     this.loadingIfaces = true;
     this.ifacesError = null;
 
@@ -1853,6 +1949,10 @@ export class UserComponent implements OnInit {
           this.ifacesError = r?.message || 'El router no devolvió VLAN.';
           return;
         }
+
+        // Con `luego` manda quien llamó: es el cruce con la orden, que elige la
+        // VLAN él mismo y no la que traía el borrador.
+        if (luego) { luego(); return; }
 
         this.reemparejarVlan();
       },
@@ -1958,6 +2058,15 @@ export class UserComponent implements OnInit {
         if (redes.length > 1) {
           this.segments    = redes.map(x => ({ ...x, names: vlan.names, vlan_id: vlan.vlan_id }));
           this.selectedSeg = this.segments.find(x => x.elegida) ?? this.segments[0];
+        }
+
+        // La que venía en la orden de instalación, si sigue libre. Si ya se la
+        // dieron a otro, se avisa en vez de dejarla puesta y fallar al guardar.
+        if (this.ipDeLaOrden) {
+          const libre = this.Ipzone.some((i: any) => String(i.id) === this.ipDeLaOrden) || huerfanas.has(this.ipDeLaOrden);
+          if (libre) this.newUser.ip = this.ipDeLaOrden;
+          else this.ipsError = `La IP ${this.ipDeLaOrden} de la orden ya está ocupada. Elegí otra.`;
+          this.ipDeLaOrden = null;
         }
 
         // Si la IP que traía el borrador ya se la dieron a otro, se descarta.
