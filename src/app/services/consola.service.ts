@@ -18,7 +18,8 @@ export interface EmpresaConsola {
   confirmada: boolean;
   activa: boolean;
   suspendida: boolean;
-  clientes: { total: number; activos: number; suspendidos: number; retirados: number };
+  /** `en_plan` = activos + suspendidos: lo que ocupa lugar en el tope del plan. Los retirados no cuentan. */
+  clientes: { total: number; activos: number; suspendidos: number; retirados: number; en_plan: number };
   olts: number;
   routers: number;
   lineas_wa: number;
@@ -49,7 +50,7 @@ export interface SuscripcionConsola {
   codigo_referido: string | null;
   referida_por: number | null;
   credito: number;
-  uso: { clientes: number; incluidos: number | null; porcentaje: number | null; excedido: boolean };
+  uso: { clientes: number; activos: number; suspendidos: number; incluidos: number | null; porcentaje: number | null; excedido: boolean };
   notas: string | null;
 }
 

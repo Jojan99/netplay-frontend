@@ -318,6 +318,7 @@
                       <span>{{ detalle.suscripcion.uso.porcentaje }}%</span>
                     </div>
                     <div class="np-meter-bar"><i [style.width.%]="usoPorcentaje"></i></div>
+                    <small class="np-kv-s">{{ detalle.suscripcion.uso.activos }} activos + {{ detalle.suscripcion.uso.suspendidos }} suspendidos · los retirados no cuentan</small>
                   </div>
                   <b class="np-kv-v is-dim" *ngIf="!detalle.suscripcion?.uso?.incluidos">sin tope de clientes</b>
                   <span class="np-kv-s np-neg" *ngIf="detalle.suscripcion?.uso?.excedido">pasada del tope del plan</span>

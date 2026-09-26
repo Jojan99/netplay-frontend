@@ -207,8 +207,10 @@ export class ConsolaEmpresasComponent implements OnInit, OnDestroy {
   private aFila(e: EmpresaConsola): FilaEmpresa {
     const s = e.suscripcion;
     const tope = s?.uso?.incluidos ?? null;
-    const activos = e.clientes?.activos ?? 0;
-    const porcentaje = tope ? Math.min(100, Math.round((activos / tope) * 100)) : 0;
+    // Contra el tope cuentan los activos Y los suspendidos: un cliente cortado por mora sigue
+    // siendo cliente. Sólo el retirado deja de ocupar lugar.
+    const enPlan = e.clientes?.en_plan ?? ((e.clientes?.activos ?? 0) + (e.clientes?.suspendidos ?? 0));
+    const porcentaje = tope ? Math.min(100, Math.round((enPlan / tope) * 100)) : 0;
 
     const red: { titulo: string; neutral: boolean }[] = [];
     if (e.olts)   red.push({ titulo: `${e.olts} OLT`, neutral: false });
@@ -223,7 +225,7 @@ export class ConsolaEmpresasComponent implements OnInit, OnDestroy {
       estadoTexto: this.textoEstado(e),
       plan: s?.plan ?? null,
       planPie: s?.plan ? `${s.ciclo} · ${pesos(s.precio)}` : '',
-      usoTexto: tope ? `${activos}/${tope}` : '—',
+      usoTexto: tope ? `${enPlan}/${tope}` : '—',
       usoPorcentaje: porcentaje,
       usoClase: !tope ? '' : s?.uso?.excedido ? 'is-over' : porcentaje >= 85 ? 'is-warn' : '',
       proxima: s?.proxima ? this.fecha(s.proxima) : '—',
