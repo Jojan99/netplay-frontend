@@ -157,6 +157,18 @@ export const components: RouteProps[] = [
         },
       },
       {
+        title: 'Conciliación de pagos',
+        icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3 8-8"/><path d="M20 12v6a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h9"/></svg>`,
+        href: 'conciliacion-pagos',
+        module: 'finanzas',
+        group: false,
+        roles: [2, 4],
+        card: {
+          className: 'w-56',
+          images: { light: 'alerts-light.svg', dark: 'alerts-dark.svg' },
+        },
+      },
+      {
         title: 'Cobranza inteligente',
         icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20l1.3-3.8A8 8 0 1 1 8 19.2L4 20z"/><path d="M12 8v8M10 10.2a2 2 0 0 1 2-1.2h.8a1.6 1.6 0 0 1 0 3.2h-1.6a1.6 1.6 0 0 0 0 3.2h.8a2 2 0 0 0 2-1.2"/></svg>`,
         href: 'cobranza',

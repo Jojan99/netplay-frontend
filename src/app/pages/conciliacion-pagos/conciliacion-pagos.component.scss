@@ -1,0 +1,110 @@
+/* ─── Conciliación de pagos ──────────────────────────────────────────────── */
+.np-req { color: var(--warn); font-style: normal; }
+
+/* Una pestaña por lista */
+.cp-tabs {
+  display: flex; align-items: flex-end; gap: 4px; flex-wrap: wrap; margin-bottom: 14px;
+  border-bottom: 1px solid var(--line);
+}
+.cp-tab {
+  display: inline-flex; align-items: center; gap: 8px; min-height: 40px; padding: 0 14px;
+  border: 1px solid transparent; border-bottom: 0; border-radius: 10px 10px 0 0; margin-bottom: -1px;
+  background: none; color: var(--text-2); font: 700 13px var(--font-body); cursor: pointer;
+  &:hover { background: var(--surface-2); }
+  small { color: var(--text-3); font-weight: 400; }
+  &[aria-selected=true] { background: var(--surface); border-color: var(--line); color: var(--accent); }
+}
+.cp-tab--mas { color: var(--accent); }
+.cp-ok { color: var(--ok); font-style: normal; font-weight: 800; }
+.cp-x {
+  display: grid; place-items: center; width: 18px; height: 18px; border-radius: 50%;
+  color: var(--text-3); font-size: 15px; line-height: 1;
+  &:hover { background: var(--surface-3); color: var(--danger); }
+}
+
+.cp-n {
+  display: grid; place-items: center; flex: none; width: 21px; height: 21px; border-radius: 50%;
+  background: var(--accent-soft); color: var(--accent); font: 800 11px var(--font-body);
+}
+.np-card-h { display: flex; align-items: center; gap: 8px; }
+.cp-csv { margin-left: auto; }
+
+.cp-texto { font-family: var(--font-mono); font-size: 12.5px; min-height: 220px; }
+.cp-noleidas { margin: 8px 0 0; padding-left: 18px; color: var(--warn); font-size: 12.5px; code { font-family: var(--font-mono); } }
+
+/* Los números de la lista */
+.cp-kpis { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; margin-bottom: 14px; }
+.cp-kpi {
+  background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-lg); padding: 10px 14px; box-shadow: var(--shadow);
+  span { display: block; font: 700 10.5px var(--font-body); letter-spacing: .06em; text-transform: uppercase; color: var(--text-3); }
+  b { display: block; font: 600 22px var(--font-mono); margin-top: 2px; }
+  small { color: var(--text-3); }
+}
+.cp-kpi--ok b { color: var(--ok); }
+.cp-kpi--warn { border-color: var(--warn); b { color: var(--warn); } }
+
+.cp-barra { margin-bottom: 10px; flex-wrap: wrap; }
+
+.cp-tabla { td { vertical-align: top; } }
+.cp-th-inc, .cp-td-inc { width: 34px; text-align: center; input { width: 16px; height: 16px; } }
+.cp-base { color: var(--text-2); }
+.cp-obs { display: block; margin-top: 2px; font-size: 11.5px; color: var(--text-3); white-space: normal; }
+.cp-lote { display: block; font: 400 10.5px var(--font-mono); color: var(--text-3); }
+
+.cp-pill {
+  display: inline-block; padding: 1px 9px; border-radius: 999px; font: 700 11px var(--font-body);
+  &[data-est=Exacta]    { background: var(--ok-soft);   color: var(--ok); }
+  &[data-est=Probable]  { background: var(--info-soft); color: var(--info); }
+  &[data-est=Corregida] { background: var(--ok-soft);   color: var(--ok); box-shadow: inset 0 0 0 1px var(--ok); }
+  &[data-est=Revisar]   { background: var(--warn-soft); color: var(--warn); }
+}
+tr.cp-fila--revisar td { background: var(--warn-soft); }
+tr.cp-fila--revisar td:first-child { box-shadow: inset 3px 0 var(--warn); }
+tr.cp-fila--fuera:not(.cp-fila--revisar) td { opacity: .55; }
+.cp-acc { display: inline-flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end; }
+
+/* Elegir a mano a quién corresponde */
+tr.cp-cambio td { background: var(--surface-2); padding: 12px 14px; }
+.cp-cambio-c { display: grid; gap: 8px; max-width: 720px; }
+.cp-cand { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.cp-resultados {
+  list-style: none; margin: 0; padding: 0; border: 1px solid var(--line); border-radius: var(--radius); background: var(--surface); overflow: hidden;
+  li + li { border-top: 1px solid var(--line); }
+  button { display: flex; justify-content: space-between; gap: 12px; width: 100%; min-height: 40px; padding: 6px 12px; text-align: left; align-items: center; &:hover { background: var(--accent-soft); } }
+}
+
+/* El resultado */
+.cp-card--ok { border-color: var(--ok); }
+.cp-mov {
+  display: inline-block; margin: 0 4px 4px 0; padding: 1px 8px; border-radius: 6px; font: 600 11.5px var(--font-mono);
+  background: var(--surface-3); color: var(--text-2);
+  &[data-tipo=pago_completo] { background: var(--ok-soft); color: var(--ok); }
+}
+.cp-forzar { display: flex; gap: 6px; align-items: center; margin-top: 4px; font-size: 12px; font-weight: 700; color: var(--warn); cursor: pointer; input { width: 16px; height: 16px; } }
+
+/* La barra de acción se queda a la vista aunque la lista sea larga */
+.cp-barra-accion {
+  position: sticky; bottom: 0; z-index: 5; display: grid; gap: 10px; margin-top: 14px; padding: 12px 16px;
+  background: var(--surface); border: 1px solid var(--line-strong, var(--line)); border-radius: var(--radius-lg); box-shadow: 0 -6px 18px rgba(20, 30, 50, .10);
+}
+.cp-conf { display: grid; grid-template-columns: minmax(220px, 1.3fr) minmax(150px, .7fr) auto; gap: 10px 14px; align-items: end; }
+.cp-botones { display: flex; gap: 8px; align-items: center; justify-content: flex-end; flex-wrap: wrap; }
+.cp-resumen { margin-right: auto; }
+.cp-ayuda { margin: -4px 0 0; text-align: right; }
+
+@media (max-width: 900px) {
+  .cp-kpis { grid-template-columns: 1fr 1fr; }
+  .cp-conf { grid-template-columns: 1fr 1fr; }
+}
+@media (max-width: 640px) {
+  .cp-kpis { grid-template-columns: 1fr 1fr; }
+  .cp-conf { grid-template-columns: 1fr; }
+  .cp-botones .np-btn { flex: 1 1 auto; }
+  .cp-resumen { flex-basis: 100%; }
+  .cp-ayuda { text-align: left; }
+  .cp-th-inc { display: none; }
+  tbody .cp-td-inc { position: absolute; top: 12px; right: 12px; width: auto; }
+  tr.cp-fila--revisar td { background: none; }
+  tr.cp-fila--revisar { background: var(--warn-soft); }
+  tr.cp-cambio td { padding: 12px; }
+}

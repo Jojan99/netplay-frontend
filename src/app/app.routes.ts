@@ -23,6 +23,7 @@ import { StaffComponent }             from './pages/staff/staff.component';
 import { BillingConfigComponent }     from './pages/billing-config/billing-config.component';
 import { ResumenComponent }           from './pages/resumen/resumen.component';
 import { CarteraComponent }           from './pages/cartera/cartera.component';
+import { ConciliacionPagosComponent } from './pages/conciliacion-pagos/conciliacion-pagos.component';
 import { MikrotikComponent }         from './pages/mikrotik/mikrotik.component';
 import { ProfileComponent }          from './pages/profile/profile.component';
 import { ContractsComponent }        from './pages/contracts/contracts.component';
@@ -85,6 +86,7 @@ export const routes: Routes = [
       { path: 'mikrotik',       component: MikrotikComponent,          canActivate: [roleGuard], data: { module: 'mikrotik' } },
       { path: 'resumen',        component: ResumenComponent,           canActivate: [roleGuard], data: { module: 'resumen' } },
       { path: 'cartera',        component: CarteraComponent,           canActivate: [roleGuard], data: { module: 'finanzas' } },
+      { path: 'conciliacion-pagos', component: ConciliacionPagosComponent, canActivate: [roleGuard], data: { module: 'finanzas' } },
       { path: 'cobranza',       component: CobranzaComponent,          canActivate: [roleGuard], data: { module: 'finanzas' } },
       {
         path: 'inventory',

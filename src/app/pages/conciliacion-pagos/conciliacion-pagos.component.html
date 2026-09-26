@@ -1,0 +1,238 @@
+<div class="np-page cp">
+  <header class="np-head">
+    <div>
+      <p class="np-kicker">Finanzas <b>/</b> Conciliación de pagos</p>
+      <h1 class="np-title">Conciliación de pagos</h1>
+      <div class="np-ribbon"><span>Pegue una lista de nombres y valores: se cruza contra los clientes, se revisa y se aplica a sus facturas. Nada se escribe hasta el último paso.</span></div>
+    </div>
+  </header>
+
+  <!-- Una pestaña por lista: se pueden ir sumando y cada una se aplica por separado -->
+  <div class="cp-tabs" role="tablist">
+    <button type="button" role="tab" class="cp-tab" *ngFor="let l of listas; let i = index; trackBy: trackLista"
+            [attr.aria-selected]="vista === 'listas' && i === activa" (click)="irA(i)">
+      {{ l.titulo }}
+      <small *ngIf="l.cruzada">{{ l.filas.length }}</small>
+      <i class="cp-ok" *ngIf="l.aplicada" title="Aplicada">✓</i>
+      <span class="cp-x" role="button" tabindex="0" aria-label="Cerrar la lista"
+            (click)="cerrarLista(i); $event.stopPropagation()" (keydown.enter)="cerrarLista(i); $event.stopPropagation()">×</span>
+    </button>
+    <button type="button" class="cp-tab cp-tab--mas" (click)="nuevaLista()">＋ Nueva lista</button>
+    <span class="np-spacer"></span>
+    <button type="button" role="tab" class="cp-tab" [attr.aria-selected]="vista === 'historial'" (click)="abrirHistorial()">Historial</button>
+  </div>
+
+  <div class="np-scroll">
+
+    <!-- ══ Historial ═══════════════════════════════════════════════════════ -->
+    <section class="np-card" *ngIf="vista === 'historial'">
+      <div class="np-card-h"><h2>Lo que ya se aplicó</h2><span class="np-card-meta">últimos 50 lotes</span></div>
+      <p class="np-loading" *ngIf="cargandoLotes"><span class="np-spinner np-spinner--sm"></span> Cargando…</p>
+      <p class="np-muted" *ngIf="!cargandoLotes && !lotes.length">Todavía no se aplicó ninguna lista desde esta pantalla.</p>
+      <div class="np-tablewrap" *ngIf="lotes.length">
+        <table class="np-table np-table--compact np-tabla-movil">
+          <thead><tr><th>Fecha</th><th>Lista</th><th>Registró</th><th>Método</th><th class="np-th-right">Pagos</th><th class="np-th-right">Aplicado</th><th class="np-th-right">Sin aplicar</th></tr></thead>
+          <tbody>
+            <tr *ngFor="let x of lotes">
+              <td class="np-data" data-label="Fecha">{{ x.created_at | date:'dd/MM/yy HH:mm' }}</td>
+              <td class="es-principal np-strong" data-label="Lista">{{ x.titulo || x.lote }}<small class="cp-lote">{{ x.lote }}</small></td>
+              <td data-label="Registró">{{ x.usuario || '—' }}</td>
+              <td data-label="Método">{{ x.metodo || '—' }}</td>
+              <td class="np-data np-td-right" data-label="Pagos">{{ x.pagos }}</td>
+              <td class="np-data np-td-right" data-label="Aplicado">{{ peso(+x.aplicado) }}</td>
+              <td class="np-data np-td-right" data-label="Sin aplicar">{{ peso(+x.sin_aplicar) }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <ng-container *ngIf="vista === 'listas' && lista as l">
+
+      <!-- ══ 1. Pegar la lista ═══════════════════════════════════════════════ -->
+      <section class="np-card" *ngIf="!l.cruzada">
+        <div class="np-card-h"><span class="cp-n">1</span><h2>Pegue la lista</h2></div>
+        <p class="np-fine np-muted">Una persona por línea: el nombre y el valor. Sirve tal como llega —con espacios, tabulaciones, <b>$</b> o puntos de miles—.</p>
+        <label class="np-field np-field-full">
+          <span>Nombre de la lista</span>
+          <input class="np-input" [(ngModel)]="l.titulo" maxlength="120" name="titulo" />
+        </label>
+        <textarea class="np-input np-textarea cp-texto" rows="12" [(ngModel)]="l.texto" name="texto"
+                  placeholder="JUAN CARLOS PEREZ GOMEZ    65000&#10;MARIA FERNANDA LOPEZ    50000&#10;…"></textarea>
+        <p class="np-notice np-notice--danger" *ngIf="l.error">{{ l.error }}</p>
+        <ul class="cp-noleidas" *ngIf="l.noLeidas.length"><li *ngFor="let x of l.noLeidas">No se pudo leer: <code>{{ x }}</code></li></ul>
+        <div class="np-btnrow np-btnrow--end">
+          <button type="button" class="np-btn np-btn--primary" (click)="cruzar(l)" [disabled]="!l.texto.trim() || l.trabajando">
+            <span *ngIf="l.trabajando" class="np-spinner np-spinner--sm"></span>
+            {{ l.trabajando ? 'Cruzando…' : 'Cruzar por nombre' }}
+          </button>
+        </div>
+      </section>
+
+      <ng-container *ngIf="l.cruzada">
+
+        <p class="np-notice np-notice--warn" *ngIf="l.noLeidas.length">
+          {{ l.noLeidas.length }} línea(s) no se pudieron leer y no están en la lista:
+          <span *ngFor="let x of l.noLeidas; let last = last"><code>{{ x }}</code>{{ last ? '' : ' · ' }}</span>
+        </p>
+
+        <!-- Los números de la lista -->
+        <div class="cp-kpis">
+          <div class="cp-kpi"><span>Nombres</span><b>{{ l.filas.length }}</b><small>{{ peso(l.totalValor) }}</small></div>
+          <div class="cp-kpi cp-kpi--ok"><span>Para aplicar</span><b>{{ l.aAplicarN }}</b><small>{{ peso(l.aAplicarValor) }}</small></div>
+          <div class="cp-kpi" [class.cp-kpi--warn]="l.conteos['Revisar']"><span>Por revisar</span><b>{{ l.conteos['Revisar'] }}</b><small>no se aplican hasta confirmarlas</small></div>
+          <div class="cp-kpi"><span>Corregidas a mano</span><b>{{ l.conteos['Corregida'] }}</b><small>confirmadas por usted</small></div>
+        </div>
+
+        <!-- ══ 2. Revisar el cruce ═════════════════════════════════════════════ -->
+        <section class="np-card">
+          <div class="np-card-h"><span class="cp-n">2</span><h2>Revise a quién corresponde cada nombre</h2></div>
+          <p class="np-fine np-muted">
+            <b>Exacta</b>: mismas palabras. <b>Probable</b>: falta o sobra un nombre, o hay una letra distinta, y hay un solo candidato.
+            <b>Revisar</b>: no se aplica hasta que la confirme o elija a otra persona.
+          </p>
+
+          <div class="np-toolbar cp-barra">
+            <label class="np-search"><input type="search" [(ngModel)]="l.busca" (ngModelChange)="buscar(l)" name="busca" placeholder="Buscar por nombre o cédula…" aria-label="Buscar" /></label>
+            <div class="np-chips" role="group" aria-label="Filtrar por coincidencia">
+              <button type="button" class="np-chip" *ngFor="let f of FILTROS" [attr.aria-pressed]="l.filtro === f" (click)="filtrar(l, f)">
+                {{ f === 'Todas' ? 'Todas' : f + (f === 'Exacta' || f === 'Probable' ? 's' : f === 'Corregida' ? 's' : '') }}<span class="np-c">{{ l.conteos[f] }}</span>
+              </button>
+            </div>
+          </div>
+
+          <div class="np-tablewrap">
+            <table class="np-table np-table--compact np-tabla-movil cp-tabla">
+              <thead><tr>
+                <th class="cp-th-inc"></th><th>Nombre en la lista</th><th class="np-th-right">Valor</th><th>Cédula</th><th>Cliente encontrado</th><th>Coincidencia</th><th class="np-th-right">Acciones</th>
+              </tr></thead>
+              <tbody>
+                <ng-container *ngFor="let f of l.visibles; trackBy: trackRef">
+                  <tr [class.cp-fila--revisar]="f.est === 'Revisar'" [class.cp-fila--fuera]="!seAplica(f)">
+                    <td class="cp-td-inc" data-label="">
+                      <input type="checkbox" [checked]="f.incluir && f.est !== 'Revisar' && !!f.cedula" [disabled]="f.est === 'Revisar' || !f.cedula || l.aplicada"
+                             (change)="alternar(l, f)" [attr.aria-label]="'Aplicar el pago de ' + f.nombre" />
+                    </td>
+                    <td class="es-principal np-strong" data-label="Nombre">{{ f.nombre }}</td>
+                    <td class="np-data np-td-right" data-label="Valor">{{ peso(f.valor) }}</td>
+                    <td class="np-data" data-label="Cédula">{{ f.cedula ? cedulaConPuntos(f.cedula) : '—' }}</td>
+                    <td class="cp-base es-ancha" data-label="Cliente encontrado">
+                      <ng-container *ngIf="f.base; else sinBase">{{ f.base }}</ng-container>
+                      <ng-template #sinBase><i>no encontrado</i></ng-template>
+                      <small class="cp-obs" *ngIf="f.est === 'Revisar' && f.obs">{{ f.obs }}</small>
+                    </td>
+                    <td data-label="Coincidencia"><span class="cp-pill" [attr.data-est]="f.est">{{ f.est }}</span></td>
+                    <td class="np-td-right es-acciones" data-label="">
+                      <div class="cp-acc" *ngIf="!l.aplicada">
+                        <button type="button" class="np-btn np-btn--sm np-btn--primary" *ngIf="f.est === 'Revisar' && f.cedula" (click)="confirmar(l, f)">Confirmar</button>
+                        <button type="button" class="np-btn np-btn--sm np-btn--ghost" (click)="abrirCambio(l, f)">{{ f.cedula ? 'Cambiar' : 'Elegir cliente' }}</button>
+                      </div>
+                    </td>
+                  </tr>
+
+                  <!-- Elegir a mano a quién corresponde -->
+                  <tr class="cp-cambio" *ngIf="l.editando === f.ref">
+                    <td colspan="7">
+                      <div class="cp-cambio-c">
+                        <p class="np-fine"><b>{{ f.nombre }}</b> — busque al cliente por nombre o cédula.</p>
+                        <div class="cp-cand" *ngIf="f.candidatos.length">
+                          <span class="np-fine np-muted">Lo más parecido:</span>
+                          <button type="button" class="np-chip" *ngFor="let c of f.candidatos" (click)="elegirCliente(l, f, c)">{{ c.nombre }} · {{ cedulaConPuntos(c.cedula) }}</button>
+                        </div>
+                        <input type="search" class="np-input" placeholder="Nombre o cédula (mínimo 2 letras)…" (input)="buscarCliente(l, $any($event.target).value)" autofocus aria-label="Buscar cliente" />
+                        <p class="np-fine np-muted" *ngIf="l.buscando"><span class="np-spinner np-spinner--sm"></span> Buscando…</p>
+                        <ul class="cp-resultados" *ngIf="l.resultados.length">
+                          <li *ngFor="let c of l.resultados"><button type="button" (click)="elegirCliente(l, f, c)"><b>{{ c.nombre }}</b><span class="np-data">{{ cedulaConPuntos(c.cedula) }}</span></button></li>
+                        </ul>
+                        <div class="np-btnrow" *ngIf="f.cedula"><button type="button" class="np-btn np-btn--sm np-btn--ghost" (click)="quitarCedula(l, f)">Quitarle la cédula a esta fila</button></div>
+                      </div>
+                    </td>
+                  </tr>
+                </ng-container>
+                <tr *ngIf="!l.visibles.length" class="np-empty"><td colspan="7">Ninguna fila coincide con el filtro.</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <!-- ══ Resultado de la simulación / de la aplicación ═════════════════ -->
+        <section class="np-card" *ngIf="l.reporte" [class.cp-card--ok]="l.reporteTipo === 'aplicado'">
+          <div class="np-card-h">
+            <span class="cp-n">3</span>
+            <h2>{{ l.reporteTipo === 'aplicado' ? 'Así quedó' : 'Así se aplicaría' }}</h2>
+            <button type="button" class="np-btn np-btn--sm np-btn--ghost cp-csv" (click)="descargarCsv(l)">Descargar CSV</button>
+          </div>
+
+          <p class="np-notice np-notice--ok" *ngIf="l.reporteTipo === 'aplicado'">
+            Aplicado: <b>{{ peso(l.reporte.resumen.aplicado) }}</b> en {{ l.reporte.resumen.pagos_aplicados }} pagos.
+            Quedó registrado a su nombre en el historial, con el estado anterior de cada factura.
+          </p>
+          <p class="np-notice np-notice--info" *ngIf="l.reporteTipo === 'simulacion'">
+            Es una simulación: <b>no se escribió nada.</b> Se aplicarían <b>{{ peso(l.reporte.resumen.aplicado) }}</b> en {{ l.reporte.resumen.pagos_aplicados }} pagos.
+            <ng-container *ngIf="l.reporte.resumen.sin_aplicar > 0"> Quedarían <b>{{ peso(l.reporte.resumen.sin_aplicar) }}</b> sin aplicar (detalle abajo).</ng-container>
+          </p>
+
+          <div class="np-tablewrap">
+            <table class="np-table np-table--compact np-tabla-movil cp-tabla">
+              <thead><tr><th>Nombre</th><th class="np-th-right">Valor</th><th>Resultado</th><th>Facturas</th><th class="np-th-right">Sobra</th></tr></thead>
+              <tbody>
+                <tr *ngFor="let x of l.reporte.filas; trackBy: trackRef" [class.cp-fila--revisar]="x.estado === 'posible_duplicado'">
+                  <td class="es-principal" data-label="Nombre"><b>{{ x.nombre }}</b><small class="cp-obs" *ngIf="x.cliente && x.cliente !== x.nombre">{{ x.cliente }}</small></td>
+                  <td class="np-data np-td-right" data-label="Valor">{{ peso(x.valor) }}</td>
+                  <td data-label="Resultado">
+                    <span class="np-pill" [ngClass]="'np-pill--' + estado(x.estado).tono">{{ estado(x.estado).texto }}</span>
+                    <small class="cp-obs" *ngIf="x.detalle">{{ x.detalle }}</small>
+                    <label class="cp-forzar" *ngIf="x.estado === 'posible_duplicado' && !l.aplicada">
+                      <input type="checkbox" [checked]="esForzada(l, x.ref)" (change)="forzar(l, x.ref, $any($event.target).checked)" /> Es otro pago: aplicarlo igual
+                    </label>
+                  </td>
+                  <td class="es-ancha" data-label="Facturas">
+                    <span class="cp-mov" *ngFor="let m of x.movimientos" [attr.data-tipo]="m.tipo">
+                      {{ m.factura }} · {{ m.tipo === 'pago_completo' ? 'pagada' : 'abono' }} {{ peso(m.monto) }}
+                    </span>
+                    <ng-container *ngIf="!x.movimientos.length">—</ng-container>
+                  </td>
+                  <td class="np-data np-td-right" data-label="Sobra"><ng-container *ngIf="x.sobrante > 0">{{ peso(x.sobrante) }}</ng-container><ng-container *ngIf="!(x.sobrante > 0)">—</ng-container></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <!-- ══ 3. Barra de acción, siempre a la vista ═════════════════════════ -->
+        <div class="cp-barra-accion" *ngIf="!l.aplicada">
+          <div class="cp-conf">
+            <label class="np-field"><span>Método de pago <em class="np-req">*</em></span>
+              <np-select [(ngModel)]="l.metodoId" (ngModelChange)="configurado(l)" [opciones]="metodos" [presentacion]="presMetodos"
+                         placeholder="Seleccione método…" ariaLabel="Método de pago"></np-select>
+            </label>
+            <label class="np-field"><span>Fecha del pago</span>
+              <input type="date" class="np-input" [(ngModel)]="l.fecha" (ngModelChange)="configurado(l)" [max]="hoyISO" name="fecha" />
+            </label>
+            <div class="np-field"><span>Cómo se reparte</span>
+              <div class="np-seg" role="group">
+                <button type="button" [attr.aria-pressed]="l.orden === 'exacta'" (click)="l.orden = 'exacta'; configurado(l)" title="Si una factura debe justo lo pagado, se paga esa; si no, de la más vieja a la más nueva">Factura exacta primero</button>
+                <button type="button" [attr.aria-pressed]="l.orden === 'antigua'" (click)="l.orden = 'antigua'; configurado(l)" title="Siempre de la más vieja a la más nueva">Más antigua primero</button>
+              </div>
+            </div>
+          </div>
+          <p class="np-notice np-notice--danger np-notice--inline" *ngIf="l.error">{{ l.error }}</p>
+          <div class="cp-botones">
+            <span class="np-fine np-muted cp-resumen">{{ l.aAplicarN }} pagos · {{ peso(l.aAplicarValor) }}</span>
+            <button type="button" class="np-btn np-btn--ghost" (click)="simular(l)" [disabled]="!l.aAplicarN || l.trabajando">
+              <span *ngIf="l.trabajando && !l.reporte" class="np-spinner np-spinner--sm"></span>
+              {{ l.reporteTipo === 'simulacion' ? 'Volver a simular' : 'Simular' }}
+            </button>
+            <button type="button" class="np-btn np-btn--primary" (click)="aplicar(l)" [disabled]="!puedeAplicar"
+                    [title]="!l.metodoId ? 'Elija el método de pago' : l.reporteTipo !== 'simulacion' ? 'Simule primero' : ''">
+              <span *ngIf="l.trabajando && l.reporte" class="np-spinner np-spinner--sm"></span>
+              Aplicar pagos
+            </button>
+          </div>
+          <p class="np-fine np-muted cp-ayuda" *ngIf="l.reporteTipo !== 'simulacion' && l.aAplicarN">Primero simule: se aplica exactamente lo que se simuló.</p>
+        </div>
+
+      </ng-container>
+    </ng-container>
+  </div>
+</div>
