@@ -147,8 +147,8 @@
               <tr *ngIf="UserInterfaces.length === 0" class="np-empty">
                 <td colspan="7">
                   <strong>No hay clientes que coincidan.</strong>
-                  <span *ngIf="search">Probá con otro nombre, documento o IP.</span>
-                  <span *ngIf="!search && statusFilter !== 'all'">Cambiá el filtro de estado para ver el resto.</span>
+                  <span *ngIf="search">Pruebe con otro nombre, documento o IP.</span>
+                  <span *ngIf="!search && statusFilter !== 'all'">Cambie el filtro de estado para ver el resto.</span>
                 </td>
               </tr>
             </ng-container>
@@ -364,7 +364,7 @@
 
               <p class="np-notice np-notice--warn np-notice--inline" *ngIf="!clienteEsPppoe && provCliente?.arp?.sin_mac">
                 El MikroTik no tiene la MAC real de este equipo y no le va a contestar.
-                <ng-container *ngIf="provCliente?.habilitado && provCliente?.tiene_ont">Tocá «Reaplicar en la ONT» y se carga sola.</ng-container>
+                <ng-container *ngIf="provCliente?.habilitado && provCliente?.tiene_ont">Toque «Reaplicar en la ONT» y se carga sola.</ng-container>
                 <ng-container *ngIf="!(provCliente?.habilitado && provCliente?.tiene_ont)">Cargala a mano abajo.</ng-container>
               </p>
 
@@ -1042,7 +1042,7 @@
 </div>
 
 <!-- ══ Motivo para revertir o anular ═════════════════════════════════════
-     Las dos acciones quedan en el historial con lo que se escriba acá. -->
+     Las dos acciones quedan en el historial con lo que se escriba aquí. -->
 <div *ngIf="motivoPedido" class="np-overlay" (click)="motivoPedido = null">
   <div class="np-modal" role="dialog" aria-modal="true" (click)="$event.stopPropagation()"
        [attr.aria-label]="motivoPedido.que === 'revertir' ? 'Revertir el pago' : 'Anular la factura'">

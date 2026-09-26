@@ -174,7 +174,7 @@ export class FinanceComponent implements OnInit, OnDestroy {
   /**
    * El nombre lleva a la ficha del cliente.
    *
-   * El clic en la fila abre su cartera, que es lo que se viene a hacer acá;
+   * El clic en la fila abre su cartera, que es lo que se viene a hacer aquí;
    * el del nombre es para cuando lo que se necesita es el cliente entero
    * —plan, equipo, contrato— y no sólo lo que debe.
    */
@@ -395,7 +395,7 @@ export class FinanceComponent implements OnInit, OnDestroy {
   async borrarFactura(invoice: any): Promise<void> {
     if (!invoice?.id) return;
 
-    if (!confirm(`¿Borrar la factura ${invoice.number_facture}? No se puede deshacer. Si querés dejar rastro, anulala.`)) return;
+    if (!confirm(`¿Borrar la factura ${invoice.number_facture}? No se puede deshacer. Si quiere dejar rastro, anúlela.`)) return;
 
     this.financeService.borrarFactura(invoice.id).subscribe({
       next: (r: any) => {

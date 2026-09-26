@@ -34,7 +34,7 @@
   </div>
 
   <div class="np-scroll">
-    <p class="np-empty-block" *ngIf="!selectedUser && !isLoadingInvoices"><strong>Elegí un cliente para ver su reporte.</strong><span>Historial de facturas, abonos y hábito de pago.</span></p>
+    <p class="np-empty-block" *ngIf="!selectedUser && !isLoadingInvoices"><strong>Seleccione un cliente para ver su reporte.</strong><span>Historial de facturas, abonos y hábito de pago.</span></p>
     <div *ngIf="isLoadingInvoices" class="np-loading"><span class="np-spinner"></span> Cargando facturas…</div>
 
     <ng-container *ngIf="selectedUser && !isLoadingInvoices">
@@ -46,7 +46,7 @@
       </section>
 
       <section class="np-card">
-        <div class="np-card-h"><h2>Facturas</h2><span class="np-card-meta"><b>{{ filtered.length }}</b> en esta vista · hacé clic para ver la trazabilidad</span></div>
+        <div class="np-card-h"><h2>Facturas</h2><span class="np-card-meta"><b>{{ filtered.length }}</b> en esta vista · haga clic para ver la trazabilidad</span></div>
         <p class="np-muted" *ngIf="filtered.length === 0">No hay facturas en esta categoría.</p>
         <div class="np-tablewrap" *ngIf="filtered.length">
           <table class="np-table np-table--compact np-ledger">

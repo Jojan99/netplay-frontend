@@ -218,29 +218,29 @@ export function nuevoBloque(type: TipoBloque, x = 80, y = 80): Bloque {
 
   switch (type) {
     case 'message':
-      b.message = 'Escribí acá lo que le dice al cliente.';
+      b.message = 'Escriba aquí lo que le dice al cliente.';
       break;
     case 'buttons':
-      b.message = '¿Qué necesitás?';
+      b.message = '¿Qué necesita?';
       b.variable_name = 'eleccion';
       b.buttons = [
         { id: 'op1', title: 'Opción 1', next_step: null },
         { id: 'op2', title: 'Opción 2', next_step: null },
       ];
-      b.error_message = 'No entendí esa opción. Tocá uno de los botones, por favor.';
+      b.error_message = 'No entendí esa opción. Toque uno de los botones, por favor.';
       break;
     case 'list':
-      b.message = 'Elegí una opción de la lista.';
+      b.message = 'Seleccione una opción de la lista.';
       b.button_text = 'Ver opciones';
       b.variable_name = 'eleccion';
       b.sections = [{ title: 'Opciones', rows: [
         { id: 'f1', title: 'Primera opción', description: '', next_step: null },
         { id: 'f2', title: 'Segunda opción', description: '', next_step: null },
       ] }];
-      b.error_message = 'No encontré esa opción. Abrí la lista y elegí una.';
+      b.error_message = 'No encontré esa opción. Abra la lista y seleccione una.';
       break;
     case 'input':
-      b.message = '¿Me pasás tu número de cédula?';
+      b.message = '¿Me pasa su número de cédula?';
       b.variable_name = 'cedula';
       b.input_type = 'number';
       b.validation_message = 'Necesito sólo números, sin puntos ni espacios.';
@@ -256,7 +256,7 @@ export function nuevoBloque(type: TipoBloque, x = 80, y = 80): Bloque {
       b.params = [];
       b.headers = [];
       b.save_response_to = 'respuesta';
-      b.error_message = 'No pude consultar esa información ahora. Probá en un rato.';
+      b.error_message = 'No pude consultar esa información ahora. Pruebe en un rato.';
       break;
     case 'condition':
       b.condition_variable = 'saldo';
@@ -273,7 +273,7 @@ export function nuevoBloque(type: TipoBloque, x = 80, y = 80): Bloque {
       if (type === 'document') b.media_name = 'archivo.pdf';
       break;
     case 'link':
-      b.message = 'Podés pagar desde acá:';
+      b.message = 'Puede pagar desde aquí:';
       b.url = 'https://';
       b.button_text = 'Pagar ahora';
       break;
@@ -282,10 +282,10 @@ export function nuevoBloque(type: TipoBloque, x = 80, y = 80): Bloque {
       break;
     case 'transfer_agent':
       b.agent_department = 'soporte';
-      b.message = 'Te paso con una persona del equipo. Ya te escribe.';
+      b.message = 'Le paso con una persona del equipo. Ya le escribe.';
       break;
     case 'end':
-      b.message = 'Gracias por escribirnos. Escribí *menu* cuando quieras volver.';
+      b.message = 'Gracias por escribirnos. Escriba *menu* cuando quieras volver.';
       break;
   }
 

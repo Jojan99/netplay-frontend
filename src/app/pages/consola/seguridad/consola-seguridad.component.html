@@ -2,7 +2,7 @@
   <header class="np-head">
     <div>
       <p class="np-kicker">Consola <b>/</b> Seguridad</p>
-      <h1 class="np-title">Tu cuenta</h1>
+      <h1 class="np-title">Su cuenta</h1>
       <p class="np-fine">Con esta cuenta se administra Netvula entera. Es la que más conviene proteger.</p>
     </div>
   </header>
@@ -20,7 +20,7 @@
       </div>
 
       <p class="np-fine">
-        Entrás con la huella, la cara o el PIN del dispositivo, sin escribir nada. Y es lo único que no se puede
+        Entra con la huella, la cara o el PIN del dispositivo, sin escribir nada. Y es lo único que no se puede
         robar con una página falsa: la llave está atada a <b>{{ dominio }}</b> y el navegador se niega a usarla
         en otro sitio.
       </p>
@@ -49,13 +49,13 @@
 
       <div class="np-btnrow">
         <button type="button" class="np-btn np-btn--primary" (click)="agregarPasskey()" [disabled]="agregandoPasskey">
-          {{ agregandoPasskey ? 'Esperando tu huella…' : 'Agregar una passkey' }}
+          {{ agregandoPasskey ? 'Esperando su huella…' : 'Agregar una passkey' }}
         </button>
       </div>
 
       <p class="np-notice np-notice--info" *ngIf="passkeys.length">
-        Conviene registrar <b>más de un dispositivo</b>. Si la passkey vive sólo en tu teléfono y lo perdés,
-        te quedan la contraseña y los códigos.
+        Conviene registrar <b>más de un dispositivo</b>. Si la passkey vive sólo en su teléfono y lo pierde,
+        le quedan la contraseña y los códigos.
       </p>
     </section>
 
@@ -68,20 +68,20 @@
       <!-- ── Estado actual ── -->
       <ng-container *ngIf="paso === 'nada'">
         <p class="np-fine" *ngIf="activo">
-          Activo desde el {{ activoEn | date:'d MMM y' }}. Al entrar te pide un código de seis dígitos,
-          salvo en los equipos que ya usaste en los últimos 30 días.
+          Activo desde el {{ activoEn | date:'d MMM y' }}. Al entrar le pide un código de seis dígitos,
+          salvo en los equipos que ya usó en los últimos 30 días.
         </p>
 
         <p class="np-notice np-notice--warn" *ngIf="activo && recuperacionQueda <= 3">
-          Te quedan <b>{{ recuperacionQueda }}</b> código(s) de recuperación. Cuando se acaben, perder el teléfono
+          Le quedan <b>{{ recuperacionQueda }}</b> código(s) de recuperación. Cuando se acaben, perder el teléfono
           significa entrar al servidor para volver a abrir la consola.
         </p>
         <p class="np-fine" *ngIf="activo && recuperacionQueda > 3">
-          Te quedan <b>{{ recuperacionQueda }}</b> códigos de recuperación.
+          Le quedan <b>{{ recuperacionQueda }}</b> códigos de recuperación.
         </p>
 
         <p class="np-notice np-notice--warn" *ngIf="!activo">
-          Hoy tu contraseña sola abre la consola de <b>todas</b> las empresas. Con el authenticator, una contraseña
+          Hoy su contraseña sola abre la consola de <b>todas</b> las empresas. Con el authenticator, una contraseña
           robada deja de alcanzar.
         </p>
 
@@ -96,7 +96,7 @@
 
         <!-- Quitarlo pide la contraseña de nuevo -->
         <div class="np-panel np-panel--form" *ngIf="pidiendoClave">
-          <p class="np-sect">Confirmá con tu contraseña</p>
+          <p class="np-sect">Confirme con su contraseña</p>
           <p class="np-fine">Se pide de nuevo a propósito: encontrarse una sesión abierta no puede alcanzar para desarmar la protección.</p>
           <label class="np-field"><span>Contraseña</span>
             <input type="password" class="np-input" [(ngModel)]="clave" autocomplete="current-password" (keydown.enter)="confirmarQuitar()" />
@@ -111,30 +111,30 @@
       <!-- ── Paso 1: escanear ── -->
       <ng-container *ngIf="paso === 'escanear'">
         <p class="np-fine">
-          Abrí tu authenticator —Google Authenticator, Authy, Microsoft Authenticator o el gestor de contraseñas que uses—
-          y escaneá esto. Sirve cualquiera: es un estándar.
+          Abra su authenticator —Google Authenticator, Authy, Microsoft Authenticator o el gestor de contraseñas que uses—
+          y escanee esto. Sirve cualquiera: es un estándar.
         </p>
 
         <div class="seg-qr">
           <div class="seg-qr-img">
             <img *ngIf="imagenQr" [src]="imagenQr" alt="Código QR del authenticator" width="200" height="200" />
             <p class="np-fine np-muted" *ngIf="!imagenQr">
-              No se pudo dibujar el código QR acá. Usá el código de al lado: sirve igual.
+              No se pudo dibujar el código QR aquí. Use el código de al lado: sirve igual.
             </p>
           </div>
 
           <div class="seg-qr-lado">
-            <p class="np-sect">¿No podés escanear?</p>
-            <p class="np-fine">Poné este código en la app, en «ingresar clave manualmente»:</p>
+            <p class="np-sect">¿No puede escanear?</p>
+            <p class="np-fine">Ingrese este código en la app, en «ingresar clave manualmente»:</p>
             <p class="seg-secreto" *ngIf="verSecreto">{{ secreto }}</p>
             <button type="button" class="np-link" (click)="verSecreto = !verSecreto">
               {{ verSecreto ? 'Ocultar el código' : 'Ver el código' }}
             </button>
-            <p class="np-fine np-muted">El QR se dibuja en esta pantalla: el secreto no sale de acá.</p>
+            <p class="np-fine np-muted">El QR se dibuja en esta pantalla: el secreto no sale de aquí.</p>
           </div>
         </div>
 
-        <label class="np-field"><span>Escribí el código que muestra la app</span>
+        <label class="np-field"><span>Escriba el código que muestra la app</span>
           <input type="text" class="np-input seg-codigo" [(ngModel)]="codigo" maxlength="6"
                  inputmode="numeric" autocomplete="one-time-code" placeholder="000000" (keydown.enter)="confirmar()" />
         </label>
@@ -150,7 +150,7 @@
       <!-- ── Paso 2: los códigos de recuperación ── -->
       <ng-container *ngIf="paso === 'codigos'">
         <p class="np-notice np-notice--danger">
-          <b>Guardá estos códigos ahora.</b> No se vuelven a mostrar. Son la única forma de entrar si perdés el teléfono
+          <b>Guarde estos códigos ahora.</b> No se vuelven a mostrar. Son la única forma de entrar si pierde el teléfono
           — sin ellos habría que entrar al servidor.
         </p>
 
@@ -177,11 +177,11 @@
     </section>
 
     <section class="np-card" *ngIf="!cargando">
-      <div class="np-card-h"><h3>Si perdés el teléfono</h3></div>
+      <div class="np-card-h"><h3>Si pierde el teléfono</h3></div>
       <ol class="seg-pasos">
-        <li>Entrá con uno de tus <b>códigos de recuperación</b>, en el mismo campo donde va el código de seis dígitos.</li>
-        <li>Si se te acabaron, desde el servidor: <b class="np-mono">php artisan consola:2fa quitar --email=tu&#64;correo.com</b></li>
-        <li>Para códigos nuevos sin cambiar la app: <b class="np-mono">php artisan consola:2fa codigos --email=tu&#64;correo.com</b></li>
+        <li>Ingrese con uno de sus <b>códigos de recuperación</b>, en el mismo campo donde va el código de seis dígitos.</li>
+        <li>Si se le acabaron, desde el servidor: <b class="np-mono">php artisan consola:2fa quitar --email=su&#64;correo.com</b></li>
+        <li>Para códigos nuevos sin cambiar la app: <b class="np-mono">php artisan consola:2fa codigos --email=su&#64;correo.com</b></li>
       </ol>
       <p class="np-fine np-muted">
         Hoy hay una sola cuenta de consola, así que no hay otro administrador que pueda resetearla: la salida

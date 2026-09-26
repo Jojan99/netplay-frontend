@@ -166,7 +166,7 @@
       <button type="button" class="at-btn at-btn--primary" [disabled]="!ticketListo || creando" (click)="crearTicket()">
         {{ creando ? 'Creando…' : 'Crear ticket' }}
       </button>
-      @if (!ficha) { <span class="at-muted">Elegí un cliente primero.</span> }
+      @if (!ficha) { <span class="at-muted">Seleccione un cliente primero.</span> }
     </div>
   }
 
@@ -175,7 +175,7 @@
     <app-selector-de-cliente [cliente]="ventana.cliente" (elegido)="elegirCliente($event)"></app-selector-de-cliente>
     @if (cargando) { <p class="at-muted">Leyendo facturas…</p> }
     @if (error) { <p class="at-error">{{ error }}</p> }
-    @if (ficha && !ficha.deuda) { <p class="at-vacio">Tu perfil no ve la cartera de los clientes.</p> }
+    @if (ficha && !ficha.deuda) { <p class="at-vacio">Su perfil no ve la cartera de los clientes.</p> }
     @if (ficha?.deuda) {
       <div class="vr-top">
         <div>

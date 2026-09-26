@@ -11,16 +11,16 @@
     <div class="np-guia-head-txt">
       <p class="np-kicker">Primeros pasos <b>/</b> {{ nombreEmpresa }}</p>
       <h2 class="np-guia-title">
-        {{ completa() ? 'Tenés todo configurado' : '¡Bienvenido a Netplay!' }}
+        {{ completa() ? 'Tiene todo configurado' : '¡Bienvenido a Netplay!' }}
       </h2>
       <p class="np-guia-sub" *ngIf="!completa()">
-        Netplay administra tu ISP de punta a punta: tus clientes y sus planes, la facturación
+        Netplay administra su ISP de punta a punta: sus clientes y sus planes, la facturación
         mensual, el cobro en línea y la atención por WhatsApp. Estos pasos dejan el sistema
-        listo para operar — se van marcando solos a medida que cargás la información.
+        listo para operar — se van marcando solos a medida que carga la información.
       </p>
       <p class="np-guia-sub" *ngIf="completa()">
-        Completaste la configuración inicial. Dejamos la guía acá por si sumás gente al equipo
-        y necesitás repasar dónde está cada cosa.
+        Completó la configuración inicial. Dejamos la guía aquí por si suma gente al equipo
+        y necesita repasar dónde está cada cosa.
       </p>
     </div>
 
@@ -38,7 +38,7 @@
   <!-- Lo siguiente por hacer -->
   <div class="np-guia-next" *ngIf="siguiente() as s">
     <div class="np-guia-next-txt">
-      <p class="np-fine">Seguí por acá</p>
+      <p class="np-fine">Continúe por aquí</p>
       <b>{{ s.titulo }}</b>
       <span>{{ s.detalle }}</span>
     </div>
@@ -68,7 +68,7 @@
   </ol>
 
   <footer class="np-guia-foot">
-    <span class="np-fine">Los pasos se marcan solos cuando cargás la información. No hace falta confirmarlos.</span>
+    <span class="np-fine">Los pasos se marcan solos cuando carga la información. No hace falta confirmarlos.</span>
     <button type="button" class="np-guia-link" (click)="ocultar()" [disabled]="ocultando()">No mostrar más</button>
   </footer>
 </section>

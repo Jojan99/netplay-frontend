@@ -60,7 +60,7 @@ export class WaDashboardComponent implements OnInit, OnDestroy {
 
   private resolveError(e: any): string {
     if (e.status === 401 || e.message === 'API Key no configurada')
-      return 'No autorizado: configura tu API Key de WhatsApp.';
+      return 'No autorizado: configura su API Key de WhatsApp.';
     if (e.status === 403)
       return 'Acceso denegado: API Key inválida o empresa suspendida.';
     return e.error?.message || e.message || 'Error al cargar el dashboard.';

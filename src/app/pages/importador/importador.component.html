@@ -6,7 +6,7 @@
       <p class="np-kicker">Operación <b>/</b> Clientes <b>/</b> Importar</p>
       <h1 class="np-title">Importar clientes</h1>
       <div class="np-ribbon">
-        <span>Traé tus clientes desde <b>WispHub</b> o <b>Mikrowisp</b>: quedan con su plan, router, conexión y facturación.</span>
+        <span>Traiga sus clientes desde <b>WispHub</b> o <b>Mikrowisp</b>: quedan con su plan, router, conexión y facturación.</span>
       </div>
     </div>
     <div class="np-actions">
@@ -35,22 +35,22 @@
     <!-- ══ 1. Plataforma ══════════════════════════════════════════════════ -->
     <ng-container *ngIf="esAdmin && !cargando && paso === 'origen'">
       <section class="imp-card">
-        <h2 class="imp-h2">¿De qué plataforma venís?</h2>
+        <h2 class="imp-h2">¿De qué plataforma viene?</h2>
         <div class="imp-origenes">
           <button type="button" class="imp-origen" (click)="elegirOrigen('wisphub')">
             <b>WispHub</b>
-            <span>Con tu API Key o con el Excel de clientes.</span>
+            <span>Con su API Key o con el Excel de clientes.</span>
           </button>
           <button type="button" class="imp-origen" (click)="elegirOrigen('mikrowisp')">
             <b>Mikrowisp</b>
-            <span>Con el token de la API de tu servidor o con el Excel de clientes.</span>
+            <span>Con el token de la API de su servidor o con el Excel de clientes.</span>
           </button>
         </div>
         <ul class="imp-garantias">
-          <li>No se toca ningún router ni OLT: tus clientes ya están configurados allá.</li>
+          <li>No se toca ningún router ni OLT: sus clientes ya están configurados allá.</li>
           <li>No se les manda WhatsApp, correo ni avisos a los clientes.</li>
           <li>No se generan facturas: sólo quedan listos para la próxima facturación.</li>
-          <li>Podés importar de nuevo sin duplicar: se reconocen por documento y por el ID de origen.</li>
+          <li>Puede importar de nuevo sin duplicar: se reconocen por documento y por el ID de origen.</li>
         </ul>
       </section>
 
@@ -89,15 +89,15 @@
       <!-- API -->
       <div *ngIf="metodo === 'api'" class="imp-bloque">
         <div class="imp-ayuda" *ngIf="origen === 'wisphub'">
-          <b>Dónde está la API Key:</b> en WispHub abrí la <em>Lista de personal</em>, elegí un usuario con permiso para ver clientes y generá su <em>API Key</em>. Se muestra una sola vez: copiala entera.
+          <b>Dónde está la API Key:</b> en WispHub abra la <em>Lista de personal</em>, seleccione un usuario con permiso para ver clientes y genere su <em>API Key</em>. Se muestra una sola vez: cópiela entera.
         </div>
         <div class="imp-ayuda" *ngIf="origen === 'mikrowisp'">
-          <b>Qué necesitás:</b> la dirección de tu Mikrowisp (la misma con la que entrás al panel) y el <em>token de la API</em>, que se genera en la configuración del sistema de Mikrowisp. La API tiene que estar habilitada.
+          <b>Qué necesita:</b> la dirección de su Mikrowisp (la misma con la que entra al panel) y el <em>token de la API</em>, que se genera en la configuración del sistema de Mikrowisp. La API tiene que estar habilitada.
         </div>
 
         <div class="np-form">
           <label class="np-field np-field-full">
-            <span>{{ origen === 'wisphub' ? 'Dirección de la API' : 'Dirección de tu Mikrowisp' }} <em>*</em></span>
+            <span>{{ origen === 'wisphub' ? 'Dirección de la API' : 'Dirección de su Mikrowisp' }} <em>*</em></span>
             <input class="np-input np-mono" [(ngModel)]="api.url" [placeholder]="origen === 'wisphub' ? 'https://api.wisphub.net' : 'https://mikrowisp.tuempresa.com'" autocomplete="off" />
           </label>
 
@@ -111,7 +111,7 @@
 
           <label class="np-field np-field-full" *ngIf="!api.usarGuardado">
             <span>{{ origen === 'wisphub' ? 'API Key' : 'Token de la API' }} <em>*</em></span>
-            <input class="np-input np-mono" type="password" [(ngModel)]="api.token" autocomplete="new-password" [placeholder]="origen === 'wisphub' ? 'AAAAAAAA.BBBBBBBBBBBBBBBB…' : 'Pegá el token'" />
+            <input class="np-input np-mono" type="password" [(ngModel)]="api.token" autocomplete="new-password" [placeholder]="origen === 'wisphub' ? 'AAAAAAAA.BBBBBBBBBBBBBBBB…' : 'Pegue el token'" />
           </label>
           <label class="np-check np-check--box np-field-full" *ngIf="!api.usarGuardado">
             <input type="checkbox" [(ngModel)]="api.guardar" />
@@ -129,17 +129,17 @@
       <!-- Archivo -->
       <div *ngIf="metodo === 'archivo'" class="imp-bloque">
         <div class="imp-ayuda" *ngIf="origen === 'wisphub'">
-          <b>Cómo exportar:</b> en WispHub abrí <em>Clientes</em> y en <em>Ver/ocultar columnas</em> activá al menos <em>Cédula (DNI/C.C.)</em>, <em>Nombre</em>, <em>ID</em>, <em>Estado</em>, <em>Plan de Internet</em>, <em>Plan Precio</em>, <em>Router</em>, <em>Ip</em>, <em>Teléfono</em>, <em>Dirección</em>, <em>Día de Corte</em> y, si usás PPPoE, <em>Usuario RB</em> y <em>Password PPPoE</em>. Después tocá <em>Excel</em> o <em>CSV</em>. WispHub exporta sólo las columnas visibles.
+          <b>Cómo exportar:</b> en WispHub abra <em>Clientes</em> y en <em>Ver/ocultar columnas</em> active al menos <em>Cédula (DNI/C.C.)</em>, <em>Nombre</em>, <em>ID</em>, <em>Estado</em>, <em>Plan de Internet</em>, <em>Plan Precio</em>, <em>Router</em>, <em>Ip</em>, <em>Teléfono</em>, <em>Dirección</em>, <em>Día de Corte</em> y, si usa PPPoE, <em>Usuario RB</em> y <em>Password PPPoE</em>. Después toque <em>Excel</em> o <em>CSV</em>. WispHub exporta sólo las columnas visibles.
         </div>
         <div class="imp-ayuda" *ngIf="origen === 'mikrowisp'">
-          <b>Cómo exportar:</b> en Mikrowisp exportá la lista de clientes a Excel con cédula, nombre, estado, plan (perfil), costo, router/nodo, IP, MAC y usuario/contraseña PPPoE. En el paso siguiente elegís qué columna es cada dato.
+          <b>Cómo exportar:</b> en Mikrowisp exporte la lista de clientes a Excel con cédula, nombre, estado, plan (perfil), costo, router/nodo, IP, MAC y usuario/contraseña PPPoE. En el paso siguiente elige qué columna es cada dato.
         </div>
 
         <label class="imp-drop" [class.has-file]="archivo">
           <input type="file" accept=".xlsx,.csv,.txt" (change)="elegirArchivo($event)" />
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 16V4m0 0-4 4m4-4 4 4M4 16v3a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-3"/></svg>
-          <b>{{ archivo ? archivo.name : 'Elegí el archivo exportado' }}</b>
-          <span>{{ archivo ? (archivo.size / 1024 | number:'1.0-0') + ' KB' : 'Excel (.xlsx) o CSV. Un .xls viejo: abrilo en Excel y guardalo como .xlsx.' }}</span>
+          <b>{{ archivo ? archivo.name : 'Seleccione el archivo exportado' }}</b>
+          <span>{{ archivo ? (archivo.size / 1024 | number:'1.0-0') + ' KB' : 'Excel (.xlsx) o CSV. Un .xls viejo: ábralo en Excel y guárdelo como .xlsx.' }}</span>
         </label>
 
         <div class="np-btnrow np-btnrow--end">
@@ -155,7 +155,7 @@
       <div class="imp-cardhead">
         <div>
           <h2 class="imp-h2">¿Qué columna es cada dato?</h2>
-          <p class="np-muted">{{ imp.nombre_archivo }} · {{ imp.total }} filas. Lo marcado ya se reconoció solo; revisalo y completá lo que falte.</p>
+          <p class="np-muted">{{ imp.nombre_archivo }} · {{ imp.total }} filas. Lo marcado ya se reconoció solo; revíselo y complete lo que falte.</p>
         </div>
         <div class="np-btnrow">
           <button type="button" class="np-link" (click)="volverADetectar()">Volver a la detección automática</button>
@@ -190,7 +190,7 @@
       <div>
         <h2 class="imp-h2">Leyendo clientes de {{ nombre(imp.origen) }}</h2>
         <p class="np-muted">{{ imp.detalle || 'Conectando…' }}</p>
-        <p class="np-muted imp-nota">Podés seguir usando el panel: el avance queda en la ventana de tareas.</p>
+        <p class="np-muted imp-nota">Puede seguir usando el panel: el avance queda en la ventana de tareas.</p>
       </div>
       <button type="button" class="np-btn np-btn--ghost" (click)="cancelar()" [disabled]="imp.estado === 'cancelando'">{{ imp.estado === 'cancelando' ? 'Cancelando…' : 'Cancelar' }}</button>
     </section>
@@ -202,7 +202,7 @@
         <div class="imp-cardhead">
           <div>
             <h2 class="imp-h2">Vista previa</h2>
-            <p class="np-muted">Todavía no se guardó nada. Revisá y elegí cómo importar.</p>
+            <p class="np-muted">Todavía no se guardó nada. Revise y seleccione cómo importar.</p>
           </div>
           <div class="np-btnrow">
             <button type="button" class="np-link" *ngIf="puedeRevisarColumnas" (click)="paso = 'columnas'">Revisar las columnas</button>
@@ -255,7 +255,7 @@
         <div class="imp-cardhead">
           <div>
             <h2 class="imp-h2">Nombres y apellidos</h2>
-            <p class="np-muted">{{ nombre(imp.origen) }} trae el nombre completo en una sola columna. Elegí cómo partirlo y mirá los ejemplos de tu propio archivo.</p>
+            <p class="np-muted">{{ nombre(imp.origen) }} trae el nombre completo en una sola columna. Seleccione cómo partirlo y consulte los ejemplos de su propio archivo.</p>
           </div>
         </div>
         <div class="imp-nombres">
@@ -277,7 +277,7 @@
             </table>
           </div>
         </div>
-        <p class="np-muted imp-nota">Si tu archivo ya trae los apellidos en otra columna, volvé al paso de columnas y asignala: en ese caso no se parte nada.</p>
+        <p class="np-muted imp-nota">Si su archivo ya trae los apellidos en otra columna, vuelva al paso de columnas y asígnela: en ese caso no se parte nada.</p>
       </section>
 
       <!-- Planes y su valor -->
@@ -300,7 +300,7 @@
                 <td class="imp-select">
                   <np-select [ngModel]="opciones.planes[p.clave]" (ngModelChange)="opciones.planes[p.clave] = $event; recalcularResumen()"
                              [opciones]="p.clave === '' ? opcionesPlan.slice(1) : opcionesPlan" [presentacion]="pres"
-                             placeholder="Elegí un plan…" [ariaLabel]="'Plan para ' + p.nombre"></np-select>
+                             placeholder="Seleccione un plan…" [ariaLabel]="'Plan para ' + p.nombre"></np-select>
                 </td>
                 <td class="imp-precio">
                   <ng-container *ngIf="opciones.planes[p.clave] === 'crear'">
@@ -349,7 +349,7 @@
           </div>
         </div>
         <p class="np-notice np-notice--warn" *ngIf="!grupos.length">
-          <strong>Todavía no tenés grupos de facturación.</strong> Creá al menos uno acá abajo: sin eso no se puede importar, porque cada cliente necesita saber qué día se le cobra.
+          <strong>Todavía no tiene grupos de facturación.</strong> Cree al menos uno aquí abajo: sin eso no se puede importar, porque cada cliente necesita saber qué día se le cobra.
         </p>
 
         <div class="np-form imp-nuevogrupo">
@@ -416,7 +416,7 @@
               <small class="np-muted"><br>Sin esto, la facturación los toma como clientes nuevos y les cobra sólo los días que van desde hoy.</small>
             </span>
           </label>
-          <p class="np-muted imp-nota">También podés elegir el grupo cliente por cliente en la lista de abajo.</p>
+          <p class="np-muted imp-nota">También puede elegir el grupo cliente por cliente en la lista de abajo.</p>
         </ng-container>
       </section>
 
@@ -430,8 +430,8 @@
         </div>
 
         <p class="np-notice np-notice--warn" *ngIf="!routers.length">
-          <strong>La empresa no tiene routers cargados.</strong> Podés importar igual —los clientes quedan sin router— y después cargar el MikroTik en
-          <a routerLink="/dashboard/mikrotik">Mikrotik</a> y volver acá a amarrarlos.
+          <strong>La empresa no tiene routers cargados.</strong> Puede importar igual —los clientes quedan sin router— y después cargar el MikroTik en
+          <a routerLink="/dashboard/mikrotik">Mikrotik</a> y volver aquí a amarrarlos.
         </p>
 
         <div class="np-form" *ngIf="routers.length">
@@ -459,14 +459,14 @@
             </tbody>
           </table>
         </div>
-        <p class="np-muted imp-nota" *ngIf="routers.length">Cuando termine la importación vas a poder comparar con el MikroTik —sólo lectura— y amarrar a los que calcen.</p>
+        <p class="np-muted imp-nota" *ngIf="routers.length">Cuando termine la importación podrá comparar con el MikroTik —sólo lectura— y amarrar a los que calcen.</p>
       </section>
 
       <!-- Saldo que traen de la otra plataforma -->
       <section class="imp-card" *ngIf="saldoClientes">
         <div class="imp-cardhead">
           <div>
-            <h2 class="imp-h2">Lo que te deben de {{ nombre(imp.origen) }}</h2>
+            <h2 class="imp-h2">Lo que le deben de {{ nombre(imp.origen) }}</h2>
             <p class="np-muted"><b>{{ saldoClientes | number }} clientes</b> deben <b>${{ peso(saldoTotal) }}</b> en total<ng-container *ngIf="a.saldo?.facturas"> ({{ a.saldo.facturas | number }} facturas)</ng-container>.</p>
           </div>
         </div>
@@ -476,7 +476,7 @@
         <label class="np-check np-check--box" *ngIf="!faltaMigracion">
           <input type="checkbox" [(ngModel)]="opciones.saldo.crear" />
           <span><b>Crear una factura por ese saldo</b>, a nombre de cada cliente.
-            <small class="np-muted"><br>Si no la marcás, el saldo queda sólo anotado en el reporte y no se le cobra desde acá.</small>
+            <small class="np-muted"><br>Si no la marca, el saldo queda sólo anotado en el reporte y no se le cobra desde aquí.</small>
           </span>
         </label>
 
@@ -503,13 +503,13 @@
           </div>
 
           <div class="np-notice np-notice--warn">
-            <strong>Ojo con lo que dispara una factura sin pagar en la plataforma:</strong>
+            <strong>Atención con lo que dispara una factura sin pagar en la plataforma:</strong>
             <ul class="imp-lista-avisos">
-              <li *ngIf="avisosEmpresa?.whatsapp?.length">Tenés recordatorios por WhatsApp activos ({{ avisosEmpresa.whatsapp.join(', ') }}): les van a llegar avisos de pago según los días que tengas configurados.</li>
-              <li *ngIf="!avisosEmpresa?.whatsapp?.length">No tenés recordatorios por WhatsApp activos: no se les avisa por ese lado.</li>
-              <li *ngIf="avisosEmpresa?.email">Tenés el envío de facturas por correo activo: marcá la casilla de arriba si no querés que salgan.</li>
-              <li *ngIf="avisosEmpresa?.auto_suspende">Tenés el corte automático activo (a partir de {{ avisosEmpresa.facturas_corte }} factura(s) sin pagar, el día {{ avisosEmpresa.dia_corte }} de cada mes): estos clientes pueden quedar suspendidos solos.</li>
-              <li *ngIf="!avisosEmpresa?.auto_suspende">No tenés el corte automático activo: nadie queda suspendido por esta factura.</li>
+              <li *ngIf="avisosEmpresa?.whatsapp?.length">Tiene recordatorios por WhatsApp activos ({{ avisosEmpresa.whatsapp.join(', ') }}): les van a llegar avisos de pago según los días que tengas configurados.</li>
+              <li *ngIf="!avisosEmpresa?.whatsapp?.length">No tiene recordatorios por WhatsApp activos: no se les avisa por ese lado.</li>
+              <li *ngIf="avisosEmpresa?.email">Tiene el envío de facturas por correo activo: marque la casilla de arriba si no quiere que salgan.</li>
+              <li *ngIf="avisosEmpresa?.auto_suspende">Tiene el corte automático activo (a partir de {{ avisosEmpresa.facturas_corte }} factura(s) sin pagar, el día {{ avisosEmpresa.dia_corte }} de cada mes): estos clientes pueden quedar suspendidos solos.</li>
+              <li *ngIf="!avisosEmpresa?.auto_suspende">No tiene el corte automático activo: nadie queda suspendido por esta factura.</li>
               <li>La importación en sí no manda ningún mensaje ni suspende a nadie.</li>
             </ul>
           </div>
@@ -567,7 +567,7 @@
         <span><span class="np-n">{{ imp.omitidos | number }}</span>omitidos</span>
         <span><i class="np-dot" style="background:var(--danger)"></i><span class="np-n">{{ imp.errores | number }}</span>con error</span>
       </div>
-      <p class="np-muted imp-nota">Podés cerrar esta pantalla: la importación sigue en el servidor y el avance queda en la ventana de tareas.</p>
+      <p class="np-muted imp-nota">Puede cerrar esta pantalla: la importación sigue en el servidor y el avance queda en la ventana de tareas.</p>
     </section>
 
     <!-- ══ 5. Resultado ═══════════════════════════════════════════════════ -->
@@ -615,7 +615,7 @@
         </div>
 
         <p class="np-notice np-notice--warn" *ngIf="!routers.length">
-          La empresa todavía no tiene routers cargados. Agregá tu MikroTik en <a routerLink="/dashboard/mikrotik">Mikrotik</a> y volvé acá para amarrar a los clientes.
+          La empresa todavía no tiene routers cargados. Agregue su MikroTik en <a routerLink="/dashboard/mikrotik">Mikrotik</a> y vuelva aquí para amarrar a los clientes.
         </p>
 
         <ng-container *ngIf="cotejo">
@@ -647,7 +647,7 @@
           </div>
           <p class="np-notice np-notice--ok" *ngIf="cotejo.amarrados">{{ cotejo.amarrados | number }} cliente(s) quedaron amarrados a su router.</p>
           <p class="np-muted imp-nota" *ngIf="cotejo.otra_ip">
-            Hay {{ cotejo.otra_ip | number }} cliente(s) con otra IP en el router. Para traer esas IP a las fichas usá <a routerLink="/dashboard/mikrotik">Mikrotik › Sincronizar IPs</a>, que las muestra antes de aplicar.
+            Hay {{ cotejo.otra_ip | number }} cliente(s) con otra IP en el router. Para traer esas IP a las fichas use <a routerLink="/dashboard/mikrotik">Mikrotik › Sincronizar IPs</a>, que las muestra antes de aplicar.
           </p>
 
           <div class="np-tablewrap np-tablewrap--scroll" *ngIf="cotejo.hallazgos?.length">
@@ -762,7 +762,7 @@
 
     <!-- Elegir a mano el grupo o el router de unos cuantos -->
     <div class="imp-asignar" *ngIf="paso === 'previa' && !faltaMigracion">
-      <span class="np-muted">{{ seleccion.size ? seleccion.size + ' elegidos' : 'Marcá clientes para darles otro grupo o router' }}</span>
+      <span class="np-muted">{{ seleccion.size ? seleccion.size + ' elegidos' : 'Marque clientes para darles otro grupo o router' }}</span>
       <np-select [(ngModel)]="asignarGrupo" [opciones]="opcionesGrupo" [presentacion]="pres" [permitirVacio]="true"
                  textoVacio="Grupo…" placeholder="Grupo…" tamano="sm" ariaLabel="Grupo para los elegidos" style="width: 200px"></np-select>
       <np-select [(ngModel)]="asignarRouter" [opciones]="opcionesRouter" [presentacion]="pres" [permitirVacio]="true"

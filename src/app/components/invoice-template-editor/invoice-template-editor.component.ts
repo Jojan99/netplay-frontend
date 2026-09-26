@@ -43,10 +43,10 @@ export class InvoiceTemplateEditorComponent implements OnInit {
 
   /** Casillas de "qué se muestra", con su explicación. */
   readonly visibleOptions: { key: keyof InvoiceTemplateConfig; label: string; hint: string }[] = [
-    { key: 'show_logo',          label: 'Logo de la empresa',   hint: 'Se toma el que subiste en los datos de facturación.' },
+    { key: 'show_logo',          label: 'Logo de la empresa',   hint: 'Se toma el que subió en los datos de facturación.' },
     { key: 'show_activity',      label: 'Actividad económica',  hint: 'Código CIIU en el membrete.' },
     { key: 'show_iva_condition', label: 'Régimen de IVA',       hint: 'Condición tributaria de la empresa.' },
-    { key: 'show_payment_info',  label: 'Medios de pago',       hint: 'Cuentas y billeteras donde te pueden pagar.' },
+    { key: 'show_payment_info',  label: 'Medios de pago',       hint: 'Cuentas y billeteras donde le pueden pagar.' },
     { key: 'show_balance',       label: 'Saldo anterior',       hint: 'Suma las facturas pendientes de meses previos.' },
     { key: 'show_footer',        label: 'Mensaje final',        hint: 'La frase de cierre al pie de la factura.' },
   ];

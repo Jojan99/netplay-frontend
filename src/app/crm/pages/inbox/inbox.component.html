@@ -41,7 +41,7 @@
 
   <!-- WhatsApp Web sin recepción: lo que escriben los clientes no llega a esta bandeja -->
   <div class="np-notice np-notice--danger" role="alert" *ngIf="recepcionApagada" style="display:flex; flex-wrap:wrap; align-items:center; gap:8px 14px; margin:8px 12px 0">
-    <span style="flex:1; min-width:240px"><b>La recepción de mensajes de WhatsApp Web está desactivada.</b> Lo que tus clientes escriben a tus líneas no llega a esta bandeja.</span>
+    <span style="flex:1; min-width:240px"><b>La recepción de mensajes de WhatsApp Web está desactivada.</b> Lo que sus clientes escriben a sus líneas no llega a esta bandeja.</span>
     <button type="button" class="np-btn np-btn--primary np-btn--sm" *ngIf="esAdmin" (click)="activarRecepcion()" [disabled]="activandoRecepcion">{{ activandoRecepcion ? 'Activando…' : 'Activar recepción' }}</button>
     <span *ngIf="!esAdmin">Pedile a un administrador que la active en <b>WhatsApp → Web → Webhook</b>.</span>
   </div>
@@ -97,7 +97,7 @@
         <section class="wa-set-card wa-set-card--wide">
           <header><span class="wa-set-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 20l1.3-3.8A8 8 0 1 1 8 19.2L4 20z"/></svg></span><div><h4>Mensaje de bienvenida</h4><p>Se envía una sola vez, con el primer mensaje del cliente.</p></div></header>
           <textarea class="np-input np-textarea" rows="3" [(ngModel)]="settingsForm.welcome_message" [placeholder]="settingsForm.welcome_message_default"></textarea>
-          <small class="np-fine">Vacío = mensaje por defecto. Podés usar *negrita* y saltos de línea como en WhatsApp.</small>
+          <small class="np-fine">Vacío = mensaje por defecto. Puede usar *negrita* y saltos de línea como en WhatsApp.</small>
         </section>
 
         <section class="wa-set-card wa-set-card--wide">
@@ -106,7 +106,7 @@
           <label class="wa-set-switch"><input type="checkbox" [(ngModel)]="settingsForm.identificacion_enabled" /><span class="wa-set-track"></span><span class="wa-set-copy"><b>Pedir cédula antes de entrar al CRM</b><small>Mientras el cliente no se identifique, el chat no aparece en la bandeja. Lo que escriba no se pierde: entra completo cuando responde.</small></span></label>
 
           <ng-container *ngIf="settingsForm.identificacion_enabled">
-            <label class="wa-set-switch"><input type="checkbox" [(ngModel)]="settingsForm.identificacion_solo_desconocidos" /><span class="wa-set-track"></span><span class="wa-set-copy"><b>Solo si no lo reconozco por el teléfono</b><small>Evita el trámite a los clientes que ya tenés registrados con ese número.</small></span></label>
+            <label class="wa-set-switch"><input type="checkbox" [(ngModel)]="settingsForm.identificacion_solo_desconocidos" /><span class="wa-set-track"></span><span class="wa-set-copy"><b>Solo si no lo reconozco por el teléfono</b><small>Evita el trámite a los clientes que ya tiene registrados con ese número.</small></span></label>
 
             <label class="np-field"><span>Intentos</span><div class="wa-set-inline"><input type="number" class="np-input np-mono" min="1" max="5" [(ngModel)]="settingsForm.identificacion_intentos" /><em>antes de pasarlo igual al agente</em></div><small class="np-fine">Si no logra dar una cédula válida, la conversación pasa igual y queda marcada como sin identificar. Nadie se queda atrapado hablándole a un bot.</small></label>
 
@@ -124,7 +124,7 @@
 <div class="np-overlay" *ngIf="showGrupos" (click)="showGrupos = false">
   <div class="np-modal np-modal--editor" role="dialog" aria-modal="true" (click)="$event.stopPropagation()">
     <div class="np-modal-head">
-      <div><p class="np-kicker">CRM <b>/</b> WhatsApp Web</p><h3>Grupos que seguís</h3></div>
+      <div><p class="np-kicker">CRM <b>/</b> WhatsApp Web</p><h3>Grupos que sigue</h3></div>
       <button type="button" class="np-icobtn" (click)="showGrupos = false" aria-label="Cerrar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
     </div>
 

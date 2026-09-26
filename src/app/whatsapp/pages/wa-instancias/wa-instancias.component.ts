@@ -107,7 +107,7 @@ export class WaInstanciasComponent implements OnInit, OnDestroy {
   }
 
   private resolveAuthError(e: any): string {
-    if (e.status === 401) return 'No autorizado: falta la API key. Configura tus credenciales de WhatsApp.';
+    if (e.status === 401) return 'No autorizado: falta la API key. Configura sus credenciales de WhatsApp.';
     if (e.status === 403) return 'Acceso denegado: API key inválida o empresa suspendida.';
     return e.error?.message || 'Error al cargar las instancias.';
   }

@@ -122,7 +122,7 @@ export class ImportadorComponent implements OnInit, OnDestroy {
   opcionesColumna: Opcion[] = [];
   readonly ESTADOS: { v: string; t: string; ayuda: string }[] = [
     { v: 'activo', t: 'Activos', ayuda: 'Entran con el servicio andando.' },
-    { v: 'suspendido', t: 'Suspendidos', ayuda: 'Entran suspendidos también acá.' },
+    { v: 'suspendido', t: 'Suspendidos', ayuda: 'Entran suspendidos también aquí.' },
     { v: 'retirado', t: 'Retirados', ayuda: 'Entran dados de baja, sólo como historial.' },
   ];
 

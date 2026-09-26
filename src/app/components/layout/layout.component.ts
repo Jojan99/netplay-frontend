@@ -74,7 +74,7 @@ export class LayoutComponent implements OnInit {
   alternarFavorito(item: RouteProps): void {
     if (!item.href) return;
     const quedo = this.atajos.alternarFavorito(item.href);
-    this.toastService.info(quedo ? `${item.title} quedó en tus atajos` : `${item.title} salió de tus atajos`);
+    this.toastService.info(quedo ? `${item.title} quedó en sus atajos` : `${item.title} salió de sus atajos`);
   }
 
   selectedItem: any;

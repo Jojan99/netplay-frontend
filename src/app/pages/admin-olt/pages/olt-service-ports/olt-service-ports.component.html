@@ -29,7 +29,7 @@
 
   <div class="np-workspace">
     <div class="np-scroll">
-      <p class="np-empty-block" *ngIf="!selectedOltId && !loadingOlts"><strong>Elegí una OLT para ver sus service ports.</strong></p>
+      <p class="np-empty-block" *ngIf="!selectedOltId && !loadingOlts"><strong>Seleccione una OLT para ver sus service ports.</strong></p>
       <div *ngIf="loadingPorts" class="np-loading"><span class="np-spinner"></span> Consultando la OLT puerto por puerto…</div>
 
       <div class="olt-aviso is-danger" *ngIf="repetidos.length">
@@ -76,7 +76,7 @@
 
       <p class="np-empty-block" *ngIf="consultado && !ports.length && !loadingPorts">
         <strong>La OLT no devolvió service ports.</strong>
-        <span>Se consultan por puerto PON a partir de las ONT registradas: sincronizá las ONT si la lista está vacía.</span>
+        <span>Se consultan por puerto PON a partir de las ONT registradas: sincronice las ONT si la lista está vacía.</span>
       </p>
     </div>
   </div>

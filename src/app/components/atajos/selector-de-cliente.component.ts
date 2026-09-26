@@ -73,7 +73,7 @@ export class SelectorDeClienteComponent {
         if (q.trim().length < 2) { this.buscando = false; return of(null); }
         this.buscando = true;
         return this.atajos.buscar(q.trim()).pipe(catchError(e => {
-          this.error = e?.status === 403 ? 'Tu perfil no puede buscar clientes.' : 'No se pudo buscar. Probá de nuevo.';
+          this.error = e?.status === 403 ? 'Su perfil no puede buscar clientes.' : 'No se pudo buscar. Pruebe de nuevo.';
           return of(null);
         }));
       }),

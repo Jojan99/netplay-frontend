@@ -28,7 +28,7 @@ import { environment } from '../../../../../environments/environment';
         <section class="np-card">
           <div class="np-card-h"><h2>Webhook</h2></div>
           <p class="np-notice np-notice--code np-mono">{{ webhookUrl }}</p>
-          <p class="np-fine">Registrá esta URL en la configuración de webhooks de tu app de Meta.</p>
+          <p class="np-fine">Registre esta URL en la configuración de webhooks de su app de Meta.</p>
         </section>
       </div></div>
     </div>

@@ -5,7 +5,7 @@
   <span class="tp-badge" *ngIf="totalUnread">{{ totalUnread }}</span>
 </button>
 
-<!-- Todo lo que flota va acá dentro. El contenedor se cuelga del body al
+<!-- Todo lo que flota va aquí dentro. El contenedor se cuelga del body al
      arrancar: dentro de la barra superior quedaba encerrado por el z-index de
      la barra y la burbuja de WhatsApp le pasaba por encima. -->
 <div #flotante class="tp-float">
@@ -45,7 +45,7 @@
   <ng-container *ngIf="active !== null">
     <div class="tp-thread" #thread>
       <div class="np-loading" *ngIf="loadingThread"><span class="np-spinner"></span> Cargando…</div>
-      <p class="np-muted tp-empty" *ngIf="!loadingThread && messages.length === 0">Todavía no hay mensajes. Escribí el primero.</p>
+      <p class="np-muted tp-empty" *ngIf="!loadingThread && messages.length === 0">Todavía no hay mensajes. Escriba el primero.</p>
       <ng-container *ngFor="let m of messages; let i = index">
         <div class="tp-day" *ngIf="showDay(i)"><span>{{ dayLabel(m.created_at) }}</span></div>
         <div class="tp-msg" [class.is-mine]="m.mine">
@@ -63,7 +63,7 @@
     </div>
     <div class="tp-composer" *ngIf="!recording">
       <button type="button" class="np-icobtn" (click)="pickFile()" [disabled]="sendingFile" title="Adjuntar imagen o archivo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m21 12-8.5 8.5a5 5 0 0 1-7-7L14 5a3.5 3.5 0 0 1 5 5l-8.5 8.5a2 2 0 0 1-3-3L15 8"/></svg></button>
-      <textarea rows="1" [(ngModel)]="draft" (keydown)="onKey($event)" placeholder="Escribí un mensaje al equipo…"></textarea>
+      <textarea rows="1" [(ngModel)]="draft" (keydown)="onKey($event)" placeholder="Escriba un mensaje al equipo…"></textarea>
       <button type="button" class="np-icobtn" *ngIf="!draft.trim()" (click)="startRecording()" [disabled]="sendingFile" title="Grabar nota de voz"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg></button>
       <button type="button" class="tp-send" *ngIf="draft.trim()" [disabled]="!draft.trim()" (click)="send()" title="Enviar"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M3 20.5 22 12 3 3.5V10l13 2-13 2z"/></svg></button>
     </div>

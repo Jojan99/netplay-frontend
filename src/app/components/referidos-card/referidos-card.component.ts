@@ -6,7 +6,7 @@ import { ToastService } from '../../services/toast.service';
 import { pesos } from '../../services/consola.service';
 
 /**
- * "Invitá a otro ISP": el código de referido de la empresa, su enlace y el
+ * "Invite a otro ISP": el código de referido de la empresa, su enlace y el
  * crédito que lleva ganado.
  *
  * Va abajo del centro de control del panel, al final: no estorba lo del día a
@@ -20,18 +20,18 @@ import { pesos } from '../../services/consola.service';
   template: `
     <div class="np-card np-referidos" *ngIf="mostrar">
       <div class="np-card-h">
-        <h2>Invitá a otro ISP</h2>
+        <h2>Invite a otro ISP</h2>
         <span class="np-card-meta" *ngIf="total">{{ activos }} de {{ total }} ya están pagando</span>
       </div>
 
       <p class="np-fine">
-        Pasale tu código a otro operador: él arranca con un descuento y a vos se te acredita
+        Comparta su código con otro operador: él arranca con un descuento y a usted se le acredita
         {{ beneficioTexto }}{{ acreditarEn === 'primer_pago' ? ' cuando pague su primer período' : ' apenas se registre' }}.
       </p>
 
       <div class="np-referidos-fila">
         <div>
-          <span class="np-kpi-l">Tu código</span>
+          <span class="np-kpi-l">Su código</span>
           <div class="np-mono np-referidos-codigo">{{ codigo }}</div>
         </div>
         <div>
@@ -44,7 +44,7 @@ import { pesos } from '../../services/consola.service';
         </div>
       </div>
 
-      <p class="np-fine np-muted">El crédito se descuenta solo de tu próxima factura de la plataforma.</p>
+      <p class="np-fine np-muted">El crédito se descuenta solo de su próxima factura de la plataforma.</p>
     </div>
   `,
   styles: [`
@@ -113,6 +113,6 @@ export class ReferidosCardComponent implements OnInit {
 
     navigator.clipboard?.writeText(texto)
       .then(() => this.toast.success('Copiado.'))
-      .catch(() => this.toast.error('No se pudo copiar. Seleccionalo y copialo a mano.'));
+      .catch(() => this.toast.error('No se pudo copiar. Seleccionalo y cópielo a mano.'));
   }
 }

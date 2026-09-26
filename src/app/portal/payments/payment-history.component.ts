@@ -37,7 +37,7 @@ export class PaymentHistoryComponent implements OnInit {
         this.totalPaid.set(res.data?.total_paid ?? 0);
         this.loading.set(false);
       },
-      error: () => { this.loading.set(false); this.errorMsg.set('No pudimos cargar tu historial de pagos.'); },
+      error: () => { this.loading.set(false); this.errorMsg.set('No pudimos cargar su historial de pagos.'); },
     });
   }
 

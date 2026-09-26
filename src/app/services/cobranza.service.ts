@@ -21,7 +21,7 @@ export interface CobranzaConfig {
   recordatorios: number;
   horas_entre_recordatorios: number;
   nombre_asistente: string;
-  /** Cómo se presenta la empresa en el mensaje; si falta, se dice «tu proveedor». */
+  /** Cómo se presenta la empresa en el mensaje; si falta, se dice «su proveedor». */
   nombre_empresa: string | null;
   instrucciones: string | null;
   wa_linea_id: number | null;

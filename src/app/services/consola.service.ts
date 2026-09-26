@@ -119,7 +119,7 @@ export interface SimulacionCobro {
  *
  * Todo cuelga de /api/consola, que sólo existe en admin.netvula.com y sólo
  * responde con un token de la consola. El token del panel de una empresa no
- * sirve acá, ni al revés.
+ * sirve aquí, ni al revés.
  */
 @Injectable({ providedIn: 'root' })
 export class ConsolaService {

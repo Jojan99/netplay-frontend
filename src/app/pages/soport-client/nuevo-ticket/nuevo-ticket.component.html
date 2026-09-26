@@ -24,7 +24,7 @@
         <np-select *ngIf="!cliente" [ngModel]="cliente" (ngModelChange)="elegirCliente($event)"
                    [opciones]="clientes" [presentacion]="presClientes" [cargando]="cargandoClientes" textoCargando="Cargando clientes…"
                    placeholder="Buscar cliente…" textoBuscar="Nombre, cédula, teléfono o dirección"
-                   textoSinOpciones="Escribí para buscar entre tus clientes." [buscable]="true" [limite]="40" ariaLabel="Cliente"></np-select>
+                   textoSinOpciones="Escriba para buscar entre sus clientes." [buscable]="true" [limite]="40" ariaLabel="Cliente"></np-select>
 
         <div class="nt-cliente" *ngIf="cliente">
           <span class="nt-avatar" aria-hidden="true">{{ inicialesCliente }}</span>
@@ -70,7 +70,7 @@
             <ng-container *ngIf="!listo">2</ng-container>
           </span>
           <h4>Qué hay que hacer</h4>
-          <small class="np-fine" *ngIf="!cliente">Elegí primero el cliente</small>
+          <small class="np-fine" *ngIf="!cliente">Seleccione primero el cliente</small>
         </header>
 
         <div class="np-form">

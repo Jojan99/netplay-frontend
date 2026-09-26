@@ -2,21 +2,21 @@
   <div>
     <p class="pt-kicker">Mi servicio</p>
     <h1>Mi WiFi</h1>
-    <p>Cambia la contraseña de tu WiFi, mira qué hay conectado en tu casa y reinicia tu equipo si hace falta.</p>
+    <p>Cambia la contraseña de su WiFi, mira qué hay conectado en su casa y reinicia su equipo si hace falta.</p>
   </div>
   <button type="button" class="pt-btn pt-btn--ghost" *ngIf="panel()?.activo" (click)="actualizar()" [disabled]="!!trabajando()">
     {{ trabajando() === 'refrescar' ? 'Actualizando…' : 'Actualizar' }}
   </button>
 </div>
 
-<div class="pt-skel" *ngIf="loading()">Consultando tu equipo…</div>
+<div class="pt-skel" *ngIf="loading()">Consultando su equipo…</div>
 <div class="pt-alert pt-alert--danger" *ngIf="error()">{{ error() }}</div>
 
 <!-- Sin equipo conectado al sistema -->
 <section class="pt-card" *ngIf="!loading() && panel() && !panel().activo">
   <div class="pt-empty">
-    <b>Todavía no podemos mostrarte tu equipo.</b>
-    <p>Tu equipo aún no está conectado a nuestro sistema de gestión. Cuando lo activemos vas a poder cambiar tu WiFi desde aquí.</p>
+    <b>Todavía no podemos mostrarte su equipo.</b>
+    <p>Su equipo aún no está conectado a nuestro sistema de gestión. Cuando lo activemos podrá cambiar su WiFi desde aquí.</p>
   </div>
 </section>
 
@@ -67,7 +67,7 @@
             Contraseña: <span class="np-mono">{{ claveVisible[r.indice] ? r.clave : '••••••••' }}</span>
             <button type="button" class="pt-linkbtn" (click)="claveVisible[r.indice] = !claveVisible[r.indice]">{{ claveVisible[r.indice] ? 'Ocultar' : 'Ver' }}</button>
           </p>
-          <p class="pt-fine" *ngIf="!r.clave">Por seguridad, tu equipo no nos muestra la contraseña. Puedes cambiarla cuando quieras.</p>
+          <p class="pt-fine" *ngIf="!r.clave">Por seguridad, su equipo no nos muestra la contraseña. Puedes cambiarla cuando quieras.</p>
         </div>
         <div class="pt-red-acciones">
           <button type="button" class="pt-btn pt-btn--ghost" *ngIf="r.puede_cambiar_clave" (click)="editar(r)" [disabled]="!!trabajando()">Cambiar contraseña</button>
@@ -84,7 +84,7 @@
           <input type="checkbox" name="todas" [(ngModel)]="ed.todas" />
           <span>Usar esta contraseña en todas mis redes (2.4 y 5 GHz)</span>
         </label>
-        <p class="pt-fine">Al guardar, los equipos conectados {{ ed.todas && ed.clave && redesConClave > 1 ? 'a tus redes' : 'a esta red' }} se desconectan y hay que volver a conectarlos con los datos nuevos.</p>
+        <p class="pt-fine">Al guardar, los equipos conectados {{ ed.todas && ed.clave && redesConClave > 1 ? 'a sus redes' : 'a esta red' }} se desconectan y hay que volver a conectarlos con los datos nuevos.</p>
         <div class="pt-btnrow">
           <button type="button" class="pt-btn pt-btn--ghost" (click)="editando = null">Cancelar</button>
           <button type="submit" class="pt-btn pt-btn--primary" [disabled]="trabajando() === 'wifi'">{{ trabajando() === 'wifi' ? 'Guardando…' : 'Guardar' }}</button>
@@ -96,7 +96,7 @@
           <span>Canal de «{{ r.nombre }}» ({{ r.banda }})</span>
           <np-select name="canal" [(ngModel)]="ce.valor" [opciones]="opcionesCanal(r)" [presentacion]="presCanal" [ariaLabel]="'Canal de ' + r.nombre" textoBuscar="Buscar canal…"></np-select>
         </label>
-        <p class="pt-fine">Cambiá el canal si tu WiFi anda lento o se corta: puede haber otras redes cercanas en el mismo. Tus equipos se desconectan unos segundos al guardar.</p>
+        <p class="pt-fine">Cambie el canal si su WiFi anda lento o se corta: puede haber otras redes cercanas en el mismo. Sus equipos se desconectan unos segundos al guardar.</p>
         <div class="pt-btnrow">
           <button type="button" class="pt-btn pt-btn--ghost" (click)="canalEditando = null">Cancelar</button>
           <button type="submit" class="pt-btn pt-btn--primary" [disabled]="trabajando() === 'canal'">{{ trabajando() === 'canal' ? 'Guardando…' : 'Guardar' }}</button>
@@ -122,7 +122,7 @@
   <section class="pt-card">
     <div class="pt-card-h"><h2>Equipos en mi casa</h2></div>
 
-    <p class="pt-empty" *ngIf="!conectados.length && !inactivos.length">Tu equipo todavía no nos informó qué hay conectado.</p>
+    <p class="pt-empty" *ngIf="!conectados.length && !inactivos.length">Su equipo todavía no nos informó qué hay conectado.</p>
 
     <div class="pt-list">
       <div class="pt-row" *ngFor="let d of conectados">
@@ -185,7 +185,7 @@
 <!-- Consumo y velocidad: para todos los clientes, reporte o no su equipo al sistema. -->
 <ng-container *ngIf="!loading()">
   <section class="pt-card" aria-labelledby="pt-vel-titulo">
-    <div class="pt-card-h"><h2 id="pt-vel-titulo">Uso de tu conexión ahora</h2></div>
+    <div class="pt-card-h"><h2 id="pt-vel-titulo">Uso de su conexión ahora</h2></div>
 
     <div class="pt-vel">
       <div class="pt-vel-med">
@@ -194,7 +194,7 @@
         <div class="pt-medidor" *ngIf="consumo()?.plan?.bajada_mbps" aria-hidden="true">
           <i [style.width.%]="pctDelPlan(velocidad()?.bajada_mbps, consumo().plan.bajada_mbps)"></i>
         </div>
-        <small *ngIf="consumo()?.plan?.bajada_mbps">de {{ consumo().plan.bajada_mbps }} Mbps de tu plan</small>
+        <small *ngIf="consumo()?.plan?.bajada_mbps">de {{ consumo().plan.bajada_mbps }} Mbps de su plan</small>
       </div>
       <div class="pt-vel-med">
         <span>Subida</span>
@@ -202,7 +202,7 @@
         <div class="pt-medidor" *ngIf="consumo()?.plan?.subida_mbps" aria-hidden="true">
           <i [style.width.%]="pctDelPlan(velocidad()?.subida_mbps, consumo().plan.subida_mbps)"></i>
         </div>
-        <small *ngIf="consumo()?.plan?.subida_mbps">de {{ consumo().plan.subida_mbps }} Mbps de tu plan</small>
+        <small *ngIf="consumo()?.plan?.subida_mbps">de {{ consumo().plan.subida_mbps }} Mbps de su plan</small>
       </div>
       <button type="button" class="pt-btn pt-btn--primary pt-vel-btn" (click)="medirVelocidad()" [disabled]="midiendo()">
         {{ midiendo() ? 'Midiendo…' : (velocidad() ? 'Medir de nuevo' : 'Medir ahora') }}
@@ -211,7 +211,7 @@
 
     <div class="pt-alert pt-alert--warn" *ngIf="errorVelocidad()">{{ errorVelocidad() }}</div>
     <p class="pt-fine">
-      Mide durante {{ velocidad()?.segundos || 3 }} segundos lo que tu casa está usando en este momento, no la velocidad máxima:
+      Mide durante {{ velocidad()?.segundos || 3 }} segundos lo que su casa está usando en este momento, no la velocidad máxima:
       si nadie está navegando va a dar poco. Para ver cuánto llega, pon un video o una descarga y mide otra vez.
     </p>
   </section>
@@ -235,13 +235,13 @@
         <span>{{ fechaCorta(diasConsumo[0].fecha) }}</span>
         <span>Hoy</span>
       </div>
-      <p class="pt-fine">Tu plan no tiene límite de datos: esto es solo informativo. Pasa el cursor por una barra para ver ese día.</p>
+      <p class="pt-fine">Su plan no tiene límite de datos: esto es solo informativo. Pasa el cursor por una barra para ver ese día.</p>
     </ng-container>
 
     <ng-template #sinConsumo>
       <p class="pt-fine">
-        Todavía no tenemos mediciones de tu consumo. Lo contamos a partir de los datos que tu equipo nos envía cada hora;
-        si tu equipo está conectado a nuestro sistema, en unas horas empieza a aparecer aquí.
+        Todavía no tenemos mediciones de su consumo. Lo contamos a partir de los datos que su equipo nos envía cada hora;
+        si su equipo está conectado a nuestro sistema, en unas horas empieza a aparecer aquí.
       </p>
     </ng-template>
   </section>

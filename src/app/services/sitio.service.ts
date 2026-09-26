@@ -79,7 +79,7 @@ export class SitioService {
   disponible(subdominio: string): Observable<Disponibilidad> {
     return this.http.get<any>(this.base + 'subdominio/disponible', { params: { s: subdominio } }).pipe(
       map(r => ({ ...(r?.data ?? {}), mensaje: r?.message ?? '' }) as Disponibilidad),
-      catchError(() => of({ subdominio, disponible: false, direccion: '', mensaje: 'No pudimos revisar la dirección. Probá de nuevo.' })),
+      catchError(() => of({ subdominio, disponible: false, direccion: '', mensaje: 'No pudimos revisar la dirección. Pruebe de nuevo.' })),
     );
   }
 
@@ -90,7 +90,7 @@ export class SitioService {
   codigo(codigo: string): Observable<CodigoRevisado> {
     return this.http.get<any>(this.base + 'codigo', { params: { c: codigo } }).pipe(
       map(r => (r?.data ?? { tipo: null, valido: false, detalle: r?.message ?? '' }) as CodigoRevisado),
-      catchError(() => of({ tipo: null, valido: false, detalle: 'No pudimos revisar el código. Probá de nuevo.' } as CodigoRevisado)),
+      catchError(() => of({ tipo: null, valido: false, detalle: 'No pudimos revisar el código. Pruebe de nuevo.' } as CodigoRevisado)),
     );
   }
 

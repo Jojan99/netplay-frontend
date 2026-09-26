@@ -21,7 +21,7 @@
           </label>
           <label class="np-field"><span>Número destinatario</span><input class="np-input np-mono" [(ngModel)]="number" type="text" placeholder="573001234567 o 3001234567" /><small class="np-fine">Con o sin código de país, se normaliza solo.</small></label>
           <ng-container *ngIf="msgType === 'text'">
-            <label class="np-field np-field-full"><span>Mensaje</span><textarea class="np-input np-textarea" [(ngModel)]="message" rows="6" placeholder="Escribí el mensaje…"></textarea><small class="np-fine np-mono">{{ message.length }} caracteres</small></label>
+            <label class="np-field np-field-full"><span>Mensaje</span><textarea class="np-input np-textarea" [(ngModel)]="message" rows="6" placeholder="Escriba el mensaje…"></textarea><small class="np-fine np-mono">{{ message.length }} caracteres</small></label>
           </ng-container>
           <ng-container *ngIf="msgType === 'image' || msgType === 'video'">
             <label class="np-field np-field-full"><span>URL de {{ msgType === 'image' ? 'la imagen' : 'el video' }}</span><input class="np-input np-mono" [(ngModel)]="mediaUrl" type="url" [placeholder]="'https://ejemplo.com/archivo.' + (msgType === 'image' ? 'jpg' : 'mp4')" /></label>

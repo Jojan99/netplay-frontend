@@ -51,7 +51,7 @@ export class ClientLoginComponent implements OnInit {
 
   login(): void {
     if (!this.username || !this.password) {
-      this.errorMsg.set('Ingresa tu usuario y contraseña');
+      this.errorMsg.set('Ingresa su usuario y contraseña');
       return;
     }
     this.loading.set(true);

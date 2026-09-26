@@ -706,7 +706,7 @@ export class BillingConfigComponent implements OnInit {
   // ── Correo (Mailjet) ──────────────────────────────────────
   // Sin cuenta propia los correos salen de la cuenta de Netvula
   // (no-reply@netvula.com) con el nombre de la empresa y las respuestas al
-  // correo de la empresa. Acá se conecta la cuenta de Mailjet propia.
+  // correo de la empresa. Aquí se conecta la cuenta de Mailjet propia.
 
   cargarCorreo(): void {
     this.correoCargando = true;
@@ -782,7 +782,7 @@ export class BillingConfigComponent implements OnInit {
   }
 
   async desconectarCorreo(): Promise<void> {
-    if (!await this.dialog.confirm('¿Desconectar tu cuenta de Mailjet? Los correos vuelven a salir desde ' + (this.correoConfig?.remitente_plataforma ?? 'la cuenta de Netvula') + '.')) return;
+    if (!await this.dialog.confirm('¿Desconectar su cuenta de Mailjet? Los correos vuelven a salir desde ' + (this.correoConfig?.remitente_plataforma ?? 'la cuenta de Netvula') + '.')) return;
     this.correoGuardando = true;
     this.correoMsg = '';
     this.correoError = '';

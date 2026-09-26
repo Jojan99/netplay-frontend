@@ -77,7 +77,7 @@ export class OltOnlineComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    // El tab Estado enlaza acá con el puerto ya elegido.
+    // El tab Estado enlaza aquí con el puerto ya elegido.
     const puerto = this.route.snapshot.queryParamMap.get('puerto');
     if (puerto) this.filterPort = puerto;
 

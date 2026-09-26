@@ -20,7 +20,7 @@
   <div class="np-toolbar"><app-olt-nav></app-olt-nav></div>
 
   <div class="np-scroll">
-    <p class="np-empty-block" *ngIf="!selectedOltId && !loadingOlts"><strong>Elegí una OLT para ver su estado.</strong></p>
+    <p class="np-empty-block" *ngIf="!selectedOltId && !loadingOlts"><strong>Seleccione una OLT para ver su estado.</strong></p>
 
     <app-olt-equipo *ngIf="selectedOltId && verEquipo" [oltId]="selectedOltId" [marcaConfigurada]="marcaSeleccionada"></app-olt-equipo>
 
@@ -63,7 +63,7 @@
       <!-- Sin medición guardada: se ofrece medir, no se mide solo. -->
       <div class="olt-aviso" *ngIf="sinMedicion && !midiendoSenal && !resumen?.medidas">
         <strong>Todavía no hay una medición de señal.</strong>
-        <span>Abrir la pantalla no le pregunta nada a la OLT. Tocá «Medir ahora» para medir la señal de todas las ONT (tarda cerca de un minuto).</span>
+        <span>Abrir la pantalla no le pregunta nada a la OLT. Toque «Medir ahora» para medir la señal de todas las ONT (tarda cerca de un minuto).</span>
       </div>
 
       <div class="olt-aviso is-warn" *ngIf="errorSenal">
@@ -172,7 +172,7 @@
             </tbody>
           </table>
         </div>
-        <p class="np-hint" *ngIf="listado.length >= 200">Se muestran las 200 peores. Afiná con las clases de arriba.</p>
+        <p class="np-hint" *ngIf="listado.length >= 200">Se muestran las 200 peores. Ajuste con las clases de arriba.</p>
       </section>
 
       <div *ngIf="cargandoSenal && midiendoSenal && !resumen" class="np-loading"><span class="np-spinner"></span> Midiendo la señal de todas las ONT… tarda cerca de un minuto.</div>

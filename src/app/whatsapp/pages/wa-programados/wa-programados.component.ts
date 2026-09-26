@@ -67,7 +67,7 @@ export class WaProgramadosComponent implements OnInit {
 
   /** Qué pide cada tipo más abajo en el formulario. */
   private readonly detalleTipo: Record<MsgType, string> = {
-    text:     'Escribís el texto',
+    text:     'Escribe el texto',
     image:    'URL de la imagen y descripción opcional',
     document: 'URL del archivo y descripción opcional',
     audio:    'URL del audio',

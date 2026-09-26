@@ -14,7 +14,7 @@
         <thead><tr><th class="np-th-stripe"></th><th>Línea</th><th>Teléfono</th><th>Usuario</th><th>Estado</th><th class="np-th-right">Acciones</th></tr></thead>
         <tbody>
           <tr *ngIf="loading && !instances.length" class="np-empty"><td colspan="6"><span class="np-spinner"></span></td></tr>
-          <tr *ngIf="!loading && !instances.length" class="np-empty"><td colspan="6"><strong>No hay instancias.</strong><span>Creá la primera y vinculala escaneando el QR.</span></td></tr>
+          <tr *ngIf="!loading && !instances.length" class="np-empty"><td colspan="6"><strong>No hay instancias.</strong><span>Cree la primera y vincúlela escaneando el QR.</span></td></tr>
           <tr *ngFor="let inst of instances; trackBy: trackByInstanceId" class="np-row np-row--static">
             <td class="np-stripe"><i [style.background]="inst.status === 'connected' ? 'var(--ok)' : inst.status === 'waiting_qr' ? 'var(--warn)' : 'var(--line-strong)'"></i></td>
             <td><div class="np-name">{{ inst.name }}<span class="np-pill np-pill--active np-wa-principal" *ngIf="inst.principal" title="Es la línea que usan las facturas, los avisos y todo lo que no sale de un chat">Principal</span></div><div class="np-plan"><em>{{ inst.instanceId }}</em></div></td>
@@ -50,7 +50,7 @@
     <div class="np-modal-head"><div><p class="np-kicker">Instancia <b>/</b> {{ qrInstance.name }}</p><h3>Vincular con QR</h3></div><button type="button" class="np-icobtn" (click)="closeQR()" aria-label="Cerrar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div>
     <div class="np-modal-body">
       <div class="np-qr-frame"><img *ngIf="qrImageUrl" [src]="qrImageUrl" alt="Código QR" (error)="qrError = true" /><p class="np-muted" *ngIf="!qrImageUrl">{{ qrError ? 'QR no disponible aún. Se vuelve a pedir solo.' : 'Pidiendo el QR…' }}</p></div>
-      <ol class="np-steps"><li>Abrí WhatsApp en el celular.</li><li>Andá a <b>Dispositivos vinculados</b>.</li><li>Tocá <b>Vincular dispositivo</b>.</li><li>Apuntá la cámara al QR.</li></ol>
+      <ol class="np-steps"><li>Abra WhatsApp en el celular.</li><li>Vaya a <b>Dispositivos vinculados</b>.</li><li>Toque <b>Vincular dispositivo</b>.</li><li>Apunte la cámara al QR.</li></ol>
       <p class="np-fine">Se verifica la conexión cada 5 segundos.</p>
       <div class="np-btnrow np-btnrow--end"><button type="button" class="np-btn np-btn--ghost" (click)="refreshQrImage()">Refrescar</button><button type="button" class="np-btn np-btn--primary" (click)="closeQR()">Cerrar</button></div>
     </div>

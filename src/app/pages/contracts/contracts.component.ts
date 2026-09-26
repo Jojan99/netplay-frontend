@@ -264,7 +264,7 @@ export class ContractsComponent implements OnInit, OnDestroy {
 
   /**
    * La lista la manda el backend: es la misma que reemplaza al firmar. Antes
-   * estaba copiada acá y ofrecía variables que el backend no conocía.
+   * estaba copiada aquí y ofrecía variables que el backend no conocía.
    */
   private cargarVariables(): void {
     this.contractService.getVariables().subscribe({

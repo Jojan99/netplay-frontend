@@ -206,7 +206,7 @@ export class TaskTicketComponent implements OnInit, OnDestroy {
     if (this.filterTechId)  filters.technical_id  = this.filterTechId;
     if (this.filterSearch)  filters.search        = this.filterSearch.trim();
 
-    // El punto de color de cada cliente se recalcula con la lista: acá es
+    // El punto de color de cada cliente se recalcula con la lista: aquí es
     // donde cambia, cuando alguien inicia o cierra un ticket.
     this.ticketsAbiertos.cargar(true);
 
@@ -334,7 +334,7 @@ export class TaskTicketComponent implements OnInit, OnDestroy {
                 if (this.selectedTicket?.id === ticket.id) this.notes = notas;
                 fin(true, 'Listo: quedó como novedad del ticket.');
               } else if (++intentos >= 12) {
-                fin(false, 'No llegó a tiempo: revisá las novedades del ticket en un rato.');
+                fin(false, 'No llegó a tiempo: revise las novedades del ticket en un rato.');
               } else {
                 setTimeout(revisar, 5000);
               }

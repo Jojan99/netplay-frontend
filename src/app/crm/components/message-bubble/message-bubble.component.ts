@@ -64,7 +64,7 @@ export class MessageBubbleComponent implements OnChanges {
 
   /**
    * WhatsApp solo deja editar dentro de los 15 minutos siguientes al envío,
-   * y solo mensajes de texto propios. Se comprueba acá para no ofrecer una
+   * y solo mensajes de texto propios. Se comprueba aquí para no ofrecer una
    * acción que la pasarela va a rechazar.
    */
   get puedeEditar(): boolean {
@@ -291,7 +291,7 @@ export class MessageBubbleComponent implements OnChanges {
   @Output() vote = new EventEmitter<{ message: ChatMessage; options: string[] }>();
   get myVote(): string[] { return (this.message?.poll_votes || []).find(v => v.voter_type === 'agent')?.options || []; }
   pollVoters(opt: string): string[] {
-    return (this.message?.poll_votes || []).filter(v => (v.options || []).includes(opt)).map(v => v.voter_type === 'agent' ? 'Vos' : (v.voter_name || v.voter_key.split('@')[0] || 'Cliente'));
+    return (this.message?.poll_votes || []).filter(v => (v.options || []).includes(opt)).map(v => v.voter_type === 'agent' ? 'Usted' : (v.voter_name || v.voter_key.split('@')[0] || 'Cliente'));
   }
   pollCount(opt: string): number { return this.pollVoters(opt).length; }
   get pollTotal(): number { return (this.message?.poll_votes || []).filter(v => (v.options || []).length).length; }

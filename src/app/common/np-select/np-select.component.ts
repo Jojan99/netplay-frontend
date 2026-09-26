@@ -94,7 +94,7 @@ export class NpSelectComponent implements ControlValueAccessor, OnChanges, OnDes
   @Input() textoBuscar = 'Buscar…';
   /**
    * Qué guarda la opción vacía (permitirVacio) y qué valor cuenta como "sin
-   * elegir". Un <option value="">Todos</option> guardaba '': con '' acá, el
+   * elegir". Un <option value="">Todos</option> guardaba '': con '' aquí, el
    * filtro recibe exactamente lo mismo que antes.
    */
   @Input() valorVacio: any = null;

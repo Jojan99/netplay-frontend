@@ -3,10 +3,10 @@ import { CommonModule } from '@angular/common';
 import { LandingConfig } from '../../services/landing.service';
 
 const DEFAULT_FAQS = [
-  { q: '¿Cuánto tarda la instalación?', a: 'El proceso de instalación tarda entre 1 y 3 días hábiles después de contratar. Nuestros técnicos coordinan contigo la visita.' },
+  { q: '¿Cuánto tarda la instalación?', a: 'El proceso de instalación tarda entre 1 y 3 días hábiles después de contratar. Nuestros técnicos coordinan con usted la visita.' },
   { q: '¿Hay permanencia mínima?',       a: 'No exigimos contratos de permanencia. Puedes cancelar el servicio cuando quieras sin penalización.' },
   { q: '¿El router está incluido?',      a: 'Sí, el router WiFi de última generación está incluido en todos nuestros planes. Es en comodato mientras tengas el servicio activo.' },
-  { q: '¿Qué pasa si tengo problemas?',  a: 'Contamos con soporte técnico 24/7. Puedes contactarnos por WhatsApp, teléfono o abrir un ticket desde tu portal de cliente.' },
+  { q: '¿Qué pasa si tengo problemas?',  a: 'Contamos con soporte técnico 24/7. Puedes contactarnos por WhatsApp, teléfono o abrir un ticket desde su portal de cliente.' },
   { q: '¿El precio incluye IVA?',        a: 'Sí, todos los precios mostrados son con IVA incluido. No hay costos ocultos.' },
 ];
 

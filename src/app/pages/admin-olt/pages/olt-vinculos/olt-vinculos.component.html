@@ -19,7 +19,7 @@
     <p class="np-notice np-notice--danger" *ngIf="error">{{ error }}</p>
 
     <section class="np-kpis" *ngIf="resumen">
-      <div class="np-kpi"><span class="np-kpi-l">Sin cliente</span><b class="np-kpi-v">{{ resumen.sin_cliente }}</b><span class="np-kpi-s">ONT en tus OLT</span></div>
+      <div class="np-kpi"><span class="np-kpi-l">Sin cliente</span><b class="np-kpi-v">{{ resumen.sin_cliente }}</b><span class="np-kpi-s">ONT en sus OLT</span></div>
       <div class="np-kpi np-kpi--accent"><span class="np-kpi-l">Coinciden</span><b class="np-kpi-v">{{ resumen.alta }}</b><span class="np-kpi-s">nombre igual o contenido</span></div>
       <div class="np-kpi"><span class="np-kpi-l">Para revisar</span><b class="np-kpi-v">{{ resumen.media + resumen.baja }}</b><span class="np-kpi-s">parecidas o repetidas</span></div>
       <div class="np-kpi"><span class="np-kpi-l">Sin candidato</span><b class="np-kpi-v">{{ resumen.sin_candidato }}</b><span class="np-kpi-s">sin nombre o sin cliente</span></div>
@@ -69,8 +69,8 @@
               <np-select class="vin-elegir" *ngIf="(p.candidatos?.length || 0) > 1"
                          [(ngModel)]="p.cliente.user_id" [name]="'c' + p.ont.id"
                          [opciones]="p.candidatos" [presentacion]="presCandidatos" tamano="sm"
-                         placeholder="Elegí el cliente…" ariaLabel="Cliente propuesto"></np-select>
-              <div class="np-fine" *ngIf="(p.candidatos?.length || 0) > 1">Mirá la dirección para decidir</div>
+                         placeholder="Seleccione el cliente…" ariaLabel="Cliente propuesto"></np-select>
+              <div class="np-fine" *ngIf="(p.candidatos?.length || 0) > 1">Consulte la dirección para decidir</div>
 
               <span class="np-pill np-pill--suspended" *ngIf="p.cliente.ya_tiene_ont">Ya tiene otra ONT</span>
               <span class="np-pill np-pill--noip" *ngIf="p.equipo_anterior">Parece el equipo anterior</span>
@@ -93,7 +93,7 @@
       <div class="np-card-h">
         <div>
           <h2>Sin forma de adivinar el cliente</h2>
-          <p class="np-fine">{{ huerfanas.length }} equipos que la OLT no describe. Buscá el cliente y asignalo a mano; el serial es el que te sirve para reconocerlo en la caja.</p>
+          <p class="np-fine">{{ huerfanas.length }} equipos que la OLT no describe. Busque el cliente y asígnelo a mano; el serial es el que le sirve para reconocerlo en la caja.</p>
         </div>
         <button type="button" class="np-btn np-btn--primary" (click)="vincularHuerfanas()" [disabled]="guardando">
           {{ guardando ? 'Guardando…' : 'Vincular los elegidos' }}

@@ -34,7 +34,7 @@
     <div class="wa-fwd" *ngIf="message.is_forwarded"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 5l7 7-7 7M21 12H8a5 5 0 0 0-5 5v2"/></svg>Reenviado</div>
     <div class="wa-bot" *ngIf="message.from === 'system' || message.from === 'bot'">Bot automático</div>
     <button type="button" class="wa-quote" *ngIf="message.quoted as q" [class.is-agent]="q.sender_type !== 'customer'" (click)="jumpTo.emit(q.id)" title="Ir al mensaje original">
-      <b>{{ q.sender_type === 'customer' ? 'Cliente' : 'Vos' }}</b>
+      <b>{{ q.sender_type === 'customer' ? 'Cliente' : 'Usted' }}</b>
       <span>{{ quotedLabel(q) }}</span>
       <img *ngIf="q.message_type === 'image' && q.media_url" [src]="q.media_url" alt="" />
     </button>
@@ -70,7 +70,7 @@
       <ng-container *ngSwitchCase="'document'">
         <button type="button" class="wa-docmsg" (click)="isPdf ? openPdf() : isOffice ? openOffice() : openLink()">
           <span class="wa-docmsg-icon" [class.is-pdf]="isPdf" [class.is-office]="isOffice"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/></svg><b>{{ isPdf ? 'PDF' : isOffice ? 'DOC' : ext }}</b></span>
-          <span class="wa-docmsg-copy"><b>{{ docName }}</b><small>{{ isPdf ? 'Documento PDF · tocá para ver' : isOffice ? 'Documento de Office · tocá para ver' : 'Archivo · tocá para descargar' }}</small></span>
+          <span class="wa-docmsg-copy"><b>{{ docName }}</b><small>{{ isPdf ? 'Documento PDF · toque para ver' : isOffice ? 'Documento de Office · toque para ver' : 'Archivo · toque para descargar' }}</small></span>
           <span class="wa-docmsg-dl"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 4v11m0 0 4-4m-4 4-4-4M5 20h14"/></svg></span>
         </button>
       </ng-container>
@@ -93,7 +93,7 @@
 
       <div *ngSwitchCase="'poll'" class="wa-poll">
         <div class="wa-poll-h"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 20V10M10 20V4M16 20v-8M22 20H2"/></svg><b>{{ pollQuestion }}</b></div>
-        <small class="wa-poll-note">{{ pollMulti ? 'Elegí una o más opciones' : 'Elegí una opción' }}<ng-container *ngIf="!canVote"> · sólo lectura en esta bandeja</ng-container></small>
+        <small class="wa-poll-note">{{ pollMulti ? 'Seleccione una o más opciones' : 'Seleccione una opción' }}<ng-container *ngIf="!canVote"> · sólo lectura en esta bandeja</ng-container></small>
         <button type="button" class="wa-poll-opt" *ngFor="let o of pollOptions" [class.is-mine]="myVote.includes(o)" [class.is-static]="!canVote" (click)="toggleVote(o); $event.stopPropagation()">
           <i [class.is-check]="myVote.includes(o)"></i>
           <span class="wa-poll-opt-body"><span class="wa-poll-opt-top"><span>{{ o }}</span><b>{{ pollCount(o) }}</b></span><span class="wa-poll-bar"><em [style.width]="(pollTotal ? pollCount(o) / pollTotal * 100 : 0) + '%'"></em></span><small *ngIf="pollVoters(o).length">{{ pollVoters(o).join(', ') }}</small></span>

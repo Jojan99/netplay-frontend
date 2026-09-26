@@ -1,12 +1,12 @@
 <div class="pt-app pt-login">
   <aside class="pt-login-side">
     <p class="pt-kicker">{{ empresaNombre() || 'Portal' }} <b style="color:var(--accent)">/</b> clientes</p>
-    <h2>{{ empresaNombre() ? 'Tu servicio de internet con ' + empresaNombre() + ', en un solo lugar.' : 'Tu servicio de internet, en un solo lugar.' }}</h2>
-    <p>Consultá tu saldo, pagá en línea, descargá facturas y reportá fallas sin llamar ni esperar.</p>
+    <h2>{{ empresaNombre() ? 'Su servicio de internet con ' + empresaNombre() + ', en un solo lugar.' : 'Su servicio de internet, en un solo lugar.' }}</h2>
+    <p>Consulte su saldo, pague en línea, descargue facturas y reporte fallas sin llamar ni esperar.</p>
     <ul>
       <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="6" width="18" height="12" rx="2"/><path d="M3 10h18M7 15h3"/></svg>Pagos en línea con tarjeta, PSE o Bre-B</li>
       <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/></svg>Facturas en PDF, por WhatsApp o correo</li>
-      <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s-7-6-7-12a7 7 0 0 1 14 0c0 6-7 12-7 12z"/><circle cx="12" cy="10" r="2.5"/></svg>Seguimiento de tus reportes técnicos</li>
+      <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s-7-6-7-12a7 7 0 0 1 14 0c0 6-7 12-7 12z"/><circle cx="12" cy="10" r="2.5"/></svg>Seguimiento de sus reportes técnicos</li>
     </ul>
   </aside>
 
@@ -15,16 +15,16 @@
       <div class="pt-login-brand">
         <img *ngIf="empresaLogo()" [src]="empresaLogo()" [alt]="'Logo de ' + empresaNombre()" (error)="logoRoto.set(true)" />
         <span *ngIf="!empresaLogo()" class="pt-brand-mono" aria-hidden="true">{{ inicial() }}</span>
-        <div><b>{{ empresaNombre() || 'Portal de clientes' }}</b><small>{{ empresaNombre() ? 'Portal de clientes' : 'Tu proveedor de internet' }}</small></div>
+        <div><b>{{ empresaNombre() || 'Portal de clientes' }}</b><small>{{ empresaNombre() ? 'Portal de clientes' : 'Su proveedor de internet' }}</small></div>
       </div>
-      <div class="pt-login-title"><h1>Hola de nuevo</h1><p>Ingresá con tu número de documento y tu contraseña.</p></div>
+      <div class="pt-login-title"><h1>Hola de nuevo</h1><p>Ingrese con su número de documento y su contraseña.</p></div>
 
-      <div class="pt-alert pt-alert--danger" *ngIf="desconocida()" role="alert"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 8v4M12 16h.01"/></svg><span>Esta dirección no corresponde a ninguna empresa. Revisá el enlace que te envió tu proveedor.</span></div>
+      <div class="pt-alert pt-alert--danger" *ngIf="desconocida()" role="alert"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 8v4M12 16h.01"/></svg><span>Esta dirección no corresponde a ninguna empresa. Revise el enlace que le envió su proveedor.</span></div>
 
       <div class="pt-alert pt-alert--danger" *ngIf="errorMsg()" role="alert"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 8v4M12 16h.01"/></svg><span>{{ errorMsg() }}</span></div>
 
       <div class="pt-alert" *ngIf="elegir().length" role="alert">
-        <span>Tenés servicio con más de una empresa. ¿Cuál querés consultar?
+        <span>Tiene servicio con más de una empresa. ¿Cuál quiere consultar?
           <span style="display:flex; flex-wrap:wrap; gap:6px; margin-top:8px">
             <button type="button" *ngFor="let e of elegir()" class="pt-btn pt-btn--ghost" (click)="elegirEmpresa(e.subdominio)" [disabled]="loading()">{{ e.nombre }}</button>
           </span>
@@ -34,7 +34,7 @@
       <label class="pt-field"><span>Documento o usuario</span><input class="pt-input np-mono" type="text" inputmode="numeric" name="username" [(ngModel)]="username" placeholder="Ej: 1234567890" autocomplete="username" autofocus /></label>
       <label class="pt-field"><span>Contraseña</span>
         <div class="pt-input-wrap"><input class="pt-input" [type]="showPw ? 'text' : 'password'" name="password" [(ngModel)]="password" placeholder="••••••••" autocomplete="current-password" /><button type="button" class="pt-eye" (click)="showPw = !showPw" [attr.aria-label]="showPw ? 'Ocultar contraseña' : 'Mostrar contraseña'"><svg *ngIf="!showPw" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg><svg *ngIf="showPw" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3l18 18M10.6 10.6a3 3 0 0 0 4.2 4.2M9.9 5.1A10.4 10.4 0 0 1 12 5c6.5 0 10 7 10 7a17 17 0 0 1-3 3.6M6.2 6.2A17 17 0 0 0 2 12s3.5 7 10 7a10 10 0 0 0 4-.8"/></svg></button></div>
-        <small>Si es tu primera vez, tu contraseña es tu número de documento.</small>
+        <small>Si es su primera vez, su contraseña es su número de documento.</small>
       </label>
 
       <label class="pt-recordar">

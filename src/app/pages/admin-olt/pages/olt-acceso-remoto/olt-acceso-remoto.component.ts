@@ -38,7 +38,7 @@ interface PerfilesDeOlt {
 export class OltAccesoRemotoComponent implements OnInit {
   /**
    * Dentro de «Gestión remota» esta pantalla es una sección más: el encabezado
-   * y el menú los pone la página de afuera, así que acá sobran.
+   * y el menú los pone la página de afuera, así que aquí sobran.
    */
   @Input() embebido = false;
 
@@ -47,7 +47,7 @@ export class OltAccesoRemotoComponent implements OnInit {
 
   private api = inject(GestionRemotaService);
   private toast = inject(ToastService);
-  /** Las tareas lanzadas desde acá también se ven en la ventana flotante del panel. */
+  /** Las tareas lanzadas desde aquí también se ven en la ventana flotante del panel. */
   private tareas = inject(TareasEnSegundoPlanoService);
 
   estado: any = null;
@@ -251,7 +251,7 @@ export class OltAccesoRemotoComponent implements OnInit {
         this.reintentando = null;
         if (r?.error !== 0) { this.toast.error(r?.message ?? 'No se pudo reintentar'); return; }
         this.ponerAprov(r.data ?? this.aprovUltimos);
-        this.toast.success('Se reintenta en menos de un minuto. Tocá "Actualizar" para ver cómo va.');
+        this.toast.success('Se reintenta en menos de un minuto. Toque "Actualizar" para ver cómo va.');
       },
       error: (e: any) => { this.reintentando = null; this.toast.error(e?.error?.message ?? 'No se pudo reintentar'); },
     });
@@ -526,7 +526,7 @@ export class OltAccesoRemotoComponent implements OnInit {
       },
       error: () => {
         this.perfiles[oltId].cargando = false;
-        this.perfiles[oltId].error = 'La OLT tardó demasiado en responder. Probá de nuevo en un rato.';
+        this.perfiles[oltId].error = 'La OLT tardó demasiado en responder. Pruebe de nuevo en un rato.';
       },
     });
   }
@@ -569,7 +569,7 @@ export class OltAccesoRemotoComponent implements OnInit {
               cerrar(ok, d.detalle ?? t?.detalle ?? '', d.estado);
               resolve(ok);
             },
-            error: () => { cerrar(false, 'Se perdió el seguimiento: volvé a leer los perfiles.'); resolve(false); },
+            error: () => { cerrar(false, 'Se perdió el seguimiento: vuelva a leer los perfiles.'); resolve(false); },
           });
         },
         error: () => { cerrar(false, 'No se pudo iniciar.'); resolve(false); },
@@ -601,7 +601,7 @@ export class OltAccesoRemotoComponent implements OnInit {
     for (const perfil of perfiles) {
       if (!this.enCola) break;
       const ok = await this.prepararPerfil(oltId, perfil);
-      if (!ok) { this.toast.error('Se frenó: revisá el perfil que falló antes de seguir.'); break; }
+      if (!ok) { this.toast.error('Se frenó: revise el perfil que falló antes de seguir.'); break; }
     }
 
     this.enCola = false;

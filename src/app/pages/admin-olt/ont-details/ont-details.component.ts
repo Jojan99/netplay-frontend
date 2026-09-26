@@ -73,7 +73,7 @@ export class OntDetailsComponent implements OnInit {
   @HostListener('window:resize', ['$event'])
   onResize(event: any) {
     if (typeof window !== 'undefined') {
-      this.isDesktop = window.innerWidth > 768; // 768px es un ejemplo, ajusta según tus necesidades
+      this.isDesktop = window.innerWidth > 768; // 768px es un ejemplo, ajusta según sus necesidades
     }
   }
 

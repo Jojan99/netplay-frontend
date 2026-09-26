@@ -63,17 +63,17 @@ export class PlataformaComponent implements OnInit, OnDestroy {
   readonly anio = new Date().getFullYear();
 
   readonly pasos = [
-    { n: '01', titulo: 'Registrá la empresa', detalle: 'NIT, correo y el usuario administrador. Se crean los perfiles de Administrador, Técnico y Contador.' },
-    { n: '02', titulo: 'Entrá por tu dirección', detalle: 'Confirmás el correo y tu equipo entra por tuempresa.netvula.com, con tu nombre y tu logo.' },
-    { n: '03', titulo: 'Conectá la red', detalle: 'El panel te guía para enlazar el MikroTik por VPN, dar de alta la OLT y cargar tus planes.' },
+    { n: '01', titulo: 'Registre la empresa', detalle: 'NIT, correo y el usuario administrador. Se crean los perfiles de Administrador, Técnico y Contador.' },
+    { n: '02', titulo: 'Ingrese por su dirección', detalle: 'Confirma el correo y su equipo entra por tuempresa.netvula.com, con su nombre y su logo.' },
+    { n: '03', titulo: 'Conecte la red', detalle: 'El panel le guía para enlazar el MikroTik por VPN, dar de alta la OLT y cargar sus planes.' },
   ];
 
   readonly preguntas = [
-    { p: '¿Necesito un servidor propio?', r: 'No. La plataforma corre en la nube y se conecta a tu red por un túnel VPN cifrado hacia tu MikroTik. Si ya tenés un servidor TR-069, también lo podés usar.' },
+    { p: '¿Necesito un servidor propio?', r: 'No. La plataforma corre en la nube y se conecta a su red por un túnel VPN cifrado hacia su MikroTik. Si ya tiene un servidor TR-069, también lo puede usar.' },
     { p: '¿Con qué equipos funciona?', r: 'OLT Huawei y C-Data, routers MikroTik (PPPoE, colas y cortes por mora) y cualquier ONT o router que hable TR-069.' },
-    { p: '¿Mis clientes ven mi marca?', r: 'Sí. El portal de clientes y el login del panel muestran el nombre y el logo de tu empresa en tu propia dirección.' },
+    { p: '¿Mis clientes ven mi marca?', r: 'Sí. El portal de clientes y el login del panel muestran el nombre y el logo de su empresa en su propia dirección.' },
     { p: '¿Los datos de mi empresa están separados?', r: 'Cada empresa ve sólo sus clientes, facturas y equipos. El acceso de cada usuario depende del perfil que le asignes.' },
-    { p: '¿Puedo migrar mis clientes actuales?', r: 'Sí. Te acompañamos a cargar clientes, planes y saldos para arrancar sin volver a digitar todo.' },
+    { p: '¿Puedo migrar mis clientes actuales?', r: 'Sí. Le acompañamos a cargar clientes, planes y saldos para arrancar sin volver a digitar todo.' },
   ];
 
   ngOnInit(): void {

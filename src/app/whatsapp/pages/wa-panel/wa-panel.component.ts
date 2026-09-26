@@ -164,7 +164,7 @@ export class WaPanelComponent implements OnInit, OnDestroy {
         this.creating = false;
         const msg: string = e.error?.message ?? e.message ?? '';
         this.createError = /límite|limite|suscripción|suscripcion/i.test(msg)
-          ? 'Has alcanzado el límite de instancias de tu suscripción.'
+          ? 'Has alcanzado el límite de instancias de su suscripción.'
           : (msg || 'Error al crear la instancia.');
       },
     });

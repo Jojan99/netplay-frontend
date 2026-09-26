@@ -105,7 +105,7 @@
               <tr *ngIf="clients.length === 0" class="np-empty">
                 <td colspan="6">
                   <strong>No hay clientes con saldo pendiente.</strong>
-                  <span *ngIf="searchTerm">Probá con otro nombre, documento o teléfono.</span>
+                  <span *ngIf="searchTerm">Pruebe con otro nombre, documento o teléfono.</span>
                 </td>
               </tr>
             </ng-container>
@@ -312,7 +312,7 @@
 <!-- ══ Liquidación masiva ══════════════════════════════════════════════════ -->
 <div *ngIf="liquidateModal" class="np-overlay" (click)="liquidateModal = false">
   <div class="np-modal" role="dialog" aria-modal="true" aria-label="Liquidación masiva" (click)="$event.stopPropagation()">
-    <div class="np-modal-head"><div><h3>Liquidación masiva</h3><p class="np-meta">Pagá varias facturas pendientes de una vez.</p></div></div>
+    <div class="np-modal-head"><div><h3>Liquidación masiva</h3><p class="np-meta">Pague varias facturas pendientes de una vez.</p></div></div>
     <div class="np-modal-body">
       <div class="np-checklist">
         <label class="np-check np-check--all"><input type="checkbox" [checked]="allLiquidateSelected" (change)="toggleAllLiquidate()" /><span>Seleccionar todas</span></label>
@@ -390,7 +390,7 @@
 <!-- ══ Envío masivo ════════════════════════════════════════════════════════ -->
 <div *ngIf="sendBulkModal" class="np-overlay" (click)="closeSendBulkModal()">
   <div class="np-modal" role="dialog" aria-modal="true" aria-label="Envío masivo de facturas" (click)="$event.stopPropagation()">
-    <div class="np-modal-head"><div><h3>Envío masivo de facturas</h3><p class="np-meta">Elegí las facturas y el canal.</p></div></div>
+    <div class="np-modal-head"><div><h3>Envío masivo de facturas</h3><p class="np-meta">Seleccione las facturas y el canal.</p></div></div>
     <div class="np-modal-body">
       <div class="np-field"><span>Canal de envío</span>
         <div class="np-seg" role="group">

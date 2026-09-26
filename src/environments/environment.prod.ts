@@ -11,7 +11,7 @@ export const environment = {
 
   rootUrl: `${SITIO}/`,
   rootUrlWeb: `${SITIO}/`,
-  urlVerificateUser: `${SITIO}/verificate/user`,
+  urlVerificateUser: `${SITIO}/verifíquelo/user`,
   urlReset: `${SITIO}/reset-password`,
   urlRegister: `${SITIO}/sign-up`,
   urlTickets: "/ticket-detail",

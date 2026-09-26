@@ -66,7 +66,7 @@
       </div>
       <div class="np-notice np-notice--warn" role="alert" *ngIf="routerInfo?.mismo_equipo?.length">
         <b>Esta conexión llega al mismo equipo que {{ routerInfo.mismo_equipo.join(', ') }}</b> (serie <span class="np-mono">{{ routerInfo.serie }}</span>).
-        Si esperabas ver otro MikroTik, ese equipo no está respondiendo en <span class="np-mono">{{ selectedRouterHost }}</span>: revisá la IP en <button type="button" class="np-link" (click)="setTab('config')">Routers</button>.
+        Si esperabas ver otro MikroTik, ese equipo no está respondiendo en <span class="np-mono">{{ selectedRouterHost }}</span>: revise la IP en <button type="button" class="np-link" (click)="setTab('config')">Routers</button>.
       </div>
       <ng-container *ngIf="routerInfo">
         <!-- Ficha del equipo: la foto del modelo y sus puertos con el estado
@@ -149,7 +149,7 @@
               <span><i data-estado="down"></i>Sin enlace</span>
               <span><i data-estado="off"></i>Deshabilitado</span>
               <span *ngIf="puertosDegradados"><i class="np-leyenda-degradado"></i>Por debajo de su velocidad</span>
-              <span class="np-panel-tip">Hacé clic en un puerto para ver su detalle</span>
+              <span class="np-panel-tip">Haga clic en un puerto para ver su detalle</span>
             </div>
           </div>
         </section>
@@ -272,7 +272,7 @@
         </section>
 
         <p class="np-notice np-notice--code" *ngIf="conflicts.length && !conflictsVisibles.length">
-          Ninguno está cortando ahora mismo. Quitá el filtro para ver los latentes.
+          Ninguno está cortando ahora mismo. Quite el filtro para ver los latentes.
         </p>
       </ng-container>
     </ng-container>
@@ -296,7 +296,7 @@
                 Cada cliente entra con su usuario y contraseña y toma una IP del rango de su VLAN.
               </p>
               <p *ngIf="!pppoe.servidores.length">
-                Si repartís IP fija no hace falta. Para trabajar con usuario y contraseña, tocá <b>Configurar servidor PPPoE</b>.
+                Si reparte IP fija no hace falta. Para trabajar con usuario y contraseña, toque <b>Configurar servidor PPPoE</b>.
               </p>
             </div>
           </div>
@@ -335,7 +335,7 @@
         <!-- Clientes: conectados y sin conectar en una sola lista -->
         <section class="px-panel" *ngIf="vistaPppoe === 'clientes'">
           <header class="px-panel-head">
-            <p>Cada credencial es el usuario y la contraseña con que el equipo del cliente entra al router. Tocá una para ver su conexión y su ONT.</p>
+            <p>Cada credencial es el usuario y la contraseña con que el equipo del cliente entra al router. Toque una para ver su conexión y su ONT.</p>
           </header>
           <div class="px-filtros">
             <label class="np-search px-buscar">
@@ -444,7 +444,7 @@
               <div class="px-fila-t"><b class="np-mono">{{ p.nombre }}</b></div>
               <dl class="px-fila-d">
                 <div class="is-ancho"><dt>Direcciones</dt><dd class="np-mono">{{ p.rangos }}</dd></div>
-                <div class="is-ancho"><dt>Perfiles que dan IP de acá</dt><dd>{{ p.usado_por.join(', ') || 'ninguno: no se está usando' }}</dd></div>
+                <div class="is-ancho"><dt>Perfiles que dan IP de aquí</dt><dd>{{ p.usado_por.join(', ') || 'ninguno: no se está usando' }}</dd></div>
               </dl>
               <div class="px-fila-acc">
                 <button type="button" class="np-icobtn" (click)="editarPool(p)" title="Editar" aria-label="Editar rango"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 20h4L18 10l-4-4L4 16v4zM13 7l4 4"/></svg></button>
@@ -463,7 +463,7 @@
         <div class="np-registry-wrap"><table class="np-table np-table--registry">
           <thead><tr><th class="np-th-stripe"></th><th>Router</th><th>Host</th><th>Puerto API</th><th>Usuario</th><th class="np-th-right">Acciones</th></tr></thead>
           <tbody>
-            <tr *ngIf="!routers.length" class="np-empty"><td colspan="6"><strong>No hay MikroTiks configurados.</strong><span>Agregá el primero con el botón de arriba.</span></td></tr>
+            <tr *ngIf="!routers.length" class="np-empty"><td colspan="6"><strong>No hay MikroTiks configurados.</strong><span>Agregue el primero con el botón de arriba.</span></td></tr>
             <tr *ngFor="let r of routers" class="np-row" [attr.aria-selected]="r.id === selectedRouterId" (click)="openEditRouter(r)">
               <td class="np-stripe"><i [style.background]="r.id === selectedRouterId ? 'var(--accent)' : 'var(--line-strong)'"></i></td>
               <td><div class="np-name">{{ r.name || 'Sin nombre' }}<span class="np-tag" *ngIf="r.id === selectedRouterId">activo</span></div></td>
@@ -484,11 +484,11 @@
          pintaba debajo de todo, a lo ancho de la pantalla. -->
     <ng-container *ngIf="activeTab === 'velocidades'">
       <p class="np-notice np-notice--code vel-intro">
-        Definí acá cuánta velocidad da cada plan. <b>PPPoE</b> la lleva en su perfil PPP (viaja con la sesión);
+        Defina aquí cuánta velocidad da cada plan. <b>PPPoE</b> la lleva en su perfil PPP (viaja con la sesión);
         <b>IP fija</b> va por lista de direcciones y PCQ en el árbol de colas. La ráfaga sólo aplica a PPPoE.
       </p>
 
-      <div *ngIf="cargandoPlanes" class="np-loading"><span class="np-spinner"></span> Leyendo tus planes…</div>
+      <div *ngIf="cargandoPlanes" class="np-loading"><span class="np-spinner"></span> Leyendo sus planes…</div>
 
       <p class="np-notice" *ngIf="resultadoPlan" [ngClass]="resultadoPlan.tipo === 'ok' ? 'np-notice--ok' : 'np-notice--warn'">{{ resultadoPlan.texto }}</p>
 
@@ -807,7 +807,7 @@
 
           <div class="np-pm-split">
             <section *ngIf="detalle.vlans?.length">
-              <h4>VLAN que salen por acá <em>{{ detalle.vlans.length }}</em></h4>
+              <h4>VLAN que salen por aquí <em>{{ detalle.vlans.length }}</em></h4>
               <table class="np-table np-table--compact">
                 <thead><tr><th>VLAN</th><th>ID</th><th class="np-th-right">Estado</th></tr></thead>
                 <tbody>
@@ -936,7 +936,7 @@
     <div class="np-modal-body">
       <!-- 0 · Cómo armarlo -->
       <ng-container *ngIf="modoAsistente === 'elegir'">
-        <p class="np-wiz-detalle">Elegí cómo querés dejarlo listo.</p>
+        <p class="np-wiz-detalle">Seleccione cómo quiere dejarlo listo.</p>
         <div class="px-modos">
           <button type="button" class="px-modo is-rec" (click)="elegirAutomatico()">
             <span class="px-modo-tag">Recomendado</span>
@@ -945,7 +945,7 @@
           </button>
           <button type="button" class="px-modo" (click)="elegirManual()">
             <b>Paso a paso</b>
-            <span>Elegís vos la interfaz, el rango, los perfiles de cada plan y la salida a internet.</span>
+            <span>Elige usted la interfaz, el rango, los perfiles de cada plan y la salida a internet.</span>
           </button>
         </div>
       </ng-container>
@@ -956,7 +956,7 @@
         <p class="np-notice np-notice--warn np-notice--inline" *ngIf="pppoeError">{{ pppoeError }}</p>
 
         <ng-container *ngIf="propuestaPppoe && !resultadoAuto">
-          <p class="np-wiz-detalle">Marcá las VLAN donde querés atender clientes PPPoE. Cada una queda con su propio rango, así nunca se pisan las IP.</p>
+          <p class="np-wiz-detalle">Marque las VLAN donde quiere atender clientes PPPoE. Cada una queda con su propio rango, así nunca se pisan las IP.</p>
 
           <div class="np-tablewrap np-sync-box">
             <table class="np-table np-table--compact">
@@ -972,7 +972,7 @@
               </tbody>
             </table>
           </div>
-          <p class="np-pm-vacio" *ngIf="!propuestaPppoe.vlans.length">El router no tiene VLAN de clientes. Usá «Paso a paso» para elegir otra interfaz.</p>
+          <p class="np-pm-vacio" *ngIf="!propuestaPppoe.vlans.length">El router no tiene VLAN de clientes. Use «Paso a paso» para elegir otra interfaz.</p>
 
           <div class="px-arreglo" *ngIf="propuestaPppoe.sin_unidad.length">
             <h4 class="np-sync-h">Velocidades mal escritas</h4>
@@ -986,7 +986,7 @@
 
           <p class="np-fine" *ngIf="propuestaPppoe.nat.general">Salida a internet: el router ya tiene una regla general, no hace falta agregar nada.</p>
           <p class="np-fine" *ngIf="!propuestaPppoe.nat.general && propuestaPppoe.nat.wan.length">Salida a internet: cada rango nuevo sale por <b>{{ propuestaPppoe.nat.wan[0] }}</b>.</p>
-          <p class="np-notice np-notice--warn np-notice--inline" *ngIf="!propuestaPppoe.nat.general && !propuestaPppoe.nat.wan.length">No se encontró por dónde sale el router a internet: revisá el NAT después.</p>
+          <p class="np-notice np-notice--warn np-notice--inline" *ngIf="!propuestaPppoe.nat.general && !propuestaPppoe.nat.wan.length">No se encontró por dónde sale el router a internet: revise el NAT después.</p>
 
           <div class="np-btnrow np-btnrow--end">
             <button type="button" class="np-btn np-btn--ghost" (click)="modoAsistente = 'elegir'">Atrás</button>
@@ -1026,7 +1026,7 @@
         </ul>
         <p class="np-notice np-notice--warn np-notice--inline" *ngIf="resultadoMontaje.error">{{ resultadoMontaje.error }}</p>
         <p class="np-fine" *ngIf="resultadoMontaje.ok">
-          Ya podés registrar clientes eligiendo <b>PPPoE</b>: cada uno toma solo el perfil de su plan.
+          Ya puede registrar clientes eligiendo <b>PPPoE</b>: cada uno toma solo el perfil de su plan.
         </p>
         <div class="np-btnrow np-btnrow--end">
           <button type="button" class="np-btn np-btn--primary" (click)="cerrarAsistente()">Cerrar</button>
@@ -1047,7 +1047,7 @@
                        placeholder="Seleccione interfaz…" ariaLabel="Interfaz"></np-select>
           </label>
           <p class="np-notice np-notice--warn np-notice--inline np-field-full" *ngIf="servidorEnInterfaz">
-            «{{ form.interfaz }}» ya atiende PPPoE con el servidor <b>{{ servidorEnInterfaz }}</b>. Elegí otra interfaz:
+            «{{ form.interfaz }}» ya atiende PPPoE con el servidor <b>{{ servidorEnInterfaz }}</b>. Seleccione otra interfaz:
             configurarla de nuevo reemplazaría ese servidor y sus clientes tomarían IP de otro rango.
           </p>
         </div>
@@ -1095,7 +1095,7 @@
           </p>
 
           <p class="np-pm-vacio" *ngIf="!planesPppoe.length">
-            No hay planes de internet cargados todavía. Podés seguir y crearlos después.
+            No hay planes de internet cargados todavía. Puede seguir y crearlos después.
           </p>
 
           <div class="np-tablewrap np-sync-box" *ngIf="planesPppoe.length">
@@ -1120,8 +1120,8 @@
         <!-- 4 · Salida a internet -->
         <div class="np-form" *ngIf="paso === 4">
           <p class="np-notice np-notice--code np-field-full">
-            Sin esto los clientes se conectan y toman IP, pero no navegan. Elegí por dónde sale
-            el tráfico a internet — si tenés una lista de interfaces WAN, es esa.
+            Sin esto los clientes se conectan y toman IP, pero no navegan. Seleccione por dónde sale
+            el tráfico a internet — si tiene una lista de interfaces WAN, es esa.
           </p>
           <label class="np-field np-field-full"><span>Salida a internet</span>
             <np-select [(ngModel)]="form.salida" [opciones]="opcionesPppoe.salidas" [presentacion]="presSalidas"
@@ -1198,7 +1198,7 @@
         </section>
 
         <section>
-          <h4 class="np-sync-h">Y además, si lo marcás</h4>
+          <h4 class="np-sync-h">Y además, si lo marca</h4>
 
           <label class="np-check np-baja-op">
             <input type="checkbox" [(ngModel)]="bajaOpciones.perfiles" />
@@ -1270,7 +1270,7 @@
         </label>
         <label class="np-field"><span>Velocidad <em>subida/bajada en megas</em></span>
           <input type="text" class="np-input np-mono" [(ngModel)]="edita.velocidad" placeholder="200M/200M" />
-          <small class="np-fine">Se guarda en megas: si escribís <b>200</b> o <b>200/200</b> queda 200M/200M. Vacío es sin límite.</small>
+          <small class="np-fine">Se guarda en megas: si escribe <b>200</b> o <b>200/200</b> queda 200M/200M. Vacío es sin límite.</small>
         </label>
         <label class="np-field"><span>Puerta de enlace</span>
           <input type="text" class="np-input np-mono" [(ngModel)]="edita.gateway" placeholder="10.20.0.1" />
@@ -1297,7 +1297,7 @@
           <input type="text" class="np-input np-mono" [(ngModel)]="edita.rangos" placeholder="10.20.0.2-10.20.3.254" />
         </label>
         <p class="np-fine np-field-full">
-          Podés poner un rango, varios separados por coma, o una red en formato 10.20.0.0/22.
+          Puede poner un rango, varios separados por coma, o una red en formato 10.20.0.0/22.
           La puerta de enlace del perfil tiene que quedar fuera del rango.
         </p>
       </div>
@@ -1373,7 +1373,7 @@
           </label>
         </ng-container>
 
-        <label class="np-field np-field-full"><span>Prioridad <em>1 es la más alta; dejala en 8 salvo que sepas por qué</em></span>
+        <label class="np-field np-field-full"><span>Prioridad <em>1 es la más alta; déjela en 8 salvo que sepas por qué</em></span>
           <input type="number" class="np-input np-mono" [(ngModel)]="planEdita.prioridad" min="1" max="8" />
         </label>
       </div>

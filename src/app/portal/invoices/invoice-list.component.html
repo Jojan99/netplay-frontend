@@ -9,11 +9,11 @@
     <div>
       <p class="pt-kicker">{{ unpaidInvoices().length === 1 ? '1 factura pendiente' : unpaidInvoices().length + ' facturas pendientes' }}</p>
       <div class="pt-hero-amount">{{ formatCurrency(totalDue()) }}</div>
-      <p class="pt-hero-sub">Saldo total · podés pagar todo o abonar una parte</p>
+      <p class="pt-hero-sub">Saldo total · puede pagar todo o abonar una parte</p>
     </div>
     <div class="pt-hero-acts">
       <button type="button" class="pt-btn pt-btn--light" *ngIf="paymentAvailable()" (click)="openPaySetup()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="6" width="18" height="12" rx="2"/><path d="M3 10h18M7 15h3"/></svg>Pagar ahora</button>
-      <span class="pt-fine" *ngIf="!paymentAvailable()">El pago en línea no está habilitado. Podés pagar en puntos autorizados.</span>
+      <span class="pt-fine" *ngIf="!paymentAvailable()">El pago en línea no está habilitado. Puede pagar en puntos autorizados.</span>
     </div>
   </div>
 </section>
@@ -29,7 +29,7 @@
 
 <div class="pt-skel" *ngIf="loading()"><span></span><span></span><span></span></div>
 
-<div class="pt-card pt-empty" *ngIf="!loading() && invoices().length === 0"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5M9 13h6M9 17h6"/></svg><b>Todavía no tenés facturas</b><span>Cuando se genere la primera, aparecerá acá.</span></div>
+<div class="pt-card pt-empty" *ngIf="!loading() && invoices().length === 0"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5M9 13h6M9 17h6"/></svg><b>Todavía no tiene facturas</b><span>Cuando se genere la primera, aparecerá aquí.</span></div>
 
 <!-- Lista (móvil) -->
 <section class="pt-list pt-only-mobile" *ngIf="!loading() && paginatedInvoices().length > 0">
@@ -109,7 +109,7 @@
       </div>
 
       <div class="pt-amount">
-        <span class="pt-fine" style="font-weight:600;color:var(--text-2)">¿Cuánto vas a pagar?</span>
+        <span class="pt-fine" style="font-weight:600;color:var(--text-2)">¿Cuánto va a pagar?</span>
         <label class="pt-amount-in"><span>$</span><input type="text" inputmode="numeric" [value]="payAmountStr()" (input)="onAmountInput($any($event.target).value)" placeholder="0" /></label>
         <div class="pt-btnrow" style="justify-content:space-between;align-items:center">
           <small class="pt-fine" *ngIf="!payAmountError()">Mínimo $1.000 · máximo {{ formatCurrency(totalDue()) }}</small>
@@ -119,7 +119,7 @@
       </div>
 
       <div class="pt-alloc" *ngIf="payAmount() > 0 && allocationPreview().length > 0">
-        <span class="pt-fine" style="font-weight:600;color:var(--text-2)">Así se distribuye tu pago</span>
+        <span class="pt-fine" style="font-weight:600;color:var(--text-2)">Así se distribuye su pago</span>
         <div class="pt-alloc-row" *ngFor="let item of allocationPreview()">
           <div class="pt-alloc-top"><span><span class="np-mono">{{ item.number_facture }}</span> <span class="pt-pill" [ngClass]="item.fullCoverage ? 'is-ok' : 'is-warn'">{{ item.fullCoverage ? 'Completa' : 'Abono' }}</span></span><b>{{ formatCurrency(item.toPay) }}<small class="pt-fine" *ngIf="!item.fullCoverage"> / {{ formatCurrency(item.price_total) }}</small></b></div>
           <span class="pt-bar"><i [style.width.%]="item.pct"></i></span>
@@ -145,7 +145,7 @@
         <div class="pt-row" *ngFor="let b of payConfirm().breakdown" style="padding:9px 12px"><span class="pt-row-copy"><b class="np-mono">{{ b.number_facture }}</b><small>{{ b.full_coverage ? 'Pago completo' : 'Abono parcial' }}</small></span><b class="np-mono">{{ formatCurrency(b.amount_to_pay) }}</b></div>
       </div>
       <div class="pt-btnrow" *ngIf="paymentMethods(payConfirm().gateway).length > 0"><span class="pt-pill" *ngFor="let m of paymentMethods(payConfirm().gateway)">{{ m }}</span></div>
-      <p class="pt-fine">Vas a ir a <b>{{ gatewayLabel(payConfirm().gateway) }}</b> para completar el pago de forma segura. Al terminar volvés acá automáticamente.</p>
+      <p class="pt-fine">Va a ir a <b>{{ gatewayLabel(payConfirm().gateway) }}</b> para completar el pago de forma segura. Al terminar vuelve aquí automáticamente.</p>
     </div>
     <div class="pt-sheet-f"><button type="button" class="pt-btn pt-btn--ghost" (click)="closePayConfirm()">Cancelar</button><button type="button" class="pt-btn pt-btn--primary" (click)="goToPay()">Ir a pagar</button></div>
   </div>
@@ -154,15 +154,15 @@
 <!-- ═══ Resultado del pago ═══ -->
 <div class="pt-overlay" *ngIf="payResultLoading() || payResult()">
   <div class="pt-sheet">
-    <div class="pt-result" *ngIf="payResultLoading()"><span class="pt-result-ico is-neutral"><span class="pt-spinner" style="width:28px;height:28px;border-width:3px"></span></span><h3>Confirmando tu pago…</h3><p>Estamos verificando con la pasarela<span *ngIf="payPollAttempt() > 0"> ({{ payPollAttempt() }}/12)</span>.</p></div>
+    <div class="pt-result" *ngIf="payResultLoading()"><span class="pt-result-ico is-neutral"><span class="pt-spinner" style="width:28px;height:28px;border-width:3px"></span></span><h3>Confirmando su pago…</h3><p>Estamos verificando con la pasarela<span *ngIf="payPollAttempt() > 0"> ({{ payPollAttempt() }}/12)</span>.</p></div>
     <ng-container *ngIf="!payResultLoading() && payResult()">
       <div class="pt-result" *ngIf="payResult().tx_status === 'approved'">
-        <span class="pt-result-ico is-ok"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="m5 12 5 5L20 7"/></svg></span><h3>¡Pago exitoso!</h3><p>Tu pago fue aprobado y ya quedó aplicado a tus facturas.</p>
+        <span class="pt-result-ico is-ok"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="m5 12 5 5L20 7"/></svg></span><h3>¡Pago exitoso!</h3><p>Su pago fue aprobado y ya quedó aplicado a sus facturas.</p>
         <dl class="pt-dl" style="width:100%;margin-top:8px"><ng-container *ngIf="payResult().amount"><dt>Monto</dt><dd style="color:var(--ok)">{{ formatCurrency(payResult().amount) }}</dd></ng-container><ng-container *ngIf="payResult().gateway"><dt>Pasarela</dt><dd>{{ gatewayLabel(payResult().gateway) }}</dd></ng-container><ng-container *ngIf="payResult().reference"><dt>Referencia</dt><dd class="np-mono">{{ payResult().reference }}</dd></ng-container><ng-container *ngIf="payResult().paid_at"><dt>Fecha</dt><dd>{{ payResult().paid_at | date:'dd/MM/yyyy HH:mm' }}</dd></ng-container></dl>
       </div>
-      <div class="pt-result" *ngIf="payResult().tx_status === 'pending'"><span class="pt-result-ico is-warn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></span><h3>Pago en proceso</h3><p>La pasarela todavía no confirmó. Cuando lo haga, tu factura se actualiza sola.</p></div>
-      <div class="pt-result" *ngIf="payResult().tx_status === 'cancelled'"><span class="pt-result-ico is-neutral"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M6 6l12 12M18 6 6 18"/></svg></span><h3>Pago cancelado</h3><p>No se realizó ningún cobro. Podés intentarlo cuando quieras.</p></div>
-      <div class="pt-result" *ngIf="payResult().tx_status === 'declined' || payResult().tx_status === 'failed'"><span class="pt-result-ico is-danger"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 8v4M12 16h.01"/></svg></span><h3>Pago rechazado</h3><p>La pasarela no aprobó la transacción. Revisá el medio de pago o probá con otro.</p></div>
+      <div class="pt-result" *ngIf="payResult().tx_status === 'pending'"><span class="pt-result-ico is-warn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></span><h3>Pago en proceso</h3><p>La pasarela todavía no confirmó. Cuando lo haga, su factura se actualiza sola.</p></div>
+      <div class="pt-result" *ngIf="payResult().tx_status === 'cancelled'"><span class="pt-result-ico is-neutral"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M6 6l12 12M18 6 6 18"/></svg></span><h3>Pago cancelado</h3><p>No se realizó ningún cobro. Puede intentarlo cuando quieras.</p></div>
+      <div class="pt-result" *ngIf="payResult().tx_status === 'declined' || payResult().tx_status === 'failed'"><span class="pt-result-ico is-danger"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 8v4M12 16h.01"/></svg></span><h3>Pago rechazado</h3><p>La pasarela no aprobó la transacción. Revise el medio de pago o pruebe con otro.</p></div>
       <div class="pt-sheet-f" style="padding-top:16px">
         <button type="button" class="pt-btn pt-btn--ghost" (click)="closePayResult()">Cerrar</button>
         <button type="button" class="pt-btn pt-btn--primary" *ngIf="payResult().tx_status === 'declined' || payResult().tx_status === 'failed'" (click)="closePayResult(); openPaySetup()">Intentar de nuevo</button>

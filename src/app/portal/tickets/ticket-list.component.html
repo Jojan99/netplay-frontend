@@ -1,5 +1,5 @@
 <div class="pt-head">
-  <div><p class="pt-kicker">Soporte</p><h1>Mis reportes</h1><p>Seguimiento de las fallas que reportaste.</p></div>
+  <div><p class="pt-kicker">Soporte</p><h1>Mis reportes</h1><p>Seguimiento de las fallas que reportó.</p></div>
   <a routerLink="/portal/reportes/nuevo" class="pt-btn pt-btn--primary"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M12 5v14M5 12h14"/></svg>Reportar una falla</a>
 </div>
 
@@ -7,7 +7,7 @@
 
 <div class="pt-card pt-empty" *ngIf="!loading() && tickets().length === 0">
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14.7 6.3a4 4 0 0 0-5.4 5.4L3 18v3h3l6.3-6.3a4 4 0 0 0 5.4-5.4l-2.4 2.4-2-2z"/></svg>
-  <b>No tenés reportes</b><span>Si tu servicio falla, reportalo y el equipo técnico lo atiende.</span>
+  <b>No tiene reportes</b><span>Si su servicio falla, repórtelo y el equipo técnico lo atiende.</span>
   <a routerLink="/portal/reportes/nuevo" class="pt-btn pt-btn--soft pt-btn--sm">Reportar ahora</a>
 </div>
 

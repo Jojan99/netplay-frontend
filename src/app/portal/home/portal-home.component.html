@@ -1,11 +1,11 @@
 <div class="pt-head">
-  <div><p class="pt-kicker">{{ greeting }}</p><h1>{{ fullName() || 'Cliente' }}</h1><p>Así está tu cuenta hoy.</p></div>
+  <div><p class="pt-kicker">{{ greeting }}</p><h1>{{ fullName() || 'Cliente' }}</h1><p>Así está su cuenta hoy.</p></div>
 </div>
 
 <!-- Servicio suspendido -->
 <div class="pt-alert pt-alert--danger" *ngIf="suspended" role="alert">
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 9v4M12 17h.01M10.3 3.9 2.3 18a2 2 0 0 0 1.7 3h16a2 2 0 0 0 1.7-3l-8-14.1a2 2 0 0 0-3.4 0z"/></svg>
-  <span><b>Tu servicio está suspendido.</b> Ponete al día para reactivarlo; la reconexión es automática apenas se acredita el pago.<ng-container *ngIf="status()?.company?.phone"> Dudas: <span class="np-mono">{{ status().company.phone }}</span>.</ng-container></span>
+  <span><b>Su servicio está suspendido.</b> Ponete al día para reactivarlo; la reconexión es automática apenas se acredita el pago.<ng-container *ngIf="status()?.company?.phone"> Dudas: <span class="np-mono">{{ status().company.phone }}</span>.</ng-container></span>
 </div>
 
 <!-- Estado de cuenta -->
@@ -23,7 +23,7 @@
       </div>
     </ng-container>
     <ng-template #alDia>
-      <div class="pt-hero-ok"><span class="pt-hero-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="m5 12 5 5L20 7"/></svg></span><div><b>Estás al día</b><small>No tenés facturas pendientes. ¡Gracias!</small></div></div>
+      <div class="pt-hero-ok"><span class="pt-hero-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="m5 12 5 5L20 7"/></svg></span><div><b>Está al día</b><small>No tiene facturas pendientes. ¡Gracias!</small></div></div>
       <div class="pt-hero-acts"><a class="pt-btn pt-btn--light" routerLink="/portal/facturas">Ver mis facturas</a></div>
     </ng-template>
   </div>
@@ -31,7 +31,7 @@
 
 <!-- Resumen -->
 <section class="pt-kpis">
-  <div class="pt-kpi is-info"><b>{{ profile()?.plan_download ? profile().plan_download + ' Mb' : '—' }}</b><small>{{ profile()?.plan_name || 'Tu plan' }}</small></div>
+  <div class="pt-kpi is-info"><b>{{ profile()?.plan_download ? profile().plan_download + ' Mb' : '—' }}</b><small>{{ profile()?.plan_name || 'Su plan' }}</small></div>
   <div class="pt-kpi" [class.is-ok]="(profile()?.internet_status || 'Activo').toUpperCase().startsWith('ACT')" [class.is-danger]="!(profile()?.internet_status || 'Activo').toUpperCase().startsWith('ACT')"><b>{{ profile()?.internet_status || 'Activo' }}</b><small>Estado del servicio</small></div>
   <div class="pt-kpi" [class.is-warn]="invoiceSummary()?.pending" ><b>{{ invoiceSummary()?.pending ?? 0 }}</b><small>Facturas pendientes</small></div>
   <div class="pt-kpi" [class.is-warn]="openTickets()"><b>{{ openTickets() }}</b><small>Reportes abiertos</small></div>

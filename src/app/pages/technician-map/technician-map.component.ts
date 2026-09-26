@@ -11,7 +11,7 @@ type Freshness = 'live' | 'recent' | 'stale';
 
 /**
  * Mapa de técnicos en tiempo real: cada técnico con el panel abierto envía su posición
- * (LocationTrackerService); acá se dibuja con un color por frescura, se sigue en vivo y se
+ * (LocationTrackerService); aquí se dibuja con un color por frescura, se sigue en vivo y se
  * actualiza por Pusher (`technician-tracking`) con un sondeo de respaldo cada 20 s.
  */
 @Component({

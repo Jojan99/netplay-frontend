@@ -15,7 +15,7 @@ import { LandingConfig, LandingSection } from '../../services/landing.service';
         {{ section?.title || 'Nuestros Planes' }}
       </h2>
       <p class="text-lg text-gray-500 dark:text-gray-400 max-w-2xl mx-auto">
-        {{ section?.content?.subtitle || 'Elige el plan perfecto para ti' }}
+        {{ section?.content?.subtitle || 'Elige el plan perfecto para usted' }}
       </p>
     </div>
 

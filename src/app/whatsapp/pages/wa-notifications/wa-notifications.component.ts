@@ -255,7 +255,7 @@ export class WaNotificationsComponent implements OnInit {
   /** El interruptor del aviso prende o apaga todos sus destinos de una. */
   alternarAviso(aviso: Aviso): void {
     if (!aviso.destinos.length) {
-      this.toast.warning('Primero elegí a dónde se manda este aviso.');
+      this.toast.warning('Primero seleccione a dónde se manda este aviso.');
       return;
     }
 
@@ -322,7 +322,7 @@ export class WaNotificationsComponent implements OnInit {
     let destino = '';
 
     if (this.tipoDestino === 'grupo') {
-      if (!this.grupoElegido) { this.errorModal = 'Elegí un grupo de la lista.'; return; }
+      if (!this.grupoElegido) { this.errorModal = 'Seleccione un grupo de la lista.'; return; }
       destino = this.grupoElegido;
     } else {
       const digitos = this.numero.replace(/\D/g, '');

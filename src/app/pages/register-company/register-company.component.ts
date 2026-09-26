@@ -38,8 +38,8 @@ export class RegisterCompanyComponent implements OnInit, OnDestroy {
 
   readonly steps = [
     { n: 1 as Step, label: 'Empresa',      hint: 'Datos legales y de contacto' },
-    { n: 2 as Step, label: 'Facturación',  hint: 'Cómo se ve tu factura' },
-    { n: 3 as Step, label: 'Administrador', hint: 'Con qué cuenta vas a entrar' },
+    { n: 2 as Step, label: 'Facturación',  hint: 'Cómo se ve su factura' },
+    { n: 3 as Step, label: 'Administrador', hint: 'Con qué cuenta va a entrar' },
   ];
 
   form = {
@@ -59,7 +59,7 @@ export class RegisterCompanyComponent implements OnInit, OnDestroy {
     admin_username: '',
     admin_password: '',
     // Cupón de descuento o código de referido. Opcional: si no sirve, el alta
-    // sigue igual y se avisa acá mismo.
+    // sigue igual y se avisa aquí mismo.
     codigo:         '',
   };
   passwordConfirm = '';
@@ -68,7 +68,7 @@ export class RegisterCompanyComponent implements OnInit, OnDestroy {
   /** Mientras no la toque, la dirección sigue al nombre de la empresa. */
   private subdominioTocado = false;
   subdominioEstado: EstadoSubdominio = 'vacio';
-  subdominioMensaje = 'Si la dejás vacía, la armamos con el nombre de la empresa.';
+  subdominioMensaje = 'Si la deja vacía, la armamos con el nombre de la empresa.';
   private revisarSubdominio = new Subject<string>();
   private subs = new Subscription();
 
@@ -112,7 +112,7 @@ export class RegisterCompanyComponent implements OnInit, OnDestroy {
   stepOk(n: Step): boolean { return n === 1 ? this.step1Ok() : n === 2 ? this.step2Ok() : this.step3Ok(); }
 
   /** El usuario por defecto es el NIT, igual que lo crea el backend. */
-  get usernamePreview(): string { return this.form.admin_username.trim() || this.form.nit.trim() || 'tu-nit'; }
+  get usernamePreview(): string { return this.form.admin_username.trim() || this.form.nit.trim() || 'su-nit'; }
   get prefixPreview(): string { return (this.form.invoice_prefix.trim() || 'FAC').toUpperCase(); }
 
   /** Revisa el código mientras se escribe, sin frenar el registro. */
@@ -148,7 +148,7 @@ export class RegisterCompanyComponent implements OnInit, OnDestroy {
       // Sólo cuenta la respuesta de lo que sigue escrito.
       if (r.subdominio !== this.form.subdomain) return;
       this.subdominioEstado  = r.disponible ? 'libre' : 'ocupado';
-      this.subdominioMensaje = r.disponible ? `Tu equipo y tus clientes van a entrar por ${r.direccion}` : r.mensaje;
+      this.subdominioMensaje = r.disponible ? `Su equipo y sus clientes van a entrar por ${r.direccion}` : r.mensaje;
     }));
 
     this.subs.add(this.revisarCodigo.pipe(
@@ -158,7 +158,7 @@ export class RegisterCompanyComponent implements OnInit, OnDestroy {
       if (this.form.codigo.trim() === '') { this.codigoEstado = 'vacio'; return; }
       this.codigoEstado  = r.valido ? 'sirve' : 'no-sirve';
       this.codigoMensaje = r.valido
-        ? (r.tipo === 'referido' ? r.detalle : `Te aplicamos ${r.detalle} en tu primer pago.`)
+        ? (r.tipo === 'referido' ? r.detalle : `Le aplicamos ${r.detalle} en su primer pago.`)
         : r.detalle;
     }));
 
@@ -204,7 +204,7 @@ export class RegisterCompanyComponent implements OnInit, OnDestroy {
 
     if (sub.length < 3) {
       this.subdominioEstado  = 'vacio';
-      this.subdominioMensaje = sub ? 'Usá al menos 3 caracteres.' : 'Si la dejás vacía, la armamos con el nombre de la empresa.';
+      this.subdominioMensaje = sub ? 'Use al menos 3 caracteres.' : 'Si la deja vacía, la armamos con el nombre de la empresa.';
       return;
     }
 
@@ -230,7 +230,7 @@ export class RegisterCompanyComponent implements OnInit, OnDestroy {
 
   next(): void {
     this.errorMsg = '';
-    if (!this.stepOk(this.step)) { this.errorMsg = 'Completá los campos marcados para continuar.'; return; }
+    if (!this.stepOk(this.step)) { this.errorMsg = 'Complete los campos marcados para continuar.'; return; }
     if (this.step < 3) this.step = (this.step + 1) as Step;
   }
   back(): void { this.errorMsg = ''; if (this.step > 1) this.step = (this.step - 1) as Step; }
@@ -238,7 +238,7 @@ export class RegisterCompanyComponent implements OnInit, OnDestroy {
 
   register(): void {
     if (this.step < 3) { this.next(); return; }
-    if (!this.step1Ok() || !this.step3Ok()) { this.errorMsg = 'Revisá los datos: hay campos incompletos.'; return; }
+    if (!this.step1Ok() || !this.step3Ok()) { this.errorMsg = 'Revise los datos: hay campos incompletos.'; return; }
 
     this.isLoading  = true;
     this.errorMsg   = '';
@@ -264,7 +264,7 @@ export class RegisterCompanyComponent implements OnInit, OnDestroy {
       },
       error: (err) => {
         this.isLoading = false;
-        this.errorMsg  = err?.error?.message || 'No pudimos registrar la empresa. Intentá de nuevo.';
+        this.errorMsg  = err?.error?.message || 'No pudimos registrar la empresa. Intente de nuevo.';
         if (/dirección|NIT|correo/i.test(this.errorMsg)) this.step = 1;
       },
     });

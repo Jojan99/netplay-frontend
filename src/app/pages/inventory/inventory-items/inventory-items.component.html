@@ -75,7 +75,7 @@
       <button type="button" class="np-icobtn" (click)="closeItemModal()" aria-label="Cerrar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div>
     <div class="np-modal-body">
       <div class="np-panel" *ngIf="!isEditing">
-        <div class="np-subbar"><span class="np-fine">Escaneá el código del equipo para completar el SKU.</span><span class="np-spacer"></span><button type="button" class="np-btn np-btn--sm" [ngClass]="itemScannerOpen ? 'np-btn--danger' : 'np-btn--ghost'" (click)="itemScannerOpen = !itemScannerOpen">{{ itemScannerOpen ? 'Cerrar escáner' : 'Abrir escáner' }}</button></div>
+        <div class="np-subbar"><span class="np-fine">Escanee el código del equipo para completar el SKU.</span><span class="np-spacer"></span><button type="button" class="np-btn np-btn--sm" [ngClass]="itemScannerOpen ? 'np-btn--danger' : 'np-btn--ghost'" (click)="itemScannerOpen = !itemScannerOpen">{{ itemScannerOpen ? 'Cerrar escáner' : 'Abrir escáner' }}</button></div>
         <app-barcode-scanner *ngIf="itemScannerOpen" mode="ref" (scanned)="onItemSkuScanned($event)"></app-barcode-scanner>
         <p class="np-fine" *ngIf="itemForm.sku">SKU capturado: <span class="np-mono np-strong">{{ itemForm.sku }}</span></p>
       </div>
@@ -108,7 +108,7 @@
         <p class="np-notice np-notice--ok" *ngIf="selectedItemForMovement"><strong>{{ selectedItemForMovement.name }}</strong><span class="np-mono" *ngIf="selectedItemForMovement.sku"> · {{ selectedItemForMovement.sku }}</span> · stock {{ selectedItemForMovement.quantity || 0 }} {{ selectedItemForMovement.unit || '' }}
           <button type="button" class="np-link" (click)="scanStep='item'; selectedItemForMovement=null; movementForm.inventory_id=0">Cambiar</button></p>
         <div class="np-panel" *ngIf="!selectedItemForMovement">
-          <span class="np-fine">Escaneá la referencia (REF / SKU) o elegilo a mano.</span>
+          <span class="np-fine">Escanee la referencia (REF / SKU) o elegilo a mano.</span>
           <app-barcode-scanner mode="ref" (scanned)="onRefScanned($event)"></app-barcode-scanner>
           <np-select [(ngModel)]="movementForm.inventory_id" (cambio)="onMovementItemChange()" [opciones]="items" [presentacion]="presItems" [valorVacio]="0" placeholder="Seleccionar un ítem…" ariaLabel="Ítem" textoBuscar="Nombre, SKU o ubicación…" textoSinOpciones="No hay ítems con estos filtros."></np-select>
           <p class="np-notice np-notice--danger" *ngIf="barcodeError">{{ barcodeError }}</p>
@@ -120,7 +120,7 @@
         <p class="np-notice np-notice--ok" *ngIf="movementForm.serial_number"><span class="np-mono np-strong">{{ movementForm.serial_number }}</span> <button type="button" class="np-link" (click)="movementForm.serial_number=''">Borrar</button></p>
         <div class="np-panel" *ngIf="!movementForm.serial_number">
           <app-barcode-scanner mode="serial" (scanned)="onSerialScanned($event)"></app-barcode-scanner>
-          <input type="text" class="np-input np-mono" [(ngModel)]="movementForm.serial_number" placeholder="o escribí el SN, ej. HWTC1234ABCD" />
+          <input type="text" class="np-input np-mono" [(ngModel)]="movementForm.serial_number" placeholder="o escriba el SN, ej. HWTC1234ABCD" />
         </div>
         <p class="np-notice np-notice--danger" *ngIf="barcodeError">{{ barcodeError }}</p>
       </section>

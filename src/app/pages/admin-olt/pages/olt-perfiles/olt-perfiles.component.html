@@ -17,7 +17,7 @@
   <div class="np-toolbar"><app-olt-nav></app-olt-nav></div>
 
   <div class="np-scroll">
-    <p class="np-empty-block" *ngIf="!selectedOltId && !loadingOlts"><strong>Elegí una OLT para ver sus perfiles.</strong></p>
+    <p class="np-empty-block" *ngIf="!selectedOltId && !loadingOlts"><strong>Seleccione una OLT para ver sus perfiles.</strong></p>
     <div *ngIf="loadingProfiles" class="np-loading"><span class="np-spinner"></span> Cargando perfiles…</div>
 
     <ng-container *ngIf="!loadingProfiles && selectedOltId">
@@ -46,7 +46,7 @@
 
       <div class="olt-aviso is-danger" *ngIf="lineDefectoHuerfano || srvDefectoHuerfano">
         <strong>Un perfil configurado no existe en la OLT.</strong>
-        <span>El alta de ONT va a fallar con «The profile does not exist». Elegí abajo uno de los que la OLT sí tiene.</span>
+        <span>El alta de ONT va a fallar con «The profile does not exist». Seleccione abajo uno de los que la OLT sí tiene.</span>
       </div>
 
       <div class="np-grid-2" *ngIf="lineProfiles.length || srvProfiles.length">

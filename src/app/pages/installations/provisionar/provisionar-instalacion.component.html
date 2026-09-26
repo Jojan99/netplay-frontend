@@ -3,7 +3,7 @@
     <div class="np-modal-head">
       <div>
         <p class="np-kicker">Instalación <b>/</b> {{ orden.client_name }}</p>
-        <h3>{{ termino ? 'Instalación terminada' : 'Elegí el equipo' }}</h3>
+        <h3>{{ termino ? 'Instalación terminada' : 'Seleccione el equipo' }}</h3>
       </div>
       <button type="button" class="np-icobtn" (click)="cerrado.emit()" aria-label="Cerrar">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M6 6l12 12M18 6 6 18"/></svg>
@@ -36,8 +36,8 @@
       <!-- ── Elegir el equipo ── -->
       <ng-container *ngIf="!termino">
         <p class="np-fine">
-          Conectá la ONT y esperá unos segundos. Acá aparecen las que la OLT está viendo y todavía no tienen dueño:
-          si la tuya está en la lista, es que ya tiene luz.
+          Conecte la ONT y espere unos segundos. Aquí aparecen las que la OLT está viendo y todavía no tienen dueño:
+          si la suya está en la lista, es que ya tiene luz.
         </p>
 
         <div *ngIf="cargando" class="np-loading"><span class="np-spinner"></span> Preguntándole a la OLT…</div>
@@ -45,7 +45,7 @@
 
         <p class="np-empty-block" *ngIf="!cargando && !onts.length && !error">
           <strong>La OLT no ve ninguna ONT nueva.</strong>
-          <span>Revisá que esté conectada y encendida, y volvé a buscar.</span>
+          <span>Revise que esté conectada y encendida, y vuelva a buscar.</span>
         </p>
 
         <div class="pv-onts" *ngIf="!cargando && onts.length">
@@ -70,7 +70,7 @@
 
         <p class="np-notice np-notice--info" *ngIf="!aprovisiona">
           Esta empresa no tiene el aprovisionamiento automático encendido: el equipo va a quedar
-          <b>autorizado y asignado</b>, y el WiFi lo configurás vos a mano.
+          <b>autorizado y asignado</b>, y el WiFi lo configura usted a mano.
         </p>
 
         <div class="np-btnrow np-btnrow--end">

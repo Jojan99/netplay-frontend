@@ -294,7 +294,7 @@ export class OltVpnComponent implements OnInit {
   copiarScript(): void {
     navigator.clipboard?.writeText(this.script).then(
       () => this.toast.success('Script copiado. Pegalo en la terminal del router.'),
-      () => this.toast.error('El navegador no permitió copiar; seleccioná el texto a mano.'),
+      () => this.toast.error('El navegador no permitió copiar; seleccione el texto a mano.'),
     );
   }
 
@@ -380,7 +380,7 @@ export class OltVpnComponent implements OnInit {
     const ip = this.pruebaIp.trim() || this.primeraIpUtil(tunel);
 
     if (!ip) {
-      this.toast.error('Escribí una IP para probar.');
+      this.toast.error('Escriba una IP para probar.');
       return;
     }
 

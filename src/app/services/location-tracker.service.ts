@@ -38,7 +38,7 @@ export class LocationTrackerService implements OnDestroy {
       if (permission.location !== 'granted') return;
 
       const options: WatcherOptions = {
-        backgroundMessage: 'WispSmart está registrando tu ubicación para el seguimiento de servicio.',
+        backgroundMessage: 'WispSmart está registrando su ubicación para el seguimiento de servicio.',
         backgroundTitle: 'Ubicación activa',
         requestPermissions: true,
         stale: false,

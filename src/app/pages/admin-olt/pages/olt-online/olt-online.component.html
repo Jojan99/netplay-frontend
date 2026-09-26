@@ -26,7 +26,7 @@
       <div class="np-registry-wrap"><table class="np-table np-table--registry np-tabla-movil">
         <thead><tr><th class="np-th-stripe"></th><th>Puerto</th><th>ID</th><th>Descripción / serial</th><th class="np-th-right">Señal</th><th class="np-col-sp">Service ports</th><th class="np-th-right"></th></tr></thead>
         <tbody>
-          <tr *ngIf="!selectedOltId && !loadingOlts" class="np-empty"><td colspan="7"><strong>Elegí una OLT para ver las ONTs en línea.</strong></td></tr>
+          <tr *ngIf="!selectedOltId && !loadingOlts" class="np-empty"><td colspan="7"><strong>Seleccione una OLT para ver las ONTs en línea.</strong></td></tr>
           <tr *ngIf="loadingOnts" class="np-empty"><td colspan="7"><span class="np-spinner"></span></td></tr>
           <tr *ngIf="!loadingOnts && selectedOltId && lastFetched && filteredOnts.length === 0" class="np-empty"><td colspan="7"><strong>No hay ONTs en línea en este momento.</strong></td></tr>
           <ng-container *ngIf="!loadingOnts && selectedOltId">

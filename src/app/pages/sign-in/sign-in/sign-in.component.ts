@@ -107,7 +107,7 @@ export class SignInComponent implements OnInit {
         this.isLoading = false;
         this.Islogin   = true;
         this.needsConfirmation = false;
-        this.errorMsg = 'No pudimos conectar. Revisá tu internet e intentá de nuevo.';
+        this.errorMsg = 'No pudimos conectar. Revise su internet e intente de nuevo.';
       },
     });
   }
@@ -124,7 +124,7 @@ export class SignInComponent implements OnInit {
     this.resending = true;
     this.resendMsg = '';
     this.companyService.resendConfirmation(this.SignInInterfaces.user).subscribe({
-      next: (r: any) => { this.resending = false; this.resendMsg = r?.message || 'Te reenviamos el correo de activación.'; },
+      next: (r: any) => { this.resending = false; this.resendMsg = r?.message || 'Le reenviamos el correo de activación.'; },
       error: () => { this.resending = false; this.resendMsg = 'No pudimos reenviar el correo. Escribinos para activarte la cuenta.'; },
     });
   }

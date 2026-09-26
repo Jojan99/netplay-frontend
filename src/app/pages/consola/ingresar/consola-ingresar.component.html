@@ -5,7 +5,7 @@
     <span class="np-ingreso-logo">N</span>
     <h2>Consola de la plataforma</h2>
     <p>
-      Acá se administra Netvula entera: las empresas que la usan, sus planes,
+      Aquí se administra Netvula entera: las empresas que la usan, sus planes,
       los cobros y los cupones. No es el panel de ninguna empresa.
     </p>
     <ul class="np-ingreso-puntos">
@@ -37,7 +37,7 @@
       <span class="np-ingreso-logo np-ingreso-logo--sm">N</span>
       <div>
         <h1>Consola Netvula</h1>
-        <p class="np-fine">Entrá con tu cuenta de la consola.</p>
+        <p class="np-fine">Ingrese con su cuenta de la consola.</p>
       </div>
       <span class="np-spacer"></span>
       <flowbite-dark-theme-toggle></flowbite-dark-theme-toggle>
@@ -46,7 +46,7 @@
     <!-- ── Paso 2: el código del authenticator ── -->
     <form class="np-form" *ngIf="pase; else pedirClave" (ngSubmit)="comprobarCodigo()">
       <div class="np-notice np-notice--info np-field-full">
-        <b>Tu contraseña está bien.</b> Ahora poné el código de seis dígitos que muestra tu authenticator.
+        <b>Su contraseña está bien.</b> Ahora ingrese el código de seis dígitos que muestra su authenticator.
       </div>
 
       <label class="np-field np-field-full"><span>Código</span>
@@ -57,7 +57,7 @@
       </label>
 
       <p class="np-fine np-field-full">
-        ¿Perdiste el teléfono? Poné uno de tus códigos de recuperación, del estilo <b class="np-mono">A1B2-C3D4</b>.
+        ¿Perdiste el teléfono? Ingrese uno de sus códigos de recuperación, del estilo <b class="np-mono">A1B2-C3D4</b>.
       </p>
 
       <p *ngIf="error" class="np-notice np-notice--danger np-field-full" role="alert">{{ error }}</p>
@@ -75,7 +75,7 @@
     <form class="np-form" (ngSubmit)="ingresar()">
       <label class="np-field np-field-full"><span>Correo</span>
         <input type="email" class="np-input" [(ngModel)]="email" name="email"
-               placeholder="vos@netvula.com"
+               placeholder="usuario@netvula.com"
                autocomplete="username" autocapitalize="off" spellcheck="false" required />
       </label>
 
@@ -111,7 +111,7 @@
             <path d="M12 11a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7Z"/>
             <path d="M12 11v3M9.5 20c0-3 1-5 2.5-6M15 14.5c1 .8 1.6 2.3 1.6 4M19 9h3M20.5 7.5v3"/>
           </svg>
-          {{ conPasskey ? 'Esperando tu huella…' : 'Iniciar sesión con Passkey' }}
+          {{ conPasskey ? 'Esperando su huella…' : 'Iniciar sesión con Passkey' }}
         </button>
       </ng-container>
     </form>

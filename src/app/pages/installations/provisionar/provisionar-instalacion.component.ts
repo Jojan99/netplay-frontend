@@ -12,7 +12,7 @@ import { DialogService } from '../../../services/dialog.service';
  * cliente, autorizar la ONT, asociársela, descontar el equipo y dejar el WiFi.
  * El técnico hacía la parte física y el resto quedaba para después.
  *
- * Acá elige el equipo de la lista que la OLT está viendo —sin escribir el
+ * Aquí elige el equipo de la lista que la OLT está viendo —sin escribir el
  * serial, y que aparezca ahí ya prueba que está conectado y encendido— y con
  * un botón queda todo hecho.
  */

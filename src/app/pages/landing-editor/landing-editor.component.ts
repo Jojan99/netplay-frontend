@@ -15,7 +15,7 @@ import { LandingAdminService } from '../../landing/services/landing-admin.servic
     <div>
       <h1 class="text-2xl font-extrabold text-gray-900 dark:text-white">Landing Page</h1>
       <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">
-        Personaliza la página de inicio pública de tu empresa
+        Personaliza la página de inicio pública de su empresa
       </p>
     </div>
     <div class="flex items-center gap-3">
@@ -288,7 +288,7 @@ import { LandingAdminService } from '../../landing/services/landing-admin.servic
   <div *ngIf="!loading() && companySlug()"
        class="bg-indigo-50 dark:bg-indigo-900/20 rounded-2xl p-4 flex items-center justify-between">
     <div>
-      <p class="text-sm font-medium text-indigo-900 dark:text-indigo-300">Vista previa de tu landing</p>
+      <p class="text-sm font-medium text-indigo-900 dark:text-indigo-300">Vista previa de su landing</p>
       <p class="text-xs text-indigo-600 dark:text-indigo-400 mt-0.5">/p/{{ companySlug() }}</p>
     </div>
     <a [href]="'/p/' + companySlug()" target="_blank"

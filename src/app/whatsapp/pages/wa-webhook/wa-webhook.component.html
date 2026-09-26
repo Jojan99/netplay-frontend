@@ -21,8 +21,8 @@
         <div class="wh-recepcion">
           <div class="wh-recepcion-txt">
             <b>{{ recepcionActiva ? 'Activada' : 'Desactivada' }}</b>
-            <p *ngIf="recepcionActiva">Lo que tus clientes escriben a tus líneas de WhatsApp Web llega a la bandeja del CRM. Las líneas nuevas también reciben, sin configurar nada.</p>
-            <p *ngIf="!recepcionActiva">Los mensajes de tus líneas de WhatsApp Web <b>no llegan</b> a la bandeja del CRM: tus clientes igual escriben, pero nadie los ve en el panel.</p>
+            <p *ngIf="recepcionActiva">Lo que sus clientes escriben a sus líneas de WhatsApp Web llega a la bandeja del CRM. Las líneas nuevas también reciben, sin configurar nada.</p>
+            <p *ngIf="!recepcionActiva">Los mensajes de sus líneas de WhatsApp Web <b>no llegan</b> a la bandeja del CRM: sus clientes igual escriben, pero nadie los ve en el panel.</p>
           </div>
           <button type="button" class="wh-switch" role="switch" [attr.aria-checked]="recepcionActiva" [class.is-on]="recepcionActiva"
                   (click)="alternarRecepcion()" [disabled]="!esAdmin || guardandoRecepcion"
@@ -59,7 +59,7 @@
         <h2>Por línea</h2>
         <label class="np-pagesize">Instancia<np-select [(ngModel)]="selectedInstance" (cambio)="onInstanceChange()" [opciones]="instances" [presentacion]="presLineas" placeholder="Seleccionar…" [valorVacio]="''" textoSinOpciones="No hay instancias." ariaLabel="Instancia" tamano="sm" style="width: 220px"></np-select></label>
       </div>
-      <p class="np-fine" *ngIf="!selectedInstance">Elegí una línea para ver sus envíos al CRM y su límite de mensajes.</p>
+      <p class="np-fine" *ngIf="!selectedInstance">Seleccione una línea para ver sus envíos al CRM y su límite de mensajes.</p>
     </section>
 
     <ng-container *ngIf="selectedInstance">

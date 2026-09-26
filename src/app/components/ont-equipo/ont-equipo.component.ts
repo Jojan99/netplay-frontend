@@ -131,7 +131,7 @@ export class OntEquipoComponent implements OnChanges {
     const oculta = c.oculta !== c.ocultaAntes ? c.oculta : null;
 
     if (clave === '' && ssid === null && oculta === null) {
-      this.avisoClave = { texto: 'Cambiá el nombre de la red, la contraseña, o si se muestra o no.', tipo: 'error' };
+      this.avisoClave = { texto: 'Cambie el nombre de la red, la contraseña, o si se muestra o no.', tipo: 'error' };
       return;
     }
 

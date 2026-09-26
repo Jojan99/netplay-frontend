@@ -13,14 +13,14 @@ import { RouterModule } from '@angular/router';
         <div>
           <p class="np-kicker">Comunicación <b>/</b> WhatsApp</p>
           <h1 class="np-title">WhatsApp</h1>
-          <div class="np-ribbon"><span>Elegí el proveedor que querés usar o configurar.</span></div>
+          <div class="np-ribbon"><span>Seleccione el proveedor que quiere usar o configurar.</span></div>
         </div>
       </header>
       <div class="np-scroll">
         <div class="np-grid-2">
           <a routerLink="netplay" class="np-card np-provider">
             <div class="np-card-h"><h2>WhatsApp Web (QR)</h2><span class="np-pill np-pill--active">Servicio propio</span></div>
-            <p>Usá tu propio número escaneando un código QR. Ideal para pruebas y control total.</p>
+            <p>Use su propio número escaneando un código QR. Ideal para pruebas y control total.</p>
             <dl class="np-dl"><dt>Incluye</dt><dd>Instancias, envíos, programados, logs y webhook.</dd></dl>
             <span class="np-btn np-btn--primary np-provider-cta">Entrar</span>
           </a>

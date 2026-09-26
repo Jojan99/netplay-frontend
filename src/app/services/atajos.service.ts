@@ -29,7 +29,7 @@ export const TIPOS_DE_VENTANA: Record<TipoDeVentana, { titulo: string; sub: stri
   ticket:   { titulo: 'Crear ticket',        sub: 'Con diagnóstico automático', modulo: 'created-ticket' },
   facturas: { titulo: 'Facturas pendientes', sub: 'Saldo y estado de cuenta',   modulo: 'finanzas' },
   alertas:  { titulo: 'Alertas de red',      sub: 'Abiertas ahora',             modulo: 'olt-admin' },
-  // El ping vive acá y no en un modal de la ficha: así se puede dejar
+  // El ping vive aquí y no en un modal de la ficha: así se puede dejar
   // corriendo minimizado mientras se hace otra cosa, y se le puede hacer a
   // cualquier cliente sin tener que entrar a su ficha primero.
   ping:     { titulo: 'Ping al cliente',     sub: 'Respuesta en vivo',          modulo: 'usuario' },

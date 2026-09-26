@@ -2,7 +2,7 @@
  * La regla de la clave y del nombre del WiFi, escrita una sola vez.
  *
  * Tiene que decir exactamente lo mismo que el backend (App\Rules\ClaveWifi y
- * AprovisionamientoDeOnt::problemaDeLaClaveWifi). Acá está para que el aviso
+ * AprovisionamientoDeOnt::problemaDeLaClaveWifi). Aquí está para que el aviso
  * salga mientras el usuario escribe, no después de mandar el formulario y
  * esperar; el que manda sigue siendo el servidor.
  */

@@ -92,7 +92,7 @@ export class CarteraComponent implements OnInit {
     this.cargando.set(true);
     this.finance.getCartera().subscribe({
       next: (res) => { this.datos.set(res?.data ?? null); this.cargando.set(false); },
-      error: () => { this.error.set('No se pudo calcular la cartera. Probá de nuevo en un momento.'); this.cargando.set(false); },
+      error: () => { this.error.set('No se pudo calcular la cartera. Pruebe de nuevo en un momento.'); this.cargando.set(false); },
     });
   }
 

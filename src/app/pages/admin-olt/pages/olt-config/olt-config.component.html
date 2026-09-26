@@ -12,7 +12,7 @@
   </header>
   <div class="np-toolbar"><app-olt-nav></app-olt-nav></div>
   <div class="np-scroll">
-    <p class="np-empty-block" *ngIf="!selectedOltId && !loadingOlts"><strong>Elegí una OLT para editar su configuración.</strong></p>
+    <p class="np-empty-block" *ngIf="!selectedOltId && !loadingOlts"><strong>Seleccione una OLT para editar su configuración.</strong></p>
     <app-olt-equipo *ngIf="selectedOltId" [oltId]="selectedOltId" [marcaConfigurada]="marcaConfigurada"></app-olt-equipo>
 
     <div class="np-grid-2" *ngIf="selectedOltId">
@@ -20,7 +20,7 @@
         <div class="np-card-h"><h2>Conexión principal</h2></div>
         <div class="np-form">
           <label class="np-field"><span>Nombre <em>*</em></span><input class="np-input" [(ngModel)]="form.name" /></label>
-          <label class="np-field"><span>Marca <em>*</em></span><np-select [(ngModel)]="form.brand" [opciones]="marcas" [presentacion]="presMarcas" placeholder="Elegí la marca…" ariaLabel="Marca"></np-select></label>
+          <label class="np-field"><span>Marca <em>*</em></span><np-select [(ngModel)]="form.brand" [opciones]="marcas" [presentacion]="presMarcas" placeholder="Seleccione la marca…" ariaLabel="Marca"></np-select></label>
           <label class="np-field"><span>Host / IP <em>*</em></span><input class="np-input np-mono" [(ngModel)]="form.host" /></label>
           <label class="np-field"><span>Puerto</span><input type="number" class="np-input np-mono" [(ngModel)]="form.port" /></label>
           <label class="np-field"><span>Usuario</span><input class="np-input np-mono" [(ngModel)]="form.username" /></label>
@@ -49,7 +49,7 @@
              datos no se usan, y pedirlos hacía pensar que eran obligatorios. -->
         <section class="np-card" *ngIf="form.access_mode === 'jump'">
           <div class="np-card-h"><h2>Jump host (bastión SSH)</h2><button type="button" class="np-link" (click)="showAdvanced = !showAdvanced">{{ showAdvanced ? 'Ocultar' : 'Mostrar' }}</button></div>
-          <p class="np-hint">La plataforma abre una sesión SSH acá y tuneliza cada consulta. El túnel de la pestaña VPN evita depender de eso.</p>
+          <p class="np-hint">La plataforma abre una sesión SSH aquí y tuneliza cada consulta. El túnel de la pestaña VPN evita depender de eso.</p>
           <div class="np-form" *ngIf="showAdvanced">
             <label class="np-field"><span>Jump host IP</span><input class="np-input np-mono" [(ngModel)]="form.jump_host" placeholder="10.0.0.1" /></label>
             <label class="np-field"><span>Puerto SSH</span><input type="number" class="np-input np-mono" [(ngModel)]="form.jump_port" /></label>

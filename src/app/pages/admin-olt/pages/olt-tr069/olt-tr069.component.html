@@ -3,7 +3,7 @@
     <div>
       <p class="np-kicker">Admin OLT <b>/</b> TR-069</p>
       <h1 class="np-title">Servidor TR-069</h1>
-      <p class="np-fine">Administrá el equipo de cada cliente: WiFi, qué tiene conectado y reinicios.</p>
+      <p class="np-fine">Administre el equipo de cada cliente: WiFi, qué tiene conectado y reinicios.</p>
     </div>
     <div class="np-actions">
       <button type="button" class="np-btn np-btn--ghost" (click)="cargar(); revisar()" [disabled]="cargando || revisando">
@@ -55,8 +55,8 @@
       <div class="tr-paso-n"><span>1</span></div>
       <div class="tr-paso-cuerpo">
         <header>
-          <h2>¿Dónde está tu servidor TR-069?</h2>
-          <p>Podés usar el nuestro o conectar el tuyo.</p>
+          <h2>¿Dónde está su servidor TR-069?</h2>
+          <p>Puede usar el nuestro o conectar el suyo.</p>
         </header>
 
         <div class="tr-elige">
@@ -67,7 +67,7 @@
             </span>
             <span class="tr-tarjeta-txt">
               <b>El de la plataforma</b>
-              <small>No instalás nada. Lo mantenemos nosotros y tus equipos quedan separados de los de otras empresas.</small>
+              <small>No instala nada. Lo mantenemos nosotros y sus equipos quedan separados de los de otras empresas.</small>
             </span>
             <span class="tr-tarjeta-check" aria-hidden="true">✓</span>
           </label>
@@ -79,7 +79,7 @@
             </span>
             <span class="tr-tarjeta-txt">
               <b>Uno mío</b>
-              <small>Ya tenés tu servidor (GenieACS u otro) y la plataforma se conecta a él.</small>
+              <small>Ya tiene su servidor (GenieACS u otro) y la plataforma se conecta a él.</small>
             </span>
             <span class="tr-tarjeta-check" aria-hidden="true">✓</span>
           </label>
@@ -88,7 +88,7 @@
         <div class="tr-propio" *ngIf="form.modo === 'propio'">
           <div class="np-form">
             <label class="np-field">
-              <span>Dirección de tu servidor</span>
+              <span>Dirección de su servidor</span>
               <input class="np-input np-mono" [(ngModel)]="form.host" (blur)="limpiarHost()" placeholder="181.48.150.43 o acs.miempresa.com" />
               <small class="np-fine">Sólo la IP o el dominio: sin <code>http://</code> ni puerto.</small>
             </label>
@@ -99,7 +99,7 @@
             </label>
             <label class="np-field np-field-full">
               <span>Dirección de su API <em class="np-fine">(opcional)</em></span>
-              <input class="np-input np-mono" [(ngModel)]="form.url_nbi" [placeholder]="'http://' + (form.host || 'TU-SERVIDOR') + ':7557'" />
+              <input class="np-input np-mono" [(ngModel)]="form.url_nbi" [placeholder]="'http://' + (form.host || 'SU-SERVIDOR') + ':7557'" />
               <small class="np-fine">La API de GenieACS (NBI), puerto <b>7557</b>. No es el puerto de los equipos. Vacía se usa <code class="np-mono">{{ apiEfectiva }}</code>.</small>
             </label>
           </div>
@@ -116,7 +116,7 @@
             </label>
             <label class="tr-tarjeta" [class.is-on]="form.alcance === 'tunel'">
               <input type="radio" name="alcance" value="tunel" [(ngModel)]="form.alcance" />
-              <span class="tr-tarjeta-txt"><b>Está en una red privada</b><small>Armamos el túnel con tu router. También hace falta para que los cambios se apliquen al instante.</small></span>
+              <span class="tr-tarjeta-txt"><b>Está en una red privada</b><small>Armamos el túnel con su router. También hace falta para que los cambios se apliquen al instante.</small></span>
               <span class="tr-tarjeta-check" aria-hidden="true">✓</span>
             </label>
           </div>
@@ -124,19 +124,19 @@
           <!-- Lo que tiene que estar listo del lado de su servidor: sin esto la
                plataforma no llega a la API y el diagnóstico da "no contesta". -->
           <div class="np-notice np-notice--info tr-preparar">
-            <b>Qué preparar en tu servidor</b>
+            <b>Qué preparar en su servidor</b>
             <ol>
               <li>
-                Que la API de GenieACS escuche hacia afuera: en <code class="np-mono">/opt/genieacs/genieacs.env</code> poné
-                <code class="np-mono">GENIEACS_NBI_INTERFACE=0.0.0.0</code> y reiniciá <code class="np-mono">genieacs-nbi</code>.
+                Que la API de GenieACS escuche hacia afuera: en <code class="np-mono">/opt/genieacs/genieacs.env</code> ingrese
+                <code class="np-mono">GENIEACS_NBI_INTERFACE=0.0.0.0</code> y reinicie <code class="np-mono">genieacs-nbi</code>.
               </li>
               <li>
-                La API no tiene contraseña: en el firewall dejá entrar al puerto <b>7557</b> sólo desde la plataforma
+                La API no tiene contraseña: en el firewall deje entrar al puerto <b>7557</b> sólo desde la plataforma
                 <ng-container *ngIf="estado?.ip_plataforma">(<code class="np-mono">{{ estado.ip_plataforma }}</code>)</ng-container>. Por ejemplo:
                 <pre class="olt-script">sudo iptables -I INPUT -p tcp --dport 7557 ! -s {{ estado?.ip_plataforma || 'IP-DE-LA-PLATAFORMA' }} -j DROP</pre>
               </li>
-              <li>El puerto de los equipos (<b>{{ form.puerto_cwmp || 7547 }}</b>) abierto para tus ONT.</li>
-              <li *ngIf="form.alcance === 'publica'">Con IP pública no hace falta el paso 2 ni el script del paso 3: guardá y usá <b>Revisar ahora</b>.</li>
+              <li>El puerto de los equipos (<b>{{ form.puerto_cwmp || 7547 }}</b>) abierto para sus ONT.</li>
+              <li *ngIf="form.alcance === 'publica'">Con IP pública no hace falta el paso 2 ni el script del paso 3: guarde y use <b>Revisar ahora</b>.</li>
             </ol>
           </div>
         </div>
@@ -152,8 +152,8 @@
       <div class="tr-paso-n"><span>2</span></div>
       <div class="tr-paso-cuerpo">
         <header>
-          <h2>¿A qué redes tuyas hay que llegar?</h2>
-          <p>Las leemos de tu router. Vos sólo confirmás.</p>
+          <h2>¿A qué redes suyas hay que llegar?</h2>
+          <p>Las leemos de su router. Usted sólo confirma.</p>
         </header>
 
         <div class="tr-routers" *ngIf="(estado?.routers?.length || 0) > 1">
@@ -175,7 +175,7 @@
         </div>
 
         <p class="tr-vacio" *ngIf="!redesDelRouter.length">
-          Buscamos solas las redes de tus clientes, los rangos que reparte el PPPoE y las de tus OLT.
+          Buscamos solas las redes de sus clientes, los rangos que reparte el PPPoE y las de sus OLT.
           <ng-container *ngIf="(estado?.routers?.length || 0) > 1"> Con varios routers se hace uno por uno.</ng-container>
         </p>
 
@@ -204,7 +204,7 @@
             Si una red que hoy se usa queda sin marcar (por ejemplo la de gestión de las ONT o un rango PPPoE nuevo), el servidor deja de llegar a ella.
           </p>
           <p class="np-notice np-notice--info np-notice--inline" *ngIf="estado?.modo === 'propio' && estado?.alcance === 'publica'">
-            Tu servidor tiene IP pública: no hace falta aplicar redes. Los equipos llegan a él por internet.
+            Su servidor tiene IP pública: no hace falta aplicar redes. Los equipos llegan a él por internet.
           </p>
 
           <div class="tr-acciones">
@@ -226,7 +226,7 @@
             {{ pendResumen.con }} de {{ pendResumen.total }} equipos ya reportan. A los {{ pendientes.length }} que faltan hay que
             cargarles la dirección una sola vez, en su gestión: ni la OLT ni el PPPoE se la pueden mandar.
           </p>
-          <p *ngIf="!pendientes.length">Todos los equipos de tus clientes con ONT ya están reportando.</p>
+          <p *ngIf="!pendientes.length">Todos los equipos de sus clientes con ONT ya están reportando.</p>
         </header>
 
         <ng-container *ngIf="pendientes.length">
@@ -250,7 +250,7 @@
               </tbody>
             </table>
           </div>
-          <p class="np-fine" *ngIf="pendientesVisibles.length > 200">Se muestran las primeras 200. Descargá la lista para verlas todas.</p>
+          <p class="np-fine" *ngIf="pendientesVisibles.length > 200">Se muestran las primeras 200. Descargue la lista para verlas todas.</p>
         </ng-container>
       </div>
     </section>
@@ -260,9 +260,9 @@
       <div class="tr-paso-n"><span>3</span></div>
       <div class="tr-paso-cuerpo">
         <header>
-          <h2>El script de tu router</h2>
-          <p *ngIf="routerActual?.tunel?.conectado">Tu router ya está conectado: esto sólo hace falta si lo rehacés o montás uno nuevo.</p>
-          <p *ngIf="!routerActual?.tunel?.conectado">Pegá esto en la terminal del router para levantar el túnel.</p>
+          <h2>El script de su router</h2>
+          <p *ngIf="routerActual?.tunel?.conectado">Su router ya está conectado: esto sólo hace falta si lo rehace o monta uno nuevo.</p>
+          <p *ngIf="!routerActual?.tunel?.conectado">Pegue esto en la terminal del router para levantar el túnel.</p>
         </header>
 
         <p class="np-notice np-notice--info np-notice--inline" *ngFor="let n of script.notas">{{ n }}</p>
@@ -280,7 +280,7 @@
 
         <div class="tr-script" *ngIf="script.servidor">
           <div class="tr-script-h">
-            <span>Para tu servidor TR-069</span>
+            <span>Para su servidor TR-069</span>
             <span>
               <button type="button" class="tr-mini" (click)="verScriptServidor = !verScriptServidor">{{ verScriptServidor ? 'Ocultar' : 'Ver' }}</button>
               <button type="button" class="np-btn np-btn--ghost np-btn--sm" (click)="copiar(script.servidor, 'servidor')">{{ copiado === 'servidor' ? '✓ Copiado' : 'Copiar' }}</button>

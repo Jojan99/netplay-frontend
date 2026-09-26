@@ -6,7 +6,7 @@ import { environment } from '../../environments/environment';
 /**
  * El tablero de inicio que arma cada usuario.
  *
- * Acá sólo viajan los nombres de los paneles y su orden: los datos los pide
+ * Aquí sólo viajan los nombres de los paneles y su orden: los datos los pide
  * cada panel a la pantalla que ya los tenía. El servidor descarta cualquier
  * nombre que no conozca, así que una sesión vieja no puede ensuciar la fila.
  */

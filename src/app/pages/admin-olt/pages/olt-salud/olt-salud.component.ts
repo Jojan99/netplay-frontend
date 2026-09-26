@@ -16,7 +16,7 @@ interface Puerto {
 
 /**
  * Salud de la red: la señal ya se medía cada 15 minutos, pero se olvidaba.
- * Acá queda la tendencia, para ir a arreglar antes de que el cliente llame.
+ * Aquí queda la tendencia, para ir a arreglar antes de que el cliente llame.
  */
 @Component({
   selector: 'app-olt-salud',
@@ -97,7 +97,7 @@ export class OltSaludComponent implements OnInit {
   }
 
   /**
-   * El ticket se arma acá y no en la cabeza del que lo escribe.
+   * El ticket se arma aquí y no en la cabeza del que lo escribe.
    *
    * El modal va al final de la página: es un overlay fijo y, metido en una
    * celda, el scroll de la tabla se lo come.

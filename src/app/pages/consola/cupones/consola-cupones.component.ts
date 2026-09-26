@@ -112,7 +112,7 @@ export class ConsolaCuponesComponent implements OnInit, OnDestroy {
 
   guardar(): void {
     if (!this.forma.codigo.trim() || !this.forma.valor) {
-      this.toast.error('Poné el código y el valor del descuento.');
+      this.toast.error('Ingrese el código y el valor del descuento.');
       return;
     }
 

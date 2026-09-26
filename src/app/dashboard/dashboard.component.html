@@ -36,8 +36,8 @@
   <div class="np-scroll sala-scroll">
 
     <p class="sala-ayuda" *ngIf="armando">
-      Tocá un panel de la derecha para ponerlo o quitarlo, y arrastrá los de acá para moverlos.
-      Cuando guardes, así te va a quedar el inicio en cualquier computador donde entres.
+      Toque un panel de la derecha para ponerlo o quitarlo, y arrastre los de aquí para moverlos.
+      Cuando guardes, así le va a quedar el inicio en cualquier computador donde entres.
     </p>
 
     <section class="sala-kpis" aria-label="Indicadores de la empresa">
@@ -157,7 +157,7 @@
             <ng-container *ngSwitchCase="'cobranza'">
               <div class="sala-panel-h"><h2>IA Cobranza</h2><a class="sala-ir" routerLink="/dashboard/cobranza">Abrir →</a></div>
               <div class="sala-lista" *ngIf="cobranza">
-                <div class="sala-fila es-quieta"><span class="sala-fila-n">Esperan tu autorización</span><span class="sala-num">{{ cobranza.esperan }}</span></div>
+                <div class="sala-fila es-quieta"><span class="sala-fila-n">Esperan su autorización</span><span class="sala-num">{{ cobranza.esperan }}</span></div>
                 <div class="sala-fila es-quieta"><span class="sala-fila-n">Hablando ahora</span><span class="sala-num">{{ cobranza.trabajando ?? 0 }}</span></div>
                 <div class="sala-fila es-quieta"><span class="sala-fila-n">En curso</span><span class="sala-num">{{ cobranza.en_curso ?? 0 }}</span></div>
                 <div class="sala-fila es-quieta"><span class="sala-fila-n">Modo</span><span class="sala-num">{{ cobranza.modo === 'auto' ? 'automático' : 'manual' }}</span></div>
@@ -255,13 +255,13 @@
           </ng-container>
         </article>
 
-        <p class="sala-hueco" *ngIf="armando">Arrastrá acá el panel que quieras mover</p>
+        <p class="sala-hueco" *ngIf="armando">Arrastre aquí el panel que quieras mover</p>
       </div>
 
       <!-- ── El cajón de paneles ── -->
       <aside class="sala-cajon" *ngIf="armando">
         <div class="sala-panel-h"><h2>Paneles</h2><span class="sala-fine">{{ paneles.length }} de {{ CATALOGO.length }}</span></div>
-        <p class="sala-fine">Tocá uno para ponerlo o quitarlo.</p>
+        <p class="sala-fine">Toque uno para ponerlo o quitarlo.</p>
 
         <div class="sala-cat" *ngFor="let g of catalogo">
           <p class="sala-sect">{{ g.seccion }}</p>

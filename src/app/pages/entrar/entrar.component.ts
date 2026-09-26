@@ -8,8 +8,8 @@ import { AuthService } from '../../services/auth.service';
  * Llegada al subdominio de la empresa después de iniciar sesión en la raíz.
  *
  * El navegador guarda la sesión por dominio: la que se abrió en netvula.com
- * no sirve en netplay.netvula.com. El login de la raíz manda acá con un vale
- * de un solo uso que dura dos minutos, y acá se canjea por la sesión.
+ * no sirve en netplay.netvula.com. El login de la raíz manda aquí con un vale
+ * de un solo uso que dura dos minutos, y aquí se canjea por la sesión.
  */
 @Component({
   selector: 'app-entrar',
@@ -23,11 +23,11 @@ import { AuthService } from '../../services/auth.service';
           <p class="np-kicker">Acceso <b>/</b> Empresa</p>
           @if (fallo()) {
             <h1 class="np-title np-login-title">El enlace ya no sirve</h1>
-            <p class="np-login-help">Se usa una sola vez y vence a los dos minutos. Iniciá sesión de nuevo desde esta dirección.</p>
+            <p class="np-login-help">Se usa una sola vez y vence a los dos minutos. Inicie sesión de nuevo desde esta dirección.</p>
             <a class="np-btn np-btn--primary np-login-submit" routerLink="/login">Iniciar sesión</a>
           } @else {
             <h1 class="np-title np-login-title">Entrando…</h1>
-            <p class="np-login-help"><span class="np-spinner np-spinner--sm"></span> Abriendo tu sesión en la dirección de tu empresa.</p>
+            <p class="np-login-help"><span class="np-spinner np-spinner--sm"></span> Abriendo su sesión en la dirección de su empresa.</p>
           }
         </div>
       </main>

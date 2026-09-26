@@ -92,9 +92,9 @@ export class CobranzaComponent implements OnInit {
   get ejemploMensaje(): string {
     const c = this.cfg;
     const quien = c?.nombre_asistente || 'Asistente';
-    const empresa = c?.nombre_empresa || 'tu proveedor de internet';
+    const empresa = c?.nombre_empresa || 'su proveedor de internet';
 
-    return `Hola, soy ${quien} de ${empresa}. Te escribo porque tenés una factura pendiente. ¿Querés que veamos cómo ponerte al día?`;
+    return `Hola, soy ${quien} de ${empresa}. Le escribo porque tiene una factura pendiente. ¿Quiere que veamos cómo ponerte al día?`;
   }
 
   probarClave(): void {
@@ -119,7 +119,7 @@ export class CobranzaComponent implements OnInit {
   quitarClave(): void {
     this.claveNueva = '';
     this.ia = { ...this.ia, propia: false };
-    this.resultadoPrueba = { ok: true, texto: 'Al guardar se quita tu clave y se vuelve a la IA de Netvula.' };
+    this.resultadoPrueba = { ok: true, texto: 'Al guardar se quita su clave y se vuelve a la IA de Netvula.' };
     this.quitandoClave = true;
   }
 
@@ -149,7 +149,7 @@ export class CobranzaComponent implements OnInit {
         this.guardando = false;
         const errs = e?.error?.errors ?? {};
         this.errores = Object.fromEntries(Object.entries(errs).map(([k, v]: [string, any]) => [k, Array.isArray(v) ? v[0] : String(v)]));
-        this.avisar(e?.error?.message && !Object.keys(errs).length ? e.error.message : 'Revisá los campos marcados.', 'error');
+        this.avisar(e?.error?.message && !Object.keys(errs).length ? e.error.message : 'Revise los campos marcados.', 'error');
       },
     });
   }

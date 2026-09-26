@@ -99,7 +99,7 @@ export class ConsolaSeguridadComponent implements OnInit {
 
       this.passkeys = r.data ?? [];
       this.nombrePasskey = '';
-      this.toast.success('Passkey guardada. Ya podés entrar con ella.');
+      this.toast.success('Passkey guardada. Ya puede entrar con ella.');
     } catch (e: any) {
       this.agregandoPasskey = false;
       this.toast.error(porQueFallo(e));
@@ -111,7 +111,7 @@ export class ConsolaSeguridadComponent implements OnInit {
 
     if (!await this.dialog.confirm(
       ultima
-        ? `Es tu única passkey. Si la borrás, vas a entrar con contraseña${this.activo ? ' y código' : ''}. ¿Seguir?`
+        ? `Es su única passkey. Si la borra, va a entrar con contraseña${this.activo ? ' y código' : ''}. ¿Seguir?`
         : `¿Eliminar «${p.nombre}»?`,
       { okLabel: 'Sí, eliminar' },
     )) return;
@@ -172,7 +172,7 @@ export class ConsolaSeguridadComponent implements OnInit {
       if (quedan === null) return;
 
       localStorage.removeItem('consola_aviso_recuperacion');
-      this.toast.info(`Entraste con un código de recuperación. Te quedan ${quedan}.`);
+      this.toast.info(`Entraste con un código de recuperación. Le quedan ${quedan}.`);
     } catch { /* sin almacenamiento no hay aviso, no es grave */ }
   }
 
@@ -262,7 +262,7 @@ export class ConsolaSeguridadComponent implements OnInit {
 
   async quitar(): Promise<void> {
     if (!await this.dialog.confirm(
-      'Sin el authenticator, tu contraseña sola vuelve a abrir la consola de todas las empresas. ¿Seguro?',
+      'Sin el authenticator, su contraseña sola vuelve a abrir la consola de todas las empresas. ¿Seguro?',
       { okLabel: 'Sí, quitarlo', cancelLabel: 'Dejarlo' },
     )) return;
 
@@ -271,7 +271,7 @@ export class ConsolaSeguridadComponent implements OnInit {
   }
 
   confirmarQuitar(): void {
-    if (!this.clave) { this.toast.error('Poné tu contraseña.'); return; }
+    if (!this.clave) { this.toast.error('Ingrese su contraseña.'); return; }
 
     this.trabajando = true;
 
@@ -294,7 +294,7 @@ export class ConsolaSeguridadComponent implements OnInit {
   }
 
   /**
-   * El QR se dibuja acá, en el navegador.
+   * El QR se dibuja aquí, en el navegador.
    *
    * No con un servicio público de códigos QR: eso le mandaría el secreto del
    * authenticator a un tercero, que es exactamente lo que este segundo factor

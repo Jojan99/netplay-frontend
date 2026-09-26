@@ -3,7 +3,7 @@
     <div>
       <p class="np-kicker">Red <b>/</b> OLT <b>/</b> CLI</p>
       <h1 class="np-title">Terminal de la OLT</h1>
-      <div class="np-ribbon"><span *ngIf="selectedOltId"><i class="np-dot" [style.background]="running ? 'var(--warn)' : 'var(--ok)'"></i>{{ selectedOltName() }} · Telnet · {{ running ? 'ejecutando…' : 'lista' }}</span><span *ngIf="!selectedOltId">Ejecutá comandos directamente en la OLT vía Telnet.</span></div>
+      <div class="np-ribbon"><span *ngIf="selectedOltId"><i class="np-dot" [style.background]="running ? 'var(--warn)' : 'var(--ok)'"></i>{{ selectedOltName() }} · Telnet · {{ running ? 'ejecutando…' : 'lista' }}</span><span *ngIf="!selectedOltId">Ejecute comandos directamente en la OLT vía Telnet.</span></div>
     </div>
     <div class="np-actions">
       <label class="np-pagesize">OLT<np-select [(ngModel)]="selectedOltId" (ngModelChange)="onOltChange()" [opciones]="olts" [presentacion]="presOlts" [cargando]="loadingOlts" [deshabilitado]="loadingOlts" placeholder="Seleccionar" ariaLabel="OLT" style="min-width: 220px"></np-select></label>
@@ -12,12 +12,12 @@
   </header>
   <div class="np-toolbar"><app-olt-nav></app-olt-nav></div>
 
-  <p class="np-empty-block" *ngIf="!selectedOltId && !loadingOlts"><strong>Elegí una OLT para abrir el terminal.</strong></p>
+  <p class="np-empty-block" *ngIf="!selectedOltId && !loadingOlts"><strong>Seleccione una OLT para abrir el terminal.</strong></p>
 
   <div class="np-term" *ngIf="selectedOltId">
     <div class="np-term-out" #termOutput>
       <div class="np-term-welcome" *ngIf="history.length === 0">
-        <p>CLI de {{ selectedOltName() }}. Escribí un comando y presioná Enter. ↑ y ↓ recorren el historial.</p>
+        <p>CLI de {{ selectedOltName() }}. Escriba un comando y presione Enter. ↑ y ↓ recorren el historial.</p>
         <p>Ejemplo: <code>display ont info all</code></p>
       </div>
       <ng-container *ngFor="let entry of history">

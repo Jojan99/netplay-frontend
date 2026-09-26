@@ -32,7 +32,7 @@
       <div class="np-registry-wrap"><table class="np-table np-table--registry np-tabla-movil">
         <thead><tr><th class="np-th-stripe"></th><th>Puerto</th><th>ID</th><th>Descripción / serial</th><th>Estado</th><th class="np-th-right">Señal</th><th class="np-col-sp">Service ports</th><th>Cliente</th><th class="np-th-right">Acciones</th></tr></thead>
         <tbody>
-          <tr *ngIf="!selectedOltId && !loadingOlts" class="np-empty"><td colspan="9"><strong>Elegí una OLT para ver sus ONTs.</strong></td></tr>
+          <tr *ngIf="!selectedOltId && !loadingOlts" class="np-empty"><td colspan="9"><strong>Seleccione una OLT para ver sus ONTs.</strong></td></tr>
           <tr *ngIf="loadingOnts" class="np-empty"><td colspan="9"><span class="np-spinner"></span></td></tr>
           <tr *ngIf="!loadingOnts && selectedOltId && lastFetched && filteredOnts.length === 0" class="np-empty"><td colspan="9"><strong>Sin resultados.</strong></td></tr>
           <ng-container *ngIf="!loadingOnts && selectedOltId">
@@ -116,7 +116,7 @@
       <button type="button" class="np-icobtn" (click)="assignModal = false" aria-label="Cerrar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div>
     <div class="np-modal-body">
       <p class="np-notice np-notice--warn" *ngIf="assignOnt?.user_data_id || assignOnt?.assigned_client">
-        Hoy la tiene <strong>{{ nombreAsignado(assignOnt) || 'un cliente' }}</strong>. Si elegís otro, la ONT se le pasa a ese.
+        Hoy la tiene <strong>{{ nombreAsignado(assignOnt) || 'un cliente' }}</strong>. Si elige otro, la ONT se le pasa a ese.
         <button type="button" class="np-link" (click)="removeAssign()" [disabled]="assigning">Dejarla libre</button>
       </p>
       <label class="np-field"><span>Buscar cliente</span><input type="search" class="np-input" [(ngModel)]="clientSearch" (input)="onClientSearch()" placeholder="Nombre o DNI…" /><small class="np-fine" *ngIf="searchingClients">Buscando…</small></label>
@@ -139,7 +139,7 @@
     </div>
 
     <div class="np-modal-body">
-      <p class="np-fine">Es el nombre con el que la OLT identifica al equipo, y el que se ve en toda la plataforma. Se cambia en la OLT, no sólo acá.</p>
+      <p class="np-fine">Es el nombre con el que la OLT identifica al equipo, y el que se ve en toda la plataforma. Se cambia en la OLT, no sólo aquí.</p>
 
       <label class="np-field"><span>Nombre</span>
         <input class="np-input" [(ngModel)]="nombreNuevo" maxlength="64" placeholder="JUAN_PEREZ" (keydown.enter)="guardarNombre()" autofocus />
@@ -148,7 +148,7 @@
       <p class="np-notice np-notice--info" *ngIf="nombreComoQueda && nombreComoQueda !== nombreNuevo">
         Va a quedar como <b class="np-mono">{{ nombreComoQueda }}</b>: la OLT no admite espacios, acentos ni comillas.
       </p>
-      <p class="np-notice np-notice--warn" *ngIf="!nombreComoQueda">Escribí un nombre. No puede quedar vacío.</p>
+      <p class="np-notice np-notice--warn" *ngIf="!nombreComoQueda">Escriba un nombre. No puede quedar vacío.</p>
 
       <p class="np-fine" *ngIf="renombrarOnt.serial">Serial <span class="np-mono">{{ renombrarOnt.serial }}</span></p>
     </div>

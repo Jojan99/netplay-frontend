@@ -338,7 +338,7 @@ export class OltListComponent implements OnInit {
   copiarScriptTunel(): void {
     navigator.clipboard?.writeText(this.scriptTunel).then(
       () => this.toast.success('Script copiado. Pegalo en la terminal del router.'),
-      () => this.toast.error('El navegador no permitió copiar; seleccioná el texto a mano.'),
+      () => this.toast.error('El navegador no permitió copiar; seleccione el texto a mano.'),
     );
   }
 

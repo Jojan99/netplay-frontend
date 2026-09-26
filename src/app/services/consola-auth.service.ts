@@ -13,7 +13,7 @@ export interface UsuarioConsola {
  * La sesión de la consola de Netvula.
  *
  * Aparte de la del panel a propósito: otra clave en el navegador, otro token
- * y otra tabla de usuarios en el servidor. Un token del panel no sirve acá y
+ * y otra tabla de usuarios en el servidor. Un token del panel no sirve aquí y
  * uno de la consola no sirve allá, así que no hay forma de terminar mirando
  * los datos de todas las empresas por haber entrado como administrador de una.
  */

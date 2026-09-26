@@ -9,7 +9,7 @@ import { isPlatformBrowser } from '@angular/common';
  * queda abierta toda la tarde: esa no recarga nunca y sigue con la versión
  * del mediodía.
  *
- * Acá se mira cada tanto si el archivo principal cambió de nombre. Cambia sólo
+ * Aquí se mira cada tanto si el archivo principal cambió de nombre. Cambia sólo
  * cuando cambia el contenido, así que si cambió es que hay algo nuevo. No se
  * recarga sola: se avisa y decide la persona, porque puede estar a mitad de un
  * formulario.

@@ -9,7 +9,7 @@ import { ToastService } from '../../../services/toast.service';
 /**
  * Los planes que vende Netvula.
  *
- * Cambiar un precio acá no cambia lo que paga nadie: cada empresa tiene su
+ * Cambiar un precio aquí no cambia lo que paga nadie: cada empresa tiene su
  * precio pactado. Para pasarlas al precio nuevo hay un botón aparte que dice
  * a cuántas afecta antes de tocar nada.
  */

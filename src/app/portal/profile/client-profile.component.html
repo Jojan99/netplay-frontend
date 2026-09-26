@@ -1,5 +1,5 @@
 <div class="pt-head">
-  <div><p class="pt-kicker">Cuenta</p><h1>Mi perfil</h1><p>Tus datos de contacto, tu plan y tu contraseña.</p></div>
+  <div><p class="pt-kicker">Cuenta</p><h1>Mi perfil</h1><p>Sus datos de contacto, su plan y su contraseña.</p></div>
   <button type="button" class="pt-btn pt-btn--ghost pt-btn--sm" *ngIf="!editing() && profile()" (click)="startEdit()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 20h4l10-10-4-4L4 16v4zM13 7l4 4"/></svg>Editar contacto</button>
 </div>
 
@@ -23,9 +23,9 @@
       <form class="pt-form" *ngIf="editing()" (ngSubmit)="save()">
         <div class="pt-form-2">
           <label class="pt-field"><span>Teléfono / WhatsApp</span><input class="pt-input np-mono" type="tel" name="phone" [(ngModel)]="phone" placeholder="3001234567" /></label>
-          <label class="pt-field"><span>Correo</span><input class="pt-input" type="email" name="email" [(ngModel)]="email" placeholder="tu@correo.com" /></label>
+          <label class="pt-field"><span>Correo</span><input class="pt-input" type="email" name="email" [(ngModel)]="email" placeholder="su@correo.com" /></label>
         </div>
-        <p class="pt-fine">La dirección de instalación la cambia el equipo de soporte. Si te mudaste, reportalo.</p>
+        <p class="pt-fine">La dirección de instalación la cambia el equipo de soporte. Si le mudó, repórtelo.</p>
         <div class="pt-btnrow pt-btnrow--end"><button type="button" class="pt-btn pt-btn--ghost" (click)="cancelEdit()">Cancelar</button><button type="submit" class="pt-btn pt-btn--primary" [disabled]="saving()"><span class="pt-spinner" *ngIf="saving()"></span>{{ saving() ? 'Guardando…' : 'Guardar cambios' }}</button></div>
       </form>
     </section>
@@ -58,7 +58,7 @@
       <div class="pt-kpi is-info" *ngIf="profile().plan_upload"><b>{{ profile().plan_upload }} <small style="font-size:12px;color:var(--text-3)">Mbps</small></b><small>Subida</small></div>
       <div class="pt-kpi" *ngIf="profile().plan_price" style="grid-column:1/-1"><b>{{ formatCurrency(profile().plan_price) }}</b><small>Mensualidad</small></div>
     </div>
-    <p class="pt-fine" style="margin:12px 0 0">¿Querés más velocidad? Escribinos por WhatsApp y te contamos las opciones.</p>
+    <p class="pt-fine" style="margin:12px 0 0">¿Quiere más velocidad? Escribinos por WhatsApp y le contamos las opciones.</p>
   </section>
 </div>
 

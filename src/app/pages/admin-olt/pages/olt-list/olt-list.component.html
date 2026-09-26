@@ -15,7 +15,7 @@
         <thead><tr><th class="np-th-stripe"></th><th>OLT</th><th>Modelo</th><th>Host</th><th>Acceso</th><th>VLAN</th><th>Jump host</th><th class="np-th-right">Acciones</th></tr></thead>
         <tbody>
           <tr *ngIf="loading" class="np-empty"><td colspan="8"><span class="np-spinner"></span></td></tr>
-          <tr *ngIf="!loading && olts.length === 0" class="np-empty"><td colspan="8"><strong>No hay OLTs registradas.</strong><span>Agregá la primera con el botón de arriba.</span></td></tr>
+          <tr *ngIf="!loading && olts.length === 0" class="np-empty"><td colspan="8"><strong>No hay OLTs registradas.</strong><span>Agregue la primera con el botón de arriba.</span></td></tr>
           <tr *ngFor="let olt of olts" class="np-row" (click)="openEdit(olt)" tabindex="0" (keydown.enter)="openEdit(olt)">
             <td class="np-stripe"><i style="background:var(--accent)"></i></td>
             <td class="es-principal"><div class="np-name">{{ olt.name }}</div><div class="np-plan">{{ nombreDeMarca(olt.brand) }}</div></td>
@@ -61,7 +61,7 @@
       <ng-container *ngIf="pestana === 'conexion'">
         <div class="np-form">
           <label class="np-field np-field-full"><span>Nombre <em>*</em></span><input class="np-input" [(ngModel)]="form.name" placeholder="OLT Principal" /></label>
-          <label class="np-field np-field-full"><span>Marca <em>*</em></span><np-select [(ngModel)]="form.brand" [opciones]="marcas" [presentacion]="presMarcas" placeholder="Elegí la marca…" ariaLabel="Marca"></np-select></label>
+          <label class="np-field np-field-full"><span>Marca <em>*</em></span><np-select [(ngModel)]="form.brand" [opciones]="marcas" [presentacion]="presMarcas" placeholder="Seleccione la marca…" ariaLabel="Marca"></np-select></label>
           <label class="np-field"><span>Host / IP <em>*</em></span><input class="np-input np-mono" [(ngModel)]="form.host" placeholder="192.168.1.1" /></label>
           <label class="np-field"><span>Puerto</span><input type="number" class="np-input np-mono" [(ngModel)]="form.port" /></label>
           <label class="np-field"><span>Usuario</span><input class="np-input np-mono" [(ngModel)]="form.username" placeholder="admin" /></label>
@@ -107,7 +107,7 @@
           <div class="np-sect">Túnel de gestión</div>
           <p class="np-hint">
             <span *ngIf="hostEsPrivado">Esa IP es privada, así que la OLT está detrás de un router. Con un túnel el router marca hacia la plataforma y el equipo queda alcanzable sin dejarle SSH abierto ni guardar su contraseña.</span>
-            <span *ngIf="!hostEsPrivado">Si la OLT tiene IP pública no hace falta túnel. Se puede crear igual si preferís no exponerla.</span>
+            <span *ngIf="!hostEsPrivado">Si la OLT tiene IP pública no hace falta túnel. Se puede crear igual si prefiere no exponerla.</span>
           </p>
           <label class="np-check np-check--box np-field-full">
             <input type="checkbox" [(ngModel)]="form.crear_tunel_vpn" />
@@ -124,15 +124,15 @@
           </div>
           <div class="olt-aviso is-warn" *ngIf="form.crear_tunel_vpn && tunelElegido">
             <strong>La red se suma a «{{ tunelElegido.nombre }}».</strong>
-            <span>Después de guardar, pegá el script en ese mismo router: agrega el acceso a la red nueva sin tocar las que ya tiene.</span>
+            <span>Después de guardar, pegue el script en ese mismo router: agrega el acceso a la red nueva sin tocar las que ya tiene.</span>
           </div>
           <p class="np-hint" *ngIf="form.crear_tunel_vpn && redSugerida && !form.tunel_redes.trim()">
-            Si lo dejás vacío se usa <code>{{ redSugerida }}</code>, deducida del host. Si ya hay un túnel que cubre esa red, se reutiliza en vez de crear otro.
+            Si lo deja vacío se usa <code>{{ redSugerida }}</code>, deducida del host. Si ya hay un túnel que cubre esa red, se reutiliza en vez de crear otro.
           </p>
         </section>
 
         <!-- El jump es el camino viejo: sólo se pide si se eligió a propósito.
-             Con acceso directo no hay nada que llenar acá. -->
+             Con acceso directo no hay nada que llenar aquí. -->
         <section class="np-panel" *ngIf="form.access_mode === 'jump'">
           <div class="np-sect">Jump host (bastión SSH)</div>
           <p class="np-hint">La plataforma abre una sesión SSH en este equipo y tuneliza cada consulta por ahí. Necesita SSH abierto y guarda su contraseña; el túnel de arriba evita las dos cosas.</p>
@@ -151,7 +151,7 @@
       </ng-container>
 
       <ng-container *ngIf="pestana === 'snmp'">
-        <p class="np-hint">De acá salen la ficha del equipo y la señal óptica. Sin SNMP la plataforma sólo puede usar la consola.</p>
+        <p class="np-hint">De aquí salen la ficha del equipo y la señal óptica. Sin SNMP la plataforma sólo puede usar la consola.</p>
         <div class="np-form">
           <label class="np-field"><span>Community</span><input class="np-input np-mono" [(ngModel)]="form.snmp_community" placeholder="public" /></label>
           <label class="np-field"><span>Versión</span><np-select [(ngModel)]="form.snmp_version" [opciones]="opcionesSnmp" [presentacion]="presSimple" ariaLabel="Versión SNMP"></np-select></label>
@@ -206,9 +206,9 @@
     <div class="np-modal-body np-modal-body--scroll">
       <div class="olt-aviso is-warn">
         <strong>La clave privada del router va en este script.</strong>
-        <span>Es la única vez que se muestra en claro. Si lo perdés se vuelve a generar desde la pestaña VPN, sin reconfigurar nada.</span>
+        <span>Es la única vez que se muestra en claro. Si lo pierde se vuelve a generar desde la pestaña VPN, sin reconfigurar nada.</span>
       </div>
-      <p class="np-hint">Pegá todo el bloque en la terminal del MikroTik. Requiere RouterOS 7.1 o superior.</p>
+      <p class="np-hint">Pegue todo el bloque en la terminal del MikroTik. Requiere RouterOS 7.1 o superior.</p>
       <pre class="olt-script">{{ scriptTunel }}</pre>
     </div>
     <div class="np-modal-foot">

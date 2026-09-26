@@ -6,7 +6,7 @@
  * «promedio -30,5 dBm, peor -31,5, puerto 0/1/3:12», sale con el reflectómetro
  * y sabe dónde empezar.
  *
- * Todas las pantallas de red arman el texto acá para que digan lo mismo y para
+ * Todas las pantallas de red arman el texto aquí para que digan lo mismo y para
  * que, cuando cambie el criterio, cambie en un solo lugar.
  */
 

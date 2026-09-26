@@ -22,7 +22,7 @@ import { ToastService } from '../../../../services/toast.service';
 export class OltTr069Component implements OnInit {
   /**
    * Dentro de «Gestión remota» esta pantalla es una sección más: el encabezado
-   * y el menú los pone la página de afuera, así que acá sobran.
+   * y el menú los pone la página de afuera, así que aquí sobran.
    */
   @Input() embebido = false;
 
@@ -186,14 +186,14 @@ export class OltTr069Component implements OnInit {
   get apiEfectiva(): string {
     const url = (this.form.url_nbi || '').trim();
     if (url) return /^https?:\/\//i.test(url) ? url : `http://${url}`;
-    return this.form.host ? `http://${this.form.host}:7557` : 'http://TU-SERVIDOR:7557';
+    return this.form.host ? `http://${this.form.host}:7557` : 'http://SU-SERVIDOR:7557';
   }
 
   guardarServidor() {
     if (this.form.modo === 'propio') this.limpiarHost();
 
     if (this.form.modo === 'propio' && !this.form.host.trim()) {
-      this.toast.error('Falta la dirección de tu servidor TR-069.');
+      this.toast.error('Falta la dirección de su servidor TR-069.');
       return;
     }
 
@@ -236,7 +236,7 @@ export class OltTr069Component implements OnInit {
   aplicar() {
     const elegidas = this.redesDelRouter.filter(r => r.elegida).map(r => r.red);
 
-    if (!elegidas.length) { this.toast.error('Elegí al menos una red.'); return; }
+    if (!elegidas.length) { this.toast.error('Seleccione al menos una red.'); return; }
 
     this.aplicando = true;
     this.api.aplicar(elegidas, this.routerSel).subscribe({
@@ -264,9 +264,9 @@ export class OltTr069Component implements OnInit {
 
   private agrupar() {
     const titulos: Record<string, string> = {
-      clientes: 'Redes de tus clientes',
+      clientes: 'Redes de sus clientes',
       pppoe: 'Rangos que reparte el router (PPPoE)',
-      olt: 'Gestión de tus OLT',
+      olt: 'Gestión de sus OLT',
       gestion: 'Otras redes del router',
     };
 

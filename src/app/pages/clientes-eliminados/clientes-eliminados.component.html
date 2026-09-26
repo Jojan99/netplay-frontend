@@ -5,7 +5,7 @@
       <h1 class="np-title">Clientes eliminados</h1>
       <div class="np-ribbon">
         <span><span class="np-n">{{ total | number }}</span>{{ search.trim() ? 'encontrados' : 'eliminados' }}</span>
-        <span class="np-fine">Se conservan sus datos: si vuelven a contratar, se reinstalan desde acá.</span>
+        <span class="np-fine">Se conservan sus datos: si vuelven a contratar, se reinstalan desde aquí.</span>
       </div>
     </div>
     <div class="np-actions">
@@ -82,7 +82,7 @@
             <tr *ngIf="clientes.length === 0" class="np-empty">
               <td colspan="7">
                 <strong>No hay clientes eliminados.</strong>
-                <span *ngIf="search">Probá con otro nombre, documento o IP.</span>
+                <span *ngIf="search">Pruebe con otro nombre, documento o IP.</span>
               </td>
             </tr>
           </ng-container>
@@ -117,8 +117,8 @@
           <ul class="np-avisos">
             <li>El MikroTik: al eliminarlo se le quitó o suspendió el servicio. Activalo desde su ficha en Clientes.</li>
             <li *ngIf="!elegido.router_id">No tiene MikroTik asignado: elegilo en la ficha.</li>
-            <li *ngIf="!elegido.plan_name">No tiene plan de internet: asignale uno en la ficha.</li>
-            <li>Si tenía una ONT enlazada, revisá la ONU en la OLT antes de darlo por instalado.</li>
+            <li *ngIf="!elegido.plan_name">No tiene plan de internet: asígnele uno en la ficha.</li>
+            <li>Si tenía una ONT enlazada, revise la ONU en la OLT antes de darlo por instalado.</li>
           </ul>
         </div>
       </div>

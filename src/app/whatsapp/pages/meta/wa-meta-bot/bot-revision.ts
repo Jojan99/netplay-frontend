@@ -5,7 +5,7 @@ import { Bloque, Flujo, META, FICHAS } from './bot-modelo';
  *
  * Un flujo roto no se nota al dibujarlo: se nota cuando alguien escribe por
  * WhatsApp y el bot se queda mudo porque un botón no llevaba a ninguna parte.
- * Acá se revisa lo que de verdad rompe la conversación y lo que Meta rechaza.
+ * Aquí se revisa lo que de verdad rompe la conversación y lo que Meta rechaza.
  */
 
 export interface Aviso {
@@ -77,7 +77,7 @@ export function revisar(flujo: Flujo): Aviso[] {
         avisos.push({ nivel: 'error', bloque: b.id, texto: 'El bloque de botones no tiene ninguno.' });
       }
       if (bts.length > META.MAX_BOTONES) {
-        avisos.push({ nivel: 'error', bloque: b.id, texto: `WhatsApp admite ${META.MAX_BOTONES} botones como máximo; hay ${bts.length}. Usá una lista.` });
+        avisos.push({ nivel: 'error', bloque: b.id, texto: `WhatsApp admite ${META.MAX_BOTONES} botones como máximo; hay ${bts.length}. Use una lista.` });
       }
       bts.forEach((x, i) => {
         if (!x.title?.trim()) avisos.push({ nivel: 'error', bloque: b.id, texto: `El botón ${i + 1} no tiene texto.` });

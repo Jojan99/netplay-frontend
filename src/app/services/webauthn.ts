@@ -2,7 +2,7 @@
  * La conversación con el navegador para crear y usar passkeys.
  *
  * WebAuthn habla en `ArrayBuffer` y el servidor en base64url, así que todo lo
- * que cruza hay que traducirlo. Está acá, en un solo lugar, porque
+ * que cruza hay que traducirlo. Está aquí, en un solo lugar, porque
  * equivocarse en una de esas conversiones da un error críptico del navegador
  * que no dice nada útil.
  */
@@ -28,7 +28,7 @@ export async function hayAlgunaGuardada(): Promise<boolean> {
     if (typeof pk.isUserVerifyingPlatformAuthenticatorAvailable !== 'function') return true;
     return await pk.isUserVerifyingPlatformAuthenticatorAvailable();
   } catch {
-    // Ante la duda se ofrece: una llave física externa no aparece acá.
+    // Ante la duda se ofrece: una llave física externa no aparece aquí.
     return true;
   }
 }
@@ -115,13 +115,13 @@ export async function usarPasskey(opciones: any): Promise<string> {
 /**
  * El reclamo del navegador, en palabras.
  *
- * Los errores de WebAuthn son crípticos —«NotAllowedError» tanto si cancelaste
+ * Los errores de WebAuthn son crípticos —«NotAllowedError» tanto si canceló
  * como si se venció el tiempo— y dejarlos tal cual sólo confunde.
  */
 export function porQueFallo(e: any): string {
   const nombre = String(e?.name ?? '');
 
-  if (nombre === 'NotAllowedError') return 'Se canceló o se agotó el tiempo. Probá de nuevo.';
+  if (nombre === 'NotAllowedError') return 'Se canceló o se agotó el tiempo. Pruebe de nuevo.';
   if (nombre === 'InvalidStateError') return 'Este dispositivo ya tiene una passkey para esta cuenta.';
   if (nombre === 'NotSupportedError') return 'Este navegador o dispositivo no admite passkeys.';
   if (nombre === 'SecurityError') return 'El navegador no permitió la passkey en esta dirección. Tiene que ser https y el dominio de la consola.';

@@ -15,7 +15,7 @@ import { environment } from '../../../../../environments/environment';
  * Hasta ahora la cartera y la salud de la red se miraban por separado, y
  * mezcladas no dicen nada: un cliente que debe y tiene el equipo apagado hace
  * días no es lo mismo que uno que debe y está navegando. Al primero lo
- * perseguís al pedo —ya se fue—; al segundo le cobrás.
+ * persigue de más —ya se fue—; al segundo le cobra.
  */
 @Component({
   selector: 'app-olt-riesgo',

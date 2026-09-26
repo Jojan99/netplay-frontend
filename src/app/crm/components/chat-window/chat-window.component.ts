@@ -83,7 +83,7 @@ export class ChatWindowComponent implements OnChanges, OnDestroy {
   }
 
   readonly quickVars = ['nombre','primer_nombre','telefono','cedula','direccion','plan','precio_plan','ip','estado','saldo','facturas_pendientes','factura','vence','link_factura','fecha','hora'];
-  readonly quickPlaceholder = 'Hola {primer_nombre}, tu factura {factura} por {saldo} vence el {vence}. Podés verla acá: {link_factura}';
+  readonly quickPlaceholder = 'Hola {primer_nombre}, su factura {factura} por {saldo} vence el {vence}. Puede verla aquí: {link_factura}';
   varToken(v: string): string { return '{' + v + '}'; }
   insertVar(v: string): void { this.quickForm.content = (this.quickForm.content || '') + this.varToken(v); }
 
@@ -226,7 +226,7 @@ export class ChatWindowComponent implements OnChanges, OnDestroy {
    *
    * La bandeja se entera por Echo, pero ese aviso puede tardar o perderse, y
    * mientras tanto la fila del cliente sigue mostrando el último mensaje de
-   * él, como si el agente no hubiera contestado. Avisar desde acá la deja
+   * él, como si el agente no hubiera contestado. Avisar desde aquí la deja
    * al día en el acto.
    */
   @Output() messageSent = new EventEmitter<void>();
@@ -239,7 +239,7 @@ export class ChatWindowComponent implements OnChanges, OnDestroy {
     const raw = this.locForm.raw.trim(); if (!raw) return;
     const m = raw.match(/(-?\d{1,3}\.\d+)[,\s]+(-?\d{1,3}\.\d+)/) || raw.match(/@(-?\d+\.\d+),(-?\d+\.\d+)/);
     if (m) { this.locForm.lat = m[1]; this.locForm.lng = m[2]; this.locError = ''; }
-    else this.locError = 'No encontré coordenadas. Pegá "lat, lng" o un link de Google Maps.';
+    else this.locError = 'No encontré coordenadas. Pegue "lat, lng" o un link de Google Maps.';
   }
   useMyLocation(): void {
     if (!navigator.geolocation) { this.locError = 'Este navegador no permite obtener la ubicación.'; return; }
@@ -488,7 +488,7 @@ export class ChatWindowComponent implements OnChanges, OnDestroy {
     if (!this.conversationId) return;
 
     this.dialog.confirm(
-      'Eliminar este mensaje para vos y para el cliente. No se puede deshacer.',
+      'Eliminar este mensaje para usted y para el cliente. No se puede deshacer.',
       { title: 'Eliminar el mensaje', okLabel: 'Eliminar', danger: true }
     ).then(ok => {
       if (!ok) return;
@@ -988,7 +988,7 @@ export class ChatWindowComponent implements OnChanges, OnDestroy {
     this.crmService.saveSticker(mediaUrl, 'Sticker guardado').subscribe({
       next: res => {
         this.stickers.push(res.data);
-        this.toast.success('Sticker guardado en tu colección');
+        this.toast.success('Sticker guardado en su colección');
       }
     });
   }
@@ -1234,7 +1234,7 @@ export class ChatWindowComponent implements OnChanges, OnDestroy {
   saveQuickReply(): void {
     const shortcut = this.quickForm.shortcut.trim().toLowerCase().replace(/^\//, '');
     if (!/^[a-z0-9_-]+$/.test(shortcut)) { this.quickError = 'El atajo sólo admite letras, números, guion y guion bajo.'; return; }
-    if (!this.quickForm.content.trim()) { this.quickError = 'Escribí el mensaje.'; return; }
+    if (!this.quickForm.content.trim()) { this.quickError = 'Escriba el mensaje.'; return; }
     this.quickSaving = true; this.quickError = '';
     this.crmService.saveQuickReply({ id: this.quickForm.id, shortcut, title: this.quickForm.title.trim() || null, content: this.quickForm.content.trim() }).subscribe({
       next: res => {

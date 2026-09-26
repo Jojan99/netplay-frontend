@@ -72,7 +72,7 @@
   <section *ngIf="tab === 'automations'" class="space-y-2">
 
     <p class="rounded-xl border border-sky-200 bg-sky-50 px-4 py-3 text-sm text-sky-900 dark:border-sky-900 dark:bg-sky-950/40 dark:text-sky-200">
-      Cuando el cliente <strong>sí</strong> te ha escrito en las últimas 24 horas se le manda un mensaje
+      Cuando el cliente <strong>sí</strong> le ha escrito en las últimas 24 horas se le manda un mensaje
       normal, más completo. Estas plantillas son el plan B para cuando esa ventana está cerrada,
       por ejemplo si pagó desde el portal.
     </p>
@@ -302,7 +302,7 @@
             </div>
 
             <div *ngIf="comp.type === 'BODY'" class="space-y-2">
-              <textarea [(ngModel)]="comp.text" rows="5" (ngModelChange)="onBodyChange()" placeholder="Hola, confirmamos tu pago…"
+              <textarea [(ngModel)]="comp.text" rows="5" (ngModelChange)="onBodyChange()" placeholder="Hola, confirmamos su pago…"
                         class="w-full rounded-md border border-slate-300 p-2 text-sm dark:border-slate-600 dark:bg-slate-700 dark:text-white"></textarea>
               <button type="button" (click)="addVariable()"
                       class="rounded-md bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-700 transition hover:bg-emerald-100 dark:bg-emerald-900/30 dark:text-emerald-300">
@@ -421,8 +421,8 @@
       </p>
       <p class="np-fine">
         Una plantilla aprobada solo sirve dentro de la cuenta donde fue aprobada, así
-        que el sistema las crea en <b>tu</b> cuenta de WhatsApp Business. Podés
-        reemplazar cualquiera por una tuya desde “Avisos automáticos”.
+        que el sistema las crea en <b>su</b> cuenta de WhatsApp Business. Puede
+        reemplazar cualquiera por una suya desde “Avisos automáticos”.
       </p>
     </div>
 
@@ -440,10 +440,10 @@
       <button type="button" class="np-btn np-btn--ghost np-btn--sm" (click)="cargarSistema(true)" [disabled]="cargandoSistema">Actualizar</button>
     </div>
 
-    <div class="np-loading" *ngIf="cargandoSistema && !sistema.length"><span class="np-spinner"></span> Consultando tu cuenta de Meta…</div>
+    <div class="np-loading" *ngIf="cargandoSistema && !sistema.length"><span class="np-spinner"></span> Consultando su cuenta de Meta…</div>
 
     <p class="np-muted" *ngIf="!cargandoSistema && !sistema.length">
-      No pudimos leer tu cuenta de Meta. Revisá que la API esté configurada en la pestaña de conexión.
+      No pudimos leer su cuenta de Meta. Revise que la API esté configurada en la pestaña de conexión.
     </p>
 
     <table class="np-table" *ngIf="sistema.length">
@@ -456,7 +456,7 @@
           </td>
           <td>
             <span class="np-mono">{{ p.vinculada || p.sugerida }}</span>
-            <small class="np-fine np-block" *ngIf="p.propia">Es tuya, no la del sistema</small>
+            <small class="np-fine np-block" *ngIf="p.propia">Es suya, no la del sistema</small>
           </td>
           <td>
             <span class="np-pill" [ngClass]="claseEstado(p.estado)">{{ etiquetaEstado(p.estado) }}</span>

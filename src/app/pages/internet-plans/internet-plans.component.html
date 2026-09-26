@@ -24,7 +24,7 @@
           <thead><tr><th class="np-th-stripe"></th><th>Plan</th><th>Tecnología</th><th>Velocidad</th><th class="np-th-right">Mensualidad</th><th class="np-th-right">Clientes</th><th>Estado</th><th class="np-th-right">Acciones</th></tr></thead>
           <tbody>
             <tr *ngIf="isLoading" class="np-empty"><td colspan="8"><span class="np-spinner"></span></td></tr>
-            <tr *ngIf="!isLoading && plans.length === 0" class="np-empty"><td colspan="8"><strong>Sin planes registrados.</strong><span>Creá el primero con Nuevo plan.</span></td></tr>
+            <tr *ngIf="!isLoading && plans.length === 0" class="np-empty"><td colspan="8"><strong>Sin planes registrados.</strong><span>Cree el primero con Nuevo plan.</span></td></tr>
             <tr *ngFor="let p of plans" class="np-row" [ngClass]="'np-row--' + (p.type || 'otro')" [class.is-off]="!p.active" (click)="openEdit(p)" tabindex="0" (keydown.enter)="openEdit(p)">
               <td class="np-stripe"><i></i></td>
               <td><div class="np-name">{{ p.plan_name }}</div><div class="np-plan" *ngIf="p.description">{{ p.description }}</div></td>

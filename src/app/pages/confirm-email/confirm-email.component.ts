@@ -101,7 +101,7 @@ export class ConfirmEmailComponent implements OnInit {
 
     if (!correo) {
       this.avisoOk.set(false);
-      this.aviso.set('Escribí el correo con el que registraste la empresa.');
+      this.aviso.set('Escriba el correo con el que registró la empresa.');
       return;
     }
 
@@ -112,12 +112,12 @@ export class ConfirmEmailComponent implements OnInit {
       next: (res) => {
         this.reenviando.set(false);
         this.avisoOk.set(!res?.error);
-        this.aviso.set(res?.message ?? 'Te reenviamos el correo de activación.');
+        this.aviso.set(res?.message ?? 'Le reenviamos el correo de activación.');
       },
       error: () => {
         this.reenviando.set(false);
         this.avisoOk.set(false);
-        this.aviso.set('No pudimos reenviar el correo. Probá de nuevo en un momento.');
+        this.aviso.set('No pudimos reenviar el correo. Pruebe de nuevo en un momento.');
       },
     });
   }

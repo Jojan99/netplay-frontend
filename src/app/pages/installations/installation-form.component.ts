@@ -22,7 +22,7 @@ import {
  * para que nada se escriba a mano ni haya que llamar a la oficina.
  *
  * Va en cinco pasos y no se pasa de uno sin lo obligatorio de ese paso: lo que
- * falte acá lo descubre el técnico en la casa del cliente, y ahí ya es tarde.
+ * falte aquí lo descubre el técnico en la casa del cliente, y ahí ya es tarde.
  */
 @Component({
   selector: 'app-installation-form',
@@ -138,7 +138,8 @@ export class InstallationFormComponent implements OnInit {
   emptyForm() {
     return {
       user_data_id: '',
-      client_name: '',
+      client_nombres: '',
+      client_apellidos: '',
       client_dni: '',
       client_phone: '',
       client_email: '',
@@ -241,7 +242,7 @@ export class InstallationFormComponent implements OnInit {
       error: () => {
         this.cargandoRedes = false;
         this.interfaces = [];
-        this.avisoRedes = 'No se pudo conectar con el router. Verificá que esté en línea y reintentá.';
+        this.avisoRedes = 'No se pudo conectar con el router. Verifique que esté en línea y reintente.';
       },
     });
   }
@@ -281,7 +282,7 @@ export class InstallationFormComponent implements OnInit {
 
         if (r?.error !== 0) {
           this.ips = [];
-          this.avisoIps = r?.message || 'El router no respondió. Reintentá en un momento.';
+          this.avisoIps = r?.message || 'El router no respondió. Reintente en un momento.';
           return;
         }
 
@@ -417,7 +418,7 @@ export class InstallationFormComponent implements OnInit {
    *
    * La OLT y las ONT rechazan la ñ, los acentos y varios signos, y toda la
    * orden se manda junta: una clave con ñ hace fallar también el nombre de la
-   * red. Mejor que se sepa acá y no con el técnico en la casa del cliente.
+   * red. Mejor que se sepa aquí y no con el técnico en la casa del cliente.
    */
   get problemaDeLaClaveWifi(): string {
     const c = this.form.wifi_password ?? '';
@@ -450,7 +451,8 @@ export class InstallationFormComponent implements OnInit {
     const falta: string[] = [];
 
     if (n === 1) {
-      if (!f.client_name?.trim()) falta.push('el nombre');
+      if (!f.client_nombres?.trim()) falta.push('el nombre');
+      if (!f.client_apellidos?.trim()) falta.push('los apellidos');
       if (!f.client_dni?.trim()) falta.push('el documento');
       if (!f.client_phone?.trim()) falta.push('el teléfono');
       if (!f.address?.trim()) falta.push('la dirección');
@@ -535,6 +537,10 @@ export class InstallationFormComponent implements OnInit {
 
   // ── El resumen del último paso ────────────────────────────────────────────
 
+  get nombreCompleto(): string {
+    return [this.form.client_nombres, this.form.client_apellidos].map(x => (x ?? '').trim()).filter(Boolean).join(' ');
+  }
+
   get nombreDelPlan(): string {
     const p = this.plans.find(x => String(x.id) === String(this.form.internet_plan_id));
     return p ? (p.plan_name ?? p.names ?? '—') : '—';
@@ -571,7 +577,11 @@ export class InstallationFormComponent implements OnInit {
     const num = (v: any) => (v === '' || v === null || v === undefined ? undefined : Number(v));
 
     const data: any = {
-      client_name: this.form.client_name,
+      // El completo para los listados y la descripción de la ONT, y separados
+      // para la ficha del cliente, que los tiene en dos campos.
+      client_name: this.nombreCompleto,
+      client_firstname: this.form.client_nombres.trim(),
+      client_lastname: this.form.client_apellidos.trim(),
       client_dni: this.form.client_dni,
       client_phone: this.form.client_phone,
       client_email: this.form.client_email || undefined,

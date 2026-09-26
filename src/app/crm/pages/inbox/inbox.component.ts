@@ -157,7 +157,7 @@ export class InboxComponent implements OnInit, OnDestroy {
       open_time: f.open_time, close_time: f.close_time, off_hours_message: f.off_hours_message || null,
       welcome_message: f.welcome_message || null, wait_alert_minutes: Number(f.wait_alert_minutes) || 15,
 
-      // Identificación previa. Va acá y no en un spread del formulario porque
+      // Identificación previa. Va aquí y no en un spread del formulario porque
       // este envío arma el cuerpo campo por campo: si no se agrega, el ajuste
       // cambia en pantalla pero nunca llega al servidor y vuelve apagado.
       identificacion_enabled: !!f.identificacion_enabled,

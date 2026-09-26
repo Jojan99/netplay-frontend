@@ -30,11 +30,11 @@
     <div class="nv-wrap nv-hero-in">
       <div class="nv-hero-copy">
         <p class="nv-kicker">Software para proveedores de internet</p>
-        <h1>Tu red, tu cartera y tus clientes en una sola consola.</h1>
-        <p class="nv-lead">Facturá, cobrá, autorizá ONT, cortá por mora y atendé por WhatsApp sin saltar entre cinco programas. Cada empresa entra por su propia dirección, con su nombre y su logo.</p>
+        <h1>Su red, su cartera y sus clientes en una sola consola.</h1>
+        <p class="nv-lead">Facture, cobre, autorice ONT, corte por mora y atienda por WhatsApp sin saltar entre cinco programas. Cada empresa entra por su propia dirección, con su nombre y su logo.</p>
 
         <form class="nv-reserva" (submit)="reservar($event)">
-          <label for="nv-sub">Reservá la dirección de tu empresa</label>
+          <label for="nv-sub">Reserve la dirección de su empresa</label>
           <div class="nv-reserva-campo" [class.is-ok]="resultado()?.disponible" [class.is-mal]="resultado() && !resultado()?.disponible">
             <input id="nv-sub" #campo (input)="alEscribir(campo)" placeholder="tuempresa" autocomplete="off" spellcheck="false" maxlength="40" autocapitalize="off" />
             <span class="nv-reserva-dom">.{{ dominio() }}</span>
@@ -75,29 +75,29 @@
     <div class="nv-wrap">
       <header class="nv-sec-head">
         <p class="nv-kicker">Funciones</p>
-        <h2>Lo que hoy hacés en hojas de cálculo, la consola de la OLT y el WhatsApp del celular.</h2>
+        <h2>Lo que hoy hace en hojas de cálculo, la consola de la OLT y el WhatsApp del celular.</h2>
       </header>
 
       <div class="nv-resuelve">
         <article>
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 10h18M7 15h4"/></svg>
           <h3>Cartera que se cobra sola</h3>
-          <p>Facturas por grupo de corte, abonos, compromisos de pago y cortes automáticos por mora. Tus clientes pagan en línea desde el portal.</p>
+          <p>Facturas por grupo de corte, abonos, compromisos de pago y cortes automáticos por mora. Sus clientes pagan en línea desde el portal.</p>
         </article>
         <article>
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="5" cy="12" r="2"/><circle cx="19" cy="6" r="2"/><circle cx="19" cy="18" r="2"/><path d="M7 12h4l6-6M11 12l6 6"/></svg>
           <h3>Red FTTH sin consola</h3>
-          <p>Autorizá ONT en OLT Huawei y C-Data, mirá la señal de cada puerto y cambiá perfiles y VLAN desde la ficha del cliente.</p>
+          <p>Autorice ONT en OLT Huawei y C-Data, consulte la señal de cada puerto y cambie perfiles y VLAN desde la ficha del cliente.</p>
         </article>
         <article>
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M5 12.5a10 10 0 0 1 14 0M8.5 16a5 5 0 0 1 7 0"/><circle cx="12" cy="19.5" r="1"/></svg>
           <h3>El equipo del cliente, a distancia</h3>
-          <p>Con TR-069 cambiás la clave del WiFi, reiniciás el router y ves el consumo sin mandar un técnico.</p>
+          <p>Con TR-069 cambia la clave del WiFi, reinicia el router y ves el consumo sin mandar un técnico.</p>
         </article>
         <article>
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 20l1.3-3.9A8 8 0 1 1 8 19z"/><path d="M9 10h6M9 13h4"/></svg>
           <h3>WhatsApp para todo el equipo</h3>
-          <p>Bandeja compartida, avisos de factura y de pago, campañas y alertas de caída de red al grupo de tus técnicos.</p>
+          <p>Bandeja compartida, avisos de factura y de pago, campañas y alertas de caída de red al grupo de sus técnicos.</p>
         </article>
       </div>
 
@@ -138,7 +138,7 @@
     <div class="nv-wrap">
       <header class="nv-sec-head">
         <p class="nv-kicker">Planes</p>
-        <h2>Todas las funciones en todos los planes. Pagás según cuántos clientes tenés.</h2>
+        <h2>Todas las funciones en todos los planes. Pagás según cuántos clientes tiene.</h2>
         @if (pruebaDias()) {
           <p class="nv-sec-sub"><b>{{ pruebaDias() }} días de prueba gratis</b> en cualquier plan.</p>
         }
@@ -147,7 +147,7 @@
       @if (!planesListos()) {
         <p class="nv-cargando"><span class="np-spinner np-spinner--sm"></span> Cargando planes…</p>
       } @else if (!planes().length) {
-        <p class="nv-cargando">Escribinos y te armamos un plan a la medida de tu red.</p>
+        <p class="nv-cargando">Escribinos y le armamos un plan a la medida de su red.</p>
       } @else {
         <div class="nv-planes">
           @for (plan of planes(); track plan.clave) {
@@ -198,11 +198,11 @@
     <div class="nv-wrap nv-confianza">
       <div>
         <p class="nv-kicker">Seguridad</p>
-        <h2>Tu operación y la de tus clientes, protegidas.</h2>
+        <h2>Su operación y la de sus clientes, protegidas.</h2>
       </div>
       <dl>
-        <div><dt>Conexión cifrada</dt><dd>Todo el tráfico va por HTTPS, y la plataforma llega a tu red por un túnel VPN.</dd></div>
-        <div><dt>Datos separados por empresa</dt><dd>Nadie de otra empresa ve tus clientes, facturas ni equipos.</dd></div>
+        <div><dt>Conexión cifrada</dt><dd>Todo el tráfico va por HTTPS, y la plataforma llega a su red por un túnel VPN.</dd></div>
+        <div><dt>Datos separados por empresa</dt><dd>Nadie de otra empresa ve sus clientes, facturas ni equipos.</dd></div>
         <div><dt>Permisos por perfil</dt><dd>Decidís qué módulos ve cada técnico, contador o asesor.</dd></div>
         <div><dt>Llaves cifradas</dt><dd>Las credenciales de la pasarela de pago y de WhatsApp se guardan cifradas.</dd></div>
       </dl>
@@ -230,7 +230,7 @@
   <!-- ── Cierre ────────────────────────────────────────────────────── -->
   <section class="nv-cierre">
     <div class="nv-wrap nv-cierre-in">
-      <h2>Empezá hoy con tu propia dirección.</h2>
+      <h2>Comience hoy con su propia dirección.</h2>
       <div class="np-btnrow">
         <a class="np-btn np-btn--primary" routerLink="/register">Crear empresa</a>
         <a class="np-btn nv-btn-claro" routerLink="/login">Ya tengo cuenta</a>

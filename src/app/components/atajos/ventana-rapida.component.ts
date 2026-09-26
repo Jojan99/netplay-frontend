@@ -70,7 +70,7 @@ export class VentanaRapidaComponent implements OnInit, OnChanges, OnDestroy {
 
   /* ── Ping ──────────────────────────────────────────────────────────────
      Antes vivía en un modal de la ficha del cliente: había que entrar al
-     cliente, abrirlo, y quedarse mirando sin poder hacer otra cosa. Acá se
+     cliente, abrirlo, y quedarse mirando sin poder hacer otra cosa. Aquí se
      puede minimizar y seguir corriendo, y se le hace a cualquier cliente
      buscándolo desde la misma ventana. */
 
@@ -310,8 +310,8 @@ export class VentanaRapidaComponent implements OnInit, OnChanges, OnDestroy {
   }
 
   private explicar(e: any, porDefecto: string): string {
-    if (e?.status === 403) return 'Tu perfil no tiene acceso a esta consulta.';
-    if (e?.status === 404) return 'No se encontró en tu empresa.';
+    if (e?.status === 403) return 'Su perfil no tiene acceso a esta consulta.';
+    if (e?.status === 404) return 'No se encontró en su empresa.';
     return e?.error?.message || porDefecto;
   }
 }

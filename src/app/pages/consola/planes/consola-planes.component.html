@@ -23,7 +23,7 @@
 
   <p *ngIf="!enBase" class="np-notice np-notice--warn">
     <strong>Los planes todavía salen de <span class="np-mono">config/plataforma.php</span>.</strong>
-    No se pueden editar desde acá. Corré la migración de la consola y quedan en la base, con los mismos precios.
+    No se pueden editar desde aquí. Ejecute la migración de la consola y quedan en la base, con los mismos precios.
   </p>
 
   <p class="np-notice np-notice--info np-notice--inline" *ngIf="notaPrecios">{{ notaPrecios }}</p>
@@ -58,7 +58,7 @@
                   <path d="M12 3 3 8l9 5 9-5-9-5ZM3 12l9 5 9-5M3 16l9 5 9-5"/>
                 </svg>
                 <strong>No hay planes cargados.</strong>
-                <span>Sin planes no se le puede asignar precio a ninguna empresa. Creá el primero con "Nuevo plan".</span>
+                <span>Sin planes no se le puede asignar precio a ninguna empresa. Cree el primero con "Nuevo plan".</span>
               </td>
             </tr>
 
@@ -152,8 +152,8 @@
       </div>
 
       <p class="np-notice np-notice--info np-field-full" *ngIf="editando">
-        Cambiar el precio acá <b>no</b> cambia lo que pagan las {{ editando.empresas }} empresa(s) que ya tienen este plan:
-        cada una conserva su precio pactado. Para pasarlas al precio nuevo, usá el botón "Precios".
+        Cambiar el precio aquí <b>no</b> cambia lo que pagan las {{ editando.empresas }} empresa(s) que ya tienen este plan:
+        cada una conserva su precio pactado. Para pasarlas al precio nuevo, use el botón "Precios".
       </p>
 
       <div class="np-btnrow np-btnrow--end np-field-full">
@@ -196,7 +196,7 @@
         </div>
         <p class="np-nada np-nada--sm" *ngIf="!historial.length">
           <b>Sin cambios registrados todavía.</b>
-          <span>Cada vez que cambies el precio del plan va a quedar acá, con el motivo y quién lo hizo.</span>
+          <span>Cada vez que cambies el precio del plan va a quedar aquí, con el motivo y quién lo hizo.</span>
         </p>
       </div>
 
@@ -225,7 +225,7 @@
 
       <p class="np-notice np-notice--warn" *ngIf="conPrecioEspecial">
         <strong>{{ conPrecioEspecial }} empresa(s) están con precio especial.</strong>
-        Si las pasás al precio nuevo, desde su próximo cobro pagan el de lista.
+        Si las pasa al precio nuevo, desde su próximo cobro pagan el de lista.
       </p>
     </div>
 

@@ -40,7 +40,7 @@
               <td class="np-col-mail">{{ u.email }}</td>
               <td><span class="np-pill" [ngClass]="rolePill(u.profile_name)">{{ u.profile_name }}</span></td>
               <td class="np-col-acc">
-                <span class="np-fine" *ngIf="u.username === miUsuario">Tu cuenta</span>
+                <span class="np-fine" *ngIf="u.username === miUsuario">Su cuenta</span>
                 <button *ngIf="u.active !== 0 && u.username !== miUsuario" type="button" class="np-icobtn np-icobtn--danger" (click)="openDelete(u)" [title]="'Eliminar a ' + u.names" aria-label="Eliminar usuario">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M10 11v6m4-6v6M6 7l1 13h10l1-13M9 7V4h6v3"/></svg>
                 </button>
@@ -105,7 +105,7 @@
           </span>
           <small class="np-fine">Al menos 10 caracteres, con mayúsculas, minúsculas y números.</small>
         </label>
-        <label class="np-field np-field-full"><span>Rol</span><np-select [(ngModel)]="form.profile_id" name="profile_id" required [opciones]="profiles" [presentacion]="presPerfiles" placeholder="Seleccioná un rol…" [valorVacio]="0" ariaLabel="Rol"></np-select></label>
+        <label class="np-field np-field-full"><span>Rol</span><np-select [(ngModel)]="form.profile_id" name="profile_id" required [opciones]="profiles" [presentacion]="presPerfiles" placeholder="Seleccione un rol…" [valorVacio]="0" ariaLabel="Rol"></np-select></label>
       </div>
       <div class="np-btnrow np-btnrow--end">
         <button type="button" class="np-btn np-btn--ghost" (click)="closeModal()">Cancelar</button>

@@ -15,7 +15,7 @@
         <thead><tr><th class="np-th-stripe"></th><th>Mensaje</th><th>Destino</th><th>Tipo</th><th>Programación</th><th>Estado</th><th class="np-th-right">Acciones</th></tr></thead>
         <tbody>
           <tr *ngIf="loading" class="np-empty"><td colspan="7"><span class="np-spinner"></span></td></tr>
-          <tr *ngIf="!loading && !scheduled.length" class="np-empty"><td colspan="7"><strong>No hay mensajes programados.</strong><span>Creá el primero con Programar mensaje.</span></td></tr>
+          <tr *ngIf="!loading && !scheduled.length" class="np-empty"><td colspan="7"><strong>No hay mensajes programados.</strong><span>Cree el primero con Programar mensaje.</span></td></tr>
           <tr *ngFor="let msg of scheduled" class="np-row np-row--static">
             <td class="np-stripe"><i [style.background]="msg.status === 'active' ? 'var(--ok)' : msg.status === 'cancelled' ? 'var(--danger)' : 'var(--line-strong)'"></i></td>
             <td><div class="np-name">{{ msg.name || 'Sin nombre' }}</div><div class="np-plan np-truncate" *ngIf="msg.content">{{ msg.content }}</div></td>

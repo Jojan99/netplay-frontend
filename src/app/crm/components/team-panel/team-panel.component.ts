@@ -82,7 +82,7 @@ export class TeamPanelComponent implements OnInit, AfterViewInit, OnDestroy {
     return 'Llamando…';
   }
   get inviteCandidates(): Member[] { return this.members.filter(m => this.online.has(m.id) && !this.peers.has(m.id)); }
-  memberName(id: number): string { return id === this.myId ? 'Vos' : (this.members.find(m => m.id === id)?.name || 'Agente'); }
+  memberName(id: number): string { return id === this.myId ? 'Usted' : (this.members.find(m => m.id === id)?.name || 'Agente'); }
   initials(n: string): string { return (n || '?').split(' ').filter(Boolean).slice(0, 2).map(x => x[0]).join('').toUpperCase(); }
   fmtTime(iso: string): string { const d = new Date(iso); return isNaN(d.getTime()) ? '' : d.toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit' }); }
   fmtSecs(s: number): string { return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`; }
@@ -240,7 +240,7 @@ export class TeamPanelComponent implements OnInit, AfterViewInit, OnDestroy {
     if (this.localStream) return true;
     try { this.localStream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true }, video: false }); return true; }
     catch (e: any) {
-      this.toast.error('No se pudo acceder al micrófono. Revisá el permiso del navegador.');
+      this.toast.error('No se pudo acceder al micrófono. Revise el permiso del navegador.');
       console.warn('[Equipo llamada] micrófono', e?.name, e?.message);
       return false;
     }
@@ -376,7 +376,7 @@ export class TeamPanelComponent implements OnInit, AfterViewInit, OnDestroy {
         break;
       }
       case 'offer': {
-        // Acá se cortaba la llamada sin dejar rastro: si algo fallaba, el que
+        // Aquí se cortaba la llamada sin dejar rastro: si algo fallaba, el que
         // aceptó se quedaba mirando la pantalla y el que llamó esperando un
         // answer que nunca salía.
         if (this.call.state !== 'in-call' || s.call_id !== this.call.id) {

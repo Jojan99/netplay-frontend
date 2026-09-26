@@ -15,7 +15,7 @@ import { MetaWhatsappService } from '../../../services/meta-whatsapp.service';
       </header>
       <div class="np-scroll">
         <div *ngIf="loading" class="np-loading"><span class="np-spinner"></span> Consultando a Meta…</div>
-        <p class="np-notice np-notice--danger" *ngIf="!loading && !phoneInfo">No se pudo obtener la información del número. Revisá las credenciales en Configuración.</p>
+        <p class="np-notice np-notice--danger" *ngIf="!loading && !phoneInfo">No se pudo obtener la información del número. Revise las credenciales en Configuración.</p>
         <section class="np-card" *ngIf="!loading && phoneInfo">
           <div class="np-card-h"><h2>Información del número</h2></div>
           <dl class="np-dl">

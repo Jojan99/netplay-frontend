@@ -263,7 +263,7 @@ export class StaffComponent implements OnInit {
       error: (err) => {
         this.isSaving = false;
         // El 422 de la validación trae el motivo exacto: mostrarlo, no taparlo.
-        this.errorMsg   = err?.error?.message || 'No se pudo crear el usuario. Revisá tu conexión e intentá de nuevo.';
+        this.errorMsg   = err?.error?.message || 'No se pudo crear el usuario. Revise su conexión e intente de nuevo.';
         this.errorField = err?.error?.data?.campo ?? '';
       },
     });

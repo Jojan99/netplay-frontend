@@ -53,7 +53,7 @@
           </tr></thead>
           <tbody>
             <tr *ngIf="isLoading" class="np-empty"><td colspan="9"><span class="np-spinner"></span></td></tr>
-            <tr *ngIf="!isLoading && installations.length === 0" class="np-empty"><td colspan="9"><strong>No hay instalaciones con estos filtros.</strong><span>Creá una nueva o limpiá los filtros.</span></td></tr>
+            <tr *ngIf="!isLoading && installations.length === 0" class="np-empty"><td colspan="9"><strong>No hay instalaciones con estos filtros.</strong><span>Cree una nueva o limpie los filtros.</span></td></tr>
             <tr *ngFor="let inst of installations" class="np-row" [ngClass]="'np-row--' + inst.status" [attr.aria-selected]="isSelected(inst)" (click)="openDetail(inst)" tabindex="0" (keydown.enter)="openDetail(inst)">
               <td class="np-stripe"><i></i></td>
               <td><div class="np-name">{{ inst.client_name }}</div><div class="np-plan"><em>{{ inst.client_phone }}</em><span class="np-plan-mobile"> · {{ inst.address }}</span></div></td>

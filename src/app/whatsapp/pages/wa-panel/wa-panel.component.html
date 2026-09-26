@@ -30,7 +30,7 @@
         </div>
         <div class="np-kpi">
           <span class="np-kpi-l">Suscripción</span>
-          <span class="np-kpi-v np-kpi-v--text" [class.np-kpi-v--ok]="subscriptionActive" [class.np-kpi-v--warn]="!subscriptionActive">{{ subscriptionActive ? 'Plan activo' : (subscriptionStatus !== null ? 'Sin suscripción' : 'Activá o renová el plan') }}</span>
+          <span class="np-kpi-v np-kpi-v--text" [class.np-kpi-v--ok]="subscriptionActive" [class.np-kpi-v--warn]="!subscriptionActive">{{ subscriptionActive ? 'Plan activo' : (subscriptionStatus !== null ? 'Sin suscripción' : 'Active o renueve el plan') }}</span>
           <span class="np-kpi-s"><span *ngIf="subscribeMsg" [class.np-neg]="subscribeError" [class.np-pos]="!subscribeError">{{ subscribeMsg }}</span><button type="button" class="np-link" (click)="activateSubscription()" [disabled]="subscribing || !hasCredentials">{{ subscribing ? 'Activando…' : (subscriptionActive ? 'Renovar plan' : 'Activar plan') }}</button></span>
         </div>
         <div class="np-kpi">
@@ -45,7 +45,7 @@
           <thead><tr><th class="np-th-stripe"></th><th>Instancia</th><th>Teléfono</th><th>Estado</th><th>Activa</th><th class="np-th-right">Acciones</th></tr></thead>
           <tbody>
             <tr *ngIf="loading" class="np-empty"><td colspan="6"><span class="np-spinner"></span></td></tr>
-            <tr *ngIf="!loading && instances.length === 0" class="np-empty"><td colspan="6"><strong>No hay instancias configuradas.</strong><span>Activá el plan y creá una nueva para comenzar.</span></td></tr>
+            <tr *ngIf="!loading && instances.length === 0" class="np-empty"><td colspan="6"><strong>No hay instancias configuradas.</strong><span>Active el plan y cree una nueva para comenzar.</span></td></tr>
             <tr *ngFor="let inst of instances" class="np-row np-row--static" [attr.aria-selected]="isActive(inst)">
               <td class="np-stripe"><i [style.background]="(inst.connected || inst.status === 'connected') ? 'var(--ok)' : 'var(--danger)'"></i></td>
               <td><div class="np-name">{{ inst.name || inst.instanceId || inst.id }}</div></td>
@@ -105,7 +105,7 @@
           <img *ngIf="!qrLoading && qrObjectUrl && !qrError" [src]="qrObjectUrl" alt="Código QR de WhatsApp" />
           <p class="np-muted" *ngIf="!qrLoading && (qrError || !qrObjectUrl)">QR no disponible aún. La instancia puede estar iniciando.</p>
         </div>
-        <p class="np-fine">WhatsApp → Dispositivos vinculados → Vincular dispositivo → escaneá este código. Se verifica el estado cada 4 segundos.</p>
+        <p class="np-fine">WhatsApp → Dispositivos vinculados → Vincular dispositivo → escanee este código. Se verifica el estado cada 4 segundos.</p>
       </ng-container>
       <div class="np-btnrow np-btnrow--end"><button type="button" class="np-btn np-btn--ghost" (click)="checkStatus()">Verificar estado</button><button type="button" class="np-btn np-btn--primary" (click)="refreshQr()" [disabled]="qrLoading || !!qrStatus?.connected">Actualizar QR</button></div>
     </div>

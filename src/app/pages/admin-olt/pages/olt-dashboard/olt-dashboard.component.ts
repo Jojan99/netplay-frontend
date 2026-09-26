@@ -50,7 +50,7 @@ interface PuertoConSenal {
  * Antes esta pantalla sólo contaba ONT en línea y las repartía por puerto, que
  * es lo que la OLT ya dice sola. Lo que un ISP necesita saber es qué enlaces
  * están por caerse: la potencia óptica de todas las ONT se lee en un solo
- * barrido, así que acá se clasifica la red completa y se listan los clientes
+ * barrido, así que aquí se clasifica la red completa y se listan los clientes
  * que hay que atender antes de que llamen.
  */
 @Component({
@@ -125,7 +125,7 @@ export class OltDashboardComponent implements OnInit {
       observacion: recomendacionDeRed({
         cliente: o.cliente || o.description, olt: this.nombreOlt, fsp: o.fsp, ont_id: o.ont_id,
         serial: o.serial, rx_prom: o.potencia, rx_min: o.potencia,
-        // Acá se ve una foto, no una semana: decir "apagado el 100% del
+        // Aquí se ve una foto, no una semana: decir "apagado el 100% del
         // tiempo" por una sola lectura sería inventar. Si está fuera, se dice
         // eso y nada más.
         detalle: o.status === 'online' ? null : 'La ONT figura fuera de línea en la OLT. Qué revisar: energía del cliente, fuente de la ONT y acometida.',

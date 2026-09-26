@@ -49,7 +49,7 @@ export class HistoryFactureComponent  implements OnInit{
 
 
   async ejecutarComando() {
-    if (!await this.dialog.confirm("¿Estás seguro de que deseas ejecutar este proceso?")) {
+    if (!await this.dialog.confirm("¿Está seguro de que deseas ejecutar este proceso?")) {
       return; // Si cancela, no hace nada
     }
 

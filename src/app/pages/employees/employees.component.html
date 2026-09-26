@@ -34,7 +34,7 @@
 
       <div class="emp-vacio" *ngIf="!isLoading && !visibles.length">
         <b>{{ employees.length ? 'Nadie coincide con el filtro.' : 'Todavía no hay empleados.' }}</b>
-        <span *ngIf="!employees.length">Creá el primero con «Nuevo empleado». Si ya tiene usuario en el sistema, se vincula solo.</span>
+        <span *ngIf="!employees.length">Cree el primero con «Nuevo empleado». Si ya tiene usuario en el sistema, se vincula solo.</span>
       </div>
 
       <button type="button" *ngFor="let e of visibles; trackBy: porId" class="emp-card" [class.is-off]="!e.active" [attr.aria-pressed]="selected?.id === e.id" (click)="selectEmployee(e)">

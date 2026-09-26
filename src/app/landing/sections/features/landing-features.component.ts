@@ -4,10 +4,10 @@ import { LandingConfig, LandingSection } from '../../services/landing.service';
 
 const DEFAULT_FEATURES = [
   { icon: 'bolt',    title: 'Alta velocidad',     desc: 'Conexión de fibra óptica con velocidades simétricas garantizadas.' },
-  { icon: 'shield',  title: 'Estabilidad 99.9%',  desc: 'Infraestructura redundante para mantener tu conexión siempre activa.' },
-  { icon: 'support', title: 'Soporte 24/7',        desc: 'Técnicos disponibles en cualquier momento para resolver tus problemas.' },
+  { icon: 'shield',  title: 'Estabilidad 99.9%',  desc: 'Infraestructura redundante para mantener su conexión siempre activa.' },
+  { icon: 'support', title: 'Soporte 24/7',        desc: 'Técnicos disponibles en cualquier momento para resolver sus problemas.' },
   { icon: 'router',  title: 'Equipo incluido',     desc: 'Router WiFi de última generación incluido en todos los planes.' },
-  { icon: 'lock',    title: 'IP fija opcional',    desc: 'Obtén una dirección IP fija para tus servicios y aplicaciones.' },
+  { icon: 'lock',    title: 'IP fija opcional',    desc: 'Obtén una dirección IP fija para sus servicios y aplicaciones.' },
   { icon: 'chart',   title: 'Sin límite de datos', desc: 'Navega, transmite y trabaja sin preocuparte por límites de consumo.' },
 ];
 

@@ -8,7 +8,7 @@ import { AuthService } from '../../services/auth.service';
  * Guía de primeros pasos del panel.
  *
  * Deliberadamente no es un tour de burbujas encima de la pantalla: esos se
- * cierran a los dos clics y no dejan nada. Acá la guía es una lista de lo que
+ * cierran a los dos clics y no dejan nada. Aquí la guía es una lista de lo que
  * la empresa necesita dejar configurado para operar, y cada paso se marca solo
  * cuando el dato existe de verdad en la base. Así el avance es real y la lista
  * sigue sirviendo aunque la persona vuelva una semana después.
@@ -35,9 +35,9 @@ export class OnboardingGuideComponent implements OnInit {
   abierta   = signal(true);
   ocultando = signal(false);
 
-  /** El primero sin hacer: es el que se destaca como "seguí por acá". */
+  /** El primero sin hacer: es el que se destaca como "continúe por aquí". */
   siguiente = computed<PasoGuia | null>(
-    // Si la respuesta llega sin pasos no se rompe: un error acá frena la
+    // Si la respuesta llega sin pasos no se rompe: un error aquí frena la
     // actualización de toda la pantalla, menú incluido.
     () => this.guia()?.pasos?.find(p => !p.hecho) ?? null
   );

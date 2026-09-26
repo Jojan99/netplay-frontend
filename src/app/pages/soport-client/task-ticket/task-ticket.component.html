@@ -156,7 +156,7 @@
 
         <section class="np-panel" *ngIf="selectedTicket.status_id === 2 || isAdmin">
           <p class="np-sect">Agregar novedad</p>
-          <textarea class="np-input np-textarea" rows="3" [(ngModel)]="noteText" placeholder="Escribí una novedad…"></textarea>
+          <textarea class="np-input np-textarea" rows="3" [(ngModel)]="noteText" placeholder="Escriba una novedad…"></textarea>
           <div class="np-note-tools">
             <label class="np-btn np-btn--ghost np-btn--sm">Fotos<span class="np-c" *ngIf="notePhotos.length">{{ notePhotos.length }}</span><input type="file" multiple accept="image/*" hidden (change)="onPhotosSelected($event)"></label>
             <button type="button" class="np-btn np-btn--ghost np-btn--sm" *ngIf="!isRecording && !audioBlobUrl" (click)="startRecording()">Grabar audio</button>

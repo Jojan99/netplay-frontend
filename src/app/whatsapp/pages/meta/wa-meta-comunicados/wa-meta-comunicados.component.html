@@ -31,7 +31,7 @@
       <section class="rounded-xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-700 dark:bg-slate-800">
         <div class="mb-4 flex items-center gap-3">
           <span class="flex h-7 w-7 items-center justify-center rounded-full bg-emerald-600 text-sm font-bold text-white">1</span>
-          <h2 class="text-base font-semibold text-slate-900 dark:text-white">Qué vas a mandar</h2>
+          <h2 class="text-base font-semibold text-slate-900 dark:text-white">Qué va a mandar</h2>
         </div>
 
         <label class="mb-1.5 block text-sm font-medium text-slate-700 dark:text-slate-300">Plantilla</label>
@@ -185,7 +185,7 @@
         </div>
 
         <p class="mb-3 text-sm text-slate-500 dark:text-slate-400">
-          Mándate el mensaje a ti primero. Hasta que no lo hagas, el envío queda bloqueado.
+          Mándate el mensaje a usted primero. Hasta que no lo hagas, el envío queda bloqueado.
         </p>
 
         <div class="flex flex-wrap gap-2">
@@ -212,10 +212,10 @@
           <div *ngIf="confirmando"
                class="rounded-lg border border-amber-300 bg-amber-50 p-4 dark:border-amber-700 dark:bg-amber-950">
             <p class="mb-1 text-sm font-semibold text-amber-900 dark:text-amber-200">
-              Vas a enviar «{{ plantilla }}» a {{ totalDestinatarios }} cliente(s).
+              Va a enviar «{{ plantilla }}» a {{ totalDestinatarios }} cliente(s).
             </p>
             <p class="mb-3 text-xs text-amber-800 dark:text-amber-300">
-              Meta te cobra cada mensaje. Una vez enviados no se pueden retirar.
+              Meta le cobra cada mensaje. Una vez enviados no se pueden retirar.
             </p>
             <div class="flex gap-2">
               <button type="button" (click)="confirmando = false"

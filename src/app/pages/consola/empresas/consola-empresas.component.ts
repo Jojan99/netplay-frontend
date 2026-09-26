@@ -386,7 +386,7 @@ export class ConsolaEmpresasComponent implements OnInit, OnDestroy {
 
   ajustarCredito(): void {
     if (!this.seleccionada || !this.montoCredito || !this.notaCredito.trim()) {
-      this.toast.error('Poné el monto y por qué se ajusta.');
+      this.toast.error('Ingrese el monto y por qué se ajusta.');
       return;
     }
 

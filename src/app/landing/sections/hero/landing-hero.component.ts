@@ -27,7 +27,7 @@ import { LandingConfig } from '../../services/landing.service';
           {{ config.hero_title || 'Internet de alta velocidad' }}
         </h1>
         <p class="text-lg md:text-xl opacity-90 mb-8 leading-relaxed">
-          {{ config.hero_subtitle || 'Conectividad rápida, estable y confiable para tu hogar y empresa.' }}
+          {{ config.hero_subtitle || 'Conectividad rápida, estable y confiable para su hogar y empresa.' }}
         </p>
         <div class="flex flex-wrap gap-4">
           <a [href]="config.hero_cta_url || '#planes'"

@@ -25,7 +25,7 @@ export const environment = {
   // rootUrl: "http://192.168.2.6:1743/",
  
   // rootUrl: "http://192.168.1.80:1743/",
-  urlVerificateUser: 'http://localhost:4200/verificate/user',
+  urlVerificateUser: 'http://localhost:4200/verifíquelo/user',
   urlReset: "http://localhost:4200/reset-password",
   urlRegister: "http://localhost:4200/sign-up",
   urlTickets: "/ticket-detail",
@@ -40,7 +40,7 @@ export const environment = {
   urlWithdrawarlUser:"/withdrawal/",
   urlNotiPayment:"/user-payments-history",
   // rootUrl: "https://networkgolden.com/API/",
-  // urlVerificateUser: 'https://networkgolden.com/NetworkGolden/verificate/user',
+  // urlVerificateUser: 'https://networkgolden.com/NetworkGolden/verifíquelo/user',
   // urlReset: "https://networkgolden.com/NetworkGoldeneset-password",
   // urlRegister: "https://networkgolden.com/NetworkGolden/sign-up",
   // urlTickets: "/ticket-detail",

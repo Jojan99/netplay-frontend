@@ -249,7 +249,7 @@ export class CrmInfoPanelComponent implements OnChanges {
 
   buscarParaVincular(): void {
     const q = this.vinculoBusqueda.trim();
-    if (q.length < 3) { this.vinculoMensaje = 'Escribí al menos 3 letras.'; return; }
+    if (q.length < 3) { this.vinculoMensaje = 'Escriba al menos 3 letras.'; return; }
 
     this.vinculoCargando = true;
     this.vinculoMensaje = '';

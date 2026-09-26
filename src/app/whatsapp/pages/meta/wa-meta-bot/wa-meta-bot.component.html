@@ -24,7 +24,7 @@
   <div *ngIf="cargando" class="np-loading"><span class="np-spinner"></span> Leyendo la configuración del bot…</div>
 
   <p class="np-notice np-notice--warn" *ngIf="!cargando && !config.enabled">
-    El bot está en <b>borrador</b>: nadie lo está usando todavía. Probalo y después activalo.
+    El bot está en <b>borrador</b>: nadie lo está usando todavía. Probalo y después actívelo.
   </p>
 
   <div class="bot-cuerpo" *ngIf="!cargando">
@@ -109,7 +109,7 @@
 
           <p class="bot-vacio" *ngIf="!flujo.steps.length">
             <b>Este flujo está vacío.</b>
-            <span>Elegí un bloque de la barra de arriba para empezar.</span>
+            <span>Seleccione un bloque de la barra de arriba para empezar.</span>
           </p>
         </div>
       </div>
@@ -130,7 +130,7 @@
 
         <!-- ── Bloque ── -->
         <ng-container *ngIf="panel === 'bloque'">
-          <p class="np-empty-block" *ngIf="!bloque"><strong>Ningún bloque elegido.</strong><span>Hacé clic en uno del lienzo.</span></p>
+          <p class="np-empty-block" *ngIf="!bloque"><strong>Ningún bloque elegido.</strong><span>Haga clic en uno del lienzo.</span></p>
 
           <ng-container *ngIf="bloque">
             <div class="bot-insp-h" [attr.data-tono]="ficha(bloque).tono">
@@ -138,7 +138,7 @@
               <div><b>{{ ficha(bloque).label }}</b><small>{{ ficha(bloque).para }}</small></div>
             </div>
 
-            <button type="button" class="np-link" (click)="marcarInicio(bloque)" *ngIf="!esInicio(bloque)">Que el flujo empiece por acá</button>
+            <button type="button" class="np-link" (click)="marcarInicio(bloque)" *ngIf="!esInicio(bloque)">Que el flujo empiece por aquí</button>
 
             <!-- Mensaje / botones / lista / input / link comparten el texto -->
             <label class="np-field" *ngIf="['message','buttons','list','input','link','transfer_agent','end'].includes(bloque.type)">
@@ -159,7 +159,7 @@
                 </div>
                 <label class="np-field"><span>Lleva a</span>
                   <select class="np-input" [(ngModel)]="x.next_step" (ngModelChange)="toco()">
-                    <option [ngValue]="null">— nada (se corta acá) —</option>
+                    <option [ngValue]="null">— nada (se corta aquí) —</option>
                     <option *ngFor="let d of destinos" [ngValue]="d.id" [disabled]="d.id === bloque.id">{{ FICHAS[d.type].label }} · {{ resumen(d) | slice:0:34 }}</option>
                   </select>
                 </label>
@@ -183,7 +183,7 @@
                   <input class="np-input" [(ngModel)]="f.description" (ngModelChange)="toco()" [maxlength]="META.LARGO_DESC_FILA" placeholder="Detalle (opcional)" />
                   <label class="np-field"><span>Lleva a</span>
                     <select class="np-input" [(ngModel)]="f.next_step" (ngModelChange)="toco()">
-                      <option [ngValue]="null">— nada (se corta acá) —</option>
+                      <option [ngValue]="null">— nada (se corta aquí) —</option>
                       <option *ngFor="let d of destinos" [ngValue]="d.id" [disabled]="d.id === bloque.id">{{ FICHAS[d.type].label }} · {{ resumen(d) | slice:0:34 }}</option>
                     </select>
                   </label>
@@ -445,7 +445,7 @@
 
       <div class="bot-probador-pie">
         <input class="np-input" [(ngModel)]="escribiendo" (keydown.enter)="enviarEnPrueba()" [disabled]="terminoLaPrueba"
-               [placeholder]="terminoLaPrueba ? 'El flujo terminó. Empezá de nuevo para probar otra vez.' : 'Escribí como si fueras el cliente…'" />
+               [placeholder]="terminoLaPrueba ? 'El flujo terminó. Comience de nuevo para probar otra vez.' : 'Escriba como si fueras el cliente…'" />
         <button type="button" class="np-btn np-btn--primary np-btn--sm" (click)="enviarEnPrueba()" [disabled]="terminoLaPrueba || probando">Enviar</button>
       </div>
 

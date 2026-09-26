@@ -817,19 +817,19 @@ export class UserComponent implements OnInit {
     }
 
     if (!aPppoe && (!this.cambioIp || !this.cambioVlan)) {
-      this.toast('Elegí la VLAN y la IP', 'error');
+      this.toast('Seleccione la VLAN y la IP', 'error');
       return;
     }
 
     const ok = await this.dialog.confirm(
       aMano
         ? `Se cambia sólo el router (${aPppoe ? `PPPoE «${this.cambioUsuario}»` : `IP fija ${this.cambioIp}`}) y se le quita ${this.clienteEsPppoe ? 'el PPPoE' : 'la IP fija'} ahora. ` +
-          `El equipo lo cargás vos: hasta que lo cargues, el cliente queda sin internet. ¿Confirmás?`
+          `El equipo lo carga usted: hasta que lo cargues, el cliente queda sin internet. ¿Confirma?`
         : aPppoe
           ? `El cliente pasa a PPPoE con el usuario «${this.cambioUsuario}». Si su ONT está en el TR-069: se crea el usuario en el router sin quitarle la IP fija, ` +
-            `se cambia la ONT y, cuando la sesión PPPoE levanta, se saca la IP fija. Si no levanta, queda como estaba. ¿Confirmás?`
+            `se cambia la ONT y, cuando la sesión PPPoE levanta, se saca la IP fija. Si no levanta, queda como estaba. ¿Confirma?`
           : `El cliente pasa a IP fija con ${this.cambioIp}. ` + this.avisoHuerfana(this.migrIpzone, this.cambioIp) +
-            `Si su ONT está en el TR-069: se agrega la IP al router sin quitarle el PPPoE, se cambia la ONT y, cuando anda con la IP nueva, se deshabilita el PPPoE. Si no anda, queda como estaba. ¿Confirmás?`,
+            `Si su ONT está en el TR-069: se agrega la IP al router sin quitarle el PPPoE, se cambia la ONT y, cuando anda con la IP nueva, se deshabilita el PPPoE. Si no anda, queda como estaba. ¿Confirma?`,
       { okLabel: aMano ? 'Cambiar sólo el router' : 'Cambiar la conexión' },
     );
 
@@ -929,16 +929,16 @@ export class UserComponent implements OnInit {
   /** Cliente de IP fija que cambia de IP (lo que hacía "Migración de IP"). */
   private async cambiarIpFija(aMano = false): Promise<void> {
     if (!this.cambioIp || !this.cambioVlan) {
-      this.toast('Elegí la VLAN y la IP', 'error');
+      this.toast('Seleccione la VLAN y la IP', 'error');
       return;
     }
 
     const ok = await this.dialog.confirm(
       `El cliente pasa de ${this.selectedUserData?.ip || 'sin IP'} a ${this.cambioIp} (${this.cambioVlan.names}). ` + this.avisoHuerfana(this.migrIpzone, this.cambioIp) +
       (aMano
-        ? `Se cambia sólo el router y se le quita la IP de ahora: el equipo lo cargás vos (hasta entonces queda sin internet). ¿Confirmás?`
+        ? `Se cambia sólo el router y se le quita la IP de ahora: el equipo lo carga usted (hasta entonces queda sin internet). ¿Confirma?`
         : `Si su ONT está en el TR-069, se agrega la IP nueva sin quitar la de ahora, se cambia la ONT y, cuando anda, se saca la vieja; si no anda, queda como estaba. ` +
-          `Si no, hay que reconfigurar su equipo con la IP nueva. ¿Confirmás?`),
+          `Si no, hay que reconfigurar su equipo con la IP nueva. ¿Confirma?`),
       { okLabel: aMano ? 'Cambiar sólo el router' : 'Cambiar la IP' },
     );
 
@@ -1252,7 +1252,7 @@ export class UserComponent implements OnInit {
     if (!item?.id) return;
 
     if (!await this.dialog.confirm(
-      `¿Borrar la factura ${item.number_facture}? No se puede deshacer. Si querés dejar rastro, anulala en vez de borrarla.`,
+      `¿Borrar la factura ${item.number_facture}? No se puede deshacer. Si quiere dejar rastro, anúlela en vez de borrarla.`,
       { danger: true, okText: 'Borrar' } as any,
     )) return;
 
@@ -1385,7 +1385,7 @@ export class UserComponent implements OnInit {
   }
 
   /**
-   * Dirección, cédula y teléfono no están acá: son del cliente y los resuelve
+   * Dirección, cédula y teléfono no están aquí: son del cliente y los resuelve
    * el backend desde su ficha. El formulario los pedía y después los
    * ignoraba —escribir otra dirección no cambiaba nada—, igual que en el modal
    * de tickets y en el CRM, que nunca los pidieron.
@@ -1402,7 +1402,7 @@ export class UserComponent implements OnInit {
    *
    * El descuento existía por factura y había que ponerlo a mano cada mes; el
    * mes que alguien se olvidaba, el cliente pagaba de más y había que
-   * devolverle. Acá se acuerda una vez y la facturación lo aplica sola.
+   * devolverle. Aquí se acuerda una vez y la facturación lo aplica sola.
    */
   descuento: { tipo: 'porcentaje' | 'valor' | null; valor: number; motivo: string; hasta: string | null } =
     { tipo: null, valor: 0, motivo: '', hasta: null };
@@ -1429,7 +1429,7 @@ export class UserComponent implements OnInit {
 
     const bruto = this.descuento.tipo === 'porcentaje' ? precio * (Math.min(valor, 100) / 100) : valor;
 
-    // Nunca más que la factura: el backend hace el mismo tope, pero acá se ve
+    // Nunca más que la factura: el backend hace el mismo tope, pero aquí se ve
     // antes de guardar y no después.
     return Math.round(Math.min(bruto, precio));
   }
@@ -1662,7 +1662,7 @@ export class UserComponent implements OnInit {
    * Los campos personales del alta.
    *
    * Los placeholder repetían la etiqueta —«Nombres» debajo de «Nombres»— y el
-   * formulario se veía plano: no decían nada sobre cómo escribir el dato. Acá
+   * formulario se veía plano: no decían nada sobre cómo escribir el dato. Aquí
    * va un ejemplo real de cada uno.
    */
   readonly CAMPOS_PERSONALES = [
@@ -1732,14 +1732,17 @@ export class UserComponent implements OnInit {
       }
     };
 
-    // La orden guarda el nombre completo en un solo campo; el alta lo tiene
-    // partido. Sin esto el apellido quedaba vacío y el nombre traía los dos.
-    const partes = String(o.names ?? '').trim().split(/\s+/);
-    if (partes.length > 1) {
-      poner('names', partes.slice(0, partes.length > 2 ? 2 : 1).join(' '));
-      poner('lastname', partes.slice(partes.length > 2 ? 2 : 1).join(' '));
+    // Las órdenes nuevas traen nombres y apellidos separados. Las viejas sólo
+    // el nombre completo: ahí hay que partirlo, y con dos nombres y dos
+    // apellidos se adivina, así que se parte al medio.
+    if (o.firstname || o.lastname) {
+      poner('names', o.firstname);
+      poner('lastname', o.lastname);
     } else {
-      poner('names', o.names);
+      const partes = String(o.names ?? '').trim().split(/\s+/);
+      const corte = partes.length > 2 ? 2 : 1;
+      poner('names', partes.slice(0, corte).join(' '));
+      if (partes.length > 1) poner('lastname', partes.slice(corte).join(' '));
     }
 
     poner('phone', o.phone);
@@ -2041,7 +2044,7 @@ export class UserComponent implements OnInit {
           if (intento < 3) { setTimeout(() => this.cargarIps(intento + 1), 900 * intento); return; }
           this.loadingIps = false;
           this.Ipzone = [];
-          this.ipsError = r?.message || 'El router no respondió. Reintentá en un momento.';
+          this.ipsError = r?.message || 'El router no respondió. Reintente en un momento.';
           return;
         }
 
@@ -2065,7 +2068,7 @@ export class UserComponent implements OnInit {
         if (this.ipDeLaOrden) {
           const libre = this.Ipzone.some((i: any) => String(i.id) === this.ipDeLaOrden) || huerfanas.has(this.ipDeLaOrden);
           if (libre) this.newUser.ip = this.ipDeLaOrden;
-          else this.ipsError = `La IP ${this.ipDeLaOrden} de la orden ya está ocupada. Elegí otra.`;
+          else this.ipsError = `La IP ${this.ipDeLaOrden} de la orden ya está ocupada. Seleccione otra.`;
           this.ipDeLaOrden = null;
         }
 
@@ -2078,7 +2081,7 @@ export class UserComponent implements OnInit {
         if (intento < 3) { setTimeout(() => this.cargarIps(intento + 1), 900 * intento); return; }
         this.loadingIps = false;
         this.Ipzone = [];
-        this.ipsError = 'No se pudo conectar con el router. Verificá que esté en línea y reintentá.';
+        this.ipsError = 'No se pudo conectar con el router. Verifique que esté en línea y reintente.';
       },
     });
   }
@@ -2200,7 +2203,7 @@ export class UserComponent implements OnInit {
       next: r => {
         this.toast(r.message ?? (r.error ? 'Error' : 'Cliente creado'), r.error ? 'error' : 'success');
         if (!r.error) {
-          // Recién acá se tira el borrador: si el alta falló, lo escrito queda.
+          // Recién aquí se tira el borrador: si el alta falló, lo escrito queda.
           this.limpiarBorrador();
           this.borradorRestaurado = false;
           this.newUser = this.usuarioEnBlanco();

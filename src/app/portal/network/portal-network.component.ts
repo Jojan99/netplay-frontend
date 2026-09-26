@@ -60,12 +60,12 @@ export class PortalNetworkComponent implements OnInit {
     this.api.medirVelocidad().subscribe({
       next: (r: any) => {
         this.midiendo.set(false);
-        if (r?.error !== 0) { this.errorVelocidad.set(r?.message || 'No pudimos medir tu conexión ahora.'); return; }
+        if (r?.error !== 0) { this.errorVelocidad.set(r?.message || 'No pudimos medir su conexión ahora.'); return; }
         this.velocidad.set(r.data);
       },
       error: (e: any) => {
         this.midiendo.set(false);
-        this.errorVelocidad.set(e?.error?.message || 'No pudimos medir tu conexión ahora. Intenta en un momento.');
+        this.errorVelocidad.set(e?.error?.message || 'No pudimos medir su conexión ahora. Intenta en un momento.');
       },
     });
   }
@@ -95,11 +95,11 @@ export class PortalNetworkComponent implements OnInit {
     this.api.getRouter().subscribe({
       next: (r: any) => {
         this.loading.set(false);
-        if (r?.error !== 0) { this.error.set(r?.message || 'No pudimos consultar tu equipo.'); return; }
+        if (r?.error !== 0) { this.error.set(r?.message || 'No pudimos consultar su equipo.'); return; }
         this.error.set('');
         this.panel.set(r.data);
       },
-      error: () => { this.loading.set(false); this.error.set('No pudimos consultar tu equipo.'); },
+      error: () => { this.loading.set(false); this.error.set('No pudimos consultar su equipo.'); },
     });
   }
 
@@ -274,7 +274,7 @@ export class PortalNetworkComponent implements OnInit {
         this.trabajando.set('');
         this.confirmarReinicio = false;
         if (res?.error !== 0) { this.aviso.set({ texto: res?.message || 'No se pudo reiniciar el equipo.', tipo: 'danger' }); return; }
-        this.aviso.set({ texto: res.data?.mensaje ?? 'Tu equipo se está reiniciando.', tipo: res.data?.hecha ? 'ok' : 'warn' });
+        this.aviso.set({ texto: res.data?.mensaje ?? 'Su equipo se está reiniciando.', tipo: res.data?.hecha ? 'ok' : 'warn' });
       },
       error: () => { this.trabajando.set(''); this.aviso.set({ texto: 'No se pudo reiniciar el equipo.', tipo: 'danger' }); },
     });
@@ -286,7 +286,7 @@ export class PortalNetworkComponent implements OnInit {
       next: (r: any) => {
         this.trabajando.set('');
         this.aviso.set({
-          texto: r?.data?.hecha ? 'Datos actualizados.' : 'Le pedimos los datos a tu equipo; aparecen en unos segundos.',
+          texto: r?.data?.hecha ? 'Datos actualizados.' : 'Le pedimos los datos a su equipo; aparecen en unos segundos.',
           tipo: r?.data?.hecha ? 'ok' : 'warn',
         });
         setTimeout(() => this.cargar(true), 5000);

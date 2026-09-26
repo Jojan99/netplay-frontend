@@ -182,7 +182,7 @@ export class WaMetaTemplatesComponent implements OnInit {
     if (!cuantas || this.creandoSistema) return;
 
     if (!await this.dialog.confirm(
-      `Se crearán ${cuantas} plantilla${cuantas === 1 ? '' : 's'} en tu cuenta de WhatsApp Business y quedarán en revisión de Meta. ` +
+      `Se crearán ${cuantas} plantilla${cuantas === 1 ? '' : 's'} en su cuenta de WhatsApp Business y quedarán en revisión de Meta. ` +
       `La aprobación puede tardar desde unos minutos hasta un día.`,
       { title: 'Crear las plantillas del sistema', okLabel: 'Crear' }
     )) return;

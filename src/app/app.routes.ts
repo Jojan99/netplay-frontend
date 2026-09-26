@@ -55,7 +55,7 @@ export const routes: Routes = [
         data: { module: 'usuario' },
       },
       // Clientes eliminados: la misma llave de permiso que el registro de
-      // clientes, así el rol que ya entra a Clientes entra también acá.
+      // clientes, así el rol que ya entra a Clientes entra también aquí.
       {
         path: 'usuario/eliminados',
         loadComponent: () => import('./pages/clientes-eliminados/clientes-eliminados.component').then(m => m.ClientesEliminadosComponent),

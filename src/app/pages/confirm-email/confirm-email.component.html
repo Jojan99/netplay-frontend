@@ -7,18 +7,18 @@
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 7a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><path d="m3 7 9 6 9-6"/></svg>
       </span>
       <p class="np-kicker">Alta <b>/</b> Empresa</p>
-      <h1 class="np-title np-login-title">Revisá tu correo</h1>
+      <h1 class="np-title np-login-title">Revise su correo</h1>
 
       <p class="np-login-help">
-        Tu empresa quedó registrada. Te enviamos un correo de confirmación
+        Su empresa quedó registrada. Le enviamos un correo de confirmación
         <ng-container *ngIf="correo()">a <b class="np-confirm-mail">{{ correo() }}</b></ng-container>.
-        Abrí el enlace y entrás directo al panel, sin volver a escribir la contraseña.
+        Abra el enlace y entra directo al panel, sin volver a escribir la contraseña.
       </p>
 
       <ol class="np-confirm-steps">
-        <li><span>1</span> Abrí el correo que te acabamos de mandar.</li>
-        <li><span>2</span> Tocá el botón <b>Confirmar correo</b>.</li>
-        <li><span>3</span> Listo: te llevamos al panel con tu sesión iniciada.</li>
+        <li><span>1</span> Abra el correo que le acabamos de mandar.</li>
+        <li><span>2</span> Toque el botón <b>Confirmar correo</b>.</li>
+        <li><span>3</span> Listo: le llevamos al panel con su sesión iniciada.</li>
       </ol>
 
       <p class="np-fine np-confirm-spam">¿No lo ves? Suele estar en <b>correo no deseado</b> o en la pestaña <b>Promociones</b>.</p>
@@ -42,7 +42,7 @@
       <span class="np-confirm-icon is-ok"><span class="np-spinner"></span></span>
       <p class="np-kicker">Alta <b>/</b> Empresa</p>
       <h1 class="np-title np-login-title">Entrando…</h1>
-      <p class="np-login-help">Confirmamos tu correo. Estamos abriendo tu panel.</p>
+      <p class="np-login-help">Confirmamos su correo. Estamos abriendo su panel.</p>
     </div>
 
     <!-- 3. Confirmada, pero sin sesión automática (vale vencido o ya usado) -->
@@ -52,7 +52,7 @@
       <h1 class="np-title np-login-title">¡Cuenta activada!</h1>
       <p class="np-login-help">
         <ng-container *ngIf="empresa()"><b>{{ empresa() }}</b> ya está activa. </ng-container>
-        Iniciá sesión con el usuario y la contraseña que elegiste al registrarte.
+        Inicie sesión con el usuario y la contraseña que eligió al registrarte.
       </p>
       <a routerLink="/login" class="np-btn np-btn--primary np-login-submit">Iniciar sesión</a>
     </div>
@@ -62,7 +62,7 @@
       <span class="np-confirm-icon is-ok"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="m5 13 4 4L19 7"/></svg></span>
       <p class="np-kicker">Alta <b>/</b> Empresa</p>
       <h1 class="np-title np-login-title">Esta cuenta ya estaba activa</h1>
-      <p class="np-login-help">No hacía falta confirmarla otra vez. Podés entrar cuando quieras.</p>
+      <p class="np-login-help">No hacía falta confirmarla otra vez. Puede entrar cuando quieras.</p>
       <a routerLink="/login" class="np-btn np-btn--primary np-login-submit">Iniciar sesión</a>
     </div>
 
@@ -74,8 +74,8 @@
       <p class="np-kicker">Alta <b>/</b> Empresa</p>
       <h1 class="np-title np-login-title">Ese enlace ya no sirve</h1>
       <p class="np-login-help">
-        El enlace se usa una sola vez. Si ya confirmaste tu cuenta, entrá directamente.
-        Si no, pedí uno nuevo con el correo que registraste.
+        El enlace se usa una sola vez. Si ya confirmó su cuenta, ingrese directamente.
+        Si no, solicite uno nuevo con el correo que registró.
       </p>
 
       <div class="np-confirm-resend">

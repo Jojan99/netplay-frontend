@@ -390,7 +390,7 @@ export class OltSinAutorizarComponent implements OnInit {
     // pero avisando, porque después no se sabe de quién es cada equipo.
     if (!this.clienteElegido) {
       const seguir = await this.dialog.confirm(
-        'Vas a autorizar la ONT sin cliente. No vas a ver su equipo en la ficha ni el cliente su WiFi en el portal, '
+        'Va a autorizar la ONT sin cliente. No verá su equipo en la ficha ni el cliente su WiFi en el portal, '
         + 'y después hay que vincularla a mano. ¿Seguir igual?',
         { okLabel: 'Autorizar sin cliente' },
       );
@@ -407,7 +407,7 @@ export class OltSinAutorizarComponent implements OnInit {
         ?? (ssidWifi ? problemaDelNombreWifi(ssidWifi) : null);
 
       if (problema) {
-        this.toast.error(problema + ' Si la dejás vacía, la genera el sistema.');
+        this.toast.error(problema + ' Si la deja vacía, la genera el sistema.');
         return;
       }
     }
@@ -576,7 +576,7 @@ export class OltSinAutorizarComponent implements OnInit {
   cargandoClientes = false;
 
   /**
-   * Se traen todos de una vez y se filtran acá.
+   * Se traen todos de una vez y se filtran aquí.
    *
    * Son unos cientos: pedirlos al servidor en cada tecla haría esperar por
    * algo que ya está en memoria.
@@ -674,7 +674,7 @@ export class OltSinAutorizarComponent implements OnInit {
 
     const ok = await this.dialog.confirm(
       `La ONT está autorizada en ${this.yaExiste.fsp} (ONT ID ${this.yaExiste.ont_id}). ` +
-      `Se va a quitar de ahí y autorizar en ${this.form.fsp}. El cliente pierde el servicio un momento. ¿Confirmás?`,
+      `Se va a quitar de ahí y autorizar en ${this.form.fsp}. El cliente pierde el servicio un momento. ¿Confirma?`,
       { okLabel: 'Mover la ONT' },
     );
 

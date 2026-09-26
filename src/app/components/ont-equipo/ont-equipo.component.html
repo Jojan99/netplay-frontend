@@ -105,9 +105,9 @@
     <p class="oe-aviso" *ngIf="equipo?.error">{{ equipo.error }}</p>
     <p class="oe-fine" *ngIf="equipo?.aviso">{{ equipo.aviso }}</p>
     <p class="oe-aviso" *ngIf="equipo && !equipo.error && !acs && !consultandoEquipo">
-      Este equipo todavía no reporta al servidor TR-069. Si la OLT lo permite, dale
+      Este equipo todavía no reporta al servidor TR-069. Si la OLT lo permite, habilítele el
       <b>acceso remoto</b> (Admin OLT → Autorizadas → el equipo) y aparece solo en uno o dos minutos.
-      Si no, cargale a mano la dirección <b class="np-mono">{{ urlAcs }}</b> en su WAN de gestión.
+      Si no, cárguele a mano la dirección <b class="np-mono">{{ urlAcs }}</b> en su WAN de gestión.
       <button type="button" class="oe-linkbtn" (click)="copiar(urlAcs, 'acs')">{{ copiado === 'acs' ? '✓ Copiada' : 'Copiar dirección' }}</button>
     </p>
 
@@ -167,7 +167,7 @@
                 <input type="checkbox" name="oculta" [(ngModel)]="c.oculta" />
                 <span>Ocultar esta red: el equipo deja de anunciar su nombre y sólo se conecta quien lo escriba a mano</span>
               </label>
-              <p class="oe-fine">Sin eñes, tildes ni espacios en la contraseña: el equipo las rechaza. Se van solas mientras escribís.</p>
+              <p class="oe-fine">Sin eñes, tildes ni espacios en la contraseña: el equipo las rechaza. Se van solas mientras escribe.</p>
               <p class="oe-fine">El nombre se cambia sólo en esta red, para que 2.4 y 5 GHz sigan distinguiéndose. Los equipos conectados se desconectan y hay que volver a conectarlos.</p>
               <div class="oe-clave-botones">
                 <button type="button" class="np-btn np-btn--ghost" (click)="cambiandoClave = null">Cancelar</button>

@@ -100,7 +100,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
     { id: 'mora',      titulo: 'La mora por antigüedad',  seccion: 'La plata', ancho: 4, plata: true, modulo: 'finanzas', para: 'Cuánto se debe de 30, 60, 90 días y de más atrás.' },
     { id: 'metodos',   titulo: 'Por dónde entra la plata', seccion: 'La plata', ancho: 3, plata: true, modulo: 'finanzas', para: 'Qué método de pago usa la gente este mes.' },
     { id: 'deudores',  titulo: 'Los que más deben',       seccion: 'La plata', ancho: 5, plata: true, modulo: 'finanzas', para: 'Los cinco con más deuda vieja, con su mora.' },
-    { id: 'cobranza',  titulo: 'IA Cobranza',             seccion: 'La plata', ancho: 3, modulo: 'finanzas', para: 'Qué está haciendo el bot y qué espera tu autorización.' },
+    { id: 'cobranza',  titulo: 'IA Cobranza',             seccion: 'La plata', ancho: 3, modulo: 'finanzas', para: 'Qué está haciendo el bot y qué espera su autorización.' },
     { id: 'salud',     titulo: 'Salud de la red',         seccion: 'La red',   ancho: 4, modulo: 'olt-admin', para: 'Cada puerto PON con su señal, coloreado.' },
     { id: 'borde',     titulo: 'Clientes al borde',       seccion: 'La red',   ancho: 3, modulo: 'olt-admin', para: 'Los que reciben menos luz de la que deberían.' },
     { id: 'equipos',   titulo: 'Los equipos',             seccion: 'La red',   ancho: 3, modulo: 'olt-admin', para: 'Cuántas ONT hay en línea, apagadas y sin medir.' },
@@ -244,7 +244,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
       next: r => {
         this.guardando = false;
         this.armando = false;
-        this.toast.success(r?.message ?? 'Tu tablero quedó guardado.');
+        this.toast.success(r?.message ?? 'Su tablero quedó guardado.');
         setTimeout(() => this.redibujar(), 60);
       },
       error: e => {

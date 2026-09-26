@@ -101,7 +101,7 @@ export class WaWebhookComponent implements OnInit {
     if (!this.esAdmin || this.guardandoRecepcion || this.recepcionActiva === null) return;
     const activar = !this.recepcionActiva;
 
-    if (!activar && !await this.dialog.confirm('¿Desactivar la recepción? Los mensajes que tus clientes escriban a tus líneas de WhatsApp Web dejarán de llegar a la bandeja del CRM.')) return;
+    if (!activar && !await this.dialog.confirm('¿Desactivar la recepción? Los mensajes que sus clientes escriban a sus líneas de WhatsApp Web dejarán de llegar a la bandeja del CRM.')) return;
 
     this.guardandoRecepcion = true;
     this.recepcionMsg = '';

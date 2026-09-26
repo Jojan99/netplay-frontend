@@ -7,7 +7,7 @@
       <div>
         <p class="ic-kicker">Finanzas / IA Cobranza</p>
         <h1>IA Cobranza</h1>
-        <p class="ic-fine">Detecta quién debe y, con tu permiso, le escribe por WhatsApp y negocia sólo dentro de tus reglas.</p>
+        <p class="ic-fine">Detecta quién debe y, con su permiso, le escribe por WhatsApp y negocia sólo dentro de sus reglas.</p>
       </div>
     </div>
     <div class="ic-head-acc" *ngIf="cfg">
@@ -104,10 +104,10 @@
             <span class="ic-estado-ia" [class.is-ok]="iaDisponible">{{ iaDisponible ? 'Conectada' : 'Sin conectar' }}</span>
           </header>
 
-          <p class="ic-ia-t">{{ ia.propia ? 'Tu cuenta de Google' : 'IA de Netvula · prueba' }}</p>
+          <p class="ic-ia-t">{{ ia.propia ? 'Su cuenta de Google' : 'IA de Netvula · prueba' }}</p>
           <ng-container *ngIf="!ia.propia">
             <div class="ic-medidor" [title]="ia.usadas_hoy + ' de ' + ia.limite_prueba + ' conversaciones nuevas hoy'"><span [style.width.%]="usoPct"></span></div>
-            <p class="ic-fine">{{ ia.usadas_hoy }} de {{ ia.limite_prueba }} conversaciones hoy. Con tu clave gratis de Google tenés unas 70 a 100 por día.</p>
+            <p class="ic-fine">{{ ia.usadas_hoy }} de {{ ia.limite_prueba }} conversaciones hoy. Con su clave gratis de Google tiene unas 70 a 100 por día.</p>
           </ng-container>
           <p class="ic-fine" *ngIf="ia.propia">Sin límite de prueba. <a class="ic-link" [href]="ia.url_limites" target="_blank" rel="noopener">Ver mi consumo ↗</a></p>
 
@@ -117,12 +117,12 @@
 
           <div class="ic-clave" *ngIf="abrirClave">
             <ol *ngIf="!ia.propia">
-              <li>Entrá a <a class="ic-link" [href]="ia.url_clave" target="_blank" rel="noopener">aistudio.google.com/apikey ↗</a> (gratis, sin tarjeta).</li>
-              <li>Tocá <b>«Crear clave de API»</b> y pegala acá.</li>
+              <li>Ingrese a <a class="ic-link" [href]="ia.url_clave" target="_blank" rel="noopener">aistudio.google.com/apikey ↗</a> (gratis, sin tarjeta).</li>
+              <li>Toque <b>«Crear clave de API»</b> y pegala aquí.</li>
             </ol>
             <div class="ic-clave-in">
               <input class="ic-input ic-mono" [type]="verClave ? 'text' : 'password'" [(ngModel)]="claveNueva" autocomplete="new-password"
-                     [placeholder]="ia.propia ? 'Pegá otra clave' : 'AIza…'" aria-label="Clave de API de Google" />
+                     [placeholder]="ia.propia ? 'Pegue otra clave' : 'AIza…'" aria-label="Clave de API de Google" />
               <button type="button" class="ic-ojo" (click)="verClave = !verClave" [title]="verClave ? 'Ocultar la clave' : 'Ver la clave'">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>
               </button>

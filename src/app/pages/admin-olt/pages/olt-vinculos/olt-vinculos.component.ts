@@ -11,7 +11,7 @@ import { NpSelectComponent, PresentacionSelect } from '../../../../common/np-sel
  * Vincular en tanda las ONT con sus clientes.
  *
  * Las ONT se autorizaron con el nombre del cliente como descripción, así que
- * el emparejado se propone solo; acá se revisa y se confirma. Nada se guarda
+ * el emparejado se propone solo; aquí se revisa y se confirma. Nada se guarda
  * sin que alguien lo marque: una ONT en el cliente equivocado manda a un
  * técnico a otra casa.
  */
@@ -102,7 +102,7 @@ export class OltVinculosComponent implements OnInit {
   /** Busca el cliente para una ONT que nadie pudo emparejar. */
   buscarCliente(ont: any) {
     const q = (this.buscando[ont.id] || '').trim();
-    if (q.length < 3) { this.toast.error('Escribí al menos 3 letras.'); return; }
+    if (q.length < 3) { this.toast.error('Escriba al menos 3 letras.'); return; }
 
     this.buscandoAhora[ont.id] = true;
     this.crm.buscarClienteParaVincular(q).subscribe({
@@ -127,7 +127,7 @@ export class OltVinculosComponent implements OnInit {
       .filter(o => this.elegido[o.id])
       .map(o => ({ ont: o.id, user_id: this.elegido[o.id].user_id }));
 
-    if (!pares.length) { this.toast.error('No elegiste ningún cliente.'); return; }
+    if (!pares.length) { this.toast.error('No eligió ningún cliente.'); return; }
 
     this.guardando = true;
     this.olt.aplicarVinculos(pares).subscribe({

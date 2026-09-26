@@ -126,7 +126,7 @@ export class NuevoTicketComponent implements OnInit, OnDestroy {
 
   @HostListener('document:keydown.escape')
   alEscape(): void {
-    // np-select abierto frena el Escape: sólo llega acá si no hay nada desplegado.
+    // np-select abierto frena el Escape: sólo llega aquí si no hay nada desplegado.
     if (!this.guardando) this.cerrar();
   }
 
@@ -139,7 +139,7 @@ export class NuevoTicketComponent implements OnInit, OnDestroy {
 
   /** Lo que falta, para el botón deshabilitado. */
   get faltante(): string {
-    if (!this.cliente) return 'Elegí el cliente';
+    if (!this.cliente) return 'Seleccione el cliente';
     if (!this.servicio) return 'Falta el tipo de servicio';
     if (!this.tecnico) return 'Falta el técnico';
     if (!this.prioridad) return 'Falta la prioridad';

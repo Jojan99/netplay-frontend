@@ -196,9 +196,9 @@
 
 /* ─── Alta: el modal y el cruce con la orden de instalación ──────────────── */
 
-/* Más ancho que el resto: son dos columnas de campos más los selectores del
-   router, y a 720px todo quedaba en una tira angosta. */
-.np-modal--alta { max-width: 960px; }
+/* Bien ancho: son dos columnas de campos más los selectores del router. A
+   720px quedaba una tira angosta con media pantalla vacía alrededor. */
+.np-modal--alta { max-width: 1180px; }
 
 /* Lo que ya se cargó al tomar el pedido. Antes era una línea de texto que
    decía sólo que la orden existía: no se veía qué iba a traer. */
@@ -230,3 +230,9 @@
   .ux-orden-h > button { width: 100%; }
   .ux-orden-d > div { grid-template-columns: 1fr; gap: 2px; }
 }
+
+/* Con el modal ancho, tres columnas: a dos, cada campo quedaba larguísimo para
+   lo que se escribe en él (un documento, un teléfono). */
+.np-modal--alta .np-modal-body > .np-form { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+@media (max-width: 1000px) { .np-modal--alta .np-modal-body > .np-form { grid-template-columns: 1fr 1fr; } }
+@media (max-width: 640px) { .np-modal--alta .np-modal-body > .np-form { grid-template-columns: 1fr; } }

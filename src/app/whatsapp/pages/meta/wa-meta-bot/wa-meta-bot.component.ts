@@ -49,7 +49,7 @@ interface MensajeProbado {
  *     rápida, listas desplegables y el botón que abre una dirección, cada
  *     opción con su propio camino. Antes «botones» era sólo una preferencia del
  *     menú principal.
- *   - Un probador. Se conversa con el flujo acá mismo, sin escribirle a nadie,
+ *   - Un probador. Se conversa con el flujo aquí mismo, sin escribirle a nadie,
  *     y se ve exactamente lo que el cliente recibiría.
  *
  * El diseño usa el tema de la plataforma (np-*) y no un CSS aparte: así respeta
@@ -86,13 +86,13 @@ export class WaMetaBotComponent implements OnInit {
   config: ConfigBot = {
     enabled: false,
     trigger_word: 'hola, buenas, menu',
-    welcome_message: 'Hola 👋 Soy el asistente de {{empresa}}.\n\n¿En qué te puedo ayudar?',
+    welcome_message: 'Hola 👋 Soy el asistente de {{empresa}}.\n\n¿En qué le puedo ayudar?',
     menu_type: 'buttons',
-    menu_title: '¿En qué te puedo ayudar?',
+    menu_title: '¿En qué le puedo ayudar?',
     options: [],
     flows: [],
     variables: [],
-    settings: { fallback_message: 'No entendí. Escribí *menu* para volver al inicio.', max_retries: 2, session_timeout_minutes: 5 },
+    settings: { fallback_message: 'No entendí. Escriba *menu* para volver al inicio.', max_retries: 2, session_timeout_minutes: 5 },
   };
 
   // ── Carga y guardado ────────────────────────────────────────────────────
@@ -169,7 +169,7 @@ export class WaMetaBotComponent implements OnInit {
     });
   }
 
-  /** Cualquier cambio del formulario pasa por acá para saber si falta guardar. */
+  /** Cualquier cambio del formulario pasa por aquí para saber si falta guardar. */
   toco(): void { this.sucio = true; }
 
   async alternarBot(): Promise<void> {
@@ -330,7 +330,7 @@ export class WaMetaBotComponent implements OnInit {
     b.buttons ??= [];
 
     if (b.buttons.length >= META.MAX_BOTONES) {
-      this.toast.info(`WhatsApp admite ${META.MAX_BOTONES} botones. Para más opciones usá el bloque de lista.`);
+      this.toast.info(`WhatsApp admite ${META.MAX_BOTONES} botones. Para más opciones use el bloque de lista.`);
       return;
     }
 
@@ -376,7 +376,7 @@ export class WaMetaBotComponent implements OnInit {
 
     if (!el || !('value' in el) || !(el.tagName === 'INPUT' || el.tagName === 'TEXTAREA')) {
       navigator.clipboard?.writeText(`{{${v}}}`);
-      this.toast.info(`{{${v}}} copiado: pegalo donde lo necesites.`);
+      this.toast.info(`{{${v}}} copiado: péguelo donde lo necesites.`);
       return;
     }
 

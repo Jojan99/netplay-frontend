@@ -3,7 +3,7 @@
     <div>
       <p class="np-kicker"><a routerLink="/dashboard/installations" class="np-crumb">Instalaciones</a> <b>/</b> Nueva orden</p>
       <h1 class="np-title">Nueva instalación</h1>
-      <div class="np-ribbon"><span>Todo lo que se cargue acá viaja con la orden: el técnico lo aplica desde la casa del cliente.</span></div>
+      <div class="np-ribbon"><span>Todo lo que se cargue aquí viaja con la orden: el técnico lo aplica desde la casa del cliente.</span></div>
     </div>
     <div class="np-actions">
       <a routerLink="/dashboard/installations" class="np-btn np-btn--ghost">Cancelar</a>
@@ -39,23 +39,26 @@
 
         <!-- ── 1 · Cliente ──────────────────────────────────────────────── -->
         <div class="np-form" *ngIf="paso === 1">
-          <label class="np-field"><span>Nombre completo <em class="np-req">*</em></span>
-            <input type="text" class="np-input" [(ngModel)]="form.client_name" name="nombre" placeholder="Juan Pérez" />
+          <label class="np-field"><span>Nombres <em class="np-req">*</em> <em>sin apellidos</em></span>
+            <input type="text" class="np-input" [(ngModel)]="form.client_nombres" name="nombres" placeholder="Juan Carlos" />
           </label>
-          <label class="np-field"><span>Documento <em class="np-req">*</em></span>
-            <input type="text" class="np-input np-mono" [(ngModel)]="form.client_dni" name="dni" />
+          <label class="np-field"><span>Apellidos <em class="np-req">*</em></span>
+            <input type="text" class="np-input" [(ngModel)]="form.client_apellidos" name="apellidos" placeholder="Pérez Gómez" />
           </label>
-          <label class="np-field"><span>Teléfono <em class="np-req">*</em></span>
-            <input type="tel" class="np-input np-mono" [(ngModel)]="form.client_phone" name="tel" />
+          <label class="np-field"><span>Documento <em class="np-req">*</em> <em>sin puntos</em></span>
+            <input type="text" class="np-input np-mono" [(ngModel)]="form.client_dni" name="dni" placeholder="1045123456" />
           </label>
-          <label class="np-field"><span>Correo</span>
-            <input type="email" class="np-input" [(ngModel)]="form.client_email" name="mail" />
+          <label class="np-field"><span>Teléfono <em class="np-req">*</em> <em>a 10 dígitos</em></span>
+            <input type="tel" class="np-input np-mono" [(ngModel)]="form.client_phone" name="tel" placeholder="3001234567" />
+          </label>
+          <label class="np-field np-field-full"><span>Correo <em>opcional</em></span>
+            <input type="email" class="np-input" [(ngModel)]="form.client_email" name="mail" placeholder="juan.perez@gmail.com" />
           </label>
           <label class="np-field np-field-full"><span>Dirección <em class="np-req">*</em></span>
             <input type="text" class="np-input" [(ngModel)]="form.address" name="dir" placeholder="Calle 12 # 4-56" />
           </label>
           <label class="np-field np-field-full"><span>Barrio</span>
-            <input type="text" class="np-input" [(ngModel)]="form.neighborhood" name="barrio" />
+            <input type="text" class="np-input" [(ngModel)]="form.neighborhood" name="barrio" placeholder="El Centro" />
           </label>
         </div>
 
@@ -175,7 +178,7 @@
 
           <p class="np-notice np-notice--warn np-notice--inline np-field-full"
              *ngIf="form.olt_id && !cargandoPerfilesOlt && !lineProfiles.length && !srvProfiles.length">
-            Esta OLT no tiene perfiles sincronizados. En <strong>OLT → Perfiles</strong> hacé clic en Sincronizar desde OLT.
+            Esta OLT no tiene perfiles sincronizados. En <strong>OLT → Perfiles</strong> haga clic en Sincronizar desde OLT.
           </p>
 
           <p class="np-subhead np-field-full">El WiFi que va a quedar puesto</p>
@@ -232,7 +235,7 @@
           <!-- Lo que se va a guardar, antes de guardarlo -->
           <p class="np-subhead">Así queda la orden</p>
           <dl class="inf-resumen">
-            <div><dt>Cliente</dt><dd>{{ form.client_name }} · {{ form.client_dni }}</dd></div>
+            <div><dt>Cliente</dt><dd>{{ nombreCompleto }} · {{ form.client_dni }}</dd></div>
             <div><dt>Dirección</dt><dd>{{ form.address }}<ng-container *ngIf="form.neighborhood">, {{ form.neighborhood }}</ng-container></dd></div>
             <div><dt>Plan</dt><dd>{{ nombreDelPlan }} · corte {{ nombreDelCorte }}</dd></div>
             <div><dt>Conexión</dt><dd>{{ esPppoe ? 'PPPoE · ' + form.pppoe_user + (form.pppoe_profile ? ' · perfil ' + form.pppoe_profile : '') : 'IP fija · ' + form.ip_asignada }}</dd></div>

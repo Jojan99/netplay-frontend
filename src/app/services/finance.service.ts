@@ -169,7 +169,7 @@ export class FinanceService {
   /**
    * Los clientes de la cartera. Con `incluirAlDia` entran también los que no
    * deben nada: sin eso, un cliente que termina de pagar desaparece de la
-   * pantalla y no hay forma de abrir su historial desde acá.
+   * pantalla y no hay forma de abrir su historial desde aquí.
    */
   getClientsPaginated(search: string, page: number, perPage: number, incluirAlDia = false): Observable<any> {
     let params = new HttpParams()

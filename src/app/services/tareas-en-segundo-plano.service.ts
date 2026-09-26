@@ -78,7 +78,7 @@ const PARADAS: Record<string, ComoSePara> = {
 
 const PARADA_GENERICA: ComoSePara = {
   modo: 'dejar', etiqueta: DEJAR_DE_SEGUIR,
-  aviso: 'Termina sola en el servidor; sólo deja de mostrarse acá.',
+  aviso: 'Termina sola en el servidor; sólo deja de mostrarse aquí.',
 };
 
 /**
@@ -92,7 +92,7 @@ const CLAVE_BASE = 'np_tareas_segundo_plano';
  * al día, reiniciar equipos), seguidas desde un solo lugar.
  *
  * Antes cada pantalla seguía la suya y, si se cambiaba de pantalla, se perdía
- * de vista. Acá quedan guardadas en el navegador: la ventana flotante del panel
+ * de vista. Aquí quedan guardadas en el navegador: la ventana flotante del panel
  * las muestra y, al recargar, retoma las que seguían en curso.
  */
 @Injectable({ providedIn: 'root' })
@@ -277,7 +277,7 @@ export class TareasEnSegundoPlanoService {
     );
 
     this.flujos.set(clave, flujo);
-    this.suscripciones.set(clave, flujo.subscribe({ error: () => this.actualizar(clave, { estado: 'error', detalle: 'Se perdió el seguimiento; mirá el detalle en Acceso remoto.', fin: Date.now() }) }));
+    this.suscripciones.set(clave, flujo.subscribe({ error: () => this.actualizar(clave, { estado: 'error', detalle: 'Se perdió el seguimiento; consulte el detalle en Acceso remoto.', fin: Date.now() }) }));
   }
 
   /**
@@ -443,7 +443,7 @@ export class TareasEnSegundoPlanoService {
             : this.seguirAprovisionamientoUnaVez(numero, id, r?.message),
           // No se pudo: se lo vuelve a seguir como antes.
           error: () => {
-            this.actualizar(id, { pedidaParada: false, detalle: 'No se pudo cancelar; probá de nuevo.' });
+            this.actualizar(id, { pedidaParada: false, detalle: 'No se pudo cancelar; pruebe de nuevo.' });
             this.seguirAprovisionamiento(numero, t.titulo);
           },
         });
@@ -453,7 +453,7 @@ export class TareasEnSegundoPlanoService {
       case 'importacion':
         this.actualizar(id, { pedidaParada: true, detalle: 'Deteniendo…' });
         this.importador.cancelar(Number(id.replace('importacion-', ''))).subscribe({
-          error: () => this.actualizar(id, { pedidaParada: false, detalle: 'No se pudo detener; probá de nuevo.' }),
+          error: () => this.actualizar(id, { pedidaParada: false, detalle: 'No se pudo detener; pruebe de nuevo.' }),
         });
         return;
 

@@ -37,7 +37,7 @@
         } @else {
           <div class="cb-cab-t">
             <b>IA Cobranza</b>
-            <small>{{ resumen()?.activa ? 'Trabajando ahora' : 'En reposo' }} · {{ resumen()?.modo === 'automatico' ? 'escribe solo' : 'vos autorizás a quién le escribe' }}</small>
+            <small>{{ resumen()?.activa ? 'Trabajando ahora' : 'En reposo' }} · {{ resumen()?.modo === 'automatico' ? 'escribe solo' : 'usted autoriza a quién le escribe' }}</small>
           </div>
         }
         <button type="button" class="cb-ico" (click)="irAConfig()" aria-label="Configurar cobranza" title="Configurar">
@@ -127,7 +127,7 @@
                 @if (c.estado === 'detectado') {
                   <div class="cb-caso-acc">
                     <button type="button" class="cb-btn cb-btn--pri cb-btn--sm" (click)="hacer(c, 'autorizar')" [disabled]="ocupado() === c.id || !resumen()?.ia_disponible"
-                            title="El asistente le escribe por WhatsApp y negocia dentro de tus límites">Que lo atienda el asistente</button>
+                            title="El asistente le escribe por WhatsApp y negocia dentro de sus límites">Que lo atienda el asistente</button>
                     <button type="button" class="cb-btn cb-btn--sm" (click)="hacer(c, 'descartar')" [disabled]="ocupado() === c.id">Descartar</button>
                   </div>
                 }

@@ -5,7 +5,7 @@ import { environment } from '../../environments/environment';
 
 /**
  * Lo que Netvula le cuenta a la empresa: qué se agregó, qué mejoró y qué se
- * arregló. Las escribe Netvula desde su consola; acá sólo se leen y se marcan
+ * arregló. Las escribe Netvula desde su consola; aquí sólo se leen y se marcan
  * como vistas.
  */
 @Injectable({ providedIn: 'root' })
@@ -21,6 +21,6 @@ export class NovedadesService {
   /** Las últimas novedades del usuario y cuántas no vio todavía. */
   lista(): Observable<any> { return this.http.get(this.base, this.h()); }
 
-  /** Se abrió la lista: de acá en adelante ya no son nuevas. */
+  /** Se abrió la lista: de aquí en adelante ya no son nuevas. */
   vistas(): Observable<any> { return this.http.post(`${this.base}/vistas`, {}, this.h()); }
 }

@@ -59,7 +59,7 @@
                 <button type="button" class="np-icobtn" (click)="confirmDelete(c.id)" title="Eliminar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/></svg></button>
               </div></td>
             </tr>
-            <tr *ngIf="!isLoading && contracts.length === 0" class="np-empty"><td colspan="6"><strong>Sin plantillas todavía.</strong><span>Creá la primera con el botón Nueva plantilla.</span></td></tr>
+            <tr *ngIf="!isLoading && contracts.length === 0" class="np-empty"><td colspan="6"><strong>Sin plantillas todavía.</strong><span>Cree la primera con el botón Nueva plantilla.</span></td></tr>
           </tbody>
         </table>
 
@@ -132,7 +132,7 @@
         <div class="np-notice np-notice--warn np-ctr-modo" *ngIf="modo !== 'pdf' && isEditing">
           <strong>Suba el contrato de su empresa en PDF.</strong>
           Es la forma recomendada: el cliente firma su formato exacto y usted sólo marca dónde va cada dato.
-          Si no tiene el contrato en PDF, escríbalo acá abajo como texto y también funcionará.
+          Si no tiene el contrato en PDF, escríbalo aquí abajo como texto y también funcionará.
         </div>
         <div class="np-notice np-notice--code np-ctr-modo" *ngIf="!isEditing">
           Cree la plantilla con un título y después podrá subir su contrato en PDF y colocarle las variables.
@@ -158,7 +158,7 @@
             <input type="file" accept="image/*" hidden (change)="onLogoSelected($event)" />
           </label>
           <!-- Un solo PDF: queda como base y se transcribe al texto. -->
-          <label class="np-btn np-btn--ghost np-btn--sm" [title]="hasPdfBase ? 'Reemplaza el PDF sobre el que se colocan las variables' : 'Queda como base del contrato y su texto se transcribe acá'">
+          <label class="np-btn np-btn--ghost np-btn--sm" [title]="hasPdfBase ? 'Reemplaza el PDF sobre el que se colocan las variables' : 'Queda como base del contrato y su texto se transcribe aquí'">
             {{ hasPdfBase ? 'Cambiar el PDF del contrato' : 'Subir el PDF del contrato' }}
             <input type="file" accept="application/pdf" hidden (change)="onPdfBaseSelected($event)" />
           </label>
@@ -279,7 +279,7 @@
       <ng-container *ngIf="seccion === 'pdf'">
         <div class="np-ctr-subir" *ngIf="!hasPdfBase">
           <h4>Suba el contrato de su empresa</h4>
-          <p>Elija el PDF que ya usa en papel. Se va a ver acá tal cual, y encima va a poder colocar los datos del cliente: nombre, cédula, dirección, plan, la firma… Su texto también se copia a «Datos y texto»: no hace falta subirlo otra vez.</p>
+          <p>Elija el PDF que ya usa en papel. Se va a ver aquí tal cual, y encima va a poder colocar los datos del cliente: nombre, cédula, dirección, plan, la firma… Su texto también se copia a «Datos y texto»: no hace falta subirlo otra vez.</p>
           <label class="np-btn np-btn--primary" [class.np-btn--busy]="isUploadingPdfBase || isUploadingPdf">
             {{ isUploadingPdfBase ? 'Subiendo…' : (isUploadingPdf ? 'Leyendo el texto…' : 'Elegir el PDF del contrato') }}
             <input type="file" accept="application/pdf" hidden (change)="onPdfBaseSelected($event)" [disabled]="isUploadingPdfBase || isUploadingPdf" />

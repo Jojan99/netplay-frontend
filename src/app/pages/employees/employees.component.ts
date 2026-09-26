@@ -213,7 +213,7 @@ export class EmployeesComponent implements OnInit {
       },
       // El servidor explica el motivo (cédula repetida, datos que faltan…):
       // mostrarlo tal cual en vez de "Error al guardar".
-      error: (err) => { this.isSaving = false; this.errorMsg = err?.error?.message || 'No se pudo guardar. Revisá tu conexión e intentá de nuevo.'; },
+      error: (err) => { this.isSaving = false; this.errorMsg = err?.error?.message || 'No se pudo guardar. Revise su conexión e intente de nuevo.'; },
     });
   }
 

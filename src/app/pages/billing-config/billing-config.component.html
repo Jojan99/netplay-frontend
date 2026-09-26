@@ -88,7 +88,7 @@
 
       <div class="bc-vacio" *ngIf="schedules.length === 0">
         <b>No hay grupos configurados.</b>
-        <span>Agregá uno para empezar a facturar.</span>
+        <span>Agregue uno para empezar a facturar.</span>
       </div>
     </div>
   </ng-container>
@@ -190,7 +190,7 @@
             <div><b>{{ invoiceTemplate.name }}</b><small>{{ invoiceTemplate.type | titlecase }}</small></div>
             <span class="np-pill np-pill--active" *ngIf="invoiceTemplate.is_default">Por defecto</span>
           </div>
-          <p class="np-fine" *ngIf="!invoiceTemplate">Se usa el diseño clásico. Creá una plantilla para cambiar colores y columnas.</p>
+          <p class="np-fine" *ngIf="!invoiceTemplate">Se usa el diseño clásico. Cree una plantilla para cambiar colores y columnas.</p>
         </section>
       </div>
 
@@ -206,7 +206,7 @@
       <div class="np-card-h">
         <div>
           <h2>Métodos de pago</h2>
-          <p class="np-fine">Las cuentas donde recibís pagos. Si hay al menos uno activo, hay que elegirlo al registrar un pago.</p>
+          <p class="np-fine">Las cuentas donde recibe pagos. Si hay al menos uno activo, hay que elegirlo al registrar un pago.</p>
         </div>
       </div>
 
@@ -244,7 +244,7 @@
         </li>
       </ul>
       <div class="bc-vacio" *ngIf="!pmLoading && !paymentMethods.length">
-        <b>Todavía no hay métodos de pago.</b><span>Agregá el primero arriba.</span>
+        <b>Todavía no hay métodos de pago.</b><span>Agregue el primero arriba.</span>
       </div>
     </section>
   </ng-container>
@@ -260,7 +260,7 @@
       <section class="bc-gw-estado" [attr.data-estado]="correoConfig?.usando === 'propia' ? 'ok' : 'prueba'">
         <span class="bc-punto" aria-hidden="true"></span>
         <div>
-          <h2>{{ correoConfig?.usando === 'propia' ? 'Estás enviando con tu propia cuenta de Mailjet' : 'Estás enviando con el correo de Netvula' }}</h2>
+          <h2>{{ correoConfig?.usando === 'propia' ? 'Está enviando con su propia cuenta de Mailjet' : 'Está enviando con el correo de Netvula' }}</h2>
           <p *ngIf="correoConfig">
             Salen desde <b class="np-mono">{{ correoConfig.remitente_actual.email }}</b>
             a nombre de <b>{{ correoConfig.remitente_actual.nombre }}</b>
@@ -275,32 +275,32 @@
       <section class="np-card">
         <div class="np-card-h"><div><h2>¿Cómo funciona?</h2></div></div>
         <p class="np-notice np-notice--info">
-          No necesitás hacer nada: por defecto las facturas y avisos de tus clientes salen desde
+          No necesita hacer nada: por defecto las facturas y avisos de sus clientes salen desde
           <b class="np-mono">{{ correoConfig?.remitente_plataforma || 'no-reply@netvula.com' }}</b>
-          con el nombre de tu empresa, y cuando el cliente responde el correo le llega a
-          <b class="np-mono">{{ correoConfig?.correo_empresa || 'el correo de tu empresa' }}</b>.
+          con el nombre de su empresa, y cuando el cliente responde el correo le llega a
+          <b class="np-mono">{{ correoConfig?.correo_empresa || 'el correo de su empresa' }}</b>.
         </p>
         <p class="np-fine">
-          Si querés que los correos salgan desde tu propio dominio (por ejemplo
-          <span class="np-mono">facturacion&#64;tuempresa.com</span>), conectá la cuenta de Mailjet de tu empresa acá abajo.
-          Es gratis hasta 6.000 correos al mes y mejora la entrega porque el correo sale con tu marca.
+          Si quiere que los correos salgan desde su propio dominio (por ejemplo
+          <span class="np-mono">facturacion&#64;tuempresa.com</span>), conecte la cuenta de Mailjet de su empresa aquí abajo.
+          Es gratis hasta 6.000 correos al mes y mejora la entrega porque el correo sale con su marca.
         </p>
         <ol class="bc-pasos">
-          <li>Creá una cuenta gratis en Mailjet:
+          <li>Cree una cuenta gratis en Mailjet:
             <a class="bc-enlace" href="https://app.mailjet.com/signup" target="_blank" rel="noopener">app.mailjet.com/signup ↗</a></li>
-          <li>Copiá la <b>API Key</b> y la <b>Secret Key</b> desde
+          <li>Copie la <b>API Key</b> y la <b>Secret Key</b> desde
             <a class="bc-enlace" href="https://app.mailjet.com/account/apikeys" target="_blank" rel="noopener">app.mailjet.com/account/apikeys ↗</a>
             <small class="np-fine">(Account settings → API Key Management).</small></li>
-          <li>Agregá el correo con el que vas a enviar y confirmalo desde el mensaje que te manda Mailjet:
+          <li>Agregue el correo con el que va a enviar y confírmelo desde el mensaje que le manda Mailjet:
             <a class="bc-enlace" href="https://app.mailjet.com/account/sender" target="_blank" rel="noopener">app.mailjet.com/account/sender ↗</a>.
-            Mejor todavía: validá el dominio completo con los registros <b>SPF</b> y <b>DKIM</b> que te indica Mailjet (se los pedís a quien te administra el dominio).</li>
-          <li>Pegá las llaves acá, activá el interruptor y guardá. Nosotros probamos las llaves antes de activarlas.</li>
+            Mejor todavía: valide el dominio completo con los registros <b>SPF</b> y <b>DKIM</b> que le indica Mailjet (se los pide a quien le administra el dominio).</li>
+          <li>Pegue las llaves aquí, active el interruptor y guarde. Nosotros probamos las llaves antes de activarlas.</li>
         </ol>
       </section>
 
       <section class="np-card">
         <div class="np-card-h">
-          <div><h2>Tu cuenta de Mailjet</h2><p class="np-fine">Dejá las llaves vacías para conservar las guardadas.</p></div>
+          <div><h2>Su cuenta de Mailjet</h2><p class="np-fine">Deje las llaves vacías para conservar las guardadas.</p></div>
         </div>
 
         <!-- Campos trampa: frenan el autocompletado de contraseñas del navegador -->
@@ -343,7 +343,7 @@
         <div class="bc-opcion">
           <div>
             <b>Usar mi cuenta de Mailjet</b>
-            <small>Apagado, los correos salen desde {{ correoConfig?.remitente_plataforma || 'no-reply@netvula.com' }} con el nombre de tu empresa.</small>
+            <small>Apagado, los correos salen desde {{ correoConfig?.remitente_plataforma || 'no-reply@netvula.com' }} con el nombre de su empresa.</small>
           </div>
           <button type="button" class="np-switch" role="switch" [attr.aria-checked]="!!correoForm.activo"
                   (click)="correoForm.activo = !correoForm.activo" aria-label="Usar mi cuenta de Mailjet"></button>
@@ -360,11 +360,11 @@
 
       <section class="np-card">
         <div class="np-card-h">
-          <div><h2>Enviar una prueba</h2><p class="np-fine">Se envía tal como le llega a tus clientes.</p></div>
+          <div><h2>Enviar una prueba</h2><p class="np-fine">Se envía tal como le llega a sus clientes.</p></div>
         </div>
         <div class="np-form">
           <div class="np-field np-field-full">
-            <span>Enviar a <em>vacío = tu correo de acceso</em></span>
+            <span>Enviar a <em>vacío = su correo de acceso</em></span>
             <input type="email" class="np-input" [(ngModel)]="correoEmailPrueba" autocomplete="off" placeholder="tucorreo@ejemplo.com" />
           </div>
         </div>
@@ -390,7 +390,7 @@
         <div>
           <h2>{{ !gwForm.active ? 'Pago en línea apagado' : (gwForm.sandbox ? 'Pago en línea en modo prueba' : 'Pago en línea funcionando') }}</h2>
           <p>{{ gatewayLabel(gwForm.gateway) }} ·
-            {{ !gwForm.active ? 'tus clientes no ven el botón de pago' : (gwForm.sandbox ? 'los pagos NO son reales' : 'tus clientes pagan desde el portal y los links del CRM') }}</p>
+            {{ !gwForm.active ? 'sus clientes no ven el botón de pago' : (gwForm.sandbox ? 'los pagos NO son reales' : 'sus clientes pagan desde el portal y los links del CRM') }}</p>
         </div>
         <div class="np-chips bc-gw-vistas" role="tablist">
           <button type="button" class="np-chip" [attr.aria-pressed]="gwView === 'config'" (click)="gwView = 'config'">Configuración</button>
@@ -402,7 +402,7 @@
       <!-- ── Configuración ── -->
       <div class="bc-gw" *ngIf="gwView === 'config'">
         <section class="np-card">
-          <div class="np-card-h"><h2>1. Elegí la pasarela</h2></div>
+          <div class="np-card-h"><h2>1. Seleccione la pasarela</h2></div>
           <div class="bc-gw-opciones" role="radiogroup" aria-label="Pasarela">
             <button type="button" *ngFor="let gw of gwAvailable" class="bc-gw-op" role="radio"
                     [attr.aria-checked]="gwForm.gateway === gw.id" (click)="gwForm.gateway = gw.id">
@@ -419,21 +419,21 @@
         <section class="np-card">
           <div class="np-card-h"><h2>2. Modo y estado</h2></div>
           <div class="bc-opcion">
-            <div><b>Modo</b><small>En prueba los pagos no son reales: usá las llaves de prueba de la pasarela.</small></div>
+            <div><b>Modo</b><small>En prueba los pagos no son reales: use las llaves de prueba de la pasarela.</small></div>
             <div class="np-chips bc-modo" role="radiogroup" aria-label="Modo">
               <button type="button" class="np-chip" role="radio" [attr.aria-pressed]="gwForm.sandbox" [attr.aria-checked]="gwForm.sandbox" (click)="gwForm.sandbox = true">Prueba</button>
               <button type="button" class="np-chip" role="radio" [attr.aria-pressed]="!gwForm.sandbox" [attr.aria-checked]="!gwForm.sandbox" (click)="gwForm.sandbox = false">Producción</button>
             </div>
           </div>
           <div class="bc-opcion">
-            <div><b>Pago en línea activo</b><small>Tus clientes ven el botón de pago en el portal.</small></div>
+            <div><b>Pago en línea activo</b><small>Sus clientes ven el botón de pago en el portal.</small></div>
             <button type="button" class="np-switch" role="switch" [attr.aria-checked]="!!gwForm.active" (click)="gwForm.active = !gwForm.active" aria-label="Pago en línea activo"></button>
           </div>
         </section>
 
         <section class="np-card bc-gw-cred">
           <div class="np-card-h">
-            <div><h2>3. Credenciales de {{ gatewayLabel(gwForm.gateway) }}</h2><p class="np-fine">Dejá un campo vacío para conservar lo guardado.</p></div>
+            <div><h2>3. Credenciales de {{ gatewayLabel(gwForm.gateway) }}</h2><p class="np-fine">Deje un campo vacío para conservar lo guardado.</p></div>
           </div>
           <!-- Campos trampa: frenan el autocompletado de contraseñas del navegador -->
           <input type="text" style="display:none" aria-hidden="true" tabindex="-1" name="username_fake">
@@ -459,7 +459,7 @@
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg>
                 </button>
               </div>
-              <small class="np-fine" *ngIf="gwConfig['has_' + guardado]">Para cambiarla, reemplazá el contenido. Si la dejás vacía se conserva la que está guardada.</small>
+              <small class="np-fine" *ngIf="gwConfig['has_' + guardado]">Para cambiarla, reemplace el contenido. Si la deja vacía se conserva la que está guardada.</small>
             </div>
           </ng-template>
 
@@ -487,7 +487,7 @@
 
           <!-- ePayco -->
           <ng-container *ngIf="gwForm.gateway === 'epayco'">
-            <p class="np-notice np-notice--info">Están en tu panel de ePayco → Configuración → Llaves API.</p>
+            <p class="np-notice np-notice--info">Están en su panel de ePayco → Configuración → Llaves API.</p>
             <div class="np-form">
               <ng-container *ngTemplateOutlet="clave; context: { titulo: 'P_CUST_ID_CLIENTE', ayuda: 'número de cliente', campo: 'client_id', guardado: 'client_id', ver: 'client_id', tipo: 'text', vacio: 'Ej: 12345' }"></ng-container>
               <ng-container *ngTemplateOutlet="clave; context: { titulo: 'P_KEY', ayuda: 'firma y webhooks', campo: 'private_key', guardado: 'private_key', ver: 'epayco_private_key', tipo: 'password', vacio: 'p_key_…' }"></ng-container>
@@ -499,7 +499,7 @@
           <ng-container *ngIf="gwForm.gateway === 'zonapago'">
             <p class="np-notice np-notice--warn">
               <strong>ZonaPago requiere un registro comercial previo.</strong>
-              Pedí las credenciales a Zona Virtual: <span class="np-mono">infozonapagos&#64;zonavirtual.com.co</span>
+              Solicite las credenciales a Zona Virtual: <span class="np-mono">infozonapagos&#64;zonavirtual.com.co</span>
             </p>
           </ng-container>
 
@@ -516,12 +516,12 @@
                 <span>Sucursal <em>parámetro office</em></span>
                 <div class="bc-sucursal">
                   <np-select *ngIf="efipayOffices.length" [(ngModel)]="gwForm.office_id" [opciones]="efipayOffices" [presentacion]="presSucursales" [valorVacio]="''"
-                             placeholder="Elegí una sucursal…" textoBuscar="Buscar por id o nombre…" ariaLabel="Sucursal EfiPay"></np-select>
+                             placeholder="Seleccione una sucursal…" textoBuscar="Buscar por id o nombre…" ariaLabel="Sucursal EfiPay"></np-select>
                   <input type="text" inputmode="numeric" class="np-input np-mono" [(ngModel)]="gwForm.office_id" autocomplete="off" placeholder="Ej: 1" aria-label="ID de sucursal" />
                   <button type="button" class="np-btn np-btn--ghost np-btn--sm" (click)="loadEfipayOffices()" [disabled]="efipayOfficesLoading">{{ efipayOfficesLoading ? 'Consultando…' : 'Ver mis sucursales' }}</button>
                 </div>
                 <small class="bc-mal" *ngIf="efipayOfficesError">{{ efipayOfficesError }}</small>
-                <small class="np-fine">Guardá primero el token de acceso y consultá tus sucursales.</small>
+                <small class="np-fine">Guarde primero el token de acceso y consulte sus sucursales.</small>
               </div>
             </div>
             <ul class="bc-check">
@@ -529,7 +529,7 @@
               <li [class.is-ok]="gwConfig.has_events_secret">Token de webhook</li>
               <li [class.is-ok]="gwConfig.has_office_id">Sucursal</li>
             </ul>
-            <ng-container *ngTemplateOutlet="webhook; context: { titulo: 'URL de webhook', ayuda: 'Se manda en cada cobro; registrala también en EfiPay si tu comercio lo pide.', url: gwWebhookUrl() }"></ng-container>
+            <ng-container *ngTemplateOutlet="webhook; context: { titulo: 'URL de webhook', ayuda: 'Se manda en cada cobro; regístrela también en EfiPay si su comercio lo pide.', url: gwWebhookUrl() }"></ng-container>
           </ng-container>
 
           <ng-container *ngIf="gwForm.gateway === 'onepay'">
@@ -554,7 +554,7 @@
                   <button type="button" class="np-btn np-btn--ghost np-btn--sm" (click)="cargarPlantillasOnepay()" [disabled]="onepayCargandoPlantillas">{{ onepayCargandoPlantillas ? 'Consultando…' : 'Ver mis plantillas' }}</button>
                 </div>
                 <small class="bc-mal" *ngIf="onepayErrorPlantillas">{{ onepayErrorPlantillas }}</small>
-                <small class="np-fine">Guardá primero la llave privada. Sólo salen las aprobadas por Meta de categoría PAYMENT: son las únicas que sirven para cobrar.</small>
+                <small class="np-fine">Guarde primero la llave privada. Sólo salen las aprobadas por Meta de categoría PAYMENT: son las únicas que sirven para cobrar.</small>
               </div>
             </div>
 
@@ -590,20 +590,20 @@
       <!-- ── Probar un pago ── -->
       <section class="np-card" *ngIf="gwView === 'test'">
         <div class="np-card-h">
-          <div><h2>Probar el flujo de pago</h2><p class="np-fine">Crea una factura temporal para un cliente y te da su link de pago.</p></div>
+          <div><h2>Probar el flujo de pago</h2><p class="np-fine">Crea una factura temporal para un cliente y le da su link de pago.</p></div>
           <button type="button" class="np-btn np-btn--ghost np-btn--sm" (click)="loadTestUsers()" [disabled]="testUsersLoading">
             {{ testUsersLoading ? 'Cargando…' : (testUsers.length ? 'Recargar clientes' : 'Cargar clientes') }}
           </button>
         </div>
 
         <div class="bc-vacio" *ngIf="!testUsers.length && !testUsersLoading">
-          <b>Primero cargá los clientes.</b><span>Tocá «Cargar clientes» para elegir a quién facturarle.</span>
+          <b>Primero cargue los clientes.</b><span>Toque «Cargar clientes» para elegir a quién facturarle.</span>
         </div>
 
         <ng-container *ngIf="testUsers.length">
           <div class="np-form bc-prueba">
             <label class="np-field"><span>Cliente</span>
-              <np-select [(ngModel)]="testForm.user_id" [opciones]="testUsers" [presentacion]="presClientesPrueba" [valorVacio]="0" placeholder="Elegí un cliente…" textoBuscar="Buscar por nombre o correo…" ariaLabel="Cliente"></np-select>
+              <np-select [(ngModel)]="testForm.user_id" [opciones]="testUsers" [presentacion]="presClientesPrueba" [valorVacio]="0" placeholder="Seleccione un cliente…" textoBuscar="Buscar por nombre o correo…" ariaLabel="Cliente"></np-select>
             </label>
             <label class="np-field"><span>Monto (COP)</span><input type="number" class="np-input np-mono" [(ngModel)]="testForm.amount" min="100" /></label>
             <label class="np-field np-field-full"><span>Descripción <em>opcional</em></span><input type="text" class="np-input" [(ngModel)]="testForm.description" placeholder="Factura de prueba" /></label>
@@ -638,13 +638,13 @@
       <!-- ── Transacciones ── -->
       <section class="np-card bc-tx" *ngIf="gwView === 'transactions'">
         <div class="np-card-h">
-          <div><h2>Transacciones en línea</h2><p class="np-fine">Tocá una para ver el detalle.</p></div>
+          <div><h2>Transacciones en línea</h2><p class="np-fine">Toque una para ver el detalle.</p></div>
           <button type="button" class="np-btn np-btn--ghost np-btn--sm" (click)="loadGatewayTransactions()" [disabled]="gwTxLoading">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 12a8 8 0 1 1-2.3-5.7M20 4v5h-5"/></svg>Actualizar
           </button>
         </div>
         <div *ngIf="gwTxLoading" class="np-loading"><span class="np-spinner"></span> Cargando…</div>
-        <div class="bc-vacio" *ngIf="!gwTxLoading && !gwTransactions.length"><b>Sin transacciones todavía.</b><span>Aparecen acá cuando un cliente paga en línea.</span></div>
+        <div class="bc-vacio" *ngIf="!gwTxLoading && !gwTransactions.length"><b>Sin transacciones todavía.</b><span>Aparecen aquí cuando un cliente paga en línea.</span></div>
 
         <ul class="bc-txs" *ngIf="!gwTxLoading && gwTransactions.length">
           <li *ngFor="let tx of gwTransactions" tabindex="0" role="button" (click)="openTxDetail(tx)" (keydown.enter)="openTxDetail(tx)">
@@ -763,7 +763,7 @@
         <button type="button" class="np-icobtn" (click)="triggerModal = false" aria-label="Cerrar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
       </div>
       <div class="np-modal-body">
-        <p class="np-fine">Elegí el mes de las facturas. El día es el del grupo: <b>{{ triggerDay }}</b>.</p>
+        <p class="np-fine">Seleccione el mes de las facturas. El día es el del grupo: <b>{{ triggerDay }}</b>.</p>
         <div class="np-form">
           <label class="np-field"><span>Mes</span><np-select [(ngModel)]="triggerMonth" [opciones]="months" [presentacion]="presMeses" textoBuscar="Buscar mes…" ariaLabel="Mes"></np-select></label>
           <label class="np-field"><span>Año</span><np-select [(ngModel)]="triggerYear" [opciones]="years" [presentacion]="presAnios" ariaLabel="Año"></np-select></label>
@@ -789,7 +789,7 @@
       <div class="np-modal-body">
         <p class="np-notice np-notice--warn">Tiene <b>{{ groupUserCounts[transferFrom] ?? 0 }} cliente(s)</b>. Pasalos a otro grupo antes de eliminarlo.</p>
         <label class="np-field"><span>Pasarlos al grupo</span>
-          <np-select [(ngModel)]="transferTo" [opciones]="transferGroups" [presentacion]="presGruposDestino" placeholder="Elegí el grupo" ariaLabel="Grupo destino"></np-select>
+          <np-select [(ngModel)]="transferTo" [opciones]="transferGroups" [presentacion]="presGruposDestino" placeholder="Seleccione el grupo" ariaLabel="Grupo destino"></np-select>
         </label>
         <div class="np-btnrow np-btnrow--end">
           <button type="button" class="np-btn np-btn--ghost" (click)="transferModal = false; pendingRemoveIndex = -1">Cancelar</button>

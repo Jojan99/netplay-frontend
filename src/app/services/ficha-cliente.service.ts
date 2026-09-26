@@ -41,7 +41,7 @@ export class FichaClienteService {
     }
 
     if (!this.permitido) {
-      this.toast.error('No tenés permiso para ver la ficha de clientes.');
+      this.toast.error('No tiene permiso para ver la ficha de clientes.');
       return;
     }
 
@@ -49,7 +49,7 @@ export class FichaClienteService {
 
     const ok = await this.dialog.confirm(
       nombre ? `¿Abrir la ficha de ${nombre}?` : '¿Abrir la ficha de este cliente?',
-      { title: 'Ir al cliente', okLabel: 'Ver ficha', cancelLabel: 'Quedarme acá' },
+      { title: 'Ir al cliente', okLabel: 'Ver ficha', cancelLabel: 'Quedarme aquí' },
     );
 
     if (!ok) return;

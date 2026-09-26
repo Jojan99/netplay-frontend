@@ -55,7 +55,7 @@ export class UserService {
       router_id: userData.router_id ?? undefined,
       // Sin estos campos el alta de un cliente PPPoE llegaba como IP fija sin
       // IP y el servidor respondía 500: la lista de campos de arriba es fija y
-      // lo que no está acá no se envía.
+      // lo que no está aquí no se envía.
       connection_type: userData.connection_type ?? 'static',
       pppoe_user: userData.connection_type === 'pppoe' ? userData.pppoe_user : undefined,
       pppoe_password: userData.connection_type === 'pppoe' ? userData.pppoe_password : undefined,

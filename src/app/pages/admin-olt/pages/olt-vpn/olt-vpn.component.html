@@ -6,7 +6,7 @@
       <div class="np-ribbon">
         <span *ngIf="servidor" class="np-mono">{{ servidor.endpoint_host }}:{{ servidor.listen_port }}</span>
         <span *ngIf="tuneles.length"><span class="np-n">{{ tuneles.length }}</span>túneles <b>·</b> <span class="np-n">{{ conectados }}</span>conectados</span>
-        <span *ngIf="!tuneles.length">El router marca hacia acá y la OLT queda alcanzable sin jump host.</span>
+        <span *ngIf="!tuneles.length">El router marca hacia aquí y la OLT queda alcanzable sin jump host.</span>
       </div>
     </div>
     <div class="np-actions">
@@ -24,7 +24,7 @@
       <div class="np-card-h"><h2>Falta instalar el servidor</h2></div>
       <p class="np-hint">
         La plataforma ya generó las claves y la configuración, pero crear la interfaz de red
-        necesita permisos de root, y PHP no los tiene ni debería tenerlos. Corré una sola vez
+        necesita permisos de root, y PHP no los tiene ni debería tenerlos. Ejecute una sola vez
         este comando en el servidor y el resto queda automático.
       </p>
       <div class="vpn-comando">
@@ -108,13 +108,13 @@
       <div class="vpn-prueba">
         <label class="np-field np-field--inline"><span>Probar alcance a</span><input class="np-input np-mono" [(ngModel)]="pruebaIp" placeholder="10.11.104.2" /></label>
         <label class="np-field np-field--inline"><span>Puerto</span><input type="number" class="np-input np-mono" [(ngModel)]="pruebaPuerto" /></label>
-        <span class="np-fine">Si lo dejás vacío se prueba la OLT que caiga dentro de las redes del túnel.</span>
+        <span class="np-fine">Si lo deja vacío se prueba la OLT que caiga dentro de las redes del túnel.</span>
       </div>
     </section>
 
     <p class="np-empty-block" *ngIf="estado && !tuneles.length">
       <strong>Todavía no hay túneles.</strong>
-      <span>Creá uno por cada nodo: el router de ese nodo marca hacia acá y sus equipos quedan alcanzables.</span>
+      <span>Cree uno por cada nodo: el router de ese nodo marca hacia aquí y sus equipos quedan alcanzables.</span>
     </p>
   </div>
 </div>
@@ -127,20 +127,20 @@
       <button type="button" class="np-icobtn" (click)="modal = false" aria-label="Cerrar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
     </div>
     <div class="np-modal-body">
-      <p class="np-hint">Un túnel por nodo. Las redes son las que quedan alcanzables detrás de ese router: la de la OLT, la de administración, las de los clientes si querés llegar a sus equipos por TR-069.</p>
-      <p class="np-notice np-notice--info np-notice--inline" *ngIf="editando">Al guardar, el servidor rehace su configuración. No hace falta volver a pegar el script en el router: sólo si agregás redes que necesiten enmascarado nuevo.</p>
+      <p class="np-hint">Un túnel por nodo. Las redes son las que quedan alcanzables detrás de ese router: la de la OLT, la de administración, las de los clientes si quiere llegar a sus equipos por TR-069.</p>
+      <p class="np-notice np-notice--info np-notice--inline" *ngIf="editando">Al guardar, el servidor rehace su configuración. No hace falta volver a pegar el script en el router: sólo si agrega redes que necesiten enmascarado nuevo.</p>
       <div class="np-form">
         <label class="np-field np-field-full"><span>Nombre del nodo <em>*</em></span><input class="np-input" [(ngModel)]="form.nombre" placeholder="Nodo Rebolo" /></label>
         <label class="np-field np-field-full"><span>Redes alcanzables <em>*</em></span><input class="np-input np-mono" [(ngModel)]="form.redes_remotas" [placeholder]="redesSugeridas.length ? redesSugeridas.join(', ') : '10.11.104.0/24, 192.168.88.0/24'" /></label>
         <p class="np-hint np-field-full" *ngIf="!editando && servidor">
           La IP del túnel no se escribe: la plataforma le asigna al router la siguiente libre de
           <code>{{ servidor.subred }}</code> (el servidor es <code>{{ servidor.ip_servidor }}</code>) y la pone en el script.
-          Acá van las redes <b>de tu lado</b>, detrás del router: la de gestión de la OLT, por ejemplo.
+          Aquí van las redes <b>de su lado</b>, detrás del router: la de gestión de la OLT, por ejemplo.
         </p>
         <p class="np-hint np-field-full" *ngIf="!editando && redesSugeridas.length">
-          Sugeridas por tus OLT:
+          Sugeridas por sus OLT:
           <button type="button" class="np-link np-mono" *ngFor="let r of redesSugeridas" (click)="agregarRed(r)">{{ r }}</button>
-          <span *ngIf="!form.redes_remotas.trim()"> — si lo dejás vacío se usan éstas.</span>
+          <span *ngIf="!form.redes_remotas.trim()"> — si lo deja vacío se usan éstas.</span>
         </p>
         <label class="np-field"><span>Puerto en el router</span><input type="number" class="np-input np-mono" [(ngModel)]="form.puerto_router" /></label>
         <label class="np-field"><span>Keepalive (s)</span><input type="number" class="np-input np-mono" [(ngModel)]="form.keepalive" /></label>
@@ -163,12 +163,12 @@
     </div>
     <div class="np-modal-body np-modal-body--scroll">
       <p class="np-hint">
-        Pegá todo el bloque en la terminal del MikroTik (RouterOS 7.1 o superior).
+        Pegue todo el bloque en la terminal del MikroTik (RouterOS 7.1 o superior).
         Se puede volver a ejecutar sin duplicar nada: lo primero que hace es limpiar lo que dejó antes.
       </p>
       <div class="olt-aviso is-warn" *ngIf="recienCreado">
         <strong>La clave privada del router va en este script.</strong>
-        <span>Es la única vez que se muestra en claro. Si lo perdés se puede volver a generar desde el listado, sin reconfigurar nada.</span>
+        <span>Es la única vez que se muestra en claro. Si lo pierde se puede volver a generar desde el listado, sin reconfigurar nada.</span>
       </div>
       <pre class="vpn-script">{{ script }}</pre>
     </div>
@@ -212,12 +212,12 @@
       </p>
       <div class="np-form">
         <label class="np-field np-field-full"><span>OLT</span>
-          <np-select [(ngModel)]="oltElegida" [opciones]="olts" [presentacion]="presOlts" placeholder="Elegí la OLT…" ariaLabel="OLT"></np-select>
+          <np-select [(ngModel)]="oltElegida" [opciones]="olts" [presentacion]="presOlts" placeholder="Seleccione la OLT…" ariaLabel="OLT"></np-select>
         </label>
       </div>
       <div class="olt-aviso is-warn" *ngIf="!tunelParaOlt?.conectado">
         <strong>Este túnel todavía no saludó.</strong>
-        <span>Aplicá el script en el router primero; si no, la comprobación va a fallar y la OLT se queda como está.</span>
+        <span>Aplique el script en el router primero; si no, la comprobación va a fallar y la OLT se queda como está.</span>
       </div>
     </div>
     <div class="np-modal-foot">
@@ -232,7 +232,7 @@
   <div class="np-modal np-modal--confirm" role="alertdialog" aria-modal="true" (click)="$event.stopPropagation()">
     <span class="np-confirm-icon is-danger"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/></svg></span>
     <h3>¿Eliminar «{{ borrando.nombre }}»?</h3>
-    <p>El router pierde el túnel en cuanto se aplique el cambio. Si alguna OLT llega por acá, primero hay que cambiarle el acceso.</p>
+    <p>El router pierde el túnel en cuanto se aplique el cambio. Si alguna OLT llega por aquí, primero hay que cambiarle el acceso.</p>
     <div class="np-btnrow np-btnrow--center">
       <button type="button" class="np-btn np-btn--ghost" (click)="borrando = null">Cancelar</button>
       <button type="button" class="np-btn np-btn--danger-solid" (click)="borrar()">Eliminar</button>

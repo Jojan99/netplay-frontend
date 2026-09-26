@@ -176,7 +176,7 @@ export class OltAutorizadasComponent implements OnInit {
               ? this.toast.success('El equipo ya puede reportar al TR-069')
               : this.toast.error(t?.detalle || 'No se pudo darle acceso');
           },
-          error: () => { this.dandoAcceso = false; this.toast.error('Se perdió el seguimiento; revisá el diagnóstico en Acceso remoto'); },
+          error: () => { this.dandoAcceso = false; this.toast.error('Se perdió el seguimiento; revise el diagnóstico en Acceso remoto'); },
         });
       },
       error: () => { this.dandoAcceso = false; this.toast.error('No se pudo iniciar'); },

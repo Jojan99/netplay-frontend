@@ -10,7 +10,7 @@ import { hayAlgunaGuardada, hayPasskeys, porQueFallo, usarPasskey } from '../../
  * El ingreso a la consola de Netvula.
  *
  * Nada del panel de empresas: ni logo de empresa, ni "olvidé mi contraseña",
- * ni registro. Acá entran las pocas personas de Netvula que tienen cuenta,
+ * ni registro. Aquí entran las pocas personas de Netvula que tienen cuenta,
  * creada a mano con `php artisan consola:usuario`.
  */
 @Component({
@@ -93,7 +93,7 @@ export class ConsolaIngresarComponent implements OnInit {
 
   ingresar(): void {
     if (!this.email.trim() || !this.password) {
-      this.error = 'Poné tu correo y tu contraseña.';
+      this.error = 'Ingrese su correo y su contraseña.';
       return;
     }
 
@@ -129,7 +129,7 @@ export class ConsolaIngresarComponent implements OnInit {
     const codigo = this.codigo.trim();
 
     if (!codigo) {
-      this.error = 'Poné el código de tu authenticator.';
+      this.error = 'Ingrese el código de su authenticator.';
       return;
     }
 
@@ -179,7 +179,7 @@ export class ConsolaIngresarComponent implements OnInit {
     this.cargando = false;
     this.password = '';
     this.error = e?.status === 429
-      ? 'Demasiados intentos. Esperá un minuto y probá de nuevo.'
-      : (e?.error?.message || 'No pudimos conectarnos. Probá de nuevo.');
+      ? 'Demasiados intentos. Espere un minuto y pruebe de nuevo.'
+      : (e?.error?.message || 'No pudimos conectarnos. Pruebe de nuevo.');
   }
 }

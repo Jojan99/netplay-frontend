@@ -11,7 +11,7 @@ import { MetaWhatsappService } from '../../../services/meta-whatsapp.service';
   template: `
     <div class="np-page">
       <header class="np-head">
-        <div><p class="np-kicker">WhatsApp <b>/</b> API de Meta <b>/</b> Enviar</p><h1 class="np-title">Enviar mensaje de prueba</h1><div class="np-ribbon"><span *ngIf="windowInfo"><i class="np-dot" [style.background]="windowInfo.has_window ? 'var(--ok)' : 'var(--warn)'"></i>ventana 24 h {{ windowInfo.has_window ? 'activa hasta ' + windowInfo.expires_at : 'inactiva: enviá una plantilla primero' }}</span><span *ngIf="!windowInfo">Texto libre sólo dentro de la ventana de 24 h; fuera de ella, plantilla.</span></div></div>
+        <div><p class="np-kicker">WhatsApp <b>/</b> API de Meta <b>/</b> Enviar</p><h1 class="np-title">Enviar mensaje de prueba</h1><div class="np-ribbon"><span *ngIf="windowInfo"><i class="np-dot" [style.background]="windowInfo.has_window ? 'var(--ok)' : 'var(--warn)'"></i>ventana 24 h {{ windowInfo.has_window ? 'activa hasta ' + windowInfo.expires_at : 'inactiva: envíe una plantilla primero' }}</span><span *ngIf="!windowInfo">Texto libre sólo dentro de la ventana de 24 h; fuera de ella, plantilla.</span></div></div>
       </header>
       <div class="np-scroll"><div class="np-grid-3">
         <section class="np-card">
@@ -26,7 +26,7 @@ import { MetaWhatsappService } from '../../../services/meta-whatsapp.service';
         </section>
         <section class="np-card">
           <div class="np-card-h"><h2>Resultado</h2></div>
-          <p class="np-muted" *ngIf="!result">Todavía no enviaste nada.</p>
+          <p class="np-muted" *ngIf="!result">Todavía no envió nada.</p>
           <p class="np-notice" *ngIf="result" [ngClass]="result.ok ? 'np-notice--ok' : 'np-notice--danger'">{{ result.message }}</p>
         </section>
       </div></div>

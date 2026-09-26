@@ -178,7 +178,7 @@
 
         <div class="np-card">
           <div class="np-card-h"><h2>Evolución de los últimos 12 meses</h2></div>
-          <p class="np-muted np-eg-nota">Por la fecha real del gasto; los egresos sin fecha no aparecen acá.</p>
+          <p class="np-muted np-eg-nota">Por la fecha real del gasto; los egresos sin fecha no aparecen aquí.</p>
           <div class="np-viz-cols" role="list">
             <div class="np-viz-col" *ngFor="let m of barrasMeses; trackBy: porMes" role="listitem" tabindex="0"
                  [attr.aria-label]="m.etiqueta + ': ' + pesos(m.total)">
@@ -244,7 +244,7 @@
       <div class="np-card" *ngIf="recurrentes.length">
         <div class="np-card-h">
           <h2>Gastos que se repiten</h2>
-          <span class="np-card-meta">nada se crea solo: se registra cuando vos lo pedís</span>
+          <span class="np-card-meta">nada se crea solo: se registra cuando usted lo pide</span>
         </div>
         <div class="np-tablewrap">
           <table class="np-table np-table--compact">
@@ -283,7 +283,7 @@
               </tr>
             </ng-container>
             <tr *ngIf="!cargandoLista && egresos.length === 0" class="np-empty">
-              <td colspan="7"><strong>No hay egresos con estos filtros.</strong>Cambiá el período o quitá el filtro del aviso.</td>
+              <td colspan="7"><strong>No hay egresos con estos filtros.</strong>Cambie el período o quite el filtro del aviso.</td>
             </tr>
             <tr *ngFor="let e of egresos; trackBy: porId" class="np-row" (click)="abrirEditar(e)" tabindex="0" (keydown.enter)="abrirEditar(e)">
               <td class="np-stripe"><i [style.background]="colorDeCategoria(e.category) || 'var(--danger)'"></i></td>
@@ -383,7 +383,7 @@
                   <button type="button" class="np-btn np-btn--ghost np-btn--sm" (click)="alternarCategoria(c)">{{ c.active ? 'Desactivar' : 'Activar' }}</button>
                   <button type="button" class="np-btn np-btn--danger np-btn--sm" (click)="borrarCategoria(c)"
                           [disabled]="c.movimientos > 0 || c.ligada"
-                          [attr.title]="(c.movimientos > 0 || c.ligada) ? 'Tiene movimientos: desactivala en vez de borrarla' : 'Eliminar'">Eliminar</button>
+                          [attr.title]="(c.movimientos > 0 || c.ligada) ? 'Tiene movimientos: desactívela en vez de borrarla' : 'Eliminar'">Eliminar</button>
                 </div>
               </td>
             </tr>
@@ -442,8 +442,8 @@
         <div class="np-field np-field-full">
           <span>Comprobante (PDF o imagen, hasta 8 MB)</span>
           <input type="file" class="np-input np-eg-archivo" accept=".pdf,.jpg,.jpeg,.png,.webp" (change)="alElegirArchivo($event)" />
-          <p class="np-muted np-eg-nota" *ngIf="adjuntoActual && !archivo">Ya tiene adjunto: <b>{{ adjuntoActual }}</b>. Si subís otro, lo reemplaza.</p>
-          <p class="np-muted np-eg-nota">Se guarda en carpeta privada: sólo se abre desde acá, con tu sesión.</p>
+          <p class="np-muted np-eg-nota" *ngIf="adjuntoActual && !archivo">Ya tiene adjunto: <b>{{ adjuntoActual }}</b>. Si sube otro, lo reemplaza.</p>
+          <p class="np-muted np-eg-nota">Se guarda en carpeta privada: sólo se abre desde aquí, con su sesión.</p>
         </div>
       </div>
 

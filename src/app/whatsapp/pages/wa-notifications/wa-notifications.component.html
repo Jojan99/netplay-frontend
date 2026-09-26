@@ -20,7 +20,7 @@
   <!-- Sin línea de WhatsApp Web no hay grupos ni envíos. -->
   <p *ngIf="!cargando && !lineaConectada" class="np-notice np-notice--warn">
     <strong>Esta empresa todavía no tiene una línea de WhatsApp Web conectada.</strong>
-    Los avisos que configures acá no van a salir hasta que vincules el teléfono.
+    Los avisos que configures aquí no van a salir hasta que vincules el teléfono.
     <a routerLink="/dashboard/whatsapp/netplay/instancias" class="np-link">Conectar la línea (QR)</a>
   </p>
 
@@ -135,7 +135,7 @@
         <label class="np-field np-field-full" *ngIf="tipoDestino === 'grupo'">
           <span>Grupo de la línea</span>
           <np-select [(ngModel)]="grupoElegido" [opciones]="grupos" [presentacion]="presGrupos"
-                     [cargando]="cargandoGrupos" placeholder="Elegí un grupo…" [valorVacio]="null"
+                     [cargando]="cargandoGrupos" placeholder="Seleccione un grupo…" [valorVacio]="null"
                      textoSinOpciones="La línea no está en ningún grupo." ariaLabel="Grupo de WhatsApp"></np-select>
         </label>
 

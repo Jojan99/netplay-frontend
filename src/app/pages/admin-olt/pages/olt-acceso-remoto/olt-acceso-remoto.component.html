@@ -3,7 +3,7 @@
     <div>
       <p class="np-kicker">Admin OLT <b>/</b> Acceso remoto</p>
       <h1 class="np-title">Acceso remoto a los equipos</h1>
-      <p class="np-fine">La red por la que las ONT de tus clientes llegan al servidor TR-069.</p>
+      <p class="np-fine">La red por la que las ONT de sus clientes llegan al servidor TR-069.</p>
     </div>
     <div class="np-actions">
       <button type="button" class="np-btn np-btn--ghost" (click)="cargar(); revisar(); cargarAprov()" [disabled]="revisando">
@@ -115,7 +115,7 @@
     <!-- ══ Perfiles de línea ════════════════════════════════════════════ -->
     <ng-container *ngIf="tab === 'perfiles'">
       <p class="np-notice np-notice--inline">El perfil de línea decide qué VLAN puede sacar cada equipo: tiene que llevar la de gestión (VLAN {{ estado?.vlan }}) y el TR-069 encendido. Al prepararlo, la OLT reconfigura a los clientes de ese perfil y puede haber un corte de segundos.</p>
-      <p class="np-fine" *ngIf="!oltsConPerfiles.length">No hay OLT que admita preparar perfiles desde acá.</p>
+      <p class="np-fine" *ngIf="!oltsConPerfiles.length">No hay OLT que admita preparar perfiles desde aquí.</p>
 
       <section class="ar-panel" *ngFor="let oltId of oltsConPerfiles">
         <div class="ar-perfiles-head">
@@ -162,7 +162,7 @@
     <ng-container *ngIf="tab === 'equipos' && estado?.activa">
       <section class="ar-panel">
         <h3 class="ar-panel-t">Equipos que ya tenías</h3>
-        <p class="np-fine">Los que autorizás de ahora en más reciben el acceso solos. A los {{ equiposFaltan }} que quedan hay que dárselo una vez. Hacelo después de preparar sus perfiles de línea.</p>
+        <p class="np-fine">Los que autoriza de ahora en más reciben el acceso solos. A los {{ equiposFaltan }} que quedan hay que dárselo una vez. Hacelo después de preparar sus perfiles de línea.</p>
 
         <div class="np-actions">
           <button type="button" class="np-btn np-btn--primary" (click)="ponerAlDia()" *ngIf="!poniendoAlDia"
@@ -222,7 +222,7 @@
             </div>
             <div class="ar-campo" *ngIf="aprovForm.admin">
               <label>Clave administrador</label>
-              <input class="np-input" type="password" [(ngModel)]="aprovForm.admin_clave" maxlength="64" autocomplete="new-password" [placeholder]="aprov.admin_con_clave ? 'Guardada · escribí para cambiarla' : ''" />
+              <input class="np-input" type="password" [(ngModel)]="aprovForm.admin_clave" maxlength="64" autocomplete="new-password" [placeholder]="aprov.admin_con_clave ? 'Guardada · escriba para cambiarla' : ''" />
             </div>
           </div>
           <div class="np-actions">
@@ -271,7 +271,7 @@
                       <span *ngIf="a.que_hacer"><b>Qué hacer:</b> {{ a.que_hacer }}</span>
                       <small class="np-fine">Se lo sigue mirando 3 días: en cuanto el equipo se reporte al TR-069, se aprovisiona solo.</small>
                     </div>
-                    <p class="np-fine" *ngIf="a.estado === 'revertido'">El cliente quedó como estaba. Para intentarlo de nuevo, pedí el cambio desde su ficha.</p>
+                    <p class="np-fine" *ngIf="a.estado === 'revertido'">El cliente quedó como estaba. Para intentarlo de nuevo, solicite el cambio desde su ficha.</p>
                     <ul class="ar-pasos-lista">
                       <li *ngFor="let p of a.pasos" [class.is-mal]="!p.ok && !p.omitido" [class.is-omitido]="p.omitido">
                         <span class="ar-tick" aria-hidden="true">{{ p.ok ? '✓' : (p.omitido ? '–' : '!') }}</span>
@@ -318,7 +318,7 @@
           <dl class="ar-explica">
             <div><dt>VLAN {{ estado.vlan }}</dt><dd>El número del canal. Sólo lo usan las ONT para hablar con el servidor; no se mezcla con las VLAN de clientes.</dd></div>
             <div><dt>Red {{ estado.red }}</dt><dd>Las IP que el MikroTik les reparte a las ONT dentro de ese canal. No hace falta tocarla.</dd></div>
-            <div><dt>Interfaz {{ estado.interfaz }}</dt><dd>El cable por donde el canal llega a la OLT. <b>Con uno por OLT alcanza:</b> aunque otras VLAN de clientes vayan por otra interfaz (sfp2, por ejemplo), sus ONT se administran igual por acá, porque la OLT saca la gestión de todas sus ONT por el puerto de subida elegido.</dd></div>
+            <div><dt>Interfaz {{ estado.interfaz }}</dt><dd>El cable por donde el canal llega a la OLT. <b>Con uno por OLT alcanza:</b> aunque otras VLAN de clientes vayan por otra interfaz (sfp2, por ejemplo), sus ONT se administran igual por aquí, porque la OLT saca la gestión de todas sus ONT por el puerto de subida elegido.</dd></div>
           </dl>
 
           <div class="np-actions">
@@ -372,7 +372,7 @@
           <div class="ar-campo">
             <label>Interfaz del MikroTik hacia la OLT</label>
             <small class="np-fine">Una sola: la que llega al puerto de subida elegido abajo. Las VLAN de clientes que van por otras interfaces no se tocan.</small>
-            <np-select [(ngModel)]="form.interfaz" [opciones]="interfaces" [presentacion]="presInterfaces" placeholder="Elegí la interfaz…" ariaLabel="Interfaz hacia las OLT" style="max-width: 460px"></np-select>
+            <np-select [(ngModel)]="form.interfaz" [opciones]="interfaces" [presentacion]="presInterfaces" placeholder="Seleccione la interfaz…" ariaLabel="Interfaz hacia las OLT" style="max-width: 460px"></np-select>
           </div>
 
           <div class="ar-campo" *ngIf="sug.olts?.length">

@@ -99,7 +99,7 @@ export class ConsolaBitacoraComponent implements OnInit, OnDestroy {
     this.cargar();
   }
 
-  /** El detalle se guarda como JSON; acá se muestra legible. */
+  /** El detalle se guarda como JSON; aquí se muestra legible. */
   detalle(d: any): string {
     if (!d) return '';
     if (typeof d === 'string') return d;

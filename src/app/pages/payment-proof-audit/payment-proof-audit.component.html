@@ -3,7 +3,7 @@
     <div>
       <p class="np-kicker">Operación <b>/</b> Recaudo <b>/</b> Auditoría</p>
       <h1 class="np-title">Auditoría de comprobantes</h1>
-      <div class="np-ribbon"><span><span class="np-n">{{ totalItems | number }}</span>comprobantes en este estado</span><span>Revisá la evidencia y decidí antes de tocar la factura.</span></div>
+      <div class="np-ribbon"><span><span class="np-n">{{ totalItems | number }}</span>comprobantes en este estado</span><span>Revise la evidencia y decida antes de tocar la factura.</span></div>
     </div>
     <div class="np-actions"><button type="button" class="np-btn np-btn--ghost" (click)="load()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 12a8 8 0 1 1-2.3-5.7M20 4v5h-5"/></svg>Actualizar</button></div>
   </header>
@@ -17,7 +17,7 @@
         <span>Aplicar los pagos automáticamente</span>
         <small class="np-fine">
           {{ autoActivo
-            ? 'Los comprobantes que pasan la revisión se aplican solos a la factura y aparecen acá como «automático».'
+            ? 'Los comprobantes que pasan la revisión se aplican solos a la factura y aparecen aquí como «automático».'
             : 'Los comprobantes quedan esperando que alguien los revise y los aplique a mano.' }}
         </small>
       </span>
@@ -64,7 +64,7 @@
                 <!-- El lector leyó la imagen de tres formas y no coincidieron:
                      el número puede estar mal y hay que mirar la foto. -->
                 <span class="ppa-dudoso" *ngIf="(item.dudosos || []).includes('amount')"
-                      title="El lector no pudo confirmar este monto: revisá la imagen antes de aprobar">sin confirmar</span>
+                      title="El lector no pudo confirmar este monto: revise la imagen antes de aprobar">sin confirmar</span>
               </td>
               <td class="np-data">{{ formatDate(item.payment_date) }}</td>
               <td class="np-data">{{ item.reference_number || '—' }}</td>
@@ -200,10 +200,10 @@
           </label>
 
           <p class="np-fine" *ngIf="montoCorregido">
-            Vas a aplicar <b>{{ formatAmount(montoAAprobar) }}</b> en lugar de lo leído.
+            Va a aplicar <b>{{ formatAmount(montoAAprobar) }}</b> en lugar de lo leído.
           </p>
           <p class="np-fine" *ngIf="!aprobando.leido">
-            No pudimos leer el monto. Podés volver a intentarlo o escribirlo a mano.
+            No pudimos leer el monto. Puede volver a intentarlo o escribirlo a mano.
           </p>
 
           <button type="button" class="np-btn np-btn--ghost np-btn--sm" (click)="releerDesdeAprobacion()"

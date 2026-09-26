@@ -153,7 +153,7 @@ export class MikrotikComponent implements OnInit {
 
   // ── PPPoE ─────────────────────────────────────────────────────────────────
   // Montar PPPoE a mano son cuatro cosas en cuatro pantallas de Winbox, y si
-  // falta una nada funciona. Acá se hace en un paso.
+  // falta una nada funciona. Aquí se hace en un paso.
   pppoe: any = null;
   pppoeUsuarios: any[] = [];
   loadingPppoe = false;
@@ -299,7 +299,7 @@ export class MikrotikComponent implements OnInit {
     if (vlans.length) partes.push(`crear PPPoE en la${vlans.length > 1 ? 's' : ''} VLAN ${vlans.map((v: any) => v.vlan).join(', ')}`);
     if (corregir.length) partes.push(`corregir la velocidad de ${corregir.map((x: any) => x.perfil).join(', ')}`);
 
-    const ok = await this.dialog.confirm(`Se va a ${partes.join(' y ')} en el router. Los clientes que ya navegan no se cortan. ¿Confirmás?`, { okLabel: 'Crear' });
+    const ok = await this.dialog.confirm(`Se va a ${partes.join(' y ')} en el router. Los clientes que ya navegan no se cortan. ¿Confirma?`, { okLabel: 'Crear' });
     if (!ok) return;
 
     this.montando = true;
@@ -369,7 +369,7 @@ export class MikrotikComponent implements OnInit {
   }
 
   async montarPppoe() {
-    if (!this.form.interfaz) { this.pppoeError = 'Elegí la interfaz por donde llegan los clientes.'; return; }
+    if (!this.form.interfaz) { this.pppoeError = 'Seleccione la interfaz por donde llegan los clientes.'; return; }
 
     const perfiles = this.planesElegidos.length;
 
@@ -378,7 +378,7 @@ export class MikrotikComponent implements OnInit {
       `puerta de enlace ${this.form.gateway}` +
       (perfiles ? `, ${perfiles} perfil(es) de plan` : '') +
       (this.form.salida ? ` y salida a internet por «${this.form.salida}»` : '') +
-      `. Se escribe en el router. ¿Confirmás?`,
+      `. Se escribe en el router. ¿Confirma?`,
       { okLabel: 'Configurar' },
     );
 
@@ -763,7 +763,7 @@ export class MikrotikComponent implements OnInit {
       `Se va a quitar el servidor PPPoE del router.` +
       (q.conectados ? ` Hay ${q.conectados} cliente(s) conectados ahora mismo: se les corta el servicio.` : '') +
       (usuarios ? ` Además se borran ${usuarios} credencial(es) de cliente, y eso no se puede deshacer.` : '') +
-      ` ¿Confirmás?`,
+      ` ¿Confirma?`,
       { okLabel: 'Quitar PPPoE', danger: true },
     );
 
@@ -789,7 +789,7 @@ export class MikrotikComponent implements OnInit {
 
   // ── Conflictos de IP ──────────────────────────────────────────────────────
   // Dos clientes con la misma IP se pelean el ARP del router: a los dos les
-  // anda el internet a ratos. Acá se listan para irlos resolviendo de a uno.
+  // anda el internet a ratos. Aquí se listan para irlos resolviendo de a uno.
   conflicts: any[] = [];
   loadingConflicts = false;
   conflictsError = '';
@@ -876,7 +876,7 @@ export class MikrotikComponent implements OnInit {
     const ok = await this.dialog.confirm(
       `Se le va a dar registro propio a ${p.separados.length} cliente(s): ` +
       `${p.conIp.length} quedan con la IP que tienen en el router y ${p.sinIp.length} sin IP, ` +
-      `porque hoy no tienen entrada en el MikroTik. No se toca el router ni se corta ningún servicio. ¿Confirmás?`,
+      `porque hoy no tienen entrada en el MikroTik. No se toca el router ni se corta ningún servicio. ¿Confirma?`,
       { okLabel: 'Separar registros' },
     );
 
@@ -895,7 +895,7 @@ export class MikrotikComponent implements OnInit {
       error: () => {
         this.separando = false;
         this.separarPreview = null;
-        this.separarError = 'Se cortó la respuesta del servidor. Puede que sí se haya aplicado: revisá la lista, que se está recargando.';
+        this.separarError = 'Se cortó la respuesta del servidor. Puede que sí se haya aplicado: revise la lista, que se está recargando.';
         this.loadConflicts();
       },
     });
@@ -954,7 +954,7 @@ export class MikrotikComponent implements OnInit {
     const ok = await this.dialog.confirm(
       `Se va a guardar la IP del router en ${total} cliente(s): ` +
       `${p.faltaban.length} que no tenían IP registrada y ${p.cambios.length} que la tenían distinta. ` +
-      `No se toca el router, sólo la plataforma. ¿Confirmás?`,
+      `No se toca el router, sólo la plataforma. ¿Confirma?`,
       { okLabel: 'Sincronizar' },
     );
 
@@ -977,7 +977,7 @@ export class MikrotikComponent implements OnInit {
       error: () => {
         this.sincronizando = false;
         this.syncPreview = null;
-        this.syncError = 'Se cortó la respuesta del servidor. Puede que la sincronización sí se haya aplicado: revisá la lista, que se está recargando.';
+        this.syncError = 'Se cortó la respuesta del servidor. Puede que la sincronización sí se haya aplicado: revise la lista, que se está recargando.';
         this.loadConflicts();
       },
     });
@@ -1065,7 +1065,7 @@ export class MikrotikComponent implements OnInit {
 
     const ok = await this.dialog.confirm(
       `Se le va a asignar la IP ${this.fixIp} a ${this.fixCliente.nombre}. ` +
-      `El cambio se aplica en el router y le corta la conexión un momento. ¿Confirmás?`,
+      `El cambio se aplica en el router y le corta la conexión un momento. ¿Confirma?`,
       { okLabel: 'Cambiar la IP' },
     );
 

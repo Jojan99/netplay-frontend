@@ -22,11 +22,11 @@
       <div id="technician-map"></div>
       <div class="np-map-legend"><span><i class="is-live"></i>En vivo (≤ 5 min)</span><span><i class="is-recent"></i>Reciente (≤ 30 min)</span><span><i class="is-stale"></i>Sin señal</span></div>
       <div class="np-map-follow" *ngIf="followId"><i class="np-dot" style="background:var(--ok)"></i>Siguiendo a <b>{{ selected?.first_name }}</b><button type="button" class="np-link" (click)="followId = null">Dejar de seguir</button></div>
-      <div class="np-map-empty" *ngIf="!isLoading && technicians.length === 0"><strong>Sin técnicos con ubicación.</strong><span>Un técnico aparece acá cuando abre el panel o la app con el GPS permitido.</span></div>
+      <div class="np-map-empty" *ngIf="!isLoading && technicians.length === 0"><strong>Sin técnicos con ubicación.</strong><span>Un técnico aparece aquí cuando abre el panel o la app con el GPS permitido.</span></div>
     </section>
 
     <aside class="np-inspector" aria-label="Técnicos">
-      <div class="np-insp-head"><div class="np-insp-id"><h2>Técnicos</h2><div class="np-meta">Tocá uno para centrar el mapa; la estrella lo sigue en vivo</div></div></div>
+      <div class="np-insp-head"><div class="np-insp-id"><h2>Técnicos</h2><div class="np-meta">Toque uno para centrar el mapa; la estrella lo sigue en vivo</div></div></div>
       <div class="np-insp-body">
         <label class="np-search np-map-search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg><input type="search" [(ngModel)]="search" placeholder="Buscar técnico" /></label>
         <div class="np-chips np-map-chips"><button type="button" class="np-chip" [attr.aria-pressed]="filter === 'all'" (click)="filter = 'all'">Todos <span class="np-c">{{ technicians.length }}</span></button><button type="button" class="np-chip" [attr.aria-pressed]="filter === 'live'" (click)="filter = 'live'">Activos <span class="np-c">{{ liveCount + recentCount }}</span></button><button type="button" class="np-chip" [attr.aria-pressed]="filter === 'stale'" (click)="filter = 'stale'">Sin señal</button></div>

@@ -257,7 +257,7 @@ export class WaMetaComunicadosComponent implements OnInit {
 
     this.slots.forEach((s, i) => {
       const valor = s.tipo === 'fijo'
-        ? (s.valor || '(tu texto)')
+        ? (s.valor || '(su texto)')
         : (this.ejemploDe(s.variable) || s.variable);
       texto = texto.split(`{{${i + 1}}}`).join(valor);
     });

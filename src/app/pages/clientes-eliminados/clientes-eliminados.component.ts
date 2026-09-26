@@ -44,7 +44,7 @@ interface ClienteEliminado {
  * Clientes eliminados de la empresa y su reinstalación.
  *
  * Eliminar un cliente no borra su ficha: la deja inactiva y le quita el
- * servicio. Cuando el cliente vuelve a pedir el servicio, desde acá se lo
+ * servicio. Cuando el cliente vuelve a pedir el servicio, desde aquí se lo
  * devuelve al registro sin volver a cargar todos sus datos.
  */
 @Component({

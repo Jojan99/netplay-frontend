@@ -37,7 +37,7 @@
         </div>
         <div *ngIf="cargando && !equipos.length" class="np-loading np-loading--inline"><span class="np-spinner np-spinner--sm"></span> Leyendo el servidor TR-069…</div>
         <p class="np-acs-vacio" *ngIf="!cargando && !error && !equipos.length">
-          Ningún equipo del servidor TR-069 coincide con tus clientes. Un equipo se reconoce por la IP fija del cliente,
+          Ningún equipo del servidor TR-069 coincide con sus clientes. Un equipo se reconoce por la IP fija del cliente,
           su usuario PPPoE o el serial de su ONT.
         </p>
         <ul class="np-acs-items">
