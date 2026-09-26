@@ -271,16 +271,30 @@ select optgroup {
 }
 
 @media (max-width: 1000px) {
+  /* Una sola barra de desplazamiento, la de la página. El layout de escritorio
+     reparte el alto y hace que la tabla scrollee por dentro de un recuadro:
+     en una pantalla chica, entre el título, los botones y los filtros, a ese
+     recuadro le quedaban dos filas visibles y la tabla «no se veía». La página
+     crece con su contenido y scrollea entera, como cualquier página. Es lo que
+     ya hacía el módulo de OLT, ahora para todo el panel. */
+  .np-console { height: auto; min-height: 100%; }
+  .np-page, .np-workspace, .np-scroll { flex: none; min-height: auto; overflow: visible; }
   .np-registry { max-height: none; }
 
-  /* En el celular la tabla no es su propio territorio de scroll: la página
-     entera scrollea. Con «overscroll-behavior: contain» el gesto moría dentro
-     de la tabla y había que tocar afuera para mover la pantalla. */
+  /* Sin alto que la limite, la tabla ya no scrollea hacia abajo por dentro;
+     de costado sí puede, cuando es más ancha que la pantalla. Y sin
+     «overscroll-behavior: contain», que mataba el gesto y había que tocar
+     afuera de la tabla para mover la página. */
   .np-registry-wrap {
-    overflow: visible;
+    overflow-x: auto;
+    overflow-y: visible;
     overscroll-behavior: auto;
     flex: none;
   }
+
+  /* La ficha es la excepción: va fija sobre la página, con su propio alto y su
+     propio scroll adentro, escape incluido. */
+  .np-inspector { max-height: none; }
 }
 @media (max-width: 760px) {
   .np-head { flex-direction: column; align-items: stretch; gap: 12px; }
