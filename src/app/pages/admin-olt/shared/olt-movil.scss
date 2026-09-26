@@ -69,56 +69,6 @@
   .np-quick { gap: 8px; .np-btn { width: 100%; } }
 }
 
-/* ─── Tablas que se vuelven tarjetas ───────────────────────────────────────
-   Con ocho columnas no hay forma de leer una fila en 390 px. Cada fila pasa a
-   ser una tarjeta: el dato principal arriba, el resto de a dos con su nombre
-   (sale de data-label en la celda) y las acciones al pie. */
-@media (max-width: 640px) {
-  .np-table--compact { min-width: 0; }
-
-  .np-tabla-movil {
-    min-width: 0 !important;
-
-    thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
-    /* Como bloques no heredan el ancho de tabla: sin width la tarjeta y el
-       aviso de "sin resultados" quedaban en una columna angosta. */
-    &, tbody, tbody tr { display: block; width: 100%; }
-
-    tbody tr:not(.np-empty) {
-      position: relative;
-      display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px 14px;
-      padding: 12px 14px 12px 18px;
-      border-bottom: 1px solid var(--line);
-    }
-
-    tbody td {
-      display: block; min-width: 0; padding: 0 !important; border: 0 !important;
-      text-align: left !important; overflow-wrap: anywhere;
-    }
-
-    tbody td[data-label]::before {
-      content: attr(data-label);
-      display: block; margin-bottom: 2px;
-      font-family: var(--font-body); font-size: 10px; font-weight: 700; letter-spacing: .05em;
-      text-transform: uppercase; color: var(--text-3);
-    }
-
-    /* La franja de color queda como borde de la tarjeta. */
-    td.np-stripe { position: absolute; inset: 0 auto 0 0; width: 4px; i { width: 4px; height: 100%; } }
-
-    td.es-principal, td.es-ancha, td.es-acciones { grid-column: 1 / -1; }
-
-    /* Lo que identifica la fila (el cliente, la OLT, el túnel) va primero
-       aunque en la tabla esté en la tercera columna; las acciones, al pie. */
-    td.es-principal { order: -1; }
-    td.es-acciones { order: 99; }
-    td.es-principal .np-name { font-size: 14.5px; }
-    td.es-acciones .np-rowacts { justify-content: flex-start; }
-    td.es-acciones > .np-btn { width: 100%; }
-
-    /* En la tarjeta sí hay lugar para los service ports. */
-    .np-col-sp { display: block; }
-
-    tr.np-empty td { display: block; width: 100%; text-align: center !important; padding: 28px 16px !important; }
-  }
-}
+/* Las tablas que se vuelven tarjetas en el celular viven en el tema
+   (theme/_console.scss, «np-tabla-movil»): no tenían nada de OLT y las
+   necesita cualquier pantalla con una tabla ancha. */

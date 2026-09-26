@@ -68,7 +68,7 @@
 
     <section class="np-registry" aria-label="Listado de clientes">
       <div class="np-registry-wrap">
-        <table class="np-table np-table--registry">
+        <table class="np-table np-table--registry np-tabla-movil">
           <thead>
             <tr>
               <th class="np-th-stripe"></th>
@@ -101,15 +101,15 @@
                   [attr.aria-selected]="isSelected(user)"
                   (click)="openRow(user)" tabindex="0" (keydown.enter)="openRow(user)">
                 <td class="np-stripe"><i></i></td>
-                <td>
+                <td class="es-principal">
                   <div class="np-name">{{ user.names }} {{ user.lastname }}<app-burbuja-ticket [userId]="user.id_user" /></div>
                   <div class="np-plan">{{ user.plan_name || 'Sin plan' }}<span class="np-plan-mobile"> · <em>{{ user.dni }}</em><ng-container *ngIf="user.ip"> · <em>{{ user.ip }}</em></ng-container></span></div>
                 </td>
-                <td class="np-data np-col-doc">{{ user.dni }}</td>
-                <td class="np-data np-col-phone">{{ user.phone || '—' }}</td>
-                <td class="np-data np-data--dim np-col-ip">{{ user.ip || (filaEsPppoe(user) ? 'PPPoE' : '—') }}</td>
-                <td><span class="np-pill" [ngClass]="'np-pill--' + rowStatus(user)">{{ rowStatusLabel(user) }}</span></td>
-                <td class="np-td-right">
+                <td class="np-data np-col-doc" data-label="Documento">{{ user.dni }}</td>
+                <td class="np-data np-col-phone" data-label="Teléfono">{{ user.phone || '—' }}</td>
+                <td class="np-data np-data--dim np-col-ip" data-label="IP">{{ user.ip || (filaEsPppoe(user) ? 'PPPoE' : '—') }}</td>
+                <td data-label="Estado"><span class="np-pill" [ngClass]="'np-pill--' + rowStatus(user)">{{ rowStatusLabel(user) }}</span></td>
+                <td class="np-td-right es-acciones">
                   <div class="np-rowacts" (click)="$event.stopPropagation()">
                     <!-- WhatsApp -->
                     <button *ngIf="companyHasWA; else waOff" type="button" class="np-icobtn np-wa" [class.is-on]="user.whatsapp_enabled"
@@ -570,31 +570,31 @@
           <div *ngIf="loadingFacture" class="np-loading"><span class="np-spinner"></span> Cargando facturas…</div>
 
           <div *ngIf="!loadingFacture" class="np-tablewrap">
-            <table class="np-table np-table--compact">
+            <table class="np-table np-table--compact np-tabla-movil">
               <thead><tr>
                 <th>N°</th><th>Emitido</th><th>Estado</th><th class="np-th-right">Total</th><th class="np-th-right">Restante</th><th>Pago</th><th>Observación</th><th class="np-th-right">Acciones</th>
               </tr></thead>
               <tbody>
                 <tr *ngFor="let item of filteredFactures">
-                  <td class="np-data np-strong">{{ item.number_facture }}</td>
-                  <td class="np-data">{{ item.date_facturation | date:'dd/MM/yy' }}</td>
-                  <td>
+                  <td class="np-data np-strong es-principal" data-label="Factura">{{ item.number_facture }}</td>
+                  <td class="np-data" data-label="Emitido">{{ item.date_facturation | date:'dd/MM/yy' }}</td>
+                  <td data-label="Estado">
                     <span class="np-pill" [ngClass]="item.anulada_en ? 'np-pill--neutral' : (item.paid === 1 ? 'np-pill--active' : 'np-pill--noip')"
                           [title]="item.anulada_en ? 'Anulada: ' + (item.anulada_motivo || 'sin motivo') : ''">
                       {{ item.anulada_en ? 'Anulada' : (item.paid === 1 ? 'Pagada' : 'Pendiente') }}
                     </span>
                   </td>
-                  <td class="np-data np-td-right">$ {{ item.price_total | number:'1.0-0' }}</td>
-                  <td class="np-data np-td-right" [class.np-neg]="(item.restante ?? 0) > 0">$ {{ item.restante | number:'1.0-0' }}</td>
-                  <td class="np-data np-data--dim">
+                  <td class="np-data np-td-right" data-label="Total">$ {{ item.price_total | number:'1.0-0' }}</td>
+                  <td class="np-data np-td-right" data-label="Restante" [class.np-neg]="(item.restante ?? 0) > 0">$ {{ item.restante | number:'1.0-0' }}</td>
+                  <td class="np-data np-data--dim" data-label="Pago">
                     <ng-container *ngIf="item.paid === 1; else sinPago">
                       {{ (item.paid_at || item.updated_at) | date:'dd/MM/yy' }}
                       <b class="np-data--metodo" *ngIf="item.metodo_pago"> · {{ item.metodo_pago }}</b>
                     </ng-container>
                     <ng-template #sinPago>—</ng-template>
                   </td>
-                  <td class="np-data np-data--dim" [title]="item.observacion || ''">{{ item.observacion || '—' }}</td>
-                  <td class="np-td-right">
+                  <td class="np-data np-data--dim es-ancha" data-label="Observación" [title]="item.observacion || ''">{{ item.observacion || '—' }}</td>
+                  <td class="np-td-right es-acciones">
                     <div class="np-rowacts is-visible">
                       <button *ngIf="item.paid !== 1 && !item.anulada_en" type="button" class="np-icobtn np-icobtn--ok" (click)="abrirCobro(item)" title="Registrar pago">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v10M9.5 9.5h3.75a1.75 1.75 0 0 1 0 3.5H10.75a1.75 1.75 0 0 0 0 3.5H14.5"/></svg>
@@ -671,20 +671,20 @@
           <div *ngIf="loadingTickets" class="np-loading"><span class="np-spinner"></span> Cargando tickets…</div>
 
           <div *ngIf="!loadingTickets" class="np-tablewrap">
-            <table class="np-table np-table--compact">
+            <table class="np-table np-table--compact np-tabla-movil">
               <thead><tr>
                 <th>N°</th><th>Servicio</th><th>Prioridad</th><th>Técnico</th><th>Fecha</th><th>Estado</th><th>Observación</th><th class="np-th-right">PDF</th>
               </tr></thead>
               <tbody>
                 <tr *ngFor="let t of pagedTickets">
-                  <td class="np-data np-strong">{{ t.id }}</td>
-                  <td><span class="np-tag">{{ t.service }}</span></td>
-                  <td><span class="np-pill" [ngClass]="t.prioritys === 'ALTA' ? 'np-pill--suspended' : t.prioritys === 'MEDIA' ? 'np-pill--noip' : 'np-pill--neutral'">{{ t.prioritys }}</span></td>
-                  <td>{{ t.tech_names }} {{ t.tech_lastname }}</td>
-                  <td class="np-data">{{ t.date | date:'dd/MM/yy' }}</td>
-                  <td><span class="np-pill" [ngClass]="t.status === 'CERRADO' ? 'np-pill--active' : t.status === 'EN PROCESO' ? 'np-pill--info' : 'np-pill--noip'">{{ t.status }}</span></td>
-                  <td class="np-truncate" [title]="t.observation">{{ t.observation }}</td>
-                  <td class="np-td-right">
+                  <td class="np-data np-strong" data-label="Ticket">{{ t.id }}</td>
+                  <td class="es-principal" data-label="Servicio"><span class="np-tag">{{ t.service }}</span></td>
+                  <td data-label="Prioridad"><span class="np-pill" [ngClass]="t.prioritys === 'ALTA' ? 'np-pill--suspended' : t.prioritys === 'MEDIA' ? 'np-pill--noip' : 'np-pill--neutral'">{{ t.prioritys }}</span></td>
+                  <td data-label="Técnico">{{ t.tech_names }} {{ t.tech_lastname }}</td>
+                  <td class="np-data" data-label="Fecha">{{ t.date | date:'dd/MM/yy' }}</td>
+                  <td data-label="Estado"><span class="np-pill" [ngClass]="t.status === 'CERRADO' ? 'np-pill--active' : t.status === 'EN PROCESO' ? 'np-pill--info' : 'np-pill--noip'">{{ t.status }}</span></td>
+                  <td class="es-ancha" data-label="Observación" [title]="t.observation">{{ t.observation }}</td>
+                  <td class="np-td-right es-acciones">
                     <button type="button" class="np-icobtn" (click)="downloadTicketPdf(t.id)" title="Descargar PDF del ticket">
                       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5M12 11v6m0 0-2.5-2.5M12 17l2.5-2.5"/></svg>
                     </button>
@@ -710,15 +710,15 @@
           <p class="np-sect">Historial de cambios</p>
           <div *ngIf="loadingAudit" class="np-loading"><span class="np-spinner"></span> Cargando historial…</div>
           <div *ngIf="!loadingAudit" class="np-tablewrap">
-            <table class="np-table np-table--compact">
+            <table class="np-table np-table--compact np-tabla-movil">
               <thead><tr><th>Fecha</th><th>Campo</th><th>Antes</th><th>Después</th><th>Descripción</th></tr></thead>
               <tbody>
                 <tr *ngFor="let log of auditLogs">
-                  <td class="np-data np-nowrap">{{ log.created_at | date:'dd/MM/yy HH:mm' }}</td>
-                  <td><span class="np-tag">{{ auditFieldLabel(log.field_changed) }}</span></td>
-                  <td class="np-neg">{{ log.old_value || '—' }}</td>
-                  <td class="np-pos">{{ log.new_value || '—' }}</td>
-                  <td class="np-muted">{{ log.description }}</td>
+                  <td class="np-data np-nowrap" data-label="Fecha">{{ log.created_at | date:'dd/MM/yy HH:mm' }}</td>
+                  <td class="es-principal" data-label="Campo"><span class="np-tag">{{ auditFieldLabel(log.field_changed) }}</span></td>
+                  <td class="np-neg" data-label="Antes">{{ log.old_value || '—' }}</td>
+                  <td class="np-pos" data-label="Después">{{ log.new_value || '—' }}</td>
+                  <td class="np-muted es-ancha" data-label="Descripción">{{ log.description }}</td>
                 </tr>
                 <tr *ngIf="auditLogs.length === 0" class="np-empty"><td colspan="5">No hay registros de cambios para este cliente.</td></tr>
               </tbody>

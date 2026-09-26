@@ -18,6 +18,27 @@
   .np-plan-mobile { display: inline; }
 }
 
+/* En el celular cada fila es una tarjeta (np-tabla-movil, en el tema): ahí sí
+   hay lugar para el documento, el teléfono y la IP con su nombre, así que
+   vuelven, y el resumen que los metía apretados dentro del plan se va. */
+@media (max-width: 640px) {
+  .np-tabla-movil .np-col-doc,
+  .np-tabla-movil .np-col-phone,
+  .np-tabla-movil .np-col-ip { display: block; }
+  .np-plan-mobile { display: none; }
+
+  /* Seis acciones en fila no entran en 390 px: se reparten en dos filas de
+     botones grandes, que además se pueden tocar sin errarle. */
+  .np-tabla-movil td.es-acciones .np-rowacts {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px;
+    padding-top: 8px; border-top: 1px solid var(--line); margin-top: 2px;
+  }
+  .np-tabla-movil td.es-acciones .np-icobtn { width: 100%; height: 40px; }
+
+  /* El esqueleto de carga, también como tarjeta. */
+  .np-tabla-movil .np-skel-bar { width: 100% !important; }
+}
+
 /* Aviso con su botón de reintento en la misma línea: el mensaje ocupa lo que
    sobra y el botón no se estira. */
 .np-aviso {
