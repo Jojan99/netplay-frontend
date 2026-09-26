@@ -60,6 +60,61 @@
           </button>
         </div>
 
+        <!-- Por dónde entra. La orden lo trae de la oficina, pero el técnico
+             está mirando el equipo: si el cliente ahora sale por otro nodo o
+             por otra VLAN, se corrige acá y no queda autorizado donde no
+             navega. Va cerrado porque casi siempre va lo planeado. -->
+        <div class="pv-donde" [class.es-abierto]="abiertoPorDonde">
+          <button type="button" class="pv-donde-h" (click)="abiertoPorDonde = !abiertoPorDonde"
+                  [attr.aria-expanded]="abiertoPorDonde">
+            <span class="pv-donde-t">
+              <b>Por dónde entra</b>
+              <small>{{ oltActual?.name || 'sin OLT' }}<ng-container *ngIf="vlan"> · VLAN {{ vlan }}</ng-container></small>
+            </span>
+            <span class="pv-donde-c" *ngIf="cambios.length">{{ cambios.length }} cambio{{ cambios.length > 1 ? 's' : '' }}</span>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="m6 9 6 6 6-6"/></svg>
+          </button>
+
+          <div class="pv-donde-b" *ngIf="abiertoPorDonde">
+            <label class="np-field" *ngIf="olts.length > 1"><span>OLT</span>
+              <np-select [(ngModel)]="oltId" (ngModelChange)="alCambiarOlt()" [opciones]="olts" [presentacion]="presOlts"
+                         [deshabilitado]="cargando || trabajando" placeholder="Seleccione OLT…" ariaLabel="OLT"></np-select>
+              <small class="np-fine np-muted">Si el equipo no aparece arriba, puede estar en otra OLT.</small>
+            </label>
+
+            <label class="np-field"><span>VLAN <em class="np-req">*</em></span>
+              <np-select [(ngModel)]="vlan" [opciones]="vlans" [presentacion]="presVlans" [buscable]="true"
+                         [deshabilitado]="trabajando" textoBuscar="Buscar VLAN o red…"
+                         [placeholder]="vlans.length ? 'Seleccione VLAN…' : 'El router no devolvió VLAN'"
+                         textoSinOpciones="El router no devolvió VLAN." ariaLabel="VLAN"></np-select>
+              <small class="np-fine np-muted">Es la que le arma el service port. Sin ella el equipo prende y el cliente no navega.</small>
+            </label>
+
+            <label class="np-field"><span>{{ capacidades.etiqueta_perfil_linea || 'Perfil de línea' }}</span>
+              <np-select [(ngModel)]="lineProfileId" [opciones]="lineProfiles" [presentacion]="presPerfilLinea"
+                         [permitirVacio]="true" textoVacio="El de la OLT" [cargando]="cargando"
+                         [deshabilitado]="cargando || trabajando" ariaLabel="Perfil de línea"></np-select>
+            </label>
+
+            <label class="np-field"><span>{{ capacidades.etiqueta_perfil_servicio || 'Perfil de servicio' }}</span>
+              <np-select [(ngModel)]="srvProfileId" [opciones]="srvProfiles" [presentacion]="presPerfilServicio"
+                         [permitirVacio]="true" textoVacio="El de la OLT" [cargando]="cargando"
+                         [deshabilitado]="cargando || trabajando || capacidades.perfil_servicio_en_alta === false"
+                         ariaLabel="Perfil de servicio"></np-select>
+              <small class="np-fine np-muted" *ngIf="capacidades.perfil_servicio_en_alta === false">Lo asigna la OLT al autorizar.</small>
+            </label>
+
+            <label class="np-field" *ngIf="capacidades.tipos_onu?.length"><span>Tipo de ONU</span>
+              <np-select [(ngModel)]="onuType" [opciones]="capacidades.tipos_onu" [presentacion]="presTextos"
+                         [buscable]="true" [deshabilitado]="trabajando" ariaLabel="Tipo de ONU"></np-select>
+            </label>
+
+            <p class="np-notice np-notice--warn np-notice--inline" *ngIf="cambios.length">
+              <span>Cambia lo que traía la orden: {{ cambios.join(' · ') }}. Queda anotado en la instalación.</span>
+            </p>
+          </div>
+        </div>
+
         <label class="np-field" *ngIf="inventario.length > 1">
           <span>De qué lote sale este equipo</span>
           <select class="np-input" [(ngModel)]="inventoryId">
@@ -72,6 +127,8 @@
           Esta empresa no tiene el aprovisionamiento automático encendido: el equipo va a quedar
           <b>autorizado y asignado</b>, y el WiFi lo configura usted a mano.
         </p>
+
+        <p class="np-fine np-muted pv-falta" *ngIf="porQueNoPuede && !cargando">{{ porQueNoPuede }}</p>
 
         <div class="np-btnrow np-btnrow--end">
           <button type="button" class="np-btn np-btn--ghost" (click)="buscarEquipos()" [disabled]="cargando || trabajando">Volver a buscar</button>

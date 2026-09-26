@@ -122,16 +122,30 @@ export class InstallationService {
     return this.http.get(`${this.baseUrl}/${id}/commission`);
   }
 
-  /** Las ONT que la OLT ve sin autorizar, y el inventario con stock. */
-  equiposDisponibles(id: number): Observable<any> {
-    return this.http.get(`${this.baseUrl}/${id}/equipos`);
+  /**
+   * Todo lo que el técnico necesita para instalar: las ONT que la OLT ve sin
+   * autorizar, el inventario con stock, las OLT de la empresa, sus perfiles y
+   * las VLAN del router.
+   *
+   * Con `oltId` responde por otra OLT sin tocar la orden: si el equipo no
+   * aparece, es que el cliente sale por otro nodo.
+   */
+  equiposDisponibles(id: number, oltId?: number | null): Observable<any> {
+    const q = oltId ? `?olt_id=${oltId}` : '';
+    return this.http.get(`${this.baseUrl}/${id}/equipos${q}`);
   }
 
   /**
    * Lo que hace el técnico al terminar: crea el cliente, autoriza el equipo,
    * lo descuenta del inventario y deja programada la configuración.
    */
-  provisionar(id: number, equipo: { fsp: string; ont_id: number; serial: string; inventory_id?: number | null }): Observable<any> {
+  provisionar(id: number, equipo: {
+    fsp: string; ont_id: number; serial: string; inventory_id?: number | null;
+    // Lo que el técnico corrige en la casa del cliente: si no va, se usa lo
+    // que traía la orden.
+    olt_id?: number | null; vlan?: number | null;
+    line_profile_id?: number | null; srv_profile_id?: number | null; onu_type?: string | null;
+  }): Observable<any> {
     return this.http.post(`${this.baseUrl}/${id}/provisionar`, equipo);
   }
 

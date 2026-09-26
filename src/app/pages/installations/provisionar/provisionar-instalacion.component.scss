@@ -46,3 +46,38 @@
 @media (max-width: 520px) {
   .pv-onts { max-height: 38vh; }
 }
+
+/* ─── Por dónde entra: cerrado por defecto ───────────────────────────────────
+   Casi siempre va lo que trae la orden; se abre cuando en el terreno es otra
+   cosa, o solo cuando la OLT no ve ningún equipo nuevo (que es justo el caso
+   en que el cliente salió por otro nodo). */
+.pv-donde { border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; }
+.pv-donde.es-abierto { border-color: var(--accent); }
+
+.pv-donde-h {
+  display: flex; align-items: center; gap: 10px; width: 100%;
+  min-height: 52px; padding: 8px 12px; border: 0; background: var(--surface-2);
+  color: var(--text-1); cursor: pointer; text-align: left;
+  &:hover { background: var(--surface-3); }
+  > svg { flex: none; width: 17px; height: 17px; color: var(--text-3); transition: transform .15s; }
+  .es-abierto & > svg { transform: rotate(180deg); }
+}
+.pv-donde-t { flex: 1; min-width: 0;
+  b { display: block; font: 700 13px var(--font-body); }
+  small { display: block; font: 600 11.5px var(--font-body); color: var(--text-3); }
+}
+.pv-donde-c {
+  flex: none; padding: 2px 8px; border-radius: 999px;
+  background: var(--warn); color: #fff; font: 700 11px var(--font-body);
+}
+.pv-donde-b {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 10px 12px;
+  padding: 12px; border-top: 1px solid var(--line);
+  > .np-field:first-child, > .np-notice { grid-column: 1 / -1; }
+}
+.pv-falta { margin: 0; text-align: right; }
+
+@media (max-width: 640px) {
+  .pv-donde-b { grid-template-columns: 1fr; }
+  .pv-falta { text-align: left; }
+}
