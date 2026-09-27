@@ -7,6 +7,7 @@ import { InstallationService, InstallationOrder, InstallationLog } from '../../s
 import { InsigniaSelect, NpSelectComponent } from '../../common/np-select/np-select.component';
 import { ProvisionarInstalacionComponent } from './provisionar/provisionar-instalacion.component';
 import { OpcionSimple, PRESENTACION_METODOS_PAGO, PRESENTACION_SIMPLE, conValor } from '../../common/np-select/presentaciones';
+import { AuthService } from '../../services/auth.service';
 
 @Component({
   selector: 'app-installations',
@@ -123,7 +124,22 @@ export class InstallationsComponent implements OnInit {
   // [value]="pm.id" guardaba el id en texto: savePayment lo pasa por parseInt.
   readonly presMetodosPago = conValor(PRESENTACION_METODOS_PAGO, m => String(m.id));
 
-  constructor(private svc: InstallationService) {}
+  constructor(private svc: InstallationService, private auth: AuthService) {}
+
+  /**
+   * Un técnico ve la agenda y avanza sus órdenes, pero no lo que cobra la empresa por la instalación, ni
+   * la comisión de sus compañeros, ni cancela, reasigna o borra una orden ajena: eso sigue siendo de
+   * oficina (ver InstallationOrderController y routes/api/installationRoutes.php, mismo criterio).
+   */
+  get esTecnico(): boolean { return this.auth.isTecnico(); }
+
+  /** Mi comisión en esta orden, si estoy entre los técnicos asignados; si no, no es asunto mío. */
+  miComision(i: any): number | null {
+    const ids: number[] = i?.technician_ids || [];
+    const yo = this.auth.getEmployeeId();
+    if (!yo || !ids.includes(yo)) return null;
+    return this.getNumValue(i.commission_amount) / (ids.length || 1);
+  }
 
   ngOnInit(): void {
     this.loadAllForSummary();

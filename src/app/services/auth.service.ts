@@ -82,6 +82,9 @@ export class AuthService {
   getCompanyLogo(): string { return this.getUser()?.company_logo ?? ''; }
   getUsername(): string    { return this.getUser()?.username     ?? ''; }
 
+  /** El id de empleado del técnico en sesión (0 si no aplica): así distingue «mi orden» de «la de otro». */
+  getEmployeeId(): number { return Number(localStorage.getItem('employee_id')) || 0; }
+
   isAdmin():    boolean { return this.getProfileName() === 'ADMIN'; }
 
   /** Nombre completo para mostrar ("Jojanny Manuel Pombo"); si no hay, la cédula. */

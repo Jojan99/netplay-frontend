@@ -5,14 +5,14 @@
       <p class="np-kicker">Operación <b>/</b> Instalaciones</p>
       <h1 class="np-title">Órdenes de instalación</h1>
       <div class="np-ribbon">
-        <span><i class="np-dot" style="background:var(--warn)"></i><span class="np-n">{{ totalPending }}</span>pendientes <span class="np-mono np-ribbon-sub">{{ formatPrice(pendingValue) }}</span></span>
-        <span><i class="np-dot" style="background:var(--info)"></i><span class="np-n">{{ totalInProgress }}</span>en proceso <span class="np-mono np-ribbon-sub">{{ formatPrice(inProgressValue) }}</span></span>
-        <span><i class="np-dot" style="background:var(--ok)"></i><span class="np-n">{{ totalCompleted }}</span>completadas <span class="np-mono np-ribbon-sub">{{ formatPrice(completedValue) }}</span></span>
-        <span><span class="np-n">{{ formatPrice(totalValue) }}</span>en total · comisiones <span class="np-mono np-ribbon-sub">{{ formatPrice(totalCommission) }}</span></span>
+        <span><i class="np-dot" style="background:var(--warn)"></i><span class="np-n">{{ totalPending }}</span>pendientes <span class="np-mono np-ribbon-sub" *ngIf="!esTecnico">{{ formatPrice(pendingValue) }}</span></span>
+        <span><i class="np-dot" style="background:var(--info)"></i><span class="np-n">{{ totalInProgress }}</span>en proceso <span class="np-mono np-ribbon-sub" *ngIf="!esTecnico">{{ formatPrice(inProgressValue) }}</span></span>
+        <span><i class="np-dot" style="background:var(--ok)"></i><span class="np-n">{{ totalCompleted }}</span>completadas <span class="np-mono np-ribbon-sub" *ngIf="!esTecnico">{{ formatPrice(completedValue) }}</span></span>
+        <span *ngIf="!esTecnico"><span class="np-n">{{ formatPrice(totalValue) }}</span>en total · comisiones <span class="np-mono np-ribbon-sub">{{ formatPrice(totalCommission) }}</span></span>
       </div>
     </div>
     <div class="np-actions">
-      <button type="button" class="np-btn np-btn--ghost" *ngIf="techniciansSummary.length" (click)="showTechSummary = !showTechSummary">Comisiones<span class="np-c">{{ techniciansSummary.length }}</span></button>
+      <button type="button" class="np-btn np-btn--ghost" *ngIf="techniciansSummary.length && !esTecnico" (click)="showTechSummary = !showTechSummary">Comisiones<span class="np-c">{{ techniciansSummary.length }}</span></button>
       <button type="button" class="np-btn np-btn--ghost" (click)="crearPractica()" [disabled]="creandoPractica"
               title="Una orden de mentira para recorrer el flujo de instalar con un equipo simulado: no toca la red ni crea clientes">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2 3 7v6c0 5 4 8 9 9 5-1 9-4 9-9V7l-9-5Z"/><path d="m9 12 2 2 4-4"/></svg>
@@ -41,7 +41,7 @@
     <p *ngIf="errorMsg" class="np-notice np-notice--danger np-notice--inline">{{ errorMsg }}</p>
   </div>
 
-  <div class="np-tech-summary" *ngIf="showTechSummary && techniciansSummary.length">
+  <div class="np-tech-summary" *ngIf="showTechSummary && techniciansSummary.length && !esTecnico">
     <button type="button" class="np-kpi" *ngFor="let tech of techniciansSummary" (click)="openTechDetail(tech)">
       <span class="np-kpi-l">{{ tech.name }}</span>
       <span class="np-kpi-v np-kpi-v--accent">{{ formatPrice(tech.commission) }}</span>
@@ -54,7 +54,7 @@
       <div class="np-registry-wrap">
         <table class="np-table np-table--registry">
           <thead><tr>
-            <th class="np-th-stripe"></th><th>Cliente</th><th class="np-col-addr">Dirección</th><th>Programada</th><th>Estado</th><th>Pago</th><th class="np-col-tech">Técnicos</th><th class="np-th-right">Costo</th><th class="np-th-right">Acciones</th>
+            <th class="np-th-stripe"></th><th>Cliente</th><th class="np-col-addr">Dirección</th><th>Programada</th><th>Estado</th><th>Pago</th><th class="np-col-tech">Técnicos</th><th class="np-th-right">{{ esTecnico ? 'Mi comisión' : 'Costo' }}</th><th class="np-th-right">Acciones</th>
           </tr></thead>
           <tbody>
             <tr *ngIf="isLoading" class="np-empty"><td colspan="9"><span class="np-spinner"></span></td></tr>
@@ -67,13 +67,16 @@
               <td><span class="np-pill" [ngClass]="'np-pill--' + inst.status">{{ statusLabel(inst.status) }}</span></td>
               <td><span class="np-pill" [ngClass]="'np-pill--pay-' + inst.payment_status">{{ paymentLabel(inst.payment_status) }}</span></td>
               <td class="np-col-tech np-truncate">{{ getTechniciansList(inst) }}</td>
-              <td class="np-money">{{ formatPrice(inst.installation_cost) }}<div class="np-fine">com. {{ formatPrice(inst.commission_amount || 0) }}</div></td>
+              <td class="np-money">
+                <ng-container *ngIf="!esTecnico">{{ formatPrice(inst.installation_cost) }}<div class="np-fine">com. {{ formatPrice(inst.commission_amount || 0) }}</div></ng-container>
+                <ng-container *ngIf="esTecnico">{{ miComision(inst) != null ? formatPrice(miComision(inst)) : '—' }}</ng-container>
+              </td>
               <td class="np-td-right"><div class="np-rowacts" (click)="$event.stopPropagation()">
                 <button type="button" class="np-icobtn np-icobtn--ok" *ngIf="inst.status === 'pending'" (click)="confirm(inst.id!)" [disabled]="actionLoading[inst.id!]" title="Confirmar"><span *ngIf="actionLoading[inst.id!] === 'confirm'" class="np-spinner np-spinner--sm"></span><svg *ngIf="actionLoading[inst.id!] !== 'confirm'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="m5 13 4 4L19 7"/></svg></button>
                 <button type="button" class="np-icobtn np-icobtn--ok" *ngIf="inst.status === 'confirmed'" (click)="start(inst.id!)" [disabled]="actionLoading[inst.id!]" title="Iniciar"><span *ngIf="actionLoading[inst.id!] === 'start'" class="np-spinner np-spinner--sm"></span><svg *ngIf="actionLoading[inst.id!] !== 'start'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 5l12 7-12 7z"/></svg></button>
                 <button type="button" class="np-icobtn np-icobtn--ok" *ngIf="inst.status === 'in_progress'" (click)="abrirProvisionar(inst)" title="Instalar el equipo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16v10H4zM8 11h8M12 17v3M9 20h6"/></svg></button>
                 <button type="button" class="np-icobtn np-icobtn--ok" *ngIf="inst.status === 'in_progress'" (click)="openComplete(inst.id!)" title="Completar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="m8.5 12.5 2.5 2.5 4.5-5"/></svg></button>
-                <button type="button" class="np-icobtn" (click)="openPayment(inst.id!)" [disabled]="actionLoading[inst.id!]" title="Pago"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v10M9.5 9.5h3.75a1.75 1.75 0 0 1 0 3.5H10.75a1.75 1.75 0 0 0 0 3.5H14.5"/></svg></button>
+                <button type="button" class="np-icobtn" *ngIf="!esTecnico" (click)="openPayment(inst.id!)" [disabled]="actionLoading[inst.id!]" title="Pago"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v10M9.5 9.5h3.75a1.75 1.75 0 0 1 0 3.5H10.75a1.75 1.75 0 0 0 0 3.5H14.5"/></svg></button>
                 <button type="button" class="np-icobtn np-icobtn--danger" *ngIf="inst.modo_practica" (click)="borrarPractica(inst)" title="Borrar la orden de práctica"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/></svg></button>
                 <button type="button" class="np-icobtn" (click)="openDetail(inst)" title="Abrir ficha"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 6 6 6-6 6"/></svg></button>
               </div></td>
@@ -121,9 +124,9 @@
             <!-- El paso de la calle: elegir el equipo y dejar todo hecho. -->
             <button type="button" class="np-btn np-btn--primary" *ngIf="selected.status === 'in_progress'" (click)="abrirProvisionar(selected)">Instalar el equipo</button>
             <button type="button" class="np-btn np-btn--ok" *ngIf="selected.status === 'in_progress'" (click)="openComplete(selected.id!)">Completar</button>
-            <button type="button" class="np-btn np-btn--ghost" (click)="openAssign(selected.id!)" *ngIf="selected.status !== 'completed' && selected.status !== 'cancelled'">Asignar técnicos</button>
-            <button type="button" class="np-btn np-btn--ghost" (click)="openPayment(selected.id!)">Registrar pago</button>
-            <button type="button" class="np-btn np-btn--danger" *ngIf="selected.status !== 'completed' && selected.status !== 'cancelled'" (click)="openCancel(selected.id!)">Cancelar orden</button>
+            <button type="button" class="np-btn np-btn--ghost" (click)="openAssign(selected.id!)" *ngIf="!esTecnico && selected.status !== 'completed' && selected.status !== 'cancelled'">Asignar técnicos</button>
+            <button type="button" class="np-btn np-btn--ghost" *ngIf="!esTecnico" (click)="openPayment(selected.id!)">Registrar pago</button>
+            <button type="button" class="np-btn np-btn--danger" *ngIf="!esTecnico && selected.status !== 'completed' && selected.status !== 'cancelled'" (click)="openCancel(selected.id!)">Cancelar orden</button>
           </div>
         </section>
 
@@ -137,7 +140,7 @@
           </dl>
         </section>
 
-        <section>
+        <section *ngIf="!esTecnico">
           <p class="np-sect">Pago</p>
           <div class="np-stats">
             <div class="np-stat"><span class="np-stat-l">Costo</span><span class="np-stat-v">{{ formatPrice(selected.installation_cost) }}</span></div>
@@ -148,6 +151,14 @@
             <dt>Referencia</dt><dd class="np-mono">{{ selected.payment_reference || '—' }}</dd>
             <dt>Método</dt><dd>{{ getPaymentMethodName(selected) }}</dd>
           </dl>
+        </section>
+
+        <!-- Sólo la propia: no ve lo que gana quien más esté asignado a la orden. -->
+        <section *ngIf="esTecnico && miComision(selected) != null">
+          <p class="np-sect">Mi comisión</p>
+          <div class="np-stats">
+            <div class="np-stat"><span class="np-stat-l">En esta instalación</span><span class="np-stat-v">{{ formatPrice(miComision(selected)) }}</span></div>
+          </div>
         </section>
 
         <section>
