@@ -45,5 +45,9 @@ export class ConciliacionPagosService {
   simular(p: PeticionDePagos): Observable<any> { return this.http.post(`${this.base}/simular`, p); }
   aplicar(p: PeticionDePagos): Observable<any> { return this.http.post(`${this.base}/aplicar`, p); }
   lotes(): Observable<any> { return this.http.get(`${this.base}/lotes`); }
+  /** Qué aplicó un lote y qué pasaría si se deshace. No toca nada. */
+  lote(lote: string): Observable<any> { return this.http.get(`${this.base}/lotes/${encodeURIComponent(lote)}`); }
+  /** Deshace un lote entero: las facturas vuelven a como estaban. Todo o nada. */
+  revertir(lote: string): Observable<any> { return this.http.post(`${this.base}/lotes/${encodeURIComponent(lote)}/revertir`, {}); }
   metodos(): Observable<any> { return this.http.get(`${environment.rootUrl}api/payment-methods`); }
 }

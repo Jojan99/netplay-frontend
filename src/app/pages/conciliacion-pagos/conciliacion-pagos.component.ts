@@ -158,6 +158,48 @@ export class ConciliacionPagosComponent implements OnInit {
 
   get lista(): Lista { return this.listas[this.activa]; }
 
+  // ── Deshacer un lote ──────────────────────────────────────────────────────
+
+  /** El lote que se está mirando en el detalle (con su vista previa de qué pasaría al deshacerlo). */
+  detalle: any | null = null;
+  cargandoDetalle = false;
+  revirtiendo = false;
+  errorDetalle = '';
+
+  verLote(lote: string): void {
+    this.detalle = null; this.errorDetalle = ''; this.cargandoDetalle = true;
+    this.svc.lote(lote).subscribe({
+      next: (r: any) => { this.cargandoDetalle = false; if (r?.error !== 0) { this.errorDetalle = r?.message || 'No se pudo leer el lote.'; return; } this.detalle = r.data; },
+      error: () => { this.cargandoDetalle = false; this.errorDetalle = 'No se pudo leer el lote.'; },
+    });
+  }
+
+  cerrarDetalle(): void { this.detalle = null; this.errorDetalle = ''; this.cargandoDetalle = false; }
+
+  async deshacer(): Promise<void> {
+    const d = this.detalle;
+    if (!d?.puede || this.revirtiendo) return;
+
+    const r = d.resumen;
+    if (!await this.dialog.confirm(
+      `Se van a deshacer ${r.facturas} facturas de ${r.clientes} clientes por ${this.peso(r.monto)}. ` +
+      `${r.quedan_pendientes} quedarán pendientes. Los movimientos originales no se borran: queda un «reverso» por cada uno. ¿Deshacer el lote?`,
+      { okLabel: 'Sí, deshacer el lote' },
+    )) return;
+
+    this.revirtiendo = true;
+    this.svc.revertir(d.lote.lote).subscribe({
+      next: (res: any) => {
+        this.revirtiendo = false;
+        if (res?.error !== 0) { this.errorDetalle = res?.message || 'No se pudo deshacer.'; return; }
+        this.toast.success(`Lote deshecho: ${res.data.facturas} facturas, ${this.peso(res.data.monto)}.`);
+        this.cerrarDetalle();
+        this.abrirHistorial();
+      },
+      error: (e: any) => { this.revirtiendo = false; this.errorDetalle = e?.error?.message || 'No se pudo deshacer.'; },
+    });
+  }
+
   abrirHistorial(): void {
     this.vista = 'historial';
     this.cargandoLotes = true;

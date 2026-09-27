@@ -108,3 +108,11 @@ tr.cp-cambio td { background: var(--surface-2); padding: 12px 14px; }
   tr.cp-fila--revisar { background: var(--warn-soft); }
   tr.cp-cambio td { padding: 12px; }
 }
+
+/* Historial: un lote deshecho se ve apagado */
+tr.cp-revertido td { opacity: .6; }
+.cp-modal { max-width: 980px; }
+.cp-kpis--modal { grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); margin-bottom: 4px; }
+.cp-detalle { max-height: 46vh; overflow-y: auto; }
+.cp-conf-lista { margin: 6px 0 0; padding-left: 18px; }
+@media (max-width: 760px) { .cp-detalle { max-height: none; } }

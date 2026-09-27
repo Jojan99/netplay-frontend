@@ -31,16 +31,18 @@
       <p class="np-muted" *ngIf="!cargandoLotes && !lotes.length">Todavía no se aplicó ninguna lista desde esta pantalla.</p>
       <div class="np-tablewrap" *ngIf="lotes.length">
         <table class="np-table np-table--compact np-tabla-movil">
-          <thead><tr><th>Fecha</th><th>Lista</th><th>Registró</th><th>Método</th><th class="np-th-right">Pagos</th><th class="np-th-right">Aplicado</th><th class="np-th-right">Sin aplicar</th></tr></thead>
+          <thead><tr><th>Fecha</th><th>Lista</th><th>Registró</th><th>Método</th><th class="np-th-right">Pagos</th><th class="np-th-right">Aplicado</th><th class="np-th-right">Sin aplicar</th><th>Estado</th><th class="np-th-right"></th></tr></thead>
           <tbody>
-            <tr *ngFor="let x of lotes">
+            <tr *ngFor="let x of lotes" [class.cp-revertido]="x.revertido_en">
               <td class="np-data" data-label="Fecha">{{ x.created_at | date:'dd/MM/yy HH:mm' }}</td>
-              <td class="es-principal np-strong" data-label="Lista">{{ x.titulo || x.lote }}<small class="cp-lote">{{ x.lote }}</small></td>
+              <td class="es-principal np-strong" data-label="Lista">{{ x.titulo || x.lote }}<small class="cp-lote">{{ x.lote }} · {{ x.origen === 'consola' ? 'por consola' : 'desde la web' }}</small></td>
               <td data-label="Registró">{{ x.usuario || '—' }}</td>
               <td data-label="Método">{{ x.metodo || '—' }}</td>
               <td class="np-data np-td-right" data-label="Pagos">{{ x.pagos }}</td>
               <td class="np-data np-td-right" data-label="Aplicado">{{ peso(+x.aplicado) }}</td>
               <td class="np-data np-td-right" data-label="Sin aplicar">{{ peso(+x.sin_aplicar) }}</td>
+              <td data-label="Estado"><span class="np-pill" [ngClass]="x.revertido_en ? 'np-pill--neutral' : 'np-pill--active'">{{ x.revertido_en ? 'Deshecho' : 'Aplicado' }}</span></td>
+              <td class="np-td-right es-acciones"><button type="button" class="np-btn np-btn--sm np-btn--ghost" (click)="verLote(x.lote)">{{ x.revertido_en ? 'Ver' : 'Ver / Deshacer' }}</button></td>
             </tr>
           </tbody>
         </table>
@@ -234,5 +236,68 @@
 
       </ng-container>
     </ng-container>
+  </div>
+</div>
+
+<!-- ══ Detalle de un lote y cómo deshacerlo ═══════════════════════════════════ -->
+<div class="np-overlay" *ngIf="cargandoDetalle || detalle || errorDetalle" (click)="cerrarDetalle()">
+  <div class="np-modal np-modal--lg cp-modal" role="dialog" aria-modal="true" aria-label="Detalle del lote" (click)="$event.stopPropagation()">
+    <div class="np-modal-head">
+      <div>
+        <p class="np-kicker">Conciliación <b>/</b> Lote</p>
+        <h3>{{ detalle?.lote?.titulo || detalle?.lote?.lote || 'Lote' }}</h3>
+      </div>
+      <button type="button" class="np-icobtn" (click)="cerrarDetalle()" aria-label="Cerrar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
+    </div>
+    <div class="np-modal-body">
+      <p class="np-loading" *ngIf="cargandoDetalle"><span class="np-spinner np-spinner--sm"></span> Leyendo el lote…</p>
+      <p class="np-notice np-notice--danger" *ngIf="errorDetalle">{{ errorDetalle }}</p>
+
+      <ng-container *ngIf="detalle">
+        <p class="np-notice np-notice--neutral" *ngIf="detalle.ya_revertido">Este lote ya se deshizo el {{ detalle.revertido_en | date:'dd/MM/yy HH:mm' }}.</p>
+
+        <div class="cp-kpis cp-kpis--modal">
+          <div class="cp-kpi"><span>Facturas</span><b>{{ detalle.resumen.facturas }}</b><small>de {{ detalle.resumen.clientes }} clientes</small></div>
+          <div class="cp-kpi"><span>Monto aplicado</span><b>{{ peso(detalle.resumen.monto) }}</b></div>
+          <div class="cp-kpi cp-kpi--warn" *ngIf="!detalle.ya_revertido"><span>Quedarían pendientes</span><b>{{ detalle.resumen.quedan_pendientes }}</b><small>facturas</small></div>
+          <div class="cp-kpi" *ngIf="detalle.resumen.con_pagos_posteriores"><span>Con pagos posteriores</span><b>{{ detalle.resumen.con_pagos_posteriores }}</b><small>se conservan</small></div>
+        </div>
+
+        <p class="np-fine np-muted" *ngIf="!detalle.ya_revertido">
+          Deshacer <b>resta lo que aplicó este lote</b>, factura por factura: si a una de ellas le llegó otro pago después, ese pago se conserva.
+          Los movimientos originales no se borran: queda un «reverso» por cada uno. No cambia el estado del internet de los clientes.
+        </p>
+
+        <div class="np-notice np-notice--danger" *ngIf="detalle.conflictos?.length">
+          <b>No se puede deshacer con seguridad</b> (todo o nada: no se toca ninguna factura):
+          <ul class="cp-conf-lista"><li *ngFor="let c of detalle.conflictos">{{ c }}</li></ul>
+        </div>
+
+        <div class="np-tablewrap cp-detalle">
+          <table class="np-table np-table--compact np-tabla-movil">
+            <thead><tr><th>Factura</th><th>Cliente</th><th class="np-th-right">Aplicó</th><th class="np-th-right">Abono hoy</th><th class="np-th-right">Quedaría</th><th>Estado</th></tr></thead>
+            <tbody>
+              <tr *ngFor="let i of detalle.items" [class.cp-fila--revisar]="i.conflicto || i.movimientos_posteriores">
+                <td class="np-data np-strong es-principal" data-label="Factura">{{ i.factura }}</td>
+                <td data-label="Cliente">{{ i.cliente }}</td>
+                <td class="np-data np-td-right" data-label="Aplicó">{{ peso(i.monto_del_lote) }}</td>
+                <td class="np-data np-td-right" data-label="Abono hoy">{{ peso(i.abono_actual) }}</td>
+                <td class="np-data np-td-right" data-label="Quedaría">{{ peso(i.abono_quedaria) }}</td>
+                <td data-label="Estado">
+                  <span class="np-pill" [ngClass]="i.pagada_quedaria ? 'np-pill--active' : 'np-pill--noip'">{{ i.pagada_quedaria ? 'Seguiría pagada' : 'Volvería a pendiente' }}</span>
+                  <small class="cp-obs" *ngIf="i.movimientos_posteriores">Tiene {{ i.movimientos_posteriores }} movimiento(s) posterior(es): se conservan.</small>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </ng-container>
+    </div>
+    <div class="np-modal-foot" *ngIf="detalle">
+      <button type="button" class="np-btn np-btn--ghost" (click)="cerrarDetalle()">Cerrar</button>
+      <button type="button" class="np-btn np-btn--danger-solid" *ngIf="!detalle.ya_revertido" (click)="deshacer()" [disabled]="!detalle.puede || revirtiendo">
+        <span *ngIf="revirtiendo" class="np-spinner np-spinner--sm"></span>{{ revirtiendo ? 'Deshaciendo…' : 'Deshacer el lote' }}
+      </button>
+    </div>
   </div>
 </div>
