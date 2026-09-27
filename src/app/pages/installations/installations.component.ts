@@ -127,9 +127,10 @@ export class InstallationsComponent implements OnInit {
   constructor(private svc: InstallationService, private auth: AuthService) {}
 
   /**
-   * Un técnico ve la agenda y avanza sus órdenes, pero no lo que cobra la empresa por la instalación, ni
-   * la comisión de sus compañeros, ni cancela, reasigna o borra una orden ajena: eso sigue siendo de
-   * oficina (ver InstallationOrderController y routes/api/installationRoutes.php, mismo criterio).
+   * Un técnico ve sólo sus propias órdenes (el servidor ya se las filtra, ver
+   * InstallationOrderController::index) y avanza su estado, pero no da de alta una instalación
+   * nueva, ni ve lo que cobra la empresa, ni la comisión de sus compañeros, ni cancela, reasigna o
+   * borra una orden ajena: eso sigue siendo de oficina.
    */
   get esTecnico(): boolean { return this.auth.isTecnico(); }
 
@@ -413,6 +414,45 @@ export class InstallationsComponent implements OnInit {
         this.loadAllForSummary();
       },
       complete: () => { delete this.actionLoading[instId]; }
+    });
+  }
+
+  // ── Comprobante de pago ─────────────────────────────────────────────────────
+  // El técnico lo adjunta de una vez, parado en la casa del cliente: no tiene que esperar a que
+  // la oficina registre el pago para dejar la prueba de la transferencia guardada en la orden.
+
+  subiendoComprobante = false;
+
+  subirComprobante(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const archivo = input.files?.[0];
+    input.value = '';   // para poder elegir el mismo archivo dos veces seguidas si hizo falta
+    if (!archivo || !this.selected?.id) return;
+
+    this.subiendoComprobante = true;
+    const instId = this.selected.id;
+    this.svc.uploadPaymentProof(instId, archivo).subscribe({
+      next: r => {
+        this.subiendoComprobante = false;
+        this.toast(r.message);
+        if (this.selected?.id === instId) this.selected.payment_image_url = r?.data?.payment_image_url;
+        this.load();
+      },
+      error: e => { this.subiendoComprobante = false; this.toast(e?.error?.message || 'No se pudo subir el comprobante.'); },
+    });
+  }
+
+  async quitarComprobante(): Promise<void> {
+    if (!this.selected?.id) return;
+    if (!await this.dialog.confirm('¿Quitar el comprobante de esta instalación?', { okLabel: 'Quitar' })) return;
+
+    const instId = this.selected.id;
+    this.svc.removePaymentProof(instId).subscribe({
+      next: () => {
+        if (this.selected?.id === instId) this.selected.payment_image_url = undefined;
+        this.load();
+      },
+      error: () => this.toast('No se pudo quitar el comprobante.'),
     });
   }
 

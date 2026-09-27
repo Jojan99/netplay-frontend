@@ -121,6 +121,17 @@ export class InstallationService {
     return this.http.put(`${this.baseUrl}/${id}/payment`, data);
   }
 
+  /** El comprobante de la transferencia con la que pagaron la instalación. Lo sube el mismo técnico. */
+  uploadPaymentProof(id: number, archivo: File): Observable<any> {
+    const fd = new FormData();
+    fd.append('comprobante', archivo);
+    return this.http.post(`${this.baseUrl}/${id}/payment-proof`, fd);
+  }
+
+  removePaymentProof(id: number): Observable<any> {
+    return this.http.delete(`${this.baseUrl}/${id}/payment-proof`);
+  }
+
   assignTechnicians(id: number, data: { technician_ids?: number[]; commission_amount?: number }): Observable<any> {
     return this.http.put(`${this.baseUrl}/${id}/technicians`, data);
   }

@@ -18,7 +18,7 @@
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2 3 7v6c0 5 4 8 9 9 5-1 9-4 9-9V7l-9-5Z"/><path d="m9 12 2 2 4-4"/></svg>
         {{ creandoPractica ? 'Creando…' : 'Práctica' }}
       </button>
-      <a routerLink="/dashboard/installations/new" class="np-btn np-btn--primary">
+      <a *ngIf="!esTecnico" routerLink="/dashboard/installations/new" class="np-btn np-btn--primary">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M12 5v14M5 12h14"/></svg>
         Nueva instalación
       </a>
@@ -159,6 +159,21 @@
           <div class="np-stats">
             <div class="np-stat"><span class="np-stat-l">En esta instalación</span><span class="np-stat-v">{{ formatPrice(miComision(selected)) }}</span></div>
           </div>
+        </section>
+
+        <!-- Cualquiera con la ficha abierta puede dejarlo o revisarlo: el técnico lo sube en la casa
+             del cliente; sólo administrador o contador puede quitarlo. -->
+        <section>
+          <p class="np-sect">Comprobante de pago</p>
+          <div class="np-comprobante" *ngIf="selected.payment_image_url; else sinComprobante">
+            <a [href]="selected.payment_image_url" target="_blank" rel="noopener" class="np-link">Ver comprobante</a>
+            <button type="button" class="np-icobtn" *ngIf="!esTecnico" (click)="quitarComprobante()" title="Quitar comprobante"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/></svg></button>
+          </div>
+          <ng-template #sinComprobante><p class="np-muted">Sin comprobante adjunto.</p></ng-template>
+          <label class="np-btn np-btn--ghost np-btn--sm">
+            {{ subiendoComprobante ? 'Subiendo…' : (selected.payment_image_url ? 'Reemplazar comprobante' : 'Adjuntar comprobante') }}
+            <input type="file" accept="image/*,.pdf" hidden [disabled]="subiendoComprobante" (change)="subirComprobante($event)" />
+          </label>
         </section>
 
         <section>

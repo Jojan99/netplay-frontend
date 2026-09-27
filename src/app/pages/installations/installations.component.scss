@@ -26,3 +26,5 @@
   display: inline-block; margin-left: 8px; padding: 1px 7px; border-radius: 999px; vertical-align: middle;
   background: var(--info-soft); color: var(--info); font: 800 9.5px var(--font-body); letter-spacing: .06em;
 }
+
+.np-comprobante { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }

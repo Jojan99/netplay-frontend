@@ -2,6 +2,7 @@ import { inject } from '@angular/core';
 import { Router, Routes } from '@angular/router';
 import { authGuard } from './guards/auth.guard';
 import { roleGuard } from './guards/role.guard';
+import { noTecnicoGuard } from './guards/no-tecnico.guard';
 import { panelYaConectadoGuard } from './guards/ya-conectado.guard';
 import { raizDelSitioGuard, soloEnLaRaizGuard } from './guards/sitio.guard';
 import { fueraDeLaConsolaGuard } from './guards/consola.guard';
@@ -128,7 +129,7 @@ export const routes: Routes = [
       { path: 'empleados', component: EmployeesComponent, canActivate: [roleGuard], data: { module: 'empleados' } },
       { path: 'planes-internet', component: InternetPlansComponent, canActivate: [roleGuard], data: { module: 'planes-internet' } },
       { path: 'installations', component: InstallationsComponent, canActivate: [roleGuard], data: { module: 'installations' } },
-      { path: 'installations/new', component: InstallationFormComponent, canActivate: [roleGuard], data: { module: 'installations' } },
+      { path: 'installations/new', component: InstallationFormComponent, canActivate: [roleGuard, noTecnicoGuard], data: { module: 'installations' } },
       { path: 'transfers', component: TransfersComponent, canActivate: [roleGuard], data: { module: 'transfers' } },
       { path: 'transfers/new', component: TransferFormComponent, canActivate: [roleGuard], data: { module: 'transfers' } },
       { path: 'technician-map', component: TechnicianMapComponent, canActivate: [roleGuard], data: { module: 'technician-map' } },
