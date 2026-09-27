@@ -16,7 +16,16 @@
         <span><i class="np-dot" style="background:var(--ok)"></i><span class="np-n">{{ countActive | number }}</span>activos</span>
         <span><i class="np-dot" style="background:var(--danger)"></i><span class="np-n">{{ countSuspended | number }}</span>suspendidos</span>
         <span><i class="np-dot" style="background:var(--warn)"></i><span class="np-n">{{ countNoIp | number }}</span>sin IP asignada</span>
+        <!-- El tope del plan: activos + suspendidos. Se ve antes de intentar un alta. -->
+        <span *ngIf="cupo?.tope" [class.np-cupo--alto]="(cupo?.porcentaje ?? 0) >= 90" [title]="textoDelCupo">
+          <i class="np-dot" [style.background]="cupo?.lleno ? 'var(--danger)' : (cupo?.porcentaje ?? 0) >= 90 ? 'var(--warn)' : 'var(--info, var(--accent))'"></i>
+          <span class="np-n">{{ cupo?.ocupados | number }}</span>de {{ cupo?.tope | number }} del plan<ng-container *ngIf="cupo?.plan"> «{{ cupo?.plan }}»</ng-container>
+        </span>
       </div>
+      <p class="np-notice np-notice--danger np-cupo-aviso" *ngIf="cupo?.lleno" role="alert">{{ textoDelCupo }}</p>
+      <p class="np-notice np-notice--warn np-cupo-aviso" *ngIf="cupo?.tope && !cupo?.lleno && (cupo?.porcentaje ?? 0) >= 90">
+        Le quedan {{ cupo?.disponibles }} lugar(es) en su plan de {{ cupo?.tope }} clientes.
+      </p>
       <div class="np-ribbon np-ribbon--loading" *ngIf="skeletor">Cargando registro…</div>
     </div>
     <div class="np-actions">
@@ -32,7 +41,8 @@
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v11m0 0-4-4m4 4 4-4M4 15v4a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-4"/></svg>
         Importar
       </a>
-      <button type="button" class="np-btn np-btn--primary" (click)="openCreateUserModal()">
+      <button type="button" class="np-btn np-btn--primary" (click)="openCreateUserModal()"
+              [disabled]="!!cupo?.lleno" [title]="cupo?.lleno ? textoDelCupo : ''">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M12 5v14M5 12h14"/></svg>
         Nuevo cliente
       </button>

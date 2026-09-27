@@ -391,6 +391,7 @@ export class UserComponent implements OnInit {
   ngOnInit() {
     this.onResize(null);
     this.loadCatalogs();
+    this.cargarCupo();
     // ?q=… abre el módulo ya filtrado (lo usa la ficha del cliente del CRM)
     const q = (this.route.snapshot.queryParamMap.get('q') || '').trim();
     // ?cliente=<id> abre su ficha en cuanto llega la lista (lo usa PPPoE).
@@ -462,7 +463,28 @@ export class UserComponent implements OnInit {
 
   // ── User list ─────────────────────────────────────────────────────────────
   /** Recarga la página actual sin esqueleto (la llaman las acciones tras guardar). */
-  getAllUser() { this.cargarClientes(true); }
+  getAllUser() { this.cargarClientes(true); this.cargarCupo(); }
+
+  /**
+   * El tope de clientes del plan. Se pide al abrir y cada vez que cambia la lista (alta o baja):
+   * quien administra tiene que ver cuánto le queda ANTES de intentar un alta, no enterarse por un error.
+   */
+  cupo: { tope: number | null; en_uso: number; reservados: number; ocupados: number; disponibles: number | null; lleno: boolean; porcentaje: number | null; plan: string | null } | null = null;
+
+  cargarCupo(): void {
+    this.userSvc.getCupo().subscribe({
+      next: (r: any) => { this.cupo = r?.error === 0 ? r.data : null; },
+      error: () => { this.cupo = null; },   // sin el dato no se bloquea nada desde aquí: el servidor manda
+    });
+  }
+
+  /** Lo que se le dice al administrador cuando el plan ya está lleno. */
+  get textoDelCupo(): string {
+    const c = this.cupo;
+    if (!c?.tope) return '';
+    const reserva = c.reservados > 0 ? ` y ${c.reservados} instalación(es) pendiente(s) por crear` : '';
+    return `Su plan${c.plan ? ' «' + c.plan + '»' : ''} incluye ${c.tope} clientes y ya tiene ${c.en_uso}${reserva}. Cuentan los activos y los suspendidos; los retirados no. Para agregar uno nuevo, retire un cliente o cambie de plan.`;
+  }
 
   /** Una página de clientes con el estado y la búsqueda elegidos. */
   cargarClientes(silencioso = false) {

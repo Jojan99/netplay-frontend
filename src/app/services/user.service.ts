@@ -459,6 +459,11 @@ getIpzonebyZone(vlan: string, segment?: string | null, routerId?: number | null,
     return this.http.post<any>(url, parameter, { headers: this.getHeaders() });
   }
 
+  /** Cuántos clientes incluye el plan de la empresa y cuántos lleva (activos + suspendidos). */
+  getCupo(): Observable<any> {
+    return this.http.get<any>(this.env.rootUrl + 'api/user/cupo', { headers: this.getHeaders() });
+  }
+
   getRouters(): Observable<any> {
     const url = this.env.rootUrl + 'api/management/routers';
     return this.http.get<any>(url, { headers: this.getHeaders() });
