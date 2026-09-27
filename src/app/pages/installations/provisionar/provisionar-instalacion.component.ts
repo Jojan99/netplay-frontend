@@ -67,6 +67,13 @@ export class ProvisionarInstalacionComponent implements OnInit {
   /** Los de por dónde entra se muestran cerrados: casi siempre va lo planeado. */
   abiertoPorDonde = false;
 
+  /**
+   * La orden no trae por qué OLT entra el cliente (y el técnico ya no puede editarla: eso es de
+   * oficina). Antes esto era un punto muerto —un aviso y ninguna forma de seguir—; ahora se abre
+   * el selector para que elija una acá mismo.
+   */
+  faltaOlt = false;
+
   readonly presOlts = conValor(PRESENTACION_OLTS, (o: any) => o.id);
   readonly presTextos = PRESENTACION_TEXTOS;
 
@@ -131,8 +138,17 @@ export class ProvisionarInstalacionComponent implements OnInit {
         this.srvProfiles = d.perfiles?.srv ?? [];
         this.capacidades = d.capacidades ?? {};
         this.plan = d.plan ?? {};
+        this.faltaOlt = !!d.falta_olt;
 
         this.oltId = d.olt_id ?? this.plan.olt_id ?? null;
+
+        // Ninguna OLT en la orden, pero la empresa sólo tiene una: se usa ésa directo, sin
+        // obligar a elegir entre una sola opción.
+        if (this.faltaOlt && !this.oltId && this.olts.length === 1) {
+          this.oltId = this.olts[0].id;
+          this.buscarEquipos();
+          return;
+        }
 
         // La primera vez se propone lo de la orden; después se respeta lo que
         // el técnico ya eligió, para no deshacerle la corrección al recargar.
@@ -203,10 +219,11 @@ export class ProvisionarInstalacionComponent implements OnInit {
   get puedeSeguir(): boolean {
     // Sin VLAN la ONT queda registrada y el cliente no navega: pasó de verdad
     // y nadie se enteró hasta que el cliente llamó.
-    return !!this.elegida && !!this.vlan && !this.trabajando;
+    return !!this.oltId && !!this.elegida && !!this.vlan && !this.trabajando;
   }
 
   get porQueNoPuede(): string {
+    if (!this.oltId) return 'Elija por dónde entra este cliente para ver sus equipos.';
     if (!this.elegida) return 'Seleccione el equipo que va a instalar.';
     if (!this.vlan) return 'Falta la VLAN: sin ella el equipo queda autorizado pero el cliente no navega.';
     return '';

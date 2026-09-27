@@ -101,6 +101,12 @@ export class InstallationsComponent implements OnInit {
     { value: 'cancelled', label: 'Cancelada' },
   ];
 
+  /** El técnico sólo tiene lo suyo por instalar: el servidor ya no le manda completadas ni
+   * canceladas (ver InstallationOrderController::index), así que esos chips no pintan nada. */
+  get opcionesDeEstado() {
+    return this.esTecnico ? this.STATUS_OPTIONS.filter(o => o.value !== 'completed' && o.value !== 'cancelled') : this.STATUS_OPTIONS;
+  }
+
   readonly PAYMENT_STATUS_OPTIONS = [
     { value: '', label: 'Todos' },
     { value: 'pending', label: 'Pendiente' },

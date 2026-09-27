@@ -7,13 +7,13 @@
       <div class="np-ribbon">
         <span><i class="np-dot" style="background:var(--warn)"></i><span class="np-n">{{ totalPending }}</span>pendientes <span class="np-mono np-ribbon-sub" *ngIf="!esTecnico">{{ formatPrice(pendingValue) }}</span></span>
         <span><i class="np-dot" style="background:var(--info)"></i><span class="np-n">{{ totalInProgress }}</span>en proceso <span class="np-mono np-ribbon-sub" *ngIf="!esTecnico">{{ formatPrice(inProgressValue) }}</span></span>
-        <span><i class="np-dot" style="background:var(--ok)"></i><span class="np-n">{{ totalCompleted }}</span>completadas <span class="np-mono np-ribbon-sub" *ngIf="!esTecnico">{{ formatPrice(completedValue) }}</span></span>
+        <span *ngIf="!esTecnico"><i class="np-dot" style="background:var(--ok)"></i><span class="np-n">{{ totalCompleted }}</span>completadas <span class="np-mono np-ribbon-sub">{{ formatPrice(completedValue) }}</span></span>
         <span *ngIf="!esTecnico"><span class="np-n">{{ formatPrice(totalValue) }}</span>en total · comisiones <span class="np-mono np-ribbon-sub">{{ formatPrice(totalCommission) }}</span></span>
       </div>
     </div>
     <div class="np-actions">
       <button type="button" class="np-btn np-btn--ghost" *ngIf="techniciansSummary.length && !esTecnico" (click)="showTechSummary = !showTechSummary">Comisiones<span class="np-c">{{ techniciansSummary.length }}</span></button>
-      <button type="button" class="np-btn np-btn--ghost" (click)="crearPractica()" [disabled]="creandoPractica"
+      <button type="button" class="np-btn np-btn--ghost" *ngIf="!esTecnico" (click)="crearPractica()" [disabled]="creandoPractica"
               title="Una orden de mentira para recorrer el flujo de instalar con un equipo simulado: no toca la red ni crea clientes">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2 3 7v6c0 5 4 8 9 9 5-1 9-4 9-9V7l-9-5Z"/><path d="m9 12 2 2 4-4"/></svg>
         {{ creandoPractica ? 'Creando…' : 'Práctica' }}
@@ -27,7 +27,7 @@
 
   <div class="np-toolbar">
     <div class="np-chips" role="group" aria-label="Estado">
-      <button type="button" class="np-chip" *ngFor="let opt of STATUS_OPTIONS" [attr.aria-pressed]="statusFilter === opt.value" (click)="statusFilter = opt.value; filter()">{{ opt.label }}</button>
+      <button type="button" class="np-chip" *ngFor="let opt of opcionesDeEstado" [attr.aria-pressed]="statusFilter === opt.value" (click)="statusFilter = opt.value; filter()">{{ opt.label }}</button>
     </div>
     <label class="np-pagesize">Pago
       <np-select [(ngModel)]="paymentStatusFilter" (cambio)="filter()" [opciones]="opcionesEstadoPago" [presentacion]="presSimple"

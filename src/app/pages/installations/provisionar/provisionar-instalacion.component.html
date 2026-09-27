@@ -41,15 +41,21 @@
 
       <!-- ── Elegir el equipo ── -->
       <ng-container *ngIf="!termino">
-        <p class="np-fine">
+        <p class="np-fine" *ngIf="!faltaOlt">
           Conecte la ONT y espere unos segundos. Aquí aparecen las que la OLT está viendo y todavía no tienen dueño:
           si la suya está en la lista, es que ya tiene luz.
+        </p>
+        <p class="np-notice np-notice--warn" *ngIf="faltaOlt && olts.length">
+          Esta orden no trae por dónde entra el cliente. Elija la OLT en «Por dónde entra», ahí abajo, y aparecen sus equipos.
+        </p>
+        <p class="np-notice np-notice--danger" *ngIf="faltaOlt && !olts.length && !cargando">
+          Esta empresa todavía no tiene ninguna OLT registrada. Avise a la oficina antes de seguir.
         </p>
 
         <div *ngIf="cargando" class="np-loading"><span class="np-spinner"></span> Preguntándole a la OLT…</div>
         <p class="np-notice np-notice--danger" *ngIf="error">{{ error }}</p>
 
-        <p class="np-empty-block" *ngIf="!cargando && !onts.length && !error">
+        <p class="np-empty-block" *ngIf="!cargando && !onts.length && !error && !faltaOlt">
           <strong>La OLT no ve ninguna ONT nueva.</strong>
           <span>Revise que esté conectada y encendida, y vuelva a buscar.</span>
         </p>
@@ -82,10 +88,11 @@
           </button>
 
           <div class="pv-donde-b" *ngIf="abiertoPorDonde">
-            <label class="np-field" *ngIf="olts.length > 1"><span>OLT</span>
+            <label class="np-field" *ngIf="!oltId || olts.length > 1"><span>OLT</span>
               <np-select [(ngModel)]="oltId" (ngModelChange)="alCambiarOlt()" [opciones]="olts" [presentacion]="presOlts"
                          [deshabilitado]="cargando || trabajando" placeholder="Seleccione OLT…" ariaLabel="OLT"></np-select>
-              <small class="np-fine np-muted">Si el equipo no aparece arriba, puede estar en otra OLT.</small>
+              <small class="np-fine np-muted" *ngIf="oltId">Si el equipo no aparece arriba, puede estar en otra OLT.</small>
+              <small class="np-fine np-muted" *ngIf="!oltId">Por ahí entra este cliente: elíjala para ver sus equipos.</small>
             </label>
 
             <label class="np-field"><span>VLAN <em class="np-req">*</em></span>
