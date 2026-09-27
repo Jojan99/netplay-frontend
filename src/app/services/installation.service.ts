@@ -37,6 +37,14 @@ export interface InstallationOrder {
   plan?: any;
   paymentMethod?: any;
   logs?: InstallationLog[];
+
+  /** Paso a paso de lo que hizo InstalarYAprovisionar al instalar: crear el cliente, autorizar la
+   * ONT, asociarla, descontar inventario, programar la configuración. Sólo existe una vez instalado. */
+  provision_detalle?: {
+    pasos: { paso: string; ok: boolean; detalle?: string | null; en: string }[];
+    avisos: string[];
+    cambios: string[];
+  } | null;
 }
 
 export interface InstallationLog {

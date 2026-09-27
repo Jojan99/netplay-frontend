@@ -28,3 +28,18 @@
 }
 
 .np-comprobante { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+
+/* El detalle paso a paso de la instalación: no reusa .np-timeline/.np-tl porque ese lo arma con un grid
+   de dos filas fijas (título + nota) y acá hay pasos sin nota («Equipo asignado al cliente») — la marca
+   de tiempo, que ocupa las dos filas, se montaba sobre el paso siguiente. Acá cada paso mide lo que su
+   propio contenido necesita, nada más. */
+.np-prov { display: grid; gap: 10px; }
+.np-prov-p { position: relative; padding-left: 16px; border-left: 2px solid var(--line);
+  &:last-child { border-color: transparent; } }
+.np-prov-p::before { content: ""; position: absolute; left: -5px; top: 3px; width: 8px; height: 8px; border-radius: 50%; background: var(--text-3); box-shadow: 0 0 0 2px var(--surface); }
+.np-prov-p.es-ok::before { background: var(--ok); }
+.np-prov-p.es-mal::before { background: var(--danger); }
+.np-prov-h { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; }
+.np-prov-t { font-weight: 700; color: var(--text); font-size: 12px; }
+.np-prov-m { font-family: var(--font-mono); font-weight: 600; color: var(--text-3); font-size: 11px; white-space: nowrap; flex-shrink: 0; }
+.np-prov-d { color: var(--text-3); font-size: 11px; margin-top: 2px; overflow-wrap: anywhere; }

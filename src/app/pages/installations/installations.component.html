@@ -188,6 +188,21 @@
           <p class="np-note" *ngIf="selected.technical_notes"><b>Notas técnicas.</b> {{ selected.technical_notes }}</p>
         </section>
 
+        <!-- Lo que pasó paso a paso al instalar el equipo (crear el cliente, autorizar la ONT,
+             asociarla, descontar el inventario, programar la configuración): lo arma
+             InstalarYAprovisionar y queda guardado en la orden desde que se instala. -->
+        <section *ngIf="selected.provision_detalle?.pasos?.length">
+          <p class="np-sect">Detalle de la instalación</p>
+          <div class="np-prov">
+            <div class="np-prov-p" *ngFor="let p of selected.provision_detalle!.pasos" [class.es-ok]="p.ok" [class.es-mal]="!p.ok">
+              <div class="np-prov-h"><span class="np-prov-t">{{ p.paso }}</span><span class="np-prov-m np-data">{{ formatDateTime(p.en) }}</span></div>
+              <div class="np-prov-d" *ngIf="p.detalle">{{ p.detalle }}</div>
+            </div>
+          </div>
+          <p class="np-notice np-notice--warn np-notice--inline" *ngFor="let a of selected.provision_detalle!.avisos">{{ a }}</p>
+          <p class="np-fine np-muted" *ngIf="selected.provision_detalle!.cambios?.length">Cambió respecto a lo planeado desde la oficina: {{ selected.provision_detalle!.cambios!.join(' · ') }}</p>
+        </section>
+
         <section>
           <p class="np-sect">Historial</p>
           <div *ngIf="loadingLogs" class="np-loading np-loading--inline"><span class="np-spinner"></span> Cargando…</div>
