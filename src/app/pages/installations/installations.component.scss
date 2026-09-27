@@ -20,3 +20,9 @@
 @media (max-width: 1500px) { .np-inst.is-open .np-col-tech { display: none; } }
 @media (max-width: 1300px) { .np-inst.is-open .np-col-addr { display: none; } }
 @media (max-width: 760px) { .np-col-addr, .np-col-tech { display: none; } .np-plan-mobile { display: inline; } .np-table--registry { min-width: 0; } }
+
+/* La orden de práctica se distingue de una de verdad a primera vista */
+.np-practica {
+  display: inline-block; margin-left: 8px; padding: 1px 7px; border-radius: 999px; vertical-align: middle;
+  background: var(--info-soft); color: var(--info); font: 800 9.5px var(--font-body); letter-spacing: .06em;
+}

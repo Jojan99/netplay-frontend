@@ -16,6 +16,8 @@ export interface InstallationOrder {
   scheduled_date: string;
   scheduled_time: string;
   status: 'pending' | 'confirmed' | 'in_progress' | 'completed' | 'cancelled';
+  /** Orden de práctica: se recorre el flujo con un equipo simulado; no toca la red ni crea clientes. */
+  modo_practica?: boolean;
   payment_status: 'pending' | 'paid' | 'verified' | 'rejected';
   payment_amount?: number | null;
   payment_reference?: string;
@@ -88,6 +90,11 @@ export class InstallationService {
 
   update(id: number, data: Partial<InstallationOrder>): Observable<any> {
     return this.http.put(`${this.baseUrl}/${id}`, data);
+  }
+
+  /** Una orden de práctica para recorrer el flujo de instalar sin tocar la red. */
+  crearPractica(): Observable<any> {
+    return this.http.post(`${this.baseUrl}/practica`, {});
   }
 
   delete(id: number): Observable<any> {

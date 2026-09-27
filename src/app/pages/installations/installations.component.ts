@@ -72,7 +72,7 @@ export class InstallationsComponent implements OnInit {
 
   openTechDetail(tech: any): void {
     this.selectedTech = tech;
-    const all = this.allInstallations.length > 0 ? this.allInstallations : this.installations;
+    const all = this.reales;
     this.techInstallations = all.filter(i => {
       const isCompleted = i.status === 'completed' || i.payment_status === 'verified';
       const techIds: number[] = i.technician_ids || [];
@@ -249,6 +249,32 @@ export class InstallationsComponent implements OnInit {
    * equipo en la mano: esta lista es para la oficina.
    */
   provisionando: any = null;
+
+  // ── Modo práctica ─────────────────────────────────────────────────────────
+
+  creandoPractica = false;
+
+  /**
+   * Crea una orden de práctica: se recorre exactamente el flujo de instalar —iniciar, elegir el equipo,
+   * corregir por dónde entra, terminar— con un equipo simulado. No toca la OLT, no crea ningún cliente
+   * y no descuenta inventario. Sirve para enseñar el módulo antes de tener una ONT en la mano.
+   */
+  crearPractica(): void {
+    if (this.creandoPractica) return;
+    this.creandoPractica = true;
+
+    this.svc.crearPractica().subscribe({
+      next: (r: any) => { this.creandoPractica = false; this.toast(r?.message || 'Orden de práctica creada.'); this.statusFilter = ''; this.load(); },
+      error: (e: any) => { this.creandoPractica = false; this.toast(e?.error?.message || 'No se pudo crear la orden de práctica.'); },
+    });
+  }
+
+  async borrarPractica(inst: any): Promise<void> {
+    if (!inst?.modo_practica) return;
+    if (!await this.dialog.confirm('¿Borrar esta orden de práctica? No afecta a ningún cliente real.', { okLabel: 'Borrar' })) return;
+
+    this.svc.delete(inst.id).subscribe({ next: () => { this.toast('Orden de práctica borrada.'); this.load(); }, error: () => this.toast('No se pudo borrar.') });
+  }
 
   abrirProvisionar(inst: any): void { this.provisionando = inst; }
 
@@ -468,42 +494,50 @@ export class InstallationsComponent implements OnInit {
     return i.paymentMethod?.name || '-';
   }
 
+  /**
+   * Las órdenes que cuentan. Las de práctica —las que el técnico usa para aprender el flujo con un equipo
+   * simulado— se ven en la lista, pero no suman en pendientes, valores ni comisiones.
+   */
+  private get reales(): any[] {
+    return (this.allInstallations.length > 0 ? this.allInstallations : this.installations).filter((i: any) => !i.modo_practica);
+  }
+
   get totalPending(): number { 
-    const all = this.allInstallations.length > 0 ? this.allInstallations : this.installations;
+    const all = this.reales;
     return all.filter(i => i.status === 'pending').length; 
   }
   get totalInProgress(): number { 
-    const all = this.allInstallations.length > 0 ? this.allInstallations : this.installations;
+    const all = this.reales;
     return all.filter(i => i.status === 'in_progress').length; 
   }
 get totalCompleted(): number { 
-    const all = this.allInstallations.length > 0 ? this.allInstallations : this.installations;
+    const all = this.reales;
     return all.filter(i => i.status === 'completed' || i.payment_status === 'verified').length; 
   }
 
   get totalValue(): number { 
-    const all = this.allInstallations.length > 0 ? this.allInstallations : this.installations;
+    const all = this.reales;
     return all.reduce((sum, i) => sum + this.getNumValue(i.installation_cost), 0);
   }
   get totalCommission(): number { 
-    const all = this.allInstallations.length > 0 ? this.allInstallations : this.installations;
+    const all = this.reales;
     return all.reduce((sum, i) => sum + this.getNumValue(i.commission_amount), 0);
   }
   get completedValue(): number { 
-    const all = this.allInstallations.length > 0 ? this.allInstallations : this.installations;
+    const all = this.reales;
     return all.filter(i => this.isCompletedStatus(i)).reduce((sum, i) => sum + this.getNumValue(i.installation_cost), 0);
   }
   get completedCommission(): number { 
-    const all = this.allInstallations.length > 0 ? this.allInstallations : this.installations;
+    const all = this.reales;
     return all.filter(i => this.isCompletedStatus(i)).reduce((sum, i) => sum + this.getNumValue(i.commission_amount), 0);
   }
 
   get pendingValue(): number { 
-    const all = this.allInstallations.length > 0 ? this.allInstallations : this.installations;
+    const all = this.reales;
     return all.filter(i => i.status === 'pending').reduce((sum, i) => sum + this.getNumValue(i.installation_cost), 0);
   }
   get inProgressValue(): number { 
-    const all = this.allInstallations.length > 0 ? this.allInstallations : this.installations;
+    const all = this.reales;
     return all.filter(i => i.status === 'in_progress').reduce((sum, i) => sum + this.getNumValue(i.installation_cost), 0);
   }
 
@@ -517,7 +551,7 @@ get totalCompleted(): number {
   }
 
   get techniciansSummary(): any[] {
-    const all = this.allInstallations.length > 0 ? this.allInstallations : this.installations;
+    const all = this.reales;
     const summary: { [id: number]: { id: string; name: string; count: number; commission: number } } = {};
     all.filter(i => this.isCompletedStatus(i)).forEach(i => {
       const techIds: number[] = i.technician_ids || [];

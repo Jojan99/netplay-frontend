@@ -12,6 +12,12 @@
 
     <div class="np-modal-body pv-cuerpo">
 
+      <!-- Práctica: el técnico tiene que saber, sin duda, que nada de esto es real. -->
+      <p class="np-notice np-notice--info pv-practica" *ngIf="orden.modo_practica">
+        <b>Modo práctica.</b> El equipo es simulado: no se toca la OLT, no se crea ningún cliente y no se descuenta inventario.
+        Todo lo demás es exactamente lo que va a ver en una instalación de verdad.
+      </p>
+
       <!-- ── Resultado ── -->
       <ng-container *ngIf="termino">
         <p class="np-notice np-notice--ok">
