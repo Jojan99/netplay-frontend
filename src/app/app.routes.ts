@@ -78,6 +78,23 @@ export const routes: Routes = [
         canActivate: [roleGuard],
         data: { module: 'olt-admin' },
       },
+      // El recorte para técnicos: mismas dos pantallas de autorización de ONT
+      // (Sin autorizar / Autorizadas), en una dirección aparte que no exige el
+      // módulo completo de OLT. Quien tenga «olt-detail» entra aquí; el resto
+      // de /dashboard/olt/** le sigue pidiendo «olt-admin».
+      {
+        path: 'olt-autorizacion/sin-autorizar',
+        loadComponent: () => import('./pages/admin-olt/pages/olt-sin-autorizar/olt-sin-autorizar.component').then(m => m.OltSinAutorizarComponent),
+        canActivate: [roleGuard],
+        data: { module: 'olt-detail' },
+      },
+      {
+        path: 'olt-autorizacion/autorizadas',
+        loadComponent: () => import('./pages/admin-olt/pages/olt-autorizadas/olt-autorizadas.component').then(m => m.OltAutorizadasComponent),
+        canActivate: [roleGuard],
+        data: { module: 'olt-detail' },
+      },
+      { path: 'olt-autorizacion', redirectTo: 'olt-autorizacion/sin-autorizar', pathMatch: 'full' },
       { path: 'staff',          component: StaffComponent,             canActivate: [roleGuard], data: { module: 'staff' } },
       { path: 'billing-config',  component: BillingConfigComponent, canActivate: [roleGuard], data: { module: 'billing-config' } },
       { path: 'payment-gateway', component: BillingConfigComponent, canActivate: [roleGuard], data: { module: 'payment-gateway' } },

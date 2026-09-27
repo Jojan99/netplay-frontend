@@ -14,6 +14,7 @@ import { NpSelectComponent, PresentacionSelect } from '../../../../common/np-sel
 import { PRESENTACION_OLTS, PRESENTACION_POR_PAGINA, conValor } from '../../../../common/np-select/presentaciones';
 import { Subject } from 'rxjs';
 import { debounceTime, distinctUntilChanged, switchMap } from 'rxjs/operators';
+import { AuthService } from '../../../../services/auth.service';
 
 @Component({
   selector: 'app-olt-autorizadas',
@@ -98,7 +99,19 @@ export class OltAutorizadasComponent implements OnInit {
     private toast: ToastService,
     private dialog: DialogService,
     private gestion: GestionRemotaService,
+    private auth: AuthService,
   ) {}
+
+  /**
+   * Quien sólo tiene «olt-detail» (el recorte para técnicos) ve la lista y
+   * puede consultar, pero no eliminar, reiniciar, reasignar ni renombrar una
+   * ONT que ya es de otro cliente: eso sigue siendo de quien tiene el módulo
+   * completo de OLT. El backend ya lo exige aparte (ver managementRouterRoutes.php);
+   * esto es para no dejarle en pantalla un botón que le va a fallar.
+   */
+  get puedeAdministrar(): boolean {
+    return this.auth.getAllowedModules().includes('olt-admin');
+  }
 
   /**
    * Le da acceso remoto a un equipo ya autorizado.

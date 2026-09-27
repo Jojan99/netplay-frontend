@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { NavigationEnd, Router, RouterModule } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { filter } from 'rxjs';
+import { AuthService } from '../../../services/auth.service';
 
 /** Navegación común del módulo OLT: misma barra en todas sus pantallas. */
 @Component({
@@ -39,8 +40,9 @@ export class OltNavComponent implements AfterViewInit {
   private host = inject(ElementRef<HTMLElement>);
   private router = inject(Router);
   private destroyRef = inject(DestroyRef);
+  private auth = inject(AuthService);
 
-  readonly links = [
+  private readonly linksCompletos = [
     { path: '/dashboard/olt',               label: 'OLTs',          exact: true },
     { path: '/dashboard/olt/dashboard',     label: 'Estado',        exact: false },
     { path: '/dashboard/olt/salud',         label: 'Salud',         exact: false },
@@ -57,6 +59,22 @@ export class OltNavComponent implements AfterViewInit {
     { path: '/dashboard/olt/config',        label: 'Configuración', exact: false },
     { path: '/dashboard/olt/cli',           label: 'CLI',           exact: false },
   ];
+
+  /**
+   * Quien sólo tiene «olt-detail» (el recorte para técnicos: autorizar ONT y
+   * consultar las autorizadas) no ve las otras trece secciones. Las mismas
+   * pantallas de siempre, en la dirección aparte que no exige el módulo
+   * completo: si el técnico les da clic a las de acá, el guardia de ruta lo
+   * manda para atrás porque esas sí exigen «olt-admin».
+   */
+  private readonly linksTecnico = [
+    { path: '/dashboard/olt-autorizacion/sin-autorizar', label: 'Sin autorizar', exact: false },
+    { path: '/dashboard/olt-autorizacion/autorizadas',   label: 'Autorizadas',   exact: false },
+  ];
+
+  get links() {
+    return this.auth.getAllowedModules().includes('olt-admin') ? this.linksCompletos : this.linksTecnico;
+  }
 
   /**
    * En el teléfono la sección actual puede quedar fuera de la vista (CLI es
