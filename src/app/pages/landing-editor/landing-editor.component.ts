@@ -11,8 +11,8 @@ import { LandingAdminService } from '../../landing/services/landing-admin.servic
 <div class="p-6 max-w-5xl mx-auto space-y-8">
 
   <!-- Header -->
-  <div class="flex items-center justify-between">
-    <div>
+  <div class="flex flex-wrap items-center justify-between gap-3">
+    <div class="min-w-0 flex-1 basis-56">
       <h1 class="text-2xl font-extrabold text-gray-900 dark:text-white">Landing Page</h1>
       <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">
         Personaliza la página de inicio pública de su empresa
@@ -35,7 +35,7 @@ import { LandingAdminService } from '../../landing/services/landing-admin.servic
   </div>
 
   <!-- Tabs -->
-  <div class="flex gap-1 border-b border-gray-200 dark:border-gray-700">
+  <div class="flex gap-1 overflow-x-auto whitespace-nowrap border-b border-gray-200 dark:border-gray-700">
     <button *ngFor="let tab of tabs" (click)="activeTab.set(tab.id)"
             class="px-4 py-2.5 text-sm font-medium rounded-t-xl transition-colors"
             [class.bg-white]="activeTab() === tab.id"
@@ -58,7 +58,7 @@ import { LandingAdminService } from '../../landing/services/landing-admin.servic
     <div class="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-sm space-y-5">
       <h2 class="font-bold text-gray-900 dark:text-white">Colores y marca</h2>
 
-      <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
         <div>
           <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Color primario</label>
           <div class="flex items-center gap-2">

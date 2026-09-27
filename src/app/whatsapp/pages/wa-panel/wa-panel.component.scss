@@ -2,7 +2,7 @@
 .hidden { display: none !important; }
 .np-wa-panel { --np-inspector-w: 400px; }
 .np-kpi-v--text { font-family: var(--font-display); font-size: 17px; }
-.np-switch-line { display: flex; align-items: center; gap: 10px; }
+.np-switch-line { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; min-width: 0; .np-switch { flex: none; } .np-kpi-v { min-width: 0; } }
 .np-row--static { cursor: default; }
 .np-list { display: grid; gap: 6px; }
 .np-list-item { display: flex; gap: 10px; padding: 9px 10px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--surface); }

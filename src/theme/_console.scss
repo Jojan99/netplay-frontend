@@ -299,7 +299,17 @@ select optgroup {
 @media (max-width: 760px) {
   .np-head { flex-direction: column; align-items: stretch; gap: 12px; }
   .np-title { font-size: 24px; }
+  /* Un dato en texto («Deshabilitado», «Active o renueve el plan») no cabe en una celda de 160 px
+     en una sola línea: se parte en vez de pisar a la celda de al lado. */
+  .np-kpi .np-kpi-v--text { white-space: normal !important; overflow-wrap: break-word; font-size: 15px !important; line-height: 1.25; }
+  /* Una tabla ancha se desplaza de lado; su mensaje de «no hay nada» quedaba centrado en todo ese
+     ancho y en el teléfono se veía cortado. Se ancla a la izquierda, con el ancho de la pantalla. */
+  @media (min-width: 641px) { .np-table tr.np-empty td > * { position: sticky; left: 16px; display: block; width: calc(100vw - 96px); max-width: 100%; margin: 0 auto 4px 0; text-align: center; white-space: normal; } }
+  .np-actions { flex-wrap: wrap; width: 100%; }
   .np-actions .np-btn { flex: 1; }
+  /* Los selectores traen un ancho mínimo escrito en la plantilla (220 px): en 360 px de pantalla
+     empujaba el botón de al lado por encima del propio selector. */
+  .np-actions np-select, .np-toolbar np-select { min-width: 0 !important; }
   .np-search { flex-basis: 100%; }
   .np-pagesize { display: none; }
   .np-table--registry { min-width: 0; }
@@ -686,6 +696,9 @@ input.np-input:-webkit-autofill:active {
       text-align: left !important; overflow-wrap: anywhere;
     }
 
+    /* Una etiqueta larga («PDF con coordenadas») se salía de su celda y pisaba a la de al lado. */
+    tbody td .np-pill, tbody td .np-tag, tbody td .np-badge { max-width: 100%; white-space: normal; text-align: left; overflow-wrap: anywhere; }
+
     tbody td[data-label]::before {
       content: attr(data-label);
       display: block; margin-bottom: 2px;
@@ -760,3 +773,8 @@ input.np-input:-webkit-autofill:active {
   .np-insp-head { position: sticky; top: 0; z-index: 2; background: var(--surface); }
   .np-quick { gap: 8px; .np-btn { width: 100%; } }
 }
+
+/* El botón de WhatsApp flota por encima de todo (z-index 70) y, con una ventana o la ficha de un
+   cliente abierta, tapaba justo los botones de abajo. Mientras haya una ventana, se esconde. */
+body:has(.np-overlay) .wg-launch { display: none; }
+@media (max-width: 1280px) { body:has(.np-inspector) .wg-launch { display: none; } }

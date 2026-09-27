@@ -1,5 +1,5 @@
 /* ─── Registro de empresa: sólo lo propio del asistente ─────────────── */
-.np-steps { list-style: none; display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin: 4px 0 10px; padding: 0;
+.np-steps { list-style: none; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; margin: 4px 0 10px; padding: 0;
   li button { display: flex; align-items: center; gap: 8px; width: 100%; padding: 8px 10px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--surface); text-align: left; cursor: pointer; }
   li.is-active button { border-color: var(--accent); background: var(--accent-soft); }
   li.is-done button { border-color: var(--ok); }
@@ -9,6 +9,18 @@
   .is-done & { background: var(--ok); color: #fff; svg { width: 13px; height: 13px; } } }
 .np-steps-copy { display: grid; min-width: 0; b { font-size: 12.5px; color: var(--text); } small { font-size: 10.5px; color: var(--text-3); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; } }
 @media (max-width: 560px) { .np-steps-copy small { display: none; } }
+
+/* En un teléfono los tres pasos con su nombre no caben en una fila: ensanchaban la tarjeta por encima
+   de la pantalla y el formulario se salía. Sólo el paso actual muestra su nombre. */
+.np-register .np-login-main { grid-template-columns: minmax(0, 1fr); }
+.np-register-card { min-width: 0; }
+.np-steps li { min-width: 0; }
+@media (max-width: 560px) {
+  .np-steps { grid-template-columns: auto auto auto; justify-content: start; }
+  .np-steps li button { padding: 8px; }
+  .np-steps li:not(.is-active) .np-steps-copy { display: none; }
+  .np-register .np-login-card { padding: 22px 18px 20px; }
+}
 
 .np-register-list { list-style: none; margin: 10px 0 0; padding: 0; display: grid; gap: 7px;
   li { display: flex; align-items: flex-start; gap: 8px; font-size: 12.5px; color: var(--text-2); svg { width: 14px; height: 14px; color: var(--ok); margin-top: 2px; flex-shrink: 0; } } }

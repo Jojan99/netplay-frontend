@@ -55,7 +55,7 @@
    Foto del modelo, sus datos y el panel de puertos con el estado real. */
 .np-equipo {
   display: grid;
-  grid-template-columns: minmax(180px, 260px) 1fr;
+  grid-template-columns: minmax(180px, 260px) minmax(0, 1fr);
   gap: 20px;
   align-items: start;
   padding: 18px;
@@ -102,6 +102,13 @@
 
   dt { font-size: 11px; text-transform: uppercase; letter-spacing: .04em; color: var(--text-3); }
   dd { margin: 1px 0 0; font-size: 13px; }
+}
+
+/* En pantallas angostas la foto y los datos no caben lado a lado: se apilan. */
+@media (max-width: 700px) {
+  .np-equipo { grid-template-columns: minmax(0, 1fr); padding: 14px; }
+  .np-equipo-foto { min-height: 90px; }
+  .np-equipo-modelo { overflow-wrap: anywhere; }
 }
 
 /* El panel ocupa el ancho completo debajo de la foto y los datos. */

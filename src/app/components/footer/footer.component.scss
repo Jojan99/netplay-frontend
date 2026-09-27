@@ -8,4 +8,10 @@
 .app-footer-status { justify-self: center; color: var(--ok); i { width: 6px; height: 6px; border-radius: 50%; background: var(--ok); box-shadow: 0 0 0 3px var(--ok-soft); } }
 .app-footer-meta { justify-self: end; a { color: var(--text-2); text-decoration: none; &:hover { color: var(--accent); } } }
 .app-footer-divider { width: 1px; height: 12px; background: var(--line-strong); }
-@media (max-width: 720px) { .app-footer-inner { grid-template-columns: 1fr; height: auto; padding: 8px 16px; gap: 6px; justify-items: center; } .app-footer-status, .app-footer-meta { justify-self: center; } }
+/* En el celular el pie ocupaba cuatro renglones (casi 90 px de una pantalla de 740) y el botón
+   de WhatsApp lo tapaba. Queda una sola línea con el estado, y a la izquierda del botón. */
+@media (max-width: 720px) {
+  .app-footer-inner { grid-template-columns: 1fr; height: 32px; padding: 0 84px 0 16px; }
+  .app-footer-brand, .app-footer-meta { display: none; }
+  .app-footer-status { justify-self: start; }
+}

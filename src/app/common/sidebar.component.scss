@@ -7,7 +7,7 @@
 .sidebar-heading-label { color: var(--text-3); font-family: var(--font-mono); font-size: 10px; letter-spacing: .07em; text-transform: uppercase; }
 .sidebar-heading-status { display: inline-flex; align-items: center; gap: 5px; color: var(--ok); font-family: var(--font-mono); font-size: 10px; }
 .sidebar-heading-status i { width: 6px; height: 6px; border-radius: 50%; background: var(--ok); box-shadow: 0 0 0 3px var(--ok-soft); }
-@media (min-width: 768px) {
+@media (min-width: 1024px) {
   .sidebar-aside {
     position: relative; top: auto; left: auto; bottom: auto; height: 100%;
     box-shadow: none !important; transform: translateX(0) !important;

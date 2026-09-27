@@ -205,6 +205,8 @@
   .np-form, .bc-prueba, .bc-kv { grid-template-columns: 1fr; }
   .bc-gw-estado { grid-template-columns: auto minmax(0, 1fr); .bc-gw-vistas { grid-column: 1 / -1; justify-self: stretch; overflow-x: auto; flex-wrap: nowrap; } }
   .bc-opcion { flex-wrap: wrap; }
+  /* El texto de la opción ocupaba todo lo que sobraba y el interruptor quedaba recortado al borde: baja a su línea. */
+  .bc-opcion > div:not(.np-chips) { flex: 1 1 100%; }
   .bc-sucursal { grid-template-columns: 1fr; }
   .bc-txs li { grid-template-columns: minmax(0, 1fr) auto; .bc-tx-est { grid-column: 1 / -1; justify-content: flex-start; } }
   .bc-cortes-h { flex-direction: column; }

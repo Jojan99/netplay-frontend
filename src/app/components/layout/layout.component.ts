@@ -127,7 +127,7 @@ export class LayoutComponent implements OnInit {
       this.updateSection(e.urlAfterRedirects || e.url);
       // En celular el menú tapa toda la pantalla: al elegir una opción se
       // cierra. Si quedaba abierto, la página nueva cargaba debajo sin verse.
-      if (isPlatformBrowser(this.platformId) && window.innerWidth < 768) {
+      if (isPlatformBrowser(this.platformId) && window.innerWidth < 1024) {
         this.sidebarService.setCollapsed(true);
       }
     });
@@ -137,7 +137,7 @@ export class LayoutComponent implements OnInit {
     // Los técnicos comparten ubicación mientras tengan el panel abierto (también al recargar, no sólo al iniciar sesión)
     this.locationTracker.startTrackingIfTechnician();
 
-    if (window.innerWidth < 768) {
+    if (window.innerWidth < 1024) {
       this.sidebarService.setCollapsed(true);
     }
 

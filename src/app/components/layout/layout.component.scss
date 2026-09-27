@@ -91,7 +91,7 @@ main {
 .app-shell-menu-item:hover { background: var(--accent-soft); color: var(--accent); }
 .app-shell-menu-item--danger { color: var(--danger); } .app-shell-menu-item--danger:hover { background: var(--danger-soft); color: var(--danger); }
 .app-shell-backdrop { position: fixed; inset: 56px 0 0; z-index: 30; background: var(--overlay); }
-@media (min-width: 768px) { .app-shell-backdrop { display: none; } }
+@media (min-width: 1024px) { .app-shell-backdrop { display: none; } }
 /* Con el buscador en el encabezado no entra el contexto completo: queda sólo la ruta. */
 @media (max-width: 1279px) { .app-shell-live, .app-shell-clock, .app-shell-context-divider { display: none; } }
 @media (max-width: 900px) { .app-shell-context { display: none; } .app-shell-nav-inner { grid-template-columns: minmax(0, 1fr) auto; } }
@@ -250,4 +250,10 @@ main {
 
   /* En pantallas chicas alcanza con el icono. */
   @media (max-width: 900px) { span { display: none; } padding: 0 8px; }
+}
+
+/* Celular: márgenes de 16 px (con 24 se perdía ancho útil) y un colchón abajo para que lo último de
+   la página no quede escondido detrás del botón flotante de WhatsApp. */
+@media (max-width: 760px) {
+  main.app-platform { padding: 16px 16px 84px !important; }
 }
