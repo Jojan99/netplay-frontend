@@ -127,6 +127,55 @@ export class FinanceComponent implements OnInit, OnDestroy {
     }
   }
 
+  // ── Anulación masiva ─────────────────────────────────────────────────────
+  //
+  // Sólo pendientes y sin abono: la que tiene un abono encima primero hay
+  // que revertirle el pago (igual que al anularla una por una), si no ese
+  // dinero cobrado queda sin explicación en ningún lado.
+  anularBulkModal    = false;
+  anularBulkSelected: Set<number> = new Set();
+  anularBulkMotivo   = '';
+  anulandoBulk       = false;
+
+  get anularBulkInvoices(): any[] {
+    return this.invoices.filter(i => i.paid !== 1 && !(i.price_abone > 0) && !i.anulada_en);
+  }
+  get allAnularBulkSelected(): boolean {
+    return this.anularBulkInvoices.length > 0 && this.anularBulkInvoices.every(i => this.anularBulkSelected.has(i.id));
+  }
+  toggleAnularBulkInvoice(id: number): void {
+    this.anularBulkSelected.has(id) ? this.anularBulkSelected.delete(id) : this.anularBulkSelected.add(id);
+  }
+  toggleAllAnularBulk(): void {
+    if (this.allAnularBulkSelected) {
+      this.anularBulkSelected.clear();
+    } else {
+      this.anularBulkInvoices.forEach(i => this.anularBulkSelected.add(i.id));
+    }
+  }
+
+  openAnularBulkModal(): void {
+    this.anularBulkSelected = new Set(this.anularBulkInvoices.map(i => i.id));
+    this.anularBulkMotivo   = '';
+    this.anularBulkModal    = true;
+  }
+
+  confirmAnularBulk(): void {
+    if (this.anularBulkSelected.size === 0) { this.toast.error('Selecciona al menos una factura'); return; }
+    if (!this.anularBulkMotivo.trim()) { this.toast.error('Escribe el motivo'); return; }
+    this.anulandoBulk = true;
+    this.financeService.anularBulk(Array.from(this.anularBulkSelected), this.anularBulkMotivo.trim()).subscribe({
+      next: (res) => {
+        this.anulandoBulk    = false;
+        this.anularBulkModal = false;
+        this.toast.success(res.message || `${res.data?.anuladas ?? 0} factura(s) anulada(s)`);
+        this.openDrawer(this.selectedClient);
+        this.loadClients();
+      },
+      error: () => { this.anulandoBulk = false; this.toast.error('Error al anular'); },
+    });
+  }
+
   // Edit invoice modal
   editModal = false;
   editingInvoice: any = null;
@@ -817,7 +866,18 @@ export class FinanceComponent implements OnInit, OnDestroy {
   }
 
   invoiceBalance(inv: any): number {
+    // Pagada = saldo cero, diga lo que diga el abono. El pago completo no siempre deja el
+    // importe en «price_abone» (depende de por dónde se registró), y la resta mostraba
+    // como saldo el total de una factura que ya estaba pagada.
+    if (inv.paid === 1) return 0;
     return (inv.price_total || 0) - (inv.price_abone || 0) - (inv.price_discount || 0);
+  }
+
+  /** Lo que se ha pagado de la factura: todo si está pagada, o lo abonado hasta ahora. */
+  invoicePaidAmount(inv: any): number {
+    return inv.paid === 1
+      ? Math.max(0, (inv.price_total || 0) - (inv.price_discount || 0))
+      : (inv.price_abone || 0);
   }
 
   invoiceStatusClass(inv: any): string {

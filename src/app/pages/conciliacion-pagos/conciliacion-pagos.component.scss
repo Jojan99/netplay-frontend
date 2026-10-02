@@ -82,6 +82,8 @@ tr.cp-cambio td { background: var(--surface-2); padding: 12px 14px; }
 }
 .cp-forzar { display: flex; gap: 6px; align-items: center; margin-top: 4px; font-size: 12px; font-weight: 700; color: var(--warn); cursor: pointer; input { width: 16px; height: 16px; } }
 
+.np-notice--warn:has(.np-btn) { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+
 /* La barra de acción se queda a la vista aunque la lista sea larga */
 .cp-barra-accion {
   position: sticky; bottom: 0; z-index: 5; display: grid; gap: 10px; margin-top: 14px; padding: 12px 16px;

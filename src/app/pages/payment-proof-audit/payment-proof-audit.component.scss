@@ -81,3 +81,13 @@
   b { color: var(--text); }
   small { display: block; font-family: var(--font-mono); color: var(--text-3); }
 }
+
+/* Portátil bajo: el panel queda en una sola línea (sin la explicación larga
+   debajo del checkbox) y el monto va al lado del conteo. */
+@media (max-height: 720px) and (min-width: 1001px) {
+  .np-audit .np-ribbon span:last-child { display: none; }
+  .ppa-auto { padding: 4px 12px; margin-bottom: 8px; gap: 10px; }
+  .ppa-auto .np-check { padding: 4px 0; border-bottom: 0; }
+  .ppa-auto .np-fine { display: none; }
+  .ppa-auto-listos small { display: inline; margin-left: 6px; }
+}

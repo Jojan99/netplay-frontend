@@ -49,5 +49,7 @@ export class ConciliacionPagosService {
   lote(lote: string): Observable<any> { return this.http.get(`${this.base}/lotes/${encodeURIComponent(lote)}`); }
   /** Deshace un lote entero: las facturas vuelven a como estaban. Todo o nada. */
   revertir(lote: string): Observable<any> { return this.http.post(`${this.base}/lotes/${encodeURIComponent(lote)}/revertir`, {}); }
+  /** Aplica, como lote nuevo, los que quedaron «posible duplicado» al aplicar este lote. */
+  reforzarDuplicados(lote: string): Observable<any> { return this.http.post(`${this.base}/lotes/${encodeURIComponent(lote)}/reforzar-duplicados`, {}); }
   metodos(): Observable<any> { return this.http.get(`${environment.rootUrl}api/payment-methods`); }
 }

@@ -173,6 +173,10 @@
             Es una simulación: <b>no se escribió nada.</b> Se aplicarían <b>{{ peso(l.reporte.resumen.aplicado) }}</b> en {{ l.reporte.resumen.pagos_aplicados }} pagos.
             <ng-container *ngIf="l.reporte.resumen.sin_aplicar > 0"> Quedarían <b>{{ peso(l.reporte.resumen.sin_aplicar) }}</b> sin aplicar (detalle abajo).</ng-container>
           </p>
+          <p class="np-notice np-notice--warn" *ngIf="!l.aplicada && hayDuplicados(l)">
+            <span>Hay pagos marcados «posible duplicado». Revíselos: si de verdad son otro pago (no el mismo cobrado dos veces), márquelos.</span>
+            <button type="button" class="np-btn np-btn--sm np-btn--ghost" (click)="forzarTodos(l)">Marcar todos como «es otro pago»</button>
+          </p>
 
           <div class="np-tablewrap">
             <table class="np-table np-table--compact np-tabla-movil cp-tabla">
@@ -262,6 +266,17 @@
           <div class="cp-kpi cp-kpi--warn" *ngIf="!detalle.ya_revertido"><span>Quedarían pendientes</span><b>{{ detalle.resumen.quedan_pendientes }}</b><small>facturas</small></div>
           <div class="cp-kpi" *ngIf="detalle.resumen.con_pagos_posteriores"><span>Con pagos posteriores</span><b>{{ detalle.resumen.con_pagos_posteriores }}</b><small>se conservan</small></div>
         </div>
+
+        <div class="np-notice np-notice--warn cp-dup-notice" *ngIf="detalle.duplicados?.length">
+          <ng-container *ngIf="!detalle.duplicados_lote">
+            <span>Al aplicar este lote quedaron <b>{{ detalle.duplicados.length }}</b> pagos como «posible duplicado» (ya se revisó de antes: son otro pago, no el mismo cobrado dos veces).</span>
+            <button type="button" class="np-btn np-btn--sm np-btn--primary" (click)="reforzarDuplicados()" [disabled]="reforzando">
+              <span *ngIf="reforzando" class="np-spinner np-spinner--sm"></span>{{ reforzando ? 'Aplicando…' : 'Aplicar los posibles duplicados' }}
+            </button>
+          </ng-container>
+          <span *ngIf="detalle.duplicados_lote">Los posibles duplicados de este lote ya se aplicaron, en el lote <b class="np-mono">{{ detalle.duplicados_lote }}</b>.</span>
+        </div>
+        <p class="np-notice np-notice--danger" *ngIf="errorReforzar">{{ errorReforzar }}</p>
 
         <p class="np-fine np-muted" *ngIf="!detalle.ya_revertido">
           Deshacer <b>resta lo que aplicó este lote</b>, factura por factura: si a una de ellas le llegó otro pago después, ese pago se conserva.

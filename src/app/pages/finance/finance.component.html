@@ -159,6 +159,7 @@
             <button type="button" class="np-btn np-btn--ghost np-btn--sm" (click)="exportCSV()" title="Exportar pagos del cliente">CSV</button>
             <button type="button" class="np-btn np-btn--ghost np-btn--sm" (click)="openSendBulkModal()" [disabled]="drawerPendingCount === 0">Enviar</button>
             <button type="button" class="np-btn np-btn--primary np-btn--sm" *ngIf="drawerPendingCount > 1" (click)="openLiquidateModal()">Liquidar todo</button>
+            <button type="button" class="np-btn np-btn--danger np-btn--sm" *ngIf="anularBulkInvoices.length > 1" (click)="openAnularBulkModal()">Anular varias</button>
           </div>
 
           <div *ngIf="drawerLoading" class="np-loading"><span class="np-spinner"></span> Cargando facturas…</div>
@@ -177,7 +178,7 @@
                     <div class="np-fine" *ngIf="inv.paid === 1">por {{ inv.paid_by_name }}<ng-container *ngIf="inv.paid_at"> · {{ inv.paid_at | date:'dd/MM/yy HH:mm' }}</ng-container></div>
                   </td>
                   <td class="np-money">{{ formatCurrency(inv.price_total) }}</td>
-                  <td class="np-data np-td-right" [class.np-pos-info]="inv.price_abone > 0">{{ formatCurrency(inv.price_abone) }}</td>
+                  <td class="np-data np-td-right" [class.np-pos-info]="invoicePaidAmount(inv) > 0">{{ formatCurrency(invoicePaidAmount(inv)) }}</td>
                   <td class="np-money" [class.np-neg]="invoiceBalance(inv) > 0" [class.np-pos]="invoiceBalance(inv) <= 0">{{ formatCurrency(invoiceBalance(inv)) }}</td>
                   <td class="np-td-right">
                     <div class="np-rowacts">
@@ -187,10 +188,10 @@
                       <button *ngIf="inv.paid !== 1" type="button" class="np-icobtn" (click)="openAbonarModal(inv)" title="Registrar abono">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 5v14M5 12h14"/></svg>
                       </button>
-                      <button *ngIf="inv.paid === 1" type="button" class="np-icobtn" (click)="abrirReverso(inv)" title="Revertir el pago">
+                      <button *ngIf="inv.paid === 1 || inv.price_abone > 0" type="button" class="np-icobtn" (click)="abrirReverso(inv)" title="Revertir el pago">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 4v4h4"/></svg>
                       </button>
-                      <button *ngIf="inv.paid !== 1" type="button" class="np-icobtn np-icobtn--danger" (click)="abrirAnulacion(inv)" title="Anular la factura">
+                      <button *ngIf="inv.paid !== 1 && !(inv.price_abone > 0)" type="button" class="np-icobtn np-icobtn--danger" (click)="abrirAnulacion(inv)" title="Anular la factura">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="m5.6 5.6 12.8 12.8"/></svg>
                       </button>
                       <button *ngIf="inv.paid !== 1" type="button" class="np-icobtn np-icobtn--danger" (click)="borrarFactura(inv)" title="Borrar la factura">
@@ -329,6 +330,30 @@
       <div class="np-btnrow np-btnrow--end">
         <button type="button" class="np-btn np-btn--ghost" (click)="liquidateModal = false">Cancelar</button>
         <button type="button" class="np-btn np-btn--primary" (click)="confirmLiquidate()" [disabled]="liquidating || liquidateSelected.size === 0">{{ liquidating ? 'Procesando…' : 'Liquidar (' + liquidateSelected.size + ')' }}</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ Anulación masiva ════════════════════════════════════════════════════ -->
+<div *ngIf="anularBulkModal" class="np-overlay" (click)="anularBulkModal = false">
+  <div class="np-modal" role="dialog" aria-modal="true" aria-label="Anulación masiva" (click)="$event.stopPropagation()">
+    <div class="np-modal-head"><div><h3>Anular varias facturas</h3><p class="np-meta">Quedan a la vista, con el motivo, pero dejan de contar en la cartera. No se puede deshacer.</p></div></div>
+    <div class="np-modal-body">
+      <div class="np-checklist">
+        <label class="np-check np-check--all"><input type="checkbox" [checked]="allAnularBulkSelected" (change)="toggleAllAnularBulk()" /><span>Seleccionar todas</span></label>
+        <label class="np-check" *ngFor="let inv of anularBulkInvoices">
+          <input type="checkbox" [checked]="anularBulkSelected.has(inv.id)" (change)="toggleAnularBulkInvoice(inv.id)" />
+          <span class="np-mono">{{ inv.number_facture }}</span><span class="np-spacer"></span><span class="np-money">{{ formatCurrency(invoiceBalance(inv)) }}</span>
+        </label>
+        <p class="np-muted" *ngIf="anularBulkInvoices.length === 0">No hay facturas que se puedan anular (la que tiene un abono hay que revertirla primero).</p>
+      </div>
+      <label class="np-field"><span>Motivo <em>*</em></span>
+        <input type="text" class="np-input" [(ngModel)]="anularBulkMotivo" placeholder="Por qué se anulan" maxlength="255" />
+      </label>
+      <div class="np-btnrow np-btnrow--end">
+        <button type="button" class="np-btn np-btn--ghost" (click)="anularBulkModal = false">Cancelar</button>
+        <button type="button" class="np-btn np-btn--danger-solid" (click)="confirmAnularBulk()" [disabled]="anulandoBulk || anularBulkSelected.size === 0 || !anularBulkMotivo.trim()">{{ anulandoBulk ? 'Anulando…' : 'Anular (' + anularBulkSelected.size + ')' }}</button>
       </div>
     </div>
   </div>

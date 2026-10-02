@@ -230,6 +230,13 @@ export class FinanceService {
       { headers: this.getHeaders() });
   }
 
+  /** Anula varias facturas de un cliente de una vez, todas con el mismo motivo. */
+  anularBulk(detIds: number[], motivo: string): Observable<any> {
+    return this.http.post<any>(`${this.env.rootUrl}api/facturation/anular-bulk`,
+      JSON.stringify({ det_ids: detIds, motivo }),
+      { headers: this.getHeaders() });
+  }
+
   updateInvoiceNew(detId: number, data: any): Observable<any> {
     return this.http.put<any>(`${this.env.rootUrl}api/facturation/invoices/${detId}`,
       JSON.stringify(data), { headers: this.getHeaders() });

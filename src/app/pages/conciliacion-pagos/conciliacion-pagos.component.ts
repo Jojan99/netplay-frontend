@@ -165,6 +165,8 @@ export class ConciliacionPagosComponent implements OnInit {
   cargandoDetalle = false;
   revirtiendo = false;
   errorDetalle = '';
+  reforzando = false;
+  errorReforzar = '';
 
   verLote(lote: string): void {
     this.detalle = null; this.errorDetalle = ''; this.cargandoDetalle = true;
@@ -175,6 +177,25 @@ export class ConciliacionPagosComponent implements OnInit {
   }
 
   cerrarDetalle(): void { this.detalle = null; this.errorDetalle = ''; this.cargandoDetalle = false; }
+
+  /** Aplica, como lote nuevo, los que quedaron «posible duplicado» al aplicar este lote. */
+  reforzarDuplicados(): void {
+    const lote = this.detalle?.lote?.lote;
+    if (!lote || this.reforzando) return;
+    this.reforzando = true;
+    this.errorReforzar = '';
+
+    this.svc.reforzarDuplicados(lote).subscribe({
+      next: (r: any) => {
+        this.reforzando = false;
+        if (r?.error !== 0) { this.errorReforzar = r?.message || 'No se pudo aplicar.'; return; }
+        this.toast.success(`Aplicado: ${this.peso(r.data.resumen.aplicado)} en ${r.data.resumen.pagos_aplicados} pagos.`);
+        this.verLote(lote); // recarga el detalle: ya trae duplicados_lote puesto
+        this.abrirHistorial();
+      },
+      error: (e: any) => { this.reforzando = false; this.errorReforzar = e?.error?.message || 'No se pudo aplicar.'; },
+    });
+  }
 
   async deshacer(): Promise<void> {
     const d = this.detalle;
@@ -369,6 +390,24 @@ export class ConciliacionPagosComponent implements OnInit {
   }
 
   esForzada(l: Lista, ref: string): boolean { return !!l.filas.find(x => x.ref === ref)?.forzar; }
+
+  /** Cuántos de la simulación salieron «posible duplicado»: para mostrar el botón de marcarlos todos. */
+  hayDuplicados(l: Lista): boolean {
+    return !!(l.reporte?.filas as any[] | undefined)?.some(x => x.estado === 'posible_duplicado');
+  }
+
+  /**
+   * Marca «Es otro pago» en todos los que salieron «posible duplicado» de una sola vez.
+   * Revisar uno por uno tiene sentido con 3 o 4; con lotes grandes (pagos del mismo valor
+   * que se repiten cada mes) son decenas, y clickear casilla por casilla no es serio.
+   */
+  forzarTodos(l: Lista): void {
+    if (!l.reporte || l.aplicada) return;
+    const refs = new Set((l.reporte.filas as any[]).filter(x => x.estado === 'posible_duplicado').map(x => x.ref));
+    if (!refs.size) return;
+    l.filas.forEach(f => { if (refs.has(f.ref)) f.forzar = true; });
+    this.cambio(l);
+  }
 
   private mensaje(e: any, porDefecto: string): string {
     const v = e?.error?.errors;
