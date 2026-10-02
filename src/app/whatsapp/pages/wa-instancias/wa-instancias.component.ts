@@ -30,6 +30,7 @@ export class WaInstanciasComponent implements OnInit, OnDestroy {
   qrInstance: any     = null;
   qrImageUrl          = '';
   qrError             = false;
+  reconnecting         = false;
   private pollSub?:     Subscription;
 
   // Eliminar
@@ -141,9 +142,24 @@ export class WaInstanciasComponent implements OnInit, OnDestroy {
 
   // ── QR ───────────────────────────────────────────────────────
   openQR(inst: any): void {
-    this.qrInstance = inst;
-    this.qrError    = false;
-    this.refreshQrImage();
+    this.qrInstance  = inst;
+    this.qrError     = false;
+    this.qrImageUrl  = '';
+    this.reconnecting = false;
+
+    // El teléfono cerró la sesión (o nunca hubo una vinculada): no hay QR esperando en
+    // memoria y no lo va a haber solo. Hay que pedirle al service que arranque una
+    // sesión nueva —sin borrar la instancia— antes de poder pedir el QR.
+    if (inst.status === 'logged_out' || (!inst.hasQR && inst.status !== 'waiting_qr' && inst.status !== 'connected')) {
+      this.reconnecting = true;
+      this.wa.reconnectInstance(inst.instanceId).subscribe({
+        next: () => { this.reconnecting = false; setTimeout(() => this.refreshQrImage(), 2500); },
+        error: () => { this.reconnecting = false; this.qrError = true; },
+      });
+    } else {
+      this.refreshQrImage();
+    }
+
     this.pollSub?.unsubscribe();
     let vueltas = 0;
 

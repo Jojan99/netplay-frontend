@@ -25,6 +25,8 @@
      no se aplasten en una pantalla baja. Cada columna hace su propio scroll. */
   flex: 1; min-height: 420px;
   display: grid; grid-template-columns: 232px minmax(0, 1fr) 340px; gap: 10px;
+  /* En un portátil bajo ese piso se salía por debajo del pie de página. */
+  @media (max-height: 720px) { min-height: 0; }
 }
 
 /* ── Columna de flujos ── */

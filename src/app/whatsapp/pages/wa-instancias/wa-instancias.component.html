@@ -16,13 +16,18 @@
           <tr *ngIf="loading && !instances.length" class="np-empty"><td colspan="6"><span class="np-spinner"></span></td></tr>
           <tr *ngIf="!loading && !instances.length" class="np-empty"><td colspan="6"><strong>No hay instancias.</strong><span>Cree la primera y vincúlela escaneando el QR.</span></td></tr>
           <tr *ngFor="let inst of instances; trackBy: trackByInstanceId" class="np-row np-row--static">
-            <td class="np-stripe"><i [style.background]="inst.status === 'connected' ? 'var(--ok)' : inst.status === 'waiting_qr' ? 'var(--warn)' : 'var(--line-strong)'"></i></td>
+            <td class="np-stripe"><i [style.background]="inst.status === 'connected' ? 'var(--ok)' : inst.status === 'waiting_qr' ? 'var(--warn)' : inst.status === 'logged_out' ? 'var(--danger)' : 'var(--line-strong)'"></i></td>
             <td><div class="np-name">{{ inst.name }}<span class="np-pill np-pill--active np-wa-principal" *ngIf="inst.principal" title="Es la línea que usan las facturas, los avisos y todo lo que no sale de un chat">Principal</span></div><div class="np-plan"><em>{{ inst.instanceId }}</em></div></td>
             <td class="np-data">{{ inst.phone || '—' }}</td>
             <td>{{ inst.userName || '—' }}</td>
-            <td><span class="np-pill" [ngClass]="inst.status === 'connected' ? 'np-pill--active' : inst.status === 'waiting_qr' ? 'np-pill--noip' : 'np-pill--neutral'">{{ inst.status === 'connected' ? 'Online' : inst.status === 'waiting_qr' ? 'QR pendiente' : 'Offline' }}</span><span class="np-fine" *ngIf="inst.hasQR && inst.status !== 'connected'">QR listo para escanear</span></td>
+            <td>
+              <span class="np-pill" [ngClass]="inst.status === 'connected' ? 'np-pill--active' : inst.status === 'waiting_qr' ? 'np-pill--noip' : inst.status === 'logged_out' ? 'np-pill--suspended' : 'np-pill--neutral'">{{ inst.status === 'connected' ? 'Online' : inst.status === 'waiting_qr' ? 'QR pendiente' : inst.status === 'logged_out' ? 'Desconectada' : 'Offline' }}</span>
+              <span class="np-fine" *ngIf="inst.hasQR && inst.status !== 'connected'">QR listo para escanear</span>
+              <span class="np-fine" style="color:var(--danger)" *ngIf="inst.status === 'logged_out'">El teléfono cerró la sesión. Vuelva a conectar.</span>
+              <span class="np-fine" *ngIf="inst.status === 'disconnected'">Se cayó la conexión: se reconecta sola.</span>
+            </td>
             <td class="np-td-right"><div class="np-rowacts is-visible">
-              <button type="button" class="np-btn np-btn--warn np-btn--sm" *ngIf="inst.status !== 'connected'" (click)="openQR(inst)">Ver QR</button>
+              <button type="button" class="np-btn np-btn--warn np-btn--sm" *ngIf="inst.status !== 'connected'" (click)="openQR(inst)">{{ inst.status === 'logged_out' ? 'Reconectar' : 'Ver QR' }}</button>
               <button type="button" class="np-btn np-btn--ghost np-btn--sm" *ngIf="hayCatalogo && !inst.principal && inst.lineaId" (click)="marcarPrincipal(inst)" [disabled]="marcando === inst.instanceId" title="Las facturas y los avisos saldrán por esta línea">{{ marcando === inst.instanceId ? 'Cambiando…' : 'Hacer principal' }}</button>
               <button type="button" class="np-icobtn" (click)="refreshStatus(inst)" title="Actualizar estado"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 12a8 8 0 1 1-2.3-5.7M20 4v5h-5"/></svg></button>
               <button type="button" class="np-icobtn" (click)="confirmDelete(inst)" title="Eliminar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/></svg></button>
@@ -49,7 +54,7 @@
   <div class="np-modal" role="dialog" aria-modal="true" (click)="$event.stopPropagation()">
     <div class="np-modal-head"><div><p class="np-kicker">Instancia <b>/</b> {{ qrInstance.name }}</p><h3>Vincular con QR</h3></div><button type="button" class="np-icobtn" (click)="closeQR()" aria-label="Cerrar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div>
     <div class="np-modal-body">
-      <div class="np-qr-frame"><img *ngIf="qrImageUrl" [src]="qrImageUrl" alt="Código QR" (error)="qrError = true" /><p class="np-muted" *ngIf="!qrImageUrl">{{ qrError ? 'QR no disponible aún. Se vuelve a pedir solo.' : 'Pidiendo el QR…' }}</p></div>
+      <div class="np-qr-frame"><img *ngIf="qrImageUrl" [src]="qrImageUrl" alt="Código QR" (error)="qrError = true" /><p class="np-muted" *ngIf="!qrImageUrl">{{ reconnecting ? 'Preparando una sesión nueva…' : (qrError ? 'QR no disponible aún. Se vuelve a pedir solo.' : 'Pidiendo el QR…') }}</p></div>
       <ol class="np-steps"><li>Abra WhatsApp en el celular.</li><li>Vaya a <b>Dispositivos vinculados</b>.</li><li>Toque <b>Vincular dispositivo</b>.</li><li>Apunte la cámara al QR.</li></ol>
       <p class="np-fine">Se verifica la conexión cada 5 segundos.</p>
       <div class="np-btnrow np-btnrow--end"><button type="button" class="np-btn np-btn--ghost" (click)="refreshQrImage()">Refrescar</button><button type="button" class="np-btn np-btn--primary" (click)="closeQR()">Cerrar</button></div>

@@ -63,6 +63,11 @@ export class WhatsappService {
     return this.http.get(`${this.WA_PROXY}/instances/${instanceId}/status`, this.h());
   }
 
+  /** Limpia la sesión vieja del teléfono se desvinculó y pide una nueva: sin borrar la instancia. */
+  reconnectInstance(instanceId: string): Observable<any> {
+    return this.http.post(`${this.WA_PROXY}/instances/${instanceId}/reconnect`, {}, this.h());
+  }
+
   /** URL del QR (para <img src> o petición autenticada). */
   getQrUrl(instanceId: string): string {
     return `${this.WA_PROXY}/instances/${instanceId}/qr-image`;

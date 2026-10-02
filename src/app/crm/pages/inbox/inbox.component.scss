@@ -26,7 +26,7 @@
 }
 /* Laptop y tablet horizontal: no entra en una línea; pasa a dos renglones
    ordenados en vez de cortar "Difusión" y "Nuevo chat" por la derecha. */
-@media (min-width: 768px) and (max-width: 1280px) {
+@media (min-width: 768px) and (max-width: 1400px) {
   .wa-topbar-kicker { display: none; }
   .wa-topbar { flex-wrap: wrap; height: auto; padding-block: 8px; row-gap: 8px; }
 }
