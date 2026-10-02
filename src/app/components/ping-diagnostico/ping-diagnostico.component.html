@@ -1,0 +1,84 @@
+<!-- data-sin-aviso: aquí no hay nada diligenciado que perder al cerrar. -->
+<div class="np-overlay" data-sin-aviso (click)="cerrar.emit()">
+  <div class="np-modal pg" role="dialog" aria-modal="true" aria-label="Diagnóstico de conexión" (click)="$event.stopPropagation()">
+
+    <header class="pg-head">
+      <span class="pg-ico" [attr.data-v]="veredicto || 'espera'" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h4l2.5-7 5 14 2.5-7h4"/></svg>
+      </span>
+      <div class="pg-titulos">
+        <p class="np-kicker">Diagnóstico de conexión</p>
+        <h3>{{ nombre || 'Cliente' }}</h3>
+        <p class="pg-sub">CC <b class="np-mono">{{ dni }}</b><ng-container *ngIf="respuestas[0]?.host || ip as h"> · <span class="np-mono">{{ h }}</span></ng-container></p>
+      </div>
+      <button type="button" class="np-icobtn" (click)="cerrar.emit()" aria-label="Cerrar">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M6 6l12 12M18 6 6 18"/></svg>
+      </button>
+    </header>
+
+    <div class="pg-body">
+
+      <!-- Veredicto: lo que el operador le dice al cliente. -->
+      <section class="pg-veredicto" [attr.data-v]="veredicto || 'espera'" aria-live="polite">
+        <div class="pg-veredicto-txt">
+          <b>
+            <ng-container [ngSwitch]="veredicto">
+              <ng-container *ngSwitchCase="'estable'">Conexión estable</ng-container>
+              <ng-container *ngSwitchCase="'lento'">Responde, pero lento</ng-container>
+              <ng-container *ngSwitchCase="'intermitente'">Conexión intermitente</ng-container>
+              <ng-container *ngSwitchCase="'caido'">El equipo no responde</ng-container>
+              <ng-container *ngSwitchDefault>{{ enviando ? 'Enviando paquetes…' : 'Sin resultados todavía' }}</ng-container>
+            </ng-container>
+          </b>
+          <span>
+            <ng-container *ngIf="enviando">Paquete {{ respuestas.length < cantidad ? respuestas.length + 1 : cantidad }} de {{ cantidad }}</ng-container>
+            <ng-container *ngIf="!enviando && respuestas.length" [ngSwitch]="veredicto">
+              <ng-container *ngSwitchCase="'estable'">Contestó todos los paquetes, sin demoras.</ng-container>
+              <ng-container *ngSwitchCase="'lento'">Contesta todo, pero tarda más de lo normal.</ng-container>
+              <ng-container *ngSwitchCase="'intermitente'">Se perdieron {{ respuestas.length - recibidos }} de {{ respuestas.length }} paquetes.</ng-container>
+              <ng-container *ngSwitchCase="'caido'">Ningún paquete volvió: revise el equipo o la señal.</ng-container>
+            </ng-container>
+            <ng-container *ngIf="!enviando && !respuestas.length && !error">El router no devolvió ninguna respuesta.</ng-container>
+          </span>
+        </div>
+        <span class="np-spinner" *ngIf="enviando"></span>
+        <strong class="pg-perdida" *ngIf="!enviando && respuestas.length">{{ perdida }}<small>% pérdida</small></strong>
+      </section>
+
+      <p class="np-notice np-notice--warn np-notice--inline" *ngIf="error">{{ error }}</p>
+
+      <!-- Cifras -->
+      <dl class="pg-cifras" *ngIf="respuestas.length">
+        <div><dt>Promedio</dt><dd>{{ promedio !== null ? formato(promedio) : '—' }}</dd></div>
+        <div><dt>Mínimo</dt><dd>{{ minimo !== null ? formato(minimo) : '—' }}</dd></div>
+        <div><dt>Máximo</dt><dd>{{ maximo !== null ? formato(maximo) : '—' }}</dd></div>
+        <div><dt>Recibidos</dt><dd>{{ recibidos }} / {{ respuestas.length }}</dd></div>
+      </dl>
+
+      <!-- Una barra por paquete: de un vistazo se ve si la demora es pareja o a saltos. -->
+      <div class="pg-grafica" *ngIf="respuestas.length" role="img" [attr.aria-label]="'Tiempo de respuesta de ' + respuestas.length + ' paquetes'">
+        <span class="pg-barra" *ngFor="let r of respuestas; trackBy: trackN" [class.is-perdido]="!r.ok" [style.height.%]="r.alto" [title]="'#' + r.n + ' · ' + r.texto"></span>
+        <span class="pg-barra is-pendiente" *ngFor="let _ of [].constructor(enviando && cantidad > respuestas.length ? cantidad - respuestas.length : 0)"></span>
+      </div>
+
+      <!-- Detalle -->
+      <ol class="pg-lista" *ngIf="respuestas.length">
+        <li *ngFor="let r of respuestas; trackBy: trackN" [class.is-perdido]="!r.ok">
+          <span class="pg-n">{{ r.n }}</span>
+          <span class="pg-punto" aria-hidden="true"></span>
+          <span class="pg-estado">{{ r.ok ? 'Respondió' : 'Sin respuesta' }}</span>
+          <span class="pg-ms np-mono">{{ r.ok ? r.texto : '—' }}</span>
+        </li>
+      </ol>
+    </div>
+
+    <footer class="pg-pie">
+      <div class="pg-cantidades" role="group" aria-label="Cantidad de paquetes">
+        <span class="pg-cantidades-l">Paquetes</span>
+        <button type="button" *ngFor="let n of cantidades" class="pg-chip" [class.is-activo]="cantidad === n" [disabled]="enviando" (click)="elegir(n)">{{ n }}</button>
+      </div>
+      <button type="button" class="np-btn np-btn--ghost" *ngIf="enviando" (click)="detener()">Detener</button>
+      <button type="button" class="np-btn np-btn--primary" *ngIf="!enviando" (click)="iniciar()">{{ corrido ? 'Repetir' : 'Iniciar' }}</button>
+    </footer>
+  </div>
+</div>

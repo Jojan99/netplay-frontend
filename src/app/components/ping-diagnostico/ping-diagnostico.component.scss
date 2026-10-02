@@ -1,0 +1,127 @@
+/* Diagnóstico de ping. Los colores salen del tema: el veredicto pinta el icono, la franja y la
+   gráfica con el mismo tono (data-v). */
+
+.pg {
+  width: min(460px, 100%);
+  padding: 0;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  max-height: min(640px, calc(100dvh - 32px));
+}
+
+[data-v='estable']      { --tono: var(--ok);     --tono-suave: var(--ok-soft); }
+[data-v='lento'],
+[data-v='intermitente'] { --tono: var(--warn);   --tono-suave: var(--warn-soft); }
+[data-v='caido']        { --tono: var(--danger); --tono-suave: var(--danger-soft); }
+[data-v='espera']       { --tono: var(--accent); --tono-suave: var(--accent-soft); }
+
+/* ── Encabezado ─────────────────────────────────────────────────────────── */
+.pg-head {
+  display: flex; align-items: center; gap: 12px;
+  padding: 18px 18px 16px;
+  border-bottom: 1px solid var(--line);
+}
+.pg-ico {
+  flex: none; display: grid; place-items: center;
+  width: 42px; height: 42px; border-radius: 12px;
+  background: var(--tono-suave); color: var(--tono);
+  transition: background .25s, color .25s;
+  svg { width: 22px; height: 22px; }
+}
+.pg-titulos { flex: 1; min-width: 0;
+  .np-kicker { margin: 0 0 2px; }
+  h3 { margin: 0; font-size: 16px; line-height: 1.25; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+}
+.pg-sub { margin: 3px 0 0; font-size: 12px; color: var(--text-3); b { color: var(--text-2); font-weight: 600; } }
+
+/* ── Cuerpo ─────────────────────────────────────────────────────────────── */
+.pg-body { display: grid; gap: 14px; padding: 16px 18px; overflow-y: auto; min-height: 0; }
+
+.pg-veredicto {
+  display: flex; align-items: center; gap: 12px;
+  padding: 12px 14px; border-radius: var(--radius-lg);
+  background: var(--tono-suave);
+  border: 1px solid color-mix(in srgb, var(--tono) 28%, transparent);
+  transition: background .25s, border-color .25s;
+}
+.pg-veredicto-txt { flex: 1; min-width: 0; display: grid; gap: 1px;
+  b { font-size: 14.5px; color: var(--tono); }
+  span { font-size: 12px; color: var(--text-2); }
+}
+.pg-perdida {
+  display: grid; justify-items: end; line-height: 1;
+  font-size: 22px; font-weight: 700; color: var(--tono); font-variant-numeric: tabular-nums;
+  small { margin-top: 3px; font-size: 10px; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; color: var(--text-3); }
+}
+
+.pg-cifras {
+  display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin: 0;
+  div { padding: 9px 10px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--surface-2); }
+  dt { font-size: 10px; font-weight: 600; letter-spacing: .05em; text-transform: uppercase; color: var(--text-3); }
+  dd { margin: 3px 0 0; font-size: 14px; font-weight: 700; color: var(--text); font-variant-numeric: tabular-nums; white-space: nowrap; }
+}
+
+.pg-grafica {
+  display: flex; align-items: flex-end; gap: 4px;
+  height: 64px; padding: 8px 10px 0;
+  border: 1px solid var(--line); border-bottom-width: 2px; border-radius: var(--radius);
+  background:
+    linear-gradient(var(--line) 1px, transparent 1px) 0 33% / 100% 33% repeat-y,
+    var(--surface);
+}
+.pg-barra {
+  flex: 1; min-width: 3px; min-height: 5px;
+  border-radius: 4px 4px 0 0;
+  background: var(--ok);
+  animation: pg-sube .28s ease-out;
+  transform-origin: bottom;
+  &.is-perdido { background: repeating-linear-gradient(135deg, var(--danger) 0 4px, color-mix(in srgb, var(--danger) 55%, transparent) 4px 8px); }
+  &.is-pendiente { height: 5px; background: var(--line-strong); animation: pg-late 1s ease-in-out infinite; }
+}
+@keyframes pg-sube { from { transform: scaleY(.15); opacity: .4; } }
+@keyframes pg-late { 50% { opacity: .35; } }
+
+.pg-lista {
+  margin: 0; padding: 0; list-style: none;
+  border: 1px solid var(--line); border-radius: var(--radius);
+  li {
+    display: grid; grid-template-columns: 22px 8px 1fr auto; align-items: center; gap: 10px;
+    padding: 7px 12px; font-size: 12.5px;
+    & + li { border-top: 1px solid var(--line); }
+  }
+  li.is-perdido { background: color-mix(in srgb, var(--danger-soft) 55%, transparent); }
+}
+.pg-n { color: var(--text-3); font-variant-numeric: tabular-nums; text-align: right; }
+.pg-punto { width: 8px; height: 8px; border-radius: 50%; background: var(--ok); }
+.is-perdido .pg-punto { background: var(--danger); }
+.pg-estado { color: var(--text-2); }
+.is-perdido .pg-estado { color: var(--danger); font-weight: 600; }
+.pg-ms { font-weight: 600; color: var(--text); }
+
+/* ── Pie ────────────────────────────────────────────────────────────────── */
+.pg-pie {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  padding: 12px 18px; border-top: 1px solid var(--line); background: var(--surface-2);
+}
+.pg-cantidades { display: flex; align-items: center; gap: 6px; }
+.pg-cantidades-l { margin-right: 4px; font-size: 11px; font-weight: 600; letter-spacing: .05em; text-transform: uppercase; color: var(--text-3); }
+.pg-chip {
+  min-width: 36px; height: 30px; padding: 0 10px;
+  border: 1px solid var(--line-strong); border-radius: 999px;
+  background: var(--surface); color: var(--text-2);
+  font: inherit; font-size: 12.5px; font-weight: 600; cursor: pointer;
+  transition: background .15s, color .15s, border-color .15s;
+  &:hover:not(:disabled) { border-color: var(--accent); color: var(--accent); }
+  &.is-activo { background: var(--accent); border-color: var(--accent); color: var(--accent-ink, #fff); }
+  &:disabled { opacity: .55; cursor: default; }
+}
+
+@media (max-width: 480px) {
+  .pg-cifras { grid-template-columns: repeat(2, 1fr); }
+  .pg-pie { flex-wrap: wrap; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pg-barra, .pg-barra.is-pendiente { animation: none; }
+}
