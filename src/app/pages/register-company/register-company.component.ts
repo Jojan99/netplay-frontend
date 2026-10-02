@@ -104,10 +104,14 @@ export class RegisterCompanyComponent implements OnInit, OnDestroy {
       && this.subdominioOk;
   }
   step2Ok(): boolean { return true; }   // todo opcional, se puede completar luego
+  /* Autorización previa y expresa (Ley 1581): sin marcarla no se crea la empresa.
+     El backend guarda la fecha, la versión aceptada y la IP. */
+  aceptaTerminos = false;
+
   step3Ok(): boolean {
     return this.req(this.form.admin_name) && this.req(this.form.admin_lastname)
       && this.form.admin_password.length >= 6 && this.form.admin_password === this.passwordConfirm
-      && this.usernameOk;
+      && this.usernameOk && this.aceptaTerminos;
   }
   stepOk(n: Step): boolean { return n === 1 ? this.step1Ok() : n === 2 ? this.step2Ok() : this.step3Ok(); }
 
@@ -247,6 +251,7 @@ export class RegisterCompanyComponent implements OnInit, OnDestroy {
     // Sólo se mandan los campos con valor: los vacíos los completa el backend
     const payload: Record<string, string> = {};
     Object.entries(this.form).forEach(([k, v]) => { if (String(v ?? '').trim()) payload[k] = String(v).trim(); });
+    payload['acepta_terminos'] = '1';
 
     this.companyService.register(payload).subscribe({
       next: (res) => {

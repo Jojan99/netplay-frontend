@@ -82,6 +82,15 @@
           </label>
           <label class="np-field np-field-full"><span>Repetir contraseña <em>*</em></span><input type="password" class="np-input" [(ngModel)]="passwordConfirm" name="passwordConfirm" autocomplete="new-password" /><small class="np-fine" *ngIf="!passwordsMatch" style="color:var(--danger)">Las contraseñas no coinciden.</small></label>
         </div>
+
+        <!-- Enlaces con href (no routerLink): esas páginas las sirve el backend, y se abren
+             aparte para no perder lo escrito en el formulario. -->
+        <label class="np-check np-check--box np-register-acepta">
+          <input type="checkbox" [(ngModel)]="aceptaTerminos" name="aceptaTerminos" />
+          <span>He leído y acepto los <a href="/terminos-del-servicio" target="_blank" rel="noopener">términos y condiciones</a>
+            y la <a href="/politica-de-privacidad" target="_blank" rel="noopener">política de tratamiento de datos personales</a>,
+            y autorizo el tratamiento de mis datos para crear y administrar la cuenta.</span>
+        </label>
       </ng-container>
 
       <!-- Navegación -->

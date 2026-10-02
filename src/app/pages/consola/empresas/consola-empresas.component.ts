@@ -100,6 +100,9 @@ export class ConsolaEmpresasComponent implements OnInit, OnDestroy {
     prueba_hasta: '',
     proxima_facturacion: '',
     notas: '',
+    // Complemento TR-069: contratado o no, y precio pactado (vacío = el de lista del plan).
+    tr069_activo: false,
+    tr069_precio: null as number | null,
   };
 
   codigoCupon = '';
@@ -303,6 +306,8 @@ export class ConsolaEmpresasComponent implements OnInit, OnDestroy {
       prueba_hasta: s?.prueba_hasta ?? '',
       proxima_facturacion: s?.proxima ?? '',
       notas: s?.notas ?? '',
+      tr069_activo: !!s?.tr069_activo,
+      tr069_precio: s?.tr069_pactado ?? null,
     };
   }
 
@@ -347,6 +352,8 @@ export class ConsolaEmpresasComponent implements OnInit, OnDestroy {
       prueba_hasta: this.forma.prueba_hasta || null,
       proxima_facturacion: this.forma.proxima_facturacion || null,
       notas: this.forma.notas || null,
+      tr069_activo: !!this.forma.tr069_activo,
+      tr069_precio: this.forma.tr069_precio === null || this.forma.tr069_precio === ('' as any) ? null : Number(this.forma.tr069_precio),
     };
 
     this.consola.guardarSuscripcion(this.seleccionada.id, datos).pipe(takeUntil(this.destruir$)).subscribe({

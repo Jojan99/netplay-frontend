@@ -8,6 +8,7 @@ import { AuthService } from '../../../services/auth.service';
 import { CompanyService } from '../../../services/company.service';
 import { LocationTrackerService } from '../../../services/location-tracker.service';
 import { SitioService, Sitio } from '../../../services/sitio.service';
+import { CuentaService } from '../../../services/cuenta.service';
 import { SignInInterface } from '../../../models/sign-in-interfaces';
 import { DarkThemeToggleComponent } from '../../../common/dark-theme-toggle.component';
 
@@ -97,6 +98,11 @@ export class SignInComponent implements OnInit {
           });
         } else if (Array.isArray(res.data?.elegir_empresa) && res.data.elegir_empresa.length) {
           this.empresasParaElegir = res.data.elegir_empresa;
+        } else if (res.data?.codigo === 'EMPRESA_SUSPENDIDA') {
+          // Las credenciales están bien, pero Netvula suspendió a la empresa:
+          // se le explica por qué y a dónde escribir, en su propia pantalla.
+          CuentaService.guardar(res.data.cuenta);
+          this.router.navigate(['/cuenta-suspendida']);
         } else {
           this.Islogin = true;
           this.needsConfirmation = !!res.data?.needs_confirmation;

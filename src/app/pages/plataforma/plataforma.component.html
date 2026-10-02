@@ -10,6 +10,7 @@
       <nav class="nv-nav" aria-label="Secciones">
         <a href="#funciones" (click)="ir($event, 'funciones')">Funciones</a>
         <a href="#planes" (click)="ir($event, 'planes')">Planes</a>
+        @if (comparativo()) { <a href="#comparar" (click)="ir($event, 'comparar')">Comparar</a> }
         <a href="#preguntas" (click)="ir($event, 'preguntas')">Preguntas</a>
       </nav>
 
@@ -70,51 +71,86 @@
     </div>
   </section>
 
-  <!-- ── Qué resuelve ──────────────────────────────────────────────── -->
+  <!-- ── Funciones: todo lo que trae, ordenado por área ───────────── -->
   <section class="nv-sec" id="funciones">
     <div class="nv-wrap">
       <header class="nv-sec-head">
         <p class="nv-kicker">Funciones</p>
-        <h2>Lo que hoy hace en hojas de cálculo, la consola de la OLT y el WhatsApp del celular.</h2>
+        <h2>Todo lo que mueve a su ISP, en una sola consola.</h2>
+        <p class="nv-sec-sub">Lo que hoy hace entre hojas de cálculo, la consola de la OLT, el Winbox y el WhatsApp del celular.</p>
       </header>
 
-      <div class="nv-resuelve">
-        <article>
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 10h18M7 15h4"/></svg>
-          <h3>Cartera que se cobra sola</h3>
-          <p>Facturas por grupo de corte, abonos, compromisos de pago y cortes automáticos por mora. Sus clientes pagan en línea desde el portal.</p>
-        </article>
-        <article>
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="5" cy="12" r="2"/><circle cx="19" cy="6" r="2"/><circle cx="19" cy="18" r="2"/><path d="M7 12h4l6-6M11 12l6 6"/></svg>
-          <h3>Red FTTH sin consola</h3>
-          <p>Autorice ONT en OLT Huawei y C-Data, consulte la señal de cada puerto y cambie perfiles y VLAN desde la ficha del cliente.</p>
-        </article>
-        <article>
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M5 12.5a10 10 0 0 1 14 0M8.5 16a5 5 0 0 1 7 0"/><circle cx="12" cy="19.5" r="1"/></svg>
-          <h3>El equipo del cliente, a distancia</h3>
-          <p>Con TR-069 cambia la clave del WiFi, reinicia el router y ves el consumo sin mandar un técnico.</p>
-        </article>
-        <article>
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 20l1.3-3.9A8 8 0 1 1 8 19z"/><path d="M9 10h6M9 13h4"/></svg>
-          <h3>WhatsApp para todo el equipo</h3>
-          <p>Bandeja compartida, avisos de factura y de pago, campañas y alertas de caída de red al grupo de sus técnicos.</p>
+      <!-- Lo que nos diferencia, antes del detalle. -->
+      <div class="nv-claves">
+        @for (c of claves; track c.titulo) {
+          <div><b>{{ c.titulo }}</b><span>{{ c.detalle }}</span></div>
+        }
+      </div>
+
+      <nav class="nv-indice" aria-label="Áreas de la plataforma">
+        @for (a of areas; track a.id) {
+          <a [href]="'#' + a.id" (click)="ir($event, a.id)">{{ a.corto }}</a>
+        }
+        <a href="#tr069" (click)="ir($event, 'tr069')">TR-069</a>
+      </nav>
+
+      <div class="nv-areas">
+        @for (a of areas; track a.id) {
+          <article class="nv-area" [id]="a.id">
+            <header>
+              <span class="nv-area-ico" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path [attr.d]="a.icono"/></svg>
+              </span>
+              <div>
+                <h3>{{ a.titulo }}</h3>
+                <p>{{ a.promesa }}</p>
+              </div>
+            </header>
+            <ul>
+              @for (f of a.funciones; track f.n) {
+                <li>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true"><path d="m5 12 5 5L20 7"/></svg>
+                  <span><b>{{ f.n }}</b>{{ f.d }}</span>
+                </li>
+              }
+            </ul>
+          </article>
+        }
+
+        <!-- El complemento, separado del resto para que no se confunda con lo incluido. -->
+        <article class="nv-area nv-area--extra" id="tr069">
+          <span class="nv-area-tag">Complemento opcional@if (precioTr069()) { · desde {{ precioTr069() }} al mes }</span>
+          <header>
+            <span class="nv-area-ico" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5a10 10 0 0 1 14 0M8.5 16a5 5 0 0 1 7 0M12 19.5h.01"/></svg>
+            </span>
+            <div>
+              <h3>TR-069: el equipo del cliente, a distancia</h3>
+              <p>Resuelva desde la oficina lo que hoy le cuesta una visita técnica.</p>
+            </div>
+          </header>
+          @if (tramosTr069().length) {
+            <div class="nv-tramos">
+              @for (tr of tramosTr069(); track tr.hasta) {
+                <div><b>{{ enPesos(tr.precio) }}</b><span>al mes · hasta {{ miles(tr.hasta) }} equipos</span></div>
+              }
+            </div>
+          }
+          <ul>
+            @for (f of tr069; track f.n) {
+              <li>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true"><path d="m5 12 5 5L20 7"/></svg>
+                <span><b>{{ f.n }}</b>{{ f.d }}</span>
+              </li>
+            }
+          </ul>
         </article>
       </div>
 
-      @if (modulos().length) {
-        <div class="nv-modulos">
-          @for (g of modulos(); track g.grupo) {
-            <div class="nv-modulo">
-              <h4>{{ g.grupo }}</h4>
-              <ul>
-                @for (m of g.items; track m.nombre) {
-                  <li><b>{{ m.nombre }}</b><span>{{ m.detalle }}</span></li>
-                }
-              </ul>
-            </div>
-          }
-        </div>
-      }
+      <div class="nv-funciones-cta">
+        <p>@if (pruebaDias()) { <b>{{ pruebaDias() }} días de prueba gratis</b>, con todas las funciones. } Sin tarjeta y sin instalar nada.</p>
+        <a class="np-btn np-btn--primary" routerLink="/register">Crear empresa</a>
+      </div>
     </div>
   </section>
 
@@ -123,7 +159,7 @@
     <div class="nv-wrap">
       <header class="nv-sec-head">
         <p class="nv-kicker">Puesta en marcha</p>
-        <h2>De registrarte a cobrar desde la plataforma.</h2>
+        <h2>De registrarse a cobrar desde la plataforma.</h2>
       </header>
       <ol class="nv-pasos">
         @for (p of pasos; track p.n) {
@@ -138,7 +174,7 @@
     <div class="nv-wrap">
       <header class="nv-sec-head">
         <p class="nv-kicker">Planes</p>
-        <h2>Todas las funciones en todos los planes. Pagás según cuántos clientes tiene.</h2>
+        <h2>Las mismas funciones en todos los planes. Paga según cuántos clientes tiene.</h2>
         @if (pruebaDias()) {
           <p class="nv-sec-sub"><b>{{ pruebaDias() }} días de prueba gratis</b> en cualquier plan.</p>
         }
@@ -147,7 +183,7 @@
       @if (!planesListos()) {
         <p class="nv-cargando"><span class="np-spinner np-spinner--sm"></span> Cargando planes…</p>
       } @else if (!planes().length) {
-        <p class="nv-cargando">Escribinos y le armamos un plan a la medida de su red.</p>
+        <p class="nv-cargando">Escríbanos y le armamos un plan a la medida de su red.</p>
       } @else {
         <div class="nv-planes">
           @for (plan of planes(); track plan.clave) {
@@ -193,6 +229,104 @@
     </div>
   </section>
 
+  <!-- ── Comparativo de precios ────────────────────────────────────── -->
+  <!-- Publicidad comparativa: sólo cifras publicadas por cada proveedor, con fecha y fuente.
+       Los datos viven en config/plataforma.php del backend y hay que revisarlos cada mes. -->
+  @if (comparativo(); as c) {
+    <section class="nv-sec" id="comparar">
+      <div class="nv-wrap">
+        <header class="nv-sec-head">
+          <p class="nv-kicker">Comparar</p>
+          <h2>Lo que paga al mes por administrar su ISP y su red de fibra.</h2>
+          <p class="nv-sec-sub">Otras plataformas cobran aparte el gestor de OLT, y por cada OLT. En {{ nombre() }} viene en el plan@if (c.tamanos[0]?.plan_clientes && c.tamanos[0].plan_clientes! > c.tamanos[0].clientes) {, y el plan de entrada admite {{ miles(c.tamanos[0].plan_clientes!) }} clientes, no {{ miles(c.tamanos[0].clientes) }}}.</p>
+        </header>
+
+        <div class="nv-compara-wrap">
+          <table class="nv-compara">
+            <thead>
+              <tr>
+                <th scope="col">Pago mensual</th>
+                @for (t of c.tamanos; track t.clientes) {
+                  <th scope="col">{{ miles(t.clientes) }} clientes<small>{{ t.olts }} OLT</small></th>
+                }
+              </tr>
+            </thead>
+            <tbody>
+              <tr class="nv-compara-nos">
+                <th scope="row">{{ nombre() }}<small>Gestión del ISP, OLT, MikroTik, WhatsApp y portal</small></th>
+                @for (t of c.tamanos; track t.clientes) {
+                  <td><b>{{ enPesos(t.netvula) }}</b><small>Plan {{ t.plan }} · {{ t.plan_clientes ? 'hasta ' + miles(t.plan_clientes) + ' clientes' : 'sin tope' }}</small></td>
+                }
+              </tr>
+              @for (a of c.alternativas; track a.nombre) {
+                <tr>
+                  <th scope="row">{{ a.nombre }}<small>{{ a.detalle }}</small></th>
+                  @for (valor of a.cop; track $index) {
+                    <td>{{ enPesos(valor) }}<small>USD {{ a.usd[$index] }}</small></td>
+                  }
+                </tr>
+              }
+              <tr class="nv-compara-dif">
+                <th scope="row">Diferencia a su favor<small>Frente a la alternativa más económica de esta tabla</small></th>
+                @for (t of c.tamanos; track t.clientes) {
+                  <td><b>{{ enPesos(ahorro($index)) }}</b><small>cada mes</small></td>
+                }
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        @if (c.tr069?.alternativas?.length) {
+          <h3 class="nv-compara-h">Y si además gestiona el equipo del cliente por TR-069</h3>
+          <div class="nv-compara-wrap">
+            <table class="nv-compara">
+              <thead>
+                <tr>
+                  <th scope="col">Complemento TR-069, al mes</th>
+                  @for (tr of c.tr069!.tramos; track tr.hasta) {
+                    <th scope="col">Hasta {{ miles(tr.hasta) }} equipos</th>
+                  }
+                </tr>
+              </thead>
+              <tbody>
+                <tr class="nv-compara-nos">
+                  <th scope="row">{{ nombre() }}<small>Se suma al plan; sin cobro por OLT</small></th>
+                  @for (tr of c.tr069!.tramos; track tr.hasta) {
+                    <td><b>{{ enPesos(tr.precio) }}</b></td>
+                  }
+                </tr>
+                @for (a of c.tr069!.alternativas; track a.nombre) {
+                  <tr>
+                    <th scope="row">{{ a.nombre }}<small>{{ a.detalle }}</small></th>
+                    @for (valor of a.cop; track $index) {
+                      <td>{{ enPesos(valor) }}<small>USD {{ a.usd[$index] }}</small></td>
+                    }
+                  </tr>
+                }
+                <tr class="nv-compara-dif">
+                  <th scope="row">Diferencia a su favor</th>
+                  @for (tr of c.tr069!.tramos; track tr.hasta) {
+                    <td><b>{{ enPesos(ahorroTr069($index)) }}</b><small>cada mes</small></td>
+                  }
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        }
+
+        <p class="nv-nota">
+          Precios de lista mensuales publicados por cada proveedor al {{ c.fecha }}, sin impuestos, convertidos de dólares a la tasa
+          representativa de ese día (${{ miles(c.trm) }} por dólar). Las alternativas suman un software de gestión de ISP
+          y un gestor de OLT porque las páginas de precios consultadas de WispHub y Mikrowisp no anuncian gestión de OLT. SmartOLT incluye
+          TR-069 en su precio; en {{ nombre() }} es un complemento opcional. Los precios de terceros pueden cambiar: confírmelos en sus sitios.
+          Fuentes:
+          @for (f of c.fuentes; track f.url) { <a [href]="f.url" target="_blank" rel="noopener nofollow">{{ f.nombre }}</a>@if (!$last) {, } }.
+          Las marcas mencionadas pertenecen a sus titulares.
+        </p>
+      </div>
+    </section>
+  }
+
   <!-- ── Confianza ─────────────────────────────────────────────────── -->
   <section class="nv-sec nv-sec--alt">
     <div class="nv-wrap nv-confianza">
@@ -203,7 +337,7 @@
       <dl>
         <div><dt>Conexión cifrada</dt><dd>Todo el tráfico va por HTTPS, y la plataforma llega a su red por un túnel VPN.</dd></div>
         <div><dt>Datos separados por empresa</dt><dd>Nadie de otra empresa ve sus clientes, facturas ni equipos.</dd></div>
-        <div><dt>Permisos por perfil</dt><dd>Decidís qué módulos ve cada técnico, contador o asesor.</dd></div>
+        <div><dt>Permisos por perfil</dt><dd>Usted decide qué módulos ve cada técnico, contador o asesor.</dd></div>
         <div><dt>Llaves cifradas</dt><dd>Las credenciales de la pasarela de pago y de WhatsApp se guardan cifradas.</dd></div>
       </dl>
     </div>
@@ -245,7 +379,10 @@
         © {{ anio }} {{ nombre() }}
       </span>
       <nav>
-        <a routerLink="/politica-de-privacidad">Política de privacidad</a>
+        <!-- Con href: las páginas legales las sirve el backend, no el router de Angular. -->
+        <a href="/terminos-del-servicio">Términos y condiciones</a>
+        <a href="/politica-de-privacidad">Tratamiento de datos</a>
+        <a href="/eliminacion-de-datos">Eliminación de datos</a>
         <a routerLink="/login">Ingresar</a>
         <a routerLink="/register">Crear empresa</a>
       </nav>

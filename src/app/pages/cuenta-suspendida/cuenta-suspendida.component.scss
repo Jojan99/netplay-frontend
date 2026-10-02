@@ -1,0 +1,8 @@
+.np-suspendida .np-login-main { grid-template-columns: minmax(0, 1fr); }
+.np-suspendida-card { width: min(100%, 460px); }
+.np-suspendida-datos { margin: 0; display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 6px 16px; padding: 12px 14px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--surface-2); font-size: 13px;
+  dt { color: var(--text-3); font-weight: 600; }
+  dd { margin: 0; color: var(--text); font-weight: 600; text-align: right; } }
+.np-suspendida-texto { margin: 0; color: var(--text-2); font-size: 13px; line-height: 1.5; }
+.np-suspendida-acciones { display: flex; flex-wrap: wrap; gap: 8px; .np-btn { flex: 1; min-width: 160px; text-decoration: none; } }
+.np-suspendida-pie { align-items: center; margin-top: 4px; }

@@ -67,16 +67,58 @@
 .nv-sec-head { max-width: 720px; margin-bottom: 36px;
   h2 { margin: 0; font: 600 clamp(26px, 3.4vw, 38px) / 1.1 var(--font-display); letter-spacing: -0.025em; } }
 
-.nv-resuelve { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 14px;
-  article { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-lg); padding: 22px; }
-  svg { width: 26px; height: 26px; color: var(--accent); }
-  h3 { margin: 14px 0 6px; font: 600 17px var(--font-display); letter-spacing: -0.01em; }
-  p { margin: 0; color: var(--text-2); font-size: 14px; line-height: 1.55; } }
+/* Funciones: lo que diferencia, un índice para saltar y una tarjeta por área. */
+.nv-claves { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1px; margin-bottom: 26px; background: var(--line); border: 1px solid var(--line); border-radius: 12px; overflow: hidden;
+  div { padding: 18px 20px; background: var(--surface); }
+  b { display: block; margin-bottom: 4px; font: 600 16px var(--font-display); letter-spacing: -0.01em; color: var(--text); }
+  span { font-size: 13.5px; line-height: 1.5; color: var(--text-2); } }
 
-.nv-modulos { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 28px 32px; margin-top: 48px; padding-top: 36px; border-top: 1px solid var(--line);
-  h4 { margin: 0 0 10px; font: 600 11px var(--font-mono); text-transform: uppercase; letter-spacing: .07em; color: var(--text-3); }
-  ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
-  li { display: grid; gap: 1px; b { font-size: 13.5px; } span { font-size: 12.5px; color: var(--text-2); } } }
+.nv-indice { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 20px;
+  a { padding: 7px 14px; border: 1px solid var(--line-strong); border-radius: 999px; background: var(--surface); color: var(--text-2); font-size: 13px; font-weight: 700; text-decoration: none; transition: border-color .15s, color .15s;
+    &:hover { border-color: var(--accent); color: var(--accent); } } }
+
+.nv-areas { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 460px), 1fr)); gap: 16px; align-items: start; }
+.nv-area { position: relative; padding: 24px; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; scroll-margin-top: 84px;
+  header { display: flex; align-items: flex-start; gap: 14px; margin-bottom: 18px; }
+  h3 { margin: 0; font: 600 19px / 1.2 var(--font-display); letter-spacing: -0.015em; }
+  header p { margin: 4px 0 0; color: var(--text-2); font-size: 14px; line-height: 1.45; }
+  ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 12px; }
+  li { display: grid; grid-template-columns: 18px minmax(0, 1fr); gap: 10px; align-items: start; font-size: 13.5px; line-height: 1.5; color: var(--text-2);
+    > svg { width: 16px; height: 16px; margin-top: 3px; color: var(--accent); }
+    b { display: block; color: var(--text); font-size: 14px; } } }
+.nv-area-ico { flex-shrink: 0; display: grid; place-items: center; width: 44px; height: 44px; border-radius: 10px; background: var(--accent-soft); color: var(--accent);
+  svg { width: 22px; height: 22px; } }
+
+/* El complemento ocupa el ancho entero y se distingue: no viene en el plan. */
+.nv-area--extra { grid-column: 1 / -1; border: 2px solid var(--accent); padding-top: 30px;
+  ul { grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr)); gap: 14px 28px; } }
+.nv-area-tag { position: absolute; top: -12px; left: 22px; padding: 4px 10px; border-radius: 999px; background: var(--accent); color: var(--accent-ink); font: 600 10.5px var(--font-mono); text-transform: uppercase; letter-spacing: .06em; max-width: calc(100% - 44px); line-height: 1.35; }
+
+.nv-funciones-cta { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 14px; margin-top: 28px; padding: 20px 24px; background: var(--surface-2); border: 1px solid var(--line); border-radius: 12px;
+  p { margin: 0; font-size: 15px; color: var(--text-2); b { color: var(--text); } } }
+
+/* Comparativo de precios */
+.nv-compara-wrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); }
+.nv-compara { width: 100%; min-width: 720px; border-collapse: collapse; font-size: 14px;
+  th, td { padding: 14px 16px; text-align: right; border-bottom: 1px solid var(--line); vertical-align: top; white-space: nowrap; }
+  th[scope="row"], thead th:first-child { text-align: left; white-space: normal; min-width: 200px; }
+  thead th { background: var(--surface-2); font: 600 13px var(--font-body); color: var(--text); }
+  tbody th { font-weight: 700; color: var(--text); }
+  td { font-family: var(--font-mono); font-variant-numeric: tabular-nums; color: var(--text-2); }
+  /* La letra chica sí se parte: con cinco columnas, en una sola línea empujaba la última fuera de la tabla. */
+  small { display: block; margin-top: 2px; font: 500 11.5px / 1.35 var(--font-body); color: var(--text-3); white-space: normal; }
+  tr:last-child th, tr:last-child td { border-bottom: 0; } }
+.nv-compara-nos { background: var(--accent-soft);
+  th { color: var(--accent); }
+  td b { font-size: 17px; color: var(--text); } }
+.nv-compara-dif td b { color: var(--ok); font-size: 15px; }
+.nv-compara-h { margin: 32px 0 14px; font: 600 19px var(--font-display); letter-spacing: -0.015em; }
+
+/* Tramos del complemento TR-069, dentro de su tarjeta. */
+.nv-tramos { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 10px; margin-bottom: 20px;
+  div { padding: 12px 14px; border: 1px solid var(--line); border-radius: 10px; background: var(--surface-2); }
+  b { display: block; font: 600 18px var(--font-mono); color: var(--text); letter-spacing: -0.02em; }
+  span { font-size: 12.5px; color: var(--text-2); } }
 
 .nv-pasos { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 14px;
   li { position: relative; padding: 22px 22px 22px; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-lg); }
@@ -106,7 +148,7 @@
   ul { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 10px 24px; }
   li { display: flex; gap: 8px; align-items: flex-start; font-size: 13.5px; color: var(--text-2); line-height: 1.45;
     svg { width: 15px; height: 15px; margin-top: 2px; color: var(--ok); flex-shrink: 0; } } }
-.nv-nota { margin: 14px 0 0; font-size: 12.5px; color: var(--text-3); }
+.nv-nota { margin: 14px 0 0; font-size: 12.5px; line-height: 1.55; color: var(--text-3); a { color: var(--text-2); } }
 .nv-plan-clientes { margin: 4px 0 0; font: 500 12px var(--font-mono); color: var(--text-3); }
 .nv-plan-btn { width: 100%; justify-content: center; }
 

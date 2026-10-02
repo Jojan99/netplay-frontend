@@ -280,6 +280,8 @@
                     precio especial · lista {{ pesos(detalle.suscripcion?.precio_lista) }}
                   </span>
                   <span class="np-kv-s" *ngIf="detalle.suscripcion?.precio_pactado === null">precio de lista</span>
+                  <span class="np-kv-s" *ngIf="detalle.suscripcion?.tr069_activo">+ TR-069 {{ pesos(detalle.suscripcion?.tr069_precio) }}/mes</span>
+                  <span class="np-kv-s" *ngIf="!detalle.suscripcion?.tr069_activo">sin complemento TR-069</span>
                 </div>
               </div>
 
@@ -368,6 +370,14 @@
                 <input type="date" class="np-input" [(ngModel)]="forma.prueba_hasta" name="prueba_hasta" /></label>
               <label class="np-field"><span>Próxima facturación</span>
                 <input type="date" class="np-input" [(ngModel)]="forma.proxima_facturacion" name="proxima_facturacion" /></label>
+              <label class="np-check np-check--box np-field-full">
+                <input type="checkbox" [(ngModel)]="forma.tr069_activo" name="tr069_activo" />
+                <span><b>Complemento TR-069</b> contratado. Gestión remota del equipo del cliente y configuración automática de la ONT; se suma al cobro del plan.</span>
+              </label>
+              <label class="np-field np-field-full" *ngIf="forma.tr069_activo"><span>Precio pactado del complemento al mes (vacío = según el tramo de equipos)</span>
+                <input type="number" class="np-input" [(ngModel)]="forma.tr069_precio" name="tr069_precio" min="0" step="1000" />
+                <small class="np-fine" *ngIf="detalle?.suscripcion?.tr069_precio">Tiene {{ detalle.suscripcion?.tr069_equipos ?? 0 }} equipos en el ACS: le corresponde el tramo de hasta {{ detalle.suscripcion?.tr069_hasta }}, <b>{{ pesos(detalle.suscripcion?.tr069_precio) }}</b> al mes. En ciclo anual se cobran diez meses.</small>
+              </label>
               <label class="np-field np-field-full"><span>Notas internas</span>
                 <textarea class="np-input" rows="2" [(ngModel)]="forma.notas" name="notas"></textarea></label>
 

@@ -2,6 +2,7 @@ import { HttpInterceptorFn } from '@angular/common/http';
 import { catchError, throwError } from 'rxjs';
 import { inject } from '@angular/core';
 import { Router } from '@angular/router';
+import { CuentaService } from '../services/cuenta.service';
 
 const WA_API = 'http://181.48.150.43:3001';
 
@@ -36,7 +37,9 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
 
   // Si la request ya trae Authorization (ej: portal cliente usa client_token),
   // no sobreescribir — cada servicio gestiona su propio token.
-  if (req.headers.has('Authorization')) return next(req);
+  if (req.headers.has('Authorization')) {
+    return next(req).pipe(catchError(err => { alSuspendida(err, router); return throwError(() => err); }));
+  }
 
   // En el prerender no hay navegador: leer localStorage ahí tira una
   // excepción por cada petición que sale durante el armado del sitio.
@@ -64,7 +67,29 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
         router.navigate(['/login']);
       }
 
+      alSuspendida(err, router);
+
       return throwError(() => err);
     })
   );
 };
+
+/**
+ * Netvula suspendió a la empresa: el servidor rechaza todo con un 403 que trae
+ * el código y el estado de la cuenta. En vez de dejar al usuario frente a
+ * pantallas vacías, se abre la de «cuenta suspendida» con esos datos.
+ */
+function alSuspendida(err: any, router: Router): void {
+  // El TR-069 es un complemento y esta empresa no lo tiene: las pantallas que
+  // lo usan muestran qué es y cómo activarlo, en vez de un error suelto.
+  if (err?.status === 403 && err?.error?.data?.codigo === 'COMPLEMENTO_NO_ACTIVO') {
+    CuentaService.tr069.set({ ...(CuentaService.tr069() ?? {}), bloqueado: true, precio: err.error.data.precio });
+    return;
+  }
+
+  if (err?.status !== 403 || err?.error?.data?.codigo !== 'EMPRESA_SUSPENDIDA') return;
+
+  CuentaService.guardar(err.error.data.cuenta);
+
+  if (!router.url.startsWith('/cuenta-suspendida')) router.navigate(['/cuenta-suspendida']);
+}

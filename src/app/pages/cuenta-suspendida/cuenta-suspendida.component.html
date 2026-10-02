@@ -1,0 +1,52 @@
+<div class="np-console np-login np-suspendida">
+  <div class="np-login-theme"><flowbite-dark-theme-toggle></flowbite-dark-theme-toggle></div>
+
+  <aside class="np-login-side" aria-hidden="true">
+    <div class="np-login-side-inner">
+      <div class="np-login-logo">
+        <img class="nv-logo nv-logo--sobre-claro" src="assets/brand/netvula-logo-dark.png" alt="Netvula" width="220" height="40" />
+        <img class="nv-logo nv-logo--sobre-oscuro" src="assets/brand/netvula-logo.png" alt="Netvula" width="220" height="40" />
+      </div>
+      <h2 class="np-login-claim">Su red sigue funcionando.</h2>
+      <dl class="np-login-facts">
+        <div><dt>Internet</dt><dd>Sus clientes siguen conectados: no se corta nada en su red.</dd></div>
+        <div><dt>Portal</dt><dd>Sus clientes pueden seguir entrando y pagando en línea.</dd></div>
+        <div><dt>Datos</dt><dd>Su información está guardada y vuelve a verla al reactivar.</dd></div>
+      </dl>
+      <p class="np-login-foot np-mono">{{ sitio }} · cuenta suspendida</p>
+    </div>
+  </aside>
+
+  <main class="np-login-main">
+    <section class="np-login-card np-suspendida-card" aria-live="polite">
+      <p class="np-kicker">Cuenta <b>/</b> Suspendida</p>
+      <h1 class="np-title np-login-title">El acceso al panel está suspendido</h1>
+      <p class="np-login-help" *ngIf="cuenta?.empresa">Empresa: <b>{{ cuenta?.empresa }}</b><ng-container *ngIf="cuenta?.plan"> · plan {{ cuenta?.plan }}</ng-container></p>
+
+      <p class="np-notice np-notice--warn" *ngIf="cuenta?.motivo"><strong>Motivo:</strong> {{ cuenta?.motivo }}</p>
+
+      <dl class="np-suspendida-datos" *ngIf="(cuenta?.pendiente ?? 0) > 0">
+        <dt>Saldo pendiente</dt><dd class="np-mono">{{ cuenta?.pendiente | currency:'COP':'symbol-narrow':'1.0-0' }}</dd>
+        <ng-container *ngIf="cuenta?.vence"><dt>Venció el</dt><dd class="np-mono">{{ cuenta?.vence | date:'dd/MM/yyyy' }}</dd></ng-container>
+      </dl>
+
+      <p class="np-suspendida-texto">Para reactivarlo, escríbanos. En cuanto se registre el pago o se active su plan, el panel vuelve a abrir con toda su información.</p>
+
+      <div class="np-suspendida-acciones">
+        <a class="np-btn np-btn--primary" *ngIf="enlaceWhatsapp" [href]="enlaceWhatsapp" target="_blank" rel="noopener">Escribir por WhatsApp</a>
+        <a class="np-btn np-btn--ghost" *ngIf="enlaceCorreo" [href]="enlaceCorreo">Escribir por correo</a>
+        <p class="np-fine" *ngIf="!enlaceWhatsapp && !enlaceCorreo">Escríbanos por el canal de soporte de Netvula que usa habitualmente.</p>
+      </div>
+
+      <p class="np-notice np-notice--danger" *ngIf="sigue" role="alert">La cuenta sigue suspendida. Si ya pagó, el registro puede tardar unos minutos.</p>
+
+      <div class="np-btnrow np-suspendida-pie">
+        <button type="button" class="np-btn np-btn--ghost" (click)="salir()">Cerrar sesión</button>
+        <span class="np-spacer"></span>
+        <button type="button" class="np-btn np-btn--ghost" (click)="reintentar()" [disabled]="revisando">
+          <span *ngIf="revisando" class="np-spinner np-spinner--sm"></span>{{ revisando ? 'Revisando…' : 'Ya lo resolví: volver a entrar' }}
+        </button>
+      </div>
+    </section>
+  </main>
+</div>
