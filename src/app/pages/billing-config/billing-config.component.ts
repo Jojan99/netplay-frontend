@@ -12,6 +12,7 @@ import { InvoiceTemplateEditorComponent } from '../../components/invoice-templat
 import { InvoiceTemplate, InvoiceTemplateService } from '../../services/invoice-template.service';
 import { environment } from '../../../environments/environment';
 import { CorreoService, ConfiguracionCorreo } from '../../services/correo.service';
+import { FacturaElectronicaComponent } from '../../components/factura-electronica/factura-electronica.component';
 import { NpSelectComponent, PresentacionSelect } from '../../common/np-select/np-select.component';
 import { OpcionSimple, PRESENTACION_PERSONAS, PRESENTACION_SIMPLE, conValor } from '../../common/np-select/presentaciones';
 
@@ -27,7 +28,7 @@ interface Schedule {
 @Component({
   selector: 'app-billing-config',
   standalone: true,
-  imports: [CommonModule, FormsModule, InvoiceTemplateEditorComponent, NpSelectComponent],
+  imports: [CommonModule, FormsModule, InvoiceTemplateEditorComponent, NpSelectComponent, FacturaElectronicaComponent],
   templateUrl: './billing-config.component.html',
   styleUrl: './billing-config.component.scss',
   host: { class: 'np-console' },
@@ -127,7 +128,7 @@ export class BillingConfigComponent implements OnInit {
   };
 
   // ── Tabs ──────────────────────────────────────────────────
-  activeTab: 'billing' | 'invoice' | 'payment-methods' | 'gateway' | 'cortes' | 'correo' = 'billing';
+  activeTab: 'billing' | 'invoice' | 'payment-methods' | 'gateway' | 'cortes' | 'correo' | 'dian' = 'billing';
   gwView: 'config' | 'test' | 'transactions' = 'config';
 
   // ── Correo (Mailjet) ───────────────────────────────────────
@@ -269,6 +270,9 @@ export class BillingConfigComponent implements OnInit {
       this.activeTab = 'gateway';
     }
     // La dirección /dashboard/correo abre directo la sección de correo.
+    if (this.route.snapshot.data?.['tab'] === 'dian') {
+      this.activeTab = 'dian';
+    }
     if (this.route.snapshot.data?.['tab'] === 'correo') {
       this.activeTab = 'correo';
       this.cargarCorreo();
@@ -690,7 +694,7 @@ export class BillingConfigComponent implements OnInit {
   }
 
   /** Cambia de sección; en el teléfono la pestaña elegida queda a la vista. */
-  irA(tab: 'billing' | 'invoice' | 'payment-methods' | 'gateway' | 'cortes' | 'correo'): void {
+  irA(tab: 'billing' | 'invoice' | 'payment-methods' | 'gateway' | 'cortes' | 'correo' | 'dian'): void {
     this.activeTab = tab;
     setTimeout(() => document.querySelector('.bc-tabs [aria-selected="true"]')?.scrollIntoView({ inline: 'center', block: 'nearest' }));
   }

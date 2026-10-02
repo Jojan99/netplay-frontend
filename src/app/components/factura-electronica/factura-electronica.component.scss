@@ -1,0 +1,12 @@
+:host { display: grid; gap: 14px; }
+.fe-como { margin: 0; }
+.fe-kpis .np-kpi { cursor: pointer; }
+.fe-vistas { justify-self: start; }
+.fe-barra { border-top: 0; padding-top: 0; }
+.fe-card { display: grid; gap: 12px; }
+.fe-card h3 { margin: 0; font-family: var(--font-display); font-size: 15px; font-weight: 600; }
+.fe-sep { margin-top: 8px; padding-top: 14px; border-top: 1px solid var(--line); }
+.fe-checks { display: grid; gap: 8px; }
+.fe-acciones { display: inline-flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end; }
+.fe-error { max-width: 340px; white-space: normal; color: var(--danger); }
+.fe-cufe { color: var(--text-3); }

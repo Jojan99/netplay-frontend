@@ -1,0 +1,265 @@
+<div *ngIf="cargando" class="np-loading"><span class="np-spinner"></span> Cargando la facturación electrónica…</div>
+
+<ng-container *ngIf="!cargando && estado">
+  <p class="np-notice" [ngClass]="aviso.tipo === 'ok' ? 'np-notice--ok' : 'np-notice--danger'" *ngIf="aviso" role="status">{{ aviso.texto }}</p>
+
+  <!-- Cómo funciona, en una línea: evita la confusión entre la cuenta de cobro y la factura DIAN. -->
+  <p class="np-notice np-notice--info fe-como">
+    La factura de la plataforma es la <b>cuenta de cobro</b>. La <b>factura electrónica</b> se emite ante la DIAN cuando esa cuenta queda pagada,
+    por su proveedor (Siigo o Alegra) y con la numeración que tiene autorizada allí.
+  </p>
+
+  <div class="np-kpis fe-kpis" *ngIf="estado.config">
+    <button type="button" class="np-kpi" (click)="ir('documentos'); filtrar('emitida')"><span class="np-kpi-l">Aceptadas por la DIAN</span><span class="np-kpi-v np-kpi-v--ok">{{ estado.resumen.emitidas }}</span></button>
+    <button type="button" class="np-kpi" (click)="ir('por-emitir')"><span class="np-kpi-l">Pagadas sin factura</span><span class="np-kpi-v" [class.np-kpi-v--warn]="estado.resumen.por_emitir > 0">{{ estado.resumen.por_emitir }}</span></button>
+    <button type="button" class="np-kpi" (click)="ir('documentos'); filtrar('rechazada')"><span class="np-kpi-l">Con novedad</span><span class="np-kpi-v" [class.np-kpi-v--danger]="estado.resumen.rechazadas > 0">{{ estado.resumen.rechazadas }}</span></button>
+    <button type="button" class="np-kpi" (click)="ir('documentos'); filtrar('')"><span class="np-kpi-l">En proceso</span><span class="np-kpi-v">{{ estado.resumen.pendientes + estado.resumen.errores }}</span></button>
+  </div>
+
+  <div class="np-seg fe-vistas" role="tablist">
+    <button type="button" [attr.aria-pressed]="vista === 'documentos'" (click)="ir('documentos')" [disabled]="!estado.config">Documentos</button>
+    <button type="button" [attr.aria-pressed]="vista === 'por-emitir'" (click)="ir('por-emitir')" [disabled]="!estado.config">Por emitir</button>
+    <button type="button" [attr.aria-pressed]="vista === 'conexion'" (click)="ir('conexion')">Conexión y ajustes</button>
+  </div>
+
+  <!-- ══ Documentos ══════════════════════════════════════════════════════ -->
+  <ng-container *ngIf="vista === 'documentos'">
+    <div class="np-toolbar fe-barra">
+      <div class="np-chips" role="group" aria-label="Estado">
+        <button type="button" class="np-chip" [attr.aria-pressed]="filtroEstado === ''" (click)="filtrar('')">Todos</button>
+        <button type="button" class="np-chip" [attr.aria-pressed]="filtroEstado === 'emitida'" (click)="filtrar('emitida')">Aceptadas</button>
+        <button type="button" class="np-chip" [attr.aria-pressed]="filtroEstado === 'rechazada'" (click)="filtrar('rechazada')">Con novedad</button>
+        <button type="button" class="np-chip" [attr.aria-pressed]="filtroEstado === 'pendiente'" (click)="filtrar('pendiente')">Esperando</button>
+      </div>
+      <label class="np-search"><input type="search" placeholder="Número, cliente o cédula…" [(ngModel)]="buscar" (keyup.enter)="cargarDocumentos()" aria-label="Buscar documento" /></label>
+    </div>
+
+    <div class="np-tablewrap">
+      <table class="np-table np-table--compact">
+        <thead><tr><th>Documento</th><th>Cliente</th><th>Cuenta de cobro</th><th class="np-th-right">Total</th><th>Estado</th><th class="np-th-right">Acciones</th></tr></thead>
+        <tbody>
+          <tr *ngIf="cargandoDocs" class="np-empty"><td colspan="6"><span class="np-spinner"></span></td></tr>
+          <tr *ngIf="!cargandoDocs && !documentos.length" class="np-empty"><td colspan="6"><strong>Todavía no hay documentos.</strong><span>Las facturas pagadas aparecen en «Por emitir».</span></td></tr>
+          <tr *ngFor="let d of documentos">
+            <td>
+              <div class="np-name">{{ d.numero || (d.tipo === 'nota_credito' ? 'Nota crédito' : 'Factura') }}</div>
+              <div class="np-fine">{{ d.tipo === 'nota_credito' ? 'Nota crédito' : 'Factura de venta' }} · {{ (d.emitida_en || d.created_at) | date:'dd/MM/yyyy HH:mm' }}</div>
+            </td>
+            <td><div>{{ d.cliente || '—' }}</div><div class="np-fine np-mono">{{ d.dni }}</div></td>
+            <td class="np-mono">{{ d.number_facture || '—' }}<div class="np-fine" *ngIf="d.anulada_en || d.paid === 0">{{ d.anulada_en ? 'anulada' : 'pago revertido' }}</div></td>
+            <td class="np-td-right np-mono">{{ d.total | currency:'COP':'symbol-narrow':'1.0-0' }}<div class="np-fine" *ngIf="d.impuesto > 0">IVA {{ d.impuesto | currency:'COP':'symbol-narrow':'1.0-0' }}</div></td>
+            <td>
+              <span class="np-pill" [ngClass]="{ 'np-pill--active': d.estado === 'emitida', 'np-pill--suspended': d.estado === 'rechazada', 'np-pill--noip': d.estado === 'error', 'np-pill--info': d.estado === 'pendiente' }">{{ etiqueta(d.estado) }}</span>
+              <div class="np-fine" *ngIf="d.anulada_con">Anulada con {{ d.anulada_con }}</div>
+              <div class="np-fine fe-error" *ngIf="d.tipo === 'factura' && d.estado === 'emitida' && !d.anulada_con && (d.anulada_en || d.paid === 0)">Sigue vigente ante la DIAN: falta la nota crédito.</div>
+              <div class="np-fine fe-error" *ngIf="d.error">{{ d.error }}</div>
+              <div class="np-fine np-mono fe-cufe" *ngIf="d.cufe" [title]="d.cufe">CUFE {{ d.cufe | slice:0:16 }}…</div>
+            </td>
+            <td class="np-td-right">
+              <div class="fe-acciones">
+                <button type="button" class="np-btn np-btn--ghost np-btn--sm" *ngIf="d.estado === 'emitida'" (click)="verPdf(d)" [disabled]="!!ocupado[d.id]">PDF</button>
+                <button type="button" class="np-btn np-btn--ghost np-btn--sm" *ngIf="d.estado !== 'emitida'" (click)="reintentar(d)" [disabled]="!!ocupado[d.id]">
+                  {{ ocupado[d.id] === 'reintentar' ? 'Consultando…' : (d.externo_id ? 'Actualizar' : 'Reintentar') }}
+                </button>
+                <button type="button" class="np-btn np-btn--danger np-btn--sm" *ngIf="d.tipo === 'factura' && d.estado === 'emitida' && !d.anulada_con" (click)="notaCredito(d)" [disabled]="!!ocupado[d.id]"
+                        title="Anula la factura ante la DIAN con una nota crédito">{{ ocupado[d.id] === 'nc' ? 'Emitiendo…' : 'Nota crédito' }}</button>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="np-pager np-pager--flat" *ngIf="paginas > 1">
+      <span class="np-range">Página {{ pagina }} de {{ paginas }} · {{ totalDocumentos }} documentos</span>
+      <div class="np-pages">
+        <button type="button" (click)="cargarDocumentos(pagina - 1)" [disabled]="pagina === 1" aria-label="Página anterior">‹</button>
+        <button type="button" (click)="cargarDocumentos(pagina + 1)" [disabled]="pagina >= paginas" aria-label="Página siguiente">›</button>
+      </div>
+    </div>
+  </ng-container>
+
+  <!-- ══ Por emitir ══════════════════════════════════════════════════════ -->
+  <ng-container *ngIf="vista === 'por-emitir'">
+    <p class="np-notice np-notice--warn" *ngIf="estado.faltantes.length"><strong>Falta configurar:</strong> {{ estado.faltantes.join(' ') }}</p>
+    <div class="np-toolbar fe-barra">
+      <span class="np-fine">{{ totalPorEmitir }} cuenta(s) de cobro pagadas desde el {{ estado.config?.emitir_desde | date:'dd/MM/yyyy' }} sin factura electrónica. Se emiten de a 10.</span>
+      <span class="np-spacer"></span>
+      <button type="button" class="np-btn np-btn--primary" (click)="emitirMarcadas()" [disabled]="emitiendo || !marcadas.size || estado.faltantes.length > 0 || !estado.config?.activa">
+        <span *ngIf="emitiendo" class="np-spinner np-spinner--sm"></span>{{ emitiendo ? 'Emitiendo ante la DIAN…' : 'Emitir (' + marcadas.size + ')' }}
+      </button>
+    </div>
+    <div class="np-tablewrap">
+      <table class="np-table np-table--compact">
+        <thead><tr>
+          <th><input type="checkbox" [checked]="todasMarcadas" (change)="marcarTodas()" aria-label="Marcar las primeras diez" /></th>
+          <th>Cuenta de cobro</th><th>Cliente</th><th>Pagada</th><th class="np-th-right">Valor</th>
+        </tr></thead>
+        <tbody>
+          <tr *ngIf="cargandoDocs" class="np-empty"><td colspan="5"><span class="np-spinner"></span></td></tr>
+          <tr *ngIf="!cargandoDocs && !porEmitir.length" class="np-empty"><td colspan="5"><strong>No hay nada por emitir.</strong></td></tr>
+          <tr *ngFor="let f of porEmitir" (click)="marcar(f.id)" class="np-row" [attr.aria-selected]="marcadas.has(f.id)">
+            <td><input type="checkbox" [checked]="marcadas.has(f.id)" (click)="$event.stopPropagation()" (change)="marcar(f.id)" [attr.aria-label]="'Emitir ' + f.number_facture" /></td>
+            <td class="np-mono">{{ f.number_facture }}</td>
+            <td><div>{{ f.cliente || '—' }}</div><div class="np-fine np-mono">{{ f.dni }}</div></td>
+            <td class="np-mono">{{ f.paid_at | date:'dd/MM/yyyy HH:mm' }}</td>
+            <td class="np-td-right np-mono">{{ f.total | currency:'COP':'symbol-narrow':'1.0-0' }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </ng-container>
+
+  <!-- ══ Conexión y ajustes ══════════════════════════════════════════════ -->
+  <ng-container *ngIf="vista === 'conexion'">
+    <form class="np-card fe-card" (ngSubmit)="guardar()">
+      <div class="np-card-h"><h3>1. Proveedor</h3><span class="np-card-meta" *ngIf="estado.config?.verificada_en">verificada el <b>{{ estado.config?.verificada_en | date:'dd/MM/yyyy HH:mm' }}</b></span></div>
+      <div class="np-form">
+        <label class="np-field np-field-full"><span>Con quién factura electrónicamente</span>
+          <select class="np-input" [ngModel]="forma.proveedor" (ngModelChange)="forma.proveedor = $event; cambiarProveedor()" name="proveedor">
+            <option *ngFor="let p of estado.proveedores; trackBy: porId" [value]="p.id">{{ p.nombre }}</option>
+          </select>
+          <small class="np-fine">Debe tener en ese proveedor la facturación electrónica habilitada ante la DIAN y una resolución de numeración vigente.</small>
+        </label>
+        <label class="np-field" *ngFor="let c of campos; trackBy: porClave; let ultimo = last" [class.np-field-full]="campos.length % 2 === 1 && ultimo">
+          <span>{{ c.etiqueta }} <em *ngIf="estado.config?.credenciales?.[c.clave] && conectado">· guardada</em></span>
+          <input class="np-input" [type]="c.secreto && !ver[c.clave] ? 'password' : 'text'" [(ngModel)]="forma.credenciales[c.clave]" [name]="'cred_' + c.clave" [attr.data-campo]="c.clave"
+                 [placeholder]="estado.config?.credenciales?.[c.clave] && conectado ? 'Dejar vacío para no cambiarla' : ''" autocomplete="off" />
+          <small class="np-fine">{{ c.ayuda }}</small>
+        </label>
+      </div>
+      <div class="np-btnrow">
+        <button type="button" class="np-btn np-btn--ghost" (click)="probar()" [disabled]="probando">{{ probando ? 'Probando…' : 'Probar conexión' }}</button>
+      </div>
+
+      <div class="np-card-h fe-sep"><h3>2. Con qué se arma cada factura</h3>
+        <button type="button" class="np-btn np-btn--ghost np-btn--sm" (click)="cargarCatalogos()" [disabled]="cargandoCatalogos || !conectado">{{ cargandoCatalogos ? 'Consultando…' : 'Traer opciones de mi cuenta' }}</button>
+      </div>
+      <p class="np-fine" *ngIf="!conectado">Guarde primero las credenciales para poder traer las numeraciones e impuestos de su cuenta.</p>
+      <p class="np-fine" *ngIf="conectado && !catalogos">Pulse «Traer opciones de mi cuenta» para elegir de las listas de {{ proveedor?.nombre }}.</p>
+
+      <div class="np-form" *ngIf="conectado">
+        <label class="np-field"><span>{{ esSiigo ? 'Comprobante de factura electrónica' : 'Numeración electrónica' }} <em>*</em></span>
+          <select class="np-input" [(ngModel)]="forma.ajustes['numeracion_id']" name="numeracion_id">
+            <option value="">{{ forma.ajustes['numeracion_id'] && !catalogos ? 'Guardada: ' + forma.ajustes['numeracion_id'] : 'Seleccione…' }}</option>
+            <option *ngFor="let o of catalogos?.['numeraciones'] ?? []" [value]="o.id">{{ o.nombre }}{{ o.electronica ? ' · electrónica' : ' · NO electrónica' }}</option>
+          </select>
+        </label>
+        <label class="np-field"><span>{{ esSiigo ? 'Comprobante de nota crédito' : 'Numeración de nota crédito' }}</span>
+          <select class="np-input" [(ngModel)]="forma.ajustes['numeracion_nc_id']" name="numeracion_nc_id">
+            <option value="">{{ forma.ajustes['numeracion_nc_id'] && !catalogos ? 'Guardada: ' + forma.ajustes['numeracion_nc_id'] : (esSiigo ? 'Seleccione…' : 'La preferida de Alegra') }}</option>
+            <option *ngFor="let o of catalogos?.['numeraciones_nc'] ?? []" [value]="o.id">{{ o.nombre }}</option>
+          </select>
+        </label>
+        <label class="np-field"><span>{{ esSiigo ? 'Producto o servicio' : 'Ítem (servicio de internet)' }} <em>*</em></span>
+          <select class="np-input" [(ngModel)]="forma.ajustes['producto_id']" name="producto_id">
+            <option value="">{{ forma.ajustes['producto_id'] && !catalogos ? 'Guardado: ' + forma.ajustes['producto_id'] : 'Seleccione…' }}</option>
+            <option *ngFor="let o of catalogos?.['productos'] ?? []" [value]="o.id">{{ o.nombre }}</option>
+          </select>
+          <small class="np-fine">Créelo en {{ proveedor?.nombre }} como servicio, por ejemplo «Servicio de internet».</small>
+        </label>
+        <ng-container *ngIf="esSiigo">
+          <label class="np-field"><span>Vendedor <em>*</em></span>
+            <select class="np-input" [(ngModel)]="forma.ajustes['vendedor_id']" name="vendedor_id">
+              <option value="">{{ forma.ajustes['vendedor_id'] && !catalogos ? 'Guardado: ' + forma.ajustes['vendedor_id'] : 'Seleccione…' }}</option>
+              <option *ngFor="let o of catalogos?.['vendedores'] ?? []" [value]="o.id">{{ o.nombre }}</option>
+            </select>
+          </label>
+          <label class="np-field"><span>Forma de pago <em>*</em></span>
+            <select class="np-input" [(ngModel)]="forma.ajustes['forma_pago_id']" name="forma_pago_id">
+              <option value="">{{ forma.ajustes['forma_pago_id'] && !catalogos ? 'Guardada: ' + forma.ajustes['forma_pago_id'] : 'Seleccione…' }}</option>
+              <option *ngFor="let o of catalogos?.['formas_pago'] ?? []" [value]="o.id">{{ o.nombre }}</option>
+            </select>
+            <small class="np-fine">Con la que se registra el pago ya recibido (efectivo, banco…).</small>
+          </label>
+          <label class="np-field"><span>Centro de costo</span>
+            <select class="np-input" [(ngModel)]="forma.ajustes['centro_costo_id']" name="centro_costo_id">
+              <option value="">{{ forma.ajustes['centro_costo_id'] && !catalogos ? 'Guardado: ' + forma.ajustes['centro_costo_id'] : 'Ninguno' }}</option>
+              <option *ngFor="let o of catalogos?.['centros_costo'] ?? []" [value]="o.id">{{ o.nombre }}</option>
+            </select>
+          </label>
+        </ng-container>
+        <ng-container *ngIf="!esSiigo">
+          <label class="np-field"><span>Cuenta donde entra el pago</span>
+            <select class="np-input" [(ngModel)]="forma.ajustes['cuenta_id']" name="cuenta_id">
+              <option value="">{{ forma.ajustes['cuenta_id'] && !catalogos ? 'Guardada: ' + forma.ajustes['cuenta_id'] : 'No registrar el pago en Alegra' }}</option>
+              <option *ngFor="let o of catalogos?.['cuentas'] ?? []" [value]="o.id">{{ o.nombre }}</option>
+            </select>
+            <small class="np-fine">Con una cuenta, la factura queda pagada también en Alegra.</small>
+          </label>
+          <label class="np-field"><span>Medio de pago (DIAN)</span>
+            <select class="np-input" [(ngModel)]="forma.ajustes['medio_pago']" name="medio_pago">
+              <option *ngFor="let m of mediosDePago" [value]="m.id">{{ m.nombre }}</option>
+            </select>
+          </label>
+        </ng-container>
+      </div>
+
+      <div class="np-card-h fe-sep"><h3>3. IVA</h3></div>
+      <div class="np-form">
+        <label class="np-field np-field-full"><span>El servicio que factura</span>
+          <select class="np-input" [(ngModel)]="forma.ajustes['iva']" name="iva">
+            <option value="excluido">No lleva IVA (excluido)</option>
+            <option value="incluido">Lleva IVA, y el valor que cobro ya lo incluye</option>
+          </select>
+          <small class="np-fine">Confírmelo con su contador: de esto depende lo que se reporta a la DIAN.</small>
+        </label>
+        <ng-container *ngIf="forma.ajustes['iva'] === 'incluido'">
+          <label class="np-field"><span>Impuesto <em>*</em></span>
+            <select class="np-input" [(ngModel)]="forma.ajustes['impuesto_id']" name="impuesto_id" (change)="alElegirImpuesto()">
+              <option value="">{{ forma.ajustes['impuesto_id'] && !catalogos ? 'Guardado: ' + forma.ajustes['impuesto_id'] + ' (' + forma.ajustes['impuesto_porcentaje'] + '%)' : 'Seleccione…' }}</option>
+              <option *ngFor="let o of catalogos?.['impuestos'] ?? []" [value]="o.id">{{ o.nombre }}</option>
+            </select>
+          </label>
+          <div class="np-field"><span>Estratos sin IVA</span>
+            <div class="np-chips">
+              <button type="button" class="np-chip" *ngFor="let e of estratos" [attr.aria-pressed]="forma.ajustes['estratos_excluidos']?.includes(e)" (click)="alternarEstrato(e)">{{ e }}</button>
+            </div>
+            <small class="np-fine">A los clientes de esos estratos se les factura sin IVA. El estrato se carga en la ficha del cliente.</small>
+          </div>
+        </ng-container>
+      </div>
+
+      <div class="np-card-h fe-sep"><h3>4. Datos del cliente por defecto</h3></div>
+      <div class="np-form">
+        <label class="np-field"><span>Código DANE del municipio <em>*</em></span>
+          <input class="np-input np-mono" [(ngModel)]="forma.ajustes['municipio']" name="municipio" maxlength="5" placeholder="08001" inputmode="numeric" />
+          <small class="np-fine">Cinco dígitos (Barranquilla 08001, Bogotá 11001). Se usa para los clientes sin municipio propio.</small>
+        </label>
+        <ng-container *ngIf="!esSiigo">
+          <label class="np-field"><span>Ciudad, como la nombra Alegra <em>*</em></span><input class="np-input" [(ngModel)]="forma.ajustes['ciudad']" name="ciudad" placeholder="Barranquilla" /></label>
+          <label class="np-field"><span>Departamento <em>*</em></span><input class="np-input" [(ngModel)]="forma.ajustes['departamento']" name="departamento" placeholder="Atlántico" /></label>
+        </ng-container>
+      </div>
+
+      <div class="np-card-h fe-sep"><h3>5. A quién se le factura</h3></div>
+      <div class="np-form">
+        <label class="np-field np-field-full"><span>Clientes con factura electrónica</span>
+          <select class="np-input" [(ngModel)]="forma.ajustes['alcance']" name="alcance">
+            <option value="marcados">Sólo los que tienen activada la factura electrónica{{ estado.clientes ? ' (' + estado.clientes.marcados + ' de ' + estado.clientes.total + ')' : '' }}</option>
+            <option value="todos">Todos los clientes que paguen</option>
+          </select>
+          <small class="np-fine">La marca se activa por cliente con el botón de factura en el listado de clientes; es la misma que define por dónde paga.</small>
+        </label>
+      </div>
+
+      <div class="np-card-h fe-sep"><h3>6. Emisión</h3></div>
+      <div class="fe-checks">
+        <label class="np-check np-check--box"><input type="checkbox" [(ngModel)]="forma.activa" name="activa" /><span><b>Facturación electrónica activa.</b> Permite emitir desde la plataforma.</span></label>
+        <label class="np-check np-check--box"><input type="checkbox" [(ngModel)]="forma.automatica" name="automatica" /><span><b>Emitir sola al quedar pagada.</b> Cada cinco minutos se emiten las cuentas de cobro pagadas. Apagado, se emiten a mano desde «Por emitir». Si una factura se anuló con nota crédito y el cliente vuelve a pagar, sale una factura nueva.</span></label>
+        <label class="np-check np-check--box"><input type="checkbox" [(ngModel)]="forma.ajustes['nota_credito_automatica']" name="nc_auto" /><span><b>Nota crédito automática.</b> Al revertir un pago o anular una cuenta de cobro ya facturada, la factura se anula ante la DIAN en ese mismo momento y el sistema lo avisa. Funciona aunque la emisión sea manual. Apagada, sólo avisa y la nota crédito se hace a mano en «Documentos».</span></label>
+        <label class="np-check np-check--box" *ngIf="esSiigo"><input type="checkbox" [(ngModel)]="forma.ajustes['enviar_correo']" name="enviar_correo" /><span><b>Que Siigo envíe la factura al correo del cliente.</b></span></label>
+      </div>
+      <div class="np-form">
+        <label class="np-field"><span>Emitir lo pagado desde</span>
+          <input type="date" class="np-input" [(ngModel)]="forma.emitir_desde" name="emitir_desde" />
+          <small class="np-fine">Lo pagado antes de esa fecha no se envía a la DIAN.</small>
+        </label>
+      </div>
+
+      <p class="np-notice np-notice--warn" *ngIf="estado.faltantes.length && conectado"><strong>Para poder emitir falta:</strong> {{ estado.faltantes.join(' ') }}</p>
+      <div class="np-btnrow np-btnrow--end">
+        <button type="submit" class="np-btn np-btn--primary" [disabled]="guardando">{{ guardando ? 'Guardando…' : 'Guardar' }}</button>
+      </div>
+    </form>
+  </ng-container>
+</ng-container>

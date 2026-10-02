@@ -12,6 +12,8 @@ export interface FactureInterface {
     price_discount?: number
     number?:number
     paid?:number
+    /** Lo abonado hasta ahora, si la factura quedó con un pago parcial. */
+    price_abone?: number
     prueba?:number
     restante?:number
     descripcion?:number

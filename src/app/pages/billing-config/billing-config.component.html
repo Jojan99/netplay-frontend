@@ -2,7 +2,7 @@
   <header class="np-head">
     <div>
       <p class="np-kicker">Operación <b>/</b> Facturación</p>
-      <h1 class="np-title">{{ activeTab === 'gateway' ? 'Pasarela de pago' : (activeTab === 'correo' ? 'Correo (Mailjet)' : 'Configuración de facturación') }}</h1>
+      <h1 class="np-title">{{ activeTab === 'gateway' ? 'Pasarela de pago' : (activeTab === 'correo' ? 'Correo (Mailjet)' : (activeTab === 'dian' ? 'Factura electrónica (DIAN)' : 'Configuración de facturación')) }}</h1>
       <div class="np-ribbon">
         <span><span class="np-n">{{ gruposActivos }}</span>de {{ schedules.length }} grupos automáticos</span>
         <span><span class="np-n">{{ metodosActivos }}</span>métodos de pago activos</span>
@@ -26,6 +26,7 @@
     <button type="button" class="np-tab" role="tab" [attr.aria-selected]="activeTab === 'gateway'" (click)="irA('gateway'); loadGatewayConfig()">Pasarela online</button>
     <button type="button" class="np-tab" role="tab" [attr.aria-selected]="activeTab === 'cortes'" (click)="irA('cortes')">Cortes por mora</button>
     <button type="button" class="np-tab" role="tab" [attr.aria-selected]="activeTab === 'correo'" (click)="irA('correo'); cargarCorreo()">Correo (Mailjet)</button>
+    <button type="button" class="np-tab" role="tab" [attr.aria-selected]="activeTab === 'dian'" (click)="irA('dian')">Factura electrónica (DIAN)</button>
   </nav>
 
   <div class="np-scroll bc-cuerpo">
@@ -250,6 +251,8 @@
   </ng-container>
 
   <!-- ═══════════════ CORREO (MAILJET) ═══════════════ -->
+  <app-factura-electronica *ngIf="activeTab === 'dian'"></app-factura-electronica>
+
   <ng-container *ngIf="activeTab === 'correo'">
     <p class="np-notice np-notice--ok" *ngIf="correoMsg">{{ correoMsg }}</p>
     <p class="np-notice np-notice--danger" *ngIf="correoError">{{ correoError }}</p>
