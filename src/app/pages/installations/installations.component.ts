@@ -6,13 +6,14 @@ import { RouterModule } from '@angular/router';
 import { InstallationService, InstallationOrder, InstallationLog } from '../../services/installation.service';
 import { InsigniaSelect, NpSelectComponent } from '../../common/np-select/np-select.component';
 import { ProvisionarInstalacionComponent } from './provisionar/provisionar-instalacion.component';
+import { AprovisionamientoEnVivoComponent } from './provisionar/aprovisionamiento-en-vivo.component';
 import { OpcionSimple, PRESENTACION_METODOS_PAGO, PRESENTACION_SIMPLE, conValor } from '../../common/np-select/presentaciones';
 import { AuthService } from '../../services/auth.service';
 
 @Component({
   selector: 'app-installations',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterModule, NpSelectComponent, ProvisionarInstalacionComponent],
+  imports: [CommonModule, FormsModule, RouterModule, NpSelectComponent, ProvisionarInstalacionComponent, AprovisionamientoEnVivoComponent],
   templateUrl: './installations.component.html',
   styleUrl: './installations.component.scss',
   host: { class: 'np-console' },

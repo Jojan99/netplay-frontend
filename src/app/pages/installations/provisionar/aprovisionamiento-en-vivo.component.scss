@@ -1,0 +1,115 @@
+.np-aev {
+  margin-top: 4px;
+  padding: 14px 16px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  display: grid;
+  gap: 10px;
+  transition: background-color .3s ease, border-color .3s ease;
+
+  &.es-ok  { border-color: var(--ok);     background: var(--ok-soft); }
+  &.es-mal { border-color: var(--danger); background: var(--danger-soft); }
+}
+
+/* La señal viajando de la plataforma al equipo: tres puntos que se prenden en cadena,
+   como si algo se estuviera transmitiendo de verdad — nada de esto es literal (no hay
+   forma de ver el TR-069 en vivo), es sólo para que el técnico sienta que está pasando
+   algo mientras espera, en vez de mirar un texto fijo sin saber si sigue vivo. */
+.np-aev-viaje {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 2px 0 4px;
+}
+.np-aev-nodo {
+  display: flex;
+  color: var(--text-3);
+  svg { width: 24px; height: 24px; }
+  &--ont { color: var(--accent); }
+}
+.np-aev-linea {
+  flex: 0 1 110px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+
+  i {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--accent);
+    opacity: .2;
+    animation: np-aev-pulso 1.3s ease-in-out infinite;
+  }
+  i:nth-child(2) { animation-delay: .18s; }
+  i:nth-child(3) { animation-delay: .36s; }
+}
+@keyframes np-aev-pulso {
+  0%, 55%, 100% { opacity: .2; transform: scale(.75); }
+  25% { opacity: 1; transform: scale(1.25); }
+}
+
+.np-aev-cabeza {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+.np-aev-icono {
+  flex-shrink: 0;
+  width: 24px; height: 24px;
+  display: flex; align-items: center; justify-content: center;
+  color: var(--text-3);
+  svg { width: 21px; height: 21px; }
+}
+.es-ok  .np-aev-icono { color: var(--ok); }
+.es-mal .np-aev-icono { color: var(--danger); }
+
+.np-aev-info { flex: 1; min-width: 0; }
+.np-aev-fila { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
+.np-aev-t { margin: 0; font-weight: 700; font-size: 12.5px; color: var(--text); }
+.np-aev-d { margin: 2px 0 0; font-size: 11.5px; color: var(--text-2); }
+
+.np-aev-reloj {
+  flex-shrink: 0;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-3);
+  &.es-vivo { color: var(--accent); }
+}
+
+.np-aev-pasos {
+  display: grid;
+  gap: 6px;
+  padding-left: 2px;
+}
+.np-aev-paso {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 11.5px;
+  color: var(--text-2);
+  animation: np-aev-entra .35s ease both;
+}
+.np-aev-check {
+  flex-shrink: 0;
+  width: 16px; height: 16px;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  background: var(--ok-soft);
+  color: var(--ok);
+  svg { width: 10px; height: 10px; }
+}
+.np-aev-paso.es-mal .np-aev-check { background: var(--danger-soft); color: var(--danger); }
+
+@keyframes np-aev-entra {
+  from { opacity: 0; transform: translateY(5px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .np-aev-linea i { animation: none; opacity: .6; }
+  .np-aev-paso { animation: none; }
+}

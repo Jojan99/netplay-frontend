@@ -6,6 +6,8 @@ export interface InstallationOrder {
   id?: number;
   company_id?: number;
   user_data_id?: number;
+  /** El aprovisionamiento que quedó programado al instalar, si la empresa lo tiene encendido. */
+  aprovisionamiento_id?: number | null;
   client_name: string;
   client_dni: string;
   client_phone: string;
@@ -173,6 +175,11 @@ export class InstallationService {
     line_profile_id?: number | null; srv_profile_id?: number | null; onu_type?: string | null;
   }): Observable<any> {
     return this.http.post(`${this.baseUrl}/${id}/provisionar`, equipo);
+  }
+
+  /** Cómo va la configuración automática que quedó programada al terminar: para la animación en vivo. */
+  aprovisionamiento(id: number): Observable<any> {
+    return this.http.get(`${this.baseUrl}/${id}/aprovisionamiento`);
   }
 
   /** Lo que ya se sabe de una cédula por su orden de instalación. */

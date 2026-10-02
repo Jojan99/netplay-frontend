@@ -1,9 +1,11 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, computed, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { AcsService } from '../../services/acs.service';
 import { DialogService } from '../../services/dialog.service';
+import { CuentaService } from '../../services/cuenta.service';
+import { ComplementoBloqueadoComponent } from '../../components/complemento-bloqueado/complemento-bloqueado.component';
 import { limpiarTextoWifi, problemaDeLaClaveWifi, problemaDelNombreWifi } from '../../common/wifi';
 
 /**
@@ -16,12 +18,15 @@ import { limpiarTextoWifi, problemaDeLaClaveWifi, problemaDelNombreWifi } from '
 @Component({
   selector: 'app-ont-device',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, ComplementoBloqueadoComponent],
   templateUrl: './ont-device.component.html',
   styleUrl: './ont-device.component.scss',
   host: { class: 'np-console' },
 })
 export class OntDeviceComponent implements OnInit {
+  /** Sin el complemento TR-069 la pantalla explica qué es y cómo activarlo. */
+  readonly bloqueado = computed(() => !!CuentaService.tr069()?.bloqueado);
+
   private acs = inject(AcsService);
   private dialog = inject(DialogService);
   private route = inject(ActivatedRoute);

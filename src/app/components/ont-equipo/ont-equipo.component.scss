@@ -48,6 +48,11 @@
   &:hover { text-decoration: underline; }
   &.is-busy { opacity: .6; pointer-events: none; }
 }
+.oe-acceso { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 8px 0; }
+.oe-acceso-msg { font-size: 11.5px; font-weight: 600;
+  &.is-ok { color: var(--ok); }
+  &.is-error { color: var(--danger); }
+}
 .oe-error { margin: 0; font-size: 11.5px; color: var(--danger); }
 
 .oe-id { display: grid; gap: 5px; min-width: 0; justify-items: start; }

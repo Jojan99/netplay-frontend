@@ -20,7 +20,9 @@
     </div>
   </header>
 
-  <div class="np-scroll np-acs-scroll">
+  <app-complemento-bloqueado *ngIf="bloqueado()" />
+
+  <div class="np-scroll np-acs-scroll" *ngIf="!bloqueado()">
     <!-- Nadie reporta: los datos son viejos y las órdenes quedan en cola. -->
     <p class="np-notice np-notice--warn" *ngIf="estado && estado.equipos && !estado.reportando">
       <b>Ningún equipo reporta al servidor TR-069 desde {{ estado.ultimo_reporte | date:'d MMM y, HH:mm' }}.</b>

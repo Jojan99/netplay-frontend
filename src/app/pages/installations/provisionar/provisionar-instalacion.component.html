@@ -1,11 +1,11 @@
-<div class="np-overlay" (click)="cerrado.emit()">
+<div class="np-overlay" (click)="cerrar()">
   <div class="np-modal np-modal--lg pv" (click)="$event.stopPropagation()" role="dialog" aria-label="Instalar">
     <div class="np-modal-head">
       <div>
         <p class="np-kicker">Instalación <b>/</b> {{ orden.client_name }}</p>
         <h3>{{ termino ? 'Instalación terminada' : 'Seleccione el equipo' }}</h3>
       </div>
-      <button type="button" class="np-icobtn" (click)="cerrado.emit()" aria-label="Cerrar">
+      <button type="button" class="np-icobtn" (click)="cerrar()" aria-label="Cerrar">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M6 6l12 12M18 6 6 18"/></svg>
       </button>
     </div>
@@ -22,7 +22,6 @@
       <ng-container *ngIf="termino">
         <p class="np-notice np-notice--ok">
           Listo. El cliente quedó creado, el equipo autorizado y a su nombre.
-          <ng-container *ngIf="aprovisiona"> La configuración corre sola en los próximos minutos.</ng-container>
         </p>
 
         <ol class="pv-pasos">
@@ -34,8 +33,11 @@
 
         <p class="np-notice np-notice--warn" *ngFor="let a of avisos">{{ a }}</p>
 
+        <!-- La configuración no entró todavía: se ve en vivo cómo va llegando al equipo. -->
+        <app-aprovisionamiento-en-vivo *ngIf="aprovisiona" [ordenId]="orden.id"></app-aprovisionamiento-en-vivo>
+
         <div class="np-btnrow np-btnrow--end">
-          <button type="button" class="np-btn np-btn--primary" (click)="cerrado.emit()">Cerrar</button>
+          <button type="button" class="np-btn np-btn--primary" (click)="cerrar()">Cerrar</button>
         </div>
       </ng-container>
 

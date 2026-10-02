@@ -19,6 +19,7 @@ import { environment } from '../../../../../environments/environment';
  */
 @Component({
   selector: 'app-olt-riesgo',
+  host: { class: 'np-console' },
   standalone: true,
   imports: [CommonModule, OltNavComponent, NuevoTicketComponent, BurbujaTicketComponent],
   templateUrl: './olt-riesgo.component.html',

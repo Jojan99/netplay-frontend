@@ -9,6 +9,9 @@
 
   <app-olt-nav />
 
+  <app-complemento-bloqueado *ngIf="bloqueado()" />
+
+  <ng-container *ngIf="!bloqueado()">
   <!-- Los equipos: es lo que se usa todos los días. -->
   <app-olt-acceso-remoto [embebido]="true" />
 
@@ -25,4 +28,5 @@
 
     <app-olt-tr069 *ngIf="verServidor" [embebido]="true" />
   </section>
+  </ng-container>
 </div>

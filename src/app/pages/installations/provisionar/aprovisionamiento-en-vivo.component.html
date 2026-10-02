@@ -1,0 +1,47 @@
+<div class="np-aev" [class.es-ok]="ok" [class.es-mal]="sinResolver" [class.es-info]="estado === 'no_aplica' || estado === 'cancelado'">
+
+  <!-- La señal viajando al equipo: sólo mientras hay algo en curso. -->
+  <div class="np-aev-viaje" *ngIf="enCurso || cargando">
+    <span class="np-aev-nodo">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 17a8 8 0 0 1 16 0M7.5 17a4.5 4.5 0 0 1 9 0M12 17h.01"/></svg>
+    </span>
+    <span class="np-aev-linea">
+      <i></i><i></i><i></i>
+    </span>
+    <span class="np-aev-nodo np-aev-nodo--ont">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="9" width="18" height="7" rx="1.5"/><path d="M7 16v2M11 16v2M3 12h18"/></svg>
+    </span>
+  </div>
+
+  <div class="np-aev-cabeza">
+    <span class="np-aev-icono">
+      <svg *ngIf="ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="9"/><path d="m8.5 12.5 2.5 2.5 4.5-5"/></svg>
+      <svg *ngIf="sinResolver" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16h.01"/></svg>
+      <svg *ngIf="!ok && !sinResolver && !enCurso && !cargando" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="9"/><path d="M9 9h.01M15 9h.01M9 15c.7.7 1.8 1 3 1s2.3-.3 3-1"/></svg>
+      <span *ngIf="enCurso || cargando" class="np-spinner np-spinner--sm"></span>
+    </span>
+    <div class="np-aev-info">
+      <div class="np-aev-fila">
+        <p class="np-aev-t">{{ titulo }}</p>
+        <span class="np-aev-reloj np-data" *ngIf="creadoEn" [class.es-vivo]="enCurso">{{ tiempo }}</span>
+      </div>
+      <p class="np-aev-d" *ngIf="detalle">{{ detalle }}</p>
+    </div>
+  </div>
+
+  <p class="np-fine np-muted" *ngIf="estado === 'no_aplica' && motivo">
+    {{ motivo }} <ng-container *ngIf="queHacer">{{ queHacer }}</ng-container>
+  </p>
+
+  <div class="np-aev-pasos" *ngIf="pasos.length">
+    <div class="np-aev-paso" *ngFor="let p of pasos; trackBy: trackByIndex" [class.es-mal]="p.ok === false">
+      <span class="np-aev-check">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6"><path d="m5 13 4 4L19 7"/></svg>
+      </span>
+      <span class="np-aev-texto">{{ p.paso }}</span>
+    </div>
+  </div>
+
+  <p class="np-fine np-muted" *ngIf="ok">El resultado también queda guardado en Gestión remota, del lado de oficina.</p>
+  <p class="np-fine np-muted" *ngIf="sinResolver">Avise a la oficina: desde Gestión remota lo pueden reintentar.</p>
+</div>

@@ -4,10 +4,14 @@ import { OltService } from '../../services/olt.service';
 import { AcsService } from '../../services/acs.service';
 import { RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
+import { GestionRemotaService } from '../../services/gestion-remota.service';
+import { TareasEnSegundoPlanoService } from '../../services/tareas-en-segundo-plano.service';
 import { limpiarTextoWifi, problemaDeLaClaveWifi, problemaDelNombreWifi } from '../../common/wifi';
 
 /** Lo que se sabe de la ONT sin preguntarle a la OLT: sale de olt_onts. */
 export interface OntVinculada {
+  /** Con el id de la OLT se le puede dar el acceso remoto desde aquí mismo. */
+  olt_id?: number | null;
   olt?: string | null;
   fsp: string;
   ont_id: number;
@@ -40,6 +44,8 @@ const COLOR_MARCA: Record<string, string> = {
 export class OntEquipoComponent implements OnChanges {
   private olt = inject(OltService);
   private acsSvc = inject(AcsService);
+  private gestion = inject(GestionRemotaService);
+  private tareas = inject(TareasEnSegundoPlanoService);
 
   @Input({ required: true }) userId!: number;
   @Input() ont: OntVinculada | null = null;
@@ -61,6 +67,10 @@ export class OntEquipoComponent implements OnChanges {
   /** La dirección que hay que cargarle al equipo para que entre al TR-069. */
   urlAcs = '';
 
+  /** Se le está dando el acceso remoto a este equipo, y cómo terminó. */
+  dandoAcceso = false;
+  avisoAcceso: { texto: string; tipo: 'ok' | 'error' | 'curso' } | null = null;
+
   /** La red a la que se le está cambiando la contraseña. */
   cambiandoClave: { indice: number; clave: string; ssid: string; todas: boolean; oculta: boolean; ocultaAntes: boolean } | null = null;
   guardandoClave = false;
@@ -70,7 +80,61 @@ export class OntEquipoComponent implements OnChanges {
   readonly gid = 'oe' + Math.random().toString(36).slice(2, 8);
 
   ngOnChanges(c: SimpleChanges) {
-    if (c['userId'] && this.userId) this.cargar();
+    if (c['userId'] && this.userId) { this.dandoAcceso = false; this.avisoAcceso = null; this.cargar(); }
+  }
+
+  /**
+   * Le da el acceso remoto al equipo sin salir de la ficha: lo mismo que
+   * Admin OLT → Autorizadas → «Dar acceso remoto». Corre en segundo plano y,
+   * al terminar, se vuelve a preguntar al TR-069 hasta que el equipo aparece.
+   */
+  darAccesoRemoto() {
+    const ont = this.ont;
+    const id = this.userId;
+    if (!ont?.olt_id || this.dandoAcceso) return;
+
+    const fin = (texto: string, tipo: 'ok' | 'error') => { if (id !== this.userId) return; this.dandoAcceso = false; this.avisoAcceso = { texto, tipo }; };
+
+    this.dandoAcceso = true;
+    this.avisoAcceso = { texto: 'Configurando el acceso remoto en la OLT… puede tardar un par de minutos.', tipo: 'curso' };
+
+    this.gestion.darAcceso(ont.olt_id, ont.fsp, ont.ont_id).subscribe({
+      next: (r: any) => {
+        const tarea = r?.data?.tarea;
+        if (r?.error !== 0 || !tarea) { fin(r?.message ?? 'No se pudo iniciar.', 'error'); return; }
+
+        this.tareas.seguir(tarea, `Dando acceso remoto · ${ont.serial || 'equipo'} (${ont.fsp}:${ont.ont_id})`, 'dar_acceso').subscribe({
+          next: (t: any) => {
+            if (t?.estado === 'en_curso') return;
+            if (t?.estado === 'detenida') { fin('Se detuvo antes de terminar.', 'error'); return; }
+            if (t?.estado === 'no_aplica') { fin(t?.motivo || t?.detalle || 'Este equipo no se puede configurar desde la OLT: cárguele la dirección a mano.', 'error'); return; }
+            if (t?.estado !== 'listo') { fin(t?.detalle || 'No se pudo darle acceso.', 'error'); return; }
+
+            fin('Listo. El equipo aparece aquí en cuanto se reporte al TR-069 (uno o dos minutos).', 'ok');
+            this.esperarAlAcs(id, 8);
+          },
+          error: () => fin('Se perdió el seguimiento; mire la ventana de tareas.', 'error'),
+        });
+      },
+      error: (e: any) => fin(e?.error?.message ?? 'No se pudo iniciar.', 'error'),
+    });
+  }
+
+  /** Pregunta cada 20 s si el equipo ya reporta; al aparecer, la ficha se completa sola. */
+  private esperarAlAcs(id: number, quedan: number) {
+    if (quedan <= 0 || id !== this.userId || this.acs) return;
+
+    setTimeout(() => {
+      if (id !== this.userId || this.acs) return;
+      this.acsSvc.deCliente(id).subscribe({
+        next: (r: any) => {
+          if (id !== this.userId) return;
+          if (r?.error === 0 && r.data) { this.acs = r.data; this.avisoAcceso = null; return; }
+          this.esperarAlAcs(id, quedan - 1);
+        },
+        error: () => this.esperarAlAcs(id, quedan - 1),
+      });
+    }, 20000);
   }
 
   /**

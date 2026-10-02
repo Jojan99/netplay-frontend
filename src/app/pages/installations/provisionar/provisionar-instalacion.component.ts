@@ -6,6 +6,7 @@ import { NpSelectComponent, PresentacionSelect } from '../../../common/np-select
 import { PRESENTACION_OLTS, PRESENTACION_TEXTOS, conValor } from '../../../common/np-select/presentaciones';
 import { ToastService } from '../../../services/toast.service';
 import { DialogService } from '../../../services/dialog.service';
+import { AprovisionamientoEnVivoComponent } from './aprovisionamiento-en-vivo.component';
 
 /**
  * Lo que el técnico hace en la casa del cliente.
@@ -21,7 +22,7 @@ import { DialogService } from '../../../services/dialog.service';
 @Component({
   selector: 'app-provisionar-instalacion',
   standalone: true,
-  imports: [CommonModule, FormsModule, NpSelectComponent],
+  imports: [CommonModule, FormsModule, NpSelectComponent, AprovisionamientoEnVivoComponent],
   templateUrl: './provisionar-instalacion.component.html',
   styleUrl: './provisionar-instalacion.component.scss',
 })
@@ -216,6 +217,16 @@ export class ProvisionarInstalacionComponent implements OnInit {
     this.elegida = ont;
   }
 
+  /**
+   * Cerrar el modal, a mano. Si ya instaló, recién ahora se avisa al padre que
+   * terminó (cierra y refresca la lista); antes de eso es un cierre sin más,
+   * como cancelar.
+   */
+  cerrar(): void {
+    if (this.termino) this.listo.emit();
+    else this.cerrado.emit();
+  }
+
   get puedeSeguir(): boolean {
     // Sin VLAN la ONT queda registrada y el cliente no navega: pasó de verdad
     // y nadie se enteró hasta que el cliente llamó.
@@ -263,7 +274,9 @@ export class ProvisionarInstalacionComponent implements OnInit {
         this.avisos = r?.data?.avisos ?? [];
         this.termino = true;
         this.toast.success(r?.message || 'Listo.');
-        this.listo.emit();
+        // No se avisa al padre todavía: eso cierra el modal (ver cerrar()) y antes de
+        // que el técnico llegara a ver esta pantalla —con la animación en vivo del
+        // aprovisionamiento incluida— ya estaba cerrada sola.
       },
       error: (e: any) => {
         this.trabajando = false;

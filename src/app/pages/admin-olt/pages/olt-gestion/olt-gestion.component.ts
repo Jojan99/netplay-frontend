@@ -1,8 +1,10 @@
 import { CommonModule } from '@angular/common';
-import { Component } from '@angular/core';
+import { Component, computed } from '@angular/core';
 import { OltNavComponent } from '../../shared/olt-nav.component';
 import { OltTr069Component } from '../olt-tr069/olt-tr069.component';
 import { OltAccesoRemotoComponent } from '../olt-acceso-remoto/olt-acceso-remoto.component';
+import { CuentaService } from '../../../../services/cuenta.service';
+import { ComplementoBloqueadoComponent } from '../../../../components/complemento-bloqueado/complemento-bloqueado.component';
 
 /**
  * Gestión remota: antes eran dos pantallas, «TR-069» y «Acceso remoto», que
@@ -16,12 +18,15 @@ import { OltAccesoRemotoComponent } from '../olt-acceso-remoto/olt-acceso-remoto
 @Component({
   selector: 'app-olt-gestion',
   standalone: true,
-  imports: [CommonModule, OltNavComponent, OltTr069Component, OltAccesoRemotoComponent],
+  imports: [CommonModule, OltNavComponent, OltTr069Component, OltAccesoRemotoComponent, ComplementoBloqueadoComponent],
   templateUrl: './olt-gestion.component.html',
   styleUrls: ['../../shared/olt.scss', './olt-gestion.component.scss'],
   host: { class: 'np-console' },
 })
 export class OltGestionComponent {
+  /** Sin el complemento TR-069 la pantalla explica qué es y cómo activarlo. */
+  readonly bloqueado = computed(() => !!CuentaService.tr069()?.bloqueado);
+
   /** El servidor arranca plegado: casi nadie viene a tocarlo. */
   verServidor = false;
 }

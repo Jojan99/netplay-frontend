@@ -201,6 +201,10 @@
           </div>
           <p class="np-notice np-notice--warn np-notice--inline" *ngFor="let a of selected.provision_detalle!.avisos">{{ a }}</p>
           <p class="np-fine np-muted" *ngIf="selected.provision_detalle!.cambios?.length">Cambió respecto a lo planeado desde la oficina: {{ selected.provision_detalle!.cambios!.join(' · ') }}</p>
+
+          <!-- El paso de arriba («Configuración programada») queda escrito una sola vez, al instalar:
+               no dice si de verdad ya corrió. Esto sí consulta en vivo cómo va. -->
+          <app-aprovisionamiento-en-vivo *ngIf="selected.aprovisionamiento_id" [ordenId]="selected.id!"></app-aprovisionamiento-en-vivo>
         </section>
 
         <section>

@@ -105,9 +105,16 @@
     <p class="oe-aviso" *ngIf="equipo?.error">{{ equipo.error }}</p>
     <p class="oe-fine" *ngIf="equipo?.aviso">{{ equipo.aviso }}</p>
     <p class="oe-aviso" *ngIf="equipo && !equipo.error && !acs && !consultandoEquipo">
-      Este equipo todavía no reporta al servidor TR-069. Si la OLT lo permite, habilítele el
-      <b>acceso remoto</b> (Admin OLT → Autorizadas → el equipo) y aparece solo en uno o dos minutos.
-      Si no, cárguele a mano la dirección <b class="np-mono">{{ urlAcs }}</b> en su WAN de gestión.
+      Este equipo todavía no reporta al servidor TR-069.
+      <ng-container *ngIf="ont?.olt_id; else sinBoton">Dele el <b>acceso remoto</b> desde aquí y aparece solo en uno o dos minutos.</ng-container>
+      <ng-template #sinBoton>Si la OLT lo permite, habilítele el <b>acceso remoto</b> (Admin OLT → Autorizadas → el equipo) y aparece solo en uno o dos minutos.</ng-template>
+      <span class="oe-acceso" *ngIf="ont?.olt_id">
+        <button type="button" class="np-btn np-btn--primary np-btn--sm" (click)="darAccesoRemoto()" [disabled]="dandoAcceso">
+          <span class="np-spinner np-spinner--sm" *ngIf="dandoAcceso"></span>{{ dandoAcceso ? 'Dando acceso…' : 'Dar acceso remoto' }}
+        </button>
+        <span class="oe-acceso-msg" *ngIf="avisoAcceso" [class.is-ok]="avisoAcceso.tipo === 'ok'" [class.is-error]="avisoAcceso.tipo === 'error'">{{ avisoAcceso.texto }}</span>
+      </span>
+      Si la OLT no lo permite, cárguele a mano la dirección <b class="np-mono">{{ urlAcs }}</b> en su WAN de gestión.
       <button type="button" class="oe-linkbtn" (click)="copiar(urlAcs, 'acs')">{{ copiado === 'acs' ? '✓ Copiada' : 'Copiar dirección' }}</button>
     </p>
 
