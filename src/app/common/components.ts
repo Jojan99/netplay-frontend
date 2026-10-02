@@ -264,18 +264,6 @@ export const components: RouteProps[] = [
     ],
     card: { className: 'w-56', images: { light: 'alerts-light.svg', dark: 'alerts-dark.svg' } },
   },
-  // El recorte para técnicos: autorizar ONT nuevas y consultar las ya
-  // autorizadas, sin el resto de «Admin OLT» (CLI, VPN, configuración). Es
-  // aparte porque el grupo de abajo entero exige «olt-admin»; quien sólo
-  // tenga «olt-detail» no vería nada si esto estuviera adentro.
-  {
-    title: 'Autorizar ONT',
-    href: 'olt-autorizacion/sin-autorizar',
-    group: false,
-    module: 'olt-detail',
-    icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 8v4M12 16h.01"/></svg>`,
-    card: { className: 'w-56', images: { light: 'alerts-light.svg', dark: 'alerts-dark.svg' } },
-  },
   {
     title: 'Admin OLT',
     icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 8h14M5 12h14M5 16h14"/><circle cx="8" cy="8" r="1"/><circle cx="8" cy="12" r="1"/><circle cx="8" cy="16" r="1"/></svg>`,

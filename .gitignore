@@ -40,3 +40,10 @@ testem.log
 # System files
 .DS_Store
 Thumbs.db
+
+# Archivos de trabajo con datos de clientes (cédulas, teléfonos): nunca al repositorio.
+/img/*.xlsx
+/img/*.html
+/img/*.csv
+# Maqueta de la ficha del cliente: se armó con datos reales pegados de la pantalla.
+/src/assets/mockup/

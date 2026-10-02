@@ -161,6 +161,8 @@
   <!-- La barra de atajos va fuera del <main>: hay pantallas (la bandeja del CRM)
        que se estiran con margen negativo hasta los bordes del main y la tapaban. -->
   <div class="app-content">
+    <!-- Prueba por vencer o pago pendiente con Netvula: se avisa antes de que el acceso se suspenda. -->
+    <app-aviso-de-cuenta></app-aviso-de-cuenta>
     <nav *ngIf="atajos.grande() && atajos.misAtajos().length" class="app-atajos" aria-label="Mis atajos">
       <span class="app-atajos-label">Mis atajos</span>
       <a *ngFor="let m of atajos.misAtajos()" class="app-atajos-chip" [routerLink]="'/dashboard/' + m.href"

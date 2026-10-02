@@ -37,7 +37,6 @@ import { TransfersComponent } from './pages/transfers/transfers.component';
 import { TransferFormComponent } from './pages/transfers/transfer-form.component';
 import { TechnicianMapComponent } from './pages/technician-map/technician-map.component';
 import { SendLogsComponent } from './pages/send-logs/send-logs.component';
-import { PrivacyPolicyComponent } from './pages/privacy-policy/privacy-policy.component';
 import { PaymentProofAuditComponent } from './pages/payment-proof-audit/payment-proof-audit.component';
 import { FinanceDesignConceptsComponent } from './pages/finance-design-concepts/finance-design-concepts.component';
 
@@ -101,6 +100,8 @@ export const routes: Routes = [
       { path: 'payment-gateway', component: BillingConfigComponent, canActivate: [roleGuard], data: { module: 'payment-gateway' } },
       // Correo (Mailjet) de la empresa: es una sección de la configuración de facturación.
       { path: 'correo', component: BillingConfigComponent, canActivate: [roleGuard], data: { module: 'billing-config', tab: 'correo' } },
+      // Factura electrónica (DIAN): otra sección de la configuración de facturación.
+      { path: 'factura-electronica', component: BillingConfigComponent, canActivate: [roleGuard], data: { module: 'billing-config', tab: 'dian' } },
       { path: 'mikrotik',       component: MikrotikComponent,          canActivate: [roleGuard], data: { module: 'mikrotik' } },
       { path: 'resumen',        component: ResumenComponent,           canActivate: [roleGuard], data: { module: 'resumen' } },
       { path: 'cartera',        component: CarteraComponent,           canActivate: [roleGuard], data: { module: 'finanzas' } },
@@ -174,7 +175,10 @@ export const routes: Routes = [
   { path: 'confirm-email', component: ConfirmEmailComponent },
   // Llegada al subdominio después de iniciar sesión en la raíz (canjea el vale).
   { path: 'entrar',        loadComponent: () => import('./pages/entrar/entrar.component').then(m => m.EntrarComponent) },
-  { path: 'politica-de-privacidad', component: PrivacyPolicyComponent },
+  // Netvula suspendió a la empresa: a dónde va su equipo en vez de quedarse frente a un panel vacío.
+  { path: 'cuenta-suspendida', loadComponent: () => import('./pages/cuenta-suspendida/cuenta-suspendida.component').then(m => m.CuentaSuspendidaComponent) },
+  // /politica-de-privacidad, /terminos-del-servicio y /eliminacion-de-datos no son rutas de
+  // Angular: las sirve el backend (nginx las manda a Laravel). Se enlazan con href, no routerLink.
   // netvula.com: la página pública. En el subdominio de una empresa, su login.
   {
     path: '',

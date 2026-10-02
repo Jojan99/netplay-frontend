@@ -11,6 +11,51 @@
 .np-wa:not(.is-on) { color: var(--text-3); opacity: .55; }
 .np-wa.is-disabled { opacity: .3; cursor: not-allowed; }
 
+/* ─── Portátil bajo (hasta 720 px de alto) ──────────────────────────────
+   Lo general (título chico, filas de 36 px, ficha apretada) está en el tema.
+   Acá va lo propio de esta pantalla: la cinta de conteos sobra porque los chips
+   traen los mismos números; en su lugar, un dato corto al lado del título. Y
+   con la ficha abierta, cabecera y barra se funden en una sola línea. */
+.np-top { display: contents; }
+.np-title-meta, .np-filtros-btn { display: none; }
+
+@media (max-height: 720px) and (min-width: 1001px) {
+  .np-clients {
+    .np-ribbon, .np-cupo-aviso { display: none; }
+    .np-title { white-space: nowrap; }
+    .np-title-meta { display: inline; font-size: 12px; color: var(--text-3); white-space: nowrap; b { color: var(--text); font-weight: 600; } }
+    .np-pagesize np-select { width: 120px !important; }
+
+    /* Ficha abierta: título, buscador y «Filtros» a la izquierda, «Nuevo
+       cliente» a la derecha, todo en una línea. Los chips salen al tocar
+       «Filtros», en una segunda fila. */
+    &.is-open {
+      --np-inspector-w: 500px;
+      .np-top { display: flex; align-items: center; flex-wrap: wrap; gap: 8px 12px; padding-bottom: 8px; flex-shrink: 0; }
+      .np-head, .np-toolbar { display: contents; }
+      .np-head > div:first-child { order: 0; }
+      .np-search { order: 1; flex: 0 1 240px; }
+      .np-filtros-btn { order: 2; display: inline-flex; height: 30px; font-size: 12px; padding: 0 12px; &[aria-pressed="true"] { border-color: var(--accent); color: var(--accent); } }
+      .np-actions { order: 3; margin-left: auto; }
+      .np-actions .np-btn--ghost { display: none; }
+      .np-spacer, .np-title-meta, .np-chips, .np-pagesize { display: none; }
+    }
+    &.is-open.is-filtros {
+      .np-chips { display: flex; order: 4; flex: 1 1 600px; }
+      .np-pagesize { display: inline-flex; order: 5; }
+    }
+    &.is-open .np-table--registry th:last-child,
+    &.is-open .np-table--registry td.es-acciones { display: none; }
+
+    &.is-open {
+      .np-insp-body { gap: 14px 16px; }
+      .np-insp-body.is-resumen { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); > section:first-child { grid-row: 1 / span 2; } }
+      .np-dl { grid-template-columns: 90px minmax(0, 1fr); row-gap: 5px; }
+      .np-quick .np-btn { padding: 0 8px; }
+    }
+  }
+}
+
 @media (max-width: 1500px) { .np-clients.is-open .np-col-phone { display: none; } }
 @media (max-width: 1280px) { .np-clients.is-wide .np-col-doc { display: none; } }
 @media (max-width: 760px) {
@@ -276,3 +321,7 @@
 /* El tope del plan */
 .np-cupo--alto { color: var(--warn); font-weight: 700; }
 .np-cupo-aviso { margin: 10px 0 0; max-width: 760px; }
+
+/* Suspensión a mano: motivo y «no reactivar automáticamente». */
+.np-susp-extra { display: grid; gap: 10px; margin: 4px 0 14px; text-align: left; }
+.np-susp-nota { margin: 6px 0 0; padding: 0 16px 10px; color: var(--warn); font-weight: 600; }

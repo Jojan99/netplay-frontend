@@ -38,11 +38,14 @@ export type ClientStatusFilter = 'all' | 'active' | 'suspended' | 'noip' | 'nowa
 export type ClientRowStatus = 'active' | 'suspended' | 'noip';
 export type ClientTab = 'resumen' | 'servicios' | 'facturacion' | 'tickets' | 'historial';
 
+import { DatosFiscalesComponent } from '../../components/datos-fiscales/datos-fiscales.component';
+import { PingDiagnosticoComponent } from '../../components/ping-diagnostico/ping-diagnostico.component';
+
 @Component({
   selector: 'app-user',
   templateUrl: './user.component.html',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink, NpSelectComponent, HttpClientModule, LayoutComponent, FooterComponent, OntEquipoComponent, BurbujaTicketComponent],
+  imports: [CommonModule, FormsModule, RouterLink, NpSelectComponent, HttpClientModule, LayoutComponent, FooterComponent, OntEquipoComponent, BurbujaTicketComponent, DatosFiscalesComponent, PingDiagnosticoComponent],
   styleUrls: ['./user.component.scss'],
   host: { class: 'np-console' }
 })
@@ -349,6 +352,14 @@ export class UserComponent implements OnInit {
   get inspectorAutoWide() { return this.wideTabs.includes(this.modalTab); }
   get inspectorIsWide()   { return this.inspectorWide || this.inspectorAutoWide; }
   toggleInspectorWide()   { this.inspectorWide = !this.inspectorWide; }
+
+  /* En un portátil bajo, con la ficha abierta, los filtros se guardan detrás
+     de un botón para que lista y ficha se queden con el alto. */
+  mostrarFiltros = false;
+  get etiquetaFiltro(): string {
+    const nombres: Record<ClientStatusFilter, string> = { all: 'Todos', active: 'Activos', suspended: 'Suspendidos', noip: 'Sin IP', nowa: 'Sin WhatsApp', fe: 'Factura electrónica' };
+    return nombres[this.statusFilter] ?? 'Todos';
+  }
 
   isSelected(u: UserInterface) { return this.showClienteModal && String(this.selectedUserId) === String(u.id_user); }
 
@@ -1558,13 +1569,24 @@ export class UserComponent implements OnInit {
     this.pendingSuspendId        = id;
     this.pendingSuspendStatus    = status;
     this.pendingSuspendRouterId  = routerId ?? null;
+    this.suspMotivo              = '';
+    this.suspNoReactivar         = false;
     this.showSuspendModal        = true;
   }
 
+  /** Por qué se suspende a mano, y si el sistema debe dejarlo quieto aunque quede al día. */
+  suspMotivo = '';
+  suspNoReactivar = false;
+  suspendiendo = false;
+
   confirmSuspend() {
+    if (this.suspendiendo) return;
     const newStatus = this.pendingSuspendStatus === 'ACTIVE' ? 2 : 1;
-    this.userSvc.disableUser(this.pendingSuspendDni, this.pendingSuspendId, newStatus, this.pendingSuspendRouterId).subscribe({
+    this.suspendiendo = true;
+    this.userSvc.disableUser(this.pendingSuspendDni, this.pendingSuspendId, newStatus, this.pendingSuspendRouterId,
+      newStatus === 2 ? { noReactivar: this.suspNoReactivar, motivo: this.suspMotivo } : undefined).subscribe({
       next: r => {
+        this.suspendiendo = false;
         this.toast(r.message ?? 'Estado actualizado', r.error ? 'error' : 'success');
         this.showSuspendModal = false;
         this.getAllUser();
@@ -1573,7 +1595,7 @@ export class UserComponent implements OnInit {
           this.loadAuditLog(this.selectedUserId);
         }
       },
-      error: () => { this.toast('Error al actualizar estado', 'error'); this.showSuspendModal = false; }
+      error: () => { this.suspendiendo = false; this.toast('Error al actualizar estado', 'error'); this.showSuspendModal = false; }
     });
   }
 
@@ -1617,53 +1639,20 @@ export class UserComponent implements OnInit {
   }
 
   // ── Ping ──────────────────────────────────────────────────────────────────
+  // La ventana y su lógica viven en PingDiagnosticoComponent; aquí sólo se abre y se cierra.
   pingName = '';
   pingDni: any = '';
-  pingCount = 5;
-  pingResults: Array<{ host: string; time: string; received: string; status: string }> = [];
-  showPingForm = false;
-  isPinging = false;
-  private pingSubscription: Subscription | null = null;
+  pingIp: string | null = null;
 
   openPingModal(ip: any, name: string, lastname: string, dni: any, userId: any) {
-    this.pingName     = `${name} ${lastname}`;
-    this.pingDni      = dni;
-    this.pingResults  = [];
-    this.showPingForm = false;
+    this.pingName = `${name ?? ''} ${lastname ?? ''}`.trim();
+    this.pingDni = dni;
+    this.pingIp = ip ? String(ip) : null;
     this.showPingModal = true;
-    if (this.pingSubscription) { this.pingSubscription.unsubscribe(); this.pingSubscription = null; }
   }
 
   closePingModal() {
     this.showPingModal = false;
-    if (this.pingSubscription) { this.pingSubscription.unsubscribe(); this.pingSubscription = null; }
-    this.pingResults  = [];
-    this.isPinging    = false;
-  }
-
-  startPing() {
-    this.pingResults = [];
-    this.cdr.detectChanges();
-    if (this.pingSubscription) { this.pingSubscription.unsubscribe(); }
-    this.isPinging = true;
-    this.pingSubscription = this.userSvc.getPingResults(this.pingCount, this.pingDni).subscribe({
-      next: data => {
-        if (data.message === 'done') { this.isPinging = false; return; }
-        const p = typeof data === 'string' ? JSON.parse(data) : data;
-        const status = p['packet-loss'] === '100' ? '❌ Timeout' : p['packet-loss'] === '0' ? '✅ Activo' : '⚠️ Intermitente';
-        this.pingResults.push({ ...p, status });
-        this.cdr.detectChanges();
-      },
-      error: () => { this.isPinging = false; },
-      complete: () => { this.isPinging = false; }
-    });
-  }
-
-  convertToSeconds(time: string | undefined): string {
-    if (!time) return '❌ Timeout';
-    if (time.includes('us')) return (parseFloat(time) / 1_000_000).toFixed(2) + ' s';
-    if (time.includes('ms')) return (parseFloat(time) / 1_000).toFixed(2) + ' s';
-    return parseFloat(time).toFixed(2) + ' s';
   }
 
   // ── Create user form ──────────────────────────────────────────────────────
@@ -2252,6 +2241,13 @@ export class UserComponent implements OnInit {
   toggleInternetStatus() {
     const d = this.selectedUserData;
     if (!d || this.togglingStatus) return;
+
+    // Suspender pasa por la confirmación: ahí se deja el motivo y se dice si vuelve solo.
+    if (d.status_internet === 'ACTIVE') {
+      this.openSuspendModal(d.dni, this.selectedUserId, 'ACTIVE', d.router_id ? Number(d.router_id) : null);
+      return;
+    }
+
     this.togglingStatus = true;
     const newStatus = d.status_internet === 'ACTIVE' ? 2 : 1;
     this.userSvc.disableUser(d.dni, this.selectedUserId, newStatus, d.router_id ? Number(d.router_id) : null).subscribe({

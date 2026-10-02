@@ -4,13 +4,18 @@
 </div>
 
 <!-- ── Página ─────────────────────────────────────────────────────────────── -->
-<div class="np-page np-clients" [class.is-open]="showClienteModal" [class.is-wide]="showClienteModal && inspectorIsWide">
+<div class="np-page np-clients" [class.is-open]="showClienteModal" [class.is-wide]="showClienteModal && inspectorIsWide" [class.is-filtros]="mostrarFiltros">
 
+  <!-- En un portátil bajo la cabecera y la barra se funden en una sola línea (np-top, en el scss). -->
+  <div class="np-top">
   <!-- Cabecera -->
   <header class="np-head">
     <div>
       <p class="np-kicker">Operación <b>/</b> Clientes</p>
       <h1 class="np-title">Registro de clientes</h1>
+      <span class="np-title-meta np-mono" *ngIf="!skeletor">
+        <b>{{ conteos.todos | number }}</b> clientes<ng-container *ngIf="cupo?.tope"> · <b [class.np-cupo--alto]="(cupo?.porcentaje ?? 0) >= 90">{{ cupo?.ocupados | number }}</b>/{{ cupo?.tope | number }} del plan</ng-container>
+      </span>
       <div class="np-ribbon" *ngIf="!skeletor">
         <span><span class="np-n">{{ conteos.todos | number }}</span>{{ search.trim() ? 'encontrados' : 'en total' }}</span>
         <span><i class="np-dot" style="background:var(--ok)"></i><span class="np-n">{{ countActive | number }}</span>activos</span>
@@ -66,11 +71,15 @@
       <button type="button" class="np-chip" [attr.aria-pressed]="statusFilter === 'fe'" (click)="setStatusFilter('fe')"
               title="Clientes con facturación electrónica: los que cobran por la pasarela">Factura electrónica<span class="np-c">{{ countConFe }}</span></button>
     </div>
+    <button type="button" class="np-btn np-btn--ghost np-filtros-btn" (click)="mostrarFiltros = !mostrarFiltros" [attr.aria-pressed]="mostrarFiltros">
+      Filtros<span class="np-c">{{ etiquetaFiltro }}</span>
+    </button>
     <span class="np-spacer"></span>
     <label class="np-pagesize">Mostrar
       <np-select [ngModel]="entriesPerPage" (ngModelChange)="onEntriesPerPageChange($event)" [opciones]="porPagina" [presentacion]="presPorPagina"
                  tamano="sm" style="width: 140px" ariaLabel="Registros por página"></np-select>
     </label>
+  </div>
   </div>
 
   <!-- Espacio de trabajo: lista + ficha -->
@@ -179,6 +188,13 @@
     <!-- ══ Ficha lateral ═══════════════════════════════════════════════════ -->
     <aside class="np-inspector" *ngIf="showClienteModal" aria-label="Ficha del cliente">
 
+      <!-- En pantalla chica la ficha tapa la lista entera: sin esto, la única forma de volver
+           era la X chiquita de la esquina o la tecla Escape, y no se notaba ninguna de las dos. -->
+      <button type="button" class="np-insp-volver" (click)="closeClienteModal()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="m11 6-6 6 6 6M5 12h14"/></svg>
+        Volver al listado
+      </button>
+
       <div class="np-insp-head">
         <div class="np-avatar">{{ initialOf(selectedUserData?.names) }}</div>
         <div class="np-insp-id">
@@ -209,6 +225,9 @@
                   (click)="toggleInternetStatus()" aria-label="Activar o suspender internet"></button>
         </span>
       </div>
+      <p class="np-fine np-susp-nota" *ngIf="selectedUserData?.status_internet !== 'ACTIVE' && selectedUserData?.no_reactivar_auto">
+        Suspendido por un operador con «no reactivar automáticamente»: no vuelve solo aunque quede al día.
+      </p>
 
       <div class="np-tabs" role="tablist">
         <button type="button" class="np-tab" role="tab" [attr.aria-selected]="modalTab === 'resumen'" (click)="setTab('resumen')">Resumen</button>
@@ -220,7 +239,7 @@
 
       <div *ngIf="loadingModal" class="np-loading"><span class="np-spinner"></span> Cargando ficha…</div>
 
-      <div class="np-insp-body" *ngIf="!loadingModal && selectedUserData">
+      <div class="np-insp-body" [class.is-resumen]="modalTab === 'resumen'" *ngIf="!loadingModal && selectedUserData">
 
         <!-- ── Resumen ─────────────────────────────────────────────────── -->
         <ng-container *ngIf="modalTab === 'resumen'">
@@ -284,6 +303,8 @@
             </div>
           </section>
 
+          <app-datos-fiscales [userId]="selectedUserId"></app-datos-fiscales>
+
           <section>
             <p class="np-sect">Acciones</p>
             <div class="np-quick">
@@ -313,7 +334,7 @@
               <ng-container *ngIf="!loadingOnt && assignedOnt">
                 <app-ont-equipo
                   [userId]="selectedUserId"
-                  [ont]="{ olt: assignedOnt.olt?.name, fsp: assignedOnt.fsp, ont_id: assignedOnt.ont_id, serial: assignedOnt.serial, estado: assignedOnt.status }">
+                  [ont]="{ olt_id: assignedOnt.olt_id ?? assignedOnt.olt?.id, olt: assignedOnt.olt?.name, fsp: assignedOnt.fsp, ont_id: assignedOnt.ont_id, serial: assignedOnt.serial, estado: assignedOnt.status }">
                 </app-ont-equipo>
                 <dl class="np-dl np-ont-extra" *ngIf="assignedOnt.description || assignedOnt.service_ports?.length">
                   <ng-container *ngIf="assignedOnt.description"><dt>Descripción</dt><dd>{{ assignedOnt.description }}</dd></ng-container>
@@ -620,11 +641,13 @@
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 12 2 2 4-4"/><circle cx="12" cy="12" r="9"/></svg>
                       </button>
                       <!-- Revertir y anular: mueven plata, así que van al final
-                           y piden el motivo antes de hacer nada. -->
-                      <button *ngIf="item.paid === 1 && !item.anulada_en" type="button" class="np-icobtn" (click)="pedirMotivo('revertir', item)" title="Revertir el pago">
+                           y piden el motivo antes de hacer nada. Un abono parcial (la
+                           factura sigue pendiente) también se revierte, no sólo la que
+                           quedó pagada del todo. -->
+                      <button *ngIf="(item.paid === 1 || (item.price_abone || 0) > 0) && !item.anulada_en" type="button" class="np-icobtn" (click)="pedirMotivo('revertir', item)" title="Revertir el pago">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 4v4h4"/></svg>
                       </button>
-                      <button *ngIf="item.paid !== 1 && !item.anulada_en" type="button" class="np-icobtn np-icobtn--danger" (click)="pedirMotivo('anular', item)" title="Anular la factura">
+                      <button *ngIf="item.paid !== 1 && !((item.price_abone || 0) > 0) && !item.anulada_en" type="button" class="np-icobtn np-icobtn--danger" (click)="pedirMotivo('anular', item)" title="Anular la factura">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="m5.6 5.6 12.8 12.8"/></svg>
                       </button>
                       <!-- Borrar es sin vuelta y pierde el consecutivo: va
@@ -728,7 +751,7 @@
                   <td class="es-principal" data-label="Campo"><span class="np-tag">{{ auditFieldLabel(log.field_changed) }}</span></td>
                   <td class="np-neg" data-label="Antes">{{ log.old_value || '—' }}</td>
                   <td class="np-pos" data-label="Después">{{ log.new_value || '—' }}</td>
-                  <td class="np-muted es-ancha" data-label="Descripción">{{ log.description }}</td>
+                  <td class="np-muted es-ancha" data-label="Descripción">{{ log.description }}<div class="np-fine">{{ log.hecho_por ? 'Por ' + log.hecho_por : (log.changed_by === 0 ? 'Por el sistema' : '') }}</div></td>
                 </tr>
                 <tr *ngIf="auditLogs.length === 0" class="np-empty"><td colspan="5">No hay registros de cambios para este cliente.</td></tr>
               </tbody>
@@ -742,38 +765,7 @@
 </div>
 
 <!-- ══ Ping ═════════════════════════════════════════════════════════════════ -->
-<div *ngIf="showPingModal" class="np-overlay" (click)="closePingModal()">
-  <div class="np-modal" role="dialog" aria-modal="true" aria-label="Diagnóstico ping" (click)="$event.stopPropagation()">
-    <div class="np-modal-head">
-      <div>
-        <h3>Diagnóstico ping</h3>
-        <p class="np-meta">{{ pingName }} · CC <b>{{ pingDni }}</b></p>
-      </div>
-      <button type="button" class="np-icobtn" (click)="closePingModal()" aria-label="Cerrar">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M6 6l12 12M18 6 6 18"/></svg>
-      </button>
-    </div>
-    <div class="np-modal-body">
-      <div class="np-form np-form--row">
-        <label class="np-field"><span>Cantidad de pings</span><input type="number" class="np-input np-mono" [(ngModel)]="pingCount" min="1" max="20" /></label>
-        <button type="button" class="np-btn np-btn--primary" (click)="startPing()" [disabled]="isPinging">{{ isPinging ? 'Enviando…' : 'Enviar' }}</button>
-      </div>
-      <div *ngIf="pingResults.length > 0" class="np-tablewrap np-tablewrap--scroll">
-        <table class="np-table np-table--compact">
-          <thead><tr><th>#</th><th>Host</th><th>Tiempo</th><th>Estado</th></tr></thead>
-          <tbody>
-            <tr *ngFor="let r of pingResults; let i = index">
-              <td class="np-data np-data--dim">{{ i + 1 }}</td>
-              <td class="np-data">{{ r.host }}</td>
-              <td class="np-data">{{ convertToSeconds(r.time) }}</td>
-              <td>{{ r.status }}</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-    </div>
-  </div>
-</div>
+<app-ping-diagnostico *ngIf="showPingModal" [nombre]="pingName" [dni]="pingDni" [ip]="pingIp" (cerrar)="closePingModal()"></app-ping-diagnostico>
 
 <!-- ══ Confirmar suspensión ════════════════════════════════════════════════ -->
 <div *ngIf="showSuspendModal" class="np-overlay" (click)="showSuspendModal = false">
@@ -784,10 +776,20 @@
     </span>
     <h3>{{ pendingSuspendStatus === 'ACTIVE' ? '¿Suspender el servicio?' : '¿Reactivar el servicio?' }}</h3>
     <p>Cliente con documento <b class="np-mono">{{ pendingSuspendDni }}</b>. El cambio se aplica en el router de inmediato.</p>
+    <div class="np-susp-extra" *ngIf="pendingSuspendStatus === 'ACTIVE'">
+      <label class="np-field">
+        <span class="np-label">Motivo (queda en el historial)</span>
+        <input type="text" class="np-input" [(ngModel)]="suspMotivo" name="suspMotivo" maxlength="200" placeholder="Ej.: mora, pidió pausar el servicio, daño en el equipo…" />
+      </label>
+      <label class="np-check np-check--box">
+        <input type="checkbox" [(ngModel)]="suspNoReactivar" name="suspNoReactivar" />
+        <span><b>No reactivar automáticamente.</b> Márquelo si no es por mora: el sistema no le devuelve el servicio aunque quede al día; sólo un operador.</span>
+      </label>
+    </div>
     <div class="np-btnrow np-btnrow--center">
       <button type="button" class="np-btn np-btn--ghost" (click)="showSuspendModal = false">Cancelar</button>
-      <button type="button" class="np-btn" [ngClass]="pendingSuspendStatus === 'ACTIVE' ? 'np-btn--danger-solid' : 'np-btn--primary'" (click)="confirmSuspend()">
-        {{ pendingSuspendStatus === 'ACTIVE' ? 'Suspender' : 'Reactivar' }}
+      <button type="button" class="np-btn" [ngClass]="pendingSuspendStatus === 'ACTIVE' ? 'np-btn--danger-solid' : 'np-btn--primary'" (click)="confirmSuspend()" [disabled]="suspendiendo">
+        {{ suspendiendo ? 'Aplicando…' : (pendingSuspendStatus === 'ACTIVE' ? 'Suspender' : 'Reactivar') }}
       </button>
     </div>
   </div>

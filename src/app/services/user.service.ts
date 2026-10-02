@@ -90,12 +90,18 @@ export class UserService {
     const url = this.env.rootUrl + 'api/user/updateUserData'
     return this.http.put<any>(url, parameter, { headers: this.getHeaders() });
   }
-  disableUser(ip:any,id_user:any,internet_status:any, routerId?: number | null){
+  /**
+   * Suspende (2) o reactiva (1). Al suspender a mano se puede dejar dicho por qué y marcar
+   * que el sistema no lo reactive solo cuando quede al día (no es por mora).
+   */
+  disableUser(ip:any,id_user:any,internet_status:any, routerId?: number | null, extra?: { noReactivar?: boolean; motivo?: string }){
     var parameter = JSON.stringify({
       username: ip,
       id_user: id_user,
       status:internet_status,
       router_id: routerId ?? undefined,
+      no_reactivar: extra?.noReactivar ? true : undefined,
+      motivo: extra?.motivo?.trim() || undefined,
     });
 
     const url = this.env.rootUrl + 'api/management/UpdateStatus'
@@ -147,7 +153,6 @@ export class UserService {
       const connect = () => {
         const token = this.getAuthToken() ?? '';
         const url = `${this.env.rootUrl}api/dni/pruebaMikroPing?dni=${encodeURIComponent(dniping)}&count=${encodeURIComponent(count)}&token=${encodeURIComponent(token)}`;
-        console.log('Conectando a:', url);
 
         const eventSource = new EventSource(url);
   

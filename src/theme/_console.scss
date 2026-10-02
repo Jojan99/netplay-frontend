@@ -75,7 +75,15 @@
   select { height: 34px !important; min-width: 72px; padding: 0 28px 0 10px !important; font-family: var(--font-mono); font-size: 13px; font-weight: 600; color: var(--text) !important; } }
 
 /* ─── Espacio de trabajo ─────────────────────────────────────────────── */
-.np-workspace { flex: 1; min-height: 0; display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; align-items: start; }
+/* «stretch» (el valor por defecto de grid): la lista y la ficha llenan todo el
+   alto disponible. Con «start» quedaban del alto de su contenido —en una
+   pantalla más baja (portátil) se veían cortas, con un hueco vacío abajo, y la
+   ficha se recortaba antes de llegar al final—. El mapa de técnicos ya lo
+   pisaba a mano por esto mismo (np-techmap-ws); ahora no hace falta en ningún
+   lado. */
+.np-workspace { flex: 1; min-height: 0; display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; align-items: stretch; }
+/* Una lista puesta directamente en la página (sin np-workspace) también llena el alto. */
+.np-page > .np-registry { flex: 1; min-height: 0; }
 .np-page.is-open .np-workspace { grid-template-columns: minmax(0, 1fr) var(--np-inspector-w); }
 .np-page.is-wide .np-workspace { grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.15fr); }
 
@@ -137,6 +145,9 @@
 
 /* ─── Ficha lateral ──────────────────────────────────────────────────── */
 .np-inspector { min-height: 0; max-height: 100%; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-lg); box-shadow: var(--shadow); overflow: hidden; display: flex; flex-direction: column; }
+/* Sólo tiene sentido cuando la ficha tapa toda la pantalla (ver el breakpoint de 1280px): al
+   lado de la lista, la X del encabezado ya alcanza y esto sería una barra de más. */
+.np-insp-volver { display: none; }
 .np-insp-head, .np-switchrow { flex-shrink: 0; }
 .np-insp-head { display: flex; align-items: flex-start; gap: 12px; padding: 16px 16px 12px; border-bottom: 1px solid var(--line); }
 .np-avatar { width: 40px; height: 40px; border-radius: var(--radius-lg); display: grid; place-items: center; background: var(--accent-soft); color: var(--accent); font-family: var(--font-display); font-weight: 700; font-size: 18px; flex-shrink: 0; }
@@ -261,6 +272,18 @@ select optgroup {
   .np-inspector { position: fixed; inset: 0; z-index: 55; border-radius: 0; border: 0; max-height: none; }
   .np-insp-head { padding-top: max(16px, env(safe-area-inset-top)); }
 
+  /* Acá abajo la ficha tapa la lista entera: sin un «volver» bien a la vista, la
+     única salida era la X chiquita del encabezado o la tecla Escape —ninguna
+     de las dos se nota—, y parecía que la pantalla se quedó sin poder navegar. */
+  .np-insp-volver {
+    display: flex; align-items: center; gap: 8px; width: 100%;
+    padding: 12px 16px; padding-top: max(12px, env(safe-area-inset-top));
+    border: 0; border-bottom: 1px solid var(--line); background: var(--surface-2);
+    color: var(--text-2); font-weight: 700; font-size: 13px; text-align: left; cursor: pointer;
+    svg { width: 18px; height: 18px; flex-shrink: 0; }
+    &:hover { background: var(--surface-3); color: var(--text); }
+  }
+
   /* Ampliar o reducir no significa nada cuando ya ocupa la pantalla. */
   .np-inspector .np-only-desktop { display: none !important; }
 
@@ -296,6 +319,57 @@ select optgroup {
      propio scroll adentro, escape incluido. */
   .np-inspector { max-height: none; }
 }
+/* ─── Portátil bajo: hasta 720 px de alto con ancho de escritorio ─────────
+   En un portátil de 1366×633 la cabecera grande (kicker, título de 30 px,
+   cinta de conteos), la barra de filtros y las filas de 44 px se comían más
+   de la mitad del alto: a la lista le quedaban tres filas y a la ficha una
+   franja. Acá todo se aprieta: título de 20 px con la cinta al lado, botones
+   y filas más bajos, ficha con menos aire. Por encima de 720 px de alto, o en
+   pantallas angostas (que ya scrollean enteras), nada de esto aplica. */
+@media (max-height: 720px) and (min-width: 1001px) {
+  main.app-platform { padding: 14px 16px 16px; }
+
+  .np-head { align-items: center; padding: 0 0 8px; gap: 14px; }
+  .np-head > div:first-child { display: flex; align-items: baseline; flex-wrap: wrap; gap: 4px 14px; min-width: 0; }
+  .np-kicker { display: none; }
+  /* Con la especificidad de «.app-platform h1» (_bridge.scss), que si no gana. */
+  .app-platform h1.np-title, .np-title { font-size: 20px; }
+  .np-ribbon { margin-top: 0; gap: 4px 16px; min-height: 0; }
+  .np-n { font-size: 13px; }
+  .np-head .np-notice, .np-page > .np-notice { padding: 5px 10px; font-size: 12px; }
+  .np-head .np-notice { flex-basis: 100%; }
+  .np-actions .np-btn { height: 30px; font-size: 12px; padding: 0 12px; }
+
+  .np-toolbar { padding: 0 0 8px; border-top: 0; gap: 8px 10px; }
+  .np-search { flex: 0 1 220px; min-width: 180px; height: 32px; }
+  .np-chip { height: 28px; padding: 0 11px; }
+  .np-btn { height: 30px; }
+  /* Rótulo al lado del campo, no encima: un «Desde / Hasta» de 48 px partía la
+     barra en dos filas. */
+  .np-toolbar .np-field--inline { grid-template-columns: auto minmax(0, 1fr); align-items: center; gap: 6px; > span { font-size: 11px; } .np-input { height: 30px; } }
+
+  .np-table--registry tbody td { padding: 6px 12px; }
+  .np-stripe i { height: 36px; }
+  .np-name { font-size: 12.5px; }
+  .np-name, .np-plan { display: inline; }
+  .np-plan { margin-left: 8px; }
+  .np-pager { padding: 6px 14px; }
+
+  .np-kpi { padding: 8px 12px; }
+  .np-kpi-v { font-size: 17px; }
+  .np-kpi-s { font-size: 11px; }
+
+  .np-insp-head { padding: 10px 14px; align-items: center; }
+  .np-avatar { width: 34px; height: 34px; font-size: 16px; }
+  .np-insp-id h2 { font-size: 15px; }
+  .np-switchrow { padding: 6px 16px; }
+  .np-tab { padding: 9px 10px; }
+  .np-insp-body { padding: 12px 14px 14px; gap: 14px; }
+  .np-stat { padding: 8px; min-width: 0; }
+  .np-stat-l { font-size: 9.5px; letter-spacing: .03em; }
+  .np-stat-v { font-size: 14px; overflow: hidden; text-overflow: ellipsis; }
+}
+
 @media (max-width: 760px) {
   .np-head { flex-direction: column; align-items: stretch; gap: 12px; }
   .np-title { font-size: 24px; }

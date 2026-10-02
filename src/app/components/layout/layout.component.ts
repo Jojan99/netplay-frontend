@@ -39,6 +39,7 @@ import { NovedadesComponent }       from '../novedades/novedades.component';
 import { TooltipsGlobales }         from '../../common/tooltips';
 import { ActualizacionService }     from '../../services/actualizacion.service';
 import { VentanasRapidasComponent, MenuDeVentanasComponent } from '../atajos/ventanas-rapidas.component';
+import { AvisoDeCuentaComponent }    from '../aviso-de-cuenta/aviso-de-cuenta.component';
 
 @Component({
   selector: 'app-layout',
@@ -49,7 +50,7 @@ import { VentanasRapidasComponent, MenuDeVentanasComponent } from '../atajos/ven
     DarkThemeToggleComponent, NavbarComponent, FooterComponent, CrmWidgetComponent, DialogHostComponent, TeamPanelComponent,
     SanitizeHtmlPipe, TareasFlotantesComponent, CobranzaBurbujaComponent,
     BuscadorRapidoComponent, VentanasRapidasComponent, MenuDeVentanasComponent,
-    NotificacionesComponent, NovedadesComponent,
+    NotificacionesComponent, NovedadesComponent, AvisoDeCuentaComponent,
   ],
   templateUrl: './layout.component.html',
   styleUrl: './layout.component.scss',

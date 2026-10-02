@@ -7,6 +7,7 @@ import { HttpClientModule } from '@angular/common/http';
 import { LayoutComponent } from './components/layout/layout.component';
 import { MatSnackBarModule } from '@angular/material/snack-bar';
 import { TablasMovilService } from './services/tablas-movil.service';
+import { SalidaSeguraService } from './services/salida-segura.service';
 
 @Component({
   selector: 'app-root',
@@ -18,7 +19,11 @@ export class AppComponent {
   // FFmpeg (32 MB) ya no se precarga al abrir cualquier pantalla: tardaba más
   // de 20 s, fallaba y dejaba un error en consola aunque nadie grabara audio.
   // Lo carga AudioFfmpegService la primera vez que el CRM convierte una nota de voz.
-  constructor(readonly sidebarService: SidebarService, tablasMovil: TablasMovilService) { tablasMovil.iniciar(); }
+  constructor(readonly sidebarService: SidebarService, tablasMovil: TablasMovilService, salidaSegura: SalidaSeguraService) {
+    tablasMovil.iniciar();
+    // «¿Seguro que desea salir?» al cerrar un modal con algo ya diligenciado.
+    salidaSegura.iniciar();
+  }
 
   components = components;
 }
