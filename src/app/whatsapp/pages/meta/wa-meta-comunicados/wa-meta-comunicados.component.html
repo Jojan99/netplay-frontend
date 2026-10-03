@@ -74,6 +74,10 @@
               <textarea *ngIf="s.tipo === 'fijo'" [(ngModel)]="s.valor" (ngModelChange)="cambioContenido()" rows="3"
                         placeholder="Escribe aquí el mensaje que verán todos los clientes…"
                         class="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-900 dark:text-white"></textarea>
+              <p *ngIf="s.tipo === 'fijo'" class="text-xs text-slate-500 dark:text-slate-400">
+                Puede meter datos de cada cliente entre llaves: <code>{{ '{total_pendiente}' }}</code>, <code>{{ '{dias_mora}' }}</code>, <code>{{ '{factura}' }}</code>, <code>{{ '{cliente}' }}</code>.
+                Va en un solo párrafo: WhatsApp no acepta saltos de renglón dentro de este espacio.
+              </p>
             </div>
           </div>
         </div>
@@ -86,7 +90,7 @@
           <h2 class="text-base font-semibold text-slate-900 dark:text-white">A quién se lo mandas</h2>
         </div>
 
-        <div class="grid gap-4 sm:grid-cols-3">
+        <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <label class="flex items-start gap-2 rounded-lg border border-slate-200 p-3 dark:border-slate-700">
             <input type="checkbox" [(ngModel)]="filtros.solo_vigentes" (ngModelChange)="contar()"
                    class="mt-0.5 h-4 w-4 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500">
@@ -107,7 +111,21 @@
             <np-select [(ngModel)]="filtros.deuda" (ngModelChange)="contar()" [opciones]="opcionesDeuda" [presentacion]="presSimple"
                        ariaLabel="Facturas"></np-select>
           </div>
+
+          <div *ngIf="opcionesGrupo.length > 1">
+            <label class="mb-1.5 block text-sm font-medium text-slate-700 dark:text-slate-300">Grupo de corte</label>
+            <np-select [(ngModel)]="filtros.grupo" (ngModelChange)="contar()" [opciones]="opcionesGrupo" [presentacion]="presSimple"
+                       ariaLabel="Grupo de corte"></np-select>
+          </div>
         </div>
+
+        <!-- El tope de Meta: pasarse no encola el resto, lo rechaza. -->
+        <p *ngIf="limite?.maximo" class="mt-4 rounded-lg px-4 py-3 text-sm"
+           [ngClass]="excede ? 'bg-red-50 text-red-800 dark:bg-red-950 dark:text-red-200' : 'bg-slate-50 text-slate-600 dark:bg-slate-900 dark:text-slate-300'">
+          <strong *ngIf="excede">Son más de los que Meta deja contactar en un día. </strong>
+          Su número puede iniciar conversación con <strong>{{ limite?.maximo }}</strong> clientes distintos cada 24 horas.
+          <span *ngIf="excede">Reduzca la lista (por ejemplo, un solo grupo de corte) y envíe el resto mañana: lo que pase del tope, Meta lo rechaza.</span>
+        </p>
 
         <!-- Conteo -->
         <div class="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-lg bg-slate-50 px-4 py-3 dark:bg-slate-900">

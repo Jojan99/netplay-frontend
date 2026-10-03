@@ -1,0 +1,45 @@
+<div class="lc">
+  <div class="lc-fila">
+    <input type="text" class="np-input np-mono lc-manual" [(ngModel)]="manual" (keyup.enter)="escrito()" data-sin-aviso
+           [placeholder]="modo === 'serial' ? 'Escriba el serial o use la pistola, y Enter' : 'Escriba el código o use la pistola, y Enter'"
+           [attr.aria-label]="etiqueta || (modo === 'serial' ? 'Serial' : 'Código')" autocomplete="off" autocapitalize="characters" spellcheck="false" />
+    <button type="button" class="np-btn np-btn--ghost lc-ok" (click)="escrito()" [disabled]="!manual.trim()">Agregar</button>
+    <button type="button" class="np-btn" [ngClass]="encendida || iniciando ? 'np-btn--danger' : 'np-btn--primary'" (click)="alternar()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8V6a2 2 0 0 1 2-2h2M16 4h2a2 2 0 0 1 2 2v2M20 16v2a2 2 0 0 1-2 2h-2M8 20H6a2 2 0 0 1-2-2v-2M7 9v6M10 9v6M13 9v6M17 9v6"/></svg>
+      {{ iniciando ? 'Abriendo…' : (encendida ? 'Cerrar cámara' : 'Usar la cámara') }}
+    </button>
+  </div>
+
+  <p class="lc-error" *ngIf="error">{{ error }}</p>
+
+  <!-- El video existe siempre (oculto): así la cámara tiene dónde verse en cuanto llega. -->
+  <div class="lc-visor" [class.is-abierto]="encendida || iniciando" [class.is-bien]="flash?.bien === true" [class.is-mal]="flash?.bien === false">
+    <video #video playsinline muted autoplay></video>
+    <div #marco class="lc-marco" aria-hidden="true"><i></i></div>
+    <p class="lc-guia" *ngIf="encendida">{{ modo === 'serial' ? 'Ponga el código del SN dentro del recuadro' : 'Ponga el código de barras dentro del recuadro' }}</p>
+    <p class="lc-guia" *ngIf="iniciando">Abriendo la cámara…</p>
+    <p class="lc-flash" *ngIf="flash as f" [class.is-mal]="!f.bien" role="status" aria-live="assertive">
+      <svg *ngIf="f.bien" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>
+      <svg *ngIf="!f.bien" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg>
+      <span>{{ f.texto }}</span>
+    </p>
+
+    <div class="lc-controles" *ngIf="encendida">
+      <button type="button" class="lc-ctl" *ngIf="conLinterna" [class.is-on]="linterna" (click)="alternarLinterna()" [attr.aria-pressed]="linterna" aria-label="Linterna">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 4 14h7l-1 8 9-12h-7z"/></svg>
+      </button>
+      <button type="button" class="lc-ctl" *ngIf="camaras.length > 1" (click)="cambiarCamara()" aria-label="Cambiar de cámara">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 0 1 15-6.7L21 8M21 3v5h-5M21 12a9 9 0 0 1-15 6.7L3 16M3 21v-5h5"/></svg>
+      </button>
+      <label class="lc-zoom" *ngIf="zoom as z">
+        <span>Acercar</span>
+        <input type="range" [min]="z.min" [max]="z.max" [step]="z.paso" [value]="z.valor" (input)="acercar($any($event.target).value)" aria-label="Acercar" data-sin-aviso />
+      </label>
+    </div>
+  </div>
+
+  <!-- Sin la cámara abierta (pistola o teclado), el mismo cartel va debajo del campo. -->
+  <p class="lc-flash lc-flash--fuera" *ngIf="flash && !encendida && !iniciando" [class.is-mal]="!flash.bien" role="status" aria-live="assertive"><span>{{ flash.texto }}</span></p>
+  <p class="lc-aviso" *ngIf="aviso">{{ aviso }}</p>
+  <p class="lc-ultimo" *ngIf="ultimo && continuo && encendida">Último leído: <b class="np-mono">{{ ultimo }}</b> · siga con el siguiente</p>
+</div>

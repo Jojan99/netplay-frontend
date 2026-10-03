@@ -11,6 +11,7 @@ import { TicketDetailComponent } from './tickets/ticket-detail.component';
 import { ClientProfileComponent } from './profile/client-profile.component';
 import { PaymentHistoryComponent } from './payments/payment-history.component';
 import { PortalNetworkComponent } from './network/portal-network.component';
+import { PortalEntrarComponent } from './entrar/portal-entrar.component';
 
 export const PORTAL_ROUTES: Routes = [
   {
@@ -19,6 +20,8 @@ export const PORTAL_ROUTES: Routes = [
     // Con sesión de cliente vigente, directo al portal.
     canActivate: [portalYaConectadoGuard],
   },
+  // Desde el enlace de pago de WhatsApp: entra con los últimos 4 dígitos de la cédula.
+  { path: 'entrar', component: PortalEntrarComponent },
   {
     path: '',
     component: PortalLayoutComponent,

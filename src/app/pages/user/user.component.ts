@@ -39,17 +39,21 @@ export type ClientRowStatus = 'active' | 'suspended' | 'noip';
 export type ClientTab = 'resumen' | 'servicios' | 'facturacion' | 'tickets' | 'historial';
 
 import { DatosFiscalesComponent } from '../../components/datos-fiscales/datos-fiscales.component';
+import { UbicacionClienteComponent } from '../../components/ubicacion-cliente/ubicacion-cliente.component';
+import { FacturaElectronicaService } from '../../services/factura-electronica.service';
 import { PingDiagnosticoComponent } from '../../components/ping-diagnostico/ping-diagnostico.component';
 
 @Component({
   selector: 'app-user',
   templateUrl: './user.component.html',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink, NpSelectComponent, HttpClientModule, LayoutComponent, FooterComponent, OntEquipoComponent, BurbujaTicketComponent, DatosFiscalesComponent, PingDiagnosticoComponent],
+  imports: [CommonModule, FormsModule, RouterLink, NpSelectComponent, HttpClientModule, LayoutComponent, FooterComponent, OntEquipoComponent, BurbujaTicketComponent, DatosFiscalesComponent, PingDiagnosticoComponent, UbicacionClienteComponent],
   styleUrls: ['./user.component.scss'],
   host: { class: 'np-console' }
 })
 export class UserComponent implements OnInit {
+  private feSvc = inject(FacturaElectronicaService);
+
   /** Cómo se ven las redes en el selector de VLAN: número de VLAN, segmento y clientes. */
   readonly redes = PRESENTACION_REDES;
   /**
@@ -403,6 +407,7 @@ export class UserComponent implements OnInit {
     this.onResize(null);
     this.loadCatalogs();
     this.cargarCupo();
+    this.cargarSugeridos();
     // ?q=… abre el módulo ya filtrado (lo usa la ficha del cliente del CRM)
     const q = (this.route.snapshot.queryParamMap.get('q') || '').trim();
     // ?cliente=<id> abre su ficha en cuanto llega la lista (lo usa PPPoE).
@@ -1165,18 +1170,19 @@ export class UserComponent implements OnInit {
   get filteredFactures() {
     let list = [...this.factureInfo];
     if (this.factureFilter === 'paid')    list = list.filter(f => f.paid === 1);
-    if (this.factureFilter === 'pending') list = list.filter(f => f.paid !== 1);
+    // Una factura anulada no está pendiente: no se debe.
+    if (this.factureFilter === 'pending') list = list.filter(f => f.paid !== 1 && !(f as any).anulada_en);
     if (this.factureSearch.trim())
       list = list.filter(f => (f.number_facture ?? '').includes(this.factureSearch));
     return list;
   }
 
   get pendingFacturesCount() {
-    return this.filteredFactures.filter(f => f.paid !== 1).length;
+    return this.filteredFactures.filter(f => f.paid !== 1 && !(f as any).anulada_en).length;
   }
 
   get pendingFacturesTotal() {
-    return this.filteredFactures.filter(f => f.paid !== 1).reduce((a, b) => a + (b.restante ?? 0), 0);
+    return this.filteredFactures.filter(f => f.paid !== 1 && !(f as any).anulada_en).reduce((a, b) => a + (b.restante ?? 0), 0);
   }
 
   loadFacturas(cabId: number, filterPaid = 0) {
@@ -1195,7 +1201,8 @@ export class UserComponent implements OnInit {
           price_discount: e.price_discount,
           price_total: e.price_total,
           updated_at: e.updated_at,
-          restante: e.paid === 1 ? 0 : (e.price_total - e.price_abone),
+          // Pagada o anulada: no queda nada por cobrar.
+          restante: e.paid === 1 || e.anulada_en ? 0 : Math.max(0, (Number(e.price_total) || 0) - (Number(e.price_discount) || 0) - (Number(e.price_abone) || 0)),
           paid: e.paid,
           paid_at: e.paid_at,
           metodo_pago: e.metodo_pago,
@@ -1676,6 +1683,26 @@ export class UserComponent implements OnInit {
    * formulario se veía plano: no decían nada sobre cómo escribir el dato. Aquí
    * va un ejemplo real de cada uno.
    */
+  /** La ciudad donde atiende la empresa: lo que se propone en cada alta. */
+  sugeridos: { ciudad?: string; departamento?: string; municipio?: string; pais?: string; prefijo_telefono?: string } = {};
+  tiposDeDocumento: Array<{ id: string; nombre: string }> = [{ id: 'CC', nombre: 'Cédula de ciudadanía' }];
+  readonly ESTRATOS = [1, 2, 3, 4, 5, 6];
+
+  private cargarSugeridos(): void {
+    this.feSvc.clientePorDefecto().subscribe({
+      next: (r: any) => {
+        this.sugeridos = r?.data?.sugeridos ?? {};
+        this.tiposDeDocumento = Object.entries(r?.data?.tipos ?? { CC: 'Cédula de ciudadanía' }).map(([id, nombre]) => ({ id, nombre: String(nombre) }));
+
+        // El formulario ya estaba armado en blanco: se le ponen ahora, sin pisar lo escrito.
+        for (const k of ['ciudad', 'departamento', 'municipio', 'pais', 'prefijo_telefono'] as const) {
+          if (!this.newUser[k] && this.sugeridos[k]) this.newUser[k] = this.sugeridos[k];
+        }
+      },
+      error: () => {},
+    });
+  }
+
   readonly CAMPOS_PERSONALES = [
     { label: 'Nombres',   key: 'names',    type: 'text',  ph: 'Juan Carlos',                 ayuda: 'sin apellidos', mono: false, ancho: false },
     { label: 'Apellidos', key: 'lastname', type: 'text',  ph: 'Pérez Gómez',                 ayuda: '',              mono: false, ancho: false },
@@ -1834,6 +1861,10 @@ export class UserComponent implements OnInit {
     return {
       names: '', lastname: '', dni: '', phone: '', email: '', address: '',
       plan_id: 0, ip: 0, periode_facturation: 0, countries: 1,
+      // Lo que piden la DIAN y Alegra: se propone la ciudad de la empresa y se corrige si no es.
+      tipo_documento: 'CC', estrato: null as number | null, barrio: '',
+      ciudad: this.sugeridos?.ciudad ?? '', departamento: this.sugeridos?.departamento ?? '', municipio: this.sugeridos?.municipio ?? '',
+      pais: this.sugeridos?.pais ?? 'Colombia', prefijo_telefono: this.sugeridos?.prefijo_telefono ?? '57',
       // Con IP fija el cliente vive en el ARP del router; con PPPoE entra con
       // usuario y contraseña y la IP se la da el pool.
       connection_type: 'static',

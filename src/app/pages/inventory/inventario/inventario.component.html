@@ -1,0 +1,309 @@
+<div class="np-page iv">
+  <header class="np-head">
+    <div>
+      <p class="np-kicker">Operación <b>/</b> Inventario</p>
+      <h1 class="np-title">Inventario</h1>
+      <div class="np-ribbon"><span>Qué hay en la bodega, qué tiene cada técnico y dónde está cada equipo.</span></div>
+    </div>
+    <div class="iv-acciones">
+      <button type="button" class="np-btn np-btn--primary" (click)="iniciar('recibir')">Recibir mercancía</button>
+      <button type="button" class="np-btn np-btn--ghost" (click)="iniciar('entregar')">Entregar a técnico</button>
+      <button type="button" class="np-btn np-btn--ghost" (click)="iniciar('devolver')">Devolución</button>
+      <button type="button" class="np-btn np-btn--ghost" (click)="nuevoItem()">Nuevo ítem</button>
+    </div>
+  </header>
+
+  <p class="np-loading" *ngIf="cargando"><span class="np-spinner"></span> Cargando el inventario…</p>
+  <p class="np-notice np-notice--danger" *ngIf="error">{{ error }}</p>
+
+  <ng-container *ngIf="resumen">
+    <div class="iv-kpis">
+      <div class="iv-kpi"><span>En bodega</span><b>{{ plata(resumen.valor_en_bodega) }}</b><small>{{ n(resumen.items) }} ítems</small></div>
+      <button type="button" class="iv-kpi" [attr.data-t]="resumen.agotados || resumen.bajos ? 'danger' : 'ok'" (click)="soloAtencion()">
+        <span>Se están acabando</span><b>{{ n(resumen.agotados + resumen.bajos) }}</b><small>{{ resumen.agotados ? n(resumen.agotados) + ' agotados' : 'ninguno agotado' }}</small>
+      </button>
+      <button type="button" class="iv-kpi" data-t="info" (click)="abrir('tecnicos')">
+        <span>En manos de técnicos</span><b>{{ plata(resumen.valor_con_tecnicos) }}</b><small>{{ n(resumen.equipos_con_tecnicos) }} equipos · {{ n(resumen.tecnicos_con_material) }} técnicos</small>
+      </button>
+      <button type="button" class="iv-kpi" [attr.data-t]="resumen.equipos_viejos ? 'warn' : 'ok'" (click)="abrir('tecnicos')">
+        <span>Equipos sin instalar hace más de {{ diasConTecnico }} días</span><b>{{ n(resumen.equipos_viejos) }}</b><small>los tienen los técnicos</small>
+      </button>
+    </div>
+
+    <nav class="np-tabs iv-tabs" role="tablist">
+      <button type="button" class="np-tab" role="tab" [attr.aria-selected]="vista === 'existencias'" (click)="abrir('existencias')">Existencias</button>
+      <button type="button" class="np-tab" role="tab" [attr.aria-selected]="vista === 'tecnicos'" (click)="abrir('tecnicos')">Técnicos<span class="np-c" *ngIf="tecnicos.length">{{ tecnicos.length }}</span></button>
+      <button type="button" class="np-tab" role="tab" [attr.aria-selected]="vista === 'equipos'" (click)="abrir('equipos')">Equipos por serial</button>
+      <button type="button" class="np-tab" role="tab" [attr.aria-selected]="vista === 'asistente'" (click)="abrir('asistente')">Asistente<span class="np-c" *ngIf="recomendaciones.length">{{ recomendaciones.length }}</span></button>
+      <span class="np-spacer"></span>
+      <a class="np-tab" routerLink="/dashboard/inventory/categories">Categorías</a>
+    </nav>
+
+    <div class="np-scroll iv-cuerpo">
+
+      <!-- ══ Existencias ═════════════════════════════════════════════════════ -->
+      <ng-container *ngIf="vista === 'existencias'">
+        <div class="iv-barra">
+          <input type="search" class="np-input iv-buscar" placeholder="Buscar un ítem" [(ngModel)]="filtro" (ngModelChange)="filtrar()" aria-label="Buscar un ítem" />
+          <div class="np-chips">
+            <button type="button" class="np-chip" [class.is-active]="!filtroEstado" (click)="filtroEstado = ''; filtrar()">Todos</button>
+            <button type="button" class="np-chip" [class.is-active]="filtroEstado === 'atencion'" (click)="filtroEstado = 'atencion'; filtrar()">Se están acabando</button>
+            <button type="button" class="np-chip" [class.is-active]="filtroEstado === 'quieto'" (click)="filtroEstado = 'quieto'; filtrar()">Sin movimiento</button>
+          </div>
+        </div>
+
+        <div class="np-tablewrap">
+          <table class="np-table np-table--compact np-tabla-movil">
+            <thead><tr><th>Ítem</th><th class="np-th-right">En bodega</th><th class="np-th-right">Con técnicos</th><th class="np-th-right">Mínimo</th><th class="np-th-right">Gasto 30 días</th><th class="np-th-right">Alcanza para</th><th>Estado</th><th></th></tr></thead>
+            <tbody>
+              <tr class="np-empty" *ngIf="!visibles.length"><td colspan="8"><strong>{{ items.length ? 'Ningún ítem con ese filtro.' : 'Todavía no hay ítems.' }}</strong><span *ngIf="!items.length">Cree el primero con «Nuevo ítem» o reciba mercancía leyendo su código.</span></td></tr>
+              <tr *ngFor="let i of visibles; trackBy: trackId">
+                <td class="es-principal" data-label="Ítem">
+                  <a class="np-strong iv-nombre" [routerLink]="['/dashboard/inventory/items', i.id]">{{ i.nombre }}</a>
+                  <div class="np-fine">{{ i.categoria || 'Sin categoría' }}<ng-container *ngIf="i.usa_serial"> · por serial</ng-container><ng-container *ngIf="i.danadas"> · {{ i.danadas }} dañados</ng-container></div>
+                </td>
+                <td class="np-td-right np-data np-strong" data-label="En bodega">{{ n(i.en_bodega) }} <span class="np-fine">{{ i.unidad }}</span></td>
+                <td class="np-td-right np-data" data-label="Con técnicos">{{ i.con_tecnicos ? n(i.con_tecnicos) : '—' }}</td>
+                <td class="np-td-right np-data" data-label="Mínimo">{{ i.minimo ? n(i.minimo) : '—' }}</td>
+                <td class="np-td-right np-data" data-label="Gasto 30 días">{{ i.consumo_30d ? n(i.consumo_30d) : '—' }}</td>
+                <td class="np-td-right np-data" data-label="Alcanza para">{{ i.dias_de_cobertura !== null ? i.dias_de_cobertura + ' días' : '—' }}</td>
+                <td data-label="Estado"><span class="iv-tag" [attr.data-t]="i.tono">{{ i.estadoTexto }}</span><div class="np-fine" *ngIf="i.sugerido_pedir">pedir {{ i.sugerido_pedir }}</div></td>
+                <td class="np-td-right es-acciones">
+                  <div class="iv-fila-acc">
+                    <button type="button" class="np-btn np-btn--ghost np-btn--sm" (click)="iniciar('recibir', i)">Recibir</button>
+                    <button type="button" class="np-btn np-btn--ghost np-btn--sm" (click)="iniciar('entregar', i)" [disabled]="i.en_bodega <= 0">Entregar</button>
+                    <button type="button" class="np-btn np-btn--ghost np-btn--sm" (click)="iniciar('salida', i)" [disabled]="i.en_bodega <= 0">Sacar</button>
+                    <button type="button" class="np-btn np-btn--ghost np-btn--sm" *ngIf="!i.usa_serial" (click)="iniciar('ajuste', i)">Contar</button>
+                    <button type="button" class="np-btn np-btn--ghost np-btn--sm" (click)="editarItem(i)">Editar</button>
+                    <button type="button" class="np-btn np-btn--ghost np-btn--sm iv-borrar" (click)="borrarItem(i)" aria-label="Eliminar el ítem">×</button>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </ng-container>
+
+      <!-- ══ Técnicos ════════════════════════════════════════════════════════ -->
+      <ng-container *ngIf="vista === 'tecnicos'">
+        <p class="np-notice np-notice--inline iv-nota" *ngIf="!tecnicos.length">Ningún técnico tiene material a su nombre. Use «Entregar a técnico» cuando se lleven equipos o cable.</p>
+        <div class="iv-tecnicos">
+          <article class="iv-tecnico" *ngFor="let t of tecnicos; trackBy: trackId" [attr.data-t]="t.tono">
+            <header>
+              <div><b>{{ t.nombre }}</b><span>{{ plata(t.valor) }} a su nombre · instaló {{ n(t.instaladas_30d) }} en 30 días</span></div>
+              <button type="button" class="np-btn np-btn--ghost np-btn--sm" (click)="iniciar('devolver', null, t.tecnico_id)">Recibir devolución</button>
+            </header>
+            <div class="iv-tecnico-n">
+              <div><strong>{{ t.equipos_total }}</strong><span>equipos</span></div>
+              <div [class.is-mal]="t.equipos_viejos > 0"><strong>{{ t.equipos_viejos }}</strong><span>hace más de {{ diasConTecnico }} días</span></div>
+              <div><strong>{{ t.dias_max }}</strong><span>días el más viejo</span></div>
+            </div>
+            <ul class="iv-lista" *ngIf="t.equipos.length">
+              <li *ngFor="let e of t.equipos; trackBy: trackI" [class.is-viejo]="e.dias > diasConTecnico">
+                <span><b class="np-mono">{{ e.serial }}</b> {{ e.item }}</span>
+                <em>{{ e.dias === null ? '—' : (e.dias === 0 ? 'hoy' : 'hace ' + e.dias + ' días') }}</em>
+              </li>
+            </ul>
+            <ul class="iv-lista" *ngIf="t.material.length">
+              <li *ngFor="let m of t.material; trackBy: trackI">
+                <span><b>{{ n(m.cantidad) }} {{ m.unidad }}</b> de {{ m.item }}</span>
+                <em>{{ m.dias === null ? '—' : 'desde hace ' + m.dias + ' días' }}</em>
+              </li>
+            </ul>
+          </article>
+        </div>
+      </ng-container>
+
+      <!-- ══ Equipos por serial ══════════════════════════════════════════════ -->
+      <ng-container *ngIf="vista === 'equipos'">
+        <p class="np-notice np-notice--inline iv-nota">Lea o escriba un serial para saber dónde está ese equipo: en bodega, con qué técnico o en la casa de qué cliente.</p>
+        <app-lector-codigos modo="serial" etiqueta="Buscar un equipo por su serial" (leido)="equipoLeido($event)"></app-lector-codigos>
+        <div class="iv-barra">
+          <input type="search" class="np-input iv-buscar" placeholder="Buscar por serial" [(ngModel)]="eq.q" (ngModelChange)="buscarEquipo()" aria-label="Buscar por serial" />
+          <div class="np-chips">
+            <button type="button" class="np-chip" [class.is-active]="eq.estado === 'bodega'" (click)="estadoEquipo('bodega')">En bodega <b class="iv-chip-n">{{ eq.porEstado['bodega'] || 0 }}</b></button>
+            <button type="button" class="np-chip" [class.is-active]="eq.estado === 'tecnico'" (click)="estadoEquipo('tecnico')">Con técnicos <b class="iv-chip-n">{{ eq.porEstado['tecnico'] || 0 }}</b></button>
+            <button type="button" class="np-chip" [class.is-active]="eq.estado === 'instalada'" (click)="estadoEquipo('instalada')">Instalados <b class="iv-chip-n">{{ eq.porEstado['instalada'] || 0 }}</b></button>
+            <button type="button" class="np-chip" [class.is-active]="eq.estado === 'danada'" (click)="estadoEquipo('danada')">Dañados <b class="iv-chip-n">{{ eq.porEstado['danada'] || 0 }}</b></button>
+          </div>
+        </div>
+        <div class="np-tablewrap">
+          <table class="np-table np-table--compact np-tabla-movil">
+            <thead><tr><th>Serial</th><th>Producto</th><th>Dónde está</th><th>Con quién</th><th>Desde</th></tr></thead>
+            <tbody>
+              <tr class="np-empty" *ngIf="eq.cargando && !eq.filas.length"><td colspan="5"><span class="np-spinner"></span></td></tr>
+              <tr class="np-empty" *ngIf="!eq.cargando && !eq.filas.length"><td colspan="5"><strong>{{ eq.q ? 'Ese serial no está en el inventario.' : 'Todavía no hay equipos registrados por serial.' }}</strong><span *ngIf="!eq.q">Aparecen al recibir mercancía leyendo el serial de cada equipo.</span></td></tr>
+              <tr *ngFor="let u of eq.filas; trackBy: trackId">
+                <td class="es-principal np-strong np-mono" data-label="Serial">{{ u.serial }}</td>
+                <td data-label="Producto">{{ u.item }}</td>
+                <td data-label="Dónde está"><span class="iv-tag" [attr.data-t]="u.tono">{{ u.dondeTexto }}</span></td>
+                <td data-label="Con quién">{{ u.estado === 'tecnico' ? (u.tecnico || '—') : (u.estado === 'instalada' ? (u.cliente || 'Cliente') : '—') }}<div class="np-fine" *ngIf="u.nota">{{ u.nota }}</div></td>
+                <td class="np-data" data-label="Desde">{{ u.estado === 'tecnico' ? fecha(u.entregada_en) : (u.estado === 'instalada' ? fecha(u.instalada_en) : fecha(u.created_at)) }}<div class="np-fine" *ngIf="u.dias !== null" [class.iv-mal]="u.dias > diasConTecnico">hace {{ u.dias }} días</div></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="np-pager np-pager--flat" *ngIf="eq.total > 30">
+          <span class="np-range">{{ n(eq.total) }} equipos</span>
+          <div class="np-pages"><button type="button" (click)="paginaEquipo(-1)" [disabled]="eq.pagina === 1" aria-label="Página anterior">‹</button><button type="button" aria-current="page">{{ eq.pagina }} / {{ ultimaDeEquipos() }}</button><button type="button" (click)="paginaEquipo(1)" [disabled]="eq.pagina >= ultimaDeEquipos()" aria-label="Página siguiente">›</button></div>
+        </div>
+      </ng-container>
+
+      <!-- ══ Asistente ═══════════════════════════════════════════════════════ -->
+      <ng-container *ngIf="vista === 'asistente'">
+        <div class="iv-dos">
+          <section class="np-card">
+            <div class="np-card-h"><h2>Qué conviene hacer</h2><span class="np-card-meta">según los números de hoy</span></div>
+            <p class="np-muted" *ngIf="!recomendaciones.length">Todo en orden: nada en el mínimo y ningún técnico con equipos hace más de {{ diasConTecnico }} días.</p>
+            <ul class="iv-recs">
+              <li *ngFor="let r of recomendaciones; trackBy: trackI" [attr.data-t]="r.nivel === 'critico' ? 'danger' : r.nivel === 'alto' ? 'warn' : 'neutro'">
+                <b>{{ r.titulo }}</b><span>{{ r.detalle }}</span>
+              </li>
+            </ul>
+          </section>
+
+          <section class="np-card iv-chat">
+            <div class="np-card-h"><h2>Pregúntele al asistente</h2><span class="np-card-meta">{{ conIa ? 'responde con los datos de su inventario' : 'sin IA conectada: responde con las reglas' }}</span></div>
+            <div class="iv-mensajes" aria-live="polite">
+              <p class="np-muted" *ngIf="!chat.length">Pregunte por compras, mínimos o por lo que tiene cada técnico.</p>
+              <div class="iv-msg" *ngFor="let m of chat; trackBy: trackI" [class.es-mio]="m.rol === 'usuario'">{{ m.texto }}</div>
+              <div class="iv-msg" *ngIf="pensando"><span class="np-spinner np-spinner--sm"></span> Revisando los números…</div>
+            </div>
+            <div class="np-chips iv-sugeridas" *ngIf="!chat.length">
+              <button type="button" class="np-chip" *ngFor="let s of SUGERIDAS; trackBy: trackI" (click)="preguntar(s)" [disabled]="pensando">{{ s }}</button>
+            </div>
+            <form class="iv-preguntar" (ngSubmit)="preguntar()">
+              <input type="text" class="np-input" [(ngModel)]="pregunta" name="pregunta" placeholder="Escriba su pregunta" maxlength="1500" autocomplete="off" data-sin-aviso />
+              <button type="submit" class="np-btn np-btn--primary" [disabled]="pensando || !pregunta.trim()">Preguntar</button>
+            </form>
+          </section>
+        </div>
+      </ng-container>
+    </div>
+  </ng-container>
+</div>
+
+<!-- ══ Operación: recibir, entregar, devolver, sacar, contar ════════════════════ -->
+<div class="np-overlay" *ngIf="op as o" (click)="cerrarOp()">
+  <div class="np-modal np-modal--lg iv-op" role="dialog" aria-modal="true" [attr.aria-label]="TITULOS[o.tipo].titulo" (click)="$event.stopPropagation()">
+    <div class="np-modal-head">
+      <div><p class="np-kicker">Inventario</p><h3>{{ TITULOS[o.tipo].titulo }}</h3></div>
+      <button type="button" class="np-icobtn" (click)="cerrarOp()" aria-label="Cerrar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
+    </div>
+    <div class="np-modal-body iv-op-body">
+      <p class="np-fine iv-ayuda">{{ TITULOS[o.tipo].ayuda }}</p>
+
+      <!-- 1. Qué producto -->
+      <section class="iv-paso" *ngIf="!o.item">
+        <h4>{{ o.tipo === 'recibir' ? '1. Lea el código de la caja, o elija el producto' : '1. Lea el serial del equipo, o elija el producto' }}</h4>
+        <app-lector-codigos #lectorOp [conVeredicto]="true" modo="producto" [auto]="false" (leido)="alLeerProducto($event)"></app-lector-codigos>
+        <select class="np-input" (change)="elegirItem($any($event.target).value)" aria-label="Elegir el producto">
+          <option value="">O elija de la lista…</option>
+          <option *ngFor="let i of items; trackBy: trackId" [value]="i.id">{{ i.nombre }} — {{ n(i.en_bodega) }} en bodega</option>
+        </select>
+        <div class="iv-nuevo" *ngIf="o.codigoNuevo">
+          <span>¿Es un producto nuevo? Créelo con el código <b class="np-mono">{{ o.codigoNuevo }}</b> y siga recibiendo.</span>
+          <button type="button" class="np-btn np-btn--primary np-btn--sm" (click)="nuevoItem(o.codigoNuevo)">Crear el producto</button>
+        </div>
+      </section>
+
+      <!-- 2. Con el producto elegido -->
+      <ng-container *ngIf="o.item as it">
+        <div class="iv-elegido">
+          <div><b>{{ it.nombre }}</b><span>{{ n(it.en_bodega) }} {{ it.unidad }} en bodega<ng-container *ngIf="it.con_tecnicos"> · {{ n(it.con_tecnicos) }} con técnicos</ng-container></span></div>
+          <button type="button" class="np-btn np-btn--ghost np-btn--sm" (click)="o.item = null; o.seriales = []; o.error = ''">Cambiar</button>
+        </div>
+
+        <label class="np-field" *ngIf="o.tipo === 'entregar' || o.tipo === 'devolver'"><span>Técnico</span>
+          <select class="np-input" [(ngModel)]="o.tecnicoId" name="op_tecnico">
+            <option [ngValue]="null">Elija el técnico…</option>
+            <option *ngFor="let t of listaDeTecnicos; trackBy: trackId" [ngValue]="t.id">{{ t.nombre }}</option>
+          </select>
+        </label>
+
+        <ng-container *ngIf="o.tipo === 'ajuste'; else mover">
+          <label class="np-field"><span>Cuántos contó en la bodega <em>hoy el sistema dice {{ n(it.en_bodega) }}</em></span>
+            <input type="number" class="np-input np-mono" [(ngModel)]="o.contado" name="op_contado" min="0" step="any" inputmode="decimal" /></label>
+        </ng-container>
+
+        <ng-template #mover>
+          <label class="np-check np-check--box" *ngIf="o.tipo === 'recibir' && !it.usa_serial && puedeUsarSeriales(it)">
+            <input type="checkbox" [(ngModel)]="o.conSeriales" name="op_con_seriales" />
+            <span><b>Son equipos con serial.</b> Se registra cada uno con el suyo y después se sabe dónde está.</span>
+          </label>
+
+          <section class="iv-paso" *ngIf="o.conSeriales">
+            <h4>Lea el serial de cada equipo <span class="iv-cuenta">{{ o.seriales.length }} leído{{ o.seriales.length === 1 ? '' : 's' }}</span></h4>
+            <!-- La lista va antes del lector: en el teléfono, con la cámara abierta, se ve lo que ya entró. -->
+            <ul class="iv-seriales" *ngIf="o.seriales.length">
+              <li *ngFor="let s of o.seriales; trackBy: trackI"><span class="np-mono">{{ s }}</span><button type="button" (click)="quitarSerial(s)" [attr.aria-label]="'Quitar ' + s">×</button></li>
+            </ul>
+            <app-lector-codigos #lectorOp [conVeredicto]="true" modo="serial" [continuo]="true" (leido)="alLeerSerial($event)"></app-lector-codigos>
+          </section>
+
+          <label class="np-field" *ngIf="!o.conSeriales"><span>Cantidad <em>{{ it.unidad }}</em></span>
+            <input type="number" class="np-input np-mono" [(ngModel)]="o.cantidad" name="op_cantidad" min="0" step="any" inputmode="decimal" /></label>
+
+          <div class="iv-dos-campos" *ngIf="o.tipo === 'recibir'">
+            <label class="np-field"><span>Precio de compra <em>por {{ it.unidad }}</em></span>
+              <input type="number" class="np-input np-mono" [(ngModel)]="o.precio" name="op_precio" min="0" step="any" inputmode="decimal" /></label>
+            <label class="np-field"><span>Factura o referencia</span>
+              <input type="text" class="np-input" [(ngModel)]="o.referencia" name="op_referencia" maxlength="120" /></label>
+          </div>
+
+          <label class="np-check np-check--box" *ngIf="o.tipo === 'devolver' || o.tipo === 'salida'">
+            <input type="checkbox" [(ngModel)]="o.danado" name="op_danado" />
+            <span><b>{{ o.tipo === 'devolver' ? 'Viene dañado.' : 'Sale por daño.' }}</b> Queda registrado como dañado y no vuelve a contarse en la existencia.</span>
+          </label>
+        </ng-template>
+
+        <label class="np-field"><span>Nota <em>opcional</em></span>
+          <input type="text" class="np-input" [(ngModel)]="o.nota" name="op_nota" maxlength="200" /></label>
+      </ng-container>
+
+      <p class="np-notice np-notice--danger np-notice--inline" *ngIf="o.error">{{ o.error }}</p>
+    </div>
+    <div class="iv-op-pie">
+      <button type="button" class="np-btn np-btn--ghost" (click)="cerrarOp()">Cancelar</button>
+      <button type="button" class="np-btn np-btn--primary" (click)="guardarOp()" [disabled]="guardando || !o.item">{{ guardando ? 'Registrando…' : TITULOS[o.tipo].boton }}</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ Ficha del ítem ══════════════════════════════════════════════════════════ -->
+<div class="np-overlay np-overlay--top" *ngIf="ficha as f" (click)="ficha = null" data-sin-aviso>
+  <div class="np-modal np-modal--lg iv-op" role="dialog" aria-modal="true" [attr.aria-label]="f.id ? 'Editar ítem' : 'Nuevo ítem'" (click)="$event.stopPropagation()">
+    <div class="np-modal-head">
+      <div><p class="np-kicker">Inventario</p><h3>{{ f.id ? 'Editar ítem' : 'Nuevo ítem' }}</h3></div>
+      <button type="button" class="np-icobtn" (click)="ficha = null" aria-label="Cerrar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
+    </div>
+    <form class="np-modal-body iv-op-body" (ngSubmit)="guardarFicha()">
+      <div class="np-form">
+        <label class="np-field np-field-full"><span>Nombre</span><input type="text" class="np-input" [(ngModel)]="f.name" name="f_name" maxlength="150" placeholder="ONT Huawei HG8145X6" /></label>
+        <label class="np-field"><span>Categoría</span>
+          <select class="np-input" [(ngModel)]="f.category_id" name="f_category"><option [ngValue]="null">Sin categoría</option><option *ngFor="let c of categorias; trackBy: trackId" [ngValue]="c.id">{{ c.name }}</option></select></label>
+        <label class="np-field"><span>Unidad</span><input type="text" class="np-input" [(ngModel)]="f.unit" name="f_unit" maxlength="50" placeholder="unidad, metros, cajas" /></label>
+        <label class="np-field np-field-full"><span>Código de barras de la caja <em>para reconocerlo al leerlo</em></span>
+          <div class="iv-codigo"><input type="text" class="np-input np-mono" [(ngModel)]="f.barcode" name="f_barcode" maxlength="80" />
+            <button type="button" class="np-btn np-btn--ghost" (click)="leyendoCodigoDeFicha = !leyendoCodigoDeFicha">{{ leyendoCodigoDeFicha ? 'Cerrar lector' : 'Leer' }}</button></div>
+          <app-lector-codigos *ngIf="leyendoCodigoDeFicha" modo="producto" [auto]="true" (leido)="codigoDeFicha($event)"></app-lector-codigos>
+        </label>
+        <label class="np-field"><span>Referencia interna <em>opcional</em></span><input type="text" class="np-input np-mono" [(ngModel)]="f.sku" name="f_sku" maxlength="50" /></label>
+        <label class="np-field"><span>Dónde se guarda <em>opcional</em></span><input type="text" class="np-input" [(ngModel)]="f.location" name="f_location" maxlength="100" placeholder="Estante 2" /></label>
+        <label class="np-field"><span>Mínimo <em>avisa al llegar aquí</em></span><input type="number" class="np-input np-mono" [(ngModel)]="f.stock_min" name="f_min" min="0" step="any" /></label>
+        <label class="np-field"><span>Máximo <em>opcional</em></span><input type="number" class="np-input np-mono" [(ngModel)]="f.stock_max" name="f_max" min="0" step="any" /></label>
+        <label class="np-field"><span>Precio de compra</span><input type="number" class="np-input np-mono" [(ngModel)]="f.unit_price" name="f_price" min="0" step="any" /></label>
+        <label class="np-field" *ngIf="!f.id && !f.usa_serial"><span>Existencia inicial</span><input type="number" class="np-input np-mono" [(ngModel)]="f.quantity" name="f_qty" min="0" step="any" /></label>
+        <label class="np-check np-check--box np-field-full" *ngIf="!f.yaUsaSerial && !f.tieneExistencia">
+          <input type="checkbox" [(ngModel)]="f.usa_serial" name="f_serial" />
+          <span><b>Se lleva equipo por equipo, con su serial.</b> Para ONT, routers y antenas. La existencia se carga leyendo el serial de cada uno.</span>
+        </label>
+        <p class="np-fine np-field-full" *ngIf="f.yaUsaSerial">Este ítem se lleva por serial.</p>
+      </div>
+      <div class="iv-op-pie iv-op-pie--form">
+        <button type="button" class="np-btn np-btn--ghost" (click)="ficha = null">Cancelar</button>
+        <button type="submit" class="np-btn np-btn--primary" [disabled]="guardandoFicha">{{ guardandoFicha ? 'Guardando…' : 'Guardar' }}</button>
+      </div>
+    </form>
+  </div>
+</div>

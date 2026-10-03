@@ -180,6 +180,20 @@
         </div>
 
         <div class="ic-grupo">
+          <h3>Medios de pago</h3>
+          <div class="ic-set ic-set--col">
+            <div class="ic-set-t"><b>Clientes sin facturación electrónica</b><small>Lo que se les dice para pagar (Nequi, Daviplata, oficinas). Lo usan la asistente de cobranza y el bot de WhatsApp.</small></div>
+            <textarea class="ic-input ic-txt" maxlength="1000" [(ngModel)]="cfg.pago_texto" aria-label="Medios de pago para clientes sin facturación electrónica"
+                      placeholder="Nequi 300 000 0000 (a nombre de …) · Daviplata 300 000 0000"></textarea>
+          </div>
+          <div class="ic-set ic-set--col">
+            <div class="ic-set-t"><b>Clientes con facturación electrónica</b><small>Reciben el código QR y, debajo, este texto. No se les envían los medios de arriba: su pago debe entrar a la cuenta de la empresa.</small></div>
+            <textarea class="ic-input ic-txt" style="min-height: 220px" maxlength="3000" [(ngModel)]="cfg.pago_texto_fe" aria-label="Instrucciones de pago para clientes con facturación electrónica"
+                      placeholder="OPCIÓN 1: Pagar con QR… OPCIÓN 2: Transferencia a la cuenta de la empresa…"></textarea>
+          </div>
+        </div>
+
+        <div class="ic-grupo">
           <h3>Recordatorios y topes</h3>
           <div class="ic-set">
             <div class="ic-set-t"><b>Clientes nuevos por día</b><small>Pocos por día cuidan la línea de bloqueos.</small></div>

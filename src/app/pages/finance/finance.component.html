@@ -182,16 +182,16 @@
                   <td class="np-money" [class.np-neg]="invoiceBalance(inv) > 0" [class.np-pos]="invoiceBalance(inv) <= 0">{{ formatCurrency(invoiceBalance(inv)) }}</td>
                   <td class="np-td-right">
                     <div class="np-rowacts">
-                      <button *ngIf="inv.paid !== 1" type="button" class="np-icobtn np-icobtn--ok" (click)="openPayModal(inv)" title="Registrar pago completo">
+                      <button *ngIf="inv.paid !== 1 && !inv.anulada_en" type="button" class="np-icobtn np-icobtn--ok" (click)="openPayModal(inv)" title="Registrar pago completo">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v10M9.5 9.5h3.75a1.75 1.75 0 0 1 0 3.5H10.75a1.75 1.75 0 0 0 0 3.5H14.5"/></svg>
                       </button>
-                      <button *ngIf="inv.paid !== 1" type="button" class="np-icobtn" (click)="openAbonarModal(inv)" title="Registrar abono">
+                      <button *ngIf="inv.paid !== 1 && !inv.anulada_en" type="button" class="np-icobtn" (click)="openAbonarModal(inv)" title="Registrar abono">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 5v14M5 12h14"/></svg>
                       </button>
                       <button *ngIf="inv.paid === 1 || inv.price_abone > 0" type="button" class="np-icobtn" (click)="abrirReverso(inv)" title="Revertir el pago">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 4v4h4"/></svg>
                       </button>
-                      <button *ngIf="inv.paid !== 1 && !(inv.price_abone > 0)" type="button" class="np-icobtn np-icobtn--danger" (click)="abrirAnulacion(inv)" title="Anular la factura">
+                      <button *ngIf="inv.paid !== 1 && !inv.anulada_en && !(inv.price_abone > 0)" type="button" class="np-icobtn np-icobtn--danger" (click)="abrirAnulacion(inv)" title="Anular la factura">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="m5.6 5.6 12.8 12.8"/></svg>
                       </button>
                       <button *ngIf="inv.paid !== 1" type="button" class="np-icobtn np-icobtn--danger" (click)="borrarFactura(inv)" title="Borrar la factura">
@@ -474,7 +474,7 @@
       <div class="np-field"><span>Facturas incluidas <em>*</em></span>
         <div class="np-checklist">
           <ng-container *ngFor="let inv of invoices">
-            <label class="np-check" *ngIf="inv.paid !== 1">
+            <label class="np-check" *ngIf="inv.paid !== 1 && !inv.anulada_en">
               <input type="checkbox" [checked]="commitmentSelected.has(inv.id)" (change)="toggleCommitmentInvoice(inv.id)" />
               <span class="np-mono">{{ inv.number_facture }}</span>
               <span class="np-fine">{{ inv.date_facturation | date:'dd/MM/yy' }}<ng-container *ngIf="inv.abone === 1"> · con abono</ng-container></span>

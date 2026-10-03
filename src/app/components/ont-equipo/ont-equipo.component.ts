@@ -5,6 +5,7 @@ import { AcsService } from '../../services/acs.service';
 import { RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { GestionRemotaService } from '../../services/gestion-remota.service';
+import { OntFichaComponent } from '../ont-ficha/ont-ficha.component';
 import { TareasEnSegundoPlanoService } from '../../services/tareas-en-segundo-plano.service';
 import { limpiarTextoWifi, problemaDeLaClaveWifi, problemaDelNombreWifi } from '../../common/wifi';
 
@@ -37,7 +38,7 @@ const COLOR_MARCA: Record<string, string> = {
 @Component({
   selector: 'app-ont-equipo',
   standalone: true,
-  imports: [CommonModule, RouterLink, FormsModule],
+  imports: [CommonModule, RouterLink, FormsModule, OntFichaComponent],
   templateUrl: './ont-equipo.component.html',
   styleUrl: './ont-equipo.component.scss',
 })
@@ -49,6 +50,11 @@ export class OntEquipoComponent implements OnChanges {
 
   @Input({ required: true }) userId!: number;
   @Input() ont: OntVinculada | null = null;
+  /** El nombre del cliente, para el título de la ficha completa. */
+  @Input() cliente = '';
+
+  /** La ventana con todo lo del equipo: energía, caídas, red, aparatos conectados. */
+  fichaAbierta = false;
 
   vivo: any = null;
   equipo: any = null;

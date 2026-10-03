@@ -1,0 +1,119 @@
+/* Módulo de Alegra. El tono (data-t) pinta cifras, etiquetas y tarjetas del cruce. */
+
+[data-t='ok']     { --tono: var(--ok);     --tono-suave: var(--ok-soft); }
+[data-t='warn']   { --tono: var(--warn);   --tono-suave: var(--warn-soft); }
+[data-t='danger'] { --tono: var(--danger); --tono-suave: var(--danger-soft); }
+[data-t='info']   { --tono: var(--info, var(--accent)); --tono-suave: var(--info-soft, var(--accent-soft)); }
+[data-t='neutro'] { --tono: var(--text-3); --tono-suave: var(--surface-2); }
+
+.al-sync { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; justify-content: flex-end; }
+.al-sync-t { display: inline-flex; align-items: center; gap: 7px; font-size: 12px; color: var(--text-3); }
+.al-mal { color: var(--danger) !important; font-weight: 600; }
+.al-bien { color: var(--ok) !important; font-weight: 600; }
+
+.al-vacio {
+  margin: 40px auto; max-width: 460px; padding: 28px; text-align: center;
+  border: 1px dashed var(--line-strong); border-radius: var(--radius-lg);
+  h2 { margin: 0 0 6px; font-size: 18px; } p { margin: 0 0 16px; color: var(--text-2); font-size: 13.5px; }
+}
+
+.al-tabs { padding-inline: 0; }
+.al-cuerpo { display: grid; gap: 14px; align-content: start; padding-top: 14px; }
+
+/* ── Resumen ────────────────────────────────────────────────────────────── */
+.al-kpis { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
+.al-kpi {
+  display: grid; gap: 3px; padding: 14px 16px; text-align: left; font: inherit; color: inherit;
+  border: 1px solid var(--line); border-left: 3px solid var(--tono, var(--accent)); border-radius: var(--radius-lg); background: var(--surface);
+  span { font-size: 11px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; color: var(--text-3); }
+  b { font-size: 24px; line-height: 1.15; color: var(--text); font-variant-numeric: tabular-nums; }
+  small { font-size: 12px; color: var(--text-2); }
+}
+button.al-kpi { cursor: pointer; transition: border-color .15s, box-shadow .15s;
+  &:hover { border-color: var(--tono, var(--accent)); box-shadow: 0 2px 10px color-mix(in srgb, var(--tono, var(--accent)) 18%, transparent); } }
+
+.al-cruces { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 10px; }
+.al-cruce {
+  display: grid; gap: 4px; align-content: start; padding: 13px 14px; text-align: left; font: inherit; cursor: pointer;
+  border: 1px solid color-mix(in srgb, var(--tono) 30%, var(--line)); border-radius: var(--radius-lg); background: var(--tono-suave);
+  transition: transform .12s, box-shadow .15s;
+  &:hover { transform: translateY(-1px); box-shadow: 0 3px 12px color-mix(in srgb, var(--tono) 20%, transparent); }
+  strong { font-size: 26px; line-height: 1; color: var(--tono); font-variant-numeric: tabular-nums; }
+}
+.al-cruce-t { font-size: 13.5px; font-weight: 700; color: var(--text); }
+.al-cruce-e { font-size: 12px; line-height: 1.4; color: var(--text-2); }
+.al-cruce em { margin-top: 2px; font-style: normal; font-size: 12px; font-weight: 700; color: var(--tono); }
+[data-t='neutro'].al-cruce strong { color: var(--text-2); }
+
+.al-dos { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; align-items: start; }
+
+.al-grafica { display: flex; align-items: flex-end; gap: 10px; height: 190px; padding-top: 6px; }
+.al-col { flex: 1; min-width: 0; height: 100%; display: grid; grid-template-rows: 1fr auto auto; gap: 3px; text-align: center;
+  b { font-size: 11px; color: var(--text); white-space: nowrap; } span { font-size: 11px; color: var(--text-3); } }
+.al-barras { display: flex; align-items: flex-end; justify-content: center; gap: 3px; min-height: 0; border-bottom: 2px solid var(--line); }
+.al-b { display: block; width: min(22px, 42%); border-radius: 4px 4px 0 0; min-height: 2px; }
+.al-b--total { background: var(--accent); }
+.al-b--saldo { background: color-mix(in srgb, var(--warn) 75%, transparent); }
+.al-ley { display: inline-block; width: 9px; height: 9px; margin: 0 3px 0 8px; border-radius: 2px; vertical-align: baseline; }
+.al-ley--total { background: var(--accent); } .al-ley--saldo { background: color-mix(in srgb, var(--warn) 75%, transparent); }
+
+.al-dl { display: grid; gap: 0; margin: 0;
+  div { display: grid; gap: 3px; padding: 10px 0; & + div { border-top: 1px solid var(--line); } }
+  dt { font-size: 11px; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; color: var(--text-3); }
+  dd { margin: 0; font-size: 13.5px; color: var(--text); display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+  small { color: var(--text-3); font-size: 12px; }
+}
+.al-dl--cols { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0 18px;
+  div + div { border-top: 0; } div { border-bottom: 1px solid var(--line); } }
+
+.al-tag {
+  display: inline-flex; align-items: center; padding: 2px 9px; border-radius: 999px; white-space: nowrap;
+  font-size: 11.5px; font-weight: 600; background: var(--tono-suave); color: var(--tono);
+  border: 1px solid color-mix(in srgb, var(--tono) 25%, transparent);
+}
+
+/* ── Listas ─────────────────────────────────────────────────────────────── */
+.al-barra { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
+.al-sel { width: auto; max-width: 300px; height: 34px; }
+.al-buscar { flex: 1; min-width: 220px; max-width: 360px; height: 34px; }
+.al-suma { margin-left: auto; font-size: 12.5px; font-weight: 600; color: var(--text-2); white-space: nowrap; }
+.al-chip-n { margin-left: 6px; font-weight: 700; opacity: .75; }
+.al-nota { margin: 0; }
+.al-tenue { opacity: .5; }
+
+.al-lista { margin: 0; padding: 0; list-style: none;
+  li { display: flex; justify-content: space-between; gap: 12px; padding: 8px 0; font-size: 13px; & + li { border-top: 1px solid var(--line); } }
+  b { font-weight: 600; color: var(--text); min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+  span { color: var(--text-3); white-space: nowrap; }
+}
+
+@media (max-width: 1100px) { .al-kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); } .al-dl--cols { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 800px)  { .al-dos { grid-template-columns: 1fr; } .al-suma { margin-left: 0; } }
+@media (max-width: 520px)  { .al-kpis, .al-dl--cols { grid-template-columns: 1fr; } .al-grafica { gap: 4px; } .al-col b { display: none; } }
+
+/* ── Bandeja de aprobación ──────────────────────────────────────────────── */
+.al-tipos { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 10px; }
+.al-tipo {
+  display: grid; gap: 6px; align-content: start; padding: 13px 14px;
+  border: 1px solid var(--line); border-radius: var(--radius-lg); background: var(--surface);
+  &.is-activo { border-color: var(--accent); box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 18%, transparent); }
+  &[data-e='probada'] { border-color: var(--warn); background: var(--warn-soft); }
+  header { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; b { font-size: 13.5px; color: var(--text); } }
+  p { margin: 0; font-size: 12px; line-height: 1.4; color: var(--text-2); }
+  small { font-size: 11.5px; color: var(--text-3); }
+  footer { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 4px; }
+}
+.al-tipo-n { display: flex; align-items: baseline; gap: 7px;
+  strong { font-size: 24px; line-height: 1; color: var(--text); font-variant-numeric: tabular-nums; }
+  span { font-size: 12px; color: var(--text-2); } }
+.al-tipo-aviso { font-weight: 600; color: var(--text) !important; }
+.al-auto { display: inline-flex; align-items: center; gap: 6px; margin-left: auto; font-size: 12px; font-weight: 600; color: var(--text-2); cursor: pointer; }
+
+.al-banco { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 12px; padding: 12px 14px; border: 1px solid var(--line); border-radius: var(--radius-lg); background: var(--surface-2);
+  label { display: grid; gap: 4px; span { font-size: 11px; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; color: var(--text-3); } }
+  select { height: 34px; min-width: 210px; }
+}
+.al-enviando { display: inline-flex; align-items: center; gap: 7px; height: 34px; font-size: 12.5px; font-weight: 600; color: var(--accent); }
+.al-revisar { margin-left: auto; }
+.al-lote { display: flex; align-items: center; gap: 10px; padding: 8px 12px; border-radius: var(--radius); background: var(--accent-soft); b { font-size: 13px; color: var(--text); margin-right: auto; } }
+.al-th-check { width: 34px; input { width: 16px; height: 16px; cursor: pointer; } }

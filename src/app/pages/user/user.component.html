@@ -333,6 +333,7 @@
               <div *ngIf="loadingOnt" class="np-loading np-loading--inline"><span class="np-spinner"></span> Consultando equipo…</div>
               <ng-container *ngIf="!loadingOnt && assignedOnt">
                 <app-ont-equipo
+                  [cliente]="(selectedUserData?.names || '') + ' ' + (selectedUserData?.lastname || '')"
                   [userId]="selectedUserId"
                   [ont]="{ olt_id: assignedOnt.olt_id ?? assignedOnt.olt?.id, olt: assignedOnt.olt?.name, fsp: assignedOnt.fsp, ont_id: assignedOnt.ont_id, serial: assignedOnt.serial, estado: assignedOnt.status }">
                 </app-ont-equipo>
@@ -885,6 +886,23 @@
           <input [type]="f.type" class="np-input" [class.np-mono]="f.mono" [(ngModel)]="newUser[f.key]"
                  (ngModelChange)="guardarBorrador(); f.key === 'dni' && buscarInstalacion()" [placeholder]="f.ph" />
         </label>
+        <!-- Lo que piden la DIAN y Alegra. Viene propuesto con la ciudad de la empresa. -->
+        <p class="np-sect np-field-full ux-fiscal-t">Identificación y ubicación <em>para la factura electrónica</em></p>
+        <label class="np-field"><span>Tipo de documento</span>
+          <select class="np-input" [(ngModel)]="newUser.tipo_documento" (ngModelChange)="guardarBorrador()" name="nu_tipo_documento">
+            <option *ngFor="let t of tiposDeDocumento" [value]="t.id">{{ t.nombre }}</option>
+          </select>
+        </label>
+        <label class="np-field"><span>Estrato</span>
+          <select class="np-input" [(ngModel)]="newUser.estrato" (ngModelChange)="guardarBorrador()" name="nu_estrato">
+            <option [ngValue]="null">Sin definir</option><option *ngFor="let e of ESTRATOS" [ngValue]="e">{{ e }}</option>
+          </select>
+        </label>
+        <label class="np-field"><span>Barrio</span>
+          <input type="text" class="np-input" [(ngModel)]="newUser.barrio" (ngModelChange)="guardarBorrador()" name="nu_barrio" placeholder="Villa Katanga" maxlength="120" /></label>
+        <!-- País, departamento, ciudad, código DANE e indicativo: de listas con buscador. -->
+        <app-ubicacion-cliente [datos]="newUser" prefijo="nu" (cambio)="guardarBorrador()"></app-ubicacion-cliente>
+
         <!-- Lo que ya se cargó al tomar el pedido: no hay por qué escribirlo
              dos veces, y es donde aparecen las diferencias. -->
         <!-- El cruce por documento: lo que se cargó al tomar el pedido ya está

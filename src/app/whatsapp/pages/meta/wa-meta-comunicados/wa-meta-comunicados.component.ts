@@ -74,7 +74,12 @@ export class WaMetaComunicadosComponent implements OnInit {
   slots: Slot[] = [];
 
   // ── Paso 2: a quién ─────────────────────────────────────────────────────────
-  filtros = { solo_vigentes: true, servicio: 'todos', deuda: 'todos' };
+  filtros = { solo_vigentes: true, servicio: 'todos', deuda: 'todos', grupo: 'todos' };
+  /** Los grupos de corte de la empresa (día 15, día 30…), para escribirle a uno solo. */
+  opcionesGrupo: OpcionSimple[] = [{ valor: 'todos', etiqueta: 'Todos los grupos', detalle: 'Sin mirar el día de corte' }];
+  /** Cuántos clientes distintos deja contactar Meta por día con este número. */
+  limite: { nivel: string | null; maximo: number | null; calidad: string | null } | null = null;
+  excede = false;
   excluidos: number[] = [];
   totalDestinatarios = 0;
   contando = false;
@@ -130,6 +135,7 @@ export class WaMetaComunicadosComponent implements OnInit {
   readonly opcionesDeuda: OpcionSimple[] = [
     { valor: 'todos', etiqueta: 'Deban o no',                detalle: 'No mira las facturas' },
     { valor: 'con',   etiqueta: 'Solo los que deben',        detalle: 'Con alguna factura sin pagar' },
+    { valor: 'vencida', etiqueta: 'Solo con factura vencida', detalle: 'Deben una factura cuya fecha límite ya pasó' },
     { valor: 'sin',   etiqueta: 'Solo los que están al día', detalle: 'Sin facturas pendientes' },
   ];
 
@@ -154,7 +160,12 @@ export class WaMetaComunicadosComponent implements OnInit {
     });
 
     this.meta.campaignOptions().subscribe({
-      next: (r: any) => { this.variables = r?.variables ?? []; },
+      next: (r: any) => {
+        this.variables = r?.variables ?? [];
+        this.limite = r?.limite ?? null;
+        this.opcionesGrupo = [{ valor: 'todos', etiqueta: 'Todos los grupos', detalle: 'Sin mirar el día de corte' },
+          ...(r?.grupos ?? []).map((g: any) => ({ valor: String(g.grupo), etiqueta: `Corte del día ${g.dia}`, detalle: `${g.nombre ? g.nombre + ' · ' : ''}${g.clientes} clientes` }))];
+      },
     });
 
     this.recargarHistorial();
@@ -272,6 +283,7 @@ export class WaMetaComunicadosComponent implements OnInit {
     p.set('solo_vigentes', String(this.filtros.solo_vigentes));
     p.set('servicio', this.filtros.servicio);
     p.set('deuda', this.filtros.deuda);
+    p.set('grupo', this.filtros.grupo);
     if (this.excluidos.length) p.set('excluded', this.excluidos.join(','));
     return p.toString();
   }
@@ -281,7 +293,7 @@ export class WaMetaComunicadosComponent implements OnInit {
     this.cambioContenido();
 
     this.meta.campaignAudience(this.queryFiltros()).subscribe({
-      next: (r: any) => { this.totalDestinatarios = r?.total ?? 0; this.contando = false; },
+      next: (r: any) => { this.totalDestinatarios = r?.total ?? 0; this.limite = r?.limite ?? this.limite; this.excede = !!r?.excede; this.contando = false; },
       error: () => { this.contando = false; },
     });
   }

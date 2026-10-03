@@ -1,0 +1,486 @@
+<div class="np-page al">
+  <header class="np-head">
+    <div>
+      <p class="np-kicker">Finanzas <b>/</b> Alegra</p>
+      <h1 class="np-title">Alegra</h1>
+      <div class="np-ribbon"><span>Lo que su empresa tiene en Alegra, cruzado con Netvula. Nada se escribe en Alegra sin que usted lo apruebe.</span></div>
+    </div>
+    <div class="al-sync" *ngIf="conectado">
+      <span class="al-sync-t" *ngIf="!sincronizando">
+        <ng-container *ngIf="sync.estado === 'error'"><b class="al-mal">No se pudo actualizar</b> · </ng-container>
+        Actualizado {{ cuando(sync.fin) }}
+      </span>
+      <span class="al-sync-t" *ngIf="sincronizando"><span class="np-spinner np-spinner--sm"></span> {{ avance }}</span>
+      <button type="button" class="np-btn np-btn--primary" (click)="sincronizar()" [disabled]="sincronizando">{{ sincronizando ? 'Trayendo datos' : 'Actualizar desde Alegra' }}</button>
+    </div>
+  </header>
+
+  <p class="np-loading" *ngIf="cargando"><span class="np-spinner"></span> Abriendo Alegra…</p>
+  <p class="np-notice np-notice--danger" *ngIf="negado">{{ negado }}</p>
+
+  <!-- Sin conectar -->
+  <section class="al-vacio" *ngIf="!cargando && !negado && !conectado">
+    <h2>Alegra todavía no está conectado</h2>
+    <p>Cargue el correo y el token de su cuenta de Alegra, y aquí verá sus facturas, pagos y contactos cruzados con Netvula.</p>
+    <a class="np-btn np-btn--primary" routerLink="/dashboard/factura-electronica">Conectar Alegra</a>
+  </section>
+
+  <ng-container *ngIf="!cargando && conectado">
+    <nav class="np-tabs al-tabs" role="tablist">
+      <button type="button" class="np-tab" role="tab" [attr.aria-selected]="vista === 'resumen'" (click)="abrir('resumen')">Resumen</button>
+      <button type="button" class="np-tab" role="tab" [attr.aria-selected]="vista === 'aprobar'" (click)="abrir('aprobar')">Por aprobar<span class="np-c" *ngIf="porAprobar">{{ n(porAprobar) }}</span></button>
+      <button type="button" class="np-tab" role="tab" [attr.aria-selected]="vista === 'facturas'" (click)="abrir('facturas')">Facturas<span class="np-c" *ngIf="r?.totales?.facturas">{{ r.totales.facturas }}</span></button>
+      <button type="button" class="np-tab" role="tab" [attr.aria-selected]="vista === 'recurrentes'" (click)="abrir('recurrentes')">Recurrentes</button>
+      <button type="button" class="np-tab" role="tab" [attr.aria-selected]="vista === 'por-facturar'" (click)="abrir('por-facturar')">Por facturar<span class="np-c" *ngIf="r?.por_facturar?.n">{{ r.por_facturar.n }}</span></button>
+      <button type="button" class="np-tab" role="tab" [attr.aria-selected]="vista === 'pagos'" (click)="abrir('pagos')">Pagos</button>
+      <button type="button" class="np-tab" role="tab" [attr.aria-selected]="vista === 'contactos'" (click)="abrir('contactos')">Contactos</button>
+      <button type="button" class="np-tab" role="tab" [attr.aria-selected]="vista === 'cuenta'" (click)="abrir('cuenta')">La cuenta</button>
+    </nav>
+
+    <div class="np-scroll al-cuerpo">
+
+      <!-- ══ Resumen ═════════════════════════════════════════════════════════ -->
+      <ng-container *ngIf="vista === 'resumen'">
+        <p class="np-loading" *ngIf="!r"><span class="np-spinner np-spinner--sm"></span> {{ sincronizando ? 'Trayendo los datos de Alegra por primera vez. Tarda unos minutos.' : 'Cargando…' }}</p>
+
+        <ng-container *ngIf="r">
+          <div class="al-kpis">
+            <button type="button" class="al-kpi" (click)="verAbiertas()">
+              <span>Por cobrar en Alegra</span><b>{{ corta(r.totales.por_cobrar) }}</b><small>{{ n(r.totales.abiertas) }} facturas abiertas</small>
+            </button>
+            <button type="button" class="al-kpi" data-t="danger" (click)="verVencidas()">
+              <span>Vencido</span><b>{{ corta(r.totales.vencido) }}</b><small>{{ n(r.totales.vencidas) }} facturas vencidas</small>
+            </button>
+            <div class="al-kpi">
+              <span>Facturado este mes</span><b>{{ corta(r.totales.facturado_mes) }}</b><small>{{ n(r.totales.facturas_mes) }} facturas</small>
+            </div>
+            <button type="button" class="al-kpi" data-t="warn" (click)="abrir('por-facturar')">
+              <span>Por facturar</span><b>{{ n(r.por_facturar.n) }}</b><small>cuentas de cobro sin factura en Alegra · {{ corta(r.por_facturar.total) }}</small>
+            </button>
+          </div>
+
+          <section class="np-card">
+            <div class="np-card-h"><h2>Cruce con Netvula</h2><span class="np-card-meta">cada factura de Alegra frente a su cuenta de cobro</span></div>
+            <div class="al-cruces">
+              <button type="button" class="al-cruce" *ngFor="let c of cruces; trackBy: trackI" [attr.data-t]="c.tono" (click)="verCruce(c.id)">
+                <strong>{{ n(c.n) }}</strong>
+                <span class="al-cruce-t">{{ c.titulo }}</span>
+                <span class="al-cruce-e">{{ c.explica }}</span>
+                <em *ngIf="c.saldo > 0">{{ plata(c.saldo) }} por cobrar en Alegra</em>
+              </button>
+            </div>
+          </section>
+
+          <div class="al-dos">
+            <section class="np-card">
+              <div class="np-card-h"><h2>Facturado por mes</h2><span class="np-card-meta"><i class="al-ley al-ley--total"></i> facturado <i class="al-ley al-ley--saldo"></i> sin cobrar en Alegra</span></div>
+              <div class="al-grafica" role="img" aria-label="Facturado por mes en Alegra">
+                <div class="al-col" *ngFor="let m of meses; trackBy: trackI" [title]="m.etiqueta + ': ' + plata(m.total) + ' facturado, ' + plata(m.saldo) + ' sin cobrar'">
+                  <div class="al-barras"><i class="al-b al-b--total" [style.height.%]="m.alto"></i><i class="al-b al-b--saldo" [style.height.%]="m.altoSaldo"></i></div>
+                  <b>{{ corta(m.total) }}</b><span>{{ m.etiqueta }}</span>
+                </div>
+              </div>
+            </section>
+
+            <section class="np-card">
+              <div class="np-card-h"><h2>Lo demás</h2></div>
+              <dl class="al-dl">
+                <div><dt>Estado ante la DIAN</dt><dd><span *ngFor="let d of dian; trackBy: trackI" class="al-tag" [attr.data-t]="d.tono">{{ n(d.n) }} · {{ d.nombre }}</span></dd></div>
+                <div><dt>Pagos registrados en Alegra este mes</dt><dd>{{ n(r.pagos_mes.n) }} · {{ plata(r.pagos_mes.total) }}<small *ngIf="r.ultimo_pago"> · el último, el {{ fecha(r.ultimo_pago) }}</small></dd></div>
+                <div><dt>Contactos en Alegra</dt><dd>{{ n(r.contactos.total) }}<small *ngIf="r.contactos.sin_netvula"> · {{ r.contactos.sin_netvula }} no están en Netvula</small></dd></div>
+                <div><dt>Clientes de Netvula sin contacto en Alegra</dt><dd>{{ n(r.contactos.netvula_sin_alegra) }}</dd></div>
+              </dl>
+            </section>
+          </div>
+        </ng-container>
+      </ng-container>
+
+      <!-- ══ Por aprobar ═════════════════════════════════════════════════════ -->
+      <ng-container *ngIf="vista === 'aprobar'">
+        <p class="np-notice np-notice--inline al-nota">Aquí está todo lo que Netvula propone escribir en Alegra. <b>Nada se envía sin su aprobación.</b> La primera vez de cada tipo se aprueba una sola, usted revisa en Alegra que quedó bien y recién ahí se habilitan los lotes y el automático.</p>
+
+        <div class="al-tipos">
+          <article class="al-tipo" *ngFor="let t of tipos; trackBy: trackI" [class.is-activo]="ban.tipo === t.id" [attr.data-e]="t.estado">
+            <header>
+              <b>{{ t.nombre }}</b>
+              <span class="al-tag" [attr.data-t]="t.estado === 'verificada' ? 'ok' : t.estado === 'probada' ? 'warn' : 'neutro'">{{ t.estado === 'verificada' ? 'Habilitado' : t.estado === 'probada' ? 'Falta confirmar' : 'Sin estrenar' }}</span>
+            </header>
+            <p>{{ t.explica }}</p>
+            <div class="al-tipo-n"><strong>{{ n(t.pendientes) }}</strong><span>por aprobar<ng-container *ngIf="t.total > 0"> · {{ plata(t.total) }}</ng-container></span></div>
+            <small *ngIf="t.hechas || t.fallidas">{{ n(t.hechas) }} hechas<ng-container *ngIf="t.fallidas"> · <b class="al-mal">{{ n(t.fallidas) }} fallidas</b></ng-container></small>
+
+            <p class="al-tipo-aviso" *ngIf="t.estado === 'probada'">Ya se hizo la primera. Ábrala en Alegra, revise que quedó como debe y confirme.</p>
+
+            <footer>
+              <button type="button" class="np-btn np-btn--ghost np-btn--sm" (click)="filtroBandeja('propuesta', ban.tipo === t.id ? '' : t.id)">{{ ban.tipo === t.id ? 'Ver todas' : 'Ver éstas' }}</button>
+              <button type="button" class="np-btn np-btn--primary np-btn--sm" *ngIf="t.estado === 'probada'" (click)="verificar(t)">Quedó bien en Alegra</button>
+              <button type="button" class="np-btn np-btn--primary np-btn--sm" *ngIf="t.estado === 'verificada' && t.pendientes > 0" (click)="aprobarTodas(t)" [disabled]="ocupado">Aprobar todas</button>
+              <label class="al-auto" *ngIf="t.estado === 'verificada'" [title]="'Cada hora, lo que aparezca de este tipo se envía a Alegra sin aprobación'">
+                <button type="button" class="np-switch" role="switch" [attr.aria-checked]="t.auto" (click)="automatico(t)" [attr.aria-label]="'Automático: ' + t.nombre"></button>
+                <span>Automático</span>
+              </label>
+            </footer>
+          </article>
+        </div>
+
+        <div class="al-banco">
+          <label><span>Banco donde entran los pagos</span>
+            <select class="np-input" [(ngModel)]="bancoId" (ngModelChange)="guardarBanco()" aria-label="Banco donde entran los pagos">
+              <option value="">Elija el banco…</option>
+              <option *ngFor="let b of bancos; trackBy: trackI" [value]="b.id">{{ b.nombre }}</option>
+            </select>
+          </label>
+          <label><span>Cómo se registran</span>
+            <select class="np-input" [(ngModel)]="medioPago" (ngModelChange)="guardarBanco()" aria-label="Medio de pago">
+              <option *ngFor="let m of medios; trackBy: trackI" [value]="m.id">{{ m.nombre }}</option>
+            </select>
+          </label>
+          <span class="al-enviando" *ngIf="aplicando > 0"><span class="np-spinner np-spinner--sm"></span> Enviando a Alegra: faltan {{ n(aplicando) }}</span>
+          <button type="button" class="np-btn np-btn--ghost np-btn--sm al-revisar" (click)="buscarPropuestas()" [disabled]="ocupado">Volver a revisar qué falta</button>
+        </div>
+
+        <div class="al-barra">
+          <div class="np-chips">
+            <button type="button" class="np-chip" [class.is-active]="ban.estado === 'propuesta'" (click)="filtroBandeja('propuesta')">Por aprobar</button>
+            <button type="button" class="np-chip" [class.is-active]="ban.estado === 'en_curso'" (click)="filtroBandeja('en_curso')">Enviando</button>
+            <button type="button" class="np-chip" [class.is-active]="ban.estado === 'hecha'" (click)="filtroBandeja('hecha')">Hechas</button>
+            <button type="button" class="np-chip" [class.is-active]="ban.estado === 'fallida'" (click)="filtroBandeja('fallida')">Fallidas</button>
+            <button type="button" class="np-chip" [class.is-active]="ban.estado === 'descartada'" (click)="filtroBandeja('descartada')">Descartadas</button>
+          </div>
+          <input type="search" class="np-input al-buscar" placeholder="Buscar por cliente, documento o factura" [(ngModel)]="ban.q" (ngModelChange)="buscar('ban')" aria-label="Buscar en la bandeja" />
+          <span class="al-suma">{{ n(ban.total) }}<ng-container *ngIf="ban.sumaTotal > 0"> · {{ plata(ban.sumaTotal) }}</ng-container></span>
+        </div>
+
+        <div class="al-lote" *ngIf="ban.estado === 'propuesta' && seleccionadas > 0">
+          <b>{{ seleccionadas }} seleccionada{{ seleccionadas === 1 ? '' : 's' }}</b>
+          <button type="button" class="np-btn np-btn--primary np-btn--sm" (click)="aprobarMarcadas()" [disabled]="ocupado">Aprobar seleccionadas</button>
+          <button type="button" class="np-btn np-btn--ghost np-btn--sm" (click)="descartarMarcadas()" [disabled]="ocupado">Descartar</button>
+        </div>
+
+        <div class="np-tablewrap">
+          <table class="np-table np-table--compact np-tabla-movil">
+            <thead><tr>
+              <th class="al-th-check"><input type="checkbox" *ngIf="ban.estado === 'propuesta'" [checked]="seleccionadas > 0 && seleccionadas === ban.filas.length" (change)="marcarTodas($any($event.target).checked)" aria-label="Marcar todas las de esta página" /></th>
+              <th>Qué se haría</th><th>Cliente</th><th>Detalle</th><th class="np-th-right">Valor</th><th></th>
+            </tr></thead>
+            <tbody>
+              <tr class="np-empty" *ngIf="ban.cargando && !ban.filas.length"><td colspan="6"><span class="np-spinner"></span></td></tr>
+              <tr class="np-empty" *ngIf="!ban.cargando && !ban.filas.length"><td colspan="6"><strong>{{ ban.estado === 'propuesta' ? 'No hay nada esperando su aprobación.' : 'Nada en esta lista.' }}</strong></td></tr>
+              <tr *ngFor="let o of ban.filas; trackBy: trackId">
+                <td class="al-th-check"><input type="checkbox" *ngIf="o.estado === 'propuesta'" [(ngModel)]="o.sel" (ngModelChange)="contarSeleccion()" [attr.aria-label]="'Marcar ' + o.cliente_nombre" /></td>
+                <td class="es-principal np-strong" data-label="Qué se haría">{{ o.nombreTipo }}<div class="np-fine" *ngIf="o.automatica == 1">en automático</div></td>
+                <td data-label="Cliente"><div>{{ o.cliente_nombre }}</div><div class="np-fine np-mono">{{ o.cliente_identificacion }}</div></td>
+                <td class="es-ancha" data-label="Detalle">{{ o.detalle }}
+                  <div class="np-fine al-mal" *ngIf="o.error">{{ o.error }}</div>
+                  <div class="np-fine" *ngIf="o.estado === 'hecha'">Hecha el {{ cuando(o.aplicada_en) }}<ng-container *ngIf="o.aprobada_por"> · aprobó {{ o.aprobada_por }}</ng-container></div>
+                </td>
+                <td class="np-money" data-label="Valor">{{ plata(o.monto) }}</td>
+                <td class="np-td-right es-acciones">
+                  <ng-container *ngIf="o.estado === 'propuesta'">
+                    <button type="button" class="np-btn np-btn--primary np-btn--sm" (click)="aprobarUna(o)" [disabled]="ocupado">Aprobar</button>
+                    <button type="button" class="np-btn np-btn--ghost np-btn--sm" (click)="descartar([o.id])" [disabled]="ocupado">Descartar</button>
+                  </ng-container>
+                  <span class="al-tag" data-t="info" *ngIf="o.estado === 'aprobada' || o.estado === 'aplicando'">Enviando…</span>
+                  <a class="np-btn np-btn--ghost np-btn--sm" *ngIf="o.estado === 'hecha' && o.alegra_factura_id" [href]="'https://app.alegra.com/invoice/view/id/' + o.alegra_factura_id" target="_blank" rel="noopener">Ver en Alegra</a>
+                  <button type="button" class="np-btn np-btn--ghost np-btn--sm" *ngIf="o.estado === 'fallida' || o.estado === 'descartada'" (click)="restaurar(o)">Volver a la bandeja</button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="np-pager np-pager--flat">
+          <span class="np-range">{{ desdeFila(ban) }}–{{ hastaFila(ban) }} de {{ n(ban.total) }}</span>
+          <div class="np-pages"><button type="button" (click)="pagina('ban', -1)" [disabled]="ban.pagina === 1" aria-label="Página anterior">‹</button><button type="button" aria-current="page">{{ ban.pagina }} / {{ ultima(ban.total) }}</button><button type="button" (click)="pagina('ban', 1)" [disabled]="ban.pagina >= ultima(ban.total)" aria-label="Página siguiente">›</button></div>
+        </div>
+      </ng-container>
+
+      <!-- ══ Facturas ════════════════════════════════════════════════════════ -->
+      <ng-container *ngIf="vista === 'facturas'">
+        <div class="al-barra">
+          <div class="np-chips">
+            <button type="button" class="np-chip" [class.is-active]="!fac.estado && !fac.vencidas" (click)="filtroFacturas('')">Todas</button>
+            <button type="button" class="np-chip" [class.is-active]="fac.estado === 'open' && !fac.vencidas" (click)="filtroFacturas('open')">Por cobrar</button>
+            <button type="button" class="np-chip" [class.is-active]="fac.vencidas" (click)="filtroFacturas('', true)">Vencidas</button>
+            <button type="button" class="np-chip" [class.is-active]="fac.estado === 'closed'" (click)="filtroFacturas('closed')">Pagadas</button>
+          </div>
+          <select class="np-input al-sel" [(ngModel)]="fac.cruce" (ngModelChange)="fac.pagina = 1; cargarFacturas()" aria-label="Filtrar por cruce con Netvula">
+            <option value="">Cualquier cruce con Netvula</option>
+            <option value="pagada_en_netvula">Pagadas en Netvula, abiertas en Alegra</option>
+            <option value="anulada_en_netvula">Anuladas en Netvula, abiertas en Alegra</option>
+            <option value="pagada_en_alegra">Pagadas sólo en Alegra</option>
+            <option value="pendiente_en_ambas">Pendientes en los dos</option>
+            <option value="pagada_en_ambas">Pagadas en los dos</option>
+            <option value="sin_cuenta">Sin cuenta de cobro en Netvula</option>
+            <option value="sin_cliente">Cliente que no está en Netvula</option>
+          </select>
+          <input type="search" class="np-input al-buscar" placeholder="Buscar por número, cliente o documento" [(ngModel)]="fac.q" (ngModelChange)="buscar('fac')" aria-label="Buscar facturas" />
+          <span class="al-suma">{{ n(fac.total) }} facturas · {{ plata(fac.sumaTotal) }}<ng-container *ngIf="fac.sumaSaldo > 0"> · {{ plata(fac.sumaSaldo) }} por cobrar</ng-container></span>
+        </div>
+
+        <div class="np-tablewrap">
+          <table class="np-table np-table--compact np-tabla-movil">
+            <thead><tr><th>Factura</th><th>Cliente</th><th>Fecha</th><th class="np-th-right">Total</th><th class="np-th-right">Saldo</th><th>En Alegra</th><th>En Netvula</th><th>Cruce</th><th></th></tr></thead>
+            <tbody>
+              <tr class="np-empty" *ngIf="fac.cargando && !fac.filas.length"><td colspan="9"><span class="np-spinner"></span></td></tr>
+              <tr class="np-empty" *ngIf="!fac.cargando && !fac.filas.length"><td colspan="9"><strong>Ninguna factura con ese filtro.</strong></td></tr>
+              <tr *ngFor="let f of fac.filas; trackBy: trackId" [class.al-tenue]="fac.cargando">
+                <td class="es-principal np-strong np-mono" data-label="Factura">{{ f.numero || f.alegra_id }}</td>
+                <td data-label="Cliente"><div>{{ f.cliente_nombre }}</div><div class="np-fine np-mono">{{ f.cliente_identificacion }}</div></td>
+                <td class="np-data" data-label="Fecha">{{ fecha(f.fecha) }}<div class="np-fine" [class.al-mal]="f.vencida">{{ f.vencida ? 'venció' : 'vence' }} {{ fecha(f.vence) }}</div></td>
+                <td class="np-money" data-label="Total">{{ plata(f.total) }}</td>
+                <td class="np-money" data-label="Saldo" [class.np-neg]="f.saldo > 0">{{ plata(f.saldo) }}</td>
+                <td data-label="En Alegra"><span class="np-pill" [ngClass]="f.estado === 'closed' ? 'np-pill--active' : f.vencida ? 'np-pill--suspended' : 'np-pill--noip'">{{ f.estado === 'closed' ? 'Pagada' : f.estado === 'open' ? (f.vencida ? 'Vencida' : 'Por cobrar') : f.estado }}</span></td>
+                <td data-label="En Netvula">
+                  <ng-container *ngIf="f.enNetvula; else sinCuenta"><span class="np-mono">{{ f.number_facture }}</span><div class="np-fine" [class.al-bien]="f.enNetvula === 'Pagada'" [class.al-mal]="f.enNetvula === 'Anulada'">{{ f.enNetvula }}<ng-container *ngIf="f.paid_at && f.enNetvula === 'Pagada'"> el {{ fecha(f.paid_at) }}</ng-container></div></ng-container>
+                  <ng-template #sinCuenta><span class="np-muted">—</span></ng-template>
+                </td>
+                <td data-label="Cruce"><span class="al-tag" [attr.data-t]="f.cruceTono">{{ f.cruceTexto }}</span></td>
+                <td class="np-td-right es-acciones"><a class="np-btn np-btn--ghost np-btn--sm" [href]="f.enlace" target="_blank" rel="noopener" title="Abrir esta factura en Alegra">Ver en Alegra</a></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="np-pager np-pager--flat">
+          <span class="np-range">{{ desdeFila(fac) }}–{{ hastaFila(fac) }} de {{ n(fac.total) }}</span>
+          <div class="np-pages"><button type="button" (click)="pagina('fac', -1)" [disabled]="fac.pagina === 1" aria-label="Página anterior">‹</button><button type="button" aria-current="page">{{ fac.pagina }} / {{ ultima(fac.total) }}</button><button type="button" (click)="pagina('fac', 1)" [disabled]="fac.pagina >= ultima(fac.total)" aria-label="Página siguiente">›</button></div>
+        </div>
+      </ng-container>
+
+      <!-- ══ Recurrentes ═════════════════════════════════════════════════════ -->
+      <ng-container *ngIf="vista === 'recurrentes'">
+        <p class="np-notice np-notice--inline al-nota">Una factura recurrente es la que Alegra genera sola cada mes para un cliente, sin que nadie la pida. Aquí se ve a quién le está facturando y a quién no.</p>
+
+        <div class="al-kpis" *ngIf="rec.resumen as s">
+          <button type="button" class="al-kpi" (click)="ladoRecurrentes('')"><span>Generan factura cada mes</span><b>{{ n(s.total) }}</b><small>{{ plata(s.valor) }} al mes<ng-container *ngIf="s.proxima"> · la próxima, el {{ fecha(s.proxima) }}</ng-container></small></button>
+          <button type="button" class="al-kpi" data-t="warn" (click)="ladoRecurrentes('', 'suspendido')"><span>Suspendidos que siguen facturando</span><b>{{ n(s.suspendidos) }}</b><small>cortados en Netvula, con factura en Alegra</small></button>
+          <button type="button" class="al-kpi" data-t="danger" (click)="ladoRecurrentes('', s.retirados ? 'retirado' : 'valor_distinto')"><span>{{ s.retirados ? 'Retirados que siguen facturando' : 'Valor distinto al plan' }}</span><b>{{ n(s.retirados || s.distintos) }}</b><small>{{ s.retirados ? 'ya no son clientes y Alegra les factura' : 'la recurrente no cobra lo que dice el plan' }}</small></button>
+          <button type="button" class="al-kpi" data-t="neutro" (click)="ladoRecurrentes('sin_recurrente')"><span>No generan factura</span><b>{{ n(s.sin) }}</b><small>clientes vigentes sin recurrente en Alegra</small></button>
+        </div>
+
+        <div class="al-barra">
+          <div class="np-chips">
+            <button type="button" class="np-chip" [class.is-active]="!rec.lado && !rec.alerta" (click)="ladoRecurrentes('')">Con recurrente</button>
+            <button type="button" class="np-chip" [class.is-active]="rec.alerta === 'suspendido'" (click)="ladoRecurrentes('', 'suspendido')">Suspendidos</button>
+            <button type="button" class="np-chip" [class.is-active]="rec.alerta === 'valor_distinto'" (click)="ladoRecurrentes('', 'valor_distinto')">Valor distinto</button>
+            <button type="button" class="np-chip" [class.is-active]="rec.lado === 'sin_recurrente'" (click)="ladoRecurrentes('sin_recurrente')">Sin recurrente</button>
+          </div>
+          <input type="search" class="np-input al-buscar" placeholder="Buscar por cliente o documento" [(ngModel)]="rec.q" (ngModelChange)="buscar('rec')" aria-label="Buscar en recurrentes" />
+          <span class="al-suma">{{ n(rec.total) }}</span>
+        </div>
+
+        <!-- Los que tienen recurrente -->
+        <div class="np-tablewrap" *ngIf="rec.lado !== 'sin_recurrente'">
+          <table class="np-table np-table--compact np-tabla-movil">
+            <thead><tr><th>Cliente</th><th class="np-th-right">Factura cada mes</th><th class="np-th-right">Plan en Netvula</th><th>Última</th><th>Próxima</th><th class="np-th-right">Abiertas en Alegra</th><th>En Netvula</th><th></th></tr></thead>
+            <tbody>
+              <tr class="np-empty" *ngIf="rec.cargando && !rec.filas.length"><td colspan="8"><span class="np-spinner"></span></td></tr>
+              <tr class="np-empty" *ngIf="!rec.cargando && !rec.filas.length"><td colspan="8"><strong>Nadie en esa lista.</strong></td></tr>
+              <tr *ngFor="let x of rec.filas; trackBy: trackId" [class.al-tenue]="rec.cargando">
+                <td class="es-principal" data-label="Cliente"><div class="np-strong">{{ x.cliente_nombre }}</div><div class="np-fine np-mono">{{ x.dni }}</div></td>
+                <td class="np-money" data-label="Factura cada mes">{{ plata(x.total) }}</td>
+                <td class="np-money" data-label="Plan en Netvula" [class.al-mal]="x.alerta === 'valor_distinto'">{{ x.monthly_price !== null ? plata(x.monthly_price) : '—' }}<div class="np-fine">{{ x.plan_name }}</div></td>
+                <td class="np-data" data-label="Última">{{ fecha(x.ultima) }}</td>
+                <td class="np-data" data-label="Próxima">{{ fecha(x.proxima) }}</td>
+                <td class="np-td-right np-data" data-label="Abiertas en Alegra">{{ x.abiertas }}<div class="np-fine" *ngIf="x.saldo > 0">{{ plata(x.saldo) }}</div></td>
+                <td data-label="En Netvula"><span class="al-tag" [attr.data-t]="x.alertaTono">{{ x.alertaTexto }}</span></td>
+                <td class="np-td-right es-acciones">
+                  <button type="button" class="np-btn np-btn--ghost np-btn--sm" *ngIf="!x.pedido" (click)="quitarRecurrente(x)" title="Que Alegra deje de facturarle">Quitar</button>
+                  <span class="al-tag" data-t="info" *ngIf="x.pedido">En la bandeja</span>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Los que no -->
+        <div class="np-tablewrap" *ngIf="rec.lado === 'sin_recurrente'">
+          <table class="np-table np-table--compact np-tabla-movil">
+            <thead><tr><th>Cliente</th><th>Plan</th><th class="np-th-right">Valor</th><th>Servicio</th><th>Contacto en Alegra</th><th></th></tr></thead>
+            <tbody>
+              <tr class="np-empty" *ngIf="rec.cargando && !rec.filas.length"><td colspan="6"><span class="np-spinner"></span></td></tr>
+              <tr class="np-empty" *ngIf="!rec.cargando && !rec.filas.length"><td colspan="6"><strong>Todos los clientes vigentes tienen recurrente.</strong></td></tr>
+              <tr *ngFor="let x of rec.filas; trackBy: trackId" [class.al-tenue]="rec.cargando">
+                <td class="es-principal" data-label="Cliente"><div class="np-strong">{{ x.cliente }}</div><div class="np-fine np-mono">{{ x.dni }}</div></td>
+                <td data-label="Plan">{{ x.plan_name || '—' }}</td>
+                <td class="np-money" data-label="Valor">{{ x.monthly_price !== null ? plata(x.monthly_price) : '—' }}</td>
+                <td data-label="Servicio"><span class="np-pill" [ngClass]="x.status_internet_id == 2 ? 'np-pill--suspended' : 'np-pill--active'">{{ x.status_internet_id == 2 ? 'Suspendido' : 'Activo' }}</span></td>
+                <td data-label="Contacto en Alegra"><span class="al-tag" [attr.data-t]="x.en_alegra == 1 ? 'ok' : 'neutro'">{{ x.en_alegra == 1 ? 'Ya existe' : 'No existe' }}</span></td>
+                <td class="np-td-right es-acciones">
+                  <button type="button" class="np-btn np-btn--ghost np-btn--sm" *ngIf="!x.pedido && x.en_alegra == 1" (click)="agregarRecurrente(x)" title="Que Alegra empiece a facturarle cada mes">Agregar</button>
+                  <button type="button" class="np-btn np-btn--ghost np-btn--sm" *ngIf="!x.pedido && x.en_alegra != 1" (click)="crearContacto(x)" title="Primero hay que crearlo como contacto en Alegra; después se le agrega la recurrente">Crear contacto</button>
+                  <span class="al-tag" data-t="info" *ngIf="x.pedido">En la bandeja</span>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="np-pager np-pager--flat">
+          <span class="np-range">{{ desdeFila(rec) }}–{{ hastaFila(rec) }} de {{ n(rec.total) }}</span>
+          <div class="np-pages"><button type="button" (click)="pagina('rec', -1)" [disabled]="rec.pagina === 1" aria-label="Página anterior">‹</button><button type="button" aria-current="page">{{ rec.pagina }} / {{ ultima(rec.total) }}</button><button type="button" (click)="pagina('rec', 1)" [disabled]="rec.pagina >= ultima(rec.total)" aria-label="Página siguiente">›</button></div>
+        </div>
+      </ng-container>
+
+      <!-- ══ Por facturar ════════════════════════════════════════════════════ -->
+      <ng-container *ngIf="vista === 'por-facturar'">
+        <p class="np-notice np-notice--inline al-nota">Cuentas de cobro de Netvula desde el {{ fecha(pf.desde) }} que no tienen una factura en Alegra. Elija un corte para verlo solo.</p>
+        <div class="al-barra">
+          <div class="np-chips">
+            <button type="button" class="np-chip" *ngFor="let c of pf.cortes; trackBy: trackI" [class.is-active]="pf.fecha === c.fecha" (click)="corte(c.fecha)">{{ fecha(c.fecha) }} <b class="al-chip-n">{{ c.n }}</b></button>
+          </div>
+          <select class="np-input al-sel" [(ngModel)]="pf.pagadas" (ngModelChange)="pf.pagina = 1; cargarPorFacturar()" aria-label="Filtrar por pago">
+            <option value="">Pagadas y pendientes</option><option value="si">Sólo las pagadas</option><option value="no">Sólo las pendientes</option>
+          </select>
+          <label class="np-check"><input type="checkbox" [(ngModel)]="pf.marcados" (ngModelChange)="pf.pagina = 1; cargarPorFacturar()" /><span>Sólo clientes con factura electrónica</span></label>
+          <input type="search" class="np-input al-buscar" placeholder="Buscar por cuenta, cliente o documento" [(ngModel)]="pf.q" (ngModelChange)="buscar('pf')" aria-label="Buscar cuentas de cobro" />
+          <span class="al-suma">{{ n(pf.total) }} cuentas · {{ plata(pf.sumaTotal) }}</span>
+        </div>
+
+        <div class="np-tablewrap">
+          <table class="np-table np-table--compact np-tabla-movil">
+            <thead><tr><th>Cuenta de cobro</th><th>Cliente</th><th>Emitida</th><th class="np-th-right">Valor</th><th>Pago</th><th>Factura electrónica</th><th>Contacto en Alegra</th></tr></thead>
+            <tbody>
+              <tr class="np-empty" *ngIf="pf.cargando && !pf.filas.length"><td colspan="7"><span class="np-spinner"></span></td></tr>
+              <tr class="np-empty" *ngIf="!pf.cargando && !pf.filas.length"><td colspan="7"><strong>Todo lo cobrado en ese periodo ya tiene factura en Alegra.</strong></td></tr>
+              <tr *ngFor="let c of pf.filas; trackBy: trackId" [class.al-tenue]="pf.cargando">
+                <td class="es-principal np-strong np-mono" data-label="Cuenta de cobro">{{ c.number_facture }}</td>
+                <td data-label="Cliente"><div>{{ c.cliente }}</div><div class="np-fine np-mono">{{ c.dni }}</div></td>
+                <td class="np-data" data-label="Emitida">{{ fecha(c.date_facturation) }}</td>
+                <td class="np-money" data-label="Valor">{{ plata(c.total) }}</td>
+                <td data-label="Pago"><span class="np-pill" [ngClass]="c.paid == 1 ? 'np-pill--active' : 'np-pill--noip'">{{ c.paid == 1 ? 'Pagada' : 'Pendiente' }}</span></td>
+                <td data-label="Factura electrónica">{{ c.billing_electronic == 1 ? 'Sí, marcado' : 'No marcado' }}</td>
+                <td data-label="Contacto en Alegra"><span class="al-tag" [attr.data-t]="c.en_alegra == 1 ? 'ok' : 'neutro'">{{ c.en_alegra == 1 ? 'Ya existe' : 'No existe' }}</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="np-pager np-pager--flat">
+          <span class="np-range">{{ desdeFila(pf) }}–{{ hastaFila(pf) }} de {{ n(pf.total) }}</span>
+          <div class="np-pages"><button type="button" (click)="pagina('pf', -1)" [disabled]="pf.pagina === 1" aria-label="Página anterior">‹</button><button type="button" aria-current="page">{{ pf.pagina }} / {{ ultima(pf.total) }}</button><button type="button" (click)="pagina('pf', 1)" [disabled]="pf.pagina >= ultima(pf.total)" aria-label="Página siguiente">›</button></div>
+        </div>
+      </ng-container>
+
+      <!-- ══ Pagos ═══════════════════════════════════════════════════════════ -->
+      <ng-container *ngIf="vista === 'pagos'">
+        <div class="al-barra">
+          <input type="search" class="np-input al-buscar" placeholder="Buscar por cliente, documento o número" [(ngModel)]="pag.q" (ngModelChange)="buscar('pag')" aria-label="Buscar pagos" />
+          <span class="al-suma">{{ n(pag.total) }} movimientos · {{ plata(pag.sumaTotal) }}</span>
+        </div>
+        <div class="np-tablewrap">
+          <table class="np-table np-table--compact np-tabla-movil">
+            <thead><tr><th>N°</th><th>Fecha</th><th>Cliente</th><th>Tipo</th><th>Banco</th><th>Facturas</th><th class="np-th-right">Valor</th></tr></thead>
+            <tbody>
+              <tr class="np-empty" *ngIf="pag.cargando && !pag.filas.length"><td colspan="7"><span class="np-spinner"></span></td></tr>
+              <tr class="np-empty" *ngIf="!pag.cargando && !pag.filas.length"><td colspan="7"><strong>No hay pagos registrados en Alegra.</strong></td></tr>
+              <tr *ngFor="let p of pag.filas; trackBy: trackId" [class.al-tenue]="pag.cargando">
+                <td class="es-principal np-strong np-mono" data-label="N°">{{ p.numero || p.alegra_id }}</td>
+                <td class="np-data" data-label="Fecha">{{ fecha(p.fecha) }}</td>
+                <td data-label="Cliente"><div>{{ p.cliente_nombre || '—' }}</div><div class="np-fine np-mono">{{ p.cliente_identificacion }}</div></td>
+                <td data-label="Tipo"><span class="al-tag" [attr.data-t]="p.tipo === 'in' ? 'ok' : 'warn'">{{ p.tipo === 'in' ? 'Ingreso' : 'Egreso' }}</span></td>
+                <td data-label="Banco">{{ p.banco || '—' }}</td>
+                <td class="np-mono" data-label="Facturas">{{ p.deFacturas || '—' }}</td>
+                <td class="np-money" data-label="Valor">{{ plata(p.monto) }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="np-pager np-pager--flat">
+          <span class="np-range">{{ desdeFila(pag) }}–{{ hastaFila(pag) }} de {{ n(pag.total) }}</span>
+          <div class="np-pages"><button type="button" (click)="pagina('pag', -1)" [disabled]="pag.pagina === 1" aria-label="Página anterior">‹</button><button type="button" aria-current="page">{{ pag.pagina }} / {{ ultima(pag.total) }}</button><button type="button" (click)="pagina('pag', 1)" [disabled]="pag.pagina >= ultima(pag.total)" aria-label="Página siguiente">›</button></div>
+        </div>
+      </ng-container>
+
+      <!-- ══ Contactos ═══════════════════════════════════════════════════════ -->
+      <ng-container *ngIf="vista === 'contactos'">
+        <div class="al-barra">
+          <div class="np-chips">
+            <button type="button" class="np-chip" [class.is-active]="!con.vinculo" (click)="vinculo('')">Contactos de Alegra</button>
+            <button type="button" class="np-chip" [class.is-active]="con.vinculo === 'sin_netvula'" (click)="vinculo('sin_netvula')">En Alegra, no en Netvula</button>
+            <button type="button" class="np-chip" [class.is-active]="con.vinculo === 'netvula_sin_alegra'" (click)="vinculo('netvula_sin_alegra')">En Netvula, no en Alegra</button>
+          </div>
+          <input type="search" class="np-input al-buscar" placeholder="Buscar por nombre o documento" [(ngModel)]="con.q" (ngModelChange)="buscar('con')" aria-label="Buscar contactos" />
+          <button type="button" class="np-btn np-btn--primary np-btn--sm" *ngIf="con.vinculo === 'netvula_sin_alegra' && con.total > 0" (click)="crearTodosLosContactos()" [disabled]="ocupado">Pasar todos a la bandeja</button>
+          <span class="al-suma">{{ n(con.total) }}</span>
+        </div>
+        <div class="np-tablewrap">
+          <table class="np-table np-table--compact np-tabla-movil">
+            <thead><tr><th>Nombre</th><th>Documento</th><th>Correo</th><th>Teléfono</th><th>En Netvula</th><th class="np-th-right">Facturas abiertas</th><th class="np-th-right">Saldo en Alegra</th><th></th></tr></thead>
+            <tbody>
+              <tr class="np-empty" *ngIf="con.cargando && !con.filas.length"><td colspan="8"><span class="np-spinner"></span></td></tr>
+              <tr class="np-empty" *ngIf="!con.cargando && !con.filas.length"><td colspan="8"><strong>Nadie en esa lista.</strong></td></tr>
+              <tr *ngFor="let c of con.filas; trackBy: trackI" [class.al-tenue]="con.cargando">
+                <td class="es-principal np-strong" data-label="Nombre">{{ c.nombre }}</td>
+                <td class="np-mono" data-label="Documento">{{ c.identificacion || '—' }}</td>
+                <td data-label="Correo">{{ c.email || '—' }}</td>
+                <td class="np-mono" data-label="Teléfono">{{ c.telefono || '—' }}</td>
+                <td data-label="En Netvula"><span class="al-tag" [attr.data-t]="c.user_id ? 'ok' : 'neutro'">{{ c.estado === 'solo_netvula' ? 'Sólo en Netvula' : (c.user_id ? 'Es cliente' : 'No está') }}</span></td>
+                <td class="np-td-right np-data" data-label="Facturas abiertas">{{ c.facturas }}</td>
+                <td class="np-money" data-label="Saldo en Alegra" [class.np-neg]="c.saldo > 0">{{ plata(c.saldo) }}</td>
+                <td class="np-td-right es-acciones">
+                  <button type="button" class="np-btn np-btn--ghost np-btn--sm" *ngIf="c.estado === 'solo_netvula' && !c.pedido" (click)="crearContacto(c)">Crear en Alegra</button>
+                  <span class="al-tag" data-t="info" *ngIf="c.pedido">En la bandeja</span>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="np-pager np-pager--flat">
+          <span class="np-range">{{ desdeFila(con) }}–{{ hastaFila(con) }} de {{ n(con.total) }}</span>
+          <div class="np-pages"><button type="button" (click)="pagina('con', -1)" [disabled]="con.pagina === 1" aria-label="Página anterior">‹</button><button type="button" aria-current="page">{{ con.pagina }} / {{ ultima(con.total) }}</button><button type="button" (click)="pagina('con', 1)" [disabled]="con.pagina >= ultima(con.total)" aria-label="Página siguiente">›</button></div>
+        </div>
+      </ng-container>
+
+      <!-- ══ La cuenta ═══════════════════════════════════════════════════════ -->
+      <ng-container *ngIf="vista === 'cuenta'">
+        <p class="np-loading" *ngIf="cargandoCuenta && !cuenta"><span class="np-spinner np-spinner--sm"></span> Consultando la cuenta en Alegra…</p>
+        <ng-container *ngIf="cuenta">
+          <section class="np-card">
+            <div class="np-card-h"><h2>{{ cuenta.empresa.nombre || 'Empresa' }}</h2><button type="button" class="np-btn np-btn--ghost np-btn--sm" (click)="cargarCuenta(true)" [disabled]="cargandoCuenta">{{ cargandoCuenta ? 'Consultando' : 'Volver a consultar' }}</button></div>
+            <dl class="al-dl al-dl--cols">
+              <div><dt>NIT</dt><dd class="np-mono">{{ cuenta.empresa.identificacion || '—' }}</dd></div>
+              <div><dt>Régimen</dt><dd>{{ cuenta.empresa.regimen || '—' }}</dd></div>
+              <div><dt>Ciudad</dt><dd>{{ cuenta.empresa.ciudad || '—' }}<ng-container *ngIf="cuenta.empresa.departamento">, {{ cuenta.empresa.departamento }}</ng-container></dd></div>
+              <div><dt>Dirección</dt><dd>{{ cuenta.empresa.direccion || '—' }}</dd></div>
+              <div><dt>Correo</dt><dd>{{ cuenta.empresa.correo || '—' }}</dd></div>
+              <div><dt>Moneda</dt><dd>{{ cuenta.empresa.moneda || '—' }}</dd></div>
+            </dl>
+          </section>
+
+          <section class="np-card">
+            <div class="np-card-h"><h2>Numeraciones</h2><span class="np-card-meta">{{ cuenta.numeraciones.length }}</span></div>
+            <div class="np-tablewrap"><table class="np-table np-table--compact np-tabla-movil">
+              <thead><tr><th>Nombre</th><th>Documento</th><th>Prefijo</th><th>Electrónica</th><th class="np-th-right">Siguiente número</th><th>Resolución</th><th>Vence</th></tr></thead>
+              <tbody><tr *ngFor="let n of cuenta.numeraciones; trackBy: trackI">
+                <td class="es-principal np-strong" data-label="Nombre">{{ n.nombre }}</td><td data-label="Documento">{{ n.tipoTexto }}</td><td class="np-mono" data-label="Prefijo">{{ n.prefijo || '—' }}</td>
+                <td data-label="Electrónica"><span class="al-tag" [attr.data-t]="n.electronica ? 'ok' : 'neutro'">{{ n.electronica ? 'Sí' : 'No' }}</span></td>
+                <td class="np-td-right np-data" data-label="Siguiente número">{{ n.siguiente ?? '—' }}<ng-container *ngIf="n.hasta"> de {{ n.hasta }}</ng-container></td>
+                <td class="np-mono" data-label="Resolución">{{ n.resolucion || '—' }}</td><td class="np-data" data-label="Vence">{{ n.vence ? fecha(n.vence) : '—' }}</td>
+              </tr></tbody>
+            </table></div>
+          </section>
+
+          <div class="al-dos">
+            <section class="np-card">
+              <div class="np-card-h"><h2>Bancos</h2></div>
+              <ul class="al-lista"><li *ngFor="let b of cuenta.bancos; trackBy: trackI"><b>{{ b.nombre }}</b><span>{{ b.tipo === 'bank' ? 'Banco' : b.tipo === 'cash' ? 'Efectivo' : b.tipo }}</span></li></ul>
+              <p class="np-muted" *ngIf="!cuenta.bancos.length">Sin bancos.</p>
+            </section>
+            <section class="np-card">
+              <div class="np-card-h"><h2>Productos y servicios</h2></div>
+              <ul class="al-lista"><li *ngFor="let i of cuenta.items; trackBy: trackI"><b>{{ i.nombre }}</b><span>{{ i.precio !== null ? plata(i.precio) : '' }}</span></li></ul>
+              <p class="np-muted" *ngIf="!cuenta.items.length">Sin ítems.</p>
+            </section>
+            <section class="np-card">
+              <div class="np-card-h"><h2>Impuestos</h2></div>
+              <ul class="al-lista"><li *ngFor="let i of cuenta.impuestos; trackBy: trackI"><b>{{ i.nombre }}</b><span>{{ i.porcentaje }} %</span></li></ul>
+            </section>
+            <section class="np-card">
+              <div class="np-card-h"><h2>Notas crédito</h2><span class="np-card-meta">las últimas</span></div>
+              <ul class="al-lista"><li *ngFor="let n of cuenta.notas_credito; trackBy: trackI"><b>{{ n.numero || n.id }} · {{ n.cliente }}</b><span>{{ fecha(n.fecha) }} · {{ plata(n.total) }}</span></li></ul>
+              <p class="np-muted" *ngIf="!cuenta.notas_credito.length">Sin notas crédito.</p>
+            </section>
+          </div>
+        </ng-container>
+      </ng-container>
+    </div>
+  </ng-container>
+</div>

@@ -1457,7 +1457,7 @@
         <p class="np-fine" *ngIf="c.user_id && !c.ont">El cliente no tiene una ONT vinculada en Admin OLT.</p>
       </ng-container>
 
-      <app-ont-equipo *ngIf="credTab === 'equipo' && c.ont && c.user_id" [userId]="c.user_id" [ont]="c.ont"></app-ont-equipo>
+      <app-ont-equipo *ngIf="credTab === 'equipo' && c.ont && c.user_id" [userId]="c.user_id" [ont]="c.ont" [cliente]="c.nombre || c.name || ''"></app-ont-equipo>
     </div>
 
     <footer class="px-modal-foot">

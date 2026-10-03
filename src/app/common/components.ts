@@ -36,6 +36,18 @@ export const components: RouteProps[] = [
         },
       },
       {
+        title: 'Suspensión masiva',
+        icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M5.6 5.6l12.8 12.8"/></svg>`,
+        href: 'suspension-masiva',
+        module: 'usuario',
+        group: false,
+        roles: [2],
+        card: {
+          className: 'w-56',
+          images: { light: 'alerts-light.svg', dark: 'alerts-dark.svg' },
+        },
+      },
+      {
         title: 'Importar clientes',
         icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v11m0 0-4-4m4 4 4-4"/><path d="M4 15v4a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-4"/></svg>`,
         href: 'usuario/importar',
@@ -157,6 +169,18 @@ export const components: RouteProps[] = [
         },
       },
       {
+        title: 'Alegra',
+        icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h9l4 4v14H6z"/><path d="M14 3v5h5"/><path d="M9 13h6M9 17h4"/></svg>`,
+        href: 'alegra',
+        module: 'finanzas',
+        group: false,
+        roles: [2, 4],
+        card: {
+          className: 'w-56',
+          images: { light: 'alerts-light.svg', dark: 'alerts-dark.svg' },
+        },
+      },
+      {
         title: 'Conciliación de pagos',
         icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3 8-8"/><path d="M20 12v6a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h9"/></svg>`,
         href: 'conciliacion-pagos',
@@ -229,7 +253,7 @@ export const components: RouteProps[] = [
     roles: [2, 4],
     children: [
       {
-        title: 'Ítems',
+        title: 'Bodega y técnicos',
         icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="2"/><path d="M4 10h16M10 4v16"/></svg>`,
         href: 'inventory',
         group: false,
@@ -272,6 +296,7 @@ export const components: RouteProps[] = [
     module: 'olt-admin',
     children: [
       { title: 'Mis OLTs',       href: 'olt',               group: false, module: 'olt-admin', icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M7 8h.01M7 12h.01M7 16h.01M11 8h6M11 12h6M11 16h6"/></svg>`, card: { className: 'w-56', images: { light: 'alerts-light.svg', dark: 'alerts-dark.svg' } } },
+      { title: 'Fallas de sector', href: 'fallas-sector',  group: false, module: 'olt-admin', icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><path d="M12 9v4M12 17h.01"/></svg>`, card: { className: 'w-56', images: { light: 'alerts-light.svg', dark: 'alerts-dark.svg' } } },
       { title: 'Dashboard',      href: 'olt/dashboard',     group: false, module: 'olt-admin', icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="8" height="8" rx="1.5"/><rect x="13" y="3" width="8" height="5" rx="1.5"/><rect x="13" y="11" width="8" height="10" rx="1.5"/><rect x="3" y="14" width="8" height="7" rx="1.5"/></svg>`, card: { className: 'w-56', images: { light: 'alerts-light.svg', dark: 'alerts-dark.svg' } } },
       { title: 'Autorizadas',    href: 'olt/autorizadas',   group: false, module: 'olt-admin', icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="m8.5 12.5 2.5 2.5 4.5-5"/></svg>`, card: { className: 'w-56', images: { light: 'alerts-light.svg', dark: 'alerts-dark.svg' } } },
       { title: 'Sin Autorizar',  href: 'olt/sin-autorizar', group: false, module: 'olt-admin', icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 8v4M12 16h.01"/></svg>`, card: { className: 'w-56', images: { light: 'alerts-light.svg', dark: 'alerts-dark.svg' } } },
@@ -359,6 +384,15 @@ export const components: RouteProps[] = [
         title: 'Bandeja de entrada',
         icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 13l2.5-7h13L21 13v5a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><path d="M3 13h5l1.5 2h5L16 13h5"/></svg>`,
         href: 'crm/inbox',
+        group: false,
+        roles: [2, 3],
+        card: { className: 'w-56', images: { light: 'alerts-light.svg', dark: 'alerts-dark.svg' } },
+      },
+      {
+        title: 'Asistente de soporte',
+        icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 13a8 8 0 0 1 16 0"/><rect x="3" y="13" width="4" height="6" rx="1.5"/><rect x="17" y="13" width="4" height="6" rx="1.5"/><path d="M20 19a4 4 0 0 1-4 3h-2"/></svg>`,
+        href: 'soporte-asistente',
+        module: 'crm',
         group: false,
         roles: [2, 3],
         card: { className: 'w-56', images: { light: 'alerts-light.svg', dark: 'alerts-dark.svg' } },

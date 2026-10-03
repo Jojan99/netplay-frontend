@@ -106,7 +106,15 @@ export const routes: Routes = [
       { path: 'resumen',        component: ResumenComponent,           canActivate: [roleGuard], data: { module: 'resumen' } },
       { path: 'cartera',        component: CarteraComponent,           canActivate: [roleGuard], data: { module: 'finanzas' } },
       { path: 'conciliacion-pagos', component: ConciliacionPagosComponent, canActivate: [roleGuard], data: { module: 'finanzas' } },
+      // Lo que la empresa tiene en Alegra, cruzado con Netvula (de consulta).
+      { path: 'alegra', loadComponent: () => import('./pages/alegra/alegra.component').then(m => m.AlegraComponent), canActivate: [roleGuard], data: { module: 'finanzas' } },
       { path: 'cobranza',       component: CobranzaComponent,          canActivate: [roleGuard], data: { module: 'finanzas' } },
+      // Suspender (y avisar) por grupo de corte, eligiendo a quiénes.
+      { path: 'suspension-masiva', loadComponent: () => import('./pages/suspension-masiva/suspension-masiva.component').then(m => m.SuspensionMasivaComponent), canActivate: [roleGuard], data: { module: 'usuario' } },
+      // El asistente que atiende los pedidos de soporte por WhatsApp.
+      // Se carga al entrar, como Alegra: el arranque del panel ya está en el tope de tamaño.
+      { path: 'fallas-sector', loadComponent: () => import('./pages/fallas-sector/fallas-sector.component').then(m => m.FallasSectorComponent), canActivate: [roleGuard], data: { module: 'olt-admin' } },
+      { path: 'soporte-asistente', loadComponent: () => import('./pages/soporte-asistente/soporte-asistente.component').then(m => m.SoporteAsistenteComponent), canActivate: [roleGuard], data: { module: 'crm' } },
       {
         path: 'inventory',
         loadChildren: () => import('./pages/inventory/inventory.routes').then(m => m.INVENTORY_ROUTES),

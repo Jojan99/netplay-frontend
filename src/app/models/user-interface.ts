@@ -26,6 +26,15 @@ export interface UserInterface {
     vlan?: number
     router_id?: number | null
     /** 'static' (IP fija) o 'pppoe'. Un cliente PPPoE no tiene IP fija: la recibe al conectarse. */
+    /** Lo que piden la DIAN y Alegra del cliente. */
+    tipo_documento?: string
+    estrato?: number | null
+    barrio?: string
+    ciudad?: string
+    departamento?: string
+    pais?: string
+    municipio?: string
+    prefijo_telefono?: string
     connection_type?: string | null
     pppoe_user?: string | null
     pppoe_password?: string | null

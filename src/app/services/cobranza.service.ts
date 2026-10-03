@@ -4,6 +4,10 @@ import { Observable } from 'rxjs';
 import { environment } from '../../environments/environment';
 
 export interface CobranzaConfig {
+  /** Medios de pago para clientes sin facturación electrónica (Nequi, Daviplata…). */
+  pago_texto?: string | null;
+  /** Instrucciones para clientes con facturación electrónica: van debajo del QR. */
+  pago_texto_fe?: string | null;
   activa: boolean;
   modo: 'manual' | 'automatico';
   min_facturas: number;

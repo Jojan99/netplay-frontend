@@ -64,7 +64,7 @@ export class FinanceComponent implements OnInit, OnDestroy {
   }
   get lastPayment(): any | null { return this.paymentLogs.length ? this.paymentLogs[0] : null; }
   get drawerPendingTotal(): number {
-    return this.invoices.filter(i => i.paid !== 1).reduce((s, i) => s + Math.max(0, this.invoiceBalance(i)), 0);
+    return this.invoices.filter(i => i.paid !== 1 && !i.anulada_en).reduce((s, i) => s + Math.max(0, this.invoiceBalance(i)), 0);
   }
   get pastCommitments(): any[] { return this.commitments.filter(c => c.status !== 'pending'); }
 
@@ -79,10 +79,10 @@ export class FinanceComponent implements OnInit, OnDestroy {
 
   get drawerInvoices(): any[] {
     return this.drawerTab === 'pending'
-      ? this.invoices.filter(i => i.paid !== 1)
+      ? this.invoices.filter(i => i.paid !== 1 && !i.anulada_en)
       : this.invoices.filter(i => i.paid === 1);
   }
-  get drawerPendingCount(): number { return this.invoices.filter(i => i.paid !== 1).length; }
+  get drawerPendingCount(): number { return this.invoices.filter(i => i.paid !== 1 && !i.anulada_en).length; }
   get drawerPaidCount():   number { return this.invoices.filter(i => i.paid === 1).length; }
 
   // Active payment methods
@@ -111,7 +111,7 @@ export class FinanceComponent implements OnInit, OnDestroy {
   liquidating       = false;
 
   get liquidateInvoices(): any[] {
-    return this.invoices.filter(i => i.paid !== 1);
+    return this.invoices.filter(i => i.paid !== 1 && !i.anulada_en);
   }
   get allLiquidateSelected(): boolean {
     return this.liquidateInvoices.length > 0 && this.liquidateInvoices.every(i => this.liquidateSelected.has(i.id));
@@ -208,7 +208,7 @@ export class FinanceComponent implements OnInit, OnDestroy {
 
   get commitmentTotal(): number {
     return this.invoices
-      .filter(i => i.paid !== 1 && this.commitmentSelected.has(i.id))
+      .filter(i => i.paid !== 1 && !i.anulada_en && this.commitmentSelected.has(i.id))
       .reduce((s, i) => s + Math.max(0, (i.price_total || 0) - (i.price_abone || 0) - (i.price_discount || 0)), 0);
   }
 
@@ -733,7 +733,7 @@ export class FinanceComponent implements OnInit, OnDestroy {
   }
 
   openSendBulkModal(): void {
-    const pending = this.invoices.filter(i => i.paid !== 1);
+    const pending = this.invoices.filter(i => i.paid !== 1 && !i.anulada_en);
     if (pending.length === 0) { this.toast.error('No hay facturas pendientes para enviar'); return; }
     this.sendBulkIds = new Set(pending.map(i => i.number_facture));
     this.sendBulkChannel = 'whatsapp';
@@ -813,7 +813,7 @@ export class FinanceComponent implements OnInit, OnDestroy {
   }
 
   toggleAllSendBulk(): void {
-    const pending = this.invoices.filter(i => i.paid !== 1);
+    const pending = this.invoices.filter(i => i.paid !== 1 && !i.anulada_en);
     if (pending.every(i => this.sendBulkIds.has(i.number_facture))) {
       pending.forEach(i => this.sendBulkIds.delete(i.number_facture));
     } else {
@@ -822,12 +822,12 @@ export class FinanceComponent implements OnInit, OnDestroy {
   }
 
   get allSendBulkSelected(): boolean {
-    const pending = this.invoices.filter(i => i.paid !== 1);
+    const pending = this.invoices.filter(i => i.paid !== 1 && !i.anulada_en);
     return pending.length > 0 && pending.every(i => this.sendBulkIds.has(i.number_facture));
   }
 
   get sendBulkInvoices(): any[] {
-    return this.invoices.filter(i => i.paid !== 1);
+    return this.invoices.filter(i => i.paid !== 1 && !i.anulada_en);
   }
 
   // ── CSV export ───────────────────────────────────────────────────────────
@@ -869,7 +869,8 @@ export class FinanceComponent implements OnInit, OnDestroy {
     // Pagada = saldo cero, diga lo que diga el abono. El pago completo no siempre deja el
     // importe en «price_abone» (depende de por dónde se registró), y la resta mostraba
     // como saldo el total de una factura que ya estaba pagada.
-    if (inv.paid === 1) return 0;
+    // Anulada = tampoco se debe nada.
+    if (inv.paid === 1 || inv.anulada_en) return 0;
     return (inv.price_total || 0) - (inv.price_abone || 0) - (inv.price_discount || 0);
   }
 

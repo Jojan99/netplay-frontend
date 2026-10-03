@@ -1,0 +1,140 @@
+<!-- data-sin-aviso: es una ventana de consulta; el buscador de abajo no es un dato que se pierda. -->
+<div class="np-overlay" data-sin-aviso (click)="cerrar.emit()">
+  <div class="np-modal of" role="dialog" aria-modal="true" aria-label="Ficha del equipo" (click)="$event.stopPropagation()">
+
+    <header class="of-head">
+      <span class="of-ico" [attr.data-t]="veredicto.tono" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="12" width="18" height="7" rx="2"/><path d="M7 15.5h.01M11 15.5h.01M8 12V8M16 12V5M12 12v-2"/></svg>
+      </span>
+      <div class="of-titulos">
+        <p class="np-kicker">Equipo del cliente</p>
+        <h3>{{ cliente || 'Cliente' }}</h3>
+        <p class="of-sub">
+          <b>{{ marca || 'ONT' }}</b><ng-container *ngIf="modelo">&nbsp;<span class="np-mono">{{ modelo }}</span></ng-container>
+          <ng-container *ngIf="ont?.serial"> · <span class="np-mono">{{ ont?.serial }}</span></ng-container>
+          <ng-container *ngIf="ont"> · {{ ont.olt || 'OLT' }} <span class="np-mono">{{ ont.fsp }}:{{ ont.ont_id }}</span></ng-container>
+        </p>
+      </div>
+      <div class="of-acciones">
+        <button type="button" class="np-btn np-btn--ghost np-btn--sm" (click)="cargar(true)" [disabled]="cargandoOlt || cargandoAcs">
+          <span class="np-spinner np-spinner--sm" *ngIf="cargandoOlt || cargandoAcs"></span>{{ cargandoOlt || cargandoAcs ? 'Consultando' : 'Actualizar' }}
+        </button>
+        <button type="button" class="np-btn np-btn--danger np-btn--sm" (click)="reiniciar()" [disabled]="reiniciando">{{ reiniciando ? 'Reiniciando' : 'Reiniciar equipo' }}</button>
+        <button type="button" class="np-icobtn" (click)="cerrar.emit()" aria-label="Cerrar">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M6 6l12 12M18 6 6 18"/></svg>
+        </button>
+      </div>
+    </header>
+
+    <div class="of-body">
+
+      <!-- Qué le pasa al equipo, dicho para el cliente. -->
+      <section class="of-veredicto" [attr.data-t]="veredicto.tono" aria-live="polite">
+        <i class="of-luz" aria-hidden="true"></i>
+        <div><b>{{ veredicto.titulo }}</b><span *ngIf="veredicto.detalle">{{ veredicto.detalle }}</span></div>
+      </section>
+
+      <div class="of-cols">
+        <div class="of-col">
+
+          <section class="of-sec">
+            <h4>Energía y arranque</h4>
+            <dl class="of-datos">
+              <div *ngFor="let d of energia; trackBy: trackI" [attr.data-t]="d.tono || null">
+                <dt>{{ d.etiqueta }}</dt><dd>{{ d.valor }}</dd><small *ngIf="d.nota">{{ d.nota }}</small>
+              </div>
+            </dl>
+            <p class="of-vacio" *ngIf="!energia.length">Sin datos todavía.</p>
+          </section>
+
+          <section class="of-sec">
+            <h4>Señal de la fibra</h4>
+            <dl class="of-datos" *ngIf="senal.length">
+              <div *ngFor="let d of senal; trackBy: trackI" [attr.data-t]="d.tono || null">
+                <dt>{{ d.etiqueta }}</dt><dd>{{ d.valor }}</dd><small *ngIf="d.nota">{{ d.nota }}</small>
+              </div>
+            </dl>
+            <p class="of-vacio" *ngIf="!senal.length">{{ cargandoOlt ? 'Midiendo la señal…' : (vivo?.error || 'La OLT no entregó la señal de este equipo.') }}</p>
+          </section>
+
+          <section class="of-sec">
+            <h4>Conexión a internet</h4>
+            <ul class="of-lista" *ngIf="redes.length">
+              <li *ngFor="let w of redes; trackBy: trackI">
+                <i class="of-punto" [class.is-on]="w.conectada"></i>
+                <div>
+                  <b>{{ w.tipo === 'PPP' ? 'PPPoE' : (w.tipo === 'IP' ? 'IP' : w.tipo) }}<ng-container *ngIf="w.nombre"> · {{ w.nombre }}</ng-container></b>
+                  <span><ng-container *ngIf="w.ip"><span class="np-mono">{{ w.ip }}</span></ng-container><ng-container *ngIf="w.usuario"> · usuario <span class="np-mono">{{ w.usuario }}</span></ng-container><ng-container *ngIf="!w.ip && !w.usuario">Sin dirección</ng-container></span>
+                </div>
+                <em [class.is-on]="w.conectada">{{ w.conectada ? 'Conectada' : (w.estado || 'Sin estado') }}</em>
+              </li>
+            </ul>
+            <p class="of-vacio" *ngIf="!redes.length">{{ cargandoAcs ? 'Consultando el TR-069…' : 'El equipo no reporta al servidor TR-069, así que no se ve su conexión.' }}</p>
+          </section>
+        </div>
+
+        <div class="of-col">
+
+          <section class="of-sec">
+            <h4>WiFi</h4>
+            <ul class="of-lista" *ngIf="wifi.length">
+              <li *ngFor="let r of wifi; trackBy: trackI">
+                <i class="of-punto" [class.is-on]="r.activo !== false"></i>
+                <div>
+                  <b>{{ r.ssid }}</b>
+                  <span>{{ r.banda || 'WiFi' }}<ng-container *ngIf="r.canal"> · canal {{ r.canal }}</ng-container><ng-container *ngIf="r.oculta"> · oculta</ng-container></span>
+                </div>
+                <em *ngIf="r.conectados !== null && r.conectados !== undefined">{{ r.conectados }} conectado{{ r.conectados === 1 ? '' : 's' }}</em>
+                <em *ngIf="r.activo === false">Apagada</em>
+              </li>
+            </ul>
+            <p class="of-vacio" *ngIf="!wifi.length">{{ cargandoAcs ? 'Consultando el TR-069…' : 'Sin datos de WiFi: el equipo no reporta al TR-069.' }}</p>
+          </section>
+
+          <section class="of-sec">
+            <h4>Aparatos conectados <span class="of-cuenta" *ngIf="aparatos.length">{{ aparatosActivos }} activos de {{ aparatos.length }}</span></h4>
+            <ul class="of-lista of-lista--aparatos" *ngIf="aparatos.length">
+              <li *ngFor="let e of aparatos; trackBy: trackI" [class.is-apagado]="!e.activo">
+                <i class="of-punto" [class.is-on]="e.activo"></i>
+                <div>
+                  <b>{{ e.nombre || 'Sin nombre' }}</b>
+                  <span class="np-mono">{{ e.ip || '—' }} · {{ e.mac }}</span>
+                </div>
+                <em>{{ e.interfaz === '802.11' ? 'WiFi' : (e.interfaz || '') }}</em>
+              </li>
+            </ul>
+            <p class="of-vacio" *ngIf="!aparatos.length">{{ cargandoAcs ? 'Consultando el TR-069…' : 'El equipo no informó aparatos conectados.' }}</p>
+          </section>
+        </div>
+      </div>
+
+      <!-- Todo lo que el equipo publica. -->
+      <section class="of-sec of-todo" *ngIf="acs">
+        <button type="button" class="of-desplegar" (click)="alternarTodo()" [attr.aria-expanded]="verTodo">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" [class.is-abierto]="verTodo"><path d="m9 6 6 6-6 6"/></svg>
+          Todos los datos del TR-069<span *ngIf="parametros.length"> ({{ parametros.length }})</span>
+        </button>
+        <ng-container *ngIf="verTodo">
+          <p class="of-vacio" *ngIf="cargandoParametros"><span class="np-spinner np-spinner--sm"></span> Leyendo lo que publica el equipo…</p>
+          <ng-container *ngIf="!cargandoParametros">
+            <input type="search" class="np-input of-buscar" placeholder="Buscar un dato (uptime, wan, ssid…)" [(ngModel)]="filtro" (ngModelChange)="filtrar()" aria-label="Buscar en los datos del TR-069" />
+            <div class="of-params">
+              <div class="of-param" *ngFor="let p of visibles; trackBy: trackRuta">
+                <span class="np-mono" [title]="p.ruta">{{ p.corta }}</span>
+                <b class="np-mono" *ngIf="!p.oculto">{{ p.valor === null || p.valor === '' ? '—' : p.valor }}</b>
+                <b class="of-oculto" *ngIf="p.oculto" title="Las claves no se muestran aquí">••••••</b>
+              </div>
+              <p class="of-vacio" *ngIf="!visibles.length">Ningún dato coincide con «{{ filtro }}».</p>
+            </div>
+          </ng-container>
+        </ng-container>
+      </section>
+    </div>
+
+    <footer class="of-pie">
+      <span *ngIf="acs?.ultimo_reporte">Reportó al TR-069 el {{ fecha(acs.ultimo_reporte) }}</span>
+      <span *ngIf="!acs && !cargandoAcs">No reporta al servidor TR-069</span>
+      <span *ngIf="vivo?.medido_en">OLT consultada el {{ fecha(vivo.medido_en) }}</span>
+    </footer>
+  </div>
+</div>

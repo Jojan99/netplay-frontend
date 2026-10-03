@@ -56,6 +56,15 @@ export class UserService {
       // Sin estos campos el alta de un cliente PPPoE llegaba como IP fija sin
       // IP y el servidor respondía 500: la lista de campos de arriba es fija y
       // lo que no está aquí no se envía.
+      // Lo que piden la DIAN y Alegra. Vacío no se manda: el servidor lo deja sin definir.
+      tipo_documento: userData.tipo_documento || undefined,
+      estrato: userData.estrato ?? undefined,
+      barrio: userData.barrio?.trim() || undefined,
+      ciudad: userData.ciudad?.trim() || undefined,
+      departamento: userData.departamento?.trim() || undefined,
+      pais: userData.pais?.trim() || undefined,
+      municipio: userData.municipio?.trim() || undefined,
+      prefijo_telefono: userData.prefijo_telefono?.trim() || undefined,
       connection_type: userData.connection_type ?? 'static',
       pppoe_user: userData.connection_type === 'pppoe' ? userData.pppoe_user : undefined,
       pppoe_password: userData.connection_type === 'pppoe' ? userData.pppoe_password : undefined,

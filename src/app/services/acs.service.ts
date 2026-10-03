@@ -27,6 +27,9 @@ export class AcsService {
 
   deCliente(userId: number): Observable<any> { return this.http.get(`${this.base}/cliente/${userId}`, this.h()); }
 
+  /** Todo lo que el equipo del cliente publica por TR-069, con las claves tapadas. */
+  parametrosDeCliente(userId: number): Observable<any> { return this.http.get(`${this.base}/cliente/${userId}/parametros`, this.h()); }
+
   refrescar(id: string): Observable<any> { return this.http.post(`${this.base}/equipos/refrescar`, { id }, this.h()); }
 
   reiniciar(id: string): Observable<any> { return this.http.post(`${this.base}/equipos/reiniciar`, { id }, this.h()); }

@@ -1,0 +1,200 @@
+<div class="np-page sa">
+  <header class="np-head">
+    <div>
+      <p class="np-kicker">CRM WhatsApp <b>/</b> Asistente de soporte</p>
+      <h1 class="np-title">Asistente de soporte</h1>
+      <div class="np-ribbon"><span>Atiende por WhatsApp a quien escribe por una falla: revisa su servicio, cambia la clave del WiFi y deja el ticket. Nunca cambia el nombre de la red.</span></div>
+    </div>
+    <div class="sa-encendido" *ngIf="cfg">
+      <span class="sa-estado" [attr.data-t]="cfg.activa ? 'ok' : 'neutro'">{{ cfg.activa ? 'Activo' : 'Apagado' }}</span>
+      <button type="button" class="np-switch" role="switch" [attr.aria-checked]="cfg.activa" (click)="encender()" [disabled]="guardando" aria-label="Activar el asistente de soporte"></button>
+    </div>
+  </header>
+
+  <p class="np-loading" *ngIf="cargando"><span class="np-spinner"></span> Abriendo el asistente…</p>
+  <p class="np-notice np-notice--danger" *ngIf="negado">{{ negado }}</p>
+
+  <ng-container *ngIf="!cargando && cfg">
+    <p class="np-notice sa-aviso" *ngFor="let a of avisos; trackBy: trackI" [class.np-notice--danger]="a.tono === 'danger'" [class.np-notice--warn]="a.tono === 'warn'">
+      {{ a.texto }} <a *ngIf="a.enlace" [routerLink]="a.enlace">{{ a.enlaceTexto }}</a>
+    </p>
+
+    <div class="sa-kpis">
+      <div class="sa-kpi" data-t="info"><span>En curso ahora</span><b>{{ hoy.abiertos }}</b><small>conversaciones que lleva el asistente</small></div>
+      <div class="sa-kpi"><span>Casos de hoy</span><b>{{ hoy.casos }}</b><small>{{ semana.casos }} en los últimos 7 días</small></div>
+      <div class="sa-kpi" data-t="ok"><span>Resueltos hoy</span><b>{{ hoy.resueltos }}</b><small>sin intervención de una persona</small></div>
+      <div class="sa-kpi" data-t="warn"><span>Pasados a una persona</span><b>{{ hoy.a_persona }}</b><small>{{ hoy.tickets }} con ticket para técnico</small></div>
+    </div>
+
+    <nav class="np-tabs sa-tabs" role="tablist">
+      <button type="button" class="np-tab" role="tab" [attr.aria-selected]="vista === 'casos'" (click)="abrir('casos')">Casos</button>
+      <button type="button" class="np-tab" role="tab" [attr.aria-selected]="vista === 'config'" (click)="abrir('config')">Qué puede hacer</button>
+      <button type="button" class="np-tab" role="tab" [attr.aria-selected]="vista === 'probar'" (click)="abrir('probar')">Probar el diagnóstico</button>
+    </nav>
+
+    <div class="np-scroll sa-cuerpo">
+
+      <!-- ══ Casos ═══════════════════════════════════════════════════════════ -->
+      <ng-container *ngIf="vista === 'casos'">
+        <div class="sa-barra">
+          <div class="np-chips">
+            <button type="button" class="np-chip" *ngFor="let f of FILTROS; trackBy: trackId" [attr.aria-pressed]="filtro === f.id" (click)="filtrar(f.id)">{{ f.texto }}</button>
+          </div>
+          <input type="search" class="np-input sa-buscar" placeholder="Buscar por cliente, documento o teléfono" [(ngModel)]="q" (ngModelChange)="buscar()" aria-label="Buscar casos" />
+        </div>
+
+        <p class="np-loading" *ngIf="cargandoCasos"><span class="np-spinner np-spinner--sm"></span> Cargando…</p>
+
+        <section class="sa-vacio" *ngIf="!cargandoCasos && !casos.length">
+          <h2>{{ filtro === 'abiertos' ? 'El asistente no tiene conversaciones en curso' : 'No hay casos con ese filtro' }}</h2>
+          <p *ngIf="!cfg.activa">El asistente está apagado. Actívelo arriba y empezará a atender a quien escriba por una falla.</p>
+          <p *ngIf="cfg.activa">Cuando un cliente escriba «no tengo internet», «está lento» o «quiero cambiar la clave», el caso aparece aquí.</p>
+        </section>
+
+        <div class="np-tablewrap" *ngIf="casos.length">
+          <table class="np-table np-table--compact np-tabla-movil">
+            <thead><tr><th>Cliente</th><th>Qué encontró</th><th>Qué hizo</th><th>Estado</th><th>Último mensaje</th><th></th></tr></thead>
+            <tbody>
+              <tr *ngFor="let c of casos; trackBy: trackId">
+                <td data-label="Cliente">
+                  <b class="sa-nombre">{{ c.quien }}</b>
+                  <small class="sa-sub">{{ c.telefonoCorto }} · {{ c.canalTexto }}<span *ngIf="c.user_id && !c.verificado" class="sa-ojo" title="Escribe desde un teléfono que no es el registrado del titular"> · otro teléfono</span></small>
+                </td>
+                <td data-label="Qué encontró">{{ c.causaTexto || '—' }}</td>
+                <td data-label="Qué hizo">
+                  <span class="sa-tag" data-t="info" *ngFor="let h of c.hizo; trackBy: trackI">{{ h }}</span>
+                  <span *ngIf="!c.hizo.length">—</span>
+                </td>
+                <td data-label="Estado"><span class="sa-tag" [attr.data-t]="c.tono">{{ c.estadoTexto }}</span></td>
+                <td data-label="Último mensaje">{{ c.cuando }}</td>
+                <td class="sa-acciones">
+                  <button type="button" class="np-btn np-btn--sm" (click)="ver(c)">Ver</button>
+                  <button type="button" class="np-btn np-btn--sm np-btn--primary" *ngIf="c.abierto" (click)="tomar(c)">Tomar</button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <section class="np-card" *ngIf="causasSemana.length">
+          <div class="np-card-h"><h2>Por qué escribieron esta semana</h2><span class="np-card-meta">según el diagnóstico de cada caso</span></div>
+          <ul class="sa-causas">
+            <li *ngFor="let k of causasSemana; trackBy: trackI">
+              <span>{{ k.nombre }}</span>
+              <i><em [style.width.%]="k.pct"></em></i>
+              <b>{{ k.n }}</b>
+            </li>
+          </ul>
+        </section>
+      </ng-container>
+
+      <!-- ══ Qué puede hacer ═════════════════════════════════════════════════ -->
+      <form class="sa-config" *ngIf="vista === 'config'" (ngSubmit)="guardar()">
+        <section class="np-card">
+          <div class="np-card-h"><h2>Por dónde atiende</h2></div>
+          <div class="sa-opcion">
+            <div><b>WhatsApp Web (líneas con QR)</b><small>{{ cuenta.lineas_web ? cuenta.lineas_web + ' línea(s) activa(s)' : 'No hay líneas conectadas' }}. Responde por la misma línea por la que escribió el cliente.</small></div>
+            <button type="button" class="np-switch" role="switch" [attr.aria-checked]="cfg.canal_web" (click)="alternar('canal_web')" aria-label="Atender por WhatsApp Web"></button>
+          </div>
+          <div class="sa-opcion">
+            <div><b>API oficial de Meta</b><small>{{ cuenta.meta ? 'Número conectado' : 'No hay número de Meta conectado' }}. Un pedido de soporte lo atiende el asistente en vez del bot de menús.</small></div>
+            <button type="button" class="np-switch" role="switch" [attr.aria-checked]="cfg.canal_meta" (click)="alternar('canal_meta')" aria-label="Atender por la API de Meta"></button>
+          </div>
+        </section>
+
+        <section class="np-card">
+          <div class="np-card-h"><h2>Qué puede hacer por su cuenta</h2><span class="np-card-meta">diagnosticar siempre puede</span></div>
+          <div class="sa-opcion">
+            <div><b>Cambiar la clave del WiFi</b><small>Sólo la contraseña, y sólo después de que el cliente confirma la clave nueva. El nombre de la red no lo puede cambiar: eso no se puede activar. Máximo 3 cambios por cliente al día.</small></div>
+            <button type="button" class="np-switch" role="switch" [attr.aria-checked]="cfg.permite_cambiar_clave" (click)="alternar('permite_cambiar_clave')" aria-label="Permitir cambiar la clave del WiFi"></button>
+          </div>
+          <div class="sa-opcion">
+            <div><b>Reiniciar el equipo a distancia</b><small>Lo propone cuando el diagnóstico lo sugiere y lo hace sólo si el cliente acepta. Una vez cada 15 minutos como mucho.</small></div>
+            <button type="button" class="np-switch" role="switch" [attr.aria-checked]="cfg.permite_reiniciar" (click)="alternar('permite_reiniciar')" aria-label="Permitir reiniciar el equipo"></button>
+          </div>
+          <div class="sa-opcion">
+            <div><b>Exigir el teléfono registrado</b><small>La clave y el reinicio sólo se hacen si escriben desde el teléfono que el titular tiene registrado. Apagado, basta con que den la cédula del titular: cualquiera que la sepa podría cambiarle la clave.</small></div>
+            <button type="button" class="np-switch" role="switch" [attr.aria-checked]="cfg.exige_telefono_registrado" (click)="alternar('exige_telefono_registrado')" aria-label="Exigir el teléfono registrado"></button>
+          </div>
+          <div class="sa-opcion">
+            <div><b>Crear tickets para el técnico</b><small>Cuando la falla no se arregla a distancia (sin señal de fibra, señal débil, equipo que no responde), deja el ticket con el diagnóstico. Si el cliente ya tiene uno abierto, le agrega la novedad.</small></div>
+            <button type="button" class="np-switch" role="switch" [attr.aria-checked]="cfg.crea_tickets" (click)="alternar('crea_tickets')" aria-label="Permitir crear tickets"></button>
+          </div>
+        </section>
+
+        <section class="np-card">
+          <div class="np-card-h"><h2>Cómo se presenta</h2></div>
+          <div class="np-form">
+            <label class="np-field"><span>Nombre del asistente</span><input type="text" class="np-input" [(ngModel)]="cfg.nombre_asistente" name="sa_nombre" maxlength="60" /></label>
+            <label class="np-field"><span>Casos por día <em>tope</em></span><input type="number" class="np-input" [(ngModel)]="cfg.max_casos_dia" name="sa_max" min="1" max="1000" /></label>
+            <label class="np-field"><span>Minutos sin respuesta para cerrar</span><input type="number" class="np-input" [(ngModel)]="cfg.minutos_inactividad" name="sa_min" min="5" max="240" /></label>
+            <label class="np-field np-field-full"><span>Palabras propias que también abren un caso <em>separadas por coma</em></span>
+              <input type="text" class="np-input" [(ngModel)]="cfg.palabras" name="sa_palabras" maxlength="500" placeholder="antena, cable roto, no prende" /></label>
+            <label class="np-field np-field-full"><span>Indicaciones de su empresa <em>opcional</em></span>
+              <textarea class="np-input sa-area" [(ngModel)]="cfg.instrucciones" name="sa_instr" maxlength="1500" rows="4" placeholder="Ej.: Las visitas técnicas son de lunes a sábado. Si el cliente es de la zona rural, siempre cree ticket."></textarea></label>
+          </div>
+          <p class="np-fine">El asistente ya reconoce frases como «no tengo internet», «está lento», «se cae», «luz roja», «cambiar la clave». No habla de pagos, facturas ni planes: eso lo pasa a un asesor.</p>
+        </section>
+
+        <div class="sa-pie">
+          <button type="submit" class="np-btn np-btn--primary" [disabled]="guardando">{{ guardando ? 'Guardando…' : 'Guardar cambios' }}</button>
+        </div>
+      </form>
+
+      <!-- ══ Probar ══════════════════════════════════════════════════════════ -->
+      <ng-container *ngIf="vista === 'probar'">
+        <section class="np-card">
+          <div class="np-card-h"><h2>Ver lo que el asistente vería de un cliente</h2><span class="np-card-meta">sólo consulta: no le escribe al cliente ni cambia nada</span></div>
+          <div class="sa-busca">
+            <input type="search" class="np-input" placeholder="Nombre o documento del cliente" [(ngModel)]="buscado" (ngModelChange)="buscarCliente()" aria-label="Buscar cliente" />
+            <ul class="sa-sugeridos" *ngIf="clientes.length">
+              <li *ngFor="let c of clientes; trackBy: trackId"><button type="button" (click)="elegir(c)"><b>{{ c.nombre }}</b><span>{{ c.dni }}</span></button></li>
+            </ul>
+          </div>
+          <p class="np-loading" *ngIf="probando"><span class="np-spinner np-spinner--sm"></span> Revisando la OLT, el router y el equipo. Tarda unos segundos…</p>
+
+          <div class="sa-prueba" *ngIf="prueba as p" [attr.data-t]="p.tono">
+            <header><span class="sa-tag" [attr.data-t]="p.tono">{{ p.causaTexto }}</span><b>{{ p.conclusion }}</b></header>
+            <ul><li *ngFor="let h of p.hechos; trackBy: trackI">{{ h }}</li></ul>
+            <footer><span>Lo que le diría al cliente</span><p>{{ p.para_el_cliente }}</p></footer>
+            <button type="button" class="np-btn np-btn--sm" (click)="probar()" [disabled]="probando">Repetir</button>
+          </div>
+        </section>
+      </ng-container>
+    </div>
+  </ng-container>
+</div>
+
+<!-- La conversación de un caso -->
+<div class="np-overlay" *ngIf="detalle as d" (click)="cerrarDetalle()" data-sin-aviso>
+  <div class="np-modal np-modal--lg sa-modal" role="dialog" aria-modal="true" aria-label="Conversación del caso" (click)="$event.stopPropagation()">
+    <div class="np-modal-head">
+      <div><p class="np-kicker">Caso #{{ d.id }} · {{ d.canalTexto }}</p><h3>{{ d.quien }} <span class="sa-tag" [attr.data-t]="d.tono">{{ d.estadoTexto }}</span></h3></div>
+      <button type="button" class="np-icobtn" (click)="cerrarDetalle()" aria-label="Cerrar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
+    </div>
+    <div class="np-modal-body sa-modal-body">
+      <p class="np-loading" *ngIf="cargandoDetalle"><span class="np-spinner np-spinner--sm"></span> Cargando la conversación…</p>
+
+      <section class="sa-dx" *ngIf="d.conclusion">
+        <b>{{ d.conclusion }}</b>
+        <ul><li *ngFor="let h of d.hechos; trackBy: trackI">{{ h }}</li></ul>
+      </section>
+      <p class="np-fine" *ngIf="d.resumen">{{ d.resumen }}</p>
+
+      <ol class="sa-hilo">
+        <li *ngFor="let p of d.pasos; trackBy: trackI" [attr.data-q]="p.quien" [class.is-error]="p.error">
+          <span class="sa-quien" *ngIf="p.quien === 'accion'">El asistente: {{ p.texto }}</span>
+          <details *ngIf="p.quien === 'resultado'"><summary>{{ p.error ? 'No se hizo' : 'Resultado' }}</summary><pre>{{ p.texto }}</pre></details>
+          <p *ngIf="p.quien === 'cliente' || p.quien === 'asistente'">{{ p.texto }}</p>
+          <span class="sa-quien" *ngIf="p.quien === 'sistema'">Aviso interno: {{ p.texto }}</span>
+        </li>
+      </ol>
+    </div>
+    <div class="np-modal-foot">
+      <a class="np-btn" *ngIf="d.user_id" routerLink="/dashboard/usuario" [queryParams]="{ cliente: d.user_id }" (click)="cerrarDetalle()">Ficha del cliente</a>
+      <a class="np-btn" *ngIf="d.conversation_id && !d.abierto" [routerLink]="['/dashboard/crm/inbox', d.conversation_id]" (click)="cerrarDetalle()">Abrir en el CRM</a>
+      <button type="button" class="np-btn np-btn--primary" *ngIf="d.abierto" (click)="tomar(d)">Tomar la conversación</button>
+      <button type="button" class="np-btn" (click)="cerrarDetalle()">Cerrar</button>
+    </div>
+  </div>
+</div>

@@ -29,7 +29,9 @@ main {
     min-height: 0;
     /* El rebote de la página no se lleva el scroll de adentro. */
     overscroll-behavior-y: contain;
-    -webkit-overflow-scrolling: touch;
+    /* Sin «-webkit-overflow-scrolling: touch»: Safari ya desplaza con inercia sin pedirlo, y con
+       esa propiedad recortaba dentro de este recuadro las ventanas «fijas a la pantalla» que
+       nacen aquí adentro (los botones de abajo quedaban tapados por el pie del panel). */
 }
 
 /* Encabezado de grupo del menú: botón nativo, se ve igual que los ítems. */

@@ -824,15 +824,29 @@ input.np-input:-webkit-autofill:active {
   .np-title { font-size: 22px; }
   .np-ribbon { gap: 4px 14px; }
 
-  /* Ventanas: suben desde abajo y ocupan el ancho. */
-  .np-overlay { align-items: flex-end; padding: 0; }
+  /* Ventanas: suben desde abajo y ocupan el ancho.
+     El fondo no ocupa «toda la pantalla» sino lo que de verdad se ve (--vv-alto y
+     --vv-arriba las pone PantallaVisibleService): en los teléfonos donde la caja del
+     navegador es más alta que lo visible, la ventana terminaba debajo de la barra del
+     navegador o del teclado y se perdían justo los botones de abajo. */
+  .np-overlay {
+    align-items: flex-end; padding: 0;
+    inset: auto 0 auto 0; top: var(--vv-arriba, 0px); height: var(--vv-alto, 100dvh);
+    overflow: hidden; overscroll-behavior: contain;
+  }
+  .np-overlay--top { padding-top: 0; }
   .np-modal {
-    max-width: 100% !important; max-height: 94dvh;
+    max-width: 100% !important; max-height: calc(100% - 10px) !important;
     border-radius: 16px 16px 0 0; border-bottom: 0;
     display: flex; flex-direction: column;
   }
-  .np-modal--confirm { padding-bottom: max(22px, env(safe-area-inset-bottom)); }
-  .np-modal-body { overflow-y: auto; min-height: 0; }
+  .np-modal--confirm { padding-bottom: max(22px, env(safe-area-inset-bottom)); overflow-y: auto; }
+  /* Una ventana armada sin «cuerpo» propio se desplaza entera, para que nada quede cortado. */
+  .np-modal:not(:has(.np-modal-body)) { overflow-y: auto; }
+  /* Encabezado y pie fijos; lo único que se desplaza es el cuerpo. */
+  .np-modal-head, .np-modal-foot { flex-shrink: 0; }
+  .np-modal-body { flex: 1 1 auto; overflow-y: auto; min-height: 0; overscroll-behavior: contain; }
+  .np-modal > form { display: flex; flex-direction: column; flex: 1 1 auto; min-height: 0; }
   .np-modal-foot {
     flex-wrap: wrap; padding-bottom: max(12px, env(safe-area-inset-bottom));
     .np-btn { flex: 1 1 auto; }
@@ -851,4 +865,17 @@ input.np-input:-webkit-autofill:active {
 /* El botón de WhatsApp flota por encima de todo (z-index 70) y, con una ventana o la ficha de un
    cliente abierta, tapaba justo los botones de abajo. Mientras haya una ventana, se esconde. */
 body:has(.np-overlay) .wg-launch { display: none; }
+/* Con una ventana abierta en el teléfono, lo de atrás no se mueve: si la página se desplaza por
+   debajo, el navegador esconde y muestra sus barras y la ventana «baila». */
+@media (max-width: 760px) {
+  html:has(.np-overlay), body:has(.np-overlay) { overflow: hidden; overscroll-behavior: none; }
+  /* La franja de estado del pie se esconde mientras hay una ventana: en el iPhone quedaba
+     encima de los botones de la ventana. Así la ventana llega hasta el borde de abajo. */
+  body:has(.np-overlay) app-footer { display: none; }
+  /* El borde de abajo de la ventana no queda pegado a la barra del navegador. */
+  .np-modal-foot, .iv-op-pie { padding-bottom: max(14px, env(safe-area-inset-bottom)); }
+}
 @media (max-width: 1280px) { body:has(.np-inspector) .wg-launch { display: none; } }
+
+/* Las confirmaciones pueden traer dos párrafos: qué se va a hacer y la pregunta. */
+.np-confirm-msg { white-space: pre-line; }

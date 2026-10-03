@@ -74,6 +74,8 @@ export class WaMetaBotComponent implements OnInit {
   readonly META = META;
 
   cargando = true;
+  /** La configuración no se pudo leer: lo que hay en pantalla no es lo guardado, y no se puede guardar encima. */
+  noCargo = false;
   guardando = false;
   /** Hay cambios sin guardar. */
   sucio = false;
@@ -105,7 +107,10 @@ export class WaMetaBotComponent implements OnInit {
       },
       error: () => {
         this.cargando = false;
-        this.toast.error('No se pudo leer la configuración del bot.');
+        // Sin haber leído la configuración real no se deja guardar: en pantalla queda un bot
+        // vacío y apagado, y guardarlo así pisaría los flujos y apagaría el bot de verdad.
+        this.noCargo = true;
+        this.toast.error('No se pudo leer la configuración del bot. Recargue la página antes de cambiar nada.');
         this.aplicar({});
       },
     });
@@ -154,6 +159,11 @@ export class WaMetaBotComponent implements OnInit {
   }
 
   guardar(): void {
+    if (this.noCargo || this.cargando) {
+      this.toast.error('La configuración del bot no se pudo leer. Recargue la página antes de guardar.');
+      return;
+    }
+
     this.guardando = true;
 
     this.api.updateBotConfig(this.config).subscribe({

@@ -1,0 +1,174 @@
+<div class="np-page sm">
+  <header class="np-head">
+    <div>
+      <p class="np-kicker">Clientes <b>/</b> Suspensión masiva</p>
+      <h1 class="np-title">Suspensión masiva</h1>
+      <div class="np-ribbon"><span>Clientes con facturas vencidas por grupo de corte. Quite a quien quiera y decida si avisarles, suspenderlos o las dos cosas.</span></div>
+    </div>
+  </header>
+
+  <p class="np-loading" *ngIf="cargando"><span class="np-spinner"></span> Cargando…</p>
+  <p class="np-notice np-notice--danger" *ngIf="negado">{{ negado }}</p>
+
+  <ng-container *ngIf="!cargando && !negado">
+    <nav class="np-tabs sm-tabs" role="tablist">
+      <button type="button" class="np-tab" role="tab" [attr.aria-selected]="vista === 'lista'" (click)="vista = 'lista'">Clientes por suspender</button>
+      <button type="button" class="np-tab" role="tab" [attr.aria-selected]="vista === 'historial'" (click)="vista = 'historial'">Órdenes anteriores<span class="np-c" *ngIf="historial.length">{{ historial.length }}</span></button>
+    </nav>
+
+    <div class="np-scroll sm-cuerpo" *ngIf="vista === 'lista'">
+      <!-- 1. A quiénes -->
+      <section class="np-card">
+        <div class="np-card-h"><h2>1. A quiénes</h2><span class="np-card-meta">sólo clientes vigentes con una factura cuya fecha límite ya pasó</span></div>
+        <div class="sm-filtros">
+          <div><span class="sm-et">Grupo de corte</span>
+            <div class="np-chips"><button type="button" class="np-chip" *ngFor="let g of grupos; trackBy: trackId" [attr.aria-pressed]="grupo === g.id" (click)="elegirGrupo(g.id)">{{ g.texto }}</button></div></div>
+          <div><span class="sm-et">Servicio</span>
+            <div class="np-chips"><button type="button" class="np-chip" *ngFor="let s of SERVICIOS; trackBy: trackId" [attr.aria-pressed]="servicio === s.id" (click)="elegirServicio(s.id)">{{ s.texto }}</button></div></div>
+          <div><span class="sm-et">Facturas vencidas, mínimo</span>
+            <div class="np-chips"><button type="button" class="np-chip" *ngFor="let n of MINIMOS; trackBy: trackI" [attr.aria-pressed]="minFacturas === n" (click)="elegirMinimo(n)">{{ n }}{{ n === 3 ? ' o más' : '' }}</button></div></div>
+        </div>
+
+        <div class="sm-kpis">
+          <div class="sm-kpi"><span>En la lista</span><b>{{ filas.length }}</b></div>
+          <div class="sm-kpi" data-t="info"><span>Marcados</span><b>{{ marcados }}</b></div>
+          <div class="sm-kpi" data-t="warn"><span>Deben los marcados</span><b>{{ deudaMarcada }}</b></div>
+          <div class="sm-kpi" [attr.data-t]="sinTelefono ? 'danger' : 'ok'"><span>Sin celular válido</span><b>{{ sinTelefono }}</b></div>
+        </div>
+
+        <div class="sm-barra">
+          <label class="np-check sm-todos"><input type="checkbox" [checked]="todosMarcados" (change)="marcarTodos()" /> <span>{{ todosMarcados ? 'Quitar todos' : 'Marcar todos' }}</span></label>
+          <input type="search" class="np-input sm-buscar" placeholder="Buscar por nombre, documento o teléfono" [(ngModel)]="q" (ngModelChange)="filtrar()" aria-label="Buscar cliente" />
+        </div>
+
+        <p class="np-loading" *ngIf="cargandoLista"><span class="np-spinner np-spinner--sm"></span> Buscando…</p>
+        <p class="sm-vacio" *ngIf="!cargandoLista && !visibles.length">No hay clientes con facturas vencidas con esos filtros.</p>
+
+        <div class="np-tablewrap" *ngIf="visibles.length">
+          <table class="np-table np-table--compact np-no-movil sm-tabla">
+            <thead><tr><th class="sm-c"></th><th>Cliente</th><th>Plan</th><th class="np-td-right">Vencidas</th><th>La más vieja</th><th class="np-td-right">Debe</th><th></th></tr></thead>
+            <tbody>
+              <ng-container *ngFor="let f of visibles; trackBy: trackId">
+                <tr [class.sm-fuera]="!f.marcado">
+                  <td class="sm-c"><input type="checkbox" [checked]="f.marcado" (change)="alternar(f)" [attr.aria-label]="'Incluir a ' + f.nombre" /></td>
+                  <td><b class="sm-nombre">{{ f.nombre }}</b><small class="sm-sub">{{ f.dni }} · {{ f.telefono || 'sin teléfono' }}<span class="sm-ojo" *ngIf="!f.telefono_valido"> · celular no válido</span><span class="sm-ojo" *ngIf="f.suspendido"> · ya suspendido</span></small></td>
+                  <td>{{ f.plan || '—' }}<small class="sm-sub">{{ f.tipo }}</small></td>
+                  <td class="np-td-right np-mono">{{ f.facturas }}</td>
+                  <td>{{ f.viejaTexto }}<small class="sm-sub">{{ f.dias_mora }} días de mora</small></td>
+                  <td class="np-td-right np-mono"><b>{{ f.totalTexto }}</b></td>
+                  <td class="np-td-right"><button type="button" class="np-btn np-btn--ghost np-btn--sm" (click)="abrir(f)">{{ f.abierto ? 'Ocultar' : 'Detalle' }}</button></td>
+                </tr>
+                <tr *ngIf="f.abierto" class="sm-detalle">
+                  <td></td>
+                  <td colspan="6">
+                    <ul><li *ngFor="let d of f.detalle; trackBy: trackId"><span>Factura <b>{{ d.numero }}</b> · venció el {{ d.fechaTexto }}<em *ngIf="d.abonadoTexto"> · abonó {{ d.abonadoTexto }}</em></span><b class="np-mono">{{ d.saldoTexto }}</b></li></ul>
+                  </td>
+                </tr>
+              </ng-container>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- 2. Qué hacer -->
+      <section class="np-card">
+        <div class="np-card-h"><h2>2. Qué hacer con los {{ marcados }} marcados</h2></div>
+
+        <div class="sm-acciones">
+          <button type="button" class="sm-accion" *ngFor="let a of LISTA_ACCIONES; trackBy: trackI" [class.is-on]="accion === a" [attr.aria-pressed]="accion === a" (click)="elegirAccion(a)">
+            <b>{{ ACCIONES[a].titulo }}</b><span>{{ ACCIONES[a].detalle }}</span>
+          </button>
+        </div>
+
+        <ng-container *ngIf="accion !== 'suspender'">
+          <p class="np-notice np-notice--warn" *ngIf="!conMeta">La API de Meta no está conectada: no se puede avisar desde aquí.</p>
+
+          <div class="sm-avisos" *ngIf="avisos.length">
+            <button type="button" class="sm-aviso" *ngFor="let a of avisos; trackBy: trackId" [class.is-on]="avisoId === a.id" [class.is-no]="!a.se_puede" [attr.aria-pressed]="avisoId === a.id" (click)="elegirAviso(a.id)">
+              <b>{{ a.nombre }}</b>
+              <span>Plantilla <code>{{ a.plantilla }}</code><ng-container *ngIf="a.botones.length"> · botones: {{ a.botones.join(', ') }}</ng-container></span>
+              <em *ngIf="!a.se_puede">No se puede usar: {{ a.problema }}</em>
+              <em class="sm-bien" *ngIf="a.se_puede">Lista para usar</em>
+            </button>
+          </div>
+
+          <div class="np-form sm-form" *ngIf="avisoElegido?.se_puede">
+            <label class="np-field"><span>Fecha límite de pago <em>{{ avisoElegido.pide_fecha ? 'va en el mensaje' : 'si el mensaje dice {fecha}' }}</em></span>
+              <input type="date" class="np-input" [(ngModel)]="fechaLimite" (ngModelChange)="revisar()" name="sm_fecha" /></label>
+            <label class="np-field np-field-full" *ngIf="avisoElegido.pide_texto"><span>Mensaje <em>un solo párrafo; admite &#123;total_pendiente&#125;, &#123;dias_mora&#125;, &#123;factura&#125;, &#123;fecha&#125;</em></span>
+              <textarea class="np-input sm-area" rows="3" maxlength="900" [(ngModel)]="texto" (ngModelChange)="revisar()" name="sm_texto"></textarea></label>
+          </div>
+
+          <div class="sm-previa" *ngIf="vistaPrevia">
+            <span>Así le llegaría al primero de la lista</span>
+            <p>{{ vistaPrevia }}</p>
+          </div>
+          <p class="np-fine" *ngIf="limite">Su número de WhatsApp puede contactar a {{ limite }} clientes distintos cada 24 horas.</p>
+        </ng-container>
+
+        <label class="np-field sm-motivo" *ngIf="accion !== 'avisar'"><span>Motivo <em>opcional; queda en el historial de cada cliente</em></span>
+          <input type="text" class="np-input" [(ngModel)]="motivo" name="sm_motivo" maxlength="250" placeholder="Corte del día 15 por mora" /></label>
+
+        <p class="np-notice np-notice--warn sm-problema" *ngIf="problema">{{ problema }}</p>
+
+        <div class="sm-pie">
+          <button type="button" class="np-btn" [ngClass]="accion === 'avisar' ? 'np-btn--primary' : 'np-btn--danger'" (click)="ordenar()" [disabled]="!!problema || enviando || lote?.enCurso">
+            {{ enviando ? 'Creando la orden…' : ACCIONES[accion].boton + ' · ' + marcados + ' cliente(s)' }}
+          </button>
+        </div>
+      </section>
+    </div>
+
+    <!-- Órdenes anteriores -->
+    <div class="np-scroll sm-cuerpo" *ngIf="vista === 'historial'">
+      <p class="sm-vacio" *ngIf="!historial.length">Todavía no se ha hecho ninguna orden.</p>
+      <div class="np-tablewrap" *ngIf="historial.length">
+        <table class="np-table np-table--compact np-tabla-movil">
+          <thead><tr><th>Cuándo</th><th>Qué se ordenó</th><th class="np-td-right">Clientes</th><th class="np-td-right">Suspendidos</th><th class="np-td-right">Avisados</th><th class="np-td-right">Con falla</th><th>Estado</th><th></th></tr></thead>
+          <tbody>
+            <tr *ngFor="let l of historial; trackBy: trackId">
+              <td data-label="Cuándo">{{ l.cuando }}</td>
+              <td data-label="Qué se ordenó">{{ l.accionTexto }}<small class="sm-sub" *ngIf="l.plantilla">{{ l.plantilla }}</small></td>
+              <td data-label="Clientes" class="np-td-right np-mono">{{ l.total }}</td>
+              <td data-label="Suspendidos" class="np-td-right np-mono">{{ l.suspendidos }}</td>
+              <td data-label="Avisados" class="np-td-right np-mono">{{ l.avisados }}</td>
+              <td data-label="Con falla" class="np-td-right np-mono">{{ l.fallidos }}</td>
+              <td data-label="Estado"><span class="sm-tag" [attr.data-t]="l.tono">{{ l.estadoTexto }}</span></td>
+              <td class="np-td-right"><button type="button" class="np-btn np-btn--ghost np-btn--sm" (click)="verLote(l)">Ver</button></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </ng-container>
+</div>
+
+<!-- El avance de la orden -->
+<div class="np-overlay" *ngIf="lote as l" (click)="cerrarAvance()" data-sin-aviso>
+  <div class="np-modal np-modal--lg" role="dialog" aria-modal="true" aria-label="Avance de la orden" (click)="$event.stopPropagation()">
+    <div class="np-modal-head">
+      <div><p class="np-kicker">Orden #{{ l.id }} · {{ l.tituloAccion }}</p><h3>{{ l.estadoTexto }}</h3></div>
+      <button type="button" class="np-icobtn" (click)="cerrarAvance()" [disabled]="l.enCurso" aria-label="Cerrar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
+    </div>
+    <div class="np-modal-body sm-avance">
+      <div class="sm-progreso" role="progressbar" [attr.aria-valuenow]="progreso" aria-valuemin="0" aria-valuemax="100"><i [style.width.%]="progreso"></i></div>
+      <div class="sm-kpis">
+        <div class="sm-kpi"><span>Clientes</span><b>{{ l.total }}</b></div>
+        <div class="sm-kpi" data-t="danger" *ngIf="l.accion !== 'avisar'"><span>Suspendidos</span><b>{{ l.suspendidos }}</b></div>
+        <div class="sm-kpi" data-t="ok" *ngIf="l.accion !== 'suspender'"><span>Avisados</span><b>{{ l.avisados }}</b></div>
+        <div class="sm-kpi" [attr.data-t]="l.fallidos ? 'warn' : 'ok'"><span>Con falla</span><b>{{ l.fallidos }}</b></div>
+      </div>
+      <p class="np-notice np-notice--warn" *ngIf="l.detalle">{{ l.detalle }}</p>
+      <p class="np-fine" *ngIf="l.enCurso">Puede dejar esta ventana abierta o volver después: la orden sigue sola.</p>
+
+      <ng-container *ngIf="fallas.length">
+        <h4 class="sm-h4">Lo que no se pudo ({{ fallas.length }})</h4>
+        <ul class="sm-fallas"><li *ngFor="let c of fallas; trackBy: trackId"><b>{{ c.nombre }}</b><span>{{ c.error }}</span></li></ul>
+      </ng-container>
+    </div>
+    <div class="np-modal-foot">
+      <button type="button" class="np-btn np-btn--danger" *ngIf="l.enCurso" (click)="cancelar()">Cancelar lo que falta</button>
+      <button type="button" class="np-btn" *ngIf="!l.enCurso" (click)="cerrarAvance()">Cerrar</button>
+    </div>
+  </div>
+</div>

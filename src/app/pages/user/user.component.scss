@@ -325,3 +325,5 @@
 /* Suspensión a mano: motivo y «no reactivar automáticamente». */
 .np-susp-extra { display: grid; gap: 10px; margin: 4px 0 14px; text-align: left; }
 .np-susp-nota { margin: 6px 0 0; padding: 0 16px 10px; color: var(--warn); font-weight: 600; }
+
+.ux-fiscal-t { margin: 6px 0 0; em { font-style: normal; font-weight: 500; text-transform: none; letter-spacing: 0; color: var(--text-3); } }

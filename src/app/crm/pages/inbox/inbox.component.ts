@@ -192,7 +192,7 @@ export class InboxComponent implements OnInit, OnDestroy {
     try {
       const name = conv?.customer?.name || conv?.customer_name || conv?.customer?.phone || 'Cliente';
       const body = this.previewText(conv).slice(0, 120);
-      const n = new Notification(`WhatsApp · ${name}`, { body, tag: `crm-${conv?.id}`, icon: '/favicon.ico', silent: true });
+      const n = new Notification(`WhatsApp · ${name}`, { body, tag: `crm-${conv?.id}`, icon: '/assets/brand/notificacion-whatsapp.png', badge: '/assets/brand/notificacion-whatsapp.png', silent: true } as NotificationOptions);
       n.onclick = () => { window.focus(); this.zone.run(() => this.openChat(conv.id)); n.close(); };
     } catch {}
   }

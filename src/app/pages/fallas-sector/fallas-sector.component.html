@@ -1,0 +1,194 @@
+<div class="np-page fs">
+  <header class="np-head">
+    <div>
+      <p class="np-kicker">Red <b>/</b> Fallas de sector</p>
+      <h1 class="np-title">Fallas de sector</h1>
+      <div class="np-ribbon"><span>Cuando se caen muchos equipos del mismo puerto, se les avisa a los clientes afectados por WhatsApp y otra vez cuando vuelve el servicio. El asistente de soporte ya sabe que están dentro de la falla.</span></div>
+    </div>
+    <div class="fs-encendido" *ngIf="cfg">
+      <span class="fs-estado" [attr.data-t]="cfg.activo ? 'ok' : 'neutro'">{{ cfg.activo ? (cfg.modo === 'automatico' ? 'Activo · avisa solo' : 'Activo · con aprobación') : 'Apagado' }}</span>
+      <button type="button" class="np-switch" role="switch" [attr.aria-checked]="cfg.activo" (click)="encender()" [disabled]="guardando" aria-label="Activar las fallas de sector"></button>
+    </div>
+  </header>
+
+  <p class="np-loading" *ngIf="cargando"><span class="np-spinner"></span> Cargando…</p>
+  <p class="np-notice np-notice--danger" *ngIf="negado">{{ negado }}</p>
+
+  <ng-container *ngIf="!cargando && cfg">
+    <p class="np-notice np-notice--warn fs-aviso" *ngIf="porAprobar">
+      Hay {{ porAprobar }} {{ porAprobar === 1 ? 'falla esperando' : 'fallas esperando' }} su aprobación para avisarles a los clientes.
+    </p>
+    <p class="np-notice fs-aviso" *ngIf="!cfg.activo">
+      El módulo está apagado: no detecta ni avisa. Revise la configuración y actívelo arriba. Puede empezar en «con aprobación» para confirmar cada aviso.
+    </p>
+
+    <div class="fs-kpis">
+      <div class="fs-kpi" [attr.data-t]="abiertas ? 'danger' : 'ok'"><span>Fallas abiertas</span><b>{{ abiertas }}</b><small>{{ abiertas ? 'se actualiza cada 30 s' : 'la red está normal' }}</small></div>
+      <div class="fs-kpi" data-t="warn"><span>Por aprobar</span><b>{{ porAprobar }}</b><small>esperan que alguien confirme el aviso</small></div>
+      <div class="fs-kpi"><span>Fallas en 30 días</span><b>{{ fallasMes }}</b><small>confirmadas</small></div>
+      <div class="fs-kpi" data-t="info"><span>Clientes avisados</span><b>{{ avisadosMes }}</b><small>en los últimos 30 días</small></div>
+    </div>
+
+    <nav class="np-tabs fs-tabs" role="tablist">
+      <button type="button" class="np-tab" role="tab" [attr.aria-selected]="vista === 'fallas'" (click)="abrir('fallas')">Fallas</button>
+      <button type="button" class="np-tab" role="tab" [attr.aria-selected]="vista === 'config'" (click)="abrir('config')">Configuración</button>
+      <button type="button" class="np-tab" role="tab" [attr.aria-selected]="vista === 'sectores'" (click)="abrir('sectores')">Nombres de los sectores</button>
+    </nav>
+
+    <div class="np-scroll fs-cuerpo">
+
+      <!-- ══ Fallas ═════════════════════════════════════════════════════════ -->
+      <ng-container *ngIf="vista === 'fallas'">
+        <div class="fs-barra">
+          <span class="fs-sub">Últimos 30 días. Las caídas cortas que se recuperan solas no aparecen.</span>
+          <button type="button" class="np-btn np-btn--sm" (click)="revisarAhora()">Revisar la red ahora</button>
+        </div>
+
+        <section class="fs-vacio" *ngIf="!fallas.length">
+          <h2>Sin fallas de sector</h2>
+          <p>Cuando se caigan al menos {{ cfg.minimo_onts }} equipos ({{ cfg.porcentaje }} % o más) del mismo puerto durante {{ cfg.minutos_confirmacion }} minutos, aparece aquí.</p>
+        </section>
+
+        <div class="np-tablewrap" *ngIf="fallas.length">
+          <table class="np-table np-table--compact np-tabla-movil">
+            <thead><tr><th>Sector</th><th>Estado</th><th>Equipos caídos</th><th>Desde</th><th>Duración</th><th>Clientes avisados</th><th></th></tr></thead>
+            <tbody>
+              <tr *ngFor="let f of fallas; trackBy: trackId">
+                <td data-label="Sector"><b class="fs-nombre">{{ f.sector }}</b><small class="fs-sub" *ngIf="f.nota">{{ f.nota }}</small></td>
+                <td data-label="Estado"><span class="fs-tag" [attr.data-t]="f.tono">{{ f.estadoTexto }}</span></td>
+                <td data-label="Equipos caídos">{{ f.abierta ? f.caidas : f.maximo_caidas }} de {{ f.total }}</td>
+                <td data-label="Desde">{{ f.desde }}</td>
+                <td data-label="Duración">{{ f.duracion }}</td>
+                <td data-label="Clientes avisados">
+                  {{ f.avisados_inicio }} de {{ f.afectados }}<span *ngIf="f.avisados_fin"> · {{ f.avisados_fin }} «ya volvió»</span>
+                  <span class="fs-error" *ngIf="f.errores"> · {{ f.errores }} sin enviar</span>
+                </td>
+                <td class="fs-acciones">
+                  <button type="button" class="np-btn np-btn--sm" (click)="ver(f)">Ver</button>
+                  <button type="button" class="np-btn np-btn--sm np-btn--primary" *ngIf="f.estado === 'por_aprobar'" (click)="accion(f, 'aprobar')">Aprobar aviso</button>
+                  <button type="button" class="np-btn np-btn--sm" *ngIf="f.abierta" (click)="accion(f, 'descartar')">Descartar</button>
+                  <button type="button" class="np-btn np-btn--sm" *ngIf="f.estado === 'activa' || f.estado === 'por_aprobar'" (click)="accion(f, 'resolver')">Dar por resuelta</button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <section class="np-card fs-detalle" *ngIf="detalle">
+          <div class="np-card-h">
+            <h2>{{ detalle.sector }}</h2>
+            <span class="np-card-meta">{{ detalle.presentada.estadoTexto }} · {{ detalle.clientes.length }} clientes afectados</span>
+            <button type="button" class="np-btn np-btn--sm np-btn--ghost" (click)="detalle = null">Cerrar</button>
+          </div>
+          <div class="np-tablewrap">
+            <table class="np-table np-table--compact np-tabla-movil">
+              <thead><tr><th>Cliente</th><th>Teléfono</th><th>Equipo</th><th>Aviso de falla</th><th>Aviso de regreso</th></tr></thead>
+              <tbody>
+                <tr *ngFor="let c of detalle.clientes; trackBy: trackId">
+                  <td data-label="Cliente">{{ c.names }} {{ c.lastname }}</td>
+                  <td data-label="Teléfono" class="np-mono">{{ c.telefono || '—' }}</td>
+                  <td data-label="Equipo" class="np-mono">{{ c.ont }}</td>
+                  <td data-label="Aviso de falla"><span *ngIf="c.avisado_inicio_en">{{ c.avisado_inicio_en | date:'h:mm a' }}</span><span class="fs-error" *ngIf="c.error">{{ c.error }}</span><span *ngIf="!c.avisado_inicio_en && !c.error">pendiente</span></td>
+                  <td data-label="Aviso de regreso">{{ c.avisado_fin_en ? (c.avisado_fin_en | date:'h:mm a') : '—' }}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+      </ng-container>
+
+      <!-- ══ Configuración ═══════════════════════════════════════════════════ -->
+      <form class="fs-config" *ngIf="vista === 'config'" (ngSubmit)="guardar()">
+        <section class="np-card">
+          <div class="np-card-h"><h2>Cuándo es una falla de sector</h2></div>
+          <div class="np-form">
+            <label class="np-field"><span>Mínimo de equipos caídos <em>en el mismo puerto</em></span><input type="number" class="np-input" [(ngModel)]="cfg.minimo_onts" name="minimo_onts" min="1" max="500" /></label>
+            <label class="np-field"><span>Porcentaje del puerto <em>caído, al menos</em></span><input type="number" class="np-input" [(ngModel)]="cfg.porcentaje" name="porcentaje" min="1" max="100" /></label>
+            <label class="np-field"><span>Minutos que debe durar <em>antes de avisar</em></span><input type="number" class="np-input" [(ngModel)]="cfg.minutos_confirmacion" name="minutos_confirmacion" min="0" max="120" /></label>
+            <label class="np-field"><span>Minutos de vuelta <em>para darla por resuelta</em></span><input type="number" class="np-input" [(ngModel)]="cfg.minutos_resolucion" name="minutos_resolucion" min="0" max="120" /></label>
+            <label class="np-field"><span>Revisar la red cada <em>minutos</em></span><input type="number" class="np-input" [(ngModel)]="cfg.minutos_revision" name="minutos_revision" min="1" max="60" /></label>
+          </div>
+          <div class="fs-opcion">
+            <div><b>Contar los cortes de energía</b><small>Si en el sector se va la luz, los equipos se apagan y también cuenta como falla. Apáguelo para avisar sólo cortes de fibra o de la OLT (Huawei y ZTE).</small></div>
+            <button type="button" class="np-switch" role="switch" [attr.aria-checked]="cfg.contar_cortes_de_luz" (click)="alternar('contar_cortes_de_luz')" aria-label="Contar los cortes de energía"></button>
+          </div>
+        </section>
+
+        <section class="np-card">
+          <div class="np-card-h"><h2>Cómo se avisa</h2></div>
+          <div class="fs-modos" role="radiogroup" aria-label="Modo de aviso">
+            <label class="fs-modo" [class.is-on]="cfg.modo === 'aprobar'"><input type="radio" name="modo" value="aprobar" [(ngModel)]="cfg.modo" />
+              <b>Con aprobación</b><small>Detecta la falla, avisa al grupo de técnicos y espera que alguien apruebe el aviso a los clientes.</small></label>
+            <label class="fs-modo" [class.is-on]="cfg.modo === 'automatico'"><input type="radio" name="modo" value="automatico" [(ngModel)]="cfg.modo" />
+              <b>Automático</b><small>Apenas se confirma la falla, les escribe a los clientes afectados sin esperar a nadie.</small></label>
+          </div>
+          <div class="fs-opcion">
+            <div><b>Avisar cuando empieza la falla</b><small>«Detectamos una falla en su zona y ya estamos trabajando».</small></div>
+            <button type="button" class="np-switch" role="switch" [attr.aria-checked]="cfg.avisar_inicio" (click)="alternar('avisar_inicio')" aria-label="Avisar cuando empieza"></button>
+          </div>
+          <div class="fs-opcion">
+            <div><b>Avisar cuando vuelve el servicio</b><small>Sólo a quien se le avisó la falla.</small></div>
+            <button type="button" class="np-switch" role="switch" [attr.aria-checked]="cfg.avisar_fin" (click)="alternar('avisar_fin')" aria-label="Avisar cuando vuelve"></button>
+          </div>
+          <div class="fs-opcion">
+            <div><b>Avisar al grupo de técnicos</b><small>Al grupo configurado en Avisos y destinos (alertas de red), al confirmarse y al resolverse.</small></div>
+            <button type="button" class="np-switch" role="switch" [attr.aria-checked]="cfg.avisar_grupo" (click)="alternar('avisar_grupo')" aria-label="Avisar al grupo"></button>
+          </div>
+          <div class="fs-opcion">
+            <div><b>Incluir clientes suspendidos</b><small>Normalmente no: sin servicio por mora, la falla no los afecta.</small></div>
+            <button type="button" class="np-switch" role="switch" [attr.aria-checked]="cfg.incluir_suspendidos" (click)="alternar('incluir_suspendidos')" aria-label="Incluir suspendidos"></button>
+          </div>
+          <div class="np-form">
+            <label class="np-field"><span>Línea de WhatsApp</span>
+              <select class="np-input" [(ngModel)]="cfg.wa_linea_id" name="wa_linea_id">
+                <option [ngValue]="null">La principal</option>
+                <option *ngFor="let l of lineas; trackBy: trackId" [ngValue]="l.id">{{ l.nombre }}{{ l.telefono ? ' · ' + l.telefono : '' }}</option>
+              </select></label>
+            <label class="np-field"><span>Segundos entre mensajes <em>para no parecer spam</em></span><input type="number" class="np-input" [(ngModel)]="cfg.segundos_entre_mensajes" name="segundos" min="0" max="30" /></label>
+            <label class="np-field"><span>No escribir desde <em>opcional</em></span><input type="time" class="np-input" [(ngModel)]="cfg.silencio_desde" name="silencio_desde" /></label>
+            <label class="np-field"><span>Hasta</span><input type="time" class="np-input" [(ngModel)]="cfg.silencio_hasta" name="silencio_hasta" /></label>
+          </div>
+          <p class="fs-sub">En el horario de silencio la falla se detecta igual; los mensajes salen al terminar, si la falla sigue.</p>
+        </section>
+
+        <section class="np-card">
+          <div class="np-card-h"><h2>Mensajes</h2><span class="np-card-meta">Variables: {{ '{' }}cliente{{ '}' }} (primer nombre), {{ '{' }}sector{{ '}' }} (nombre del sector o «su zona»), {{ '{' }}empresa{{ '}' }}</span></div>
+          <div class="np-form">
+            <label class="np-field np-field-full"><span>Cuando empieza la falla <button type="button" class="np-link" (click)="restaurar('mensaje_inicio')">Restaurar</button></span>
+              <textarea class="np-input fs-area" [(ngModel)]="cfg.mensaje_inicio" name="mensaje_inicio" maxlength="1000"></textarea></label>
+            <label class="np-field np-field-full"><span>Cuando vuelve el servicio <button type="button" class="np-link" (click)="restaurar('mensaje_fin')">Restaurar</button></span>
+              <textarea class="np-input fs-area" [(ngModel)]="cfg.mensaje_fin" name="mensaje_fin" maxlength="1000"></textarea></label>
+          </div>
+          <div class="fs-prueba">
+            <label class="np-field"><span>Enviarme una prueba al <em>celular</em></span><input type="tel" class="np-input np-mono" [(ngModel)]="telefonoPrueba" name="telefono_prueba" placeholder="3001234567" /></label>
+            <button type="button" class="np-btn np-btn--sm" (click)="probar('inicio')">Probar el de falla</button>
+            <button type="button" class="np-btn np-btn--sm" (click)="probar('fin')">Probar el de regreso</button>
+          </div>
+          <p class="fs-sub">La prueba sale con lo último guardado.</p>
+        </section>
+
+        <div class="fs-pie"><button type="submit" class="np-btn np-btn--primary" [disabled]="guardando">{{ guardando ? 'Guardando…' : 'Guardar configuración' }}</button></div>
+      </form>
+
+      <!-- ══ Sectores ═══════════════════════════════════════════════════════ -->
+      <ng-container *ngIf="vista === 'sectores'">
+        <p class="fs-sub">El nombre se usa en el mensaje al cliente («la falla en el servicio de <b>Villa Katanga</b>»). Sin nombre, el mensaje dice «su zona».</p>
+        <div class="np-tablewrap">
+          <table class="np-table np-table--compact np-tabla-movil">
+            <thead><tr><th>OLT</th><th>Puerto</th><th>Equipos</th><th>Clientes activos</th><th>Nombre del sector</th></tr></thead>
+            <tbody>
+              <tr *ngFor="let p of puertos; trackBy: trackPuerto">
+                <td data-label="OLT">{{ p.olt }} <small class="fs-sub">{{ p.marca }}</small></td>
+                <td data-label="Puerto" class="np-mono">{{ p.fsp }}</td>
+                <td data-label="Equipos">{{ p.onts }}</td>
+                <td data-label="Clientes activos">{{ p.clientes }}</td>
+                <td data-label="Nombre del sector"><input type="text" class="np-input fs-sector" [(ngModel)]="p.nombre" [name]="'s_' + p.olt_id + '_' + p.fsp" maxlength="120" placeholder="Ej: Villa Katanga" /></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="fs-pie"><button type="button" class="np-btn np-btn--primary" (click)="guardarSectores()" [disabled]="guardando">{{ guardando ? 'Guardando…' : 'Guardar nombres' }}</button></div>
+      </ng-container>
+    </div>
+  </ng-container>
+</div>

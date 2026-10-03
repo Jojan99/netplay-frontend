@@ -49,6 +49,8 @@ export class FacturaElectronicaService {
   emitir(detIds: number[]): Observable<any> { return this.http.post(this.base + '/emitir', { det_ids: detIds }); }
   reintentar(id: number): Observable<any> { return this.http.post(`${this.base}/documentos/${id}/reintentar`, {}); }
   notaCredito(id: number): Observable<any> { return this.http.post(`${this.base}/documentos/${id}/nota-credito`, {}); }
+  /** Lo que se propone al dar de alta un cliente: la ciudad de la empresa y los tipos de documento. */
+  clientePorDefecto(): Observable<any> { return this.http.get(`${this.base}/cliente-por-defecto`); }
   clienteFiscal(userId: number | string): Observable<any> { return this.http.get(`${this.base}/cliente/${userId}`); }
   guardarClienteFiscal(userId: number | string, datos: any): Observable<any> { return this.http.put(`${this.base}/cliente/${userId}`, datos); }
   pdf(id: number): Observable<Blob> { return this.http.get(`${this.base}/documentos/${id}/pdf`, { responseType: 'blob' }); }

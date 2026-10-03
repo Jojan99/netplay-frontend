@@ -66,8 +66,11 @@
         <span *ngIf="vivo?.distancia_m !== null && vivo?.distancia_m !== undefined">A <b>{{ vivo.distancia_m }} m</b></span>
       </div>
       <p class="oe-cargando" *ngIf="consultandoEquipo && !version"><span class="np-spinner np-spinner--sm"></span> Consultando el equipo en la OLT…</p>
+      <button type="button" class="np-btn np-btn--primary np-btn--sm oe-abrir" (click)="fichaAbierta = true" title="Último arranque, caídas, voltaje, red y aparatos conectados">Ver ficha completa</button>
     </div>
   </div>
+
+  <app-ont-ficha *ngIf="fichaAbierta" [userId]="userId" [ont]="ont" [cliente]="cliente" (cerrar)="fichaAbierta = false"></app-ont-ficha>
 
   <!-- ── Señal óptica ── -->
   <section class="oe-sec">

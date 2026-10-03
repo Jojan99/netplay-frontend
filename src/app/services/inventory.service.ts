@@ -156,4 +156,35 @@ export class InventoryService {
       { headers: this.getHeaders() }
     );
   }
+
+  // ── Tablero, lector y técnicos ─────────────────────────────────────────────
+
+  private ruta(r: string): string { return `${this.env.rootUrl}api/inventory/${r}`; }
+
+  /** Cifras, estado de cada ítem, lo que tiene cada técnico y las recomendaciones. */
+  panel(): Observable<any> { return this.http.get(this.ruta('panel'), { headers: this.getHeaders() }); }
+
+  /** Qué es un código leído: un equipo (por su serial), un producto, o nada conocido. */
+  buscarCodigo(codigo: string): Observable<any> {
+    return this.http.get(this.ruta('buscar'), { headers: this.getHeaders(), params: new HttpParams().set('codigo', codigo) });
+  }
+
+  tecnicos(): Observable<any> { return this.http.get(this.ruta('tecnicos'), { headers: this.getHeaders() }); }
+
+  unidades(filtros: Record<string, any>): Observable<any> {
+    let params = new HttpParams();
+    for (const [k, v] of Object.entries(filtros)) if (v !== null && v !== undefined && v !== '') params = params.set(k, String(v));
+    return this.http.get(this.ruta('unidades'), { headers: this.getHeaders(), params });
+  }
+
+  /** entradas | salidas | ajustes | entregas | devoluciones | consumos */
+  operar(tipo: string, cuerpo: Record<string, any>): Observable<any> {
+    return this.http.post(this.ruta(tipo), JSON.stringify(cuerpo), { headers: this.getHeaders() });
+  }
+
+  preguntarAlAsistente(pregunta: string, historial: Array<{ rol: string; texto: string }>): Observable<any> {
+    return this.http.post(this.ruta('asistente'), JSON.stringify({ pregunta, historial }), { headers: this.getHeaders() });
+  }
+
+  miMaterial(): Observable<any> { return this.http.get(this.ruta('mi-material'), { headers: this.getHeaders() }); }
 }

@@ -25,6 +25,11 @@ export class ClientApiService {
     return this.http.post(`${this.baseUrl}/login`, { username, password, recordar, ...(empresa ? { empresa } : {}) });
   }
 
+  /** Desde el enlace de pago: el token del enlace y los últimos 4 dígitos de la cédula. */
+  entrarConEnlace(token: string, documento: string): Observable<any> {
+    return this.http.post(`${this.baseUrl}/entrar-con-enlace`, { token, documento });
+  }
+
   logout(): Observable<any> {
     return this.http.post(`${this.baseUrl}/logout`, {}, this.headers());
   }

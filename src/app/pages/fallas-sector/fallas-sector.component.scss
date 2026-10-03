@@ -1,0 +1,70 @@
+/* Fallas de sector. El tono (data-t) pinta etiquetas y cifras. */
+
+[data-t='ok']     { --tono: var(--ok);     --tono-suave: var(--ok-soft); }
+[data-t='warn']   { --tono: var(--warn);   --tono-suave: var(--warn-soft); }
+[data-t='danger'] { --tono: var(--danger); --tono-suave: var(--danger-soft); }
+[data-t='info']   { --tono: var(--info, var(--accent)); --tono-suave: var(--info-soft, var(--accent-soft)); }
+[data-t='neutro'] { --tono: var(--text-3); --tono-suave: var(--surface-2); }
+
+.fs-encendido { display: flex; align-items: center; gap: 10px; }
+.fs-estado { font-size: 12.5px; font-weight: 700; color: var(--tono); }
+.fs-aviso { margin: 0 0 10px; }
+
+.fs-kpis { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; margin-bottom: 12px; }
+.fs-kpi {
+  display: grid; gap: 3px; padding: 13px 16px;
+  border: 1px solid var(--line); border-left: 3px solid var(--tono, var(--accent)); border-radius: var(--radius-lg); background: var(--surface);
+  span { font-size: 11px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; color: var(--text-3); }
+  b { font-size: 24px; line-height: 1.15; color: var(--text); font-variant-numeric: tabular-nums; }
+  small { font-size: 12px; color: var(--text-2); }
+}
+
+.fs-tabs { padding-inline: 0; }
+.fs-cuerpo { display: grid; gap: 14px; align-content: start; padding-top: 14px; }
+.fs-barra { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; }
+.fs-sub { display: block; font-size: 12.5px; color: var(--text-3); margin: 0; }
+.fs-nombre { display: block; font-weight: 600; color: var(--text); }
+.fs-error { color: var(--danger); font-weight: 600; font-size: 12px; }
+.fs-acciones { white-space: nowrap; text-align: right; .np-btn + .np-btn { margin-left: 6px; } }
+
+.fs-tag {
+  display: inline-flex; align-items: center; padding: 2px 9px; border-radius: 999px; white-space: nowrap;
+  font-size: 11.5px; font-weight: 600; background: var(--tono-suave); color: var(--tono);
+  border: 1px solid color-mix(in srgb, var(--tono) 25%, transparent);
+}
+
+.fs-vacio {
+  margin: 28px auto; max-width: 480px; padding: 26px; text-align: center;
+  border: 1px dashed var(--line-strong); border-radius: var(--radius-lg);
+  h2 { margin: 0 0 6px; font-size: 17px; } p { margin: 0; color: var(--text-2); font-size: 13.5px; }
+}
+.fs-detalle .np-card-h { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; .np-btn { margin-left: auto; } }
+
+.fs-config { display: grid; gap: 14px; max-width: 900px; }
+.fs-opcion {
+  display: flex; align-items: center; justify-content: space-between; gap: 18px; padding: 12px 16px;
+  border-top: 1px solid var(--line);
+  div { display: grid; gap: 3px; min-width: 0; }
+  b { font-size: 13.5px; color: var(--text); }
+  small { font-size: 12.5px; line-height: 1.45; color: var(--text-2); }
+  .np-switch { flex-shrink: 0; }
+}
+.fs-modos { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 0 16px 14px; }
+.fs-modo {
+  display: grid; gap: 4px; padding: 12px 14px; border: 1px solid var(--line); border-radius: var(--radius-lg); cursor: pointer; background: var(--surface);
+  input { position: absolute; opacity: 0; pointer-events: none; }
+  b { font-size: 13.5px; color: var(--text); } small { font-size: 12.5px; line-height: 1.45; color: var(--text-2); }
+  &.is-on { border-color: var(--accent); background: var(--accent-soft); box-shadow: inset 0 0 0 1px var(--accent); }
+}
+.fs-area { height: auto; min-height: 150px; padding: 8px 10px; resize: vertical; line-height: 1.45; }
+.fs-prueba { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 8px; padding: 0 16px; .np-field { flex: 1; min-width: 200px; max-width: 280px; } }
+.fs-config > .np-card > .fs-sub, .fs-config > .np-card > p.fs-sub { padding: 8px 16px 14px; }
+.fs-pie { display: flex; justify-content: flex-end; }
+.fs-sector { min-width: 200px; height: 32px; }
+
+@media (max-width: 1100px) { .fs-kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 640px) {
+  .fs-modos { grid-template-columns: 1fr; }
+  .fs-acciones { text-align: left; white-space: normal; .np-btn { margin: 4px 6px 0 0; } }
+}
+@media (max-width: 480px) { .fs-kpis { grid-template-columns: 1fr; } }
