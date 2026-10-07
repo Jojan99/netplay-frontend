@@ -2,6 +2,7 @@ import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { FinanceService } from '../../services/finance.service';
+import { coincide } from '../../common/busqueda';
 
 interface Deudor {
   user_id: number;
@@ -52,11 +53,10 @@ export class CarteraComponent implements OnInit {
   deudores = computed<Deudor[]>(() => {
     const d = this.datos();
     if (!d) return [];
-    const q = this.buscar().trim().toLowerCase();
+    const q = this.buscar();
     const filas: Deudor[] = d[this.lista()] ?? [];
-    return q
-      ? filas.filter(f => f.nombre.toLowerCase().includes(q) || (f.documento ?? '').includes(q) || (f.telefono ?? '').includes(q))
-      : filas;
+    // Por palabras y en cualquier orden; el celular, solo por sus dígitos.
+    return filas.filter(f => coincide(q, f.nombre, f.documento, f.telefono));
   });
 
   /** Barras horizontales: el largo es proporcional al mayor tramo. */

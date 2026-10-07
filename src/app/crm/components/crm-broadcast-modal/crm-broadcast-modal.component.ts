@@ -2,6 +2,7 @@ import { Component, OnInit, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { CrmService } from '../../../services/crm.service';
+import { coincide } from '../../../common/busqueda';
 
 @Component({
   selector: 'app-crm-broadcast-modal',
@@ -47,7 +48,7 @@ export class CrmBroadcastModalComponent implements OnInit {
       if (this.quickFilter === 'inactive') return !!c.linked && !st.startsWith('ACT');
       return true;
     });
-    this.filtered = !q ? pool : pool.filter(c => c.name?.toLowerCase().includes(q) || c.phone?.includes(q) || c.plan?.toLowerCase().includes(q));
+    this.filtered = !q ? pool : pool.filter(c => coincide(q, c.name, c.phone, c.plan));
   }
 
   toggleAll(): void {

@@ -9,6 +9,7 @@ import { MikrotikService } from '../../services/mikrotik.service';
 import { Router } from '@angular/router';
 import { OntEquipoComponent } from '../../components/ont-equipo/ont-equipo.component';
 import { buscarModelo, ModeloMikrotik, Puerto } from './modelos-mikrotik';
+import { coincide } from '../../common/busqueda';
 
 type EstadoPuerto = 'up' | 'down' | 'off' | 'na';
 
@@ -438,7 +439,7 @@ export class MikrotikComponent implements OnInit {
       const orden = { on: 0, off: 1, deshab: 2 };
       const lista = this.pppoeUsuarios
         .filter(u => this.filtroCred === 'todos' || this.estadoCred(u) === this.filtroCred)
-        .filter(u => !q || [u.cliente, u.usuario, u.comentario, u.sesion?.ip, u.perfil].some(x => String(x ?? '').toLowerCase().includes(q)))
+        .filter(u => coincide(q, u.cliente, u.usuario, u.comentario, u.sesion?.ip, u.perfil))
         .sort((a, b) => orden[this.estadoCred(a)] - orden[this.estadoCred(b)] || String(a.cliente ?? '~').localeCompare(String(b.cliente ?? '~')));
       this.credCache = { clave, lista };
     }

@@ -4,6 +4,7 @@ import {
 } from '@angular/core';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { ControlValueAccessor, NG_VALUE_ACCESSOR } from '@angular/forms';
+import { coincide } from '../busqueda';
 
 export interface InsigniaSelect {
   texto: string;
@@ -218,8 +219,9 @@ export class NpSelectComponent implements ControlValueAccessor, OnChanges, OnDes
   recalcular(): void {
     const q = this.normalizar(this.busqueda);
     const texto = (o: any) => this.presentacion?.buscarEn?.(o) ?? `${this.etiquetaDe(o)} ${this.detalleDe(o) ?? ''}`;
+    // Por palabras y en cualquier orden: «gabriel giraldo» encuentra «GABRIEL DE JESUS GIRALDO».
     let coinciden = this.todas.filter(o => q
-      ? this.normalizar(texto(o)).includes(q)
+      ? coincide(this.busqueda, texto(o))
       : !this.presentacion?.soloAlBuscar?.(o));
 
     const relevancia = this.presentacion?.relevancia;

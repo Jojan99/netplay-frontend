@@ -6,6 +6,7 @@ import { ToastService } from '../../services/toast.service';
 import { DialogService } from '../../services/dialog.service';
 import { NpSelectComponent } from '../../common/np-select/np-select.component';
 import { PRESENTACION_METODOS_PAGO, conValor } from '../../common/np-select/presentaciones';
+import { coincide } from '../../common/busqueda';
 
 type Est = 'Exacta' | 'Probable' | 'Corregida' | 'Revisar';
 
@@ -256,10 +257,8 @@ export class ConciliacionPagosComponent implements OnInit {
 
   /** Filtros, conteos y totales, en campos: se llama al cambiar algo, no en cada ciclo. */
   recalcular(l: Lista): void {
-    const q = this.norm(l.busca);
-
     l.visibles = l.filas.filter(f =>
-      (l.filtro === 'Todas' || f.est === l.filtro) && (!q || this.norm(`${f.nombre} ${f.base} ${f.cedula}`).includes(q)));
+      (l.filtro === 'Todas' || f.est === l.filtro) && coincide(l.busca, f.nombre, f.base, f.cedula));
 
     l.conteos = { Todas: l.filas.length };
     for (const e of ['Exacta', 'Probable', 'Corregida', 'Revisar']) l.conteos[e] = l.filas.filter(f => f.est === e).length;
@@ -271,7 +270,6 @@ export class ConciliacionPagosComponent implements OnInit {
     l.aAplicarValor = va.reduce((a, f) => a + f.valor, 0);
   }
 
-  private norm(t: string): string { return t.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase(); }
 
   seAplica(f: Fila): boolean { return f.incluir && f.est !== 'Revisar' && !!f.cedula; }
 

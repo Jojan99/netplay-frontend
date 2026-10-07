@@ -8,6 +8,7 @@ import { FinanceService } from '../../services/finance.service';
 import { Capacitor } from '@capacitor/core';
 import { Directory, Filesystem } from '@capacitor/filesystem';
 import { saveAs } from 'file-saver';
+import { coincide } from '../../common/busqueda';
 
 @Component({
   selector: 'app-report-paid',
@@ -91,15 +92,11 @@ export class ReportPaidComponent implements OnInit, OnDestroy {
   }
 
   filterLocalUsers(term: string): void {
-    const t = term.toLowerCase();
+    const t = term;
     let base = this.allUsers;
     if (this.statusFilter === 'active')   base = base.filter(u => u.internet_status === 'ACTIVE' || u.internet_status === 1);
     if (this.statusFilter === 'inactive') base = base.filter(u => u.internet_status !== 'ACTIVE' && u.internet_status !== 1);
-    this.filteredUsers = !t ? base : base.filter(u =>
-      (u.names + ' ' + u.lastname).toLowerCase().includes(t) ||
-      (u.dni  || '').toLowerCase().includes(t) ||
-      (u.phone || '').toLowerCase().includes(t),
-    );
+    this.filteredUsers = base.filter(u => coincide(t, u.names, u.lastname, u.dni, u.phone));
   }
 
   setStatusFilter(f: string): void {

@@ -7,6 +7,7 @@ import { DomSanitizer, SafeResourceUrl, SafeHtml } from '@angular/platform-brows
 import { firstValueFrom } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { NpSelectComponent, PresentacionSelect } from '../../common/np-select/np-select.component';
+import { coincide } from '../../common/busqueda';
 
 const PESOS = new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 });
 
@@ -1221,9 +1222,7 @@ export class ContractsComponent implements OnInit, OnDestroy {
     const q = this.assignedSearch.trim().toLowerCase();
     this.asignadosFiltrados = this.assignedContracts.filter(cc => {
       if (this.filtroEstado !== 'todos' && cc.status !== this.filtroEstado) return false;
-      if (!q) return true;
-      return [cc.user?.names, cc.user?.lastname, cc.user?.dni, cc.user?.username, cc.contract?.title]
-        .some(v => (v ?? '').toLowerCase().includes(q));
+      return coincide(q, cc.user?.names, cc.user?.lastname, cc.user?.dni, cc.user?.username, cc.contract?.title);
     });
 
     this.signedCount  = this.assignedContracts.filter(c => c.status === 'signed').length;

@@ -14,6 +14,7 @@ import { AcsSetupService } from '../../../../services/acs-setup.service';
 
 import { GestionRemotaService } from '../../../../services/gestion-remota.service';
 import { limpiarTextoWifi, problemaDeLaClaveWifi, problemaDelNombreWifi } from '../../../../common/wifi';
+import { coincide } from '../../../../common/busqueda';
 
 @Component({
   selector: 'app-olt-sin-autorizar',
@@ -600,10 +601,7 @@ export class OltSinAutorizarComponent implements OnInit {
 
     if (!t) return this.clientes;
 
-    return this.clientes.filter(c =>
-      (c.nombre || '').toLowerCase().includes(t) ||
-      (c.dni || '').toLowerCase().includes(t) ||
-      (c.direccion || '').toLowerCase().includes(t));
+    return this.clientes.filter(c => coincide(t, c.nombre, c.dni, c.direccion));
   }
 
   /** Lo que se lee en cada opción del desplegable. */

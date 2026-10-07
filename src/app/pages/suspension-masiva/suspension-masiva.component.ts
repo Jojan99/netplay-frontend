@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { SuspensionMasivaService } from '../../services/suspension-masiva.service';
 import { ToastService } from '../../services/toast.service';
 import { DialogService } from '../../services/dialog.service';
+import { coincide } from '../../common/busqueda';
 
 type Accion = 'avisar' | 'suspender' | 'suspender_y_avisar';
 
@@ -146,8 +147,7 @@ export class SuspensionMasivaComponent implements OnInit, OnDestroy {
   elegirMinimo(n: number): void { this.minFacturas = n; this.cargar(); }
 
   filtrar(): void {
-    const t = this.q.trim().toLowerCase();
-    this.visibles = t ? this.filas.filter(f => f.buscar.includes(t)) : this.filas;
+    this.visibles = this.filas.filter(f => coincide(this.q, f.buscar));
     this.recontar();
   }
 

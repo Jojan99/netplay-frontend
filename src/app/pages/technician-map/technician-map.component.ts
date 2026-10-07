@@ -6,6 +6,7 @@ import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { EmployeeService } from '../../services/employee.service';
 import { EchoService } from '../../services/echo.service';
+import { coincide } from '../../common/busqueda';
 
 type Freshness = 'live' | 'recent' | 'stale';
 
@@ -200,7 +201,7 @@ export class TechnicianMapComponent implements OnInit, AfterViewInit, OnDestroy 
     const q = this.search.trim().toLowerCase();
     return this.technicians
       .filter(t => this.filter === 'all' || (this.filter === 'live' ? this.freshness(t) !== 'stale' : this.freshness(t) === 'stale'))
-      .filter(t => !q || `${t.first_name} ${t.last_name} ${t.job_title || ''}`.toLowerCase().includes(q))
+      .filter(t => coincide(q, t.first_name, t.last_name, t.job_title))
       .sort((a, b) => (this.minutesAgo(a.last_location_update) ?? 1e9) - (this.minutesAgo(b.last_location_update) ?? 1e9));
   }
   select(t: any, center = true): void {
