@@ -1,7 +1,8 @@
 import { CommonModule } from '@angular/common';
-import { Component, ElementRef, HostListener, Input, computed, inject, signal, viewChild } from '@angular/core';
+import { Component, ElementRef, HostListener, Input, OnInit, computed, inject, signal, viewChild } from '@angular/core';
 import { Router } from '@angular/router';
 import { PaymentProofService } from '../../services/payment-proof.service';
+import { PagosPorAplicarService } from '../../services/pagos-por-aplicar.service';
 
 /**
  * El punto verde al lado del nombre: este cliente mandó un pago que todavía
@@ -16,6 +17,10 @@ import { PaymentProofService } from '../../services/payment-proof.service';
  * Va al lado de la burbuja de tickets y se dibuja igual: misma forma, misma
  * tarjeta con `position: fixed`, para que se lean como una familia.
  *
+ * Si el cliente tiene un pago esperando lo dice el mapa de PagosPorAplicarService
+ * (una consulta para toda la pantalla, así sirve también en la lista de
+ * clientes); los comprobantes se piden al abrir la tarjeta.
+ *
  * Uso: `<app-burbuja-pago [userId]="selectedUserId" />`
  */
 @Component({
@@ -23,7 +28,7 @@ import { PaymentProofService } from '../../services/payment-proof.service';
   standalone: true,
   imports: [CommonModule],
   template: `
-    <span class="bp-wrap" *ngIf="pagos().length"
+    <span class="bp-wrap" *ngIf="total()"
           (mouseenter)="abrir()" (mouseleave)="cerrarConDemora()"
           (focusin)="abrir()" (focusout)="cerrarConDemora()">
       <button #ancla type="button" class="bp" [attr.aria-expanded]="abierta()" [attr.aria-label]="resumen()"
@@ -35,6 +40,7 @@ import { PaymentProofService } from '../../services/payment-proof.service';
       <div class="bp-card" *ngIf="abierta()" [style.left.px]="x()" [style.top.px]="y()" role="dialog"
            (mouseenter)="quedate()" (mouseleave)="cerrarConDemora()">
         <p class="bp-card-h">{{ resumen() }}</p>
+        <p class="bp-card-f" *ngIf="cargando()">Cargando comprobante…</p>
 
         <a class="bp-pago" *ngFor="let p of pagos()" (click)="irALaAuditoria(p, $event)" href="#" tabindex="0">
           <span class="bp-foto" [class.is-vacia]="!esImagen(p.file_path)">
@@ -50,7 +56,7 @@ import { PaymentProofService } from '../../services/payment-proof.service';
           </span>
         </a>
 
-        <p class="bp-card-f">
+        <p class="bp-card-f" *ngIf="!cargando()">
           <span *ngIf="total() > pagos().length">y {{ total() - pagos().length }} más · </span>Clic para revisarlo en la auditoría
         </p>
       </div>
@@ -110,8 +116,9 @@ import { PaymentProofService } from '../../services/payment-proof.service';
     .bp-mono { font-family: var(--font-mono); }
   `],
 })
-export class BurbujaPagoComponent {
+export class BurbujaPagoComponent implements OnInit {
   private proofs = inject(PaymentProofService);
+  private pendientes = inject(PagosPorAplicarService);
   private router = inject(Router);
 
   private ancla = viewChild<ElementRef<HTMLElement>>('ancla');
@@ -119,16 +126,22 @@ export class BurbujaPagoComponent {
   /** Los que se muestran en la tarjeta: con más, la auditoría los lista todos. */
   private static readonly MAXIMO = 3;
 
-  pagos = signal<any[]>([]);
-  total = signal(0);
-
-  private pedido = 0;
+  private id = signal<number | null>(null);
 
   /** Acepta texto además de número, como la burbuja de tickets. */
   @Input() set userId(v: number | string | null | undefined) {
     const n = Number(v);
-    this.cargar(Number.isFinite(n) && n > 0 ? n : null);
+    this.id.set(Number.isFinite(n) && n > 0 ? n : null);
+    this.pagos.set([]);
+    this.cargadoDe = null;
+    this.abierta.set(false);
   }
+
+  total = computed(() => this.pendientes.de(this.id())?.total ?? 0);
+
+  pagos = signal<any[]>([]);
+  cargando = signal(false);
+  private cargadoDe: number | null = null;
 
   resumen = computed(() => this.total() === 1
     ? 'Pago por aplicar en la auditoría'
@@ -140,31 +153,32 @@ export class BurbujaPagoComponent {
 
   private cierre: ReturnType<typeof setTimeout> | null = null;
 
-  private cargar(userId: number | null): void {
-    // Al pasar de un cliente a otro, la respuesta vieja no puede pintar la ficha nueva.
-    const este = ++this.pedido;
-    this.pagos.set([]);
-    this.total.set(0);
-    this.abierta.set(false);
+  ngOnInit(): void { this.pendientes.cargar(); }
 
-    if (!userId) return;
+  /** Los comprobantes, la primera vez que se abre la tarjeta de este cliente. */
+  private traerComprobantes(): void {
+    const userId = this.id();
+    if (!userId || this.cargadoDe === userId) return;
+
+    this.cargadoDe = userId;
+    this.cargando.set(true);
 
     this.proofs.list({ user_id: userId, status: 'pending', per_page: BurbujaPagoComponent.MAXIMO }).subscribe({
       next: (r: any) => {
-        if (este !== this.pedido) return;
-        const pagina = r?.data ?? {};
-        const filas = pagina.data ?? [];
-        this.pagos.set(filas);
-        this.total.set(Number(pagina.total ?? filas.length));
+        // Si mientras tanto cambió de cliente, la respuesta vieja no se pinta.
+        if (this.id() !== userId) return;
+        this.pagos.set(r?.data?.data ?? []);
+        this.cargando.set(false);
       },
-      // Sin permiso a finanzas o sin red: la burbuja simplemente no aparece.
-      error: () => {},
+      error: () => { this.cargando.set(false); this.cargadoDe = null; },
     });
   }
 
   abrir(): void {
     this.quedate();
     if (this.abierta()) return;
+
+    this.traerComprobantes();
 
     const caja = this.ancla()?.nativeElement.getBoundingClientRect();
     if (!caja) return;
@@ -176,7 +190,7 @@ export class BurbujaPagoComponent {
     izq = Math.max(margen, Math.min(izq, window.innerWidth - ancho - margen));
 
     // Cabecera y pie, más una fila por comprobante (la foto mide 96px).
-    const alto = 56 + this.pagos().length * 115;
+    const alto = 56 + Math.min(this.total(), BurbujaPagoComponent.MAXIMO) * 115;
     const abajo = caja.bottom + 6;
     const arriba = caja.top - alto - 6;
 

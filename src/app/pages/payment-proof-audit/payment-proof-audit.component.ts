@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { PaymentProofService } from '../../services/payment-proof.service';
+import { PagosPorAplicarService } from '../../services/pagos-por-aplicar.service';
 import { ToastService } from '../../services/toast.service';
 import { DialogService } from '../../services/dialog.service';
 import { NpSelectComponent } from '../../common/np-select/np-select.component';
@@ -43,6 +44,7 @@ export class PaymentProofAuditComponent implements OnInit {
 
   private dialog = inject(DialogService);
   private route = inject(ActivatedRoute);
+  private pendientes = inject(PagosPorAplicarService);
 
   /** El comprobante que pidió abrir otra pantalla (la burbuja de pago de la ficha del cliente). */
   private comprobantePedido: number | null = null;
@@ -176,6 +178,8 @@ export class PaymentProofAuditComponent implements OnInit {
         this.toItem = pagination.to || 0;
         this.loading = false;
         this.abrirPedido();
+        // Lo que se aprobó o rechazó aquí apaga la burbuja de pago en las demás pantallas.
+        this.pendientes.cargar(true);
       },
       error: () => {
         this.loading = false;

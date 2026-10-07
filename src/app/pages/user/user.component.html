@@ -70,6 +70,9 @@
       <button type="button" class="np-chip" *ngIf="companyHasWA" [attr.aria-pressed]="statusFilter === 'nowa'" (click)="setStatusFilter('nowa')">Sin WhatsApp<span class="np-c">{{ countNoWa }}</span></button>
       <button type="button" class="np-chip" [attr.aria-pressed]="statusFilter === 'fe'" (click)="setStatusFilter('fe')"
               title="Clientes con facturación electrónica: los que cobran por la pasarela">Factura electrónica<span class="np-c">{{ countConFe }}</span></button>
+      <!-- Mandaron un comprobante que espera en la auditoría: la misma burbuja verde del nombre. -->
+      <button type="button" class="np-chip" *ngIf="countConPago || statusFilter === 'pago'" [attr.aria-pressed]="statusFilter === 'pago'" (click)="setStatusFilter('pago')"
+              title="Clientes con un comprobante de pago esperando en la auditoría">Pago por aplicar<span class="np-c">{{ countConPago }}</span></button>
     </div>
     <button type="button" class="np-btn np-btn--ghost np-filtros-btn" (click)="mostrarFiltros = !mostrarFiltros" [attr.aria-pressed]="mostrarFiltros">
       Filtros<span class="np-c">{{ etiquetaFiltro }}</span>
@@ -121,7 +124,7 @@
                   (click)="openRow(user)" tabindex="0" (keydown.enter)="openRow(user)">
                 <td class="np-stripe"><i></i></td>
                 <td class="es-principal">
-                  <div class="np-name">{{ user.names }} {{ user.lastname }}<app-burbuja-ticket [userId]="user.id_user" /></div>
+                  <div class="np-name">{{ user.names }} {{ user.lastname }}<app-burbuja-ticket [userId]="user.id_user" /><app-burbuja-pago [userId]="user.id_user" /></div>
                   <div class="np-plan">{{ user.plan_name || 'Sin plan' }}<span class="np-plan-mobile"> · <em>{{ user.dni }}</em><ng-container *ngIf="user.ip"> · <em>{{ user.ip }}</em></ng-container></span></div>
                 </td>
                 <td class="np-data np-col-doc" data-label="Documento">{{ user.dni }}</td>
