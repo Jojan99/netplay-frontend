@@ -253,10 +253,10 @@ export class UserComponent implements OnInit {
   toasts: Toast[] = [];
   private toastId = 0;
 
-  toast(msg: string, type: 'success' | 'error' | 'info' = 'info') {
+  toast(msg: string, type: 'success' | 'error' | 'info' = 'info', ms = 4000) {
     const id = ++this.toastId;
     this.toasts.push({ id, msg, type });
-    setTimeout(() => this.toasts = this.toasts.filter(t => t.id !== id), 4000);
+    setTimeout(() => this.toasts = this.toasts.filter(t => t.id !== id), ms);
   }
 
   // ── User list ─────────────────────────────────────────────────────────────
@@ -775,6 +775,96 @@ export class UserComponent implements OnInit {
   // ── Resumen tab ───────────────────────────────────────────────────────────
   enableEdit()  { this.isEditing = true; }
   cancelEdit()  { this.isEditing = false; this.loadModalUser(this.selectedUserId); }
+
+  // ── Plataforma contra router ──────────────────────────────────────────────
+  /* Quién figura activo y está cortado en el MikroTik (o al revés). La sincronización
+     de las 6 a. m. arregla sola los ARP del router principal; esto muestra lo demás
+     (PPPoE, otros routers, los que no aparecen) para que alguien lo mire. */
+  mostrarDescuadres = false;
+  revisandoRouter = false;
+  descuadres: { revisados: number; ok: number; routers: any[]; problemas: any[] } | null = null;
+  corrigiendo = new Set<number>();
+
+  readonly problemasRouter: Record<string, { titulo: string; ayuda: string }> = {
+    activo_cortado:       { titulo: 'Activo, pero cortado en el router', ayuda: 'Paga y no tiene internet.' },
+    suspendido_navegando: { titulo: 'Suspendido, pero navegando', ayuda: 'El router no le aplicó el corte.' },
+    no_esta:              { titulo: 'No está en el router', ayuda: 'Revise su IP o su usuario PPPoE, o reinstálelo.' },
+  };
+
+  revisarRouter(): void {
+    this.mostrarDescuadres = true;
+    this.revisandoRouter = true;
+    this.userSvc.descuadresConElRouter().subscribe({
+      next: (r: any) => { this.revisandoRouter = false; this.descuadres = r?.data ?? null; },
+      error: () => { this.revisandoRouter = false; this.toast('No se pudo revisar el router', 'error'); },
+    });
+  }
+
+  gruposDeDescuadres(): { clave: string; filas: any[] }[] {
+    const problemas = this.descuadres?.problemas ?? [];
+    return Object.keys(this.problemasRouter)
+      .map(clave => ({ clave, filas: problemas.filter(p => p.problema === clave) }))
+      .filter(g => g.filas.length);
+  }
+
+  async corregirEnRouter(p: any): Promise<void> {
+    const accion = p.plataforma === 'suspendido' ? 'cortarlo' : 'habilitarlo';
+    if (!await this.dialog.confirm(`¿Igualar el router a la plataforma para ${p.nombre}? Se va a ${accion} en el MikroTik.`, { okLabel: 'Sí, corregir' })) return;
+
+    this.corrigiendo.add(p.user_id);
+    this.userSvc.aplicarEstadoEnRouter(p.user_id).subscribe({
+      next: (r: any) => {
+        this.corrigiendo.delete(p.user_id);
+        this.toast(r?.message || 'Listo', r?.error ? 'error' : 'success');
+        if (!r?.error && this.descuadres) {
+          this.descuadres.problemas = this.descuadres.problemas.filter(x => x.user_id !== p.user_id);
+          this.descuadres.ok++;
+        }
+      },
+      error: () => { this.corrigiendo.delete(p.user_id); this.toast('No se pudo corregir', 'error'); },
+    });
+  }
+
+  verClienteDelDescuadre(p: any): void {
+    this.mostrarDescuadres = false;
+    this.abrirAlCargar = Number(p.user_id);
+    this.abrirPendiente();
+  }
+
+  // ── Cambio de documento ───────────────────────────────────────────────────
+  /** null: no se está cambiando; texto: el documento nuevo que se está escribiendo. */
+  cambioDoc: string | null = null;
+  guardandoDoc = false;
+
+  async guardarDocumento(): Promise<void> {
+    const nuevo = (this.cambioDoc ?? '').trim();
+    const viejo = this.selectedUserData?.dni ?? '';
+    if (!nuevo || this.guardandoDoc) return;
+
+    if (!await this.dialog.confirm(
+      `¿Cambiar el documento de ${viejo} a ${nuevo}? Se corrige también en el usuario de acceso, el MikroTik, el CRM, el bot de WhatsApp y los tickets.`,
+      { okLabel: 'Sí, cambiarlo' },
+    )) return;
+
+    this.guardandoDoc = true;
+    this.userSvc.cambiarDocumento(this.selectedUserId, nuevo).subscribe({
+      next: (r: any) => {
+        this.guardandoDoc = false;
+        if (r?.error) { this.toast(r?.message || 'No se pudo cambiar el documento', 'error'); return; }
+        this.cambioDoc = null;
+        this.toast(r?.message || 'Documento cambiado', 'success');
+        // Lo que no se pudo hacer solo (Alegra, el router) se dice aparte, con tiempo para leerlo.
+        for (const aviso of r?.data?.avisos ?? []) this.toast(aviso, 'info', 9000);
+        this.loadModalUser(this.selectedUserId);
+        this.loadAuditLog(this.selectedUserId);
+        this.cargarClientes(true);
+      },
+      error: (e: any) => {
+        this.guardandoDoc = false;
+        this.toast(e?.error?.message || 'No se pudo cambiar el documento', 'error');
+      },
+    });
+  }
 
   saveUser() {
     this.userSvc.updateUser(this.selectedUserData, this.selectedUserId, this.internet_plan, this.data_cortes)

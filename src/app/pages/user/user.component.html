@@ -38,6 +38,11 @@
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12m0 0 4-4m-4 4-4-4M4 17v3h16v-3"/></svg>
         {{ exportingCsv ? 'Exportando…' : 'Exportar CSV' }}
       </button>
+      <button *ngIf="esAdmin" type="button" class="np-btn np-btn--ghost" (click)="revisarRouter()"
+              title="Compara la plataforma con el MikroTik: quién figura activo y está cortado, o al revés">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="13" width="18" height="7" rx="1.5"/><path d="M7 16.5h.01M11 16.5h.01M8 9.5a6 6 0 0 1 8 0M5.5 7a9.5 9.5 0 0 1 13 0"/></svg>
+        Revisar router
+      </button>
       <a *ngIf="esAdmin" class="np-btn np-btn--ghost" routerLink="/dashboard/usuario/eliminados" title="Clientes eliminados: reinstalar a uno que vuelve">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 3-6.7M3 4v4h4"/></svg>
         Eliminados
@@ -271,8 +276,22 @@
                 ]">
                 <dt>{{ f.label }}</dt>
                 <dd [class.np-mono]="f.mono">
-                  <ng-container *ngIf="!isEditing || f.ro">{{ selectedUserData[f.key] || '—' }}</ng-container>
-                  <input *ngIf="isEditing && !f.ro" class="np-input" [(ngModel)]="selectedUserData[f.key]" />
+                  <!-- El documento no se edita con lo demás: va copiado en el router, el CRM y el bot,
+                       y «Cambiar» lo corrige en todos lados de una vez (ver CambioDeDocumento). -->
+                  <ng-container *ngIf="f.key === 'dni' && cambioDoc !== null; else valorNormal">
+                    <span class="np-doc-cambio">
+                      <input class="np-input np-mono" [(ngModel)]="cambioDoc" (keydown.enter)="guardarDocumento()" (keydown.escape)="cambioDoc = null"
+                             placeholder="Documento nuevo" aria-label="Documento nuevo" [disabled]="guardandoDoc" />
+                      <button type="button" class="np-link" (click)="guardarDocumento()" [disabled]="guardandoDoc || !cambioDoc.trim()">{{ guardandoDoc ? 'Guardando…' : 'Guardar' }}</button>
+                      <button type="button" class="np-link np-link--muted" (click)="cambioDoc = null" [disabled]="guardandoDoc">Cancelar</button>
+                    </span>
+                  </ng-container>
+                  <ng-template #valorNormal>
+                    <ng-container *ngIf="!isEditing || f.ro">{{ selectedUserData[f.key] || '—' }}</ng-container>
+                    <input *ngIf="isEditing && !f.ro" class="np-input" [(ngModel)]="selectedUserData[f.key]" />
+                    <button type="button" class="np-link np-doc-btn" *ngIf="f.key === 'dni' && esAdmin && !isEditing"
+                            (click)="cambioDoc = selectedUserData.dni || ''" title="Corrige la cédula también en el router, el CRM, el bot de WhatsApp y los tickets">Cambiar</button>
+                  </ng-template>
                 </dd>
               </ng-container>
               <dt>Plan</dt>
@@ -1112,6 +1131,55 @@
           {{ aplicandoMotivo ? 'Aplicando…' : (motivoPedido.que === 'revertir' ? 'Revertir el pago' : 'Anular la factura') }}
         </button>
       </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ Plataforma contra router ═══════════════════════════════════════════
+     Solo lee el MikroTik; cada corrección se confirma y se hace cliente por cliente. -->
+<div *ngIf="mostrarDescuadres" class="np-overlay" (click)="mostrarDescuadres = false">
+  <div class="np-modal np-modal--lg" role="dialog" aria-modal="true" aria-label="Plataforma contra router" (click)="$event.stopPropagation()">
+    <div class="np-modal-head">
+      <div>
+        <p class="np-kicker">Red <b>/</b> MikroTik</p>
+        <h3>Plataforma contra router</h3>
+      </div>
+      <button type="button" class="np-icobtn" (click)="mostrarDescuadres = false" aria-label="Cerrar">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M6 6l12 12M18 6 6 18"/></svg>
+      </button>
+    </div>
+
+    <div class="np-modal-body">
+      <div *ngIf="revisandoRouter" class="np-loading"><span class="np-spinner"></span> Leyendo el MikroTik…</div>
+
+      <ng-container *ngIf="!revisandoRouter && descuadres">
+        <p class="np-fine">
+          Revisados <b>{{ descuadres.revisados }}</b> clientes vigentes: <b>{{ descuadres.ok }}</b> coinciden
+          y <b>{{ descuadres.problemas.length }}</b> no.
+        </p>
+        <p class="np-notice np-notice--danger" *ngFor="let r of descuadres.routers" [hidden]="!r.error">
+          No se pudo leer «{{ r.nombre }}»: {{ r.error }}. Sus {{ r.clientes }} clientes no se revisaron.
+        </p>
+        <p class="np-notice" *ngIf="!descuadres.problemas.length">Todo coincide: la plataforma y el router dicen lo mismo.</p>
+
+        <section *ngFor="let g of gruposDeDescuadres()" class="np-desc-grupo">
+          <p class="np-sect">{{ problemasRouter[g.clave].titulo }} <span class="np-c">{{ g.filas.length }}</span>
+            <small class="np-fine">{{ problemasRouter[g.clave].ayuda }}</small></p>
+          <div class="np-desc-fila" *ngFor="let p of g.filas">
+            <div class="np-desc-quien">
+              <button type="button" class="np-name--link" (click)="verClienteDelDescuadre(p)">{{ p.nombre }}</button>
+              <small class="np-mono">{{ p.dni }} · {{ p.tipo === 'pppoe' ? 'PPPoE' : 'IP fija' }} {{ p.donde }}</small>
+              <small *ngIf="p.no_reactivar" class="np-fine">Suspendido a propósito: «no reactivar automáticamente».</small>
+            </div>
+            <span class="np-desc-estado">Plataforma <b>{{ p.plataforma }}</b> · router <b>{{ p.router_estado }}</b></span>
+            <button type="button" class="np-btn np-btn--sm" *ngIf="p.problema !== 'no_esta'"
+                    [disabled]="corrigiendo.has(p.user_id)" (click)="corregirEnRouter(p)">
+              {{ corrigiendo.has(p.user_id) ? 'Corrigiendo…' : (p.plataforma === 'suspendido' ? 'Cortar en el router' : 'Habilitar en el router') }}
+            </button>
+            <button type="button" class="np-btn np-btn--ghost np-btn--sm" *ngIf="p.problema === 'no_esta'" (click)="verClienteDelDescuadre(p)">Ver ficha</button>
+          </div>
+        </section>
+      </ng-container>
     </div>
   </div>
 </div>

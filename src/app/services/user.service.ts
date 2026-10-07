@@ -99,6 +99,21 @@ export class UserService {
     const url = this.env.rootUrl + 'api/user/updateUserData'
     return this.http.put<any>(url, parameter, { headers: this.getHeaders() });
   }
+  /** Quién está de una forma en la plataforma y de otra en el MikroTik (solo lee). */
+  descuadresConElRouter(): Observable<any> {
+    return this.http.get<any>(this.env.rootUrl + 'api/user/router/descuadres', { headers: this.getHeaders() });
+  }
+
+  /** Deja al cliente en el router como está en la plataforma. */
+  aplicarEstadoEnRouter(userId: any): Observable<any> {
+    return this.http.post<any>(this.env.rootUrl + `api/user/${userId}/router/aplicar-estado`, '{}', { headers: this.getHeaders() });
+  }
+
+  /** Corrige el documento del cliente en todos lados (ficha, usuario, router, CRM, bot y tickets). */
+  cambiarDocumento(userId: any, documento: string): Observable<any> {
+    return this.http.post<any>(this.env.rootUrl + `api/user/${userId}/documento`, JSON.stringify({ documento }), { headers: this.getHeaders() });
+  }
+
   /**
    * Suspende (2) o reactiva (1). Al suspender a mano se puede dejar dicho por qué y marcar
    * que el sistema no lo reactive solo cuando quede al día (no es por mora).

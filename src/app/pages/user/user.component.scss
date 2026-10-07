@@ -331,3 +331,18 @@
 /* «Pagó y sigue suspendido»: la pestaña llama la atención y cada fila dice qué falta. */
 .np-chip--alerta[aria-pressed="true"] { background: var(--warn-soft); color: var(--warn); border-color: var(--warn); }
 .np-pagosusp { font-size: 11px; font-weight: 700; color: var(--warn); margin-top: 1px; }
+
+/* Cambio de documento: el botón va discreto junto al número y el formulario en la misma fila. */
+.np-doc-btn { margin-left: 8px; font-size: 11px; }
+.np-doc-cambio { display: inline-flex; align-items: center; gap: 8px; flex-wrap: wrap;
+  .np-input { width: 150px; } }
+
+/* Plataforma contra router */
+.np-desc-grupo { margin-top: 14px; .np-sect small { margin-left: 6px; font-weight: 400; } }
+.np-desc-fila {
+  display: grid; grid-template-columns: minmax(0, 1fr) auto auto; gap: 10px; align-items: center;
+  padding: 8px 0; border-bottom: 1px solid var(--line);
+  @media (max-width: 640px) { grid-template-columns: 1fr; }
+}
+.np-desc-quien { display: grid; gap: 2px; min-width: 0; small { color: var(--text-3); } }
+.np-desc-estado { font-size: 12px; color: var(--text-2); }
