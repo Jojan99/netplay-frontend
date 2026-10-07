@@ -7,6 +7,8 @@ export interface PagosDelCliente {
   total: number;
   /** Cuándo llegó el más reciente. */
   ultimo: string | null;
+  /** Cuándo llegó el más viejo: si pasa de un día, la burbuja se pone ámbar. */
+  desde: string | null;
 }
 
 /**

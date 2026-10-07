@@ -46,6 +46,7 @@ type InboxProvider = 'meta' | 'netplay';
 })
 export class InboxComponent implements OnInit, OnDestroy {
   private toast = inject(ToastService);
+  private auth = inject(AuthService);
   private dialog = inject(DialogService);
 
   inbox: any[] = [];
@@ -305,6 +306,11 @@ export class InboxComponent implements OnInit, OnDestroy {
   listenInboxRealtime(): void {
     this.echoService.inboxUpdated$.subscribe((payload: any) => {
       this.zone.run(() => {
+        // El bot le pasó un chat a un asesor: aviso aparte, con más tiempo en pantalla.
+        if (payload.aviso && Number(payload.companyId) === this.auth.getCompanyId()) {
+          this.toast.show(`🔔 ${payload.aviso}`, 'warning', 9000);
+        }
+
         const conversationId = payload.conversationId;
         const fromCustomer = payload.sender !== 'agent';
         const provider: string = payload.provider || this.inboxProvider;

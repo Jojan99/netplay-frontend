@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, NgZone, Inject, PLATFORM_ID, HostListener, ElementRef, ViewChild } from '@angular/core';
+import { inject, Component, OnInit, OnDestroy, NgZone, Inject, PLATFORM_ID, HostListener, ElementRef, ViewChild } from '@angular/core';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { Router, NavigationEnd } from '@angular/router';
 import { filter } from 'rxjs/operators';
@@ -7,6 +7,8 @@ import { ConversationListComponent } from '../conversation-list/conversation-lis
 import { ChatWindowComponent } from '../chat-window/chat-window.component';
 import { CrmService } from '../../../services/crm.service';
 import { EchoService } from '../../../services/echo.service';
+import { ToastService } from '../../../services/toast.service';
+import { AuthService } from '../../../services/auth.service';
 
 type Provider = 'meta' | 'netplay';
 
@@ -84,8 +86,16 @@ export class CrmWidgetComponent implements OnInit, OnDestroy {
     });
   }
 
+  private toast = inject(ToastService);
+  private auth = inject(AuthService);
+
   private onRealtime(payload: any): void {
     if (!this.visible) return;
+
+    // El bot le pasó un chat a un asesor: que se vea aunque nadie esté mirando el CRM.
+    if (payload.aviso && this.enabled && Number(payload.companyId) === this.auth.getCompanyId()) {
+      this.toast.show(`🔔 ${payload.aviso}`, 'warning', 9000);
+    }
     const fromCustomer = payload.sender !== 'agent';
     if (fromCustomer && payload.conversationId !== this.activeConversationId) {
       this.unreadMap.set(payload.conversationId, (this.unreadMap.get(payload.conversationId) || 0) + 1);

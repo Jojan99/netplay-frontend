@@ -35,7 +35,7 @@ interface Toast {
   type: 'success' | 'error' | 'info';
 }
 
-export type ClientStatusFilter = 'all' | 'active' | 'suspended' | 'noip' | 'nowa' | 'fe' | 'pago';
+export type ClientStatusFilter = 'all' | 'active' | 'suspended' | 'noip' | 'nowa' | 'fe' | 'pago' | 'pagosusp';
 export type ClientRowStatus = 'active' | 'suspended' | 'noip';
 export type ClientTab = 'resumen' | 'servicios' | 'facturacion' | 'tickets' | 'historial';
 
@@ -292,13 +292,14 @@ export class UserComponent implements OnInit {
    * Antes se contaba sobre la lista cargada, y "Sin WhatsApp" daba todos: la
    * lista no traía ese dato.
    */
-  conteos = { todos: 0, activos: 0, suspendidos: 0, sin_ip: 0, sin_wa: 0, con_fe: 0, con_pago: 0 };
+  conteos = { todos: 0, activos: 0, suspendidos: 0, sin_ip: 0, sin_wa: 0, con_fe: 0, con_pago: 0, pago_suspendido: 0 };
   get countActive()    { return this.conteos.activos; }
   get countSuspended() { return this.conteos.suspendidos; }
   get countNoIp()      { return this.conteos.sin_ip; }
   get countNoWa()      { return this.conteos.sin_wa; }
   get countConFe()     { return this.conteos.con_fe; }
   get countConPago()   { return this.conteos.con_pago ?? 0; }
+  get countPagoSusp()  { return this.conteos.pago_suspendido ?? 0; }
 
   setStatusFilter(f: ClientStatusFilter) {
     if (f === this.statusFilter) return;
@@ -363,7 +364,7 @@ export class UserComponent implements OnInit {
      de un botón para que lista y ficha se queden con el alto. */
   mostrarFiltros = false;
   get etiquetaFiltro(): string {
-    const nombres: Record<ClientStatusFilter, string> = { all: 'Todos', active: 'Activos', suspended: 'Suspendidos', noip: 'Sin IP', nowa: 'Sin WhatsApp', fe: 'Factura electrónica', pago: 'Pago por aplicar' };
+    const nombres: Record<ClientStatusFilter, string> = { all: 'Todos', active: 'Activos', suspended: 'Suspendidos', noip: 'Sin IP', nowa: 'Sin WhatsApp', fe: 'Factura electrónica', pago: 'Pago por aplicar', pagosusp: 'Pagó y sigue suspendido' };
     return nombres[this.statusFilter] ?? 'Todos';
   }
 
@@ -548,6 +549,7 @@ export class UserComponent implements OnInit {
       billing_electronic: Number(e.billing_electronic ?? 0),
       router_id: e.router_id ?? null,
       connection_type: e.connection_type ?? 'static',
+      al_dia: !!Number(e.al_dia ?? 0),
     };
   }
 

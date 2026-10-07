@@ -36,6 +36,8 @@ export interface UserInterface {
     municipio?: string
     prefijo_telefono?: string
     connection_type?: string | null
+    /** Sin facturas por pagar (la pestaña «Pagó y sigue suspendido» dice por qué está ahí). */
+    al_dia?: boolean
     pppoe_user?: string | null
     pppoe_password?: string | null
     pppoe_profile?: string | null

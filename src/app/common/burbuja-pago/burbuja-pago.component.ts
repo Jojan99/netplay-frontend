@@ -3,6 +3,8 @@ import { Component, ElementRef, HostListener, Input, OnInit, computed, inject, s
 import { Router } from '@angular/router';
 import { PaymentProofService } from '../../services/payment-proof.service';
 import { PagosPorAplicarService } from '../../services/pagos-por-aplicar.service';
+import { DialogService } from '../../services/dialog.service';
+import { ToastService } from '../../services/toast.service';
 
 /**
  * El punto verde al lado del nombre: este cliente mandó un pago que todavía
@@ -21,6 +23,10 @@ import { PagosPorAplicarService } from '../../services/pagos-por-aplicar.service
  * (una consulta para toda la pantalla, así sirve también en la lista de
  * clientes); los comprobantes se piden al abrir la tarjeta.
  *
+ * Verde mientras el pago es reciente; ámbar cuando lleva más de un día esperando,
+ * que es lo que se está quedando atrás. Un comprobante claro (con factura, valor
+ * y sin datos dudosos) se puede aprobar desde la misma tarjeta.
+ *
  * Uso: `<app-burbuja-pago [userId]="selectedUserId" />`
  */
 @Component({
@@ -31,7 +37,7 @@ import { PagosPorAplicarService } from '../../services/pagos-por-aplicar.service
     <span class="bp-wrap" *ngIf="total()"
           (mouseenter)="abrir()" (mouseleave)="cerrarConDemora()"
           (focusin)="abrir()" (focusout)="cerrarConDemora()">
-      <button #ancla type="button" class="bp" [attr.aria-expanded]="abierta()" [attr.aria-label]="resumen()"
+      <button #ancla type="button" class="bp" [class.is-viejo]="viejo()" [attr.aria-expanded]="abierta()" [attr.aria-label]="resumen()"
               (click)="alternar($event)">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true"><path d="M12 6v12M15.5 8.5c-.6-1-1.9-1.6-3.5-1.6-2 0-3.4 1-3.4 2.5 0 3.4 7 1.8 7 5.2 0 1.6-1.5 2.6-3.6 2.6-1.7 0-3.1-.7-3.7-1.8"/></svg>
         <b *ngIf="total() > 1">{{ total() }}</b>
@@ -49,10 +55,12 @@ import { PagosPorAplicarService } from '../../services/pagos-por-aplicar.service
           </span>
           <span class="bp-datos">
             <b class="bp-monto">{{ monto(p) }}</b>
+            <button type="button" class="bp-aprobar" *ngIf="esClaro(p)" [disabled]="aprobando() === p.id"
+                    (click)="aprobar(p, $event)">{{ aprobando() === p.id ? 'Aprobando…' : 'Aprobar' }}</button>
             <small>{{ p.bank_name || 'Entidad no identificada' }}</small>
             <small *ngIf="p.reference_number" class="bp-mono">Ref. {{ p.reference_number }}</small>
             <small *ngIf="p.invoice?.number_facture" class="bp-mono">Factura {{ p.invoice.number_facture }}</small>
-            <small>Recibido {{ desde(p.created_at) }}</small>
+            <small [class.bp-tarde]="esViejo(p.created_at)">Recibido {{ desde(p.created_at) }}</small>
           </span>
         </a>
 
@@ -76,6 +84,8 @@ import { PagosPorAplicarService } from '../../services/pagos-por-aplicar.service
       &:hover, &:focus-visible { transform: scale(1.12); }
       &:focus-visible { outline: 2px solid var(--ok); outline-offset: 2px; }
       svg { width: 11px; height: 11px; flex: none; }
+      /* Más de un día esperando: se está quedando atrás. */
+      &.is-viejo { background: var(--warn-soft); color: var(--warn); }
       b { font-size: 9.5px; font-weight: 800; font-variant-numeric: tabular-nums; }
     }
 
@@ -114,12 +124,25 @@ import { PagosPorAplicarService } from '../../services/pagos-por-aplicar.service
     .bp-datos small { font-size: 10.5px; color: var(--text-3); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     .bp-monto { font-size: 14px; font-weight: 800; color: var(--ok); font-variant-numeric: tabular-nums; }
     .bp-mono { font-family: var(--font-mono); }
+    .bp-datos .bp-tarde { color: var(--warn); font-weight: 600; }
+
+    .bp-aprobar {
+      justify-self: start; margin: 2px 0;
+      appearance: none; border: 0; cursor: pointer;
+      padding: 3px 10px; border-radius: 999px;
+      font-size: 10.5px; font-weight: 700;
+      background: var(--ok); color: #fff;
+      &:hover { filter: brightness(1.08); }
+      &:disabled { opacity: .6; cursor: default; }
+    }
   `],
 })
 export class BurbujaPagoComponent implements OnInit {
   private proofs = inject(PaymentProofService);
   private pendientes = inject(PagosPorAplicarService);
   private router = inject(Router);
+  private dialog = inject(DialogService);
+  private toast = inject(ToastService);
 
   private ancla = viewChild<ElementRef<HTMLElement>>('ancla');
 
@@ -138,6 +161,11 @@ export class BurbujaPagoComponent implements OnInit {
   }
 
   total = computed(() => this.pendientes.de(this.id())?.total ?? 0);
+
+  /** El más viejo lleva más de un día esperando. */
+  viejo = computed(() => this.esViejo(this.pendientes.de(this.id())?.desde ?? null));
+
+  aprobando = signal<number | null>(null);
 
   pagos = signal<any[]>([]);
   cargando = signal(false);
@@ -225,6 +253,42 @@ export class BurbujaPagoComponent implements OnInit {
     this.abierta.set(false);
     this.router.navigate(['/dashboard/payment-proof-audit'], {
       queryParams: { comprobante: p.id, client: p.user?.dni || null },
+    });
+  }
+
+  esViejo(fecha: string | null | undefined): boolean {
+    if (!fecha) return false;
+    return Date.now() - new Date(String(fecha).replace(' ', 'T')).getTime() > 86_400_000;
+  }
+
+  /**
+   * Claro: tiene factura, valor y el lector no dejó nada en duda. Lo demás se
+   * revisa en la auditoría, donde se puede corregir el monto.
+   */
+  esClaro(p: any): boolean {
+    return !!p.invoice_id && Number(p.reported_amount ?? p.detected_amount ?? 0) > 0 && !(p.dudosos ?? []).length;
+  }
+
+  async aprobar(p: any, e: Event): Promise<void> {
+    e.preventDefault();
+    e.stopPropagation();
+
+    const factura = p.invoice?.number_facture ? ` a la factura ${p.invoice.number_facture}` : '';
+    this.quedate();
+    if (!await this.dialog.confirm(`¿Aprobar el pago de ${this.monto(p)}${factura}? Se aplica a la factura ya mismo.`, { okLabel: 'Sí, aprobar' })) return;
+
+    this.aprobando.set(p.id);
+
+    this.proofs.approve(p.id, { amount: Number(p.reported_amount ?? p.detected_amount) }).subscribe({
+      next: (r: any) => {
+        this.aprobando.set(null);
+        if (r?.status !== 'success') { this.toast.error(r?.message || 'No se pudo aprobar.'); return; }
+        this.toast.success('Pago aprobado y aplicado a la factura.');
+        this.pagos.set(this.pagos().filter(x => x.id !== p.id));
+        this.pendientes.cargar(true);
+        if (!this.pagos().length) this.abierta.set(false);
+      },
+      error: (err: any) => { this.aprobando.set(null); this.toast.error(err?.error?.message || 'No se pudo aprobar.'); },
     });
   }
 
