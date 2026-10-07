@@ -6,6 +6,7 @@ import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
 import { OntEquipoComponent } from '../../components/ont-equipo/ont-equipo.component';
 import { BurbujaTicketComponent } from '../../common/burbuja-ticket/burbuja-ticket.component';
+import { BurbujaPagoComponent } from '../../common/burbuja-pago/burbuja-pago.component';
 import { TicketsAbiertosService } from '../../services/tickets-abiertos.service';
 import { InstallationService } from '../../services/installation.service';
 import { FormsModule } from '@angular/forms';
@@ -47,7 +48,7 @@ import { PingDiagnosticoComponent } from '../../components/ping-diagnostico/ping
   selector: 'app-user',
   templateUrl: './user.component.html',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink, NpSelectComponent, HttpClientModule, LayoutComponent, FooterComponent, OntEquipoComponent, BurbujaTicketComponent, DatosFiscalesComponent, PingDiagnosticoComponent, UbicacionClienteComponent],
+  imports: [CommonModule, FormsModule, RouterLink, NpSelectComponent, HttpClientModule, LayoutComponent, FooterComponent, OntEquipoComponent, BurbujaTicketComponent, BurbujaPagoComponent, DatosFiscalesComponent, PingDiagnosticoComponent, UbicacionClienteComponent],
   styleUrls: ['./user.component.scss'],
   host: { class: 'np-console' }
 })

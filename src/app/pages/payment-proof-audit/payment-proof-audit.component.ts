@@ -1,6 +1,6 @@
 import { Component, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterLink } from '@angular/router';
+import { ActivatedRoute, RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { PaymentProofService } from '../../services/payment-proof.service';
 import { ToastService } from '../../services/toast.service';
@@ -42,6 +42,10 @@ export class PaymentProofAuditComponent implements OnInit {
   ];
 
   private dialog = inject(DialogService);
+  private route = inject(ActivatedRoute);
+
+  /** El comprobante que pidió abrir otra pantalla (la burbuja de pago de la ficha del cliente). */
+  private comprobantePedido: number | null = null;
 
   constructor(private paymentProofService: PaymentProofService, private toast: ToastService) {}
 
@@ -119,7 +123,30 @@ export class PaymentProofAuditComponent implements OnInit {
 
   ngOnInit(): void {
     this.verAutomatico();
+
+    // Desde la ficha del cliente se llega con ?comprobante=ID&client=CÉDULA: la
+    // lista queda filtrada por ese cliente y el comprobante, abierto al lado.
+    const q = this.route.snapshot.queryParamMap;
+    const pedido = Number(q.get('comprobante'));
+    this.comprobantePedido = Number.isFinite(pedido) && pedido > 0 ? pedido : null;
+    if (q.get('client')) this.searchFilters.client = String(q.get('client'));
+
     this.load();
+  }
+
+  /** Abre el comprobante pedido; si no está en la página, lo trae aparte. */
+  private abrirPedido(): void {
+    const id = this.comprobantePedido;
+    if (!id) return;
+    this.comprobantePedido = null;
+
+    const enLista = this.items.find((i) => Number(i.id) === id);
+    if (enLista) { this.selectedItem = enLista; return; }
+
+    this.paymentProofService.get(id).subscribe({
+      next: (r: any) => { if (r?.data) this.selectedItem = r.data; },
+      error: () => this.toast.error('No se encontró ese comprobante.'),
+    });
   }
 
   setFilter(status: string): void {
@@ -148,6 +175,7 @@ export class PaymentProofAuditComponent implements OnInit {
         this.fromItem = pagination.from || 0;
         this.toItem = pagination.to || 0;
         this.loading = false;
+        this.abrirPedido();
       },
       error: () => {
         this.loading = false;

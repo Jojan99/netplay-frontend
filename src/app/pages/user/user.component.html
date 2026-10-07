@@ -198,7 +198,7 @@
       <div class="np-insp-head">
         <div class="np-avatar">{{ initialOf(selectedUserData?.names) }}</div>
         <div class="np-insp-id">
-          <h2>{{ selectedUserData?.names || '…' }} {{ selectedUserData?.lastname || '' }}<app-burbuja-ticket [userId]="selectedUserId" /></h2>
+          <h2>{{ selectedUserData?.names || '…' }} {{ selectedUserData?.lastname || '' }}<app-burbuja-ticket [userId]="selectedUserId" /><app-burbuja-pago [userId]="selectedUserId" /></h2>
           <div class="np-meta">CC <b>{{ selectedUserData?.dni || '—' }}</b> · IP <b>{{ ipCabecera }}</b></div>
         </div>
         <div class="np-insp-tools">
