@@ -304,6 +304,8 @@ export class InboxComponent implements OnInit, OnDestroy {
 
   /* ── REALTIME ───────────────────────────────────────────────── */
   listenInboxRealtime(): void {
+    // La bandeja de la empresa del usuario (el servicio arranca antes del login).
+    this.echoService.escucharBandeja();
     this.echoService.inboxUpdated$.subscribe((payload: any) => {
       this.zone.run(() => {
         // El bot le pasó un chat a un asesor: aviso aparte, con más tiempo en pantalla.

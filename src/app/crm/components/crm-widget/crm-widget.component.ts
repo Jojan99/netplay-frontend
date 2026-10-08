@@ -64,6 +64,8 @@ export class CrmWidgetComponent implements OnInit, OnDestroy {
     if (!this.pos.x && !this.pos.y) { this.pos = { x: Math.max(8, window.innerWidth - this.size.w - 24), y: Math.max(8, window.innerHeight - this.size.h - 24) }; }
     this.updateVisibility(this.router.url);
     this.routeSub = this.router.events.pipe(filter(e => e instanceof NavigationEnd)).subscribe((e: any) => this.updateVisibility(e.urlAfterRedirects || e.url));
+    // La bandeja de la empresa del usuario (el servicio arranca antes del login).
+    this.echo.escucharBandeja();
     this.sub = this.echo.inboxUpdated$.subscribe((payload: any) => this.zone.run(() => this.onRealtime(payload)));
   }
 

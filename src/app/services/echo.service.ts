@@ -36,9 +36,38 @@ export class EchoService {
       }
     });
 
-    // 🔵 LISTENER GLOBAL DEL INBOX
-    this.echo.private('crm.inbox')
+    this.escucharBandeja();
+  }
+
+  /** El canal de la bandeja que se está escuchando, para no suscribirse dos veces. */
+  private canalBandeja: string | null = null;
+
+  /**
+   * Escucha la bandeja del CRM de la empresa del usuario.
+   *
+   * Antes se escuchaba 'crm.inbox', un canal que comparten TODAS las empresas: a
+   * cada panel le llegaban los avisos de las demás (el sonido, el contador de no
+   * leídos y el id de conversaciones ajenas). Ahora es 'crm.inbox.<empresa>'.
+   *
+   * Se puede llamar las veces que haga falta: el servicio arranca antes del login
+   * y la bandeja se engancha cuando ya se sabe de qué empresa es el usuario.
+   */
+  escucharBandeja(): void {
+    if (!this.echo) return;
+
+    let empresa = 0;
+    try { empresa = Number(JSON.parse(localStorage.getItem('auth_user') || 'null')?.company_id) || 0; } catch { empresa = 0; }
+    if (!empresa) return;
+
+    const canal = `crm.inbox.${empresa}`;
+    if (this.canalBandeja === canal) return;
+    if (this.canalBandeja) this.echo.leave(this.canalBandeja);
+
+    this.canalBandeja = canal;
+    this.echo.private(canal)
       .listen('.inbox.updated', (e: any) => {
+        // Por si acaso: un aviso de otra empresa no se procesa.
+        if (e?.companyId && Number(e.companyId) !== empresa) return;
         this.inboxUpdated$.next(e);
       });
   }
