@@ -736,6 +736,7 @@ export class UserComponent implements OnInit {
     this.loadTickets(userId);
     this.loadAuditLog(userId);
     this.loadCatalogs();
+    this.cargarSuspensionTemporal(userId);
   }
 
   closeClienteModal() {
@@ -775,6 +776,93 @@ export class UserComponent implements OnInit {
   // ── Resumen tab ───────────────────────────────────────────────────────────
   enableEdit()  { this.isEditing = true; }
   cancelEdit()  { this.isEditing = false; this.loadModalUser(this.selectedUserId); }
+
+  // ── Suspensión temporal que pide el cliente ───────────────────────────────
+  /* Viaje, temporada, lo que sea: se le cobran los días usados desde su último corte,
+     no se le factura mientras dura, y el día que vuelve se reactiva solo si está al
+     día; si debe, no se reactiva y se abre una alerta para atenderlo. */
+  suspTemporal: any = null;
+  formSusp: { desde: string; hasta: string; motivo: string } | null = null;
+  cobroSusp: { dias: number; desde: string; monto: number; descuento: number } | null = null;
+  guardandoSusp = false;
+
+  readonly estadosSusp: Record<string, string> = {
+    programada: 'Programada', activa: 'Suspendido por un tiempo', requiere_atencion: 'Terminó y debe: requiere atención',
+  };
+
+  private hoyIso(diasMas = 0): string {
+    const d = new Date(); d.setDate(d.getDate() + diasMas);
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  }
+
+  cargarSuspensionTemporal(userId: any): void {
+    this.suspTemporal = null;
+    this.formSusp = null;
+    if (!this.esAdmin) return;
+    this.userSvc.suspensionTemporal(userId).subscribe({
+      next: (r: any) => { if (String(userId) === String(this.selectedUserId)) this.suspTemporal = r?.data?.actual ?? null; },
+      error: () => {},
+    });
+  }
+
+  abrirFormSusp(): void {
+    this.formSusp = { desde: this.hoyIso(), hasta: this.hoyIso(30), motivo: '' };
+    this.simularSusp();
+  }
+
+  simularSusp(): void {
+    if (!this.formSusp?.desde) return;
+    this.cobroSusp = null;
+    this.userSvc.simularSuspensionTemporal(this.selectedUserId, this.formSusp.desde).subscribe({
+      next: (r: any) => this.cobroSusp = r?.data ?? null,
+      error: () => {},
+    });
+  }
+
+  async guardarSusp(): Promise<void> {
+    const f = this.formSusp;
+    if (!f || this.guardandoSusp) return;
+    if (!f.motivo.trim()) { this.toast('Escriba el motivo de la suspensión', 'error'); return; }
+
+    const cobro = this.cobroSusp?.monto
+      ? ` Al suspender se le factura $${Math.round(this.cobroSusp.monto).toLocaleString('es-CO')} por ${this.cobroSusp.dias} día(s) usados.`
+      : '';
+    if (!await this.dialog.confirm(`¿Suspender el internet del ${f.desde} al ${f.hasta}?${cobro} El ${f.hasta} vuelve solo si está al día.`, { okLabel: 'Sí, programar' })) return;
+
+    this.guardandoSusp = true;
+    this.userSvc.programarSuspensionTemporal(this.selectedUserId, f).subscribe({
+      next: (r: any) => {
+        this.guardandoSusp = false;
+        this.toast(r?.message || 'Listo', r?.error ? 'error' : 'success', 6000);
+        if (r?.error) return;
+        this.formSusp = null;
+        this.cargarSuspensionTemporal(this.selectedUserId);
+        this.loadModalUser(this.selectedUserId);
+        this.loadAuditLog(this.selectedUserId);
+        this.loadFacturas(this.selectedUserCab);
+      },
+      error: (e: any) => { this.guardandoSusp = false; this.toast(e?.error?.message || 'No se pudo programar', 'error'); },
+    });
+  }
+
+  async cancelarSusp(): Promise<void> {
+    const s = this.suspTemporal;
+    if (!s) return;
+    const pregunta = s.estado === 'programada'
+      ? '¿Cancelar la suspensión programada?'
+      : '¿Terminar la suspensión ahora? Se reactiva solo si no debe facturas.';
+    if (!await this.dialog.confirm(pregunta, { okLabel: 'Sí' })) return;
+
+    this.userSvc.cancelarSuspensionTemporal(this.selectedUserId).subscribe({
+      next: (r: any) => {
+        this.toast(r?.message || 'Listo', r?.error ? 'error' : 'success', 6000);
+        this.cargarSuspensionTemporal(this.selectedUserId);
+        this.loadModalUser(this.selectedUserId);
+        this.loadAuditLog(this.selectedUserId);
+      },
+      error: (e: any) => this.toast(e?.error?.message || 'No se pudo', 'error'),
+    });
+  }
 
   // ── Plataforma contra router ──────────────────────────────────────────────
   /* Quién figura activo y está cortado en el MikroTik (o al revés). La sincronización

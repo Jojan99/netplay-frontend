@@ -99,6 +99,20 @@ export class UserService {
     const url = this.env.rootUrl + 'api/user/updateUserData'
     return this.http.put<any>(url, parameter, { headers: this.getHeaders() });
   }
+  // ── Suspensión temporal que pide el cliente ──
+  suspensionTemporal(userId: any): Observable<any> {
+    return this.http.get<any>(this.env.rootUrl + `api/user/${userId}/suspension-temporal`, { headers: this.getHeaders() });
+  }
+  simularSuspensionTemporal(userId: any, desde: string): Observable<any> {
+    return this.http.get<any>(this.env.rootUrl + `api/user/${userId}/suspension-temporal/simular?desde=${encodeURIComponent(desde)}`, { headers: this.getHeaders() });
+  }
+  programarSuspensionTemporal(userId: any, datos: { desde: string; hasta: string; motivo: string }): Observable<any> {
+    return this.http.post<any>(this.env.rootUrl + `api/user/${userId}/suspension-temporal`, JSON.stringify(datos), { headers: this.getHeaders() });
+  }
+  cancelarSuspensionTemporal(userId: any): Observable<any> {
+    return this.http.post<any>(this.env.rootUrl + `api/user/${userId}/suspension-temporal/cancelar`, '{}', { headers: this.getHeaders() });
+  }
+
   /** Quién está de una forma en la plataforma y de otra en el MikroTik (solo lee). */
   descuadresConElRouter(): Observable<any> {
     return this.http.get<any>(this.env.rootUrl + 'api/user/router/descuadres', { headers: this.getHeaders() });

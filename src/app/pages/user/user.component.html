@@ -237,9 +237,41 @@
                   (click)="toggleInternetStatus()" aria-label="Activar o suspender internet"></button>
         </span>
       </div>
-      <p class="np-fine np-susp-nota" *ngIf="selectedUserData?.status_internet !== 'ACTIVE' && selectedUserData?.no_reactivar_auto">
+      <p class="np-fine np-susp-nota" *ngIf="selectedUserData?.status_internet !== 'ACTIVE' && selectedUserData?.no_reactivar_auto && !suspTemporal">
         Suspendido por un operador con «no reactivar automáticamente»: no vuelve solo aunque quede al día.
       </p>
+
+      <!-- Suspensión temporal que pidió el cliente: cobra los días usados, no factura mientras
+           dura, y al volver solo se reactiva si está al día. -->
+      <div class="np-susp-temp" *ngIf="esAdmin && selectedUserData">
+        <ng-container *ngIf="suspTemporal; else sinSuspTemp">
+          <div class="np-susp-temp-box" [attr.data-estado]="suspTemporal.estado">
+            <b>{{ estadosSusp[suspTemporal.estado] || suspTemporal.estado }}</b>
+            <span>Del {{ suspTemporal.desde | date:'dd/MM/yyyy' }} al {{ suspTemporal.hasta | date:'dd/MM/yyyy' }} · {{ suspTemporal.motivo }}</span>
+            <small *ngIf="suspTemporal.monto_prorrateo > 0">Se facturaron {{ suspTemporal.dias_cobrados }} día(s) usados: $ {{ suspTemporal.monto_prorrateo | number:'1.0-0' }}</small>
+            <small *ngIf="suspTemporal.nota" class="np-susp-temp-nota">{{ suspTemporal.nota }}</small>
+            <button type="button" class="np-link" (click)="cancelarSusp()">{{ suspTemporal.estado === 'programada' ? 'Cancelar' : 'Terminar ahora' }}</button>
+          </div>
+        </ng-container>
+        <ng-template #sinSuspTemp>
+          <button type="button" class="np-link" *ngIf="!formSusp" (click)="abrirFormSusp()"
+                  title="El cliente pide suspender el internet por un tiempo (viaje, temporada…)">Suspender por un tiempo</button>
+          <div class="np-susp-temp-form" *ngIf="formSusp">
+            <label>Desde<input type="date" class="np-input" [(ngModel)]="formSusp.desde" (change)="simularSusp()" /></label>
+            <label>Vuelve el<input type="date" class="np-input" [(ngModel)]="formSusp.hasta" /></label>
+            <label class="np-susp-temp-motivo">Motivo<input class="np-input" [(ngModel)]="formSusp.motivo" placeholder="Viaje, temporada, arreglos en la casa…" /></label>
+            <p class="np-fine" *ngIf="cobroSusp">
+              <ng-container *ngIf="cobroSusp.monto > 0; else sinCobro">Se le facturan <b>{{ cobroSusp.dias }} día(s)</b> usados desde el {{ cobroSusp.desde | date:'dd/MM' }}: <b>$ {{ cobroSusp.monto | number:'1.0-0' }}</b>{{ cobroSusp.descuento > 0 ? ' (con su descuento)' : '' }}.</ng-container>
+              <ng-template #sinCobro>No hay días por cobrar desde su último corte.</ng-template>
+              Mientras esté suspendido no se le factura. El día que vuelve se reactiva solo si está al día.
+            </p>
+            <div class="np-susp-temp-acc">
+              <button type="button" class="np-btn np-btn--sm np-btn--primary" (click)="guardarSusp()" [disabled]="guardandoSusp">{{ guardandoSusp ? 'Programando…' : 'Programar' }}</button>
+              <button type="button" class="np-link np-link--muted" (click)="formSusp = null">Cancelar</button>
+            </div>
+          </div>
+        </ng-template>
+      </div>
 
       <div class="np-tabs" role="tablist">
         <button type="button" class="np-tab" role="tab" [attr.aria-selected]="modalTab === 'resumen'" (click)="setTab('resumen')">Resumen</button>
