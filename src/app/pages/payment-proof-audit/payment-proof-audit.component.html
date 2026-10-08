@@ -57,6 +57,7 @@
             <tr *ngFor="let item of items" class="np-row" [ngClass]="'np-row--' + item.status" [attr.aria-selected]="selectedItem?.id === item.id" (click)="selectedItem = item" tabindex="0" (keydown.enter)="selectedItem = item">
               <td class="np-stripe"><i></i></td>
               <td><div class="np-name">
+                    <span class="ppa-semaforo" *ngIf="item.semaforo" [attr.data-color]="item.semaforo.color" [title]="semaforoTitulo(item)"></span>
                     <ng-container *ngIf="item.user; else sinTitularFila">{{ item.user.names }} {{ item.user.lastname || '' }}</ng-container>
                     <ng-template #sinTitularFila><span class="ppa-sintitular">Sin titular</span></ng-template>
                   </div><div class="np-plan"><em>{{ item.user?.dni || item.raw_payload?.dni_escrito || 'sin documento' }}</em> · recibido {{ formatDateTime(item.created_at) }}</div></td>
@@ -119,6 +120,15 @@
             </button>
           </div>
           <p class="np-fine" *ngIf="buscaTitular.trim().length >= 3 && !titulares.length && !buscandoTitular">No encontré clientes con eso.</p>
+        </section>
+        <!-- Qué tan creíble es: lo que aprendió de los comprobantes aprobados. -->
+        <section *ngIf="it.semaforo">
+          <p class="np-sect">Autenticidad <span class="ppa-semaforo ppa-semaforo--txt" [attr.data-color]="it.semaforo.color">{{ it.semaforo.color }}</span></p>
+          <ul class="ppa-senales">
+            <li *ngFor="let s of it.semaforo.senales" [attr.data-nivel]="s.nivel">{{ s.texto }}</li>
+            <li *ngIf="!it.semaforo.senales.length" data-nivel="ok">No hay señales para revisar en este comprobante.</li>
+          </ul>
+          <p class="np-fine">Aprende cada noche de los comprobantes aprobados y de los motivos de rechazo. No reemplaza mirar la foto.</p>
         </section>
         <section>
           <p class="np-sect">Decisión</p>

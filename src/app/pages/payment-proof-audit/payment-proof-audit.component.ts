@@ -350,8 +350,34 @@ export class PaymentProofAuditComponent implements OnInit {
     });
   }
 
-  reject(item: any): void {
-    this.paymentProofService.reject(item.id, { reviewed_by: 1, reason: 'Rechazado por inconsistencia con la factura.' }).subscribe(() => this.load());
+  /**
+   * Rechazar diciendo por qué. Antes siempre se mandaba «inconsistencia con la
+   * factura» (y reviewed_by = 1): ningún rechazo decía nada, y el semáforo no
+   * podía aprender cómo es un comprobante falso.
+   */
+  async reject(item: any): Promise<void> {
+    const tipo = await this.dialog.choose('¿Por qué se rechaza este comprobante?', [
+      { id: 'falso', label: 'Falso o editado', hint: 'La imagen fue alterada o no es un pago real.' },
+      { id: 'viejo', label: 'Viejo o ya usado', hint: 'Es un pago anterior que se vuelve a mandar.' },
+      { id: 'otra_cuenta', label: 'Pagado a otra cuenta', hint: 'El dinero no llegó a una cuenta de la empresa.' },
+      { id: 'no_coincide', label: 'No coincide con la factura', hint: 'Monto, cliente o factura equivocados.' },
+      { id: 'otro', label: 'Otro motivo' },
+    ], 'Rechazar comprobante');
+
+    if (!tipo) return;
+
+    this.paymentProofService.reject(item.id, { tipo }).subscribe({
+      next: () => { this.toast.success('Comprobante rechazado.'); this.selectedItem = null; this.load(); },
+      error: () => this.toast.error('No se pudo rechazar.'),
+    });
+  }
+
+  /** Texto del semáforo de autenticidad para la fila. */
+  semaforoTitulo(item: any): string {
+    const s = item?.semaforo;
+    if (!s) return '';
+    const malas = (s.senales || []).filter((x: any) => x.nivel !== 'ok').map((x: any) => x.texto);
+    return malas.length ? malas.join(' · ') : 'Sin señales raras.';
   }
 
   markSuspicious(item: any): void {

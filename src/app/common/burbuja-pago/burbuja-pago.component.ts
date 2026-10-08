@@ -262,11 +262,13 @@ export class BurbujaPagoComponent implements OnInit {
   }
 
   /**
-   * Claro: tiene factura, valor y el lector no dejó nada en duda. Lo demás se
+   * Claro: tiene factura, valor, el lector no dejó nada en duda y el semáforo está en verde. Lo demás se
    * revisa en la auditoría, donde se puede corregir el monto.
    */
   esClaro(p: any): boolean {
-    return !!p.invoice_id && Number(p.reported_amount ?? p.detected_amount ?? 0) > 0 && !(p.dudosos ?? []).length;
+    // Y el semáforo en verde: lo que se sale de lo normal se aprueba desde la auditoría, mirando la foto.
+    return !!p.invoice_id && Number(p.reported_amount ?? p.detected_amount ?? 0) > 0 && !(p.dudosos ?? []).length
+      && (p.semaforo?.color ?? 'verde') === 'verde';
   }
 
   async aprobar(p: any, e: Event): Promise<void> {

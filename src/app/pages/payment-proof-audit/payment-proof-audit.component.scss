@@ -101,3 +101,23 @@
   &:hover { background: var(--surface-3); } &:disabled { opacity: .6; cursor: default; }
   small { color: var(--text-3); font-size: 11px; }
 }
+
+/* Semáforo de autenticidad */
+.ppa-semaforo {
+  display: inline-block; width: 9px; height: 9px; border-radius: 50%; margin-right: 6px; vertical-align: middle;
+  background: var(--ok);
+  &[data-color="amarillo"] { background: var(--warn); }
+  &[data-color="rojo"] { background: var(--danger); }
+}
+.ppa-semaforo--txt {
+  width: auto; height: auto; margin-left: 6px; padding: 2px 8px; border-radius: 999px;
+  font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: .03em; color: #fff;
+}
+.ppa-senales {
+  margin: 0 0 6px; padding: 0; list-style: none; display: grid; gap: 4px; font-size: 12px;
+  li { padding-left: 16px; position: relative; color: var(--text-2); }
+  li::before { content: '✓'; position: absolute; left: 0; color: var(--ok); font-weight: 800; }
+  li[data-nivel="aviso"]::before { content: '!'; color: var(--warn); }
+  li[data-nivel="alerta"]::before { content: '✕'; color: var(--danger); }
+  li[data-nivel="alerta"] { color: var(--text); font-weight: 600; }
+}
