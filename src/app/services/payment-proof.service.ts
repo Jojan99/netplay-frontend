@@ -59,6 +59,16 @@ export class PaymentProofService {
     return this.http.post(`${this.baseUrl}/payment-proofs/${id}/approve`, JSON.stringify(payload), { headers: this.getHeaders() });
   }
 
+  /** A un comprobante que llegó sin titular se le asigna el cliente (y su factura pendiente). */
+  asignar(id: number, userId: number): Observable<any> {
+    return this.http.post(`${this.baseUrl}/payment-proofs/${id}/asignar`, JSON.stringify({ user_id: userId }), { headers: this.getHeaders() });
+  }
+
+  /** Clientes para asignar: la misma búsqueda por palabras de toda la plataforma. */
+  buscarClientes(q: string): Observable<any> {
+    return this.http.get(`${this.baseUrl}/user/search?q=${encodeURIComponent(q)}`, { headers: this.getHeaders() });
+  }
+
   reject(id: number, payload: any = {}): Observable<any> {
     return this.http.post(`${this.baseUrl}/payment-proofs/${id}/reject`, JSON.stringify(payload), { headers: this.getHeaders() });
   }

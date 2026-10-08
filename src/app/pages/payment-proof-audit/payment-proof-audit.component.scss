@@ -91,3 +91,13 @@
   .ppa-auto .np-fine { display: none; }
   .ppa-auto-listos small { display: inline; margin-left: 6px; }
 }
+
+/* Comprobante sin titular: se ve en la lista y se asigna desde el panel. */
+.ppa-sintitular { font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: .03em; padding: 2px 7px; border-radius: 999px; background: var(--warn-soft); color: var(--warn); }
+.ppa-resultados { display: grid; gap: 4px; margin-top: 6px; }
+.ppa-resultado {
+  appearance: none; border: 1px solid var(--line); background: var(--surface-2, transparent); color: var(--text);
+  border-radius: 7px; padding: 6px 8px; text-align: left; cursor: pointer; display: grid; gap: 1px;
+  &:hover { background: var(--surface-3); } &:disabled { opacity: .6; cursor: default; }
+  small { color: var(--text-3); font-size: 11px; }
+}

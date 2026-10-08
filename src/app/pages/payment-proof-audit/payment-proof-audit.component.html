@@ -56,7 +56,10 @@
             <tr *ngIf="!loading && items.length === 0" class="np-empty"><td colspan="10"><strong>No hay comprobantes en este estado.</strong></td></tr>
             <tr *ngFor="let item of items" class="np-row" [ngClass]="'np-row--' + item.status" [attr.aria-selected]="selectedItem?.id === item.id" (click)="selectedItem = item" tabindex="0" (keydown.enter)="selectedItem = item">
               <td class="np-stripe"><i></i></td>
-              <td><div class="np-name">{{ item.user?.names || 'Cliente' }} {{ item.user?.lastname || '' }}</div><div class="np-plan"><em>{{ item.user?.dni || 'sin documento' }}</em> · recibido {{ formatDateTime(item.created_at) }}</div></td>
+              <td><div class="np-name">
+                    <ng-container *ngIf="item.user; else sinTitularFila">{{ item.user.names }} {{ item.user.lastname || '' }}</ng-container>
+                    <ng-template #sinTitularFila><span class="ppa-sintitular">Sin titular</span></ng-template>
+                  </div><div class="np-plan"><em>{{ item.user?.dni || item.raw_payload?.dni_escrito || 'sin documento' }}</em> · recibido {{ formatDateTime(item.created_at) }}</div></td>
               <td class="np-data">{{ item.invoice?.number_facture || '—' }}</td>
               <td class="np-money np-pos">
                 {{ formatAmount(item.reported_amount ?? item.detected_amount) }}
@@ -97,11 +100,26 @@
     <aside class="np-inspector" *ngIf="selectedItem as it" aria-label="Comprobante">
       <div class="np-insp-head">
         <div class="np-avatar">{{ initials(it) }}</div>
-        <div class="np-insp-id"><h2>{{ it.user?.names || 'Cliente' }} {{ it.user?.lastname || '' }}</h2><div class="np-meta">CC <b>{{ it.user?.dni || '—' }}</b> · recibido <b>{{ formatDateTime(it.created_at) }}</b></div></div>
+        <div class="np-insp-id"><h2>{{ it.user ? (it.user.names + ' ' + (it.user.lastname || '')) : 'Sin titular' }}</h2><div class="np-meta">CC <b>{{ it.user?.dni || '—' }}</b> · recibido <b>{{ formatDateTime(it.created_at) }}</b></div></div>
         <div class="np-insp-tools"><button type="button" class="np-icobtn" (click)="selectedItem = null" aria-label="Cerrar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div>
       </div>
       <div class="np-switchrow"><span class="np-pill" [ngClass]="'np-pill--' + it.status">{{ statusLabel(it.status) }}</span><span class="np-money np-money--lg np-pos">{{ formatAmount(it.reported_amount ?? it.detected_amount) }}</span></div>
       <div class="np-insp-body">
+        <!-- Llegó sin titular (la cédula no estaba en el sistema): antes se perdía. Se le asigna
+             el cliente aquí y queda enganchado a su factura pendiente; recién ahí se puede aprobar. -->
+        <section *ngIf="!it.user && it.status !== 'approved'">
+          <p class="np-sect">Asignar cliente</p>
+          <p class="np-fine">
+            Llegó sin titular<ng-container *ngIf="it.raw_payload?.dni_escrito">: escribió la cédula <b class="np-mono">{{ it.raw_payload.dni_escrito }}</b></ng-container><ng-container *ngIf="it.raw_payload?.phone">, desde el <b class="np-mono">{{ it.raw_payload.phone }}</b></ng-container>.
+          </p>
+          <input class="np-input" [(ngModel)]="buscaTitular" (input)="buscarTitular()" placeholder="Nombre, cédula o celular del cliente" aria-label="Buscar cliente" />
+          <div class="ppa-resultados" *ngIf="titulares.length">
+            <button type="button" class="ppa-resultado" *ngFor="let c of titulares" (click)="asignarTitular(it, c)" [disabled]="asignando">
+              <b>{{ c.names }} {{ c.lastname }}</b><small class="np-mono">{{ c.dni }} · {{ c.phone || 'sin celular' }}</small>
+            </button>
+          </div>
+          <p class="np-fine" *ngIf="buscaTitular.trim().length >= 3 && !titulares.length && !buscandoTitular">No encontré clientes con eso.</p>
+        </section>
         <section>
           <p class="np-sect">Decisión</p>
           <div class="np-quick">

@@ -216,6 +216,44 @@ export class PaymentProofAuditComponent implements OnInit {
     };
   }
 
+  // ── Asignar el cliente a un comprobante sin titular ─────────────────────
+  buscaTitular = '';
+  titulares: any[] = [];
+  buscandoTitular = false;
+  asignando = false;
+  private esperaTitular: ReturnType<typeof setTimeout> | null = null;
+
+  buscarTitular(): void {
+    if (this.esperaTitular) clearTimeout(this.esperaTitular);
+    const q = this.buscaTitular.trim();
+    if (q.length < 3) { this.titulares = []; return; }
+
+    this.esperaTitular = setTimeout(() => {
+      this.buscandoTitular = true;
+      this.paymentProofService.buscarClientes(q).subscribe({
+        next: (r: any) => { this.buscandoTitular = false; this.titulares = (r?.data ?? []).slice(0, 8); },
+        error: () => { this.buscandoTitular = false; this.titulares = []; },
+      });
+    }, 300);
+  }
+
+  async asignarTitular(item: any, cliente: any): Promise<void> {
+    if (!await this.dialog.confirm(`¿Asignar este comprobante a ${cliente.names} ${cliente.lastname} (${cliente.dni})?`, { okLabel: 'Sí, asignar' })) return;
+
+    this.asignando = true;
+    this.paymentProofService.asignar(item.id, cliente.id).subscribe({
+      next: (r: any) => {
+        this.asignando = false;
+        this.toast.success(r?.message || 'Cliente asignado.');
+        this.buscaTitular = '';
+        this.titulares = [];
+        if (r?.data) this.selectedItem = { ...item, ...r.data };
+        this.load();
+      },
+      error: (e: any) => { this.asignando = false; this.toast.error(e?.error?.message || 'No se pudo asignar.'); },
+    });
+  }
+
   releyendo: number | null = null;
 
   /**
