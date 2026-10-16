@@ -256,6 +256,10 @@
         <ng-template #sinSuspTemp>
           <button type="button" class="np-link" *ngIf="!formSusp" (click)="abrirFormSusp()"
                   title="El cliente pide suspender el internet por un tiempo (viaje, temporada…)">Suspender por un tiempo</button>
+          <button type="button" class="np-link" *ngIf="!formSusp" (click)="abrirPaginaEquipo()" [disabled]="abriendoEquipo"
+                  title="Abre la página web de la ONT del cliente en otra pestaña, por el servidor (en ZTE entra solo como administrador)">
+            {{ abriendoEquipo ? 'Conectando…' : 'Abrir página del equipo' }}
+          </button>
           <div class="np-susp-temp-form" *ngIf="formSusp">
             <label>Desde<input type="date" class="np-input" [(ngModel)]="formSusp.desde" (change)="simularSusp()" /></label>
             <label>Vuelve el<input type="date" class="np-input" [(ngModel)]="formSusp.hasta" /></label>

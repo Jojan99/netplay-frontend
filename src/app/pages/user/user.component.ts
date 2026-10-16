@@ -785,6 +785,7 @@ export class UserComponent implements OnInit {
   formSusp: { desde: string; hasta: string; motivo: string } | null = null;
   cobroSusp: { dias: number; desde: string; monto: number; descuento: number } | null = null;
   guardandoSusp = false;
+  abriendoEquipo = false;
 
   readonly estadosSusp: Record<string, string> = {
     programada: 'Programada', activa: 'Suspendido por un tiempo', requiere_atencion: 'Terminó y debe: requiere atención',
@@ -816,6 +817,38 @@ export class UserComponent implements OnInit {
     this.userSvc.simularSuspensionTemporal(this.selectedUserId, this.formSusp.desde).subscribe({
       next: (r: any) => this.cobroSusp = r?.data ?? null,
       error: () => {},
+    });
+  }
+
+  /**
+   * Abre la página web de la ONT del cliente en otra pestaña, por el servidor (los ZTE
+   * de Claro no dejan entrar al administrador ni desde la red local ni con la IP de la
+   * WAN en el navegador). La pestaña se abre ya en el clic: si se abriera al volver la
+   * respuesta, el navegador la tomaría por una ventana emergente y la bloquearía.
+   */
+  abrirPaginaEquipo(): void {
+    if (this.abriendoEquipo || !this.selectedUserId) return;
+    const pestana = window.open('', '_blank');
+    pestana?.document.write('<p style="font-family:system-ui,sans-serif;padding:24px">Conectando con el equipo…</p>');
+    this.abriendoEquipo = true;
+    this.userSvc.abrirPaginaDelEquipo(this.selectedUserId).subscribe({
+      next: (r: any) => {
+        this.abriendoEquipo = false;
+        if (r?.error || !r?.data?.url) {
+          pestana?.close();
+          this.toast(r?.message || 'No se pudo abrir la página del equipo', 'error', 6000);
+          return;
+        }
+        if (!pestana) { this.toast('El navegador bloqueó la pestaña nueva: permita ventanas emergentes para este sitio.', 'error', 7000); return; }
+        pestana.opener = null;
+        pestana.location.href = r.data.url;
+        this.loadAuditLog(this.selectedUserId);
+      },
+      error: (e: any) => {
+        this.abriendoEquipo = false;
+        pestana?.close();
+        this.toast(e?.error?.message || 'No se pudo abrir la página del equipo', 'error');
+      },
     });
   }
 
