@@ -282,9 +282,14 @@ export class UserComponent implements OnInit {
     return 'active';
   }
 
+  /** El estado en palabras de quien atiende, no el nombre del sistema. «Por
+      mora» sólo cuando la fila dice que debe (al_dia en falso): la lista no
+      trae el motivo de la suspensión. */
   rowStatusLabel(u: UserInterface): string {
     const s = this.rowStatus(u);
-    return s === 'active' ? 'Activo' : s === 'suspended' ? 'Suspendido' : 'Sin IP';
+    if (s === 'active') return 'Con servicio';
+    if (s === 'noip') return 'Sin conexión asignada';
+    return u.al_dia === false ? 'Suspendido por mora' : 'Suspendido';
   }
 
   /**
@@ -304,6 +309,15 @@ export class UserComponent implements OnInit {
   setStatusFilter(f: ClientStatusFilter) {
     if (f === this.statusFilter) return;
     this.statusFilter = f;
+    this.currentPage = 1;
+    this.cargarClientes();
+  }
+
+  /** Desde el «no hay clientes que coincidan»: borra la búsqueda y el filtro y vuelve a la lista completa. */
+  verTodos() {
+    clearTimeout(this.timer);
+    this.search = '';
+    this.statusFilter = 'all';
     this.currentPage = 1;
     this.cargarClientes();
   }
@@ -340,6 +354,7 @@ export class UserComponent implements OnInit {
     const target = ev.target as HTMLElement | null;
     const typing = !!target && ['INPUT', 'SELECT', 'TEXTAREA'].includes(target.tagName);
     if (ev.key === 'Escape') {
+      if (this.menuAbierto)          { this.cerrarMenus(); return; }
       if (this.showPingModal)        { this.closePingModal(); return; }
       if (this.showDeleteModal)      { this.showDeleteModal = false; return; }
       if (this.showSuspendModal)     { this.showSuspendModal = false; return; }
@@ -350,6 +365,34 @@ export class UserComponent implements OnInit {
       ev.preventDefault();
       this.searchInput?.nativeElement.focus();
     }
+  }
+
+  // ── Menús «Más» (cabecera y ficha) ───────────────────────────────────────
+  /* Uno solo abierto a la vez. Se cierra al elegir, al tocar afuera o con
+     Escape: lo demás que había en la cabecera eran botones que tapaban al
+     único que se busca siempre, «Nuevo cliente». */
+  menuAbierto: 'cabecera' | 'ficha' | null = null;
+  alternarMenu(cual: 'cabecera' | 'ficha'): void { this.menuAbierto = this.menuAbierto === cual ? null : cual; }
+  cerrarMenus(): void { this.menuAbierto = null; }
+
+  @HostListener('document:click', ['$event'])
+  onDocumentClick(ev: Event): void {
+    if (!this.menuAbierto) return;
+    const t = ev.target as HTMLElement | null;
+    if (!t?.closest?.('.np-mas')) this.menuAbierto = null;
+  }
+
+  /** El estado del servicio en palabras. El interruptor sigue mandando; esto
+      dice por qué está así con lo que ya trae la ficha: la suspensión temporal,
+      «no reactivar automáticamente» (la puso un operador) o facturas sin pagar. */
+  get estadoServicioTexto(): string {
+    const d = this.selectedUserData;
+    if (!d) return '…';
+    if (d.status_internet === 'ACTIVE') return 'Con servicio';
+    if (this.suspTemporal?.estado === 'activa') return 'Suspendido por un tiempo';
+    if (d.no_reactivar_auto) return 'Suspendido por un operador';
+    if (this.pendingFacturesCount > 0) return 'Suspendido por mora';
+    return 'Suspendido';
   }
 
   // ── Ficha lateral (inspector) ─────────────────────────────────────────────
@@ -364,7 +407,7 @@ export class UserComponent implements OnInit {
      de un botón para que lista y ficha se queden con el alto. */
   mostrarFiltros = false;
   get etiquetaFiltro(): string {
-    const nombres: Record<ClientStatusFilter, string> = { all: 'Todos', active: 'Activos', suspended: 'Suspendidos', noip: 'Sin IP', nowa: 'Sin WhatsApp', fe: 'Factura electrónica', pago: 'Pago por aplicar', pagosusp: 'Pagó y sigue suspendido' };
+    const nombres: Record<ClientStatusFilter, string> = { all: 'Todos', active: 'Con servicio', suspended: 'Suspendidos', noip: 'Sin conexión asignada', nowa: 'Sin WhatsApp', fe: 'Factura electrónica', pago: 'Pago por aplicar', pagosusp: 'Pagó y sigue suspendido' };
     return nombres[this.statusFilter] ?? 'Todos';
   }
 
@@ -730,6 +773,8 @@ export class UserComponent implements OnInit {
     this.inspectorWide   = false;
     this.showCreateFactureForm = false;
     this.showNewTicketForm = false;
+    this.accesoEquipo = null;
+    this.verClaveEquipo = false;
     this.showClienteModal = true;
     this.loadModalUser(userId);
     this.loadFacturas(cabId);
@@ -737,6 +782,10 @@ export class UserComponent implements OnInit {
     this.loadAuditLog(userId);
     this.loadCatalogs();
     this.cargarSuspensionTemporal(userId);
+    // «Equipo en la casa» y «Detalles técnicos» van arriba de las pestañas:
+    // el equipo y el aprovisionamiento se piden al abrir, no sólo en Servicios.
+    this.loadAssignedOnt(userId);
+    this.cargarProvCliente();
   }
 
   closeClienteModal() {
@@ -786,6 +835,34 @@ export class UserComponent implements OnInit {
   cobroSusp: { dias: number; desde: string; monto: number; descuento: number } | null = null;
   guardandoSusp = false;
   abriendoEquipo = false;
+
+  /** Usuario y clave de la página del equipo: se piden al tocar «Ver acceso» (queda en el historial). */
+  accesoEquipo: { equipo: string; usuario: string; clave: string; nota: string | null; local: { usuario: string; nota: string } | null } | null = null;
+  cargandoAcceso = false;
+  verClaveEquipo = false;
+  copiado: string | null = null;
+
+  verAccesoEquipo(): void {
+    if (this.cargandoAcceso || !this.selectedUserId) return;
+    this.cargandoAcceso = true;
+    this.userSvc.accesoDelEquipo(this.selectedUserId).subscribe({
+      next: (r: any) => {
+        this.cargandoAcceso = false;
+        if (r?.error || !r?.data) { this.toast(r?.message || 'No se pudo consultar el acceso del equipo', 'error', 6000); return; }
+        this.accesoEquipo = r.data;
+        this.verClaveEquipo = false;
+        this.loadAuditLog(this.selectedUserId);
+      },
+      error: (e: any) => { this.cargandoAcceso = false; this.toast(e?.error?.message || 'No se pudo consultar el acceso del equipo', 'error'); },
+    });
+  }
+
+  copiarAcceso(valor: string, cual: string): void {
+    navigator.clipboard?.writeText(valor).then(() => {
+      this.copiado = cual;
+      setTimeout(() => { if (this.copiado === cual) this.copiado = null; }, 1600);
+    }).catch(() => this.toast('No se pudo copiar', 'error'));
+  }
 
   readonly estadosSusp: Record<string, string> = {
     programada: 'Programada', activa: 'Suspendido por un tiempo', requiere_atencion: 'Terminó y debe: requiere atención',

@@ -4,57 +4,165 @@
       <p class="np-kicker">Operación <b>/</b> Técnicos en campo</p>
       <h1 class="np-title">Mapa de técnicos</h1>
       <div class="np-ribbon">
-        <span><i class="np-dot" style="background:var(--ok)"></i><span class="np-n">{{ liveCount }}</span>en vivo</span>
-        <span><i class="np-dot" style="background:var(--warn)"></i><span class="np-n">{{ recentCount }}</span>recientes</span>
-        <span><i class="np-dot" style="background:var(--text-3)"></i><span class="np-n">{{ technicians.length - liveCount - recentCount }}</span>sin señal</span>
-        <span class="np-mono np-fine">tiempo real<ng-container *ngIf="lastUpdate"> · {{ lastUpdate | date:'HH:mm:ss' }}</ng-container></span>
+        <span><i class="np-dot" style="background:var(--ok)"></i><span class="np-n">{{ enVivo }}</span>en vivo</span>
+        <span><i class="np-dot" style="background:var(--warn)"></i><span class="np-n">{{ recientes }}</span>recientes</span>
+        <span><i class="np-dot" style="background:var(--text-3)"></i><span class="np-n">{{ sinSenal }}</span>sin señal</span>
+        <span class="np-mono np-fine">en tiempo real<ng-container *ngIf="ultimaActualizacion"> · {{ ultimaActualizacion | date:'HH:mm:ss' }}</ng-container></span>
       </div>
+      <!-- Hay técnicos pero ninguno manda posición: se dice, en vez de dejar el mapa gris y callado. -->
+      <p class="np-notice np-notice--info np-tm-aviso" *ngIf="!cargando && todosSinSenal" role="status">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 8h.01M11 12h1v4h1"/></svg>
+        <span>Ningún técnico está compartiendo su ubicación ahora. Desde esta versión la app les pide activarla para poder trabajar.</span>
+      </p>
     </div>
     <div class="np-actions">
-      <button type="button" class="np-btn np-btn--ghost" (click)="toggleStyle()" [title]="mapStyle === 'streets' ? 'Ver satélite' : 'Ver calles'"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6l6-3 6 3 6-3v15l-6 3-6-3-6 3zM9 3v15M15 6v15"/></svg>{{ mapStyle === 'streets' ? 'Satélite' : 'Calles' }}</button>
-      <button type="button" class="np-btn np-btn--ghost" (click)="fitAll()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg>Ver todos</button>
-      <button type="button" class="np-btn np-btn--ghost" (click)="loadLocations()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 12a8 8 0 1 1-2.3-5.7M20 4v5h-5"/></svg>Actualizar</button>
+      <button type="button" class="np-btn np-btn--ghost" (click)="cargar()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 12a8 8 0 1 1-2.3-5.7M20 4v5h-5"/></svg>Actualizar</button>
     </div>
   </header>
 
-  <div class="np-workspace np-techmap-ws">
-    <section class="np-map-wrap">
+  <div class="np-workspace np-techmap-ws" [class.is-arrastrando]="arrastrandoHoja">
+    <section class="np-map-wrap" [class.is-satelite]="mapStyle === 'satellite'">
       <div id="technician-map"></div>
-      <div class="np-map-legend"><span><i class="is-live"></i>En vivo (≤ 5 min)</span><span><i class="is-recent"></i>Reciente (≤ 30 min)</span><span><i class="is-stale"></i>Sin señal</span></div>
-      <div class="np-map-follow" *ngIf="followId"><i class="np-dot" style="background:var(--ok)"></i>Siguiendo a <b>{{ selected?.first_name }}</b><button type="button" class="np-link" (click)="followId = null">Dejar de seguir</button></div>
-      <div class="np-map-empty" *ngIf="!isLoading && technicians.length === 0"><strong>Sin técnicos con ubicación.</strong><span>Un técnico aparece aquí cuando abre el panel o la app con el GPS permitido.</span></div>
+
+      <!-- Buscador flotante, como el de Waze: encuentra a un técnico y vuela hasta él. -->
+      <div class="np-map-buscar" [class.is-abierto]="buscarAbierto && busquedaMapa">
+        <label class="np-tm-pill">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg>
+          <input type="search" [(ngModel)]="busquedaMapa" (ngModelChange)="buscarEnMapa()" (focus)="buscarEnMapa()" (blur)="cerrarBusquedaLuego()" (keydown.escape)="limpiarBusquedaMapa()"
+                 placeholder="Buscar técnico" aria-label="Buscar técnico en el mapa" autocomplete="off" />
+          <button type="button" *ngIf="busquedaMapa" (click)="limpiarBusquedaMapa()" aria-label="Limpiar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
+        </label>
+        <ul class="np-tm-resultados" *ngIf="buscarAbierto && busquedaMapa" (pointerdown)="$event.preventDefault()" role="listbox">
+          <li *ngFor="let t of resultados; trackBy: trackId" role="option">
+            <button type="button" (click)="elegirResultado(t)">
+              <i class="np-tm-avatar is-sm" [ngClass]="'is-' + frescura(t)">{{ iniciales(t) }}</i>
+              <span><b>{{ nombre(t) }}</b><small>{{ estado(t) }} · {{ t.job_title || 'Técnico' }}</small></span>
+            </button>
+          </li>
+          <li class="np-tm-nada" *ngIf="!resultados.length">Nadie coincide con «{{ busquedaMapa }}».</li>
+        </ul>
+      </div>
+
+      <!-- Botones redondos a la derecha, como los de Waze: satélite, clientes, ver todos y dónde estoy. -->
+      <div class="np-map-fabs" role="group" aria-label="Ver el mapa">
+        <button type="button" (click)="cambiarFondo()" [attr.aria-pressed]="mapStyle === 'satellite'" [title]="mapStyle === 'streets' ? 'Ver satélite' : 'Ver mapa'">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6l6-3 6 3 6-3v15l-6 3-6-3-6 3zM9 3v15M15 6v15"/></svg><span>{{ mapStyle === 'streets' ? 'Satélite' : 'Mapa' }}</span>
+        </button>
+        <button type="button" *ngIf="clientesDisponibles" (click)="cambiarClientes()" [attr.aria-pressed]="clientesVisibles" [disabled]="clientesCargando" [title]="clientesVisibles ? 'Esconder los clientes' : 'Ver los clientes de la red'">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 11l9-7 9 7M5 10v10h14V10M10 20v-6h4v6"/></svg><span>Clientes</span>
+        </button>
+        <button type="button" (click)="verTodos()" title="Ver a todos los técnicos">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg><span>Ver todos</span>
+        </button>
+        <button type="button" (click)="miUbicacion()" title="Dónde estoy">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="7"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/><circle cx="12" cy="12" r="2" fill="currentColor"/></svg><span>Dónde estoy</span>
+        </button>
+      </div>
+
+      <!-- Siguiendo a alguien: arriba y al centro, por encima de los controles de Leaflet. -->
+      <div class="np-map-modo" *ngIf="seguido as s" role="status">
+        <i class="np-tm-modo-pin"></i>
+        <span>Siguiendo a <b>{{ nombre(s) }}</b></span>
+        <button type="button" class="np-link" (click)="dejarDeSeguir()">Dejar de seguir</button>
+      </div>
+
+      <!-- Leyenda = filtro. Abajo a la izquierda en escritorio; fila de píldoras bajo el buscador en el teléfono. -->
+      <div class="np-map-legend" aria-label="Filtrar por estado">
+        <button type="button" [class.is-off]="!filtroIncluye('live')" [attr.aria-pressed]="filtro === 'live'" (click)="cambiarFiltro(filtro === 'live' ? 'todos' : 'live')" title="Posición de hace 5 minutos o menos">
+          <i style="background:var(--ok)"></i><span>En vivo</span><small>{{ enVivo }}</small>
+        </button>
+        <button type="button" [class.is-off]="!filtroIncluye('recent')" [attr.aria-pressed]="filtro === 'recent'" (click)="cambiarFiltro(filtro === 'recent' ? 'todos' : 'recent')" title="Posición de hace 30 minutos o menos">
+          <i style="background:var(--warn)"></i><span>Recientes</span><small>{{ recientes }}</small>
+        </button>
+        <button type="button" [class.is-off]="!filtroIncluye('stale')" [attr.aria-pressed]="filtro === 'stale'" (click)="cambiarFiltro(filtro === 'stale' ? 'todos' : 'stale')" title="Dejaron de mandar posición hace más de 30 minutos">
+          <i style="background:var(--text-3)"></i><span>Sin señal</span><small>{{ sinSenal }}</small>
+        </button>
+      </div>
+
+      <!-- Nadie con ubicación: se explica cómo aparecen. -->
+      <div class="np-map-empty" *ngIf="!cargando && !error && !tecnicos.length">
+        <i class="np-tm-empty-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg></i>
+        <strong>Todavía no hay técnicos con ubicación</strong>
+        <p>Un técnico aparece aquí cuando abre la app con la ubicación activada. La app se la pide al entrar, así que basta con que la abra.</p>
+      </div>
     </section>
 
-    <aside class="np-inspector" aria-label="Técnicos">
-      <div class="np-insp-head"><div class="np-insp-id"><h2>Técnicos</h2><div class="np-meta">Toque uno para centrar el mapa; la estrella lo sigue en vivo</div></div></div>
-      <div class="np-insp-body">
-        <label class="np-search np-map-search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg><input type="search" [(ngModel)]="search" placeholder="Buscar técnico" /></label>
-        <div class="np-chips np-map-chips"><button type="button" class="np-chip" [attr.aria-pressed]="filter === 'all'" (click)="filter = 'all'">Todos <span class="np-c">{{ technicians.length }}</span></button><button type="button" class="np-chip" [attr.aria-pressed]="filter === 'live'" (click)="filter = 'live'">Activos <span class="np-c">{{ liveCount + recentCount }}</span></button><button type="button" class="np-chip" [attr.aria-pressed]="filter === 'stale'" (click)="filter = 'stale'">Sin señal</button></div>
+    <!-- En escritorio es el panel lateral; en el teléfono, una hoja que sube desde abajo (ver el .scss). -->
+    <aside class="np-inspector" aria-label="Técnicos" [class.is-arrastrando]="arrastrandoHoja" [attr.data-hoja]="hoja">
+      <div class="np-tm-asa" (pointerdown)="hojaInicioArrastre($event)" (pointermove)="hojaArrastre($event)" (pointerup)="hojaFinArrastre($event)" (pointercancel)="hojaFinArrastre($event)" aria-hidden="true"><i></i></div>
+      <button type="button" class="np-tm-peek" (click)="alternarHoja()">
+        <i class="np-tm-peek-ico" [class.is-ok]="enVivo > 0"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg></i>
+        <span><b>{{ cargando ? 'Mapa de técnicos' : (tecnicos.length + (tecnicos.length === 1 ? ' técnico' : ' técnicos')) }}</b><small>{{ cargando ? 'Cargando…' : resumen }}</small></span>
+        <svg class="np-tm-peek-flecha" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="m6 15 6-6 6 6"/></svg>
+      </button>
 
-        <div *ngIf="isLoading" class="np-loading"><span class="np-spinner"></span> Cargando…</div>
-        <p class="np-notice np-notice--danger" *ngIf="!isLoading && errorMsg">{{ errorMsg }}</p>
-        <p class="np-muted" *ngIf="!isLoading && !errorMsg && filtered.length === 0">Nada que mostrar con este filtro.</p>
+      <!-- Un técnico elegido -->
+      <ng-container *ngIf="seleccion; else panelLista">
+        <div class="np-insp-head">
+          <i class="np-tm-avatar is-lg" [ngClass]="'is-' + frescura(seleccion)">{{ iniciales(seleccion) }}</i>
+          <div class="np-insp-id">
+            <h2>{{ nombre(seleccion) }}</h2>
+            <div class="np-meta">{{ seleccion.job_title || 'Técnico' }}</div>
+          </div>
+          <div class="np-insp-tools"><button type="button" class="np-icobtn" (click)="cerrarSeleccion()" aria-label="Volver a la lista"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div>
+        </div>
+        <div class="np-insp-body">
+          <div class="np-tm-estado">
+            <span class="np-pill" [ngClass]="clasePill(seleccion)">{{ estado(seleccion) }}</span>
+            <small>Última ubicación {{ hace(seleccion.last_location_update) }}<ng-container *ngIf="seleccion.last_location_update"> · {{ seleccion.last_location_update | date:'d MMM HH:mm' }}</ng-container></small>
+          </div>
+          <p class="np-notice np-notice--warn" *ngIf="frescura(seleccion) === 'stale'">Dejó de compartir su ubicación. El punto del mapa es el último que envió.</p>
 
-        <div class="np-tech-list" *ngIf="!isLoading && filtered.length > 0">
-          <div class="np-tech" *ngFor="let tech of filtered; trackBy: trackTech" [class.is-selected]="selected?.id === tech.id" role="button" tabindex="0" (click)="centerOnTech(tech)" (keydown.enter)="centerOnTech(tech)">
-            <span class="np-tech-avatar" [ngClass]="'is-' + freshness(tech)">{{ (tech.first_name || 'T')[0].toUpperCase() }}{{ (tech.last_name || '')[0] || '' }}</span>
-            <span class="np-tech-copy"><b>{{ tech.first_name }} {{ tech.last_name }}</b><small>{{ tech.job_title || 'Técnico' }} · {{ getMinutesAgo(tech.last_location_update) }}</small></span>
-            <span class="np-pill" [ngClass]="freshness(tech) === 'live' ? 'np-pill--active' : freshness(tech) === 'recent' ? 'np-pill--noip' : 'np-pill--neutral'">{{ freshness(tech) === 'live' ? 'En vivo' : freshness(tech) === 'recent' ? 'Reciente' : 'Sin señal' }}</span>
-            <button type="button" class="np-icobtn np-tech-follow" [class.is-on]="followId === tech.id" (click)="toggleFollow(tech); $event.stopPropagation()" [title]="followId === tech.id ? 'Dejar de seguir' : 'Seguir en vivo'"><svg viewBox="0 0 24 24" [attr.fill]="followId === tech.id ? 'currentColor' : 'none'" stroke="currentColor" stroke-width="2"><path d="m12 3 2.7 5.6 6.1.9-4.4 4.3 1 6.1-5.4-2.9-5.4 2.9 1-6.1L3.2 9.5l6.1-.9z"/></svg></button>
+          <!-- Cómo llegar: lo primero que se necesita para mandar a alguien o alcanzarlo. -->
+          <div class="np-tm-llegar">
+            <a class="np-btn np-btn--sm np-tm-waze" [href]="waze(seleccion)" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M3.4 11.6 20.2 3.5c.8-.4 1.6.4 1.2 1.2l-8.1 16.8c-.4.8-1.6.7-1.8-.2l-1.4-6.2-6.2-1.4c-.9-.2-1-1.4-.5-1.1z"/></svg>Ir con Waze</a>
+            <a class="np-btn np-btn--ghost np-btn--sm" [href]="googleMaps(seleccion)" target="_blank" rel="noopener">Abrir en Google Maps</a>
+          </div>
+
+          <dl class="np-dl">
+            <dt>Coordenadas</dt><dd class="np-mono">{{ seleccion.latitude }}, {{ seleccion.longitude }}</dd>
+          </dl>
+
+          <div class="np-btnrow">
+            <button type="button" class="np-btn np-btn--sm" [class.np-btn--primary]="siguiendo !== seleccion.id" [class.np-btn--ghost]="siguiendo === seleccion.id" (click)="seguir(seleccion)">{{ siguiendo === seleccion.id ? 'Dejar de seguir' : 'Seguir en vivo' }}</button>
+            <button type="button" class="np-btn np-btn--ghost np-btn--sm" (click)="seleccionar(seleccion)">Centrar</button>
           </div>
         </div>
+      </ng-container>
 
-        <div class="np-tech-detail" *ngIf="selected">
-          <p class="np-sect">Detalle</p>
-          <dl class="np-dl">
-            <dt>Técnico</dt><dd>{{ selected.first_name }} {{ selected.last_name }}</dd>
-            <dt>Cargo</dt><dd>{{ selected.job_title || 'Técnico' }}</dd>
-            <dt>Estado</dt><dd>{{ freshness(selected) === 'live' ? 'En vivo' : freshness(selected) === 'recent' ? 'Reciente' : 'Sin señal' }} · {{ getMinutesAgo(selected.last_location_update) }}</dd>
-            <dt>Coordenadas</dt><dd class="np-mono">{{ selected.latitude }}, {{ selected.longitude }}</dd>
-          </dl>
-          <div class="np-btnrow"><a class="np-btn np-btn--ghost np-btn--sm" [href]="mapsUrl(selected)" target="_blank" rel="noopener">Abrir en Google Maps</a><button type="button" class="np-btn np-btn--primary np-btn--sm" (click)="toggleFollow(selected)">{{ followId === selected.id ? 'Dejar de seguir' : 'Seguir en vivo' }}</button></div>
+      <!-- La lista -->
+      <ng-template #panelLista>
+        <div class="np-insp-head np-tm-head-lista"><div class="np-insp-id"><h2>Técnicos</h2><div class="np-meta">Toque uno para centrar el mapa; la estrella lo sigue en vivo</div></div></div>
+        <div class="np-tm-buscar">
+          <label class="np-search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg><input type="search" [(ngModel)]="busqueda" placeholder="Filtrar por nombre o cargo" /></label>
+          <div class="np-chips">
+            <button type="button" class="np-chip" [attr.aria-pressed]="filtro === 'todos'" (click)="cambiarFiltro('todos')">Todos <span class="np-c">{{ tecnicos.length }}</span></button>
+            <button type="button" class="np-chip" [attr.aria-pressed]="filtro === 'activos'" (click)="cambiarFiltro('activos')">Activos <span class="np-c">{{ enVivo + recientes }}</span></button>
+            <button type="button" class="np-chip" [attr.aria-pressed]="filtro === 'stale'" (click)="cambiarFiltro('stale')">Sin señal <span class="np-c">{{ sinSenal }}</span></button>
+          </div>
         </div>
-      </div>
+        <div class="np-insp-body np-tm-cuerpo">
+          <div *ngIf="cargando" class="np-loading"><span class="np-spinner"></span> Cargando…</div>
+          <p class="np-notice np-notice--danger" *ngIf="!cargando && error">{{ error }}</p>
+
+          <div class="np-tm-lista" *ngIf="!cargando && !error">
+            <div class="np-tm-fila" *ngFor="let t of lista; trackBy: trackId" [class.is-sel]="seleccion?.id === t.id" role="button" tabindex="0" (click)="seleccionar(t)" (keydown.enter)="seleccionar(t)">
+              <i class="np-tm-avatar" [ngClass]="'is-' + frescura(t)">{{ iniciales(t) }}</i>
+              <span class="np-tm-copy">
+                <b>{{ nombre(t) }}</b>
+                <span class="np-tm-sub"><span class="np-pill" [ngClass]="clasePill(t)">{{ estado(t) }}</span><small>{{ t.job_title || 'Técnico' }}<ng-container *ngIf="frescura(t) === 'stale'"> · Última ubicación {{ hace(t.last_location_update) }}</ng-container></small></span>
+              </span>
+              <a class="np-tm-wz" [href]="waze(t)" target="_blank" rel="noopener" (click)="$event.stopPropagation()" title="Ir con Waze" aria-label="Ir con Waze"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M3.4 11.6 20.2 3.5c.8-.4 1.6.4 1.2 1.2l-8.1 16.8c-.4.8-1.6.7-1.8-.2l-1.4-6.2-6.2-1.4c-.9-.2-1-1.4-.5-1.1z"/></svg></a>
+              <button type="button" class="np-icobtn np-tm-seguir" [class.is-on]="siguiendo === t.id" (click)="seguir(t); $event.stopPropagation()" [title]="siguiendo === t.id ? 'Dejar de seguir' : 'Seguir en vivo'" [attr.aria-pressed]="siguiendo === t.id"><svg viewBox="0 0 24 24" [attr.fill]="siguiendo === t.id ? 'currentColor' : 'none'" stroke="currentColor" stroke-width="2"><path d="m12 3 2.7 5.6 6.1.9-4.4 4.3 1 6.1-5.4-2.9-5.4 2.9 1-6.1L3.2 9.5l6.1-.9z"/></svg></button>
+            </div>
+            <p class="np-muted np-tm-vacio" *ngIf="!lista.length && tecnicos.length">Nadie coincide con este filtro.</p>
+            <div class="np-tm-vacio" *ngIf="!tecnicos.length">
+              <strong>Todavía no hay técnicos con ubicación</strong>
+              <p class="np-muted">Aparecen cuando abren la app con la ubicación activada.</p>
+            </div>
+          </div>
+        </div>
+      </ng-template>
     </aside>
   </div>
 </div>

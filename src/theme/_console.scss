@@ -14,15 +14,30 @@
 .np-muted { color: var(--text-3); margin: 0; }
 .np-strong { font-weight: 700; color: var(--text); }
 .np-neg { color: var(--danger); font-weight: 600; }
-.np-pos { color: var(--ok); font-weight: 600; }
+.np-pos { color: var(--ok-ink, var(--ok)); font-weight: 600; }
 .np-nowrap { white-space: nowrap; }
 .np-truncate { max-width: 180px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .np-only-desktop { @media (max-width: 1000px) { display: none !important; } }
 
 :where(.np-console) button { font: inherit; cursor: pointer; color: inherit; background: none; border: 0; padding: 0; }
 :where(.np-console) button:disabled { cursor: not-allowed; opacity: .55; }
-.np-console :is(button, input, select, textarea, [tabindex]):focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
-@media (prefers-reduced-motion: reduce) { .np-console *, .np-console ::before, .np-console ::after { transition: none !important; animation: none !important; } }
+/* También los enlaces y los <summary> de los desplegables: sin esto llevaban el
+   anillo azul del navegador. */
+.np-console :is(button, a, summary, input, select, textarea, [tabindex]):focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.np-console summary:focus-visible { outline-offset: -2px; border-radius: var(--radius); }
+/* El cursor de escritura del color de la marca: se encuentra enseguida en un campo largo. */
+.np-console :is(input, textarea) { caret-color: var(--accent); }
+/* Firefox no entiende ::-webkit-scrollbar (styles.scss): la barra sale del mismo
+   token. Sólo ahí; en Chrome «scrollbar-color» pisaría la barra fina de 6 px. */
+@supports not selector(::-webkit-scrollbar) { :root { scrollbar-color: var(--line-strong) transparent; } }
+/* En las pantallas táctiles no hay «pasar por encima»: el toque dejaba el botón
+   pintado como si el mouse siguiera ahí. Las acciones de fila, que en escritorio
+   aparecen al pasar, se ven siempre. */
+@media (hover: none) { .np-rowacts { opacity: 1; } }
+@media (prefers-reduced-motion: reduce) {
+  .np-console *, .np-console ::before, .np-console ::after { transition: none !important; animation: none !important; }
+  .np-console :is(.np-btn, .np-icobtn, .np-chip):active { transform: none !important; }
+}
 
 /* ─── Toasts ─────────────────────────────────────────────────────────── */
 .np-toasts { position: fixed; top: 16px; right: 16px; z-index: 9999; display: grid; gap: 8px; max-width: 320px; pointer-events: none; }
@@ -38,26 +53,32 @@
 .np-title { font-family: var(--font-display); font-weight: 600; font-size: 30px; line-height: 1.05; letter-spacing: -0.02em; margin: 0; color: var(--text); text-wrap: balance; }
 .np-ribbon { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 22px; margin-top: 12px; font-size: 12px; color: var(--text-2); min-height: 22px; }
 .np-ribbon--loading { color: var(--text-3); font-family: var(--font-mono); font-size: 11.5px; }
-.np-n { font-family: var(--font-mono); font-size: 15px; font-weight: 600; color: var(--text); margin-right: 5px; }
+.np-n { font-family: var(--font-mono); font-size: 15px; font-weight: 600; color: var(--text); margin-right: 5px; font-variant-numeric: tabular-nums; }
 .np-dot { width: 7px; height: 7px; border-radius: 50%; display: inline-block; margin-right: 7px; transform: translateY(-1px); }
 .np-actions { display: flex; gap: 8px; flex-shrink: 0; }
 
 /* ─── Botones ────────────────────────────────────────────────────────── */
-.np-btn { display: inline-flex; align-items: center; justify-content: center; gap: 7px; height: 34px; padding: 0 14px; border-radius: var(--radius); font-weight: 700; font-size: 12.5px; border: 1px solid transparent; white-space: nowrap; transition: background .15s, border-color .15s, color .15s; }
-.np-btn--primary { background: var(--accent); color: var(--accent-ink); &:hover:not(:disabled) { filter: brightness(1.08); } }
-.np-btn--ghost { border-color: var(--line-strong); background: var(--surface); color: var(--text-2); &:hover:not(:disabled) { border-color: var(--accent-line); color: var(--accent); } }
-.np-btn--danger { background: var(--danger-soft); color: var(--danger); &:hover:not(:disabled) { border-color: var(--danger); } }
-.np-btn--danger-solid { background: var(--danger); color: #fff; &:hover:not(:disabled) { filter: brightness(1.08); } }
-.np-btn--warn { background: var(--warn-soft); color: var(--warn); border-color: transparent; &:hover:not(:disabled) { border-color: var(--warn); } }
+/* Al pulsar, el botón se hunde apenas (97 %) y vuelve en 120 ms: la interfaz
+   acusa recibo. Los «hover» van detrás de (hover: hover) para que en el
+   teléfono el toque no deje el botón pintado. */
+.np-btn { display: inline-flex; align-items: center; justify-content: center; gap: 7px; height: 34px; padding: 0 14px; border-radius: var(--radius); font-weight: 700; font-size: 12.5px; border: 1px solid transparent; white-space: nowrap; transition: background .15s, border-color .15s, color .15s, transform var(--dur-press) var(--ease-out);
+  &:active:not(:disabled) { transform: scale(.97); } }
+.np-btn--primary { background: var(--accent); color: var(--accent-ink); @media (hover: hover) { &:hover:not(:disabled) { filter: brightness(1.08); } } }
+.np-btn--ghost { border-color: var(--line-strong); background: var(--surface); color: var(--text-2); @media (hover: hover) { &:hover:not(:disabled) { border-color: var(--accent-line); color: var(--accent); } } }
+/* Texto con los tonos «ink»: el rojo y el ámbar a secas no llegaban a 4,5:1 sobre su fondo suave. */
+.np-btn--danger { background: var(--danger-soft); color: var(--danger-ink, var(--danger)); @media (hover: hover) { &:hover:not(:disabled) { border-color: var(--danger); } } }
+.np-btn--danger-solid { background: var(--danger); color: #fff; @media (hover: hover) { &:hover:not(:disabled) { filter: brightness(1.08); } } }
+.np-btn--warn { background: var(--warn-soft); color: var(--warn-ink, var(--warn)); border-color: transparent; @media (hover: hover) { &:hover:not(:disabled) { border-color: var(--warn); } } }
 .np-btnrow { display: flex; gap: 8px; flex-wrap: wrap; }
 .np-btnrow--center { justify-content: center; }
 .np-btnrow--end { justify-content: flex-end; margin-top: 18px; }
 .np-link { color: var(--accent); font-weight: 700; font-size: 11.5px; text-transform: none; letter-spacing: 0; &:hover { text-decoration: underline; } }
 .np-link--muted { color: var(--text-3); }
 
-.np-icobtn { width: 28px; height: 28px; display: inline-grid; place-items: center; border-radius: 5px; color: var(--text-2); transition: background .12s, color .12s;
-  &:hover:not(:disabled) { background: var(--surface-3); color: var(--accent); } }
-.np-icobtn--ok { color: var(--ok); &:hover:not(:disabled) { background: var(--ok-soft); color: var(--ok); } }
+.np-icobtn { width: 28px; height: 28px; display: inline-grid; place-items: center; border-radius: 5px; color: var(--text-2); transition: background .12s, color .12s, transform var(--dur-press) var(--ease-out);
+  @media (hover: hover) { &:hover:not(:disabled) { background: var(--surface-3); color: var(--accent); } }
+  &:active:not(:disabled) { transform: scale(.94); } }
+.np-icobtn--ok { color: var(--ok-ink, var(--ok)); @media (hover: hover) { &:hover:not(:disabled) { background: var(--ok-soft); color: var(--ok-ink, var(--ok)); } } }
 
 /* ─── Barra ──────────────────────────────────────────────────────────── */
 .np-toolbar { display: flex; align-items: center; gap: 12px; padding: 10px 0 12px; border-top: 1px solid var(--line); flex-wrap: wrap; }
@@ -67,10 +88,11 @@
   input::placeholder { color: var(--text-3); }
   kbd { font-family: var(--font-mono); font-size: 10px; padding: 1px 5px; border: 1px solid var(--line-strong); border-radius: 4px; color: var(--text-3); } }
 .np-chips { display: flex; gap: 4px; flex-wrap: wrap; }
-.np-chip { display: inline-flex; align-items: center; height: 30px; padding: 0 12px; border-radius: 999px; font-weight: 700; font-size: 12px; color: var(--text-2); border: 1px solid var(--line); background: var(--surface); white-space: nowrap; transition: background .12s, color .12s, border-color .12s;
-  &:hover { background: var(--surface-3); }
+.np-chip { display: inline-flex; align-items: center; height: 30px; padding: 0 12px; border-radius: 999px; font-weight: 700; font-size: 12px; color: var(--text-2); border: 1px solid var(--line); background: var(--surface); white-space: nowrap; transition: background .12s, color .12s, border-color .12s, transform var(--dur-press) var(--ease-out);
+  @media (hover: hover) { &:hover { background: var(--surface-3); } }
+  &:active { transform: scale(.97); }
   &[aria-pressed="true"] { background: var(--text); color: var(--bg); border-color: var(--text); } }
-.np-c { display: inline-flex; align-items: center; justify-content: center; min-width: 18px; height: 17px; padding: 0 5px; margin-left: 6px; border-radius: 999px; background: color-mix(in srgb, currentColor 14%, transparent); font-family: var(--font-mono); font-weight: 600; font-size: 10.5px; line-height: 1; vertical-align: middle; }
+.np-c { display: inline-flex; align-items: center; justify-content: center; min-width: 18px; height: 17px; padding: 0 5px; margin-left: 6px; border-radius: 999px; background: color-mix(in srgb, currentColor 14%, transparent); font-family: var(--font-mono); font-weight: 600; font-size: 10.5px; line-height: 1; vertical-align: middle; font-variant-numeric: tabular-nums; }
 .np-pagesize { display: inline-flex; align-items: center; gap: 8px; color: var(--text-3); font-size: 12px; font-weight: 600;
   select { height: 34px !important; min-width: 72px; padding: 0 28px 0 10px !important; font-family: var(--font-mono); font-size: 13px; font-weight: 600; color: var(--text) !important; } }
 
@@ -99,8 +121,10 @@
 .np-th-stripe { width: 4px; padding: 0 !important; }
 .np-th-right, .np-td-right { text-align: right !important; }
 .np-row { transition: background .12s; cursor: pointer;
-  &:hover { background: var(--surface-2); }
-  &[aria-selected="true"] { background: var(--accent-soft); } }
+  @media (hover: hover) { &:hover { background: var(--surface-2); } }
+  &[aria-selected="true"] { background: var(--accent-soft); }
+  /* El anillo de foco va por dentro de la fila: por fuera lo recortaba el scroll de la tabla. */
+  &:focus-visible { outline-offset: -2px; } }
 .np-stripe { padding: 0 !important; width: 4px; i { display: block; width: 4px; height: 44px; background: var(--line); } }
 .np-name { font-weight: 800; font-size: 13px; color: var(--text); }
 
@@ -120,10 +144,11 @@
 .np-data--dim { color: var(--text-3); }
 .np-pill { display: inline-flex; align-items: center; gap: 6px; height: 22px; padding: 0 9px 0 7px; border-radius: 999px; font-size: 11px; font-weight: 800; letter-spacing: .02em; white-space: nowrap;
   &::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: currentColor; } }
-.np-pill--active    { background: var(--ok-soft); color: var(--ok); }
-.np-pill--suspended { background: var(--danger-soft); color: var(--danger); }
-.np-pill--noip      { background: var(--warn-soft); color: var(--warn); }
-.np-pill--info      { background: var(--info-soft); color: var(--info); }
+/* Texto con los tonos «ink»: los de estado a secas no llegaban a 4.5:1 sobre su fondo suave. */
+.np-pill--active    { background: var(--ok-soft); color: var(--ok-ink, var(--ok)); }
+.np-pill--suspended { background: var(--danger-soft); color: var(--danger-ink, var(--danger)); }
+.np-pill--noip      { background: var(--warn-soft); color: var(--warn-ink, var(--warn)); }
+.np-pill--info      { background: var(--info-soft); color: var(--info-ink, var(--info)); }
 .np-pill--neutral   { background: var(--surface-3); color: var(--text-2); }
 .np-rowacts { display: flex; gap: 2px; justify-content: flex-end; opacity: .4; transition: opacity .12s;
   &.is-visible { opacity: 1; } }
@@ -137,10 +162,12 @@
 
 .np-pager { flex-shrink: 0; display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 10px 14px; border-top: 1px solid var(--line); background: var(--surface-2); font-size: 12px; color: var(--text-3); flex-wrap: wrap; }
 .np-pager--flat { background: transparent; border-top: 0; padding: 10px 0 0; }
-.np-range { font-family: var(--font-mono); color: var(--text-2); }
+.np-range { font-family: var(--font-mono); color: var(--text-2); font-variant-numeric: tabular-nums; }
 .np-pages { display: flex; gap: 3px;
-  button { min-width: 28px; height: 28px; padding: 0 8px; border-radius: 5px; font-family: var(--font-mono); font-size: 12px; color: var(--text-2); border: 1px solid transparent;
-    &:hover:not(:disabled) { border-color: var(--line-strong); }
+  button { display: inline-grid; place-items: center; min-width: 28px; height: 28px; padding: 0 8px; border-radius: 5px; font-family: var(--font-mono); font-size: 12px; color: var(--text-2); border: 1px solid transparent; font-variant-numeric: tabular-nums; transition: border-color .12s, transform var(--dur-press) var(--ease-out);
+    svg { width: 14px; height: 14px; }
+    @media (hover: hover) { &:hover:not(:disabled) { border-color: var(--line-strong); } }
+    &:active:not(:disabled) { transform: scale(.94); }
     &[aria-current="page"] { background: var(--text); color: var(--bg); } } }
 
 /* ─── Ficha lateral ──────────────────────────────────────────────────── */
@@ -153,21 +180,23 @@
 .np-avatar { width: 40px; height: 40px; border-radius: var(--radius-lg); display: grid; place-items: center; background: var(--accent-soft); color: var(--accent); font-family: var(--font-display); font-weight: 700; font-size: 18px; flex-shrink: 0; }
 .np-insp-id { min-width: 0; flex: 1;
   h2 { font-family: var(--font-display); font-size: 17px; font-weight: 600; margin: 0; line-height: 1.15; letter-spacing: -0.01em; color: var(--text); overflow-wrap: anywhere; } }
-.np-meta { font-family: var(--font-mono); font-size: 11.5px; color: var(--text-3); margin: 3px 0 0; b { color: var(--text-2); font-weight: 500; } }
+.np-meta { font-family: var(--font-mono); font-size: 11.5px; color: var(--text-3); margin: 3px 0 0; font-variant-numeric: tabular-nums; b { color: var(--text-2); font-weight: 500; } }
 .np-insp-tools { display: flex; gap: 2px; flex-shrink: 0; }
 
 .np-switchrow { display: flex; align-items: center; justify-content: space-between; padding: 10px 16px; background: var(--surface-2); border-bottom: 1px solid var(--line); font-size: 12px; font-weight: 700; color: var(--text-2); }
 .np-switchrow-right { display: inline-flex; align-items: center; gap: 10px; }
-.np-state { font-family: var(--font-mono); font-size: 11px; color: var(--ok); &.is-off { color: var(--danger); } }
+.np-state { font-family: var(--font-mono); font-size: 11px; color: var(--ok-ink, var(--ok)); &.is-off { color: var(--danger-ink, var(--danger)); } }
+/* El botón del interruptor se mueve con transform, no con «left»: no recalcula el layout en cada cuadro. */
 .np-switch { position: relative; width: 36px; height: 20px; border-radius: 999px; background: var(--line-strong); transition: background .15s;
-  &::after { content: ""; position: absolute; top: 2px; left: 2px; width: 16px; height: 16px; border-radius: 50%; background: #fff; transition: left .15s; box-shadow: 0 1px 2px rgb(0 0 0 / .25); }
-  &[aria-checked="true"] { background: var(--ok); &::after { left: 18px; } } }
+  &::after { content: ""; position: absolute; top: 2px; left: 2px; width: 16px; height: 16px; border-radius: 50%; background: #fff; transition: transform .15s var(--ease-out); box-shadow: 0 1px 2px rgb(0 0 0 / .25); }
+  &[aria-checked="true"] { background: var(--ok); &::after { transform: translateX(16px); } } }
 
 .np-tabs { display: flex; gap: 6px; padding: 0 10px; border-bottom: 1px solid var(--line); overflow-x: auto; flex-shrink: 0; scrollbar-width: none; &::-webkit-scrollbar { display: none; } }
-.np-tab { display: inline-flex; align-items: center; gap: 6px; padding: 11px 10px; font-weight: 700; font-size: 12.5px; color: var(--text-3); border-bottom: 2px solid transparent; margin-bottom: -1px; white-space: nowrap; transition: color .12s;
+.np-tab { display: inline-flex; align-items: center; gap: 6px; padding: 11px 10px; font-weight: 700; font-size: 12.5px; color: var(--text-3); border-bottom: 2px solid transparent; margin-bottom: -1px; white-space: nowrap; transition: color .12s, border-color .12s;
   .np-c { margin-left: 0; background: var(--surface-3); color: var(--text-2); }
   &[aria-selected="true"] .np-c { background: var(--accent-soft); color: var(--accent); }
-  &:hover { color: var(--text); }
+  @media (hover: hover) { &:hover { color: var(--text); } }
+  &:focus-visible { outline-offset: -2px; border-radius: var(--radius); }
   &[aria-selected="true"] { color: var(--accent); border-color: var(--accent); } }
 
 .np-insp-body { flex: 1; min-height: 0; padding: 14px 16px 18px; display: grid; gap: 18px; align-content: start; overflow-y: auto; overscroll-behavior: contain; }
@@ -186,9 +215,10 @@
 .np-stats { display: grid; grid-template-columns: repeat(3, 1fr); border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; }
 .np-stat { padding: 10px 12px; border-right: 1px solid var(--line); text-align: left; display: grid; gap: 2px; transition: background .12s;
   &:last-child { border-right: 0; }
-  &:hover { background: var(--surface-2); } }
+  @media (hover: hover) { &:hover { background: var(--surface-2); } }
+  &:focus-visible { outline-offset: -2px; } }
 .np-stat-l { font-size: 10.5px; color: var(--text-3); font-weight: 700; text-transform: uppercase; letter-spacing: .05em; }
-.np-stat-v { font-family: var(--font-mono); font-size: 17px; font-weight: 600; color: var(--text); &.is-warn { color: var(--warn); } }
+.np-stat-v { font-family: var(--font-mono); font-size: 17px; font-weight: 600; color: var(--text); font-variant-numeric: tabular-nums; &.is-warn { color: var(--warn-ink, var(--warn)); } }
 .np-quick { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; .np-btn { height: 32px; font-size: 12px; } }
 .np-quick-full { grid-column: 1 / -1; }
 
@@ -228,9 +258,10 @@ select optgroup {
 .np-subbar { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; }
 .np-subbar-search { width: 140px; height: 32px; }
 .np-seg { display: inline-flex; border: 1px solid var(--line-strong); border-radius: var(--radius); overflow: hidden;
-  button { height: 32px; padding: 0 11px; font-size: 12px; font-weight: 700; color: var(--text-2); border-right: 1px solid var(--line-strong);
+  button { height: 32px; padding: 0 11px; font-size: 12px; font-weight: 700; color: var(--text-2); border-right: 1px solid var(--line-strong); transition: background .12s, color .12s;
     &:last-child { border-right: 0; }
-    &:hover { background: var(--surface-3); }
+    @media (hover: hover) { &:hover { background: var(--surface-3); } }
+    &:focus-visible { outline-offset: -2px; }
     &[aria-pressed="true"] { background: var(--text); color: var(--bg); } } }
 
 .np-tablewrap { overflow-x: auto; border: 1px solid var(--line); border-radius: var(--radius); }
@@ -419,11 +450,13 @@ select optgroup {
 
 /* ─── Piezas agregadas con Finanzas (genéricas) ──────────────────────── */
 .np-btn--sm { height: 30px; padding: 0 11px; font-size: 12px; }
-.np-btn--ok { background: var(--ok-soft); color: var(--ok); &:hover:not(:disabled) { border-color: var(--ok); } }
+.np-btn--ok { background: var(--ok-soft); color: var(--ok-ink, var(--ok)); @media (hover: hover) { &:hover:not(:disabled) { border-color: var(--ok); } } }
 .np-money { font-family: var(--font-mono); font-variant-numeric: tabular-nums; text-align: right; font-weight: 600; color: var(--text); white-space: nowrap; }
 .np-money--lg { font-size: 18px; }
 .np-pos-info { color: var(--info); }
-.np-fine { display: block; font-size: 10.5px; color: var(--text-3); margin-top: 2px; font-weight: 500; }
+/* Letra fina: 11,5 px y no 10,5. Lleva frases enteras («Mientras esté suspendido
+   no se le factura…»), no sólo un apunte, y a 10,5 px no se leían. */
+.np-fine { display: block; font-size: 11.5px; line-height: 1.45; color: var(--text-3); margin-top: 2px; font-weight: 500; }
 .np-meta--addr { font-family: var(--font-body); }
 .np-tag--neutral { background: var(--surface-3); color: var(--text-2); }
 .np-stats--bar { border: 0; border-bottom: 1px solid var(--line); border-radius: 0; background: var(--surface-2); flex-shrink: 0; }
@@ -431,9 +464,9 @@ select optgroup {
 .np-stat-v--sm { font-size: 13px; padding-top: 4px; }
 .np-dl--ledger { border-top: 1px dashed var(--line); padding-top: 10px; dd { text-align: right; } }
 .np-notice { margin: 0; padding: 9px 12px; border-radius: var(--radius); font-size: 12.5px; border: 1px solid transparent; }
-.np-notice--ok { background: var(--ok-soft); color: var(--ok); }
-.np-notice--danger { background: var(--danger-soft); color: var(--danger); }
-.np-notice--warn { background: var(--warn-soft); color: var(--text-2); border-color: var(--warn); strong { color: var(--warn); } }
+.np-notice--ok { background: var(--ok-soft); color: var(--ok-ink, var(--ok)); }
+.np-notice--danger { background: var(--danger-soft); color: var(--danger-ink, var(--danger)); }
+.np-notice--warn { background: var(--warn-soft); color: var(--text-2); border-color: var(--warn); strong { color: var(--warn-ink, var(--warn)); } }
 .np-checklist { display: grid; border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; max-height: 260px; overflow-y: auto; }
 .np-check { display: flex; align-items: center; gap: 10px; padding: 8px 12px; border-bottom: 1px solid var(--line); font-size: 12.5px; cursor: pointer;
   &:last-child { border-bottom: 0; }
@@ -476,7 +509,7 @@ select optgroup {
 button.np-kpi:hover { background: var(--surface-2); }
 .np-kpi--accent { background: var(--accent-soft); .np-kpi-l { color: var(--accent); } }
 .np-kpi-l { font-size: 10.5px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--text-3); }
-.np-kpi-v { font-family: var(--font-mono); font-size: 22px; font-weight: 600; color: var(--text); letter-spacing: -0.02em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.np-kpi-v { font-family: var(--font-mono); font-size: 22px; font-weight: 600; color: var(--text); letter-spacing: -0.02em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-variant-numeric: tabular-nums; }
 .np-kpi-v--ok { color: var(--ok); } .np-kpi-v--warn { color: var(--warn); } .np-kpi-v--danger { color: var(--danger); } .np-kpi-v--info { color: var(--info); } .np-kpi-v--accent { color: var(--accent); }
 .np-kpi-s { font-size: 11.5px; color: var(--text-3); display: flex; align-items: center; gap: 4px; flex-wrap: wrap; .np-dot { margin-right: 2px; } }
 
@@ -805,18 +838,20 @@ input.np-input:-webkit-autofill:active {
    del tamaño de un dedo; los campos a 16 px para que el teléfono no agrande la
    pantalla al tocarlos; y las ventanas subiendo desde abajo, como las del
    sistema. Vale para todo el panel. */
-@media (max-width: 760px) {
+@media (max-width: 767px) {
   .np-actions { flex-wrap: wrap; > * { flex: 1 1 auto; } }
   .np-toolbar { gap: 8px; }
   .np-search { height: 42px; input { font-size: 16px; } }
 
-  /* Todo lo que se toca, del tamaño de un dedo. */
+  /* Todo lo que se toca, del tamaño de un dedo: 40 px como mínimo, también
+     los chips de filtro y los botones de ícono. */
   .np-btn { height: 42px; }
-  .np-btn--sm { height: 38px; }
+  .np-btn--sm { height: 40px; }
   .np-icobtn { width: 40px; height: 40px; }
+  .np-pages button { min-width: 36px; height: 36px; }
   .np-rowacts { opacity: 1; gap: 4px; flex-wrap: wrap; }
   .np-link { display: inline-block; padding-block: 6px; }
-  .np-chip, .np-seg button { height: 38px; }
+  .np-chip, .np-seg button { height: 40px; }
 
   /* 16 px en los campos: con menos, el teléfono agranda la pantalla al tocarlos. */
   .np-input, select.np-input, textarea.np-input { font-size: 16px; min-height: 42px; }

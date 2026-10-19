@@ -280,9 +280,10 @@
     <div class="np-modal-body">
       <dl class="np-dl"><dt>Dirección</dt><dd>{{ selected.address }}</dd><dt>Fecha</dt><dd class="np-mono">{{ formatDate(selected.scheduled_date) }}</dd><dt>Técnicos</dt><dd>{{ getTechniciansList(selected) }}</dd></dl>
       <label class="np-field"><span>Notas técnicas</span><textarea class="np-input np-textarea" rows="4" [(ngModel)]="completeNotes" placeholder="Trabajo realizado, materiales, observaciones…"></textarea></label>
+      <p class="np-fine">Ciérrela estando en la casa del cliente: se toma la ubicación del celular para ponerlo en el mapa de la red.</p>
       <div class="np-btnrow np-btnrow--end">
-        <button type="button" class="np-btn np-btn--ghost" (click)="closeCompleteModal()">Cancelar</button>
-        <button type="button" class="np-btn np-btn--primary" (click)="saveComplete()">Marcar completada</button>
+        <button type="button" class="np-btn np-btn--ghost" (click)="closeCompleteModal()" [disabled]="completando">Cancelar</button>
+        <button type="button" class="np-btn np-btn--primary" (click)="saveComplete()" [disabled]="completando">{{ completando ? 'Tomando la ubicación…' : 'Marcar completada' }}</button>
       </div>
     </div>
   </div>

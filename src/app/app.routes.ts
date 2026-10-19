@@ -24,7 +24,6 @@ import { StaffComponent }             from './pages/staff/staff.component';
 import { BillingConfigComponent }     from './pages/billing-config/billing-config.component';
 import { ResumenComponent }           from './pages/resumen/resumen.component';
 import { CarteraComponent }           from './pages/cartera/cartera.component';
-import { ConciliacionPagosComponent } from './pages/conciliacion-pagos/conciliacion-pagos.component';
 import { MikrotikComponent }         from './pages/mikrotik/mikrotik.component';
 import { ProfileComponent }          from './pages/profile/profile.component';
 import { ContractsComponent }        from './pages/contracts/contracts.component';
@@ -35,10 +34,6 @@ import { InstallationsComponent } from './pages/installations/installations.comp
 import { InstallationFormComponent } from './pages/installations/installation-form.component';
 import { TransfersComponent } from './pages/transfers/transfers.component';
 import { TransferFormComponent } from './pages/transfers/transfer-form.component';
-import { TechnicianMapComponent } from './pages/technician-map/technician-map.component';
-import { SendLogsComponent } from './pages/send-logs/send-logs.component';
-import { PaymentProofAuditComponent } from './pages/payment-proof-audit/payment-proof-audit.component';
-import { FinanceDesignConceptsComponent } from './pages/finance-design-concepts/finance-design-concepts.component';
 
 export const routes: Routes = [
   {
@@ -105,7 +100,7 @@ export const routes: Routes = [
       { path: 'mikrotik',       component: MikrotikComponent,          canActivate: [roleGuard], data: { module: 'mikrotik' } },
       { path: 'resumen',        component: ResumenComponent,           canActivate: [roleGuard], data: { module: 'resumen' } },
       { path: 'cartera',        component: CarteraComponent,           canActivate: [roleGuard], data: { module: 'finanzas' } },
-      { path: 'conciliacion-pagos', component: ConciliacionPagosComponent, canActivate: [roleGuard], data: { module: 'finanzas' } },
+      { path: 'conciliacion-pagos', loadComponent: () => import('./pages/conciliacion-pagos/conciliacion-pagos.component').then(m => m.ConciliacionPagosComponent), canActivate: [roleGuard], data: { module: 'finanzas' } },
       // Lo que la empresa tiene en Alegra, cruzado con Netvula (de consulta).
       { path: 'alegra', loadComponent: () => import('./pages/alegra/alegra.component').then(m => m.AlegraComponent), canActivate: [roleGuard], data: { module: 'finanzas' } },
       { path: 'cobranza',       component: CobranzaComponent,          canActivate: [roleGuard], data: { module: 'finanzas' } },
@@ -114,6 +109,7 @@ export const routes: Routes = [
       // El asistente que atiende los pedidos de soporte por WhatsApp.
       // Se carga al entrar, como Alegra: el arranque del panel ya está en el tope de tamaño.
       { path: 'fallas-sector', loadComponent: () => import('./pages/fallas-sector/fallas-sector.component').then(m => m.FallasSectorComponent), canActivate: [roleGuard], data: { module: 'olt-admin' } },
+      { path: 'mapa-red', loadComponent: () => import('./pages/mapa-red/mapa-red.component').then(m => m.MapaRedComponent), canActivate: [roleGuard], data: { module: 'olt-admin' } },
       { path: 'soporte-asistente', loadComponent: () => import('./pages/soporte-asistente/soporte-asistente.component').then(m => m.SoporteAsistenteComponent), canActivate: [roleGuard], data: { module: 'crm' } },
       {
         path: 'inventory',
@@ -141,10 +137,10 @@ export const routes: Routes = [
       { path: 'installations/new', component: InstallationFormComponent, canActivate: [roleGuard, noTecnicoGuard], data: { module: 'installations' } },
       { path: 'transfers', component: TransfersComponent, canActivate: [roleGuard], data: { module: 'transfers' } },
       { path: 'transfers/new', component: TransferFormComponent, canActivate: [roleGuard], data: { module: 'transfers' } },
-      { path: 'technician-map', component: TechnicianMapComponent, canActivate: [roleGuard], data: { module: 'technician-map' } },
-      { path: 'send-logs', component: SendLogsComponent, canActivate: [roleGuard], data: { module: 'finanzas' } },
-      { path: 'payment-proof-audit', component: PaymentProofAuditComponent, canActivate: [roleGuard], data: { module: 'finanzas' } },
-      { path: 'finance-design-concepts.html', component: FinanceDesignConceptsComponent, canActivate: [roleGuard], data: { module: 'finanzas' } },
+      { path: 'technician-map', loadComponent: () => import('./pages/technician-map/technician-map.component').then(m => m.TechnicianMapComponent), canActivate: [roleGuard], data: { module: 'technician-map' } },
+      { path: 'send-logs', loadComponent: () => import('./pages/send-logs/send-logs.component').then(m => m.SendLogsComponent), canActivate: [roleGuard], data: { module: 'finanzas' } },
+      { path: 'payment-proof-audit', loadComponent: () => import('./pages/payment-proof-audit/payment-proof-audit.component').then(m => m.PaymentProofAuditComponent), canActivate: [roleGuard], data: { module: 'finanzas' } },
+      { path: 'finance-design-concepts.html', loadComponent: () => import('./pages/finance-design-concepts/finance-design-concepts.component').then(m => m.FinanceDesignConceptsComponent), canActivate: [roleGuard], data: { module: 'finanzas' } },
       {
         path: 'landing',
         loadComponent: () => import('./pages/landing-editor/landing-editor.component').then(m => m.LandingEditorComponent),

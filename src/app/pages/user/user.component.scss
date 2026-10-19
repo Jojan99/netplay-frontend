@@ -37,7 +37,6 @@
       .np-search { order: 1; flex: 0 1 240px; }
       .np-filtros-btn { order: 2; display: inline-flex; height: 30px; font-size: 12px; padding: 0 12px; &[aria-pressed="true"] { border-color: var(--accent); color: var(--accent); } }
       .np-actions { order: 3; margin-left: auto; }
-      .np-actions .np-btn--ghost { display: none; }
       .np-spacer, .np-title-meta, .np-chips, .np-pagesize { display: none; }
     }
     &.is-open.is-filtros {
@@ -84,6 +83,9 @@
   .np-tabla-movil .np-skel-bar { width: 100% !important; }
 }
 
+/* El botón del «no hay clientes»: debajo del texto, con aire. */
+.np-empty-acc { margin-top: 12px; }
+
 /* Aviso con su botón de reintento en la misma línea: el mensaje ocupa lo que
    sobra y el botón no se estira. */
 .np-aviso {
@@ -95,16 +97,6 @@
 
   > span { flex: 1 1 auto; }
   > .np-btn { flex: 0 0 auto; }
-}
-
-/* Elegir cómo se conecta el cliente: IP fija o PPPoE. */
-.np-tipoconex {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-
-  > span { margin: 0; }
-  .np-seg { flex: 0 0 auto; }
 }
 
 /* Elegir cómo se conecta el cliente: IP fija o PPPoE. */
@@ -131,7 +123,7 @@
   display: grid; gap: 10px;
 }
 .np-baja-t {
-  margin: 0; font-size: 10.5px; font-weight: 800; letter-spacing: .6px; text-transform: uppercase; color: var(--text-3);
+  margin: 0; font-size: 10.5px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--text-3);
   span { text-transform: none; letter-spacing: 0; font-weight: 700; color: var(--text-2); }
 }
 .np-baja-lista {
@@ -160,7 +152,7 @@
   border: 1px solid var(--line); border-radius: var(--radius); background: var(--surface-2);
   .np-check { display: inline-flex; align-items: center; gap: 7px; font-size: 12.5px; }
 }
-.np-vel-t { font-size: 10.5px; font-weight: 800; letter-spacing: .5px; text-transform: uppercase; color: var(--text-3); }
+.np-vel-t { font-size: 10.5px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--text-3); }
 
 /* Acción chica en la línea del título de un campo ("Ver todas" en VLAN):
    arriba no mueve el formulario cuando termina de cargar. */
@@ -174,16 +166,18 @@
 /* ─── Conexión a internet: cómo está hoy y su ONT ───────────────────── */
 .cx-card { display: grid; gap: 12px; padding: 14px 16px; border: 1px solid var(--line); border-radius: var(--radius-lg); background: var(--surface); }
 .cx-cab { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; }
-.cx-tipo { font-size: 10.5px; font-weight: 800; letter-spacing: .5px; text-transform: uppercase; padding: 3px 9px; border-radius: 999px; background: var(--accent-soft, var(--surface-3)); color: var(--accent); }
+/* Rótulos chicos en mayúsculas: mismo tamaño, peso y tracking que .np-sect en
+   todo el panel (10,5 px · 700 · .06em). */
+.cx-tipo { font-size: 10.5px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; padding: 3px 9px; border-radius: 999px; background: var(--accent-soft, var(--surface-3)); color: var(--accent); }
 .cx-valor { font-size: 15px; color: var(--text); }
-.cx-estado { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 700; color: var(--danger);
+.cx-estado { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 700; color: var(--danger-ink, var(--danger));
   i { width: 8px; height: 8px; border-radius: 50%; background: currentColor; }
-  &[data-ok="true"] { color: var(--ok); }
+  &[data-ok="true"] { color: var(--ok-ink, var(--ok)); }
 }
 .cx-cambiar { margin-left: auto; }
 .cx-datos { margin: 0; display: flex; flex-wrap: wrap; gap: 8px 22px;
   > div { display: grid; gap: 1px; }
-  dt { font-size: 10.5px; font-weight: 700; letter-spacing: .4px; text-transform: uppercase; color: var(--text-3); }
+  dt { font-size: 10.5px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--text-3); }
   dd { margin: 0; font-size: 13px; color: var(--text); }
 }
 .cx-ont { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px;
@@ -191,14 +185,14 @@
 .cx-ont-txt { display: grid; gap: 3px; min-width: 0; flex: 1 1 260px;
   small { font-size: 12px; color: var(--text-2); line-height: 1.5; overflow-wrap: anywhere; }
 }
-.cx-ont-t { font-size: 10.5px; font-weight: 800; letter-spacing: .5px; text-transform: uppercase; color: var(--text-3); }
+.cx-ont-t { font-size: 10.5px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--text-3); }
 .cx-ont-acc { display: flex; gap: 6px; flex-wrap: wrap; }
-.cx-pill { font-style: normal; font-size: 10px; font-weight: 800; letter-spacing: .3px; text-transform: uppercase; padding: 1px 7px; margin-right: 4px;
-  border-radius: 999px; background: var(--warn-soft); color: var(--warn);
-  &[data-estado="listo"] { background: var(--ok-soft); color: var(--ok); }
-  &[data-estado="con_errores"], &[data-estado="error"], &[data-estado="vencido"] { background: var(--danger-soft); color: var(--danger); }
+.cx-pill { font-style: normal; font-size: 10.5px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; padding: 1px 7px; margin-right: 4px;
+  border-radius: 999px; background: var(--warn-soft); color: var(--warn-ink, var(--warn));
+  &[data-estado="listo"] { background: var(--ok-soft); color: var(--ok-ink, var(--ok)); }
+  &[data-estado="con_errores"], &[data-estado="error"], &[data-estado="vencido"] { background: var(--danger-soft); color: var(--danger-ink, var(--danger)); }
   &[data-estado="no_aplica"], &[data-estado="cancelado"] { background: var(--surface-3); color: var(--text-2); }
-  &[data-estado="revertido"] { background: var(--danger-soft); color: var(--danger); }
+  &[data-estado="revertido"] { background: var(--danger-soft); color: var(--danger-ink, var(--danger)); }
 }
 .cx-editar { margin-top: 10px; }
 .cx-mac { margin-top: 10px;
@@ -220,44 +214,110 @@
       background: var(--ok); border: 1.5px solid var(--surface); } } }
 
 /* ── La cabecera en el teléfono ─────────────────────────────────────────────
-   Son cuatro botones en una fila. La regla general los estira a todos por
-   igual, así que en 380 px se apretaban hasta salirse y «Nuevo cliente» —que
-   es a lo que se viene— quedaba fuera de la pantalla. */
-@media (max-width: 760px) {
+   «Nuevo cliente» de lado a lado y «Más» debajo, los dos del ancho de la
+   pantalla: es a lo que se viene, y antes cuatro botones apretados lo
+   dejaban fuera. */
+@media (max-width: 767px) {
   .np-head .np-actions {
     display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns: 1fr;
     gap: 8px;
     width: 100%;
 
-    .np-btn {
-      flex: none;
-      min-width: 0;
-      justify-content: center;
-      padding: 0 10px;
-      font-size: 12px;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-
-    /* La acción principal, arriba y de lado a lado: es la que se busca. */
-    .np-btn--primary {
-      grid-column: 1 / -1;
-      order: -1;
-      font-size: 13.5px;
-    }
+    .np-btn { flex: none; min-width: 0; justify-content: center; }
+    .np-btn--primary { font-size: 13.5px; }
+    .np-mas, .np-mas-btn { width: 100%; }
   }
 }
 
-/* Debajo de 420 px tres columnas dejan los textos ilegibles: van de a dos. */
-@media (max-width: 420px) {
-  .np-head .np-actions { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+/* ── Menú «Más» (cabecera y ficha) ──────────────────────────────────────────
+   Un botón de verdad con aria-expanded; la lista se cierra al elegir, al
+   tocar afuera o con Escape (lo maneja el componente). */
+.np-mas { position: relative; }
+.np-mas-btn svg { width: 14px; height: 14px; }
+.np-mas-btn[aria-expanded="true"] { border-color: var(--accent-line); color: var(--accent); }
+/* La lista sale del botón, no de la nada: nace al 96 % desde su esquina de
+   arriba a la derecha y se asienta en 160 ms. Se abre de vez en cuando, así
+   que el movimiento se nota sin estorbar. */
+.np-mas-menu {
+  position: absolute; right: 0; top: calc(100% + 4px); z-index: 40;
+  min-width: 240px; padding: 6px; display: grid; gap: 1px;
+  background: var(--surface); border: 1px solid var(--line-strong); border-radius: var(--radius-lg); box-shadow: var(--shadow-lg);
+  transform-origin: top right;
+  animation: np-mas-in var(--dur-menu) var(--ease-out) both;
+}
+@keyframes np-mas-in { from { opacity: 0; transform: scale(.96) translateY(-2px); } }
+.np-mas-item {
+  display: flex; align-items: center; gap: 9px; width: 100%; min-height: 36px; padding: 0 10px; border-radius: var(--radius);
+  font-size: 12.5px; font-weight: 600; color: var(--text); text-align: left; text-decoration: none; white-space: nowrap;
+  svg { width: 15px; height: 15px; color: var(--text-3); }
+  &:focus-visible { background: var(--surface-2); color: var(--accent); outline-offset: -2px; svg { color: inherit; } }
+  @media (hover: hover) { &:hover:not(:disabled) { background: var(--surface-2); color: var(--accent); svg { color: inherit; } } }
+  &:disabled { opacity: .55; cursor: not-allowed; }
+}
+.np-mas-item--danger { color: var(--danger-ink, var(--danger));
+  &:focus-visible { background: var(--danger-soft); color: var(--danger-ink, var(--danger)); }
+  @media (hover: hover) { &:hover:not(:disabled) { background: var(--danger-soft); color: var(--danger-ink, var(--danger)); } } }
+.np-mas-sep { display: block; height: 1px; margin: 4px 2px; background: var(--line); }
+@media (max-width: 767px) {
+  .np-mas-menu { left: 0; right: 0; min-width: 0; transform-origin: top center; }
+  .np-mas-item { min-height: 42px; }
 }
 
+/* ── Acciones de cada fila ──────────────────────────────────────────────────
+   Se ven siempre y se tocan: 36 px, sin esperar a pasar el mouse. La regla
+   general del tema las atenuaba al 40 % y eran de 28 px. */
+.np-clients .np-rowacts { opacity: 1; gap: 4px; }
+.np-clients .np-rowacts .np-icobtn { width: 36px; height: 36px; }
+
+/* ── La ficha: una sola columna que se desplaza ─────────────────────────────
+   Estado, plata, acciones, equipo, detalles y las pestañas van en el mismo
+   scroll; las pestañas se pegan arriba al pasar. El cuerpo de la pestaña ya
+   no scrollea por su cuenta. */
+/* La ficha entra desde su lado (12 px, 220 ms) en vez de aparecer de golpe: se
+   entiende que se abrió «al lado» de la lista. Cambiar de cliente con la ficha
+   ya abierta no la vuelve a animar. A pantalla completa sube desde abajo. */
+.np-clients .np-inspector { animation: np-ficha-in var(--dur-panel) var(--ease-out) both; }
+@keyframes np-ficha-in { from { opacity: 0; transform: translateX(12px); } }
+@media (max-width: 1280px) {
+  .np-clients .np-inspector { animation-name: np-ficha-in-sube; }
+  @keyframes np-ficha-in-sube { from { opacity: 0; transform: translateY(16px); } }
+}
+/* Con «menos movimiento» quedan sólo los fundidos: se sigue viendo que algo
+   apareció, sin desplazamiento. (El tema apaga todo lo demás.) */
+@media (prefers-reduced-motion: reduce) {
+  .np-clients .np-inspector, .np-clients .np-mas-menu { animation: np-solo-fundido .15s ease-out both !important; }
+  @keyframes np-solo-fundido { from { opacity: 0; } }
+}
+
+.np-clients .np-insp-scroll { flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior: contain; display: flex; flex-direction: column; }
+.np-clients .np-insp-scroll .np-switchrow { flex-shrink: 0; }
+.np-clients .np-insp-scroll .np-tabs { position: sticky; top: 0; z-index: 2; background: var(--surface); }
+.np-clients .np-insp-body { flex: none; overflow: visible; min-height: 0; }
+.np-insp-resumen { padding: 12px 16px 14px; display: grid; gap: 16px; border-bottom: 1px solid var(--line); }
+.np-acciones { display: flex; gap: 8px; align-items: center; .np-btn--primary { flex: 1; } }
+.np-equipo { margin: 0; display: grid; gap: 2px; font-size: 12.5px; b { color: var(--text); } span { color: var(--text-2); } }
+.np-equipo + .np-link { margin-top: 6px; }
+.np-detalles {
+  border: 1px solid var(--line); border-radius: var(--radius); background: var(--surface-2);
+  > summary {
+    cursor: pointer; padding: 9px 12px; font-size: 12.5px; font-weight: 700; color: var(--text-2); list-style: none;
+    display: flex; align-items: center; gap: 8px; flex-wrap: wrap; border-radius: inherit; transition: color .12s;
+    &::before { content: ''; width: 0; height: 0; border: 4px solid transparent; border-left: 6px solid var(--text-3); transition: transform .15s; }
+    &::-webkit-details-marker { display: none; }
+    small { font-weight: 500; color: var(--text-3); }
+    @media (hover: hover) { &:hover { color: var(--text); } }
+  }
+  &[open] > summary::before { transform: rotate(90deg); }
+  .np-dl { padding: 2px 12px 12px; }
+}
+@media (max-width: 1280px) { .np-insp-resumen { width: 100%; max-width: 960px; margin-inline: auto; } }
+
 /* ─── Trato especial: el descuento de todos los meses ──────────────────── */
+/* Con descuento vigente el marco entero toma el verde, como la plantilla
+   «predeterminada» en el tema; la franja lateral de 3 px era decoración. */
 .de-panel { display: grid; gap: 8px; margin-bottom: 12px;
-  &.is-activo { border-left: 3px solid var(--ok); } }
+  &.is-activo { border-color: var(--ok); } }
 .de-cab { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
 
 /* ─── Alta: el modal y el cruce con la orden de instalación ──────────────── */
@@ -271,7 +331,7 @@
 }
 .ux-orden-h {
   display: flex; align-items: center; gap: 10px; padding: 10px 12px;
-  b { display: block; font: 700 13px var(--font-body); color: var(--text-1); }
+  b { display: block; font: 700 13px var(--font-body); color: var(--text); }
   small { display: block; font: 600 11px var(--font-body); color: var(--text-3); }
   > div { flex: 1; min-width: 0; }
   > button { flex: none; }
@@ -285,7 +345,7 @@
   margin: 0; display: grid; gap: 1px; background: var(--line); border-top: 1px solid var(--line);
   > div { display: grid; grid-template-columns: 96px 1fr; gap: 10px; padding: 6px 12px; background: var(--surface); }
   dt { font: 600 12px var(--font-body); color: var(--text-3); }
-  dd { margin: 0; font: 600 12px var(--font-body); color: var(--text-1); word-break: break-word; }
+  dd { margin: 0; font: 600 12px var(--font-body); color: var(--text); word-break: break-word; }
 }
 
 @media (max-width: 620px) {
@@ -319,18 +379,18 @@
 }
 
 /* El tope del plan */
-.np-cupo--alto { color: var(--warn); font-weight: 700; }
+.np-cupo--alto { color: var(--warn-ink, var(--warn)); font-weight: 700; }
 .np-cupo-aviso { margin: 10px 0 0; max-width: 760px; }
 
 /* Suspensión a mano: motivo y «no reactivar automáticamente». */
 .np-susp-extra { display: grid; gap: 10px; margin: 4px 0 14px; text-align: left; }
-.np-susp-nota { margin: 6px 0 0; padding: 0 16px 10px; color: var(--warn); font-weight: 600; }
+.np-susp-nota { margin: 6px 0 0; padding: 0 16px 10px; color: var(--warn-ink, var(--warn)); font-weight: 600; }
 
 .ux-fiscal-t { margin: 6px 0 0; em { font-style: normal; font-weight: 500; text-transform: none; letter-spacing: 0; color: var(--text-3); } }
 
 /* «Pagó y sigue suspendido»: la pestaña llama la atención y cada fila dice qué falta. */
-.np-chip--alerta[aria-pressed="true"] { background: var(--warn-soft); color: var(--warn); border-color: var(--warn); }
-.np-pagosusp { font-size: 11px; font-weight: 700; color: var(--warn); margin-top: 1px; }
+.np-chip--alerta[aria-pressed="true"] { background: var(--warn-soft); color: var(--warn-ink, var(--warn)); border-color: var(--warn); }
+.np-pagosusp { font-size: 11px; font-weight: 700; color: var(--warn-ink, var(--warn)); margin-top: 1px; }
 
 /* Cambio de documento: el botón va discreto junto al número y el formulario en la misma fila. */
 .np-doc-btn { margin-left: 8px; font-size: 11px; }
@@ -338,7 +398,9 @@
   .np-input { width: 150px; } }
 
 /* Plataforma contra router */
-.np-desc-grupo { margin-top: 14px; .np-sect small { margin-left: 6px; font-weight: 400; } }
+/* La ayuda del grupo va en la misma línea que el título, en minúsculas: heredaba
+   las mayúsculas y el tracking del rótulo y una frase entera así no se leía. */
+.np-desc-grupo { margin-top: 14px; .np-sect small { display: inline; margin: 0 0 0 6px; font-size: 11px; font-weight: 400; text-transform: none; letter-spacing: 0; } }
 .np-desc-fila {
   display: grid; grid-template-columns: minmax(0, 1fr) auto auto; gap: 10px; align-items: center;
   padding: 8px 0; border-bottom: 1px solid var(--line);
@@ -363,4 +425,18 @@
   .np-susp-temp-motivo, p, .np-susp-temp-acc { grid-column: 1 / -1; }
   .np-susp-temp-acc { display: flex; gap: 10px; align-items: center; }
   @media (max-width: 520px) { grid-template-columns: 1fr; }
+}
+
+/* Usuario y clave de la página del equipo (bloque «Equipo en la casa»). */
+.np-acceso-ver { display: block; margin-top: 6px; }
+.np-acceso {
+  margin-top: 10px; padding: 10px 12px; border: 1px solid var(--line); border-radius: var(--radius);
+  background: var(--surface-2); display: grid; gap: 6px;
+}
+.np-acceso-t { margin: 0; font-size: 12px; font-weight: 700; color: var(--text-2); }
+.np-acceso-dl {
+  margin: 0; display: grid; grid-template-columns: max-content 1fr; gap: 6px 12px; align-items: center;
+  dt { font-size: 12px; color: var(--text-3); }
+  dd { margin: 0; display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; min-width: 0; font-size: 13px;
+       .np-mono { font-weight: 600; word-break: break-all; } small { color: var(--text-3); font-size: 11.5px; } }
 }

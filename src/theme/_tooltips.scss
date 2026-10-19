@@ -24,7 +24,9 @@
 
   opacity: 0;
   transform: translateY(4px) scale(.97);
-  transition: opacity .14s ease, transform .18s cubic-bezier(.2, .9, .3, 1.2);
+  /* Sin rebote: un tooltip se ve decenas de veces al día y tiene que aparecer y
+     ya. 140 ms con la curva de salida del panel. */
+  transition: opacity .12s ease-out, transform .14s var(--ease-out, ease-out);
 
   // Filo de luz arriba.
   &::before {

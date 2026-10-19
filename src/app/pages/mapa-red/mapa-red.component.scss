@@ -1,0 +1,271 @@
+/* ─── Mapa de la red: sólo lo propio ─────────────────────────────────── */
+.np-mapared { --np-inspector-w: 360px; --mr-hoja: 128px; }
+.np-mapared-ws { align-items: stretch; }
+.np-mapared .np-actions { flex-wrap: wrap; justify-content: flex-end; }
+
+/* Poner caja / OLT / mover van juntos: son lo que cambia el mapa. El pulsado
+   marca el modo activo. */
+.np-mr-poner button { display: inline-flex; align-items: center; gap: 6px; height: 34px; padding: 0 12px; svg { width: 14px; height: 14px; } }
+
+/* «isolation»: los paneles de Leaflet llevan z-index 200–1000 y, sin un contexto
+   propio, se salían del recuadro y tapaban lo que hubiera encima (la ficha, un
+   diálogo). Así todo lo del mapa compite sólo dentro del mapa. */
+.np-map-wrap { position: relative; isolation: isolate; min-height: 420px; border: 1px solid var(--line); border-radius: var(--radius-lg); overflow: hidden; box-shadow: var(--shadow); background: var(--surface-2); }
+.np-map-wrap.is-poniendo ::ng-deep .leaflet-container { cursor: crosshair; }
+#mapa-red { position: absolute; inset: 0; }
+
+/* Controles de Leaflet con el mismo aire de las tarjetas flotantes. */
+:host ::ng-deep .leaflet-bar { border: 0; border-radius: 12px; box-shadow: var(--shadow-lg); overflow: hidden;
+  a { width: 36px; height: 36px; line-height: 36px; background: var(--surface); color: var(--text); border-bottom-color: var(--line); font-size: 18px;
+    &:hover { background: var(--surface-2); } } }
+:host ::ng-deep .leaflet-control-attribution { background: color-mix(in srgb, var(--surface) 80%, transparent); color: var(--text-3); font-size: 10px; border-radius: 6px 0 0 0;
+  a { color: var(--text-2); } }
+:host ::ng-deep .leaflet-control-scale-line { background: color-mix(in srgb, var(--surface) 70%, transparent); color: var(--text-2); border-color: var(--text-3); }
+:host ::ng-deep .leaflet-container { font-family: var(--font-body); background: var(--surface-2); }
+
+/* Buscador flotante: la píldora de Waze, arriba a la izquierda, con los resultados colgando. */
+.np-map-buscar { position: absolute; left: 12px; top: 12px; z-index: 1000; width: min(380px, calc(100% - 80px)); }
+.np-mr-pill { display: flex; align-items: center; gap: 10px; height: 44px; padding: 0 10px 0 14px; border-radius: 999px; background: var(--surface); border: 1px solid var(--line); box-shadow: var(--shadow-lg); color: var(--text-3); cursor: text; transition: box-shadow .15s;
+  &:focus-within { box-shadow: var(--shadow-lg), 0 0 0 3px var(--accent-soft); color: var(--accent); }
+  > svg { width: 18px; height: 18px; flex-shrink: 0; }
+  input { flex: 1; min-width: 0; height: 100%; border: 0; background: transparent; color: var(--text); font: 600 14px var(--font-body); outline: none;
+    &::placeholder { color: var(--text-3); font-weight: 500; }
+    &::-webkit-search-cancel-button { display: none; } }
+  button { width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center; background: var(--surface-2); color: var(--text-2); flex-shrink: 0;
+    svg { width: 12px; height: 12px; } &:hover { background: var(--surface-3); color: var(--text); } } }
+.np-mr-resultados { list-style: none; margin: 6px 0 0; padding: 6px; max-height: min(360px, 60vh); overflow-y: auto; border-radius: 16px; background: var(--surface); border: 1px solid var(--line); box-shadow: var(--shadow-lg);
+  li > button { display: grid; grid-template-columns: 12px minmax(0, 1fr); align-items: center; gap: 10px; width: 100%; padding: 8px 10px; border-radius: 10px; text-align: left; transition: background .12s;
+    &:hover, &:focus-visible { background: var(--surface-2); outline: none; }
+    i { width: 10px; height: 10px; border-radius: 50%; justify-self: center; box-shadow: 0 0 0 1px color-mix(in srgb, var(--text) 12%, transparent); &.is-cuadro { border-radius: 3px; width: 12px; height: 12px; } }
+    span { min-width: 0; display: grid; }
+    b { font-size: 13px; font-weight: 700; color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    small { font-size: 11.5px; color: var(--text-3); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; } }
+  .np-mr-nada { padding: 12px 10px; font-size: 12.5px; color: var(--text-3); } }
+
+/* Botones redondos a la derecha, como los de Waze: satélite, técnicos, ver todo, donde estoy.
+   Empiezan debajo de la franja del buscador para no chocar con el aviso del modo «poner». */
+.np-map-fabs { position: absolute; right: 12px; top: 64px; z-index: 900; display: grid; gap: 8px;
+  button { position: relative; width: 44px; height: 44px; border-radius: 50%; display: grid; place-items: center; background: var(--surface); border: 1px solid var(--line); box-shadow: var(--shadow-lg); color: var(--text-2); transition: background .12s, color .12s, transform .12s;
+    svg { width: 20px; height: 20px; }
+    span { position: absolute; right: calc(100% + 8px); top: 50%; transform: translateY(-50%); padding: 4px 8px; border-radius: 6px; background: var(--text); color: var(--surface); font-size: 11.5px; font-weight: 700; white-space: nowrap; opacity: 0; pointer-events: none; transition: opacity .12s; }
+    small { position: absolute; top: -4px; right: -4px; min-width: 18px; height: 18px; padding: 0 5px; border-radius: 999px; background: var(--accent); color: #fff; font: 700 10px var(--font-mono); display: grid; place-items: center; border: 2px solid var(--surface); }
+    &:hover { background: var(--surface-2); color: var(--text); span { opacity: 1; } }
+    &:active { transform: scale(.94); }
+    &[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: #fff; } } }
+
+/* Aviso del modo «poner»: arriba al centro, por encima de los controles de Leaflet (1000). */
+.np-map-modo { position: absolute; left: 50%; top: 12px; transform: translateX(-50%); z-index: 1100; display: flex; align-items: center; gap: 10px; max-width: calc(100% - 24px); padding: 8px 8px 8px 14px; border-radius: 999px; background: var(--surface); border: 1px solid var(--accent); box-shadow: var(--shadow-lg); font-size: 13px; font-weight: 600; color: var(--text); white-space: nowrap;
+  b { color: var(--accent); }
+  .np-link { margin-left: 4px; padding: 4px 10px; border-left: 1px solid var(--line); } }
+.np-mr-modo-pin { width: 8px; height: 8px; border-radius: 50%; background: var(--accent); flex-shrink: 0; animation: mr-pin 1.4s ease-out infinite; }
+@keyframes mr-pin { 0% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--accent) 55%, transparent); } 100% { box-shadow: 0 0 0 9px color-mix(in srgb, var(--accent) 0%, transparent); } }
+
+/* Leyenda = filtro. Tarjeta abajo a la izquierda; el zoom, la escala y la
+   atribución de Leaflet quedan a la derecha (ver el .ts), así nada se pisa. */
+.np-map-legend { position: absolute; left: 10px; bottom: 10px; z-index: 900; display: grid; gap: 1px; min-width: 172px; max-width: calc(100% - 20px); padding: 6px; border-radius: 14px; background: color-mix(in srgb, var(--surface) 94%, transparent); backdrop-filter: blur(6px); border: 1px solid var(--line); box-shadow: var(--shadow-lg);
+  button { display: flex; align-items: center; gap: 8px; height: 26px; padding: 0 8px; border-radius: 8px; font-size: 12px; font-weight: 600; color: var(--text-2); text-align: left; white-space: nowrap; transition: background .12s, color .12s;
+    &:hover { background: var(--surface-3); color: var(--text); }
+    &.is-off { color: var(--text-3); i { opacity: .3; } }
+    &[aria-pressed="true"] { background: var(--accent-soft); color: var(--accent); }
+    span { flex: 1; }
+    small { font-family: var(--font-mono); font-size: 11px; color: var(--text-3); font-variant-numeric: tabular-nums; } }
+  i { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; box-shadow: 0 0 0 1px rgb(0 0 0 / .12); transition: opacity .12s; }
+  .np-legend-prob { position: relative; margin-bottom: 6px; svg { width: 13px; height: 13px; color: var(--danger); }
+    &::after { content: ""; position: absolute; left: 4px; right: 4px; bottom: -4px; height: 1px; background: var(--line); }
+    &[aria-pressed="true"] { background: var(--danger-soft); color: var(--danger); } } }
+
+/* Sin nada en el mapa: los tres pasos, en orden. */
+.np-map-empty { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); z-index: 900; width: min(440px, calc(100% - 32px)); background: var(--surface); border: 1px solid var(--line); border-radius: 18px; padding: 18px 20px; box-shadow: var(--shadow-lg); display: grid; gap: 6px;
+  strong { font-family: var(--font-display); font-size: 16px; font-weight: 600; color: var(--text); letter-spacing: -0.01em; }
+  p { margin: 0; font-size: 12.5px; color: var(--text-3); } }
+.np-mr-pasos { list-style: none; margin: 8px 0 0; padding: 0; display: grid; gap: 6px;
+  li { display: grid; grid-template-columns: 24px minmax(0, 1fr) auto; align-items: center; gap: 10px; padding: 8px 10px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--surface-2); }
+  b { width: 24px; height: 24px; border-radius: 50%; display: grid; place-items: center; background: var(--accent-soft); color: var(--accent); font: 700 12px var(--font-mono); }
+  span { font-size: 12.5px; color: var(--text-2); } }
+
+.np-btn--danger { color: var(--danger, #dc2626); }
+
+/* ─── Panel lateral ──────────────────────────────────────────────────── */
+/* El asa y el resumen son de la hoja del teléfono: en escritorio no existen. */
+.np-mr-asa, .np-mr-peek { display: none; }
+
+.np-mr-insp-ico { width: 36px; height: 36px; flex-shrink: 0; display: grid; place-items: center; border-radius: 8px; background: var(--surface); border: 3px solid var(--line-strong); font: 700 12px var(--font-mono); font-style: normal; color: var(--text);
+  &.is-olt { background: #1e293b; border-color: #1e293b; color: #fff; font-size: 10px; letter-spacing: .04em; } }
+.np-mr-buscar { flex-shrink: 0; padding: 10px 12px 0; .np-search { flex: none; width: 100%; min-width: 0; height: 32px; } }
+.np-mr-cuerpo { padding-top: 10px; gap: 0; }
+.np-mr-form { display: grid; gap: 10px; label { display: grid; gap: 4px; font-size: 12px; color: var(--text-2); } }
+.np-mr-ayuda { margin: -4px 0 8px; }
+.np-mr-vacio { padding: 20px 8px; text-align: center; font-size: 12.5px; }
+.np-mr-lista { display: grid; gap: 1px; }
+.np-mr-fila { display: grid; grid-template-columns: 12px minmax(0, 1fr) auto; align-items: center; gap: 10px; padding: 7px 8px; border-radius: var(--radius); cursor: pointer; transition: background .12s;
+  &:hover { background: var(--surface-2); }
+  > i { width: 10px; height: 10px; border-radius: 50%; justify-self: center; box-shadow: 0 0 0 1px color-mix(in srgb, var(--text) 12%, transparent);
+    &.is-cuadro { border-radius: 3px; width: 12px; height: 12px; }
+    &.is-olt { background: var(--text); } }
+  > span { min-width: 0; display: grid;
+    b { font-size: 13px; font-weight: 700; color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    small { font-size: 11.5px; color: var(--text-3); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; } }
+  .np-link { font-size: 12px; white-space: nowrap; } }
+.np-mr-conteo { display: flex; flex-wrap: wrap; gap: 4px; margin: 0 0 10px;
+  span { display: inline-flex; align-items: center; gap: 6px; height: 22px; padding: 0 8px; border-radius: 999px; background: var(--surface-2); border: 1px solid var(--line); font-size: 11.5px; font-weight: 600; color: var(--text-2); }
+  i { width: 8px; height: 8px; border-radius: 50%; } }
+
+/* El botoncito «Ir con Waze» de las filas: redondo, del azul de Waze. */
+.np-mr-wz { width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center; background: #e9f3ff; color: #1d6fd8; flex-shrink: 0; transition: background .12s, transform .12s;
+  svg { width: 15px; height: 15px; }
+  &:hover { background: #d4e8ff; transform: scale(1.06); } }
+:host-context(.dark) .np-mr-wz, :host-context([data-theme='dark']) .np-mr-wz { background: #1e3a5f; color: #8ec5ff; &:hover { background: #244a78; } }
+
+/* Las alertas en el panel: tarjetas con el icono del reporte, la más grave primero. */
+.np-mr-alertas { display: grid; gap: 6px; margin-bottom: 12px; }
+.np-mr-alerta { display: grid; grid-template-columns: 34px minmax(0, 1fr) auto; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 14px; background: color-mix(in srgb, var(--c) 8%, var(--surface)); border: 1px solid color-mix(in srgb, var(--c) 30%, var(--line)); cursor: pointer; transition: background .12s, transform .12s;
+  &:hover { background: color-mix(in srgb, var(--c) 14%, var(--surface)); }
+  &:focus-visible { outline: 2px solid var(--c); outline-offset: 1px; }
+  > i { width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; background: var(--c); color: #fff; box-shadow: 0 2px 6px color-mix(in srgb, var(--c) 40%, transparent);
+    ::ng-deep svg { width: 18px; height: 18px; } }
+  > span { min-width: 0; display: grid;
+    b { font-size: 13px; font-weight: 700; color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    small { font-size: 11.5px; color: var(--text-2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; } } }
+
+/* Cómo llegar y quién está más cerca, en la caja seleccionada. */
+.np-mr-llegar { display: grid; gap: 10px; padding: 10px 12px; border-radius: 14px; background: var(--surface-2); border: 1px solid var(--line); }
+.np-mr-tecfila { display: flex; align-items: center; gap: 10px; min-width: 0;
+  > span { min-width: 0; display: grid;
+    small { font-size: 11px; color: var(--text-3); text-transform: uppercase; letter-spacing: .04em; font-weight: 700; }
+    b { font-size: 13px; color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; } } }
+.np-mr-avatar { width: 32px; height: 32px; flex-shrink: 0; border-radius: 50%; display: grid; place-items: center; background: #0ea5e9; color: #fff; font: 700 12px var(--font-display); font-style: normal; border: 2px solid #fff; box-shadow: 0 0 0 2px #10b981;
+  &.is-vacio { background: var(--surface-3); color: var(--text-3); box-shadow: 0 0 0 2px var(--line-strong); } }
+.np-mr-waze { display: inline-flex; align-items: center; justify-content: center; gap: 8px; width: 100%; background: #1d6fd8; border-color: #1d6fd8; color: #fff; text-decoration: none;
+  svg { width: 15px; height: 15px; }
+  &:hover { background: #185fbd; border-color: #185fbd; color: #fff; } }
+
+/* ─── Marcadores (se dibujan fuera de Angular: ::ng-deep) ─────────────
+   El borde blanco y la sombra son para que se vean igual sobre calles claras y
+   sobre satélite oscuro. Sólo pulsan los que tienen problema, con su color (--c). */
+:host ::ng-deep .mr-cli { display: block; width: 14px; height: 14px; border-radius: 50%; border: 2px solid #fff; box-shadow: 0 0 0 1px rgb(0 0 0 / .25), 0 1px 4px rgb(0 0 0 / .45);
+  &.is-grave { animation: mr-pulso 1.8s ease-out infinite; } }
+@keyframes mr-pulso {
+  0%   { box-shadow: 0 0 0 0 color-mix(in srgb, var(--c, #dc2626) 60%, transparent), 0 0 0 1px rgb(0 0 0 / .25), 0 1px 4px rgb(0 0 0 / .45); }
+  100% { box-shadow: 0 0 0 12px color-mix(in srgb, var(--c, #dc2626) 0%, transparent), 0 0 0 1px rgb(0 0 0 / .25), 0 1px 4px rgb(0 0 0 / .45); } }
+
+/* Burbujas de clientes agrupados: del color del peor estado que hay adentro. */
+:host ::ng-deep .mr-cluster { border-radius: 50%; background: var(--surface); border: 4px solid var(--c, #10b981); display: grid; place-items: center; box-shadow: 0 0 0 3px color-mix(in srgb, var(--c, #10b981) 25%, transparent), 0 2px 8px rgb(0 0 0 / .35); transition: transform .12s;
+  b { font: 700 12px var(--font-mono); color: var(--text); }
+  &.is-grave { box-shadow: 0 0 0 5px color-mix(in srgb, var(--c) 30%, transparent), 0 2px 8px rgb(0 0 0 / .35); }
+  &:hover { transform: scale(1.08); } }
+
+/* Caja NAP: cuadrito con el conteo. La seleccionada lleva un halo que respira. */
+:host ::ng-deep .mr-nap { position: relative; width: 30px; height: 30px; border-radius: 9px; background: #fff; border: 4px solid #94a3b8; display: grid; place-items: center; box-shadow: 0 0 0 1px rgb(0 0 0 / .2), 0 2px 8px rgb(0 0 0 / .35);
+  b { font: 700 11px var(--font-mono); color: #1e293b; }
+  &.is-grave { animation: mr-pulso 1.8s ease-out infinite; }
+  &.is-sel { outline: 3px solid #0ea5e9; outline-offset: 2px;
+    &::before { content: ""; position: absolute; inset: -16px; border-radius: 50%; background: rgb(14 165 233 / .25); animation: mr-halo 2s ease-in-out infinite; pointer-events: none; } } }
+@keyframes mr-halo { 0%, 100% { transform: scale(.85); opacity: .9; } 50% { transform: scale(1.25); opacity: .35; } }
+:host ::ng-deep .mr-olt { position: relative; width: 40px; height: 40px; border-radius: 11px; background: #1e293b; color: #fff; display: grid; place-items: center; font: 800 11px var(--font-display); letter-spacing: .04em; border: 3px solid #fff; box-shadow: 0 0 0 1px rgb(0 0 0 / .3), 0 2px 10px rgb(0 0 0 / .4);
+  &.is-sel { outline: 3px solid #0ea5e9; outline-offset: 2px;
+    &::before { content: ""; position: absolute; inset: -18px; border-radius: 50%; background: rgb(14 165 233 / .25); animation: mr-halo 2s ease-in-out infinite; pointer-events: none; } } }
+:host ::ng-deep .mr-temp { display: block; width: 20px; height: 20px; border-radius: 50%; background: #0ea5e9; border: 3px solid #fff; box-shadow: 0 0 0 4px rgb(14 165 233 / .35), 0 2px 8px rgb(0 0 0 / .4); }
+
+/* Pines de alerta: el «reporte» de Waze flotando sobre la caja. El marcador mide 0×0 y
+   el globo se centra con transform, así el ancho depende del texto. */
+:host ::ng-deep .mr-alerta-pin { overflow: visible !important; }
+:host ::ng-deep .mr-alerta { position: absolute; left: 0; bottom: 24px; transform: translateX(-50%); display: flex; align-items: center; gap: 6px; height: 30px; padding: 0 10px 0 3px; border-radius: 999px; background: #fff; border: 2px solid var(--c); box-shadow: 0 3px 10px rgb(0 0 0 / .35); color: #1e293b; font: 700 12px var(--font-body); white-space: nowrap; cursor: pointer; transition: transform .12s;
+  i { width: 22px; height: 22px; border-radius: 50%; display: grid; place-items: center; background: var(--c); color: #fff; flex-shrink: 0; svg { width: 13px; height: 13px; } }
+  &::after { content: ""; position: absolute; left: 50%; bottom: -8px; width: 10px; height: 10px; background: var(--c); transform: translateX(-50%) rotate(45deg); border-radius: 2px; }
+  &.is-falla i { animation: mr-latido 1.4s ease-in-out infinite; }
+  &:hover { transform: translateX(-50%) scale(1.06); } }
+@keyframes mr-latido { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.15); } }
+
+/* Técnicos: avatar redondo con iniciales. Anillo verde si mandó posición hace poco; gris si no. */
+:host ::ng-deep .mr-tec { position: relative; width: 34px; height: 34px; border-radius: 50%; background: #94a3b8; color: #fff; display: grid; place-items: center; font: 700 12px var(--font-display); border: 2px solid #fff; box-shadow: 0 0 0 3px #94a3b8, 0 2px 8px rgb(0 0 0 / .4);
+  &.is-fresco { background: #0ea5e9; box-shadow: 0 0 0 3px #10b981, 0 2px 8px rgb(0 0 0 / .4);
+    i { position: absolute; inset: -8px; border-radius: 50%; border: 2px solid #10b981; animation: mr-tec-pulso 1.8s ease-out infinite; pointer-events: none; } } }
+@keyframes mr-tec-pulso { 0% { transform: scale(.75); opacity: .9; } 100% { transform: scale(1.5); opacity: 0; } }
+
+/* Ventanitas: redondeadas y del tema (claras u oscuras). */
+:host ::ng-deep .leaflet-popup-content-wrapper { border-radius: 14px; background: var(--surface); color: var(--text); box-shadow: var(--shadow-lg); }
+:host ::ng-deep .leaflet-popup-tip { background: var(--surface); }
+:host ::ng-deep .leaflet-popup-close-button { color: var(--text-3); }
+:host ::ng-deep .leaflet-tooltip { border-radius: 8px; background: var(--surface); color: var(--text); border-color: var(--line); box-shadow: var(--shadow); font-weight: 600; }
+:host ::ng-deep .mr-pop { display: grid; gap: 2px; min-width: 180px; b { font-size: 13.5px; color: var(--text); } small { color: var(--text-3); font-size: 11.5px; } }
+:host ::ng-deep .mr-pop-st { font-size: 11.5px; font-weight: 700; }
+:host ::ng-deep .mr-pop-acc { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px;
+  a { display: inline-flex; align-items: center; height: 28px; padding: 0 10px; border-radius: 999px; background: var(--surface-2); color: var(--text) !important; font-size: 12px; font-weight: 700; text-decoration: none !important; border: 1px solid var(--line); }
+  a.mr-waze { background: #1d6fd8; border-color: #1d6fd8; color: #fff !important; }
+  a.mr-waze::before { content: "➤"; margin-right: 6px; font-size: 11px; } }
+
+/* La regla global de 1280 px vuelve la ficha un panel fijo a pantalla completa
+   (sirve en las tablas, donde la ficha se abre y se cierra). Acá la ficha es la
+   lista, siempre visible: sigue al lado del mapa hasta los 1000 px y después es
+   una hoja sobre el mapa. Sin esto, la ficha tapaba la pantalla y el mapa flotaba encima. */
+@media (max-width: 1280px) {
+  .np-mapared.is-open .np-workspace { grid-template-columns: minmax(0, 1fr) var(--np-inspector-w); }
+  .np-mapared .np-inspector { position: relative; inset: auto; z-index: auto; border: 1px solid var(--line); border-radius: var(--radius-lg); max-height: 100%; }
+  .np-mapared .np-insp-body { max-width: none; }
+}
+
+@media (max-height: 720px) and (min-width: 1001px) {
+  .np-mr-poner button { height: 30px; }
+}
+
+/* ─── El teléfono: mapa a pantalla y la lista como hoja que sube desde abajo ─── */
+@media (max-width: 1000px) {
+  /* El alto lo pone el .ts (lo que queda de pantalla bajo la cabecera); la hoja va encima. */
+  .np-mapared.is-open .np-workspace { display: block; position: relative; height: 70vh; min-height: 420px; }
+  .np-map-wrap { position: absolute; inset: 0; min-height: 0; }
+  .np-map-modo { white-space: normal; text-align: center; }
+
+  /* Sin zoom ni escala: se pellizca. La atribución sube con la hoja. */
+  :host ::ng-deep .leaflet-control-zoom, :host ::ng-deep .leaflet-control-scale { display: none; }
+  :host ::ng-deep .leaflet-bottom { bottom: var(--mr-hoja); transition: bottom .25s ease; }
+  .np-mapared-ws.is-arrastrando ::ng-deep .leaflet-bottom { transition: none; }
+
+  /* Buscador a lo ancho; debajo, la leyenda en fila de píldoras que se desplaza de costado. */
+  .np-map-buscar { width: calc(100% - 24px); }
+  .np-map-legend { left: 0; right: 0; top: 64px; bottom: auto; display: flex; flex-wrap: nowrap; gap: 6px; min-width: 0; max-width: none; padding: 0 12px; background: transparent; backdrop-filter: none; border: 0; box-shadow: none; overflow-x: auto; scrollbar-width: none; &::-webkit-scrollbar { display: none; }
+    button { flex-shrink: 0; height: 30px; padding: 0 10px; border-radius: 999px; background: var(--surface); border: 1px solid var(--line); box-shadow: var(--shadow); font-size: 11.5px; span { flex: none; } }
+    .np-legend-prob { margin-bottom: 0; &::after { display: none; } } }
+  .np-map-fabs { top: 108px; }
+  .np-map-empty { top: 42%; }
+
+  /* La hoja: pegada abajo, con el asa para subirla y bajarla. Tres alturas (ver el .ts). */
+  .np-mapared .np-inspector { position: absolute; left: 0; right: 0; bottom: 0; inset-block-start: auto; z-index: 5; height: var(--mr-hoja); max-height: none; border-radius: 20px 20px 0 0; border-bottom: 0; box-shadow: 0 -8px 30px rgb(0 0 0 / .18); transition: height .25s ease; display: flex; flex-direction: column; overflow: hidden;
+    &.is-arrastrando { transition: none; } }
+  .np-mr-asa { display: grid; place-items: center; height: 22px; flex-shrink: 0; cursor: grab; touch-action: none;
+    i { width: 40px; height: 5px; border-radius: 999px; background: var(--line-strong); } }
+  .np-mr-peek { display: grid; grid-template-columns: 36px minmax(0, 1fr) 20px; align-items: center; gap: 10px; flex-shrink: 0; padding: 4px 16px 12px; text-align: left; width: 100%;
+    > span { min-width: 0; display: grid;
+      b { font-size: 14px; font-weight: 700; color: var(--text); }
+      small { font-size: 12px; color: var(--text-3); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; } } }
+  .np-mr-peek-ico { width: 36px; height: 36px; border-radius: 50%; display: grid; place-items: center; background: var(--danger-soft); color: var(--danger); svg { width: 18px; height: 18px; }
+    &.is-ok { background: color-mix(in srgb, #10b981 15%, transparent); color: #059669; } }
+  .np-mr-peek-flecha { width: 20px; height: 20px; color: var(--text-3); transition: transform .25s; }
+  .np-inspector[data-hoja="full"] .np-mr-peek-flecha { transform: rotate(180deg); }
+  /* Con la hoja asomada sólo se ve el resumen: el encabezado de la lista sobra. */
+  .np-inspector[data-hoja="peek"] .np-mr-head-lista { display: none; }
+  .np-mapared .np-insp-head { padding-top: 6px; }
+  .np-mapared .np-insp-body { overflow-y: auto; -webkit-overflow-scrolling: touch; padding-bottom: max(18px, env(safe-area-inset-bottom)); }
+}
+
+@media (max-width: 760px) {
+  .np-mapared .np-actions { justify-content: flex-start; }
+  .np-map-fabs button { width: 42px; height: 42px; span { display: none; } }
+}
+
+@media (max-width: 520px) {
+  .np-mr-pasos li { grid-template-columns: 24px minmax(0, 1fr); .np-btn { grid-column: 2; justify-self: start; } }
+  .np-mr-alerta { grid-template-columns: 30px minmax(0, 1fr) auto; > i { width: 30px; height: 30px; } }
+}
+
+/* El fondo de calles estilo Waze lo dibuja MapLibre (ver estilo-waze.ts) en el panel de
+   teselas de Leaflet, debajo de todos los marcadores. De maplibre-gl.css (65 kB, casi todo
+   controles y globos que acá no se usan) sólo hace falta esto: el lienzo pegado a su caja.
+   El lienzo no recibe el ratón: los clics van al mapa de Leaflet (poner cajas, arrastrar). */
+:host ::ng-deep .leaflet-gl-layer { pointer-events: none; }
+:host ::ng-deep .leaflet-gl-layer.maplibregl-map { position: relative; overflow: hidden; }
+:host ::ng-deep .leaflet-gl-layer .maplibregl-canvas { position: absolute; left: 0; top: 0; pointer-events: none; }
+
+/* Respaldo si MapLibre no carga: OpenStreetMap con tonos suaves (claro) o invertido a
+   oscuro, para acercarse al estilo de Waze sin depender de un servicio que pida clave. */
+:host ::ng-deep .mr-fondo-claro { filter: saturate(.85) brightness(1.03); }
+:host ::ng-deep .mr-fondo-oscuro { filter: invert(1) hue-rotate(180deg) brightness(.9) contrast(.88) saturate(.7); }

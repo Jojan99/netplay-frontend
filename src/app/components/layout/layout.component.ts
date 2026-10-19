@@ -6,8 +6,12 @@ import {
   ChangeDetectorRef,
   OnInit,
   inject,
-  PLATFORM_ID
+  PLATFORM_ID,
+  signal,
+  computed,
+  effect,
 } from '@angular/core';
+import { Capacitor } from '@capacitor/core';
 import { isPlatformBrowser, CommonModule } from '@angular/common';
 import { RouterModule, RouterOutlet, Router, NavigationEnd } from '@angular/router';
 import { CrmWidgetComponent } from '../../crm/components/crm-widget/crm-widget.component';
@@ -71,6 +75,48 @@ export class LayoutComponent implements OnInit {
   /** Avisa cuando se publicó una versión nueva, para no quedarse con la vieja. */
   readonly actualizacion = inject(ActualizacionService);
   readonly iconos = ICONOS;
+
+  /** Bloqueo de ubicación de los técnicos (ver LocationTrackerService.estado). */
+  private gps = inject(LocationTrackerService);
+  readonly ubicacion = this.gps.estado;
+  readonly esApp = Capacitor.isNativePlatform();
+  readonly nombreApp = 'WispSmart';
+  /** «Revisando…» sólo aparece si tarda: en el caso normal la ubicación llega antes y no parpadea nada. */
+  private verificandoLargo = signal(false);
+  private relojVerificando: any = null;
+  readonly ubicacionBloquea = computed(() => {
+    const e = this.ubicacion();
+    return e === 'denegada' || e === 'apagada' || e === 'sin_soporte' || (e === 'verificando' && this.verificandoLargo());
+  });
+
+  private vigiaVerificando = effect(() => {
+    if (this.ubicacion() === 'verificando') {
+      clearTimeout(this.relojVerificando);
+      this.relojVerificando = setTimeout(() => this.verificandoLargo.set(true), 2500);
+    } else {
+      clearTimeout(this.relojVerificando);
+      this.verificandoLargo.set(false);
+      // Ya activa: la ayuda del intento anterior no debe reaparecer si después la apaga.
+      if (this.ubicacion() === 'activa') this.resultadoActivar = null;
+    }
+  }, { allowSignalWrites: true });
+
+  /** Lo que pasó al tocar «Activar ubicación»: decide qué ayuda mostrar debajo. */
+  resultadoActivar: 'activa' | 'ajustes' | 'bloqueada' | 'sin_gps' | null = null;
+  activando = false;
+
+  async activarUbicacion(): Promise<void> {
+    if (this.activando) return;
+    this.activando = true;
+    try {
+      this.resultadoActivar = await this.gps.activar();
+    } finally {
+      this.activando = false;
+      this.cdr.markForCheck();
+    }
+  }
+
+  recargarPagina(): void { window.location.reload(); }
 
   alternarFavorito(item: RouteProps): void {
     if (!item.href) return;
@@ -242,9 +288,12 @@ export class LayoutComponent implements OnInit {
     if (this.isDropdownVisible) this.setPosition();
   }
 
+  /** El menú (260 px) queda alineado al borde derecho del botón, con 6 px de
+      aire; antes se corría 180 px a la izquierda a ojo. Nunca se sale por la
+      izquierda en un teléfono. */
   setPosition(): void {
     const rect = this.dropdownButton.nativeElement.getBoundingClientRect();
-    this.dropdownPosition = { top: rect.bottom, left: rect.left - 180 };
+    this.dropdownPosition = { top: rect.bottom + 6, left: Math.max(8, rect.right - 260) };
   }
 
   signOut(): void {

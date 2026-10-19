@@ -9,6 +9,7 @@ import { ProvisionarInstalacionComponent } from './provisionar/provisionar-insta
 import { AprovisionamientoEnVivoComponent } from './provisionar/aprovisionamiento-en-vivo.component';
 import { OpcionSimple, PRESENTACION_METODOS_PAGO, PRESENTACION_SIMPLE, conValor } from '../../common/np-select/presentaciones';
 import { AuthService } from '../../services/auth.service';
+import { LocationTrackerService } from '../../services/location-tracker.service';
 
 @Component({
   selector: 'app-installations',
@@ -20,6 +21,8 @@ import { AuthService } from '../../services/auth.service';
 })
 export class InstallationsComponent implements OnInit {
   private dialog = inject(DialogService);
+  private gps = inject(LocationTrackerService);
+  completando = false;
   installations: InstallationOrder[] = [];
   allInstallations: InstallationOrder[] = [];
   isLoading = false;
@@ -328,18 +331,26 @@ export class InstallationsComponent implements OnInit {
     this.showCompleteModal = true;
   }
 
-  saveComplete(): void {
-    if (!this.selected?.id) return;
+  /**
+   * El técnico cierra estando en la casa del cliente: se toma el GPS en ese momento para
+   * ubicarlo en el mapa de la red. Sin permiso o sin señal se cierra igual.
+   */
+  async saveComplete(): Promise<void> {
+    if (!this.selected?.id || this.completando) return;
     const instId = this.selected.id;
     const notes = this.completeNotes;
-    this.svc.complete(instId, notes || undefined).subscribe({
-      next: r => {
+    this.completando = true;
+    const ubicacion = await this.gps.posicionActual();
+    this.svc.complete(instId, notes || undefined, ubicacion).subscribe({
+      next: (r: any) => {
+        this.completando = false;
         this.svc.createLog(instId, { action: 'complete', description: 'Instalación completada', notes }).subscribe();
-        this.toast(r.message);
+        this.toast(r?.ubicacion?.ubicado ? `${r.message}. ${r.ubicacion.detalle}` : r.message);
         this.showCompleteModal = false;
         this.load();
         this.loadAllForSummary();
       },
+      error: (e: any) => { this.completando = false; this.toast(e?.error?.message || 'No se pudo completar la instalación.'); },
     });
   }
 

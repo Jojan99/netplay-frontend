@@ -1,6 +1,8 @@
 /* ── Ítem de navegación ────────────────────────────────────────────────── */
 .sidebar-nav-item { position: relative; display: flex; align-items: center; width: 100%; min-height: 38px; padding: 0 10px !important; margin: 0 0 2px !important; border: 1px solid transparent; border-radius: var(--radius); color: var(--text-2); font-family: var(--font-body); font-size: 12.5px; font-weight: 700; cursor: pointer; transition: background .15s, color .15s, border-color .15s; }
-.sidebar-nav-item:hover { background: var(--surface-2); color: var(--accent); }
+@media (hover: hover) { .sidebar-nav-item:hover { background: var(--surface-2); color: var(--accent); } }
+/* Es un div con tabindex: sin esto llevaba el anillo azul del navegador al recorrerlo con Tab. */
+.sidebar-nav-item:focus-visible { outline: 2px solid var(--accent); outline-offset: -1px; }
 .sidebar-nav-item-active { border-color: var(--accent-line); background: var(--accent-soft); color: var(--accent); }
 .sidebar-nav-item-active::before { content: ''; position: absolute; top: 50%; left: -8px; width: 3px; height: 18px; border-radius: 0 3px 3px 0; background: var(--accent); transform: translateY(-50%); }
 .sidebar-nav-icon { display: grid; width: 20px; height: 20px; place-items: center; color: currentColor; flex-shrink: 0; }

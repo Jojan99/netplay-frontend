@@ -19,7 +19,9 @@
           "options": {
             "allowedCommonJsDependencies": [
               "rxjs",
-              "leaflet"
+              "leaflet",
+              "leaflet.markercluster",
+              "maplibre-gl"
             ],
             "outputPath": "dist/front-netplay",
             "index": "src/index.html",

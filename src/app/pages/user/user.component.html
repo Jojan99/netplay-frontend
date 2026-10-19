@@ -18,9 +18,9 @@
       </span>
       <div class="np-ribbon" *ngIf="!skeletor">
         <span><span class="np-n">{{ conteos.todos | number }}</span>{{ search.trim() ? 'encontrados' : 'en total' }}</span>
-        <span><i class="np-dot" style="background:var(--ok)"></i><span class="np-n">{{ countActive | number }}</span>activos</span>
+        <span><i class="np-dot" style="background:var(--ok)"></i><span class="np-n">{{ countActive | number }}</span>con servicio</span>
         <span><i class="np-dot" style="background:var(--danger)"></i><span class="np-n">{{ countSuspended | number }}</span>suspendidos</span>
-        <span><i class="np-dot" style="background:var(--warn)"></i><span class="np-n">{{ countNoIp | number }}</span>sin IP asignada</span>
+        <span><i class="np-dot" style="background:var(--warn)"></i><span class="np-n">{{ countNoIp | number }}</span>sin conexión asignada</span>
         <!-- El tope del plan: activos + suspendidos. Se ve antes de intentar un alta. -->
         <span *ngIf="cupo?.tope" [class.np-cupo--alto]="(cupo?.porcentaje ?? 0) >= 90" [title]="textoDelCupo">
           <i class="np-dot" [style.background]="cupo?.lleno ? 'var(--danger)' : (cupo?.porcentaje ?? 0) >= 90 ? 'var(--warn)' : 'var(--info, var(--accent))'"></i>
@@ -34,28 +34,40 @@
       <div class="np-ribbon np-ribbon--loading" *ngIf="skeletor">Cargando registro…</div>
     </div>
     <div class="np-actions">
-      <button type="button" class="np-btn np-btn--ghost" (click)="downloadCsvAll()" [disabled]="exportingCsv">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12m0 0 4-4m-4 4-4-4M4 17v3h16v-3"/></svg>
-        {{ exportingCsv ? 'Exportando…' : 'Exportar CSV' }}
-      </button>
-      <button *ngIf="esAdmin" type="button" class="np-btn np-btn--ghost" (click)="revisarRouter()"
-              title="Compara la plataforma con el MikroTik: quién figura activo y está cortado, o al revés">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="13" width="18" height="7" rx="1.5"/><path d="M7 16.5h.01M11 16.5h.01M8 9.5a6 6 0 0 1 8 0M5.5 7a9.5 9.5 0 0 1 13 0"/></svg>
-        Revisar router
-      </button>
-      <a *ngIf="esAdmin" class="np-btn np-btn--ghost" routerLink="/dashboard/usuario/eliminados" title="Clientes eliminados: reinstalar a uno que vuelve">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 3-6.7M3 4v4h4"/></svg>
-        Eliminados
-      </a>
-      <a *ngIf="esAdmin" class="np-btn np-btn--ghost" routerLink="/dashboard/usuario/importar" title="Traer clientes desde WispHub o Mikrowisp">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v11m0 0-4-4m4 4 4-4M4 15v4a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-4"/></svg>
-        Importar
-      </a>
       <button type="button" class="np-btn np-btn--primary" (click)="openCreateUserModal()"
               [disabled]="!!cupo?.lleno" [title]="cupo?.lleno ? textoDelCupo : ''">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M12 5v14M5 12h14"/></svg>
         Nuevo cliente
       </button>
+      <!-- Lo que se usa de vez en cuando (exportar, revisar el router, eliminados,
+           importar) va bajo «Más»: cuatro botones iguales tapaban al único que
+           se busca siempre. -->
+      <div class="np-mas">
+        <button type="button" class="np-btn np-btn--ghost np-mas-btn" (click)="alternarMenu('cabecera')"
+                aria-haspopup="menu" aria-controls="np-mas-clientes" [attr.aria-expanded]="menuAbierto === 'cabecera'">
+          Más
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
+        </button>
+        <div class="np-mas-menu" id="np-mas-clientes" role="menu" aria-label="Más acciones" *ngIf="menuAbierto === 'cabecera'">
+          <button type="button" role="menuitem" class="np-mas-item" (click)="cerrarMenus(); downloadCsvAll()" [disabled]="exportingCsv">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12m0 0 4-4m-4 4-4-4M4 17v3h16v-3"/></svg>
+            {{ exportingCsv ? 'Exportando…' : 'Exportar CSV' }}
+          </button>
+          <button *ngIf="esAdmin" type="button" role="menuitem" class="np-mas-item" (click)="cerrarMenus(); revisarRouter()"
+                  title="Compara la plataforma con el router: quién figura activo y está cortado, o al revés">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="13" width="18" height="7" rx="1.5"/><path d="M7 16.5h.01M11 16.5h.01M8 9.5a6 6 0 0 1 8 0M5.5 7a9.5 9.5 0 0 1 13 0"/></svg>
+            Revisar router
+          </button>
+          <a *ngIf="esAdmin" role="menuitem" class="np-mas-item" routerLink="/dashboard/usuario/eliminados" (click)="cerrarMenus()" title="Clientes eliminados: reinstalar a uno que vuelve">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 3-6.7M3 4v4h4"/></svg>
+            Clientes eliminados
+          </a>
+          <a *ngIf="esAdmin" role="menuitem" class="np-mas-item" routerLink="/dashboard/usuario/importar" (click)="cerrarMenus()" title="Traer clientes desde WispHub o Mikrowisp">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v11m0 0-4-4m4 4 4-4M4 15v4a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-4"/></svg>
+            Importar clientes
+          </a>
+        </div>
+      </div>
     </div>
   </header>
 
@@ -69,9 +81,10 @@
     </label>
     <div class="np-chips" role="group" aria-label="Filtrar por estado">
       <button type="button" class="np-chip" [attr.aria-pressed]="statusFilter === 'all'" (click)="setStatusFilter('all')">Todos<span class="np-c">{{ conteos.todos }}</span></button>
-      <button type="button" class="np-chip" [attr.aria-pressed]="statusFilter === 'active'" (click)="setStatusFilter('active')">Activos<span class="np-c">{{ countActive }}</span></button>
+      <button type="button" class="np-chip" [attr.aria-pressed]="statusFilter === 'active'" (click)="setStatusFilter('active')">Con servicio<span class="np-c">{{ countActive }}</span></button>
       <button type="button" class="np-chip" [attr.aria-pressed]="statusFilter === 'suspended'" (click)="setStatusFilter('suspended')">Suspendidos<span class="np-c">{{ countSuspended }}</span></button>
-      <button type="button" class="np-chip" [attr.aria-pressed]="statusFilter === 'noip'" (click)="setStatusFilter('noip')">Sin IP<span class="np-c">{{ countNoIp }}</span></button>
+      <button type="button" class="np-chip" [attr.aria-pressed]="statusFilter === 'noip'" (click)="setStatusFilter('noip')"
+              title="De IP fija y sin IP asignada: todavía no pueden navegar">Sin conexión asignada<span class="np-c">{{ countNoIp }}</span></button>
       <button type="button" class="np-chip" *ngIf="companyHasWA" [attr.aria-pressed]="statusFilter === 'nowa'" (click)="setStatusFilter('nowa')">Sin WhatsApp<span class="np-c">{{ countNoWa }}</span></button>
       <button type="button" class="np-chip" [attr.aria-pressed]="statusFilter === 'fe'" (click)="setStatusFilter('fe')"
               title="Clientes con facturación electrónica: los que cobran por la pasarela">Factura electrónica<span class="np-c">{{ countConFe }}</span></button>
@@ -133,42 +146,48 @@
                 <td class="np-stripe"><i></i></td>
                 <td class="es-principal">
                   <div class="np-name">{{ user.names }} {{ user.lastname }}<app-burbuja-ticket [userId]="user.id_user" /><app-burbuja-pago [userId]="user.id_user" /></div>
-                  <div class="np-pagosusp" *ngIf="statusFilter === 'pagosusp'">{{ user.al_dia ? 'Al día: reactívalo' : 'Comprobante esperando: apruébalo en la burbuja' }}</div>
+                  <div class="np-pagosusp" *ngIf="statusFilter === 'pagosusp'">{{ user.al_dia ? 'Al día: reactívelo' : 'Comprobante esperando: apruébelo en la burbuja' }}</div>
                   <div class="np-plan">{{ user.plan_name || 'Sin plan' }}<span class="np-plan-mobile"> · <em>{{ user.dni }}</em><ng-container *ngIf="user.ip"> · <em>{{ user.ip }}</em></ng-container></span></div>
                 </td>
                 <td class="np-data np-col-doc" data-label="Documento">{{ user.dni }}</td>
                 <td class="np-data np-col-phone" data-label="Teléfono">{{ user.phone || '—' }}</td>
-                <td class="np-data np-data--dim np-col-ip" data-label="IP">{{ user.ip || (filaEsPppoe(user) ? 'PPPoE' : '—') }}</td>
-                <td data-label="Estado"><span class="np-pill" [ngClass]="'np-pill--' + rowStatus(user)">{{ rowStatusLabel(user) }}</span></td>
+                <!-- Un cliente PPPoE no tiene IP fija: en la celda va algo que se entienda y
+                     la sigla queda en el tooltip. -->
+                <td class="np-data np-data--dim np-col-ip" data-label="IP"
+                    [title]="!user.ip && filaEsPppoe(user) ? 'PPPoE: la IP se la asigna el router cada vez que se conecta' : ''">{{ user.ip || (filaEsPppoe(user) ? 'Automática' : '—') }}</td>
+                <td data-label="Estado"><span class="np-pill" [ngClass]="'np-pill--' + rowStatus(user)" [title]="'En el sistema: ' + (user.internet_status || '—')">{{ rowStatusLabel(user) }}</span></td>
                 <td class="np-td-right es-acciones">
                   <div class="np-rowacts" (click)="$event.stopPropagation()">
                     <!-- WhatsApp -->
                     <button *ngIf="companyHasWA; else waOff" type="button" class="np-icobtn np-wa" [class.is-on]="user.whatsapp_enabled"
                             (click)="toggleWhatsapp(user)"
+                            [attr.aria-label]="user.whatsapp_enabled ? 'Notificaciones WhatsApp activas' : 'Activar notificaciones WhatsApp'"
                             [title]="user.whatsapp_enabled ? 'Notificaciones WhatsApp activas' : 'Activar notificaciones WhatsApp'">
                       <svg viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.089.534 4.049 1.475 5.762L0 24l6.435-1.44A11.945 11.945 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.818a9.818 9.818 0 01-5.007-1.373l-.36-.214-3.724.834.849-3.629-.236-.373A9.818 9.818 0 1112 21.818z"/></svg>
                     </button>
                     <ng-template #waOff>
-                      <span class="np-icobtn np-wa is-disabled" title="Activa WhatsApp en Configuración > WhatsApp para habilitar esta opción">
+                      <span class="np-icobtn np-wa is-disabled" title="Active WhatsApp en Configuración › Líneas de WhatsApp para habilitar esta opción">
                         <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.373 0 0 5.373 0 12c0 2.089.534 4.049 1.475 5.762L0 24l6.435-1.44A11.945 11.945 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.818a9.818 9.818 0 01-5.007-1.373l-.36-.214-3.724.834.849-3.629-.236-.373A9.818 9.818 0 1112 21.818z"/></svg>
                       </span>
                     </ng-template>
                     <!-- Facturación electrónica -->
                     <button type="button" class="np-icobtn np-fe" [class.is-on]="!!user.billing_electronic"
                             (click)="toggleFacturacionElectronica(user)"
+                            [attr.aria-label]="user.billing_electronic ? 'Factura electrónica activa: cobra por la pasarela' : 'Activar factura electrónica (cobra por la pasarela)'"
                             [title]="user.billing_electronic ? 'Factura electrónica activa: cobra por la pasarela' : 'Activar factura electrónica (cobra por la pasarela)'">
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <path d="M6 3h9l4 4v14l-2.5-1.5L14 21l-2.5-1.5L9 21l-2.5-1.5L4 21V5a2 2 0 0 1 2-2z"/><path d="M9 8h6M9 12h6M9 16h3"/>
                       </svg>
                     </button>
                                         <!-- Suspender / Reactivar -->
                     <button type="button" class="np-icobtn" (click)="openSuspendModal(user.dni, user.id_user, user.internet_status, user.router_id)"
+                            [attr.aria-label]="user.internet_status === 'ACTIVE' ? 'Suspender servicio' : 'Reactivar servicio'"
                             [title]="user.internet_status === 'ACTIVE' ? 'Suspender servicio' : 'Reactivar servicio'">
                       <svg *ngIf="user.internet_status === 'ACTIVE'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="6" y="5" width="4" height="14" rx="1"/><rect x="14" y="5" width="4" height="14" rx="1"/></svg>
                       <svg *ngIf="user.internet_status !== 'ACTIVE'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 5l12 7-12 7z"/></svg>
                     </button>
                     <!-- Abrir ficha -->
-                    <button type="button" class="np-icobtn" (click)="openRow(user)" title="Abrir ficha">
+                    <button type="button" class="np-icobtn" (click)="openRow(user)" title="Abrir ficha" aria-label="Abrir ficha">
                       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 6 6 6-6 6"/></svg>
                     </button>
                   </div>
@@ -180,6 +199,10 @@
                   <strong>No hay clientes que coincidan.</strong>
                   <span *ngIf="search">Pruebe con otro nombre, documento o IP.</span>
                   <span *ngIf="!search && statusFilter !== 'all'">Cambie el filtro de estado para ver el resto.</span>
+                  <!-- La salida a mano: borra la búsqueda y el filtro de una vez. -->
+                  <div class="np-empty-acc" *ngIf="search || statusFilter !== 'all'">
+                    <button type="button" class="np-btn np-btn--ghost np-btn--sm" (click)="verTodos()">Ver todos los clientes</button>
+                  </div>
                 </td>
               </tr>
             </ng-container>
@@ -190,9 +213,9 @@
       <div class="np-pager">
         <span class="np-range">{{ totalEntries ? startIndex + 1 : 0 }}–{{ endIndex }} de {{ totalEntries | number }}</span>
         <div class="np-pages">
-          <button type="button" (click)="prevPage()" [disabled]="currentPage === 1" aria-label="Página anterior">‹</button>
+          <button type="button" (click)="prevPage()" [disabled]="currentPage === 1" aria-label="Página anterior"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m15 6-6 6 6 6"/></svg></button>
           <button type="button" *ngFor="let p of pageNumbers" (click)="goToPage(p)" [attr.aria-current]="p === currentPage ? 'page' : null">{{ p }}</button>
-          <button type="button" (click)="nextPage()" [disabled]="isLastPage" aria-label="Página siguiente">›</button>
+          <button type="button" (click)="nextPage()" [disabled]="isLastPage" aria-label="Página siguiente"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg></button>
         </div>
       </div>
     </section>
@@ -211,7 +234,12 @@
         <div class="np-avatar">{{ initialOf(selectedUserData?.names) }}</div>
         <div class="np-insp-id">
           <h2>{{ selectedUserData?.names || '…' }} {{ selectedUserData?.lastname || '' }}<app-burbuja-ticket [userId]="selectedUserId" /><app-burbuja-pago [userId]="selectedUserId" /></h2>
-          <div class="np-meta">CC <b>{{ selectedUserData?.dni || '—' }}</b> · IP <b>{{ ipCabecera }}</b></div>
+          <!-- Quién es: lo que hace falta para llamarlo o ir a su casa. La IP y lo
+               demás técnico bajan a «Detalles técnicos». -->
+          <div class="np-meta">CC <b>{{ selectedUserData?.dni || '—' }}</b> · Tel. <b>{{ selectedUserData?.phone || '—' }}</b></div>
+          <div class="np-meta np-meta--addr" *ngIf="selectedUserData">
+            {{ selectedUserData.address || 'Sin dirección' }} · <b>{{ selectedUserData.plan_name || 'Sin plan' }}</b><ng-container *ngIf="selectedUserData.monthly_price"> · $ {{ selectedUserData.monthly_price | number:'1.0-0' }} al mes</ng-container>
+          </div>
         </div>
         <div class="np-insp-tools">
           <button type="button" class="np-icobtn np-only-desktop" *ngIf="!inspectorAutoWide" (click)="toggleInspectorWide()"
@@ -225,16 +253,23 @@
         </div>
       </div>
 
+      <!-- De acá para abajo todo se desplaza junto: estado, plata, acciones, equipo,
+           detalles y las pestañas. Antes sólo scrolleaba el cuerpo de la pestaña y
+           lo de arriba se comía media ficha. -->
+      <div class="np-insp-scroll">
+
+      <!-- Estado del servicio, en palabras. El interruptor sigue mandando. -->
       <div class="np-switchrow">
-        <span>Servicio de internet</span>
+        <span>Estado del servicio</span>
         <span class="np-switchrow-right">
           <span class="np-state" [class.is-off]="selectedUserData?.status_internet !== 'ACTIVE'">
-            {{ togglingStatus ? '…' : (selectedUserData?.status_internet === 'ACTIVE' ? 'ACTIVE' : 'SUSPENDED') }}
+            {{ togglingStatus ? '…' : estadoServicioTexto }}
           </span>
           <button type="button" class="np-switch" role="switch"
                   [attr.aria-checked]="selectedUserData?.status_internet === 'ACTIVE'"
                   [disabled]="togglingStatus || !selectedUserData"
-                  (click)="toggleInternetStatus()" aria-label="Activar o suspender internet"></button>
+                  (click)="toggleInternetStatus()"
+                  [attr.aria-label]="selectedUserData?.status_internet === 'ACTIVE' ? 'Con servicio. Apagar para suspender' : 'Suspendido. Encender para reactivar'"></button>
         </span>
       </div>
       <p class="np-fine np-susp-nota" *ngIf="selectedUserData?.status_internet !== 'ACTIVE' && selectedUserData?.no_reactivar_auto && !suspTemporal">
@@ -242,7 +277,8 @@
       </p>
 
       <!-- Suspensión temporal que pidió el cliente: cobra los días usados, no factura mientras
-           dura, y al volver solo se reactiva si está al día. -->
+           dura, y al volver solo se reactiva si está al día. Se pide desde «Más»; acá se ve
+           la que hay y el formulario cuando se abre. -->
       <div class="np-susp-temp" *ngIf="esAdmin && selectedUserData">
         <ng-container *ngIf="suspTemporal; else sinSuspTemp">
           <div class="np-susp-temp-box" [attr.data-estado]="suspTemporal.estado">
@@ -254,12 +290,6 @@
           </div>
         </ng-container>
         <ng-template #sinSuspTemp>
-          <button type="button" class="np-link" *ngIf="!formSusp" (click)="abrirFormSusp()"
-                  title="El cliente pide suspender el internet por un tiempo (viaje, temporada…)">Suspender por un tiempo</button>
-          <button type="button" class="np-link" *ngIf="!formSusp" (click)="abrirPaginaEquipo()" [disabled]="abriendoEquipo"
-                  title="Abre la página web de la ONT del cliente en otra pestaña, por el servidor (en ZTE entra solo como administrador)">
-            {{ abriendoEquipo ? 'Conectando…' : 'Abrir página del equipo' }}
-          </button>
           <div class="np-susp-temp-form" *ngIf="formSusp">
             <label>Desde<input type="date" class="np-input" [(ngModel)]="formSusp.desde" (change)="simularSusp()" /></label>
             <label>Vuelve el<input type="date" class="np-input" [(ngModel)]="formSusp.hasta" /></label>
@@ -275,6 +305,132 @@
             </div>
           </div>
         </ng-template>
+      </div>
+
+      <div class="np-insp-resumen" *ngIf="selectedUserData">
+
+        <!-- ── La plata ─────────────────────────────────────────────────── -->
+        <section>
+          <p class="np-sect">La plata</p>
+          <div class="np-stats">
+            <button type="button" class="np-stat" (click)="setTab('facturacion')">
+              <span class="np-stat-l">Debe</span>
+              <span class="np-stat-v" [class.is-warn]="pendingFacturesTotal > 0">$ {{ pendingFacturesTotal | number:'1.0-0' }}</span>
+            </button>
+            <button type="button" class="np-stat" (click)="setTab('facturacion')">
+              <span class="np-stat-l">Facturas pendientes</span>
+              <span class="np-stat-v" [class.is-warn]="pendingFacturesCount > 0">{{ pendingFacturesCount }}</span>
+            </button>
+            <button type="button" class="np-stat" (click)="setTab('tickets')">
+              <span class="np-stat-l">Tickets</span>
+              <span class="np-stat-v">{{ userTickets.length }}</span>
+            </button>
+          </div>
+        </section>
+
+        <!-- ── Una acción principal y el resto bajo «Más» ───────────────── -->
+        <!-- Si debe, lo primero es cobrarle (las facturas tienen el botón de
+             registrar el pago); si no, lo más común es abrirle un ticket. -->
+        <section class="np-acciones">
+          <button type="button" class="np-btn np-btn--primary" *ngIf="pendingFacturesCount > 0; else sinDeuda" (click)="setTab('facturacion')">Registrar pago</button>
+          <ng-template #sinDeuda>
+            <button type="button" class="np-btn np-btn--primary" (click)="setTab('tickets'); showNewTicketForm = true">Nuevo ticket</button>
+          </ng-template>
+          <div class="np-mas">
+            <button type="button" class="np-btn np-btn--ghost np-mas-btn" (click)="alternarMenu('ficha')"
+                    aria-haspopup="menu" aria-controls="np-mas-ficha" [attr.aria-expanded]="menuAbierto === 'ficha'">
+              Más
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
+            </button>
+            <div class="np-mas-menu" id="np-mas-ficha" role="menu" aria-label="Más acciones de la ficha" *ngIf="menuAbierto === 'ficha'">
+              <button type="button" role="menuitem" class="np-mas-item" *ngIf="pendingFacturesCount > 0" (click)="cerrarMenus(); setTab('tickets'); showNewTicketForm = true">Nuevo ticket</button>
+              <button type="button" role="menuitem" class="np-mas-item" (click)="cerrarMenus(); setTab('resumen'); enableEdit()">Editar datos del cliente</button>
+              <button type="button" role="menuitem" class="np-mas-item" [disabled]="!ipDeGestion"
+                      [title]="ipDeGestion ? 'Ping a ' + ipDeGestion : (clienteEsPppoe ? 'El cliente no tiene sesión PPPoE activa' : 'Sin IP asignada')"
+                      (click)="cerrarMenus(); openPingModal(ipDeGestion, selectedUserData.names, selectedUserData.lastname, selectedUserData.dni, selectedUserId)">Probar la conexión (ping)</button>
+              <button type="button" role="menuitem" class="np-mas-item" *ngIf="esAdmin && !suspTemporal && !formSusp" (click)="cerrarMenus(); abrirFormSusp()"
+                      title="El cliente pide suspender el internet por un tiempo (viaje, temporada…)">Suspender por un tiempo</button>
+              <button type="button" role="menuitem" class="np-mas-item" (click)="cerrarMenus(); openSuspendModal(selectedUserData.dni, selectedUserId, selectedUserData.status_internet, selectedUserData.router_id)">
+                {{ selectedUserData.status_internet === 'ACTIVE' ? 'Suspender el servicio' : 'Reactivar el servicio' }}
+              </button>
+              <button type="button" role="menuitem" class="np-mas-item" (click)="cerrarMenus(); downloadCsvUser()">Exportar CSV</button>
+              <span class="np-mas-sep" role="separator"></span>
+              <!-- Eliminar ya no es el botón rojo más grande de la ficha: va al final del
+                   menú y sigue pidiendo confirmación. -->
+              <button type="button" role="menuitem" class="np-mas-item np-mas-item--danger" (click)="cerrarMenus(); openDeleteModal(selectedUserId, selectedUserData.dni, selectedUserData.router_id)">Eliminar cliente…</button>
+            </div>
+          </div>
+        </section>
+
+        <!-- ── Equipo en la casa ────────────────────────────────────────── -->
+        <section>
+          <p class="np-sect">Equipo en la casa
+            <span class="np-sect-actions"><button type="button" class="np-link" (click)="setTab('servicios')">Ver el equipo</button></span>
+          </p>
+          <div *ngIf="loadingOnt" class="np-loading np-loading--inline"><span class="np-spinner"></span> Consultando equipo…</div>
+          <ng-container *ngIf="!loadingOnt">
+            <p class="np-equipo" *ngIf="assignedOnt; else sinEquipo">
+              <b>{{ assignedOnt.description || 'Equipo de fibra instalado' }}</b>
+              <span>Conectado a {{ assignedOnt.olt?.name || 'la OLT' }}, puerto <span class="np-mono">{{ assignedOnt.fsp }}</span>. La señal y el WiFi se ven en «Ver el equipo».</span>
+            </p>
+            <ng-template #sinEquipo>
+              <p class="np-equipo np-muted">Sin equipo de fibra registrado.<ng-container *ngIf="clienteEsPppoe && sesionPppoe?.mac"> Se conecta por usuario y contraseña desde <span class="np-mono">{{ sesionPppoe?.mac }}</span>.</ng-container></p>
+            </ng-template>
+            <button type="button" class="np-link" *ngIf="esAdmin && !suspTemporal && !formSusp" (click)="abrirPaginaEquipo()" [disabled]="abriendoEquipo"
+                    title="Abre la página web de la ONT del cliente en otra pestaña, por el servidor (en ZTE entra solo como administrador)">
+              {{ abriendoEquipo ? 'Conectando…' : 'Abrir página del equipo' }}
+            </button>
+
+            <!-- Con qué se entra a la página del equipo, según la marca: el técnico no adivina. -->
+            <ng-container *ngIf="esAdmin">
+              <button type="button" class="np-link np-acceso-ver" *ngIf="!accesoEquipo" (click)="verAccesoEquipo()" [disabled]="cargandoAcceso"
+                      title="Usuario y clave para entrar a la página del equipo (queda registrado en el historial)">
+                {{ cargandoAcceso ? 'Consultando…' : 'Ver usuario y clave del equipo' }}
+              </button>
+              <div class="np-acceso" *ngIf="accesoEquipo">
+                <p class="np-acceso-t">Acceso a la página del {{ accesoEquipo.equipo || 'equipo' }}</p>
+                <dl class="np-acceso-dl">
+                  <dt>Usuario</dt>
+                  <dd>
+                    <span class="np-mono">{{ accesoEquipo.usuario }}</span>
+                    <button type="button" class="np-link" (click)="copiarAcceso(accesoEquipo.usuario, 'usuario')">{{ copiado === 'usuario' ? 'Copiado' : 'Copiar' }}</button>
+                  </dd>
+                  <dt>Clave</dt>
+                  <dd>
+                    <span class="np-mono">{{ verClaveEquipo ? accesoEquipo.clave : '••••••' }}</span>
+                    <button type="button" class="np-link" (click)="verClaveEquipo = !verClaveEquipo" [attr.aria-pressed]="verClaveEquipo">{{ verClaveEquipo ? 'Ocultar' : 'Mostrar' }}</button>
+                    <button type="button" class="np-link" (click)="copiarAcceso(accesoEquipo.clave, 'clave')">{{ copiado === 'clave' ? 'Copiado' : 'Copiar' }}</button>
+                  </dd>
+                  <ng-container *ngIf="accesoEquipo.local">
+                    <dt>En la casa</dt>
+                    <dd><span class="np-mono">{{ accesoEquipo.local.usuario }}</span> <small>{{ accesoEquipo.local.nota }}</small></dd>
+                  </ng-container>
+                </dl>
+                <p class="np-fine" *ngIf="accesoEquipo.nota">{{ accesoEquipo.nota }}</p>
+              </div>
+            </ng-container>
+          </ng-container>
+        </section>
+
+        <!-- ── Detalles técnicos: cerrados, para quien los necesite ─────── -->
+        <details class="np-detalles">
+          <summary>Detalles técnicos <small>conexión, IP, puerto de la OLT, serial</small></summary>
+          <dl class="np-dl">
+            <dt>Conexión</dt>
+            <dd>{{ clienteEsPppoe ? 'Por usuario y contraseña (PPPoE)' : 'IP fija' }}<ng-container *ngIf="clienteEsPppoe"> · <span class="np-mono">{{ selectedUserData.pppoe_user || '—' }}</span></ng-container></dd>
+            <dt>IP</dt><dd class="np-mono">{{ ipCabecera }}</dd>
+            <ng-container *ngIf="clienteEsPppoe"><dt>Perfil PPP</dt><dd class="np-mono">{{ selectedUserData.pppoe_profile || 'default' }}</dd></ng-container>
+            <dt>VLAN</dt><dd class="np-mono">{{ provCliente?.arp?.interfaz || selectedUserData.vlan || '—' }}</dd>
+            <dt>MAC</dt><dd class="np-mono">{{ provCliente?.arp?.mac || sesionPppoe?.mac || selectedUserData.mac || '—' }}</dd>
+            <ng-container *ngIf="assignedOnt">
+              <dt>Puerto OLT</dt><dd class="np-mono">{{ assignedOnt.olt?.name || 'OLT' }} {{ assignedOnt.fsp }} · ONT {{ assignedOnt.ont_id }}</dd>
+              <dt>Serial</dt><dd class="np-mono">{{ assignedOnt.serial || '—' }}</dd>
+            </ng-container>
+            <dt>Configuración remota</dt>
+            <dd>{{ provCliente ? (provCliente.habilitado ? 'Activa: la ONT se reconfigura sola (TR-069)' : 'Apagada: los cambios se cargan a mano en el equipo') : (cargandoProv ? 'Consultando…' : '—') }}</dd>
+          </dl>
+        </details>
+
       </div>
 
       <div class="np-tabs" role="tablist">
@@ -347,38 +503,8 @@
             </dl>
           </section>
 
-          <section>
-            <p class="np-sect">Resumen financiero</p>
-            <div class="np-stats">
-              <button type="button" class="np-stat" (click)="setTab('facturacion')">
-                <span class="np-stat-l">Pendientes</span>
-                <span class="np-stat-v" [class.is-warn]="pendingFacturesCount > 0">{{ pendingFacturesCount }}</span>
-              </button>
-              <button type="button" class="np-stat" (click)="setTab('facturacion')">
-                <span class="np-stat-l">Adeudado</span>
-                <span class="np-stat-v" [class.is-warn]="pendingFacturesTotal > 0">$ {{ pendingFacturesTotal | number:'1.0-0' }}</span>
-              </button>
-              <button type="button" class="np-stat" (click)="setTab('tickets')">
-                <span class="np-stat-l">Tickets</span>
-                <span class="np-stat-v">{{ userTickets.length }}</span>
-              </button>
-            </div>
-          </section>
-
+          <!-- La plata y las acciones viven arriba de las pestañas, en la ficha. -->
           <app-datos-fiscales [userId]="selectedUserId"></app-datos-fiscales>
-
-          <section>
-            <p class="np-sect">Acciones</p>
-            <div class="np-quick">
-              <button type="button" class="np-btn np-btn--ghost" [disabled]="!ipDeGestion" [title]="ipDeGestion ? 'Ping a ' + ipDeGestion : (clienteEsPppoe ? 'El cliente no tiene sesión PPPoE activa' : 'Sin IP asignada')" (click)="openPingModal(ipDeGestion, selectedUserData.names, selectedUserData.lastname, selectedUserData.dni, selectedUserId)">Ping</button>
-              <button type="button" class="np-btn np-btn--ghost" (click)="setTab('tickets'); showNewTicketForm = true">Nuevo ticket</button>
-              <button type="button" class="np-btn np-btn--ghost" (click)="downloadCsvUser()">Exportar CSV</button>
-              <button type="button" class="np-btn np-btn--ghost" (click)="openSuspendModal(selectedUserData.dni, selectedUserId, selectedUserData.status_internet, selectedUserData.router_id)">
-                {{ selectedUserData.status_internet === 'ACTIVE' ? 'Suspender' : 'Reactivar' }}
-              </button>
-              <button type="button" class="np-btn np-btn--danger np-quick-full" (click)="openDeleteModal(selectedUserId, selectedUserData.dni, selectedUserData.router_id)">Eliminar cliente</button>
-            </div>
-          </section>
         </ng-container>
 
         <!-- ── Servicios ───────────────────────────────────────────────── -->
@@ -459,7 +585,7 @@
               <p class="np-notice np-notice--warn np-notice--inline" *ngIf="!clienteEsPppoe && provCliente?.arp?.sin_mac">
                 El MikroTik no tiene la MAC real de este equipo y no le va a contestar.
                 <ng-container *ngIf="provCliente?.habilitado && provCliente?.tiene_ont">Toque «Reaplicar en la ONT» y se carga sola.</ng-container>
-                <ng-container *ngIf="!(provCliente?.habilitado && provCliente?.tiene_ont)">Cargala a mano abajo.</ng-container>
+                <ng-container *ngIf="!(provCliente?.habilitado && provCliente?.tiene_ont)">Cárguela a mano abajo.</ng-container>
               </p>
 
               <!-- La ONT y su aprovisionamiento -->
@@ -478,7 +604,7 @@
                     <small class="cx-que-hacer" *ngIf="u.estado === 'no_aplica' && u.que_hacer"><b>Qué hacer:</b> {{ u.que_hacer }}</small>
                   </ng-container>
                   <ng-container *ngIf="provCliente?.habilitado && !provCliente?.ultimo">
-                    <small>Se reconfigura sola por TR-069 cuando cambies la conexión.</small>
+                    <small>Se reconfigura sola por TR-069 cuando cambie la conexión.</small>
                   </ng-container>
                 </div>
                 <div class="cx-ont-acc" *ngIf="provCliente?.habilitado">
@@ -794,9 +920,9 @@
           <div *ngIf="ticketPageCount > 1" class="np-pager np-pager--flat">
             <span class="np-range">{{ (ticketPage-1)*ticketPerPage+1 }}–{{ ticketPage*ticketPerPage > userTickets.length ? userTickets.length : ticketPage*ticketPerPage }} de {{ userTickets.length }}</span>
             <div class="np-pages">
-              <button type="button" (click)="ticketPage = ticketPage - 1" [disabled]="ticketPage === 1">‹</button>
+              <button type="button" (click)="ticketPage = ticketPage - 1" [disabled]="ticketPage === 1" aria-label="Página anterior"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m15 6-6 6 6 6"/></svg></button>
               <button type="button" *ngFor="let p of ticketPageNumbers" (click)="ticketPage = p" [attr.aria-current]="p === ticketPage ? 'page' : null">{{ p }}</button>
-              <button type="button" (click)="ticketPage = ticketPage + 1" [disabled]="ticketPage === ticketPageCount">›</button>
+              <button type="button" (click)="ticketPage = ticketPage + 1" [disabled]="ticketPage === ticketPageCount" aria-label="Página siguiente"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg></button>
             </div>
           </div>
         </ng-container>
@@ -823,6 +949,7 @@
         </ng-container>
 
       </div>
+      </div><!-- /np-insp-scroll -->
     </aside>
   </div>
 </div>
@@ -938,7 +1065,7 @@
       <!-- El alta se guarda sola: si el router falla o se cierra el modal, no
            hay que volver a escribir todo. -->
       <div *ngIf="borradorRestaurado" class="np-notice np-notice--info np-notice--inline np-field-full np-aviso">
-        <span>Retomamos el alta que habías empezado.</span>
+        <span>Retomamos el alta que había empezado.</span>
         <button type="button" class="np-btn np-btn--ghost np-btn--sm" (click)="descartarBorrador()">Empezar en blanco</button>
       </div>
 

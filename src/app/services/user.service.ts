@@ -119,6 +119,11 @@ export class UserService {
   }
 
   /** Enlace de un solo uso a la página web de la ONT del cliente (puente de equipos.netvula.com). */
+  /** Usuario y clave de administración del equipo del cliente (queda en el historial). */
+  accesoDelEquipo(userId: any): Observable<any> {
+    return this.http.get<any>(this.env.rootUrl + `api/user/${userId}/equipo/acceso`, { headers: this.getHeaders() });
+  }
+
   abrirPaginaDelEquipo(userId: any): Observable<any> {
     return this.http.post<any>(this.env.rootUrl + `api/user/${userId}/equipo/pagina`, '{}', { headers: this.getHeaders() });
   }

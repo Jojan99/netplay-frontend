@@ -43,7 +43,7 @@
   <div class="np-notice np-notice--danger" role="alert" *ngIf="recepcionApagada" style="display:flex; flex-wrap:wrap; align-items:center; gap:8px 14px; margin:8px 12px 0">
     <span style="flex:1; min-width:240px"><b>La recepción de mensajes de WhatsApp Web está desactivada.</b> Lo que sus clientes escriben a sus líneas no llega a esta bandeja.</span>
     <button type="button" class="np-btn np-btn--primary np-btn--sm" *ngIf="esAdmin" (click)="activarRecepcion()" [disabled]="activandoRecepcion">{{ activandoRecepcion ? 'Activando…' : 'Activar recepción' }}</button>
-    <span *ngIf="!esAdmin">Pedile a un administrador que la active en <b>WhatsApp → Web → Webhook</b>.</span>
+    <span *ngIf="!esAdmin">Pídale a un administrador que la active en <b>WhatsApp → Web → Webhook</b>.</span>
   </div>
   <div class="np-notice np-notice--danger" role="alert" *ngIf="!recepcionApagada && recepcionFallando" style="display:flex; flex-wrap:wrap; align-items:center; gap:8px 14px; margin:8px 12px 0">
     <span style="flex:1; min-width:240px"><b>Hay mensajes de WhatsApp Web que no están llegando a esta bandeja</b> ({{ recepcionFallando }}).</span>

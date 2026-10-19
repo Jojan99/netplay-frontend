@@ -122,19 +122,32 @@
           </span>
         </button>
 
+        <!-- El bloque se abre y cierra con grid-template-rows (0fr → 1fr): la
+             altura real, sin el «max-height: 900px» que al cerrar se quedaba
+             esperando a bajar de los 900 antes de moverse. El envoltorio es
+             lo que el truco necesita: una sola celda. -->
         <div [class.expanded]="selectedItem === item" class="sidebar-content">
+          <div class="sidebar-content-inner">
 
-          <div class="sb-fav" *ngFor="let child of item.children">
-            <flowbite-sidebar-item
-              [icon]="child.icon"
-              [link]="child.href">
+          <ng-container *ngFor="let child of item.children; let i = index">
+            <!-- Rótulo de bloque («Avanzado»): se pinta una vez, antes del primer
+                 hijo que lo trae. Lo técnico queda al final del grupo y separado. -->
+            <p class="sidebar-subsect" *ngIf="child.seccion && (i === 0 || item.children![i - 1].seccion !== child.seccion) && (sidebarService.$collapsed | async) === false">
+              {{ child.seccion }}
+            </p>
+            <div class="sb-fav">
+              <flowbite-sidebar-item
+                [icon]="child.icon"
+                [link]="child.href">
 
-              {{ child.title }}
+                {{ child.title }}
 
-            </flowbite-sidebar-item>
-            <ng-container *ngTemplateOutlet="estrella; context: { $implicit: child }"></ng-container>
+              </flowbite-sidebar-item>
+              <ng-container *ngTemplateOutlet="estrella; context: { $implicit: child }"></ng-container>
+            </div>
+          </ng-container>
+
           </div>
-
         </div>
 
       </ng-container>
@@ -173,6 +186,51 @@
     <main class="app-platform flex-1 overflow-auto p-6">
       <router-outlet></router-outlet>
     </main>
+
+    <!-- Técnicos: sin la ubicación activa no se trabaja en el panel (el mapa de técnicos y la
+         ubicación al cerrar instalaciones dependen de ella). Cubre todo menos esta tarjeta. -->
+    <div class="app-ubicacion" *ngIf="ubicacionBloquea()" role="alertdialog" aria-modal="true" aria-labelledby="app-ubicacion-t" aria-describedby="app-ubicacion-d">
+      <div class="app-ubicacion-card">
+        <div class="app-ubicacion-ico" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-6.5-5.6-6.5-11a6.5 6.5 0 0 1 13 0c0 5.4-6.5 11-6.5 11z"/><circle cx="12" cy="10" r="2.4"/></svg>
+        </div>
+        <ng-container *ngIf="ubicacion() === 'verificando'; else sinUbicacion">
+          <h2 id="app-ubicacion-t">Revisando su ubicación…</h2>
+          <p id="app-ubicacion-d">Si el celular o el navegador le pregunta, toque <b>Permitir</b>.</p>
+        </ng-container>
+        <ng-template #sinUbicacion>
+          <h2 id="app-ubicacion-t">{{ ubicacion() === 'apagada' ? 'Encienda la ubicación del celular' : 'Active la ubicación para trabajar' }}</h2>
+          <p id="app-ubicacion-d">
+            Los técnicos deben compartir su ubicación mientras usan la plataforma: así la oficina los ve en el mapa
+            y cada instalación queda ubicada en el mapa de la red.
+          </p>
+          <!-- Lo que el botón no puede resolver solo: sólo aparece después de intentarlo. -->
+          <p class="app-ubicacion-aviso" *ngIf="resultadoActivar === 'ajustes'" role="status">
+            Se abrieron los ajustes de {{ nombreApp }}: en <b>Permisos → Ubicación</b> elija <b>Permitir</b> y vuelva aquí.
+          </p>
+          <ol class="app-ubicacion-pasos" *ngIf="resultadoActivar === 'sin_gps'">
+            <li>Baje la barra de arriba del celular y encienda <b>Ubicación</b> (GPS).</li>
+            <li>Vuelva aquí: se revisa solo.</li>
+          </ol>
+          <ng-container *ngIf="resultadoActivar === 'bloqueada'">
+            <p class="app-ubicacion-aviso" role="status">El navegador tiene la ubicación <b>bloqueada</b> para esta página y no deja volver a preguntar. Desbloquéela así:</p>
+            <ol class="app-ubicacion-pasos">
+              <li>Toque el <b>candado</b> (o el ícono) a la izquierda de la dirección de la página.</li>
+              <li>En <b>Ubicación</b>, elija <b>Permitir</b>.</li>
+              <li>Toque <b>Recargar la página</b>.</li>
+            </ol>
+          </ng-container>
+          <p class="app-ubicacion-nota" *ngIf="ubicacion() === 'sin_soporte'">Este navegador no puede dar la ubicación. Use la app de la empresa o Chrome en el celular.</p>
+          <div class="app-ubicacion-acc">
+            <button type="button" class="app-ubicacion-btn" *ngIf="resultadoActivar !== 'bloqueada'" (click)="activarUbicacion()" [disabled]="activando">
+              {{ activando ? 'Activando…' : 'Activar ubicación' }}
+            </button>
+            <button type="button" class="app-ubicacion-btn" *ngIf="resultadoActivar === 'bloqueada'" (click)="recargarPagina()">Recargar la página</button>
+            <button type="button" class="app-ubicacion-salir" (click)="signOut()">Cerrar sesión</button>
+          </div>
+        </ng-template>
+      </div>
+    </div>
   </div>
 
 </div>

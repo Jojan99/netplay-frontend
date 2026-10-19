@@ -18,7 +18,10 @@
   --surface-3: #e9efef;
   --text: #17293a;
   --text-2: #4b6072;
-  --text-3: #7f92a2;
+  /* Texto atenuado: antes #7f92a2 (3,2:1 sobre blanco, 3,0:1 sobre --surface-2).
+     Con este llega a 4,8:1 y 4,5:1, y sigue siendo claramente más suave que
+     --text-2 (6,5:1): los rótulos chicos y la letra fina se leen. */
+  --text-3: #5f7487;
   --line: #d5e0e4;
   --line-strong: #b9c9cf;
   --accent: #0f766e;
@@ -33,6 +36,14 @@
   --danger-soft: #fae3e0;
   --info: #2563eb;
   --info-soft: #e3ebfb;
+  /* Texto de estado sobre su fondo suave (píldoras). Los colores de arriba
+     están pensados para fondo blanco; sobre --ok-soft el verde quedaba en
+     3.8:1 y no se leía. Estos llegan a 4.5:1 o más en claro; en oscuro los
+     de arriba ya cumplen y se reutilizan. */
+  --ok-ink: #15713c;
+  --warn-ink: #8a5a12;
+  --danger-ink: #a1291c;
+  --info-ink: #1d4ed8;
   --overlay: rgb(10 22 28 / .55);
   --shadow: 0 1px 2px rgb(23 41 58 / .06), 0 8px 24px -12px rgb(23 41 58 / .18);
   --shadow-lg: 0 24px 60px -20px rgb(23 41 58 / .35);
@@ -41,6 +52,14 @@
   --font-display: 'Bricolage Grotesque', 'Manrope', system-ui, sans-serif;
   --font-body: 'Manrope', ui-sans-serif, system-ui, sans-serif;
   --font-mono: 'IBM Plex Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+
+  /* Movimiento: una sola curva de salida fuerte (arranca rápido, se asienta
+     suave) y tres duraciones. Lo que se pulsa, lo que se despliega y lo que
+     entra en pantalla. Nunca más de 300 ms en el panel. */
+  --ease-out: cubic-bezier(.23, 1, .32, 1);
+  --dur-press: 120ms;
+  --dur-menu: 160ms;
+  --dur-panel: 220ms;
 }
 
 :root[data-theme='dark'],
@@ -53,7 +72,9 @@
   --surface-3: #1f343d;
   --text: #e6eef0;
   --text-2: #a9bcc5;
-  --text-3: #728a96;
+  /* Antes #728a96: 4,5:1 justo sobre --surface y 4,1:1 sobre --surface-2.
+     Ahora 5,2:1 y 4,7:1. */
+  --text-3: #7d95a1;
   --line: #25383f;
   --line-strong: #35505a;
   --accent: #2fb5a5;
@@ -68,6 +89,10 @@
   --danger-soft: #3f1f1c;
   --info: #7aa2f7;
   --info-soft: #1c2b4a;
+  --ok-ink: var(--ok);
+  --warn-ink: var(--warn);
+  --danger-ink: var(--danger);
+  --info-ink: var(--info);
   --overlay: rgb(0 0 0 / .65);
   --shadow: 0 1px 2px rgb(0 0 0 / .4), 0 12px 32px -12px rgb(0 0 0 / .6);
   --shadow-lg: 0 24px 60px -20px rgb(0 0 0 / .7);

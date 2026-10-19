@@ -119,8 +119,9 @@ export class InstallationService {
     return this.http.post(`${this.baseUrl}/${id}/start`, {});
   }
 
-  complete(id: number, notes?: string): Observable<any> {
-    return this.http.post(`${this.baseUrl}/${id}/complete`, { technical_notes: notes });
+  /** `ubicacion`: el GPS del celular al cerrar; el servidor ubica al cliente en el mapa de la red. */
+  complete(id: number, notes?: string, ubicacion?: { lat: number; lng: number; precision: number } | null): Observable<any> {
+    return this.http.post(`${this.baseUrl}/${id}/complete`, { technical_notes: notes, ...(ubicacion ?? {}) });
   }
 
   cancel(id: number, reason?: string): Observable<any> {

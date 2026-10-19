@@ -1,0 +1,276 @@
+<div class="np-page np-mapared is-open">
+  <header class="np-head">
+    <div>
+      <p class="np-kicker">Red <b>/</b> Dónde está cada cosa</p>
+      <h1 class="np-title">Mapa de la red</h1>
+      <div class="np-ribbon">
+        <span><i class="np-dot" [style.background]="color('caido')"></i><span class="np-n">{{ cuenta('caido') }}</span>caídos</span>
+        <span><i class="np-dot" [style.background]="color('falla')"></i><span class="np-n">{{ cuenta('falla') }}</span>en falla de sector</span>
+        <span><i class="np-dot" [style.background]="color('senal')"></i><span class="np-n">{{ cuenta('senal') }}</span>señal baja</span>
+        <span class="np-mono np-fine">{{ ubicados }} de {{ clientes.length }} clientes ubicados<ng-container *ngIf="medidoEn"> · señal {{ medidoEn | date:'HH:mm' }}</ng-container></span>
+      </div>
+    </div>
+    <div class="np-actions">
+      <!-- Lo que cambia el mapa va junto. Lo que sólo lo mira (satélite, técnicos, encuadre) flota sobre el mapa. -->
+      <div class="np-seg np-mr-poner" *ngIf="esAdmin" role="group" aria-label="Editar el mapa">
+        <button type="button" [attr.aria-pressed]="modo === 'nap'" (click)="empezar('nap')" title="Toque el mapa donde está la caja"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="16" height="16" rx="2"/><path d="M12 8v8M8 12h8"/></svg>Caja NAP</button>
+        <button type="button" [attr.aria-pressed]="modo === 'olt'" (click)="empezar('olt')" title="Toque el mapa donde está la OLT"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="6" width="18" height="12" rx="2"/><path d="M7 10h.01M11 10h.01M7 14h10"/></svg>OLT</button>
+        <button type="button" [attr.aria-pressed]="editando" (click)="cambiarEdicion()" title="Arrastrar cajas y clientes para corregir su posición"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 9l-3 3 3 3M9 5l3-3 3 3M15 19l-3 3-3-3M19 9l3 3-3 3M2 12h20M12 2v20"/></svg>{{ editando ? 'Listo' : 'Mover' }}</button>
+      </div>
+      <button type="button" class="np-btn np-btn--ghost" (click)="cargar()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 12a8 8 0 1 1-2.3-5.7M20 4v5h-5"/></svg>Actualizar</button>
+    </div>
+  </header>
+
+  <div class="np-workspace np-mapared-ws" [class.is-arrastrando]="arrastrandoHoja">
+    <section class="np-map-wrap" [class.is-poniendo]="modo" [class.is-satelite]="mapStyle === 'satellite'">
+      <div id="mapa-red"></div>
+
+      <!-- Buscador flotante, como el de Waze. Se esconde mientras se pone algo: ahí manda el aviso del modo. -->
+      <div class="np-map-buscar" *ngIf="!modo" [class.is-abierto]="buscarAbierto && busquedaMapa">
+        <label class="np-mr-pill">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg>
+          <input type="search" [(ngModel)]="busquedaMapa" (ngModelChange)="buscarEnMapa()" (focus)="buscarEnMapa()" (blur)="cerrarBusquedaLuego()" (keydown.escape)="limpiarBusquedaMapa()"
+                 placeholder="Buscar cliente, caja o puerto" aria-label="Buscar en el mapa" autocomplete="off" />
+          <button type="button" *ngIf="busquedaMapa" (click)="limpiarBusquedaMapa()" aria-label="Limpiar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
+        </label>
+        <ul class="np-mr-resultados" *ngIf="buscarAbierto && busquedaMapa" (pointerdown)="$event.preventDefault()" role="listbox">
+          <li *ngFor="let r of resultados" role="option">
+            <button type="button" (click)="elegirResultado(r)">
+              <i [class.is-cuadro]="r.tipo === 'punto'" [style.background]="r.color"></i>
+              <span><b>{{ r.titulo }}</b><small>{{ r.detalle }}</small></span>
+            </button>
+          </li>
+          <li class="np-mr-nada" *ngIf="!resultados.length">Nada coincide con «{{ busquedaMapa }}».</li>
+        </ul>
+      </div>
+
+      <!-- Botones redondos a la derecha: satélite, técnicos, ver todo y mi ubicación. -->
+      <div class="np-map-fabs" role="group" aria-label="Ver el mapa">
+        <button type="button" (click)="cambiarFondo()" [attr.aria-pressed]="mapStyle === 'satellite'" [title]="mapStyle === 'streets' ? 'Ver satélite' : 'Ver mapa'">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6l6-3 6 3 6-3v15l-6 3-6-3-6 3zM9 3v15M15 6v15"/></svg><span>{{ mapStyle === 'streets' ? 'Satélite' : 'Mapa' }}</span>
+        </button>
+        <button type="button" *ngIf="tecnicosDisponibles" (click)="cambiarTecnicos()" [attr.aria-pressed]="tecnicosVisibles" [title]="tecnicosVisibles ? 'Esconder los técnicos' : 'Ver los técnicos'">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg><span>Técnicos</span><small *ngIf="tecnicos.length">{{ tecnicos.length }}</small>
+        </button>
+        <button type="button" (click)="encuadrar()" title="Ver toda la red">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg><span>Ver todo</span>
+        </button>
+        <button type="button" (click)="miUbicacion()" title="Donde estoy">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="7"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/><circle cx="12" cy="12" r="2" fill="currentColor"/></svg><span>Donde estoy</span>
+        </button>
+      </div>
+
+      <!-- Aviso del modo «poner»: arriba y al centro, por encima de los controles de Leaflet -->
+      <div class="np-map-modo" *ngIf="modo" role="status">
+        <i class="np-mr-modo-pin"></i>
+        <ng-container [ngSwitch]="modo">
+          <span *ngSwitchCase="'nap'">Toque el mapa donde está la <b>caja NAP</b></span>
+          <span *ngSwitchCase="'olt'">Toque el mapa donde está la <b>OLT</b></span>
+          <span *ngSwitchCase="'cliente'">Toque la casa de <b>{{ ubicando?.nombre }}</b></span>
+        </ng-container>
+        <button type="button" class="np-link" (click)="cancelar()">Cancelar</button>
+      </div>
+
+      <!-- Leyenda = filtro. Abajo a la izquierda en escritorio; fila de píldoras bajo el buscador en el teléfono. -->
+      <div class="np-map-legend" aria-label="Filtrar por estado">
+        <button type="button" class="np-legend-prob" [attr.aria-pressed]="filtro === 'problemas'" (click)="cambiarFiltro(filtro === 'problemas' ? 'todos' : 'problemas')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 9v4M12 17h.01M10.3 3.9 2.4 18a2 2 0 0 0 1.7 3h15.8a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/></svg>
+          Sólo problemas <small>{{ problemas }}</small>
+        </button>
+        <button type="button" class="np-legend-item" *ngFor="let e of estados"
+                [class.is-off]="filtro !== 'todos' && filtro !== e.clave && !(filtro === 'problemas' && (e.clave === 'caido' || e.clave === 'falla' || e.clave === 'senal'))"
+                [attr.aria-pressed]="filtro === e.clave"
+                (click)="cambiarFiltro(filtro === e.clave ? 'todos' : e.clave)" [title]="filtro === e.clave ? 'Ver todos' : 'Ver sólo: ' + e.label">
+          <i [style.background]="e.color"></i><span>{{ e.label }}</span><small>{{ cuenta(e.clave) }}</small>
+        </button>
+      </div>
+
+      <!-- Sin nada en el mapa: los tres pasos, con los mismos botones de arriba. Se esconde mientras se pone algo. -->
+      <div class="np-map-empty" *ngIf="!cargando && !puntos.length && !ubicados && !modo && !borrador">
+        <strong>Todavía no hay nada en el mapa</strong>
+        <ng-container *ngIf="esAdmin; else sinPermiso">
+          <p>Se arma en tres pasos. Cada uno se hace tocando el mapa.</p>
+          <ol class="np-mr-pasos">
+            <li><b>1</b><span>Ponga la OLT donde está el equipo.</span><button type="button" class="np-btn np-btn--primary np-btn--sm" (click)="empezar('olt')">Poner OLT</button></li>
+            <li><b>2</b><span>Ponga las cajas NAP, con su puerto PON.</span><button type="button" class="np-btn np-btn--ghost np-btn--sm" (click)="empezar('nap')">Poner caja NAP</button></li>
+            <li><b>3</b><span>Ubique a los clientes desde la lista «Sin ubicar».</span><button type="button" class="np-btn np-btn--ghost np-btn--sm" (click)="pestana = 'sin_ubicar'; ponerHoja('half')">Ver sin ubicar</button></li>
+          </ol>
+        </ng-container>
+        <ng-template #sinPermiso><p>Un administrador tiene que poner las OLT, las cajas y los clientes.</p></ng-template>
+      </div>
+    </section>
+
+    <!-- En escritorio es el panel lateral; en el teléfono, una hoja que sube desde abajo (ver el .scss). -->
+    <aside class="np-inspector" aria-label="Detalle del mapa" [class.is-arrastrando]="arrastrandoHoja" [attr.data-hoja]="hoja">
+      <div class="np-mr-asa" (pointerdown)="hojaInicioArrastre($event)" (pointermove)="hojaArrastre($event)" (pointerup)="hojaFinArrastre($event)" (pointercancel)="hojaFinArrastre($event)" aria-hidden="true"><i></i></div>
+      <button type="button" class="np-mr-peek" (click)="alternarHoja()">
+        <i class="np-mr-peek-ico" [class.is-ok]="!alertas.length"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 9v4M12 17h.01M10.3 3.9 2.4 18a2 2 0 0 0 1.7 3h15.8a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/></svg></i>
+        <span><b>{{ cargando ? 'Mapa de la red' : (alertas.length ? alertas.length + (alertas.length === 1 ? ' alerta' : ' alertas') : 'Red en orden') }}</b><small>{{ cargando ? 'Cargando…' : resumenAlertas }}</small></span>
+        <svg class="np-mr-peek-flecha" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="m6 15 6-6 6 6"/></svg>
+      </button>
+
+      <!-- Formulario de OLT / caja -->
+      <ng-container *ngIf="borrador; else panel">
+        <div class="np-insp-head"><div class="np-insp-id"><h2>{{ borrador.id ? 'Editar' : 'Nueva' }} {{ borrador.tipo === 'olt' ? 'OLT' : 'caja NAP' }}</h2><div class="np-meta">Puede arrastrar el punto en el mapa para afinarlo</div></div></div>
+        <div class="np-insp-body np-mr-form">
+          <label>Nombre<input class="np-input" [(ngModel)]="borrador.nombre" [placeholder]="borrador.tipo === 'nap' ? 'NAP Calle 10 #4' : 'OLT principal'" /></label>
+          <label>OLT
+            <select class="np-input" [(ngModel)]="borrador.olt_id">
+              <option [ngValue]="null">—</option>
+              <option *ngFor="let o of olts" [ngValue]="o.id">{{ o.nombre }}</option>
+            </select>
+          </label>
+          <ng-container *ngIf="borrador.tipo === 'nap'">
+            <label>Puerto PON<input class="np-input np-mono" [(ngModel)]="borrador.fsp" placeholder="0/0/3" /></label>
+            <label>Capacidad (puertos de la caja)<input class="np-input" type="number" min="1" [(ngModel)]="borrador.capacidad" /></label>
+          </ng-container>
+          <label>Nota<input class="np-input" [(ngModel)]="borrador.nota" placeholder="Poste, referencia…" /></label>
+          <p class="np-notice np-notice--danger" *ngIf="aviso">{{ aviso }}</p>
+          <div class="np-btnrow">
+            <button type="button" class="np-btn np-btn--primary np-btn--sm" (click)="guardarPunto()" [disabled]="guardando">{{ guardando ? 'Guardando…' : 'Guardar' }}</button>
+            <button type="button" class="np-btn np-btn--ghost np-btn--sm" (click)="cancelar()">Cancelar</button>
+          </div>
+        </div>
+      </ng-container>
+
+      <ng-template #panel>
+        <!-- Ubicar a un cliente -->
+        <ng-container *ngIf="modo === 'cliente' && ubicando; else general">
+          <div class="np-insp-head"><div class="np-insp-id"><h2>Ubicar cliente</h2><div class="np-meta">{{ ubicando.nombre }} · {{ ubicando.direccion || 'sin dirección' }}</div></div></div>
+          <div class="np-insp-body np-mr-form">
+            <p class="np-notice" [class.np-notice--ok]="ubicandoPos" [class.np-notice--info]="!ubicandoPos">{{ ubicandoPos ? 'Listo: puede arrastrar el punto para afinarlo.' : 'Toque en el mapa la casa del cliente. Si sólo quiere colgarlo de su caja, elíjala y guarde sin tocar el mapa.' }}</p>
+            <label>Caja NAP
+              <select class="np-input" [(ngModel)]="ubicandoNap">
+                <option [ngValue]="null">Sin caja</option>
+                <option *ngFor="let n of naps" [ngValue]="n.id">{{ n.nombre }}{{ n.fsp ? ' · ' + n.fsp : '' }}</option>
+              </select>
+            </label>
+            <p class="np-fine" *ngIf="ubicando.fsp">Su ONT está en {{ puerto(ubicando) }}.</p>
+            <p class="np-notice np-notice--danger" *ngIf="aviso">{{ aviso }}</p>
+            <div class="np-btnrow">
+              <button type="button" class="np-btn np-btn--primary np-btn--sm" (click)="guardarUbicacion()" [disabled]="guardando || (!ubicandoPos && ubicando.lat === null && !ubicandoNap)">{{ guardando ? 'Guardando…' : 'Guardar' }}</button>
+              <button type="button" class="np-btn np-btn--ghost np-btn--sm" (click)="cancelar()">Cancelar</button>
+            </div>
+          </div>
+        </ng-container>
+
+        <ng-template #general>
+          <!-- Caja u OLT seleccionada -->
+          <ng-container *ngIf="seleccion; else listas">
+            <div class="np-insp-head">
+              <i class="np-mr-insp-ico" [class.is-olt]="seleccion.tipo === 'olt'" [style.border-color]="seleccion.tipo === 'nap' ? color(estadoDeCaja(seleccion)) : null">{{ seleccion.tipo === 'olt' ? 'OLT' : clientesDe(seleccion).length }}</i>
+              <div class="np-insp-id">
+                <h2>{{ seleccion.tipo === 'olt' ? 'OLT' : 'Caja' }} {{ seleccion.nombre }}</h2>
+                <div class="np-meta">{{ seleccion.olt_id ? nombreOlt(seleccion.olt_id) : 'Sin OLT' }}{{ seleccion.fsp ? ' · puerto ' + seleccion.fsp : '' }}{{ seleccion.nota ? ' · ' + seleccion.nota : '' }}</div>
+              </div>
+              <div class="np-insp-tools"><button type="button" class="np-icobtn" (click)="cerrarSeleccion()" aria-label="Cerrar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div>
+            </div>
+            <div class="np-insp-body">
+              <p class="np-notice np-notice--danger" *ngIf="seleccion.falla">Su puerto PON tiene una falla de sector abierta.</p>
+
+              <!-- Cómo llegar y quién está más cerca: lo primero que se necesita ante una falla. -->
+              <div class="np-mr-llegar">
+                <div class="np-mr-tecfila" *ngIf="tecnicosDisponibles">
+                  <ng-container *ngIf="tecnicoCercano(seleccion.lat, seleccion.lng) as tc; else sinTec">
+                    <i class="np-mr-avatar">{{ iniciales(tc.tecnico) }}</i>
+                    <span><small>Técnico más cercano</small><b>{{ tc.tecnico.first_name }} {{ tc.tecnico.last_name }} · {{ tc.distancia }}</b></span>
+                  </ng-container>
+                  <ng-template #sinTec>
+                    <i class="np-mr-avatar is-vacio">?</i>
+                    <span><small>Técnico más cercano</small><b>Ninguno con posición en los últimos 30 min</b></span>
+                  </ng-template>
+                </div>
+              </div>
+
+              <ng-container *ngIf="seleccion.tipo === 'nap'">
+                <div>
+                  <p class="np-sect">Clientes de la caja <span class="np-c">{{ clientesDe(seleccion).length }}{{ seleccion.capacidad ? ' / ' + seleccion.capacidad : '' }}</span></p>
+                  <div class="np-mr-conteo" *ngIf="conteoCaja(seleccion).length"><span *ngFor="let x of conteoCaja(seleccion)"><i [style.background]="x.color"></i>{{ x.n }} {{ x.label | lowercase }}</span></div>
+                  <div class="np-mr-lista">
+                    <div class="np-mr-fila" *ngFor="let c of clientesDe(seleccion); trackBy: trackId" (click)="irACliente(c)">
+                      <i [style.background]="color(c.estado)"></i>
+                      <span><b>{{ c.nombre }}</b><small>{{ label(c.estado) }}{{ c.potencia !== null ? ' · ' + (c.potencia | number:'1.1-1') + ' dBm' : '' }}{{ c.lat === null ? ' · sin ubicar' : '' }}</small></span>
+                      <a class="np-link" [routerLink]="['/dashboard/usuario']" [queryParams]="{ cliente: c.id }" (click)="$event.stopPropagation()">Ficha</a>
+                    </div>
+                    <p class="np-muted np-mr-vacio" *ngIf="!clientesDe(seleccion).length">Ningún cliente colgado de esta caja todavía.</p>
+                  </div>
+                </div>
+
+                <div *ngIf="esAdmin && delPuertoSinCaja(seleccion).length">
+                  <p class="np-sect">Del puerto {{ seleccion.fsp }} sin caja <span class="np-c">{{ delPuertoSinCaja(seleccion).length }}</span></p>
+                  <p class="np-fine np-mr-ayuda">Tienen la ONT en este puerto pero no se sabe de qué caja cuelgan.</p>
+                  <div class="np-mr-lista">
+                    <div class="np-mr-fila" *ngFor="let c of delPuertoSinCaja(seleccion); trackBy: trackId">
+                      <i [style.background]="color(c.estado)"></i>
+                      <span><b>{{ c.nombre }}</b><small>{{ c.direccion || 'sin dirección' }}</small></span>
+                      <button type="button" class="np-link" (click)="colgar(c, seleccion)">A esta caja</button>
+                    </div>
+                  </div>
+                </div>
+              </ng-container>
+
+              <div class="np-btnrow" *ngIf="esAdmin">
+                <button type="button" class="np-btn np-btn--ghost np-btn--sm" (click)="editarPunto(seleccion)">Editar</button>
+                <button type="button" class="np-btn np-btn--ghost np-btn--sm np-btn--danger" (click)="borrarPunto(seleccion)">Borrar</button>
+              </div>
+            </div>
+          </ng-container>
+
+          <!-- Listas -->
+          <ng-template #listas>
+            <div class="np-insp-head np-mr-head-lista"><div class="np-insp-id"><h2>Red</h2><div class="np-meta">Toque una caja o una alerta en el mapa para ver sus clientes</div></div></div>
+            <div class="np-tabs" role="tablist">
+              <button type="button" class="np-tab" role="tab" [attr.aria-selected]="pestana === 'problemas'" (click)="pestana = 'problemas'">Problemas<span class="np-c" *ngIf="problemas">{{ problemas }}</span></button>
+              <button type="button" class="np-tab" role="tab" [attr.aria-selected]="pestana === 'sin_ubicar'" (click)="pestana = 'sin_ubicar'">Sin ubicar<span class="np-c">{{ sinUbicarTotal }}</span></button>
+              <button type="button" class="np-tab" role="tab" [attr.aria-selected]="pestana === 'puntos'" (click)="pestana = 'puntos'">Cajas y OLT<span class="np-c">{{ puntos.length }}</span></button>
+            </div>
+            <div class="np-mr-buscar">
+              <label class="np-search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg><input type="search" [(ngModel)]="busqueda" [placeholder]="pestana === 'puntos' ? 'Filtrar por caja, OLT o puerto' : 'Filtrar por nombre, cédula o barrio'" /></label>
+            </div>
+            <div class="np-insp-body np-mr-cuerpo">
+              <div *ngIf="cargando" class="np-loading"><span class="np-spinner"></span> Cargando…</div>
+              <p class="np-notice np-notice--danger" *ngIf="!cargando && error">{{ error }}</p>
+
+              <ng-container *ngIf="!cargando && pestana === 'problemas'">
+                <!-- Las alertas, como los reportes de Waze: una por caja o puerto, la más grave primero. -->
+                <div class="np-mr-alertas" *ngIf="listaAlertas.length">
+                  <div class="np-mr-alerta" *ngFor="let a of listaAlertas; trackBy: trackClave" [ngClass]="'is-' + a.tipo" [style.--c]="colorAlerta(a.tipo)" role="button" tabindex="0" (click)="irAlerta(a)" (keydown.enter)="irAlerta(a)">
+                    <i [innerHTML]="iconoAlerta[a.tipo] | sanitizeHtml"></i>
+                    <span><b>{{ a.titulo }}</b><small>{{ a.etiqueta }} · {{ a.detalle }}</small></span>
+                  </div>
+                </div>
+                <p class="np-sect" *ngIf="listaAlertas.length && listaProblemas.length">Clientes <span class="np-c">{{ listaProblemas.length }}</span></p>
+                <div class="np-mr-lista">
+                  <div class="np-mr-fila" *ngFor="let c of listaProblemas; trackBy: trackId" (click)="irACliente(c)">
+                    <i [style.background]="color(c.estado)"></i>
+                    <span><b>{{ c.nombre }}</b><small>{{ label(c.estado) }}{{ c.potencia !== null ? ' · ' + (c.potencia | number:'1.1-1') + ' dBm' : '' }} · {{ puerto(c) }}{{ c.nap_id ? ' · caja ' + nombreNap(c.nap_id) : '' }}</small></span>
+                    <a class="np-link" [routerLink]="['/dashboard/usuario']" [queryParams]="{ cliente: c.id }" (click)="$event.stopPropagation()">Ficha</a>
+                  </div>
+                  <p class="np-muted np-mr-vacio" *ngIf="!listaProblemas.length && !listaAlertas.length">Sin clientes caídos, en falla o con señal baja.</p>
+                </div>
+              </ng-container>
+
+              <div class="np-mr-lista" *ngIf="!cargando && pestana === 'sin_ubicar'">
+                <div class="np-mr-fila" *ngFor="let c of listaSinUbicar; trackBy: trackId">
+                  <i [style.background]="color(c.estado)"></i>
+                  <span><b>{{ c.nombre }}</b><small>{{ c.direccion || 'sin dirección' }}{{ c.nap_id ? ' · caja ' + nombreNap(c.nap_id) : '' }}</small></span>
+                  <button type="button" class="np-link" *ngIf="esAdmin" (click)="empezarUbicar(c)">Ubicar</button>
+                </div>
+                <p class="np-fine np-mr-ayuda" *ngIf="sinUbicarTotal > listaSinUbicar.length">Se muestran {{ listaSinUbicar.length }} de {{ sinUbicarTotal }}: filtre por nombre, cédula o barrio.</p>
+                <p class="np-muted np-mr-vacio" *ngIf="!listaSinUbicar.length">Todos los clientes están ubicados.</p>
+              </div>
+
+              <div class="np-mr-lista" *ngIf="!cargando && pestana === 'puntos'">
+                <div class="np-mr-fila" *ngFor="let p of listaPuntos; trackBy: trackId" (click)="seleccionar(p)">
+                  <i class="is-cuadro" [class.is-olt]="p.tipo === 'olt'" [style.background]="p.tipo === 'olt' ? null : color(estadoDeCaja(p))"></i>
+                  <span><b>{{ p.tipo === 'olt' ? 'OLT · ' : '' }}{{ p.nombre }}</b><small>{{ p.olt_id ? nombreOlt(p.olt_id) : 'Sin OLT' }}{{ p.fsp ? ' · ' + p.fsp : '' }}{{ p.tipo === 'nap' ? ' · ' + clientesDe(p).length + ' cliente(s)' : '' }}</small></span>
+                </div>
+                <p class="np-muted np-mr-vacio" *ngIf="!listaPuntos.length">Todavía no hay cajas ni OLT en el mapa.</p>
+              </div>
+            </div>
+          </ng-template>
+        </ng-template>
+      </ng-template>
+    </aside>
+  </div>
+</div>
