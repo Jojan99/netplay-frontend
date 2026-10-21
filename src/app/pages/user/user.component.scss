@@ -440,3 +440,35 @@
   dd { margin: 0; display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; min-width: 0; font-size: 13px;
        .np-mono { font-weight: 600; word-break: break-all; } small { color: var(--text-3); font-size: 11.5px; } }
 }
+
+/* Opciones de la ficha a la vista (antes en «Más»): cuadrícula de botones con ícono. */
+.np-opciones {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(118px, 1fr)); gap: 8px;
+}
+.np-opcion {
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px;
+  min-height: 72px; padding: 10px 8px; border: 1px solid var(--line); border-radius: var(--radius);
+  background: var(--surface); color: var(--text); font: inherit; font-size: 12.5px; font-weight: 600;
+  text-align: center; line-height: 1.25; cursor: pointer;
+  transition: background-color 140ms var(--ease-out, ease-out), border-color 140ms var(--ease-out, ease-out), transform 120ms var(--ease-out, ease-out);
+  svg { width: 20px; height: 20px; color: var(--accent); flex-shrink: 0; }
+  &:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  &:active:not(:disabled) { transform: scale(.97); }
+  &:disabled { opacity: .5; cursor: not-allowed; }
+  &.is-principal { background: var(--accent); border-color: var(--accent); color: #fff; svg { color: #fff; } }
+  &.is-alerta svg { color: var(--danger-ink, var(--danger)); }
+}
+@media (hover: hover) {
+  .np-opcion:hover:not(:disabled):not(.is-principal) { background: var(--surface-2); border-color: var(--accent); }
+  .np-opcion.is-principal:hover { filter: brightness(1.05); }
+}
+.np-eliminar {
+  justify-self: start; margin-top: -2px; padding: 4px 0; border: 0; background: transparent; cursor: pointer;
+  color: var(--danger-ink, var(--danger)); font: inherit; font-size: 12px; text-decoration: underline; text-underline-offset: 2px;
+  &:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 4px; }
+}
+.np-equipo-acc {
+  display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px;
+  .np-btn svg { width: 15px; height: 15px; }
+}
+@media (prefers-reduced-motion: reduce) { .np-opcion { transition: none; &:active:not(:disabled) { transform: none; } } }

@@ -50,7 +50,7 @@
               <span class="np-pill" [ngClass]="'np-pill--s' + t.status_id">{{ t.status }}</span>
               <b>#{{ t.id }}</b>
               <span class="nt-abiertos-q">{{ t.service }}</span>
-              <small>{{ desde(t.created_at) }} · {{ t.tech_names }} {{ t.tech_lastname }}</small>
+              <small>{{ desde(t.created_at) }} · {{ t.tech_names ? (t.tech_names + ' ' + (t.tech_lastname || '')) : 'Sin técnico asignado' }}</small>
             </li>
           </ul>
           <small class="nt-abiertos-f">Si es por lo mismo, conviene agregar una nota al ticket que ya existe en vez de abrir otro.</small>

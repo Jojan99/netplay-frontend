@@ -258,6 +258,19 @@
            lo de arriba se comía media ficha. -->
       <div class="np-insp-scroll">
 
+      <!-- Las pestañas, de primero (pedido del 20-10): antes quedaban debajo del estado, la
+           plata, las opciones y el equipo, y había que bajar para encontrarlas. Ese bloque
+           ahora es el contenido de «Resumen». -->
+      <div class="np-tabs" role="tablist">
+        <button type="button" class="np-tab" role="tab" [attr.aria-selected]="modalTab === 'resumen'" (click)="setTab('resumen')">Resumen</button>
+        <button type="button" class="np-tab" role="tab" [attr.aria-selected]="modalTab === 'servicios'" (click)="setTab('servicios')">Servicios</button>
+        <button type="button" class="np-tab" role="tab" [attr.aria-selected]="modalTab === 'facturacion'" (click)="setTab('facturacion')">Facturación<span class="np-c" *ngIf="pendingFacturesCount">{{ pendingFacturesCount }}</span></button>
+        <button type="button" class="np-tab" role="tab" [attr.aria-selected]="modalTab === 'tickets'" (click)="setTab('tickets')">Tickets<span class="np-c" *ngIf="userTickets.length">{{ userTickets.length }}</span></button>
+        <button type="button" class="np-tab" role="tab" [attr.aria-selected]="modalTab === 'historial'" (click)="setTab('historial')">Historial</button>
+      </div>
+
+      <ng-container *ngIf="modalTab === 'resumen'">
+
       <!-- Estado del servicio, en palabras. El interruptor sigue mandando. -->
       <div class="np-switchrow">
         <span>Estado del servicio</span>
@@ -328,39 +341,45 @@
           </div>
         </section>
 
-        <!-- ── Una acción principal y el resto bajo «Más» ───────────────── -->
-        <!-- Si debe, lo primero es cobrarle (las facturas tienen el botón de
-             registrar el pago); si no, lo más común es abrirle un ticket. -->
-        <section class="np-acciones">
-          <button type="button" class="np-btn np-btn--primary" *ngIf="pendingFacturesCount > 0; else sinDeuda" (click)="setTab('facturacion')">Registrar pago</button>
-          <ng-template #sinDeuda>
-            <button type="button" class="np-btn np-btn--primary" (click)="setTab('tickets'); showNewTicketForm = true">Nuevo ticket</button>
-          </ng-template>
-          <div class="np-mas">
-            <button type="button" class="np-btn np-btn--ghost np-mas-btn" (click)="alternarMenu('ficha')"
-                    aria-haspopup="menu" aria-controls="np-mas-ficha" [attr.aria-expanded]="menuAbierto === 'ficha'">
-              Más
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
-            </button>
-            <div class="np-mas-menu" id="np-mas-ficha" role="menu" aria-label="Más acciones de la ficha" *ngIf="menuAbierto === 'ficha'">
-              <button type="button" role="menuitem" class="np-mas-item" *ngIf="pendingFacturesCount > 0" (click)="cerrarMenus(); setTab('tickets'); showNewTicketForm = true">Nuevo ticket</button>
-              <button type="button" role="menuitem" class="np-mas-item" (click)="cerrarMenus(); setTab('resumen'); enableEdit()">Editar datos del cliente</button>
-              <button type="button" role="menuitem" class="np-mas-item" [disabled]="!ipDeGestion"
-                      [title]="ipDeGestion ? 'Ping a ' + ipDeGestion : (clienteEsPppoe ? 'El cliente no tiene sesión PPPoE activa' : 'Sin IP asignada')"
-                      (click)="cerrarMenus(); openPingModal(ipDeGestion, selectedUserData.names, selectedUserData.lastname, selectedUserData.dni, selectedUserId)">Probar la conexión (ping)</button>
-              <button type="button" role="menuitem" class="np-mas-item" *ngIf="esAdmin && !suspTemporal && !formSusp" (click)="cerrarMenus(); abrirFormSusp()"
-                      title="El cliente pide suspender el internet por un tiempo (viaje, temporada…)">Suspender por un tiempo</button>
-              <button type="button" role="menuitem" class="np-mas-item" (click)="cerrarMenus(); openSuspendModal(selectedUserData.dni, selectedUserId, selectedUserData.status_internet, selectedUserData.router_id)">
-                {{ selectedUserData.status_internet === 'ACTIVE' ? 'Suspender el servicio' : 'Reactivar el servicio' }}
-              </button>
-              <button type="button" role="menuitem" class="np-mas-item" (click)="cerrarMenus(); downloadCsvUser()">Exportar CSV</button>
-              <span class="np-mas-sep" role="separator"></span>
-              <!-- Eliminar ya no es el botón rojo más grande de la ficha: va al final del
-                   menú y sigue pidiendo confirmación. -->
-              <button type="button" role="menuitem" class="np-mas-item np-mas-item--danger" (click)="cerrarMenus(); openDeleteModal(selectedUserId, selectedUserData.dni, selectedUserData.router_id)">Eliminar cliente…</button>
-            </div>
-          </div>
+        <!-- ── Opciones a la vista (antes escondidas en «Más») ───────────── -->
+        <!-- Registrar pago se destaca sólo si debe. Eliminar queda aparte, chico y
+             al final, y sigue pidiendo confirmación. -->
+        <section class="np-opciones" aria-label="Opciones del cliente">
+          <button type="button" class="np-opcion" [class.is-principal]="pendingFacturesCount > 0" (click)="setTab('facturacion')">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="6" width="18" height="13" rx="2"/><path d="M3 10h18M7 15h3"/></svg>
+            <span>Registrar pago</span>
+          </button>
+          <button type="button" class="np-opcion" (click)="setTab('tickets'); showNewTicketForm = true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v2a2 2 0 0 0 0 4v2a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-2a2 2 0 0 0 0-4z"/><path d="M12 9v4M10 11h4"/></svg>
+            <span>Nuevo ticket</span>
+          </button>
+          <button type="button" class="np-opcion" (click)="setTab('resumen'); enableEdit()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h4L19 9l-4-4L4 16z"/><path d="m13 7 4 4"/></svg>
+            <span>Editar datos</span>
+          </button>
+          <button type="button" class="np-opcion" [disabled]="!ipDeGestion"
+                  [title]="ipDeGestion ? 'Ping a ' + ipDeGestion : (clienteEsPppoe ? 'El cliente no tiene sesión PPPoE activa' : 'Sin IP asignada')"
+                  (click)="openPingModal(ipDeGestion, selectedUserData.names, selectedUserData.lastname, selectedUserData.dni, selectedUserId)">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h4l2-6 4 12 2-6h6"/></svg>
+            <span>Probar conexión</span>
+          </button>
+          <button type="button" class="np-opcion" *ngIf="esAdmin && !suspTemporal && !formSusp" (click)="abrirFormSusp()"
+                  title="El cliente pide suspender el internet por un tiempo (viaje, temporada…)">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8"/><path d="M12 8v4l2.5 2.5"/></svg>
+            <span>Suspender por un tiempo</span>
+          </button>
+          <button type="button" class="np-opcion" [class.is-alerta]="selectedUserData.status_internet === 'ACTIVE'"
+                  (click)="openSuspendModal(selectedUserData.dni, selectedUserId, selectedUserData.status_internet, selectedUserData.router_id)">
+            <svg *ngIf="selectedUserData.status_internet === 'ACTIVE'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8"/><path d="M10 9v6M14 9v6"/></svg>
+            <svg *ngIf="selectedUserData.status_internet !== 'ACTIVE'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8"/><path d="m10 8.5 5 3.5-5 3.5z"/></svg>
+            <span>{{ selectedUserData.status_internet === 'ACTIVE' ? 'Suspender servicio' : 'Reactivar servicio' }}</span>
+          </button>
+          <button type="button" class="np-opcion" (click)="downloadCsvUser()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11M7.5 10.5 12 15l4.5-4.5M5 19h14"/></svg>
+            <span>Exportar CSV</span>
+          </button>
         </section>
+        <button type="button" class="np-eliminar" (click)="openDeleteModal(selectedUserId, selectedUserData.dni, selectedUserData.router_id)">Eliminar cliente…</button>
 
         <!-- ── Equipo en la casa ────────────────────────────────────────── -->
         <section>
@@ -376,17 +395,21 @@
             <ng-template #sinEquipo>
               <p class="np-equipo np-muted">Sin equipo de fibra registrado.<ng-container *ngIf="clienteEsPppoe && sesionPppoe?.mac"> Se conecta por usuario y contraseña desde <span class="np-mono">{{ sesionPppoe?.mac }}</span>.</ng-container></p>
             </ng-template>
-            <button type="button" class="np-link" *ngIf="esAdmin && !suspTemporal && !formSusp" (click)="abrirPaginaEquipo()" [disabled]="abriendoEquipo"
-                    title="Abre la página web de la ONT del cliente en otra pestaña, por el servidor (en ZTE entra solo como administrador)">
-              {{ abriendoEquipo ? 'Conectando…' : 'Abrir página del equipo' }}
-            </button>
-
-            <!-- Con qué se entra a la página del equipo, según la marca: el técnico no adivina. -->
-            <ng-container *ngIf="esAdmin">
-              <button type="button" class="np-link np-acceso-ver" *ngIf="!accesoEquipo" (click)="verAccesoEquipo()" [disabled]="cargandoAcceso"
-                      title="Usuario y clave para entrar a la página del equipo (queda registrado en el historial)">
-                {{ cargandoAcceso ? 'Consultando…' : 'Ver usuario y clave del equipo' }}
+            <div class="np-equipo-acc" *ngIf="esAdmin">
+              <button type="button" class="np-btn np-btn--ghost np-btn--sm" *ngIf="!suspTemporal && !formSusp" (click)="abrirPaginaEquipo()" [disabled]="abriendoEquipo"
+                      title="Abre la página web de la ONT del cliente en otra pestaña, por el servidor (en ZTE entra solo como administrador)">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M14 4h6v6M20 4l-9 9M18 14v4a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4"/></svg>
+                {{ abriendoEquipo ? 'Conectando…' : 'Abrir página del equipo' }}
               </button>
+              <!-- Con qué se entra a la página del equipo, según la marca: el técnico no adivina. -->
+              <button type="button" class="np-btn np-btn--ghost np-btn--sm" *ngIf="!accesoEquipo" (click)="verAccesoEquipo()" [disabled]="cargandoAcceso"
+                      title="Usuario y clave para entrar a la página del equipo (queda registrado en el historial)">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="15" r="4"/><path d="m11 12 9-9M17 6l3 3M15 8l2 2"/></svg>
+                {{ cargandoAcceso ? 'Consultando…' : 'Usuario y clave' }}
+              </button>
+            </div>
+
+            <ng-container *ngIf="esAdmin">
               <div class="np-acceso" *ngIf="accesoEquipo">
                 <p class="np-acceso-t">Acceso a la página del {{ accesoEquipo.equipo || 'equipo' }}</p>
                 <dl class="np-acceso-dl">
@@ -433,13 +456,7 @@
 
       </div>
 
-      <div class="np-tabs" role="tablist">
-        <button type="button" class="np-tab" role="tab" [attr.aria-selected]="modalTab === 'resumen'" (click)="setTab('resumen')">Resumen</button>
-        <button type="button" class="np-tab" role="tab" [attr.aria-selected]="modalTab === 'servicios'" (click)="setTab('servicios')">Servicios</button>
-        <button type="button" class="np-tab" role="tab" [attr.aria-selected]="modalTab === 'facturacion'" (click)="setTab('facturacion')">Facturación<span class="np-c" *ngIf="pendingFacturesCount">{{ pendingFacturesCount }}</span></button>
-        <button type="button" class="np-tab" role="tab" [attr.aria-selected]="modalTab === 'tickets'" (click)="setTab('tickets')">Tickets<span class="np-c" *ngIf="userTickets.length">{{ userTickets.length }}</span></button>
-        <button type="button" class="np-tab" role="tab" [attr.aria-selected]="modalTab === 'historial'" (click)="setTab('historial')">Historial</button>
-      </div>
+      </ng-container>
 
       <div *ngIf="loadingModal" class="np-loading"><span class="np-spinner"></span> Cargando ficha…</div>
 
@@ -902,7 +919,7 @@
                   <td class="np-data np-strong" data-label="Ticket">{{ t.id }}</td>
                   <td class="es-principal" data-label="Servicio"><span class="np-tag">{{ t.service }}</span></td>
                   <td data-label="Prioridad"><span class="np-pill" [ngClass]="t.prioritys === 'ALTA' ? 'np-pill--suspended' : t.prioritys === 'MEDIA' ? 'np-pill--noip' : 'np-pill--neutral'">{{ t.prioritys }}</span></td>
-                  <td data-label="Técnico">{{ t.tech_names }} {{ t.tech_lastname }}</td>
+                  <td data-label="Técnico">{{ t.tech_names ? (t.tech_names + ' ' + (t.tech_lastname || '')) : 'Sin asignar' }}</td>
                   <td class="np-data" data-label="Fecha">{{ t.date | date:'dd/MM/yy' }}</td>
                   <td data-label="Estado"><span class="np-pill" [ngClass]="t.status === 'CERRADO' ? 'np-pill--active' : t.status === 'EN PROCESO' ? 'np-pill--info' : 'np-pill--noip'">{{ t.status }}</span></td>
                   <td class="es-ancha" data-label="Observación" [title]="t.observation">{{ t.observation }}</td>

@@ -60,7 +60,7 @@
               <td class="np-data np-strong" data-t="Ticket">{{ ticket.id }}</td>
               <td data-t="Cliente"><button type="button" class="np-name np-name--link" (click)="$event.stopPropagation(); verFicha(ticket)" [title]="'Ver la ficha de ' + ticket.name">{{ ticket.name }} {{ ticket.last_name }}</button><app-burbuja-ticket [userId]="ticket.user_id" /><div class="np-plan"><em>{{ ticket.cedula }}</em></div></td>
               <td data-t="Servicio">{{ ticket.name_service }}</td>
-              <td *ngIf="isAdmin" class="np-col-tech" data-t="Técnico">{{ ticket.tech_names }} {{ ticket.tech_lastname }}</td>
+              <td *ngIf="isAdmin" class="np-col-tech" data-t="Técnico">{{ ticket.tech_names ? (ticket.tech_names + ' ' + (ticket.tech_lastname || '')) : 'Sin asignar' }}</td>
               <td data-t="Estado"><span class="np-pill" [ngClass]="'np-pill--s' + ticket.status_id">{{ statusLabel(ticket.status_id) }}</span><span class="np-fine" *ngIf="ticket.reopened_count && ticket.reopened_count > 0">reabierto ×{{ ticket.reopened_count }}</span></td>
               <td class="np-data" data-t="Duración" [class.np-pos-info]="ticket.status_id === 2">{{ ticket.status_id === 2 ? formatSecs(ticket.elapsedSeconds || 0) : formatDuration(ticket) }}</td>
               <td data-t="Prioridad"><span class="np-pill" [ngClass]="priorityPill(ticket.name_priority)">{{ ticket.name_priority }}</span></td>
@@ -120,7 +120,7 @@
           <p class="np-sect">Ticket</p>
           <dl class="np-dl">
             <dt>Servicio</dt><dd>{{ selectedTicket.name_service }}</dd>
-            <dt>Técnico</dt><dd>{{ selectedTicket.tech_names }} {{ selectedTicket.tech_lastname }}</dd>
+            <dt>Técnico</dt><dd>{{ selectedTicket.tech_names ? (selectedTicket.tech_names + ' ' + (selectedTicket.tech_lastname || '')) : 'Sin asignar' }}</dd>
             <dt>Dirección</dt><dd>{{ selectedTicket.address }}</dd>
             <dt>Observación</dt><dd class="tk-obs">{{ selectedTicket.observation }}</dd>
           </dl>
