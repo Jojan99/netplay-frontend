@@ -1,0 +1,77 @@
+<ng-container *ngIf="!cargando && conectado">
+  <section class="tvc">
+    <div class="tvc-h">
+      <p class="np-sect">Televisión</p>
+      <span class="tvc-tag" *ngIf="linea" [attr.data-t]="estado.tono">{{ estado.texto }}</span>
+    </div>
+
+    <!-- Sin línea -->
+    <div class="tvc-vacia" *ngIf="!linea && !editando">
+      <p>{{ planConTv ? 'Su plan lleva TV pero todavía no tiene línea.' : 'No tiene televisión.' }}</p>
+      <div class="tvc-acc">
+        <button type="button" class="np-btn np-btn--sm np-btn--primary" *ngIf="planConTv" (click)="crearYa()" [disabled]="!!ocupado">{{ ocupado === 'crear' ? 'Creando…' : 'Crear la línea' }}</button>
+        <button type="button" class="np-btn np-btn--sm np-btn--ghost" (click)="abrirEditor()">{{ planConTv ? 'Elegir otro paquete' : 'Darle TV' }}</button>
+      </div>
+    </div>
+
+    <!-- Con línea -->
+    <div class="tvc-card" *ngIf="linea && !editando">
+      <p class="np-notice np-notice--danger np-notice--inline" *ngIf="linea.estado === 'pendiente'">
+        No se ha podido crear en el panel{{ linea.error ? ': ' + linea.error : '' }}. Se reintenta sola cada 10 minutos.
+      </p>
+
+      <div class="tvc-datos">
+        <div><span>Usuario</span><b class="np-mono">{{ linea.usuario }}</b><button type="button" class="tvc-copia" (click)="copiar(linea.usuario, 'Usuario')" aria-label="Copiar usuario"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h8"/></svg></button></div>
+        <div><span>Clave</span><b class="np-mono">{{ verClave ? linea.clave : '••••••••' }}</b>
+          <button type="button" class="tvc-copia" (click)="verClave = !verClave" [attr.aria-label]="verClave ? 'Ocultar clave' : 'Ver clave'"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg></button>
+          <button type="button" class="tvc-copia" (click)="copiar(linea.clave, 'Clave')" aria-label="Copiar clave"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h8"/></svg></button></div>
+        <div><span>Paquete</span><b>{{ linea.paquete }} · {{ linea.pantallas }} {{ linea.pantallas === 1 ? 'pantalla' : 'pantallas' }}</b></div>
+        <div><span>Última vez viendo</span><b>{{ hace(linea.ultima_actividad_en) }}</b></div>
+      </div>
+
+      <div class="tvc-url">
+        <span>Lista de canales <em>{{ formato?.para }}</em></span>
+        <div class="tvc-formato">
+          <select class="np-input" [(ngModel)]="tipo" (ngModelChange)="cambiarFormato()" aria-label="Formato de la lista">
+            <option *ngFor="let f of linea.formatos" [value]="f.clave">{{ f.nombre }}</option>
+          </select>
+          <select class="np-input" [(ngModel)]="salida" (ngModelChange)="cambiarFormato()" aria-label="Salida">
+            <option *ngFor="let o of linea.salidas" [value]="o.clave">{{ o.nombre }}</option>
+          </select>
+        </div>
+        <div><code class="np-mono">{{ urlVisible }}</code>
+          <button type="button" class="np-btn np-btn--sm np-btn--ghost" (click)="copiar(url, 'Enlace de la lista')">Copiar</button></div>
+      </div>
+      <div class="tvc-url">
+        <span>Servidor <em>IPTV Smarters, TiviMate (Xtream Codes)</em></span>
+        <div><code class="np-mono">{{ linea.servidor }}</code>
+          <button type="button" class="np-btn np-btn--sm np-btn--ghost" (click)="copiar(linea.servidor, 'Servidor')">Copiar</button></div>
+      </div>
+
+      <div class="tvc-acc" *ngIf="linea.en_el_panel">
+        <button type="button" class="np-btn np-btn--sm np-btn--primary" (click)="enviar()" [disabled]="!!ocupado">{{ ocupado === 'whatsapp' ? 'Enviando…' : 'Enviar por WhatsApp' }}</button>
+        <button type="button" class="np-btn np-btn--sm np-btn--ghost" (click)="copiarTodo()">Copiar todo</button>
+        <button type="button" class="np-btn np-btn--sm np-btn--ghost" (click)="cambiarClave()" [disabled]="!!ocupado">{{ ocupado === 'clave' ? 'Cambiando…' : 'Cambiar clave' }}</button>
+        <button type="button" class="np-btn np-btn--sm np-btn--ghost" (click)="abrirEditor()">Cambiar paquete</button>
+        <button type="button" class="np-btn np-btn--sm np-btn--ghost" *ngIf="linea.estado === 'activa'" (click)="encender(false)" [disabled]="!!ocupado">Apagar</button>
+        <button type="button" class="np-btn np-btn--sm np-btn--ghost" *ngIf="linea.estado !== 'activa'" (click)="encender(true)" [disabled]="!!ocupado">Prender</button>
+      </div>
+      <p class="tvc-fine" *ngIf="linea.estado === 'suspendida'">La apagó la plataforma por mora: se prende sola cuando pague.</p>
+      <p class="tvc-fine" *ngIf="linea.origen === 'importada'">Venía del panel{{ linea.vinculo === 'auto' ? ' y se ligó sola a este cliente por el nombre' : '' }}. <a routerLink="/dashboard/television" [queryParams]="{ vista: 'lineas' }">Ver todas las líneas</a></p>
+    </div>
+
+    <!-- Crear o cambiar el paquete -->
+    <div class="tvc-card" *ngIf="editando">
+      <span class="tvc-fine">{{ linea?.en_el_panel ? 'Paquete de la línea' : 'Con qué paquete se crea' }}</span>
+      <p class="tvc-fine" *ngIf="!bouquets.length">Leyendo los paquetes del panel…</p>
+      <div class="tvc-bouquets" role="group" aria-label="Paquetes">
+        <button type="button" *ngFor="let b of bouquets" [attr.aria-pressed]="elegidos.includes(b.id)" (click)="alternar(b.id)">{{ b.nombre }}<small>{{ b.canales }} canales</small></button>
+      </div>
+      <label class="tvc-pant">Pantallas a la vez <input class="np-input" type="number" min="1" max="20" [(ngModel)]="pantallas" /></label>
+      <div class="tvc-acc">
+        <button type="button" class="np-btn np-btn--sm np-btn--ghost" (click)="editando = false">Cancelar</button>
+        <button type="button" class="np-btn np-btn--sm np-btn--primary" (click)="guardarEditor()" [disabled]="!!ocupado || !elegidos.length">{{ ocupado ? 'Guardando…' : (linea?.en_el_panel ? 'Guardar' : 'Crear la línea') }}</button>
+      </div>
+    </div>
+  </section>
+</ng-container>

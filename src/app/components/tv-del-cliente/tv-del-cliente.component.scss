@@ -1,0 +1,32 @@
+/* La TV del cliente en la ficha (21-10-2026) */
+:host { display: block; }
+.tvc { display: grid; gap: 8px; }
+.tvc-h { display: flex; align-items: center; justify-content: space-between; gap: 8px; .np-sect { margin: 0; } }
+.tvc-tag { display: inline-flex; align-items: center; height: 21px; padding: 0 8px; border-radius: 6px; font-size: 12px; white-space: nowrap;
+  background: var(--surface-2, #f3f3f5); color: var(--text-2, #4f525c);
+  &[data-t='ok'] { background: color-mix(in srgb, var(--ok, #1f7a45) 12%, transparent); color: var(--ok, #1f7a45); }
+  &[data-t='mal'] { background: color-mix(in srgb, var(--danger, #b42318) 12%, transparent); color: var(--danger, #b42318); }
+  &[data-t='warn'] { background: color-mix(in srgb, var(--warn, #9a5b00) 14%, transparent); color: var(--warn, #9a5b00); } }
+.tvc-vacia { padding: 12px 14px; border: 1px dashed var(--line-strong, #d9dadf); border-radius: 10px; display: grid; gap: 8px;
+  p { margin: 0; font-size: 13px; color: var(--text-2, #4f525c); } }
+.tvc-card { padding: 12px 14px; border: 1px solid var(--line, #e7e7ea); border-radius: 10px; display: grid; gap: 12px; }
+.tvc-datos { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px;
+  > div { position: relative; padding: 8px 10px; border-radius: 8px; background: var(--surface-2, #f3f3f5); display: flex; flex-wrap: wrap; align-items: center; gap: 2px 6px; min-width: 0;
+    span { flex-basis: 100%; font-size: 11.5px; color: var(--text-3, #737782); }
+    b { font-size: 13.5px; font-weight: 500; overflow-wrap: anywhere; } } }
+.tvc-copia { width: 26px; height: 26px; padding: 0; border: 0; border-radius: 6px; background: transparent; color: var(--text-3, #737782); display: grid; place-items: center; cursor: pointer;
+  svg { width: 14px; height: 14px; } &:hover { background: var(--surface-3, #ececef); color: var(--text, #111216); } }
+.tvc-url { display: grid; gap: 4px;
+  > span { font-size: 12.5px; font-weight: 500; em { font-style: normal; font-weight: 400; color: var(--text-3, #737782); margin-left: 4px; } }
+  > div { display: flex; align-items: center; gap: 8px; }
+  code { flex: 1; min-width: 0; padding: 7px 10px; border: 1px solid var(--line, #e7e7ea); border-radius: 8px; font-size: 12px; color: var(--text-2, #4f525c); overflow-wrap: anywhere; } }
+.tvc-acc { display: flex; flex-wrap: wrap; gap: 6px; }
+.tvc-fine { margin: 0; font-size: 12px; color: var(--text-3, #737782); }
+.tvc-bouquets { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 6px;
+  button { display: grid; gap: 2px; justify-items: start; padding: 8px 10px; border: 1px solid var(--line-strong, #d9dadf); border-radius: 8px; background: var(--surface, #fff);
+    font: inherit; font-size: 13px; font-weight: 500; color: var(--text, #111216); text-align: left; cursor: pointer;
+    small { font-size: 11px; font-weight: 400; color: var(--text-3, #737782); }
+    &[aria-pressed='true'] { border-color: var(--text, #111216); box-shadow: inset 0 0 0 1px var(--text, #111216); } } }
+.tvc-pant { display: inline-flex; align-items: center; gap: 8px; font-size: 12.5px; color: var(--text-2, #4f525c); .np-input { width: 70px; height: 32px; } }
+div.tvc-formato { display: grid; grid-template-columns: minmax(0, 1fr) 150px; gap: 8px; .np-input { height: 34px; font-size: 13px; } }
+@media (max-width: 640px) { div.tvc-formato { grid-template-columns: minmax(0, 1fr); } .tvc-datos { grid-template-columns: minmax(0, 1fr); } }

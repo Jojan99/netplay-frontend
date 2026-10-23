@@ -1,0 +1,258 @@
+<div class="np-page tv">
+  <header class="tv-head">
+    <div><p class="tv-kicker">{{ soloConfig ? 'Configuración' : 'Servicios' }}</p><h1>{{ soloConfig ? 'Conectar panel de TV' : 'Televisión' }}</h1></div>
+    <div class="tv-acciones" *ngIf="vista === 'canales'">
+      <span class="tv-fine" *ngIf="revisadoEn">Revisado {{ hace(revisadoEn) }}</span>
+      <button type="button" class="tv-btn" (click)="revisarYa()" [disabled]="revisando">{{ revisando ? 'Revisando…' : 'Revisar ahora' }}</button>
+    </div>
+    <div class="tv-acciones" *ngIf="vista === 'lineas'">
+      <button type="button" class="tv-btn" (click)="sincronizar()" [disabled]="sincronizando">{{ sincronizando ? 'Trayendo del panel…' : 'Traer del panel' }}</button>
+    </div>
+  </header>
+
+  <p class="tv-fine tv-explica" *ngIf="soloConfig">Si la empresa da televisión por IPTV con un panel XUI.one, conéctelo aquí. Mientras no haya panel, nada de TV aparece en la plataforma.</p>
+
+  <nav class="tv-tabs" role="tablist" aria-label="Secciones de televisión" *ngIf="!soloConfig">
+    <button type="button" role="tab" [attr.aria-selected]="vista === 'canales'" (click)="abrir('canales')">Canales</button>
+    <button type="button" role="tab" [attr.aria-selected]="vista === 'lineas'" (click)="abrir('lineas')">Líneas de clientes</button>
+    <button type="button" role="tab" [attr.aria-selected]="vista === 'configuracion'" (click)="abrir('configuracion')">Configuración</button>
+  </nav>
+
+  <!-- ══ Canales: cuadrícula con la foto de cada uno; en vivo al pasar el mouse o al tocarlo ══ -->
+  <ng-container *ngIf="vista === 'canales'">
+    <p class="np-loading" *ngIf="cargandoCanales"><span class="np-spinner"></span> Cargando los canales…</p>
+    <p class="np-notice np-notice--danger" *ngIf="errorPanel">El panel no respondió en la última revisión: {{ errorPanel }}</p>
+
+    <ng-container *ngIf="!cargandoCanales">
+      <div class="tv-cifras">
+        <div><b>{{ totalAlAire }}</b><span>al aire</span></div>
+        <div [class.is-mal]="totalSinSenal"><b>{{ totalSinSenal }}</b><span>sin señal</span></div>
+        <div><b>{{ viendo }}</b><span>viendo ahora</span></div>
+        <div><b>{{ totalApagados }}</b><span>sin vigilar</span></div>
+      </div>
+
+      <p class="tv-aviso" *ngIf="!avisaAlGrupo">
+        Los canales caídos todavía no le llegan a nadie.
+        <a routerLink="/dashboard/whatsapp/netplay/avisos">Elija el grupo en Avisos por WhatsApp › Canales caídos</a>.
+      </p>
+
+      <div class="tv-barra">
+        <input type="search" class="np-input tv-buscar" placeholder="Buscar un canal" [(ngModel)]="buscarCanal" aria-label="Buscar un canal" />
+        <span class="tv-fine">{{ tactil ? 'Toque un canal para verlo en vivo.' : 'Pase el mouse por un canal para verlo en vivo; clic para verlo en grande.' }}</span>
+      </div>
+
+      <!-- Sin señal primero: es lo que pide atención -->
+      <section class="tv-bloque" aria-labelledby="tv-sin-senal" *ngIf="sinSenal.length">
+        <h2 id="tv-sin-senal"><i class="tv-punto is-mal" aria-hidden="true"></i>Sin señal <span>{{ sinSenal.length }}</span>
+          <small *ngIf="avisaAlGrupo">se avisa al grupo a los {{ minutos }} minutos y cuando vuelve</small></h2>
+        <ul class="tv-grid">
+          <li *ngFor="let c of sinSenal; trackBy: trackId" class="tv-tile is-caido">
+            <div class="tv-pantalla">
+              <img *ngIf="c.previa" [src]="url(c.previa)" alt="" loading="lazy" />
+              <span class="tv-estado is-mal">{{ c.estado === 'arrancando' ? 'Reintentando' : 'Sin señal' }}</span>
+            </div>
+            <div class="tv-tile-pie">
+              <b>{{ c.nombre }}</b>
+              <small>Caído {{ hace(c.desde) }}<ng-container *ngIf="c.avisado"> · avisado</ng-container></small>
+              <button type="button" class="tv-link" (click)="vigilar(c, false)" title="Para canales que ya no se dan: deja de avisar">No vigilar</button>
+            </div>
+          </li>
+        </ul>
+      </section>
+
+      <section class="tv-bloque" aria-labelledby="tv-al-aire">
+        <h2 id="tv-al-aire"><i class="tv-punto is-ok" aria-hidden="true"></i>Al aire <span>{{ alAire.length }}</span>
+          <small *ngIf="fotosDe">fotos de {{ fotosDe }}</small></h2>
+        <ul class="tv-grid">
+          <li *ngFor="let c of alAire; trackBy: trackId" class="tv-tile" (mouseenter)="alEntrar(c)" (mouseleave)="alSalir(c)">
+            <button type="button" class="tv-tile-btn" (click)="abrirGrande(c)" [attr.aria-label]="'Ver ' + c.nombre + ' en vivo'">
+              <div class="tv-pantalla">
+                <img *ngIf="c.previa" [src]="url(c.previa)" alt="" loading="lazy" />
+                <span class="tv-sin-foto" *ngIf="!c.previa">Sin foto todavía</span>
+                <video *ngIf="enVivo === c.id" [id]="'tv-v-' + c.id" muted playsinline></video>
+                <span class="tv-estado"><i aria-hidden="true"></i>{{ enVivo === c.id ? 'En vivo' : 'Al aire' }}</span>
+                <span class="tv-viendo" *ngIf="c.espectadores" [attr.aria-label]="c.espectadores + ' viendo'">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>{{ c.espectadores }}</span>
+                <span class="tv-play" aria-hidden="true"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg></span>
+              </div>
+              <div class="tv-tile-pie"><b>{{ c.nombre }}</b><small>{{ mbps(c.bitrate) }}</small></div>
+            </button>
+          </li>
+        </ul>
+        <p class="tv-vacio" *ngIf="!alAire.length">{{ buscarCanal ? 'Ninguno con ese nombre.' : 'Ningún canal al aire.' }}</p>
+      </section>
+
+      <details class="tv-bloque tv-apagados" *ngIf="apagados.length">
+        <summary><i class="tv-punto" aria-hidden="true"></i>Sin vigilar <span>{{ apagados.length }}</span> <small>caídos hace tiempo; no avisan. Si vuelven al aire se vigilan solos.</small></summary>
+        <ul class="tv-canales tv-canales--caidos">
+          <li *ngFor="let c of apagados; trackBy: trackId">
+            <div><b>{{ c.nombre }}</b><span class="tv-fine">Caído {{ hace(c.desde) }}</span></div>
+            <button type="button" class="tv-link" (click)="vigilar(c, true)">Vigilar</button>
+          </li>
+        </ul>
+      </details>
+    </ng-container>
+  </ng-container>
+
+  <!-- ══ Líneas de los clientes ═════════════════════════════════════════════ -->
+  <ng-container *ngIf="vista === 'lineas'">
+    <div class="tv-barra">
+      <div class="np-chips" role="group" aria-label="Filtrar líneas">
+        <button type="button" class="np-chip" *ngFor="let f of FILTROS" [class.is-active]="filtro === f.clave" (click)="elegirFiltro(f.clave)">
+          {{ f.titulo }} <b class="tv-chip-n">{{ conteo[f.conteo] ?? 0 }}</b>
+        </button>
+      </div>
+      <input type="search" class="np-input tv-buscar" placeholder="Usuario o cliente" [(ngModel)]="q" (ngModelChange)="alBuscar()" aria-label="Buscar línea" />
+    </div>
+
+    <p class="tv-fine tv-explica" *ngIf="filtro === 'revisar'">Estas líneas se parecen a un cliente pero no con certeza. Confirme la sugerencia o busque el cliente correcto.</p>
+
+    <div class="np-tablewrap">
+      <table class="np-table np-table--compact np-tabla-movil">
+        <thead><tr><th>Usuario</th><th>Cliente</th><th>Paquete</th><th class="np-th-right">Pantallas</th><th>Estado</th><th>Última vez</th></tr></thead>
+        <tbody>
+          <tr class="np-empty" *ngIf="!cargandoLineas && !lineas.length"><td colspan="6"><strong>No hay líneas con este filtro.</strong></td></tr>
+          <tr *ngFor="let l of lineas; trackBy: trackId">
+            <td class="es-principal np-mono np-strong" data-label="Usuario">{{ l.usuario }}<div class="tv-fine" *ngIf="l.error">{{ l.error }}</div></td>
+            <td data-label="Cliente">
+              <ng-container *ngIf="l.user_id">
+                <span>{{ l.cliente || 'Cliente #' + l.user_id }}</span>
+                <div class="tv-fine">{{ l.vinculo === 'auto' ? 'Ligada sola' + (l.motivo ? ' · ' + l.motivo.toLowerCase() : '') : 'Ligada a mano' }} · <button type="button" class="tv-link" (click)="ligar(l, null)">Soltar</button></div>
+              </ng-container>
+              <ng-container *ngIf="!l.user_id">
+                <div *ngIf="l.vinculo === 'revisar' && l.sugerido_user_id" class="tv-sugerido">
+                  <span>¿{{ l.sugerido }}?</span>
+                  <div class="tv-fine">{{ l.motivo }}</div>
+                  <div class="tv-sug-acc">
+                    <button type="button" class="np-btn np-btn--sm np-btn--primary" (click)="ligarSugerido(l)">Sí, es</button>
+                    <button type="button" class="np-btn np-btn--sm np-btn--ghost" (click)="abrirLigar(l)">Otro cliente</button>
+                  </div>
+                </div>
+                <button type="button" class="np-btn np-btn--sm np-btn--ghost" *ngIf="l.vinculo !== 'revisar'" (click)="abrirLigar(l)">Ligar a un cliente</button>
+              </ng-container>
+            </td>
+            <td data-label="Paquete">{{ l.paquete }}</td>
+            <td class="np-td-right np-data" data-label="Pantallas">{{ l.pantallas }}</td>
+            <td data-label="Estado"><span class="tv-tag" [attr.data-t]="estadoLinea(l).tono">{{ estadoLinea(l).texto }}</span></td>
+            <td class="np-data" data-label="Última vez">{{ l.ultima_actividad_en ? hace(l.ultima_actividad_en) : '—' }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="np-pager np-pager--flat" *ngIf="paginas > 1">
+      <span class="np-range">{{ total }} líneas</span>
+      <div class="np-pages">
+        <button type="button" (click)="irAPagina(pagina - 1)" [disabled]="pagina === 1" aria-label="Página anterior">‹</button>
+        <button type="button" aria-current="page">{{ pagina }} / {{ paginas }}</button>
+        <button type="button" (click)="irAPagina(pagina + 1)" [disabled]="pagina >= paginas" aria-label="Página siguiente">›</button>
+      </div>
+    </div>
+  </ng-container>
+
+  <!-- ══ Configuración ══════════════════════════════════════════════════════ -->
+  <ng-container *ngIf="vista === 'configuracion'">
+    <p class="np-loading" *ngIf="cargandoCfg"><span class="np-spinner"></span> Cargando…</p>
+    <ng-container *ngIf="cfg && !cargandoCfg">
+      <section class="tv-card">
+        <div class="tv-card-h">
+          <h2>Conexión con el panel XUI.one</h2>
+          <span class="tv-tag" [attr.data-t]="cfg.conexion === 'ok' ? 'ok' : 'mal'">{{ cfg.conexion === 'ok' ? 'Conectado' : (cfg.panel ? 'Sin conexión' : 'Sin configurar') }}</span>
+        </div>
+        <p class="np-notice np-notice--danger np-notice--inline" *ngIf="cfg.conexion && cfg.conexion !== 'ok'">{{ cfg.conexion }}</p>
+        <div class="np-form">
+          <label class="np-field"><span>Dirección del panel</span><input class="np-input np-mono" [(ngModel)]="form.url" placeholder="http://192.168.5.10" /></label>
+          <label class="np-field"><span>Código de acceso de la API</span><input class="np-input np-mono" [(ngModel)]="form.codigo_api" placeholder="Tipo «Admin API»" /></label>
+          <label class="np-field"><span>API key <em>{{ cfg.panel?.tiene_llave ? 'guardada; escriba solo para cambiarla' : '' }}</em></span>
+            <input class="np-input np-mono" type="password" [(ngModel)]="form.api_key" autocomplete="off" [placeholder]="cfg.panel?.tiene_llave ? '••••••••••••' : 'La del perfil del administrador'" /></label>
+          <label class="np-field"><span>Dirección que ven los clientes <em>opcional</em></span>
+            <input class="np-input np-mono" [(ngModel)]="form.url_clientes" placeholder="Si no, la del panel" /></label>
+        </div>
+      </section>
+
+      <section class="tv-card" *ngIf="cfg.panel">
+        <div class="tv-card-h"><h2>Línea nueva por defecto</h2><span class="tv-fine">para planes con TV sin paquete propio y para crearla a mano</span></div>
+        <div class="tv-bouquets" role="group" aria-label="Paquetes por defecto">
+          <button type="button" *ngFor="let b of bouquets; trackBy: trackId" [attr.aria-pressed]="form.bouquets.includes(b.id)" (click)="form.bouquets = alternar(form.bouquets, b.id)">
+            {{ b.nombre }}<small>{{ b.canales }} canales</small>
+          </button>
+        </div>
+        <div class="tv-dos">
+          <label class="np-field tv-pantallas"><span>Pantallas a la vez</span><input class="np-input" type="number" min="1" max="20" [(ngModel)]="form.pantallas" /></label>
+          <label class="np-field"><span>Clave de las líneas nuevas <em>vacío: 5 dígitos al azar</em></span>
+            <input class="np-input np-mono" [(ngModel)]="form.clave_fija" maxlength="20" placeholder="Al azar (ej. 48213)" autocomplete="off" /></label>
+        </div>
+        <p class="tv-fine">El usuario es el nombre y el primer apellido juntos (nasly gil → naslygil). Si escribe una clave aquí (por ejemplo 1234), todas las líneas nuevas la usan; al cambiar la clave desde la ficha siempre sale una al azar.</p>
+      </section>
+
+      <section class="tv-card" *ngIf="cfg.panel">
+        <div class="tv-card-h"><h2>Seguir a la cartera</h2></div>
+        <label class="np-check np-check--box">
+          <input type="checkbox" [(ngModel)]="form.sincronizar_cartera" />
+          <span><b>Apagar la TV cuando se suspende el internet, y prenderla cuando paga.</b> También se apaga al retirar al cliente. Solo toca líneas ligadas a un cliente; las que alguien apagó a mano en el panel se respetan.</span>
+        </label>
+        <p class="tv-fine" *ngIf="cfg.cartera as c">Hoy: {{ c.se_apagarian }} líneas activas son de clientes suspendidos o retirados{{ c.se_prenderian ? '; ' + c.se_prenderian + ' se prenderían' : '' }}.</p>
+      </section>
+
+      <div class="tv-guardar"><button type="button" class="np-btn np-btn--primary" (click)="guardarCfg()" [disabled]="guardandoCfg">{{ guardandoCfg ? 'Probando y guardando…' : (cfg.panel ? 'Probar y guardar' : 'Conectar') }}</button></div>
+
+      <section class="tv-card" *ngIf="cfg.panel">
+        <div class="tv-card-h"><h2>Planes con TV</h2><span class="tv-fine">a los clientes nuevos de estos planes se les crea la línea sola</span></div>
+        <ul class="tv-planes">
+          <li *ngFor="let p of planes; trackBy: trackId" [class.is-on]="p.tv_incluida">
+            <div class="tv-plan-h">
+              <div><b>{{ p.nombre }}</b><span class="tv-fine">{{ pesos(p.precio) }} · {{ p.clientes }} clientes</span></div>
+              <button type="button" class="tv-switch" role="switch" [attr.aria-checked]="p.tv_incluida" (click)="alternarPlan(p)" [disabled]="p.guardando" [attr.aria-label]="'Incluye TV: ' + p.nombre"><i aria-hidden="true"></i>{{ p.tv_incluida ? 'Incluye TV' : 'Sin TV' }}</button>
+            </div>
+            <div class="tv-plan-tv" *ngIf="p.tv_incluida">
+              <div class="tv-bouquets tv-bouquets--sm">
+                <button type="button" *ngFor="let b of bouquets; trackBy: trackId" [attr.aria-pressed]="p.tv_bouquets.includes(b.id)" (click)="p.tv_bouquets = alternar(p.tv_bouquets, b.id); guardarPlan(p)">{{ b.nombre }}</button>
+              </div>
+              <label class="tv-plan-pant">Pantallas <input class="np-input" type="number" min="1" max="20" [(ngModel)]="p.tv_pantallas" (change)="guardarPlan(p)" [placeholder]="'' + form.pantallas" /></label>
+            </div>
+          </li>
+        </ul>
+      </section>
+
+      <section class="tv-card" *ngIf="cfg.panel">
+        <div class="tv-card-h"><h2>Avisos de canales caídos</h2></div>
+        <p class="tv-fine" *ngIf="cfg.destinos_alertas.length">Van a: {{ cfg.destinos_alertas.join(', ') }}.</p>
+        <p class="tv-fine" *ngIf="!cfg.destinos_alertas.length">Todavía no hay grupo: los canales caídos solo se ven aquí.</p>
+        <a class="np-btn np-btn--ghost np-btn--sm" routerLink="/dashboard/whatsapp/netplay/avisos">Elegir el grupo en Avisos por WhatsApp</a>
+      </section>
+    </ng-container>
+  </ng-container>
+</div>
+
+<!-- ══ Ligar una línea a un cliente ═══════════════════════════════════════════ -->
+<div class="np-overlay" *ngIf="ligando as g" (click)="ligando = null">
+  <div class="np-modal tv-ligar" role="dialog" aria-modal="true" aria-label="Ligar la línea a un cliente" (click)="$event.stopPropagation()">
+    <div class="np-modal-head">
+      <div><p class="np-kicker">Línea {{ g.linea.usuario }}</p><h3>¿De qué cliente es?</h3></div>
+      <button type="button" class="np-icobtn" (click)="ligando = null" aria-label="Cerrar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
+    </div>
+    <div class="np-modal-body">
+      <input type="search" class="np-input" placeholder="Nombre, cédula o celular" [(ngModel)]="g.q" (ngModelChange)="alBuscarCliente()" aria-label="Buscar cliente" autofocus />
+      <p class="tv-fine" *ngIf="g.buscando">Buscando…</p>
+      <ul class="tv-resultados">
+        <li *ngFor="let c of g.resultados">
+          <button type="button" (click)="ligar(g.linea, c.user_id)"><b>{{ c.nombre }}</b><span class="tv-fine">{{ c.dni }} · {{ c.address }}</span></button>
+        </li>
+      </ul>
+      <p class="tv-fine" *ngIf="g.q.trim().length >= 2 && !g.buscando && !g.resultados.length">Ningún cliente sin línea con ese dato.</p>
+    </div>
+  </div>
+</div>
+
+<!-- ══ Un canal en grande, con sonido ═════════════════════════════════════════ -->
+<div class="np-overlay" *ngIf="grande as g" (click)="cerrarGrande()">
+  <div class="np-modal tv-grande" role="dialog" aria-modal="true" [attr.aria-label]="g.nombre + ' en vivo'" (click)="$event.stopPropagation()">
+    <div class="np-modal-head">
+      <div><p class="np-kicker"><span class="tv-estado-txt"><i aria-hidden="true"></i>En vivo</span> · {{ mbps(g.bitrate) }}<ng-container *ngIf="g.espectadores"> · {{ g.espectadores }} viendo</ng-container></p><h3>{{ g.nombre }}</h3></div>
+      <button type="button" class="np-icobtn" (click)="cerrarGrande()" aria-label="Cerrar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
+    </div>
+    <div class="tv-grande-video">
+      <video id="tv-grande" controls autoplay playsinline [poster]="g.previa ? url(g.previa) : ''"></video>
+      <p class="tv-grande-error" *ngIf="errorVivo">{{ errorVivo }}</p>
+    </div>
+  </div>
+</div>
