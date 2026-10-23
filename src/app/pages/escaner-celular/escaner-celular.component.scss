@@ -1,0 +1,21 @@
+/* La página del celular: el lector arriba y lo que se va mandando debajo. Fuera del panel,
+   así que lleva sus propios valores por si los del tema no están. */
+:host { display: block; min-height: 100dvh; background: var(--bg, #f7f7f8); color: var(--text, #111216); font-family: 'Geist', ui-sans-serif, system-ui, sans-serif; }
+
+.ec { max-width: 560px; margin: 0 auto; padding: 18px 16px 32px; display: flex; flex-direction: column; gap: 14px; }
+.ec-head h1 { margin: 2px 0 0; font-size: 22px; font-weight: 600; letter-spacing: -0.01em; }
+.ec-kicker { margin: 0; font-size: 12.5px; color: var(--text-3, #737782); }
+.ec-sub { margin: 4px 0 0; font-size: 13px; color: var(--text-2, #4f525c); }
+.ec-estado { margin: 0; font-size: 13.5px; color: var(--text-2, #4f525c); }
+.ec-error { margin: 0; padding: 10px 12px; border-radius: 10px; font-size: 13.5px; background: var(--danger-soft, #fdecea); color: var(--danger, #c0392b); }
+
+.ec-lista { display: flex; flex-direction: column; gap: 8px; }
+.ec-cuenta { margin: 0; font-size: 13px; color: var(--text-2, #4f525c); b { font-size: 15px; color: var(--text, #111216); } }
+.ec-lista ol { list-style: none; margin: 0; padding: 0; border: 1px solid var(--line, #e7e7ea); border-radius: 12px; overflow: hidden; background: var(--surface, #fff); }
+.ec-lista li { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 10px 12px; font-size: 13px;
+  & + li { border-top: 1px solid var(--line, #e7e7ea); }
+  &[data-estado='bien'] .ec-texto { color: var(--ok, #1f8a4c); }
+  &[data-estado='mal'] .ec-texto, &[data-estado='error'] .ec-texto { color: var(--danger, #c0392b); }
+  &[data-estado='enviando'] .ec-texto { color: var(--text-3, #737782); } }
+.ec-codigo { font-family: 'Geist Mono', ui-monospace, monospace; font-weight: 500; overflow-wrap: anywhere; }
+.ec-texto { text-align: right; flex: none; max-width: 55%; }

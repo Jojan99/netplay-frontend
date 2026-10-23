@@ -1,0 +1,25 @@
+<main class="ec">
+  <header class="ec-head">
+    <p class="ec-kicker">{{ datos?.empresa || 'Netvula' }} · lector para el computador</p>
+    <h1>{{ datos?.titulo || (datos?.modo === 'serial' ? 'Leer seriales' : 'Leer códigos') }}</h1>
+    <p class="ec-sub" *ngIf="datos?.quien">Lo que lea aparece en la pantalla de {{ datos?.quien }}.</p>
+  </header>
+
+  <p class="ec-estado" *ngIf="cargando">Conectando con el computador…</p>
+  <p class="ec-error" *ngIf="error" role="alert">{{ error }}</p>
+  <p class="ec-error" *ngIf="cerrada && !error" role="alert">El computador cerró la conexión. Para seguir, vuelva a tocar «Usar el celular» allá y escanee el código nuevo.</p>
+
+  <ng-container *ngIf="datos && !error">
+    <app-lector-codigos [modo]="datos.modo" [continuo]="true" [conVeredicto]="true" [conCelular]="false" (leido)="enviar($event)"></app-lector-codigos>
+
+    <section class="ec-lista" *ngIf="envios.length" aria-label="Lo que se leyó">
+      <p class="ec-cuenta"><b>{{ bien }}</b> {{ bien === 1 ? 'agregado' : 'agregados' }} en el computador</p>
+      <ol>
+        <li *ngFor="let e of envios" [attr.data-estado]="e.estado">
+          <span class="ec-codigo">{{ e.codigo }}</span>
+          <span class="ec-texto">{{ e.texto }}</span>
+        </li>
+      </ol>
+    </section>
+  </ng-container>
+</main>

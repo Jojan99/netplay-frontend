@@ -7,10 +7,11 @@ import { InventoryService }           from '../../../services/inventory.service'
 import { ToastService }               from '../../../services/toast.service';
 import { InventoryCategoryInterface } from '../../../models/inventory-category.interface';
 
+import { SeccionTabsComponent } from '../../../components/seccion-tabs/seccion-tabs.component';
 @Component({
   selector: 'app-categories',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink],
+  imports: [CommonModule, FormsModule, RouterLink, SeccionTabsComponent],
   templateUrl: './categories.component.html',
   styleUrl: './categories.component.scss',
   host: { class: 'np-console' },
@@ -23,7 +24,7 @@ export class CategoriesComponent implements OnInit {
   editingId: number | null = null;
   categories: InventoryCategoryInterface[] = [];
 
-  categoryForm = { name: '', description: '' };
+  categoryForm: { name: string; description: string; usa_serial: boolean } = { name: '', description: '', usa_serial: true };
 
   constructor(
     private inventoryService: InventoryService,
@@ -46,21 +47,21 @@ export class CategoriesComponent implements OnInit {
     this.showForm = !this.showForm;
     this.isEditing = false;
     this.editingId = null;
-    this.categoryForm = { name: '', description: '' };
+    this.categoryForm = { name: '', description: '', usa_serial: true };
   }
 
   openEdit(category: InventoryCategoryInterface) {
     this.showForm = true;
     this.isEditing = true;
     this.editingId = category.id || null;
-    this.categoryForm = { name: category.name || '', description: category.description || '' };
+    this.categoryForm = { name: category.name || '', description: category.description || '', usa_serial: !(category.usa_serial === false || category.usa_serial === 0) };
   }
 
   cancelForm() {
     this.showForm = false;
     this.isEditing = false;
     this.editingId = null;
-    this.categoryForm = { name: '', description: '' };
+    this.categoryForm = { name: '', description: '', usa_serial: true };
   }
 
   saveCategory() {

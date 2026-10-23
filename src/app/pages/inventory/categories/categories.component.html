@@ -1,26 +1,28 @@
 <div class="np-page np-inv-cat" [class.is-open]="showForm">
   <header class="np-head">
     <div>
-      <p class="np-kicker"><a [routerLink]="['/dashboard/inventory']" class="np-crumb">Inventario</a> <b>/</b> Categorías</p>
-      <h1 class="np-title">Categorías de inventario</h1>
-      <div class="np-ribbon"><span><span class="np-n">{{ categories.length }}</span>categorías</span></div>
+      <p class="np-kicker"><a [routerLink]="['/dashboard/inventory']" class="np-crumb">Bodega</a> <b>/</b> Tipos de equipo</p>
+      <h1 class="np-title">Tipos de equipo</h1>
+      <div class="np-ribbon"><span><span class="np-n">{{ categories.length }}</span>tipos · son los que se eligen al dar entrada</span></div>
     </div>
     <div class="np-actions">
-      <button type="button" class="np-btn np-btn--primary" (click)="toggleForm()"><svg *ngIf="!showForm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M12 5v14M5 12h14"/></svg>{{ showForm ? 'Cerrar formulario' : 'Nueva categoría' }}</button>
+      <button type="button" class="np-btn np-btn--primary" (click)="toggleForm()"><svg *ngIf="!showForm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M12 5v14M5 12h14"/></svg>{{ showForm ? 'Cerrar formulario' : 'Nuevo tipo' }}</button>
     </div>
   </header>
+  <app-seccion-tabs grupo="bodega"></app-seccion-tabs>
 
   <div class="np-workspace">
     <section class="np-registry">
       <div class="np-registry-wrap">
         <table class="np-table np-table--registry">
-          <thead><tr><th class="np-th-stripe"></th><th>Categoría</th><th>Descripción</th><th class="np-th-right">Ítems</th><th>Creada</th><th class="np-th-right">Acciones</th></tr></thead>
+          <thead><tr><th class="np-th-stripe"></th><th>Tipo</th><th>Se registra</th><th>Descripción</th><th class="np-th-right">Ítems</th><th>Creada</th><th class="np-th-right">Acciones</th></tr></thead>
           <tbody>
-            <tr *ngIf="skeletor" class="np-empty"><td colspan="6"><span class="np-spinner"></span></td></tr>
-            <tr *ngIf="!skeletor && categories.length === 0" class="np-empty"><td colspan="6"><strong>No hay categorías registradas.</strong></td></tr>
+            <tr *ngIf="skeletor" class="np-empty"><td colspan="7"><span class="np-spinner"></span></td></tr>
+            <tr *ngIf="!skeletor && categories.length === 0" class="np-empty"><td colspan="7"><strong>No hay tipos de equipo.</strong></td></tr>
             <tr *ngFor="let cat of categories" class="np-row" [attr.aria-selected]="isEditing && editingId === cat.id" (click)="openEdit(cat)" tabindex="0" (keydown.enter)="openEdit(cat)">
               <td class="np-stripe"><i style="background:var(--accent)"></i></td>
               <td><div class="np-name">{{ cat.name }}</div></td>
+              <td>{{ cat.usa_serial === false || cat.usa_serial === 0 ? 'Por cantidad' : 'Por serial' }}</td>
               <td class="np-muted">{{ cat.description || '—' }}</td>
               <td class="np-data np-td-right">{{ cat.inventories_count || 0 }}</td>
               <td class="np-data">{{ cat.created_at | date:'dd/MM/yy' }}</td>
@@ -36,14 +38,20 @@
 
     <aside class="np-inspector" *ngIf="showForm" aria-label="Formulario de categoría">
       <div class="np-insp-head">
-        <div class="np-insp-id"><h2>{{ isEditing ? 'Editar categoría' : 'Nueva categoría' }}</h2><div class="np-meta">Nombre y descripción</div></div>
+        <div class="np-insp-id"><h2>{{ isEditing ? 'Editar tipo de equipo' : 'Nuevo tipo de equipo' }}</h2><div class="np-meta">ONT, TV box, conectores, RJ45…</div></div>
         <div class="np-insp-tools"><button type="button" class="np-icobtn" (click)="cancelForm()" aria-label="Cerrar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div>
       </div>
       <div class="np-insp-body">
         <div class="np-form np-form--single">
           <label class="np-field"><span>Nombre <em>*</em></span><input type="text" class="np-input" [(ngModel)]="categoryForm.name" placeholder="Nombre de la categoría" /></label>
           <label class="np-field"><span>Descripción</span><input type="text" class="np-input" [(ngModel)]="categoryForm.description" placeholder="Opcional" /></label>
-          <div class="np-btnrow np-btnrow--end"><button type="button" class="np-btn np-btn--ghost" (click)="cancelForm()">Cancelar</button><button type="button" class="np-btn np-btn--primary" (click)="saveCategory()">{{ isEditing ? 'Guardar cambios' : 'Crear categoría' }}</button></div>
+          <div class="np-field"><span id="cat-serial">Cómo se registra</span>
+            <div class="np-seg np-seg--full" role="group" aria-labelledby="cat-serial">
+              <button type="button" [attr.aria-pressed]="categoryForm.usa_serial" (click)="categoryForm.usa_serial = true">Por serial</button>
+              <button type="button" [attr.aria-pressed]="!categoryForm.usa_serial" (click)="categoryForm.usa_serial = false">Por cantidad</button>
+            </div>
+            <small class="np-hint">Por serial: cada equipo con el suyo (ONT, TV box). Por cantidad: se cuentan (conectores, RJ45).</small></div>
+          <div class="np-btnrow np-btnrow--end"><button type="button" class="np-btn np-btn--ghost" (click)="cancelForm()">Cancelar</button><button type="button" class="np-btn np-btn--primary" (click)="saveCategory()">{{ isEditing ? 'Guardar cambios' : 'Crear tipo' }}</button></div>
         </div>
       </div>
     </aside>

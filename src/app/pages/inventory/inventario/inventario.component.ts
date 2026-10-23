@@ -1,3 +1,5 @@
+import { EntradaInventarioComponent } from './entrada/entrada.component';
+import { SeccionTabsComponent } from '../../../components/seccion-tabs/seccion-tabs.component';
 import { Component, OnInit, QueryList, ViewChildren, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -7,7 +9,8 @@ import { ToastService } from '../../../services/toast.service';
 import { DialogService } from '../../../services/dialog.service';
 import { CodigoLeido, LectorDeCodigosComponent } from '../../../components/lector-de-codigos/lector-de-codigos.component';
 
-type Vista = 'existencias' | 'tecnicos' | 'equipos' | 'asistente';
+type Vista = 'existencias' | 'items' | 'tecnicos' | 'equipos' | 'asistente';
+type Grupo = { clave: string; nombre: string; items: any[]; en_bodega: number; con_tecnicos: number; atencion: number };
 type Operacion = 'recibir' | 'entregar' | 'devolver' | 'salida' | 'ajuste';
 
 interface Op {
@@ -56,9 +59,9 @@ const DONDE: Record<string, { texto: string; tono: string }> = {
 @Component({
   selector: 'app-inventario',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink, LectorDeCodigosComponent],
+  imports: [CommonModule, FormsModule, RouterLink, LectorDeCodigosComponent, SeccionTabsComponent, EntradaInventarioComponent],
   templateUrl: './inventario.component.html',
-  styleUrl: './inventario.component.scss',
+  styleUrls: ['./inventario.component.scss', './bodega-limpio.scss'],
   host: { class: 'np-console' },
 })
 export class InventarioComponent implements OnInit {
@@ -80,6 +83,9 @@ export class InventarioComponent implements OnInit {
 
   filtro = '';
   filtroEstado = '';
+  grupos: Grupo[] = [];
+  private abiertos = new Set<string>();
+  filtroItems = '';
 
   // ── Operación en curso (recibir, entregar, devolver, salida, ajuste) ──
   op: Op | null = null;
@@ -136,8 +142,38 @@ export class InventarioComponent implements OnInit {
   filtrar(): void {
     const q = this.filtro.trim().toLowerCase();
     this.visibles = this.items.filter(i =>
-      (!q || i.nombre.toLowerCase().includes(q) || (i.categoria ?? '').toLowerCase().includes(q)) &&
+      (!q || i.nombre.toLowerCase().includes(q) || (i.codigo ?? '').toLowerCase().includes(q) || (i.categoria ?? '').toLowerCase().includes(q)) &&
       (!this.filtroEstado || (this.filtroEstado === 'atencion' ? ['agotado', 'bajo', 'por_agotarse'].includes(i.estado) : i.estado === this.filtroEstado)));
+
+    // Por categoría: ONT 8 → 5 ZTE F680, 2 Huawei, 1 Askey. Los ítems de más existencia, primero.
+    const porCategoria = new Map<string, Grupo>();
+    for (const i of this.visibles) {
+      const clave = String(i.category_id ?? 'sin');
+      const g: Grupo = porCategoria.get(clave) ?? { clave, nombre: i.categoria || 'Sin categoría', items: [] as any[], en_bodega: 0, con_tecnicos: 0, atencion: 0 };
+      g.items.push(i);
+      g.en_bodega += Number(i.en_bodega) || 0;
+      g.con_tecnicos += Number(i.con_tecnicos) || 0;
+      if (['agotado', 'bajo', 'por_agotarse'].includes(i.estado)) g.atencion++;
+      porCategoria.set(clave, g);
+    }
+    this.grupos = [...porCategoria.values()]
+      .map(g => ({ ...g, items: [...g.items].sort((a, b) => b.en_bodega - a.en_bodega || a.nombre.localeCompare(b.nombre)) }))
+      .sort((a, b) => (a.clave === 'sin' ? 1 : 0) - (b.clave === 'sin' ? 1 : 0) || a.nombre.localeCompare(b.nombre));
+  }
+
+  /** Al buscar o filtrar se ven abiertas todas; si no, solo las que se tocaron. */
+  abierto(g: Grupo): boolean { return !!this.filtro.trim() || !!this.filtroEstado || this.abiertos.has(g.clave); }
+
+  alternarGrupo(g: Grupo): void { this.abiertos.has(g.clave) ? this.abiertos.delete(g.clave) : this.abiertos.add(g.clave); }
+
+  trackClave = (_: number, g: Grupo) => g.clave;
+
+  /** El catálogo de ítems, por categoría y nombre. */
+  get catalogo(): any[] {
+    const q = this.filtroItems.trim().toLowerCase();
+    return this.items
+      .filter(i => !q || [i.codigo, i.nombre, i.categoria, i.marca].some(x => (x ?? '').toLowerCase().includes(q)))
+      .sort((a, b) => (a.categoria ?? '~').localeCompare(b.categoria ?? '~') || a.nombre.localeCompare(b.nombre));
   }
 
   soloAtencion(): void { this.vista = 'existencias'; this.filtroEstado = this.filtroEstado === 'atencion' ? '' : 'atencion'; this.filtrar(); }
@@ -148,6 +184,19 @@ export class InventarioComponent implements OnInit {
   }
 
   // ── Operaciones ───────────────────────────────────────────────────────────
+
+  // ── Entradas por ítems (21-10-2026): varios ítems en una entrada, un serial por equipo ──
+  entrada: { item: any } | null = null;
+
+  abrirEntrada(item: any = null): void { this.entrada = { item: item ? { id: item.id } : null }; }
+
+  trasEntrada(mensaje: string): void {
+    this.entrada = null;
+    this.avisoEntrada = mensaje;
+    setTimeout(() => this.avisoEntrada = '', 4000);
+    this.cargar();
+  }
+  avisoEntrada = '';
 
   iniciar(tipo: Operacion, item: any = null, tecnicoId: number | null = null): void {
     this.op = {
@@ -318,7 +367,7 @@ export class InventarioComponent implements OnInit {
   // ── Ficha del ítem ────────────────────────────────────────────────────────
 
   nuevoItem(codigo = ''): void {
-    this.ficha = { id: null, name: '', category_id: null, barcode: codigo, sku: '', unit: 'unidad', usa_serial: false, stock_min: 0, stock_max: null, unit_price: 0, location: '', quantity: 0, tieneExistencia: false };
+    this.ficha = { id: null, code: '', name: '', marca: '', category_id: null, barcode: codigo, unit: 'unidad', stock_min: 0, stock_max: null, unit_price: 0, location: '' };
     this.leyendoCodigoDeFicha = false;
   }
 
@@ -328,9 +377,9 @@ export class InventarioComponent implements OnInit {
         const d = r?.data;
         if (!d) { this.toast.error('No se pudo abrir el ítem'); return; }
         this.ficha = {
-          id: d.id, name: d.name, category_id: d.category_id ?? null, barcode: d.barcode ?? '', sku: d.sku ?? '', unit: d.unit ?? 'unidad', usa_serial: !!d.usa_serial,
+          id: d.id, code: d.code ?? d.referencia ?? '', name: d.name, marca: d.marca ?? '', category_id: d.category_id ?? null, barcode: d.barcode ?? '', unit: d.unit ?? 'unidad',
           stock_min: Number(d.stock_min ?? 0), stock_max: d.stock_max !== null && d.stock_max !== undefined ? Number(d.stock_max) : null,
-          unit_price: Number(d.unit_price ?? 0), location: d.location ?? '', tieneExistencia: i.en_bodega > 0 || i.con_tecnicos > 0, yaUsaSerial: !!d.usa_serial,
+          unit_price: Number(d.unit_price ?? 0), location: d.location ?? '',
         };
         this.leyendoCodigoDeFicha = false;
       },
@@ -338,19 +387,22 @@ export class InventarioComponent implements OnInit {
     });
   }
 
+  get categoriaDeFicha(): any { return this.ficha?.category_id ? this.categorias.find(c => c.id === this.ficha.category_id) ?? null : null; }
+
   codigoDeFicha(c: CodigoLeido): void { if (this.ficha) { this.ficha.barcode = c.texto.trim(); this.leyendoCodigoDeFicha = false; } }
 
   guardarFicha(): void {
     const f = this.ficha;
     if (!f || this.guardandoFicha) return;
+    if (!f.code?.trim()) { this.toast.error('Escriba el código del ítem (la referencia del equipo)'); return; }
     if (!f.name?.trim()) { this.toast.error('Escriba el nombre del ítem'); return; }
+    if (!f.category_id) { this.toast.error('Elija la categoría'); return; }
 
     const cuerpo: any = {
-      name: f.name.trim(), category_id: f.category_id || null, barcode: f.barcode?.trim() || null, sku: f.sku?.trim() || null,
-      unit: f.unit?.trim() || 'unidad', usa_serial: !!f.usa_serial, stock_min: Number(f.stock_min) || 0,
+      code: f.code.trim().toUpperCase(), name: f.name.trim(), marca: f.marca?.trim() || null, category_id: f.category_id, barcode: f.barcode?.trim() || null,
+      unit: f.unit?.trim() || 'unidad', usa_serial: !!this.categoriaDeFicha?.usa_serial, stock_min: Number(f.stock_min) || 0,
       stock_max: f.stock_max === null || f.stock_max === '' ? null : Number(f.stock_max), unit_price: Number(f.unit_price) || 0, location: f.location?.trim() || null,
     };
-    if (!f.id && !f.usa_serial) cuerpo.quantity = Number(f.quantity) || 0;
 
     this.guardandoFicha = true;
     (f.id ? this.svc.updateItem(f.id, cuerpo) : this.svc.createItem(cuerpo)).subscribe({

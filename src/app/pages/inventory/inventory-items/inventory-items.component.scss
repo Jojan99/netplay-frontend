@@ -1,6 +1,6 @@
 /* ─── Inventario: sólo lo propio ────────────────────────────────────── */
 .hidden { display: none !important; }
-.np-row--ok .np-stripe i   { background: var(--ok); }
+.np-row--ok .np-stripe i   { background: transparent; }
 .np-row--low .np-stripe i  { background: var(--danger); }
 .np-row--zero .np-stripe i { background: var(--line-strong); }
 .np-stock { font-family: var(--font-mono); font-weight: 600; font-size: 13px; small { font-family: var(--font-body); font-weight: 500; color: var(--text-3); } }

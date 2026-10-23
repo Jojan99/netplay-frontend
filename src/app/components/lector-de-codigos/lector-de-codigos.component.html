@@ -8,6 +8,22 @@
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8V6a2 2 0 0 1 2-2h2M16 4h2a2 2 0 0 1 2 2v2M20 16v2a2 2 0 0 1-2 2h-2M8 20H6a2 2 0 0 1-2-2v-2M7 9v6M10 9v6M13 9v6M17 9v6"/></svg>
       {{ iniciando ? 'Abriendo…' : (encendida ? 'Cerrar cámara' : 'Usar la cámara') }}
     </button>
+    <button type="button" class="np-btn np-btn--ghost" *ngIf="conCelular && ofrecerCelular" (click)="alternarCelular()" [attr.aria-pressed]="!!celular"
+            title="Escanee un código QR con el celular y use su cámara para leer los seriales">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="7" y="2" width="10" height="20" rx="2"/><path d="M11 18h2"/></svg>
+      {{ abriendoCelular ? 'Preparando…' : (celular ? 'Desconectar celular' : 'Usar el celular') }}
+    </button>
+  </div>
+
+  <!-- El celular como cámara: el QR y si ya se conectó. -->
+  <div class="lc-celular" *ngIf="celular as c" role="status" aria-live="polite">
+    <img [src]="c.qr" width="168" height="168" alt="Código QR para usar la cámara del celular" />
+    <div class="lc-celular-t">
+      <b>{{ c.conectado ? 'Celular conectado' : 'Escanee este código con el celular' }}</b>
+      <span *ngIf="!c.conectado">Ábralo con la cámara del teléfono: se abre una página que lee los códigos y los manda aquí. No hace falta iniciar sesión.</span>
+      <span *ngIf="c.conectado">Lea los {{ modo === 'serial' ? 'seriales' : 'códigos' }} con el celular: van llegando aquí.<ng-container *ngIf="c.leidos"> Van <b>{{ c.leidos }}</b>.</ng-container></span>
+      <small>El código vence a la media hora sin uso.</small>
+    </div>
   </div>
 
   <p class="lc-error" *ngIf="error">{{ error }}</p>
@@ -15,8 +31,8 @@
   <!-- El video existe siempre (oculto): así la cámara tiene dónde verse en cuanto llega. -->
   <div class="lc-visor" [class.is-abierto]="encendida || iniciando" [class.is-bien]="flash?.bien === true" [class.is-mal]="flash?.bien === false">
     <video #video playsinline muted autoplay></video>
-    <div #marco class="lc-marco" aria-hidden="true"><i></i></div>
-    <p class="lc-guia" *ngIf="encendida">{{ modo === 'serial' ? 'Ponga el código del SN dentro del recuadro' : 'Ponga el código de barras dentro del recuadro' }}</p>
+    <div #marco class="lc-marco" aria-hidden="true"><i></i><b class="lc-mira"></b></div>
+    <p class="lc-guia" *ngIf="encendida">{{ modo === 'serial' ? 'Ponga la línea roja sobre el código del SN' : 'Ponga la línea roja sobre el código' }}</p>
     <p class="lc-guia" *ngIf="iniciando">Abriendo la cámara…</p>
     <p class="lc-flash" *ngIf="flash as f" [class.is-mal]="!f.bien" role="status" aria-live="assertive">
       <svg *ngIf="f.bien" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>

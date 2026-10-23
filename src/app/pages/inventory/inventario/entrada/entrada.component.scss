@@ -1,0 +1,32 @@
+/* Entrada a la bodega por ítems (21-10-2026) */
+.en { max-width: 720px; display: flex; flex-direction: column; max-height: calc(100dvh - 32px); }
+.en-cuerpo { overflow-y: auto; min-height: 0; display: grid; gap: 12px; align-content: start; }
+.en-linea { display: grid; gap: 12px; padding: 12px; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); }
+.en-linea-h { display: flex; align-items: center; gap: 10px; }
+.en-n { flex: none; width: 24px; height: 24px; border-radius: 50%; background: var(--surface-2); display: grid; place-items: center; font-size: 12px; font-weight: 600; color: var(--text-2); }
+.en-item { flex: 1; min-width: 0; }
+.en-campos { display: grid; grid-template-columns: 110px minmax(0, 1fr) minmax(0, 1fr); gap: 10px; align-items: end; }
+.en-sub { display: grid; gap: 4px; padding-bottom: 8px; text-align: right;
+  span { font-size: 12px; color: var(--text-3); } b { font-size: 14px; font-weight: 600; font-variant-numeric: tabular-nums; } }
+.en-seriales { display: grid; gap: 8px; }
+.en-seriales-h { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.en-t { font-size: 12.5px; font-weight: 500; color: var(--text); small { margin-left: 6px; font-weight: 400; color: var(--text-3); font-variant-numeric: tabular-nums; } }
+.en-cam { display: inline-flex; align-items: center; gap: 6px; height: 30px; padding: 0 11px; border: 1px solid var(--line-strong); border-radius: 8px;
+  background: var(--surface); font: inherit; font-size: 12.5px; color: var(--text-2); cursor: pointer;
+  svg { width: 15px; height: 15px; }
+  &:hover { color: var(--text); border-color: var(--text-3); }
+  &[aria-pressed='true'] { border-color: var(--accent); color: var(--text); } }
+.en-casillas { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 6px;
+  li { display: flex; align-items: center; gap: 6px; }
+  .np-input { height: 34px; min-width: 0; flex: 1; font-size: 13px; }
+  li.is-rep .np-input { border-color: var(--danger); box-shadow: 0 0 0 1px var(--danger); } }
+.en-k { flex: none; width: 22px; text-align: right; font-size: 11.5px; color: var(--text-3); font-variant-numeric: tabular-nums; }
+.en-falta { font-size: 12px; color: var(--text-3); }
+.en-mas { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap;
+  .np-btn svg { width: 15px; height: 15px; } }
+@media (max-width: 640px) {
+  .en { max-height: none; }
+  .en-campos { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+  .en-sub { grid-column: 1 / -1; display: flex; justify-content: space-between; padding: 0; }
+  .en-casillas { grid-template-columns: minmax(0, 1fr); }
+}

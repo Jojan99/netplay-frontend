@@ -1,20 +1,19 @@
 <div class="np-page iv">
-  <header class="np-head">
-    <div>
-      <p class="np-kicker">Operación <b>/</b> Inventario</p>
-      <h1 class="np-title">Inventario</h1>
-      <div class="np-ribbon"><span>Qué hay en la bodega, qué tiene cada técnico y dónde está cada equipo.</span></div>
-    </div>
+  <!-- Estilo limpio (21-10-2026) -->
+  <header class="iv-head">
+    <div><p class="iv-kicker">Bodega</p><h1>Existencias y técnicos</h1></div>
     <div class="iv-acciones">
-      <button type="button" class="np-btn np-btn--primary" (click)="iniciar('recibir')">Recibir mercancía</button>
-      <button type="button" class="np-btn np-btn--ghost" (click)="iniciar('entregar')">Entregar a técnico</button>
-      <button type="button" class="np-btn np-btn--ghost" (click)="iniciar('devolver')">Devolución</button>
-      <button type="button" class="np-btn np-btn--ghost" (click)="nuevoItem()">Nuevo ítem</button>
+      <button type="button" class="iv-btn" (click)="nuevoItem()">Nuevo ítem</button>
+      <button type="button" class="iv-btn" (click)="iniciar('devolver')">Recibir devolución</button>
+      <button type="button" class="iv-btn" (click)="iniciar('entregar')">Entregar a un técnico</button>
+      <button type="button" class="iv-btn iv-btn--1" (click)="abrirEntrada()">Entradas</button>
     </div>
   </header>
+  <app-seccion-tabs grupo="bodega"></app-seccion-tabs>
 
   <p class="np-loading" *ngIf="cargando"><span class="np-spinner"></span> Cargando el inventario…</p>
   <p class="np-notice np-notice--danger" *ngIf="error">{{ error }}</p>
+  <p class="np-notice np-notice--ok" *ngIf="avisoEntrada">{{ avisoEntrada }}</p>
 
   <ng-container *ngIf="resumen">
     <div class="iv-kpis">
@@ -28,10 +27,14 @@
       <button type="button" class="iv-kpi" [attr.data-t]="resumen.equipos_viejos ? 'warn' : 'ok'" (click)="abrir('tecnicos')">
         <span>Equipos sin instalar hace más de {{ diasConTecnico }} días</span><b>{{ n(resumen.equipos_viejos) }}</b><small>los tienen los técnicos</small>
       </button>
+      <!-- Lo que está fuera de la bodega pero es de la empresa: las ONT de los clientes. -->
+      <div class="iv-kpi" *ngIf="resumen.en_clientes !== undefined"><span>En casas de clientes</span><b>{{ n(resumen.en_clientes) }}</b><small>ONT en comodato · se recogen al retiro</small></div>
+      <div class="iv-kpi" *ngIf="resumen.por_recoger !== undefined" [attr.data-t]="resumen.por_recoger ? 'warn' : 'ok'"><span>Por recoger</span><b>{{ n(resumen.por_recoger) }}</b><small>clientes retirados con la ONT en casa</small></div>
     </div>
 
     <nav class="np-tabs iv-tabs" role="tablist">
       <button type="button" class="np-tab" role="tab" [attr.aria-selected]="vista === 'existencias'" (click)="abrir('existencias')">Existencias</button>
+      <button type="button" class="np-tab" role="tab" [attr.aria-selected]="vista === 'items'" (click)="abrir('items')">Ítems<span class="np-c" *ngIf="items.length">{{ items.length }}</span></button>
       <button type="button" class="np-tab" role="tab" [attr.aria-selected]="vista === 'tecnicos'" (click)="abrir('tecnicos')">Técnicos<span class="np-c" *ngIf="tecnicos.length">{{ tecnicos.length }}</span></button>
       <button type="button" class="np-tab" role="tab" [attr.aria-selected]="vista === 'equipos'" (click)="abrir('equipos')">Equipos por serial</button>
       <button type="button" class="np-tab" role="tab" [attr.aria-selected]="vista === 'asistente'" (click)="abrir('asistente')">Asistente<span class="np-c" *ngIf="recomendaciones.length">{{ recomendaciones.length }}</span></button>
@@ -52,15 +55,30 @@
           </div>
         </div>
 
+        <!-- Por categoría (21-10-2026): el número de cada una y, al tocarlo, de qué ítems se compone. -->
         <div class="np-tablewrap">
-          <table class="np-table np-table--compact np-tabla-movil">
-            <thead><tr><th>Ítem</th><th class="np-th-right">En bodega</th><th class="np-th-right">Con técnicos</th><th class="np-th-right">Mínimo</th><th class="np-th-right">Gasto 30 días</th><th class="np-th-right">Alcanza para</th><th>Estado</th><th></th></tr></thead>
-            <tbody>
-              <tr class="np-empty" *ngIf="!visibles.length"><td colspan="8"><strong>{{ items.length ? 'Ningún ítem con ese filtro.' : 'Todavía no hay ítems.' }}</strong><span *ngIf="!items.length">Cree el primero con «Nuevo ítem» o reciba mercancía leyendo su código.</span></td></tr>
-              <tr *ngFor="let i of visibles; trackBy: trackId">
+          <table class="np-table np-table--compact np-tabla-movil iv-agrupada">
+            <thead><tr><th>Categoría / ítem</th><th class="np-th-right">En bodega</th><th class="np-th-right">Con técnicos</th><th class="np-th-right">Mínimo</th><th class="np-th-right">Gasto 30 días</th><th class="np-th-right">Alcanza para</th><th>Estado</th><th></th></tr></thead>
+            <tbody *ngIf="!grupos.length"><tr class="np-empty"><td colspan="8"><strong>{{ items.length ? 'Ningún ítem con ese filtro.' : 'Todavía no hay ítems.' }}</strong><span *ngIf="!items.length">Créelos en la pestaña «Ítems» y luego deles entrada.</span></td></tr></tbody>
+            <tbody *ngFor="let g of grupos; trackBy: trackClave" [class.is-abierto]="abierto(g)">
+              <tr class="iv-grupo" (click)="alternarGrupo(g)">
+                <td class="es-principal" data-label="Categoría">
+                  <button type="button" class="iv-grupo-nombre" [attr.aria-expanded]="abierto(g)" (click)="$event.stopPropagation(); alternarGrupo(g)">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg>
+                    <b>{{ g.nombre }}</b><span class="np-fine">{{ g.items.length }} {{ g.items.length === 1 ? 'ítem' : 'ítems' }}</span>
+                  </button>
+                </td>
+                <td class="np-td-right" data-label="En bodega"><button type="button" class="iv-cuantos" (click)="$event.stopPropagation(); alternarGrupo(g)" [attr.aria-label]="'Ver de qué se componen ' + g.en_bodega + ' ' + g.nombre">{{ n(g.en_bodega) }}</button></td>
+                <td class="np-td-right np-data" data-label="Con técnicos">{{ g.con_tecnicos ? n(g.con_tecnicos) : '—' }}</td>
+                <td class="iv-vacia"></td><td class="iv-vacia"></td><td class="iv-vacia"></td>
+                <td data-label="Estado"><span class="iv-tag" data-t="danger" *ngIf="g.atencion">{{ g.atencion }} {{ g.atencion === 1 ? 'se acaba' : 'se acaban' }}</span></td>
+                <td class="iv-vacia"></td>
+              </tr>
+              <ng-container *ngIf="abierto(g)">
+              <tr *ngFor="let i of g.items; trackBy: trackId" class="iv-hijo">
                 <td class="es-principal" data-label="Ítem">
                   <a class="np-strong iv-nombre" [routerLink]="['/dashboard/inventory/items', i.id]">{{ i.nombre }}</a>
-                  <div class="np-fine">{{ i.categoria || 'Sin categoría' }}<ng-container *ngIf="i.usa_serial"> · por serial</ng-container><ng-container *ngIf="i.danadas"> · {{ i.danadas }} dañados</ng-container></div>
+                  <div class="np-fine"><span class="np-mono" *ngIf="i.codigo">{{ i.codigo }} · </span>{{ i.usa_serial ? 'por serial' : 'por cantidad' }}<ng-container *ngIf="i.danadas"> · {{ i.danadas }} dañados</ng-container></div>
                 </td>
                 <td class="np-td-right np-data np-strong" data-label="En bodega">{{ n(i.en_bodega) }} <span class="np-fine">{{ i.unidad }}</span></td>
                 <td class="np-td-right np-data" data-label="Con técnicos">{{ i.con_tecnicos ? n(i.con_tecnicos) : '—' }}</td>
@@ -70,14 +88,40 @@
                 <td data-label="Estado"><span class="iv-tag" [attr.data-t]="i.tono">{{ i.estadoTexto }}</span><div class="np-fine" *ngIf="i.sugerido_pedir">pedir {{ i.sugerido_pedir }}</div></td>
                 <td class="np-td-right es-acciones">
                   <div class="iv-fila-acc">
-                    <button type="button" class="np-btn np-btn--ghost np-btn--sm" (click)="iniciar('recibir', i)">Recibir</button>
+                    <button type="button" class="np-btn np-btn--ghost np-btn--sm" (click)="abrirEntrada(i)">Recibir</button>
                     <button type="button" class="np-btn np-btn--ghost np-btn--sm" (click)="iniciar('entregar', i)" [disabled]="i.en_bodega <= 0">Entregar</button>
                     <button type="button" class="np-btn np-btn--ghost np-btn--sm" (click)="iniciar('salida', i)" [disabled]="i.en_bodega <= 0">Sacar</button>
                     <button type="button" class="np-btn np-btn--ghost np-btn--sm" *ngIf="!i.usa_serial" (click)="iniciar('ajuste', i)">Contar</button>
-                    <button type="button" class="np-btn np-btn--ghost np-btn--sm" (click)="editarItem(i)">Editar</button>
-                    <button type="button" class="np-btn np-btn--ghost np-btn--sm iv-borrar" (click)="borrarItem(i)" aria-label="Eliminar el ítem">×</button>
                   </div>
                 </td>
+              </tr>
+              </ng-container>
+            </tbody>
+          </table>
+        </div>
+      </ng-container>
+
+      <!-- ══ Ítems: el catálogo que se crea antes de dar entrada ═════════════════ -->
+      <ng-container *ngIf="vista === 'items'">
+        <div class="iv-barra">
+          <input type="search" class="np-input iv-buscar" placeholder="Buscar por código o nombre" [(ngModel)]="filtroItems" aria-label="Buscar un ítem" />
+          <button type="button" class="np-btn np-btn--primary np-btn--sm" (click)="nuevoItem()">Nuevo ítem</button>
+        </div>
+        <div class="np-tablewrap">
+          <table class="np-table np-table--compact np-tabla-movil">
+            <thead><tr><th>Código</th><th>Nombre</th><th>Categoría</th><th>Se recibe</th><th class="np-th-right">En bodega</th><th></th></tr></thead>
+            <tbody>
+              <tr class="np-empty" *ngIf="!catalogo.length"><td colspan="6"><strong>{{ items.length ? 'Ningún ítem con esa búsqueda.' : 'Todavía no hay ítems.' }}</strong><span *ngIf="!items.length">Cree uno por cada equipo que compran: código ZXHNF680, nombre «ONT ZTE GPON F680 WIFI5».</span></td></tr>
+              <tr *ngFor="let i of catalogo; trackBy: trackId">
+                <td class="np-mono np-strong" data-label="Código">{{ i.codigo || '—' }}</td>
+                <td class="es-principal" data-label="Nombre">{{ i.nombre }}</td>
+                <td data-label="Categoría">{{ i.categoria || 'Sin categoría' }}</td>
+                <td data-label="Se recibe">{{ i.usa_serial ? 'Por serial' : 'Por cantidad' }}</td>
+                <td class="np-td-right np-data" data-label="En bodega">{{ n(i.en_bodega) }}</td>
+                <td class="np-td-right es-acciones"><div class="iv-fila-acc">
+                  <button type="button" class="np-btn np-btn--ghost np-btn--sm" (click)="editarItem(i)">Editar</button>
+                  <button type="button" class="np-btn np-btn--ghost np-btn--sm iv-borrar" (click)="borrarItem(i)" aria-label="Eliminar el ítem">×</button>
+                </div></td>
               </tr>
             </tbody>
           </table>
@@ -137,7 +181,7 @@
                 <td class="es-principal np-strong np-mono" data-label="Serial">{{ u.serial }}</td>
                 <td data-label="Producto">{{ u.item }}</td>
                 <td data-label="Dónde está"><span class="iv-tag" [attr.data-t]="u.tono">{{ u.dondeTexto }}</span></td>
-                <td data-label="Con quién">{{ u.estado === 'tecnico' ? (u.tecnico || '—') : (u.estado === 'instalada' ? (u.cliente || 'Cliente') : '—') }}<div class="np-fine" *ngIf="u.nota">{{ u.nota }}</div></td>
+                <td data-label="Con quién">{{ u.estado === 'tecnico' ? (u.tecnico || '—') : (u.estado === 'instalada' ? (u.cliente || 'Cliente') : '—') }}<div class="np-fine" *ngIf="u.estado === 'instalada' && u.tecnico">Instaló {{ u.tecnico }}</div><div class="np-fine" *ngIf="u.nota">{{ u.nota }}</div></td>
                 <td class="np-data" data-label="Desde">{{ u.estado === 'tecnico' ? fecha(u.entregada_en) : (u.estado === 'instalada' ? fecha(u.instalada_en) : fecha(u.created_at)) }}<div class="np-fine" *ngIf="u.dias !== null" [class.iv-mal]="u.dias > diasConTecnico">hace {{ u.dias }} días</div></td>
               </tr>
             </tbody>
@@ -279,26 +323,22 @@
     </div>
     <form class="np-modal-body iv-op-body" (ngSubmit)="guardarFicha()">
       <div class="np-form">
-        <label class="np-field np-field-full"><span>Nombre</span><input type="text" class="np-input" [(ngModel)]="f.name" name="f_name" maxlength="150" placeholder="ONT Huawei HG8145X6" /></label>
+        <label class="np-field"><span>Código del ítem <em>la referencia del equipo</em></span><input type="text" class="np-input np-mono" [(ngModel)]="f.code" name="f_code" maxlength="50" placeholder="ZXHNF680" autocapitalize="characters" /></label>
         <label class="np-field"><span>Categoría</span>
-          <select class="np-input" [(ngModel)]="f.category_id" name="f_category"><option [ngValue]="null">Sin categoría</option><option *ngFor="let c of categorias; trackBy: trackId" [ngValue]="c.id">{{ c.name }}</option></select></label>
+          <select class="np-input" [(ngModel)]="f.category_id" name="f_category"><option [ngValue]="null" disabled>Elija la categoría…</option><option *ngFor="let c of categorias; trackBy: trackId" [ngValue]="c.id">{{ c.name }}{{ c.usa_serial ? ' · por serial' : ' · por cantidad' }}</option></select></label>
+        <label class="np-field np-field-full"><span>Nombre</span><input type="text" class="np-input" [(ngModel)]="f.name" name="f_name" maxlength="150" placeholder="ONT ZTE GPON F680 WIFI5" /></label>
+        <label class="np-field"><span>Marca <em>opcional</em></span><input type="text" class="np-input" [(ngModel)]="f.marca" name="f_marca" maxlength="80" placeholder="ZTE" /></label>
         <label class="np-field"><span>Unidad</span><input type="text" class="np-input" [(ngModel)]="f.unit" name="f_unit" maxlength="50" placeholder="unidad, metros, cajas" /></label>
-        <label class="np-field np-field-full"><span>Código de barras de la caja <em>para reconocerlo al leerlo</em></span>
+        <label class="np-field"><span>Mínimo <em>avisa al llegar aquí</em></span><input type="number" class="np-input np-mono" [(ngModel)]="f.stock_min" name="f_min" min="0" step="any" /></label>
+        <label class="np-field"><span>Máximo <em>opcional</em></span><input type="number" class="np-input np-mono" [(ngModel)]="f.stock_max" name="f_max" min="0" step="any" /></label>
+        <label class="np-field"><span>Precio de compra <em>opcional</em></span><input type="number" class="np-input np-mono" [(ngModel)]="f.unit_price" name="f_price" min="0" step="any" /></label>
+        <label class="np-field"><span>Dónde se guarda <em>opcional</em></span><input type="text" class="np-input" [(ngModel)]="f.location" name="f_location" maxlength="100" placeholder="Estante 2" /></label>
+        <label class="np-field np-field-full"><span>Código de barras de la caja <em>opcional, para reconocerlo al leerlo</em></span>
           <div class="iv-codigo"><input type="text" class="np-input np-mono" [(ngModel)]="f.barcode" name="f_barcode" maxlength="80" />
             <button type="button" class="np-btn np-btn--ghost" (click)="leyendoCodigoDeFicha = !leyendoCodigoDeFicha">{{ leyendoCodigoDeFicha ? 'Cerrar lector' : 'Leer' }}</button></div>
           <app-lector-codigos *ngIf="leyendoCodigoDeFicha" modo="producto" [auto]="true" (leido)="codigoDeFicha($event)"></app-lector-codigos>
         </label>
-        <label class="np-field"><span>Referencia interna <em>opcional</em></span><input type="text" class="np-input np-mono" [(ngModel)]="f.sku" name="f_sku" maxlength="50" /></label>
-        <label class="np-field"><span>Dónde se guarda <em>opcional</em></span><input type="text" class="np-input" [(ngModel)]="f.location" name="f_location" maxlength="100" placeholder="Estante 2" /></label>
-        <label class="np-field"><span>Mínimo <em>avisa al llegar aquí</em></span><input type="number" class="np-input np-mono" [(ngModel)]="f.stock_min" name="f_min" min="0" step="any" /></label>
-        <label class="np-field"><span>Máximo <em>opcional</em></span><input type="number" class="np-input np-mono" [(ngModel)]="f.stock_max" name="f_max" min="0" step="any" /></label>
-        <label class="np-field"><span>Precio de compra</span><input type="number" class="np-input np-mono" [(ngModel)]="f.unit_price" name="f_price" min="0" step="any" /></label>
-        <label class="np-field" *ngIf="!f.id && !f.usa_serial"><span>Existencia inicial</span><input type="number" class="np-input np-mono" [(ngModel)]="f.quantity" name="f_qty" min="0" step="any" /></label>
-        <label class="np-check np-check--box np-field-full" *ngIf="!f.yaUsaSerial && !f.tieneExistencia">
-          <input type="checkbox" [(ngModel)]="f.usa_serial" name="f_serial" />
-          <span><b>Se lleva equipo por equipo, con su serial.</b> Para ONT, routers y antenas. La existencia se carga leyendo el serial de cada uno.</span>
-        </label>
-        <p class="np-fine np-field-full" *ngIf="f.yaUsaSerial">Este ítem se lleva por serial.</p>
+        <p class="np-fine np-field-full" *ngIf="categoriaDeFicha as c">{{ c.usa_serial ? 'Se recibe equipo por equipo, con el serial de cada uno.' : 'Se recibe por cantidad, sin serial.' }} La existencia entra con el botón «Entradas».</p>
       </div>
       <div class="iv-op-pie iv-op-pie--form">
         <button type="button" class="np-btn np-btn--ghost" (click)="ficha = null">Cancelar</button>
@@ -307,3 +347,6 @@
     </form>
   </div>
 </div>
+
+<!-- ══ Entradas por ítems: varios ítems, cantidad y un serial por equipo (21-10-2026) ══ -->
+<app-entrada-inventario *ngIf="entrada" [items]="items" [deItem]="entrada.item" (cerrado)="entrada = null" (guardado)="trasEntrada($event)" (crearItem)="nuevoItem()"></app-entrada-inventario>

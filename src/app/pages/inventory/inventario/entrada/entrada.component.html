@@ -1,0 +1,70 @@
+<div class="np-overlay" (click)="cerrado.emit()">
+  <div class="np-modal en" role="dialog" aria-modal="true" aria-label="Entrada a la bodega" (click)="$event.stopPropagation()">
+    <div class="np-modal-head">
+      <div><p class="np-kicker">Bodega</p><h3>Entrada</h3></div>
+      <button type="button" class="np-icobtn" (click)="cerrado.emit()" aria-label="Cerrar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
+    </div>
+
+    <div class="np-modal-body en-cuerpo">
+      <section class="en-linea" *ngFor="let l of lineas; let li = index; trackBy: trackLinea" [attr.aria-label]="'Ítem ' + (li + 1)">
+        <div class="en-linea-h">
+          <span class="en-n">{{ li + 1 }}</span>
+          <np-select class="en-item" [(ngModel)]="l.itemId" (cambio)="elegido(l)" [opciones]="items" [presentacion]="presItems" [valorVacio]="null"
+            placeholder="Elija el ítem…" textoBuscar="Código o nombre…" textoSinOpciones="No hay ítems: créelo primero." ariaLabel="Ítem"></np-select>
+          <button type="button" class="np-icobtn" *ngIf="lineas.length > 1 || l.itemId" (click)="quitar(l)" aria-label="Quitar este ítem"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
+        </div>
+
+        <ng-container *ngIf="item(l) as it">
+          <div class="en-campos">
+            <label class="np-field"><span>Cantidad</span>
+              <input class="np-input" type="number" min="1" [max]="it.usa_serial ? 200 : null" inputmode="numeric" [(ngModel)]="l.cantidad" (ngModelChange)="ajustarSeriales(l)" /></label>
+            <label class="np-field"><span>Precio por unidad <em>opcional</em></span>
+              <input class="np-input" type="number" min="0" inputmode="numeric" [(ngModel)]="l.precio" placeholder="$ 0" /></label>
+            <div class="en-sub"><span>Subtotal</span><b>{{ subtotal(l) ? '$ ' + (subtotal(l) | number:'1.0-0') : '—' }}</b></div>
+          </div>
+
+          <div class="en-seriales" *ngIf="it.usa_serial && l.seriales.length">
+            <div class="en-seriales-h">
+              <span class="en-t">Seriales <small>{{ llenos(l) }} de {{ l.seriales.length }}</small></span>
+              <button type="button" class="en-cam" [attr.aria-pressed]="l.leyendo" (click)="alternarLector(l)">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M4 7V5a1 1 0 0 1 1-1h2M17 4h2a1 1 0 0 1 1 1v2M20 17v2a1 1 0 0 1-1 1h-2M7 20H5a1 1 0 0 1-1-1v-2M7 12h10"/></svg>
+                {{ l.leyendo ? 'Cerrar cámara' : 'Escanear' }}
+              </button>
+            </div>
+            <app-lector-codigos #lector *ngIf="l.leyendo" modo="serial" [auto]="true" [continuo]="true" [conVeredicto]="true" etiqueta="Serial del equipo" (leido)="alLeer(l, $event, lector)"></app-lector-codigos>
+            <ol class="en-casillas">
+              <li *ngFor="let s of l.seriales; let k = index; trackBy: trackK" [class.is-rep]="repetido(s)">
+                <span class="en-k">{{ k + 1 }}</span>
+                <input class="np-input np-mono" [id]="'en-s-' + l.clave + '-' + k" [(ngModel)]="l.seriales[k]" (blur)="normalizar(l, k)" (keydown.enter)="siguienteCasilla(l, k, $event)"
+                  placeholder="Serial" autocomplete="off" autocapitalize="characters" spellcheck="false" [attr.aria-label]="'Serial ' + (k + 1)" />
+              </li>
+            </ol>
+            <small class="np-hint">Con la pistola, cada lectura pasa sola a la casilla siguiente.</small>
+          </div>
+        </ng-container>
+
+        <small class="en-falta" *ngIf="falta(l) && item(l)">{{ falta(l) }}</small>
+      </section>
+
+      <div class="en-mas">
+        <button type="button" class="np-btn np-btn--ghost" (click)="agregar()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M12 5v14M5 12h14"/></svg>Agregar otro ítem
+        </button>
+        <button type="button" class="np-link" (click)="crearItem.emit()">¿No está? Crear ítem</button>
+      </div>
+
+      <label class="np-field"><span>Factura o proveedor <em>opcional</em></span>
+        <input class="np-input" [(ngModel)]="nota" maxlength="200" placeholder="Factura 1234 · Proveedor" /></label>
+
+      <p class="np-notice np-notice--danger np-notice--inline" *ngIf="error">{{ error }}</p>
+    </div>
+
+    <div class="np-modal-foot">
+      <small class="np-hint">{{ resumen }}</small>
+      <div class="np-btnrow">
+        <button type="button" class="np-btn np-btn--ghost" (click)="cerrado.emit()">Cancelar</button>
+        <button type="button" class="np-btn np-btn--primary" (click)="dar()" [disabled]="!listo || guardando">{{ guardando ? 'Guardando…' : 'Dar entrada' }}</button>
+      </div>
+    </div>
+  </div>
+</div>
