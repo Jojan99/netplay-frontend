@@ -31,6 +31,12 @@ export class ConversationListComponent implements OnChanges {
   @Output() openChat     = new EventEmitter<number>();
   @Output() refresh      = new EventEmitter<void>();
   @Output() markUnread   = new EventEmitter<number>();
+  /**
+   * Lo que se escribe en el buscador, para buscar en el servidor: aquí sólo están los chats
+   * cargados (los 50 recientes del estado elegido), y uno cerrado o viejo no aparecía nunca.
+   */
+  @Output() buscar       = new EventEmitter<string>();
+  private relojBusqueda: any;
 
   /* ── Fijados (por agente, en este navegador) ─────────────────── */
   private pins = new Set<number>();
@@ -84,6 +90,14 @@ export class ConversationListComponent implements OnChanges {
     if (changes['conversations']) {
       this.applySearch();
     }
+  }
+
+  /** Al escribir: el filtro local al instante y, con una pausa, la búsqueda en el servidor. */
+  alBuscar(): void {
+    this.applySearch();
+    clearTimeout(this.relojBusqueda);
+    const q = this.searchQuery.trim();
+    this.relojBusqueda = setTimeout(() => this.buscar.emit(q.length >= 3 ? q : ''), 400);
   }
 
   applySearch(): void {

@@ -5,7 +5,7 @@ import { Router } from '@angular/router';
 import { environment } from '../../../environments/environment';
 
 interface Notificacion {
-  origen: 'red' | 'cobranza' | 'equipo';
+  origen: 'red' | 'cobranza' | 'equipo' | 'chat' | 'pago';
   nivel: 'critico' | 'aviso';
   titulo: string;
   detalle: string;
@@ -41,7 +41,7 @@ export class NotificacionesComponent implements OnInit, OnDestroy {
 
   private reloj: ReturnType<typeof setInterval> | null = null;
 
-  readonly ORIGENES: Record<string, string> = { red: 'Red', cobranza: 'Cobranza', equipo: 'Equipo' };
+  readonly ORIGENES: Record<string, string> = { red: 'Red', cobranza: 'Cobranza', equipo: 'Equipo', chat: 'WhatsApp', pago: 'Pagos' };
 
   @HostListener('document:mousedown', ['$event'])
   alHacerClic(e: MouseEvent): void {

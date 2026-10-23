@@ -62,9 +62,11 @@ export class CrmService {
   /* =====================
      MENSAJES
   ====================== */
-  getMessages(conversationId: number) {
+  /** Los últimos 200 mensajes; con «antes», la tanda anterior a ese mensaje. */
+  getMessages(conversationId: number, antes?: number) {
     return this.http.get<any>(this.apiUrl(`conversations/${conversationId}/messages`), {
-      headers: this.getHeaders()
+      headers: this.getHeaders(),
+      params: antes ? { antes } : {},
     });
   }
 
@@ -286,7 +288,24 @@ export class CrmService {
   getCustomerSummary(conversationId: number) {
     return this.http.get<any>(this.apiUrl(`conversations/${conversationId}/customer-summary`), { headers: this.getHeaders() });
   }
-  getConversationHistory(conversationId: number) {
+  /** «Registrar como pago» la foto del chat. */
+  registrarComprobante(conversationId: number, messageId: number) {
+    return this.http.post<any>(this.apiUrl(`conversations/${conversationId}/messages/${messageId}/comprobante`), {}, { headers: this.getHeaders() });
+  }
+
+  /** No leídos compartidos entre asesores. */
+  marcarNoLeido(conversationId: number) {
+    return this.http.post<any>(this.apiUrl(`conversations/${conversationId}/no-leido`), {}, { headers: this.getHeaders() });
+  }
+  marcarLeido(conversationId: number) {
+    return this.http.post<any>(this.apiUrl(`conversations/${conversationId}/leido`), {}, { headers: this.getHeaders() });
+  }
+
+  /** El copiloto del asesor: respuesta sugerida o resumen del chat. */
+  copiloto(conversationId: number, accion: 'sugerir' | 'resumir') {
+    return this.http.post<any>(this.apiUrl(`conversations/${conversationId}/copiloto`), { accion }, { headers: this.getHeaders() });
+  }
+    getConversationHistory(conversationId: number) {
     return this.http.get<any>(this.apiUrl(`conversations/${conversationId}/history`), { headers: this.getHeaders() });
   }
   sendInvoiceFromChat(conversationId: number, invoiceId: number) {

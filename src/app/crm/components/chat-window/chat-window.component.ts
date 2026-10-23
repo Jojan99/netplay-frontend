@@ -360,9 +360,21 @@ export class ChatWindowComponent implements OnChanges, OnDestroy {
 
   retrySend(msg: ChatMessage): void {
     const payload = this.pendingPayloads.get(msg.id);
+
+    // Falló del lado de WhatsApp (ya estaba guardado y llegó «failed»): no hay nada pendiente en
+    // el navegador. El texto se vuelve a mandar; un archivo hay que adjuntarlo otra vez. Antes
+    // el botón «Reintentar» aparecía y no hacía nada.
+    if (!payload) {
+      if ((msg.message_type ?? 'text') === 'text' && (msg.content ?? '').trim()) {
+        this.sendMessage(String(msg.content));
+      } else {
+        this.toast.info('Ese archivo no se puede reenviar desde aquí: adjúntelo otra vez.');
+      }
+      return;
+    }
+
     this.dropPending(msg.id);
     this.pendingPayloads.delete(msg.id);
-    if (!payload) return;
     switch (payload.kind) {
       case 'text':    if (payload.quotedId) this.replyTarget = this.messages.find(x => x.id === payload.quotedId) || null; this.sendMessage(payload.text || ''); break;
       case 'media':   this.fileToSend = payload.file!; this.mediaCaption = payload.caption || ''; this.sendMedia(); break;
@@ -417,6 +429,8 @@ export class ChatWindowComponent implements OnChanges, OnDestroy {
   /* ── CAMBIO DE CONVERSACIÓN ─────────────────────────────────── */
   ngOnChanges(): void {
     if (!this.conversationId) return;
+    // El resumen era del chat anterior.
+    this.resumenIa = null;
 
     if (this.currentConversationId) {
       this.echoService.leave(`conversation.${this.currentConversationId}`);
@@ -594,6 +608,15 @@ export class ChatWindowComponent implements OnChanges, OnDestroy {
   }
 
   /** Ack de WhatsApp: nunca retrocede (leído > entregado > enviado). */
+  /** El estado tal cual, aunque «retroceda» (un mensaje en cola vuelve a «pendiente»). */
+  private forzarEstado(messageId: number, status: 'pending' | 'sent' | 'failed'): void {
+    const idx = this.messages.findIndex(m => m.id === messageId);
+    if (idx === -1) return;
+    const copy = [...this.messages];
+    copy[idx] = { ...copy[idx], status, failed: status === 'failed', _renderKey: Date.now() };
+    this.messages = copy;
+  }
+
   private applyStatus(messageId: number, status: string): void {
     const rank: Record<string, number> = { pending: 0, sent: 1, delivered: 2, read: 3, failed: 9 };
     const idx = this.messages.findIndex(m => m.id === messageId);
@@ -760,29 +783,137 @@ export class ChatWindowComponent implements OnChanges, OnDestroy {
   }
 
   /* ── CARGA MENSAJES ─────────────────────────────────────────── */
+  /** Lo que manda el servidor, como lo pinta la burbuja. */
+  private aMensajes(lista: any[] | null | undefined): ChatMessage[] {
+    return (lista ?? []).map((m: any) => ({
+      id:             m.id,
+      from:           m.sender_type,
+      content:        m.content,
+      message_type:   m.message_type ?? 'text',
+      media_url:      this.secure(m.media_url),
+      mime_type:      m.mime_type,
+      at:             m.created_at,
+      agent_signature: m.agent_signature ?? null,
+      participant_name: m.participant_name ?? null,
+      participant_phone: m.participant_phone ?? null,
+      is_forwarded:   !!m.is_forwarded,
+      is_note:        !!m.is_note,
+      status:         m.status ?? 'sent',
+      quoted:         m.quoted ?? null,
+      reactions:      m.reactions ?? [],
+      poll_votes:     m.poll_votes ?? null,
+      transcripcion:  m.transcripcion ?? null,
+      comprobante:    m.comprobante ?? null,
+    })).map((x: ChatMessage) => this.normalizeLegacy(x));
+  }
+
+  /** Quedan mensajes más viejos que los cargados (el servidor manda de a 200). */
+  hayAnteriores = false;
+  cargandoAnteriores = false;
+
+  /** Trae la tanda anterior y la pone arriba sin mover lo que el asesor está leyendo. */
+  cargarAnteriores(): void {
+    const id = this.conversationId;
+    const primero = this.messages.find(m => m.id > 0)?.id;
+    if (!id || !primero || this.cargandoAnteriores) return;
+    this.cargandoAnteriores = true;
+    const caja = this.messagesContainer?.nativeElement as HTMLElement | undefined;
+    const alto = caja?.scrollHeight ?? 0;
+
+    this.crmService.getMessages(id, primero).subscribe({
+      next: res => {
+        this.cargandoAnteriores = false;
+        if (this.conversationId !== id) return;
+        this.messages = [...this.aMensajes(res?.data?.data), ...this.messages];
+        this.hayAnteriores = !!res?.data?.hay_anteriores;
+        setTimeout(() => { if (caja) caja.scrollTop += caja.scrollHeight - alto; }, 0);
+      },
+      error: () => { this.cargandoAnteriores = false; this.toast.error('No se pudieron cargar los mensajes anteriores.'); },
+    });
+  }
+
+  /** El pedido de mensajes en curso: uno nuevo (otro chat) lo cancela. */
+  private cargaMensajes?: { unsubscribe(): void };
+  // ── Copiloto (IA) ──
+  sugiriendo = false;
+  resumiendo = false;
+  /** Las tres líneas del resumen (Pide / Hecho / Falta), o null. */
+  resumenIa: string[] | null = null;
+
+  /** La foto del cliente pasa a la auditoría de comprobantes, a nombre del cliente del chat. */
+  registrarPago(msg: ChatMessage): void {
+    const id = this.conversationId;
+    if (!id) return;
+    this.toast.info('Leyendo el comprobante…');
+    this.crmService.registrarComprobante(id, msg.id).subscribe({
+      next: (r: any) => {
+        const d = r?.data ?? {};
+        const i = this.messages.findIndex(m => m.id === msg.id);
+        if (i !== -1) {
+          const copia = [...this.messages];
+          copia[i] = { ...copia[i], comprobante: { id: d.proof_id, estado: d.estado }, _renderKey: Date.now() };
+          this.messages = copia;
+        }
+        const monto = d.monto ? ` · $ ${Number(d.monto).toLocaleString('es-CO')}` : '';
+        const ref = d.referencia ? ` · ref ${d.referencia}` : '';
+        if (d.repetido) this.toast.info(`Ese comprobante ya estaba registrado (#${d.proof_id})${monto}${ref}.`);
+        else if (d.aplicado) this.toast.success(`Pago aplicado a ${d.cliente}${monto}${ref}.`);
+        else if (d.sin_titular) this.toast.warning(`Comprobante #${d.proof_id} registrado sin titular: asígnele el cliente en la auditoría.`);
+        else this.toast.success(`Comprobante #${d.proof_id} registrado a nombre de ${d.cliente}${monto}${ref}. Quedó por revisar en la auditoría.`);
+      },
+      error: (e: any) => this.toast.error(e?.error?.error || 'No se pudo registrar el comprobante.'),
+    });
+  }
+
+  /** Redacta una respuesta y la deja en la caja: nada sale sin que el asesor la mande. */
+  sugerirRespuesta(): void {
+    const id = this.conversationId;
+    if (!id || this.sugiriendo) return;
+    this.sugiriendo = true;
+    this.crmService.copiloto(id, 'sugerir').subscribe({
+      next: (r: any) => {
+        this.sugiriendo = false;
+        if (this.conversationId !== id) return;
+        const texto = String(r?.data?.texto ?? '').trim();
+        if (!texto) { this.toast.info('La IA no tuvo nada que sugerir para este chat.'); return; }
+        this.draftMessage = texto;
+        setTimeout(() => {
+          const t = this.messageTextarea?.nativeElement;
+          if (t) { this.autoResize(t); t.focus(); t.setSelectionRange(t.value.length, t.value.length); }
+        }, 0);
+      },
+      error: (e: any) => { this.sugiriendo = false; this.toast.error(e?.error?.error || 'No se pudo sugerir una respuesta.'); },
+    });
+  }
+
+  resumirChat(): void {
+    const id = this.conversationId;
+    if (!id || this.resumiendo) return;
+    this.resumiendo = true;
+    this.crmService.copiloto(id, 'resumir').subscribe({
+      next: (r: any) => {
+        this.resumiendo = false;
+        if (this.conversationId !== id) return;
+        this.resumenIa = String(r?.data?.texto ?? '').split('\n').map(l => l.trim()).filter(Boolean).slice(0, 4);
+      },
+      error: (e: any) => { this.resumiendo = false; this.toast.error(e?.error?.error || 'No se pudo resumir la conversación.'); },
+    });
+  }
+
+  /** Los stickers son del agente, no del chat: se piden una vez. */
+  private stickersCargados = false;
+
   loadMessages(conversationId: number): void {
     this.loading = true;
-    this.crmService.getMessages(conversationId).subscribe({
+    // Al cambiar rápido de chat, la respuesta del anterior podía llegar después y pintar sus
+    // mensajes en el chat abierto: el agente le contestaba a quien no era.
+    this.cargaMensajes?.unsubscribe();
+    this.cargaMensajes = this.crmService.getMessages(conversationId).subscribe({
       next: res => {
+        if (this.conversationId !== conversationId) return;
         const payload = res.data;
-        this.messages = (payload?.data ?? []).map((m: any) => ({
-          id:             m.id,
-          from:           m.sender_type,
-          content:        m.content,
-          message_type:   m.message_type ?? 'text',
-          media_url:      this.secure(m.media_url),
-          mime_type:      m.mime_type,
-          at:             m.created_at,
-          agent_signature: m.agent_signature ?? null,
-          participant_name: m.participant_name ?? null,
-          participant_phone: m.participant_phone ?? null,
-          is_forwarded:   !!m.is_forwarded,
-          is_note:        !!m.is_note,
-          status:         m.status ?? 'sent',
-          quoted:         m.quoted ?? null,
-          reactions:      m.reactions ?? [],
-          poll_votes:     m.poll_votes ?? null,
-        })).map((x: ChatMessage) => this.normalizeLegacy(x));
+        this.messages = this.aMensajes(payload?.data);
+        this.hayAnteriores = !!payload?.hay_anteriores;
 
         this.headerData = {
           customerName:  payload?.conversation?.customer_name || 'Cliente',
@@ -802,13 +933,25 @@ export class ChatWindowComponent implements OnChanges, OnDestroy {
         this.scrollToBottom();
         this.focusComposer();
       },
-      error: () => this.loading = false
+      error: () => {
+        if (this.conversationId !== conversationId) return;
+        this.loading = false;
+        this.toast.error('No se pudieron cargar los mensajes de este chat. Vuelva a abrirlo.');
+      },
     });
   }
 
   toggleBotPause(): void {
     if (!this.conversationId) return;
-    this.crmService.setBotPaused(this.conversationId, !this.botPaused).subscribe({ next: res => this.botPaused = !!res.paused });
+    const pausar = !this.botPaused;
+    this.crmService.setBotPaused(this.conversationId, pausar).subscribe({
+      next: res => {
+        this.botPaused = !!res.paused;
+        this.toast.success(this.botPaused ? 'Bot en pausa: este chat lo atiende usted.' : 'El bot vuelve a contestar en este chat.');
+      },
+      // Antes fallaba en silencio y el agente creía que el bot estaba en pausa.
+      error: () => this.toast.error(pausar ? 'No se pudo pausar el bot: puede seguir contestando.' : 'No se pudo reactivar el bot.'),
+    });
   }
 
   /* ── ATTACH MENU ────────────────────────────────────────────── */
@@ -907,6 +1050,12 @@ export class ChatWindowComponent implements OnChanges, OnDestroy {
           if (res?.destinoResuelto === false) {
             this.toast.info('Enviado, pero de este contacto solo conocemos su identificador de WhatsApp, no su teléfono. Pedile el número para asegurar la entrega.');
           }
+
+          // La línea está caída: quedó en la bandeja de salida y sale solo cuando vuelva.
+          if (res?.status === 'queued') {
+            this.toast.info(res.message || 'La línea está desconectada: el mensaje sale apenas se reconecte.');
+            if (res.message_id) setTimeout(() => this.forzarEstado(Number(res.message_id), 'pending'), 600);
+          }
         },
         error: () => { this.sending = false; this.markFailed(tempId); }
       });
@@ -946,7 +1095,9 @@ export class ChatWindowComponent implements OnChanges, OnDestroy {
 
   /* ── STICKERS ───────────────────────────────────────────────── */
   loadStickers(): void {
-    this.crmService.getStickers().subscribe({ next: res => this.stickers = res.data ?? [] });
+    if (this.stickersCargados) return;
+    this.stickersCargados = true;
+    this.crmService.getStickers().subscribe({ next: res => this.stickers = res.data ?? [], error: () => { this.stickersCargados = false; } });
   }
 
   toggleStickerPicker(): void {
@@ -989,7 +1140,8 @@ export class ChatWindowComponent implements OnChanges, OnDestroy {
       next: res => {
         this.stickers.push(res.data);
         this.toast.success('Sticker guardado en su colección');
-      }
+      },
+      error: () => this.toast.error('No se pudo guardar el sticker.'),
     });
   }
 
@@ -1012,10 +1164,15 @@ export class ChatWindowComponent implements OnChanges, OnDestroy {
   submitForward(): void {
     if (!this.forwardingMessage || !this.forwardTargets.length) return;
 
+    const cuantos = this.forwardTargets.length;
     this.crmService.forwardMessage(this.forwardingMessage.id, this.forwardTargets)
-      .subscribe(() => {
-        this.forwardingMessage = null;
-        this.forwardTargets    = [];
+      .subscribe({
+        next: () => {
+          this.forwardingMessage = null;
+          this.forwardTargets    = [];
+          this.toast.success(cuantos === 1 ? 'Mensaje reenviado.' : `Mensaje reenviado a ${cuantos} chats.`);
+        },
+        error: () => this.toast.error('No se pudo reenviar el mensaje.'),
       });
   }
 
@@ -1262,9 +1419,12 @@ export class ChatWindowComponent implements OnChanges, OnDestroy {
     if (!this.conversationId) return;
     if (!await this.dialog.confirm('¿Finalizar conversación?')) return;
 
-    this.crmService.closeConversation(this.conversationId).subscribe(() => {
-      this.messages = [];
-      this.conversationClosed.emit();
+    this.crmService.closeConversation(this.conversationId).subscribe({
+      next: () => {
+        this.messages = [];
+        this.conversationClosed.emit();
+      },
+      error: () => this.toast.error('No se pudo cerrar la conversación.'),
     });
   }
 

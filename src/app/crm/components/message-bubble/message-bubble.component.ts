@@ -7,7 +7,9 @@ import {
   ChangeDetectorRef,
   Output,
   EventEmitter,
-  HostListener
+  HostListener,
+  ViewChild,
+  ElementRef
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
@@ -38,6 +40,10 @@ export interface ChatMessage {
   deleted_by?: string | null;
   /** Editado después de enviarse. */
   edited?: boolean;
+  /** Lo que dice la nota de voz, pasado a texto en el servidor. */
+  transcripcion?: string | null;
+  /** La foto se registró como comprobante de pago (con su estado en la auditoría). */
+  comprobante?: { id: number; estado: string | null } | null;
   _renderKey?: number;
 }
 
@@ -61,6 +67,16 @@ export class MessageBubbleComponent implements OnChanges {
   @Output() jumpTo       = new EventEmitter<number>();
   @Output() deleteMsg    = new EventEmitter<ChatMessage>();
   @Output() editMsg      = new EventEmitter<ChatMessage>();
+  /** «Registrar como pago»: la foto o el documento del cliente pasa a la auditoría de comprobantes. */
+  @Output() registrarPago = new EventEmitter<ChatMessage>();
+
+  get puedeSerPago(): boolean {
+    return !this.isOut && !this.message.comprobante && (this.message.message_type === 'image' || this.message.message_type === 'document') && !!this.message.media_url;
+  }
+
+  readonly ESTADO_COMPROBANTE: Record<string, string> = { pending: 'por revisar', approved: 'aprobado', rejected: 'rechazado', reverted: 'revertido' };
+
+  pedirRegistrarPago(): void { this.showContextMenu = false; this.registrarPago.emit(this.message); }
 
   /**
    * WhatsApp solo deja editar dentro de los 15 minutos siguientes al envío,
@@ -92,12 +108,6 @@ export class MessageBubbleComponent implements OnChanges {
   }
   reply(): void { this.replyTo.emit(this.message); this.showContextMenu = false; }
   /** Doble clic sobre la burbuja = responder (como WhatsApp Web). No aplica sobre controles ni selección de texto. */
-  onDblClick(ev: MouseEvent): void {
-    const t = ev.target as HTMLElement;
-    if (this.isNote || this.message.pending || t.closest('button, a, input, audio, video')) return;
-    window.getSelection()?.removeAllRanges();
-    this.reply();
-  }
   @Input() highlight = '';
 
   showContextMenu = false;
@@ -323,11 +333,32 @@ export class MessageBubbleComponent implements OnChanges {
     event.stopPropagation();
     // Cerrar cualquier otro menú abierto antes de mostrar éste
     document.dispatchEvent(new CustomEvent('wa-ctx-open'));
-    // Mantener el menú dentro de la ventana
-    this.contextX = Math.min(event.clientX, window.innerWidth - 200);
-    this.contextY = Math.min(event.clientY, window.innerHeight - 150);
+    // Primero se dibuja donde se tocó; después se mide y se acomoda.
+    this.contextX = event.clientX;
+    this.contextY = event.clientY;
     this.showContextMenu = true;
-    this.cdr.markForCheck();
+    this.cdr.detectChanges();
+    this.acomodarMenu(event.clientX, event.clientY);
+  }
+
+  @ViewChild('menuCtx') menuCtx?: ElementRef<HTMLElement>;
+
+  /**
+   * El menú dentro de la ventana, con su tamaño real. Antes se suponía de 150 px y con todas
+   * las opciones (reaccionar, responder, reenviar, copiar, editar, eliminar…) mide el doble:
+   * en un mensaje de abajo, la mitad quedaba fuera de la pantalla. Si no cabe hacia abajo, se
+   * abre hacia arriba; si tampoco, se pega al borde de arriba.
+   */
+  private acomodarMenu(x: number, y: number): void {
+    const el = this.menuCtx?.nativeElement;
+    if (!el) return;
+    const margen = 8;
+    const { width, height } = el.getBoundingClientRect();
+    const ancho = window.innerWidth, alto = window.innerHeight;
+
+    this.contextX = Math.max(margen, Math.min(x, ancho - width - margen));
+    this.contextY = y + height + margen <= alto ? y : Math.max(margen, y - height);
+    this.cdr.detectChanges();
   }
 
   @HostListener('document:wa-ctx-open')

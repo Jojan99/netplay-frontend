@@ -127,3 +127,20 @@
 
 /* Aviso de edición sobre el compositor: se distingue de la respuesta */
 .wa-editbar .wa-replybar-card { border-left-color: var(--warn); }
+
+/* ── Copiloto (IA) ─────────────────────────────────────────────────────────
+   Del mismo tamaño y color que los otros íconos del compositor: es una herramienta más,
+   no un adorno. El resumen va en una franja angosta arriba de los mensajes. */
+.wa-ia svg { width: 20px; height: 20px; }
+.wa-resumen { display: flex; align-items: flex-start; gap: 10px; padding: 10px 14px; border-bottom: 1px solid var(--wa-line); background: var(--wa-panel); font-size: 13px; line-height: 1.45; }
+.wa-resumen-ico { flex: none; width: 18px; height: 18px; margin-top: 1px; color: var(--wa-accent); svg { width: 18px; height: 18px; } }
+.wa-resumen-t { flex: 1; min-width: 0; p { margin: 0; } p + p { margin-top: 2px; } }
+.wa-resumen-cargando { display: inline-flex; align-items: center; gap: 8px; color: var(--wa-text-2); }
+.wa-resumir { align-self: center; display: inline-flex; align-items: center; gap: 6px; margin: 8px auto 0; padding: 5px 12px; border: 1px solid var(--wa-line); border-radius: 999px;
+  background: var(--wa-panel); color: var(--wa-text-2); font: inherit; font-size: 12.5px; cursor: pointer; position: relative; z-index: 2;
+  svg { width: 14px; height: 14px; color: var(--wa-accent); }
+  &:hover { color: var(--wa-text); } }
+
+/* Los chats largos llegan de a 200: el resto, con este botón arriba de todo. */
+.wa-anteriores { align-self: center; margin: 4px auto 10px; padding: 6px 14px; border: 0; border-radius: 999px; background: var(--wa-panel); color: var(--wa-text-2);
+  font: inherit; font-size: 12.5px; box-shadow: 0 1px 1px rgba(11,20,26,.13); cursor: pointer; &:disabled { opacity: .7; cursor: default; } }

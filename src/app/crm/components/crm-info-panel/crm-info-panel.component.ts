@@ -95,7 +95,7 @@ export class CrmInfoPanelComponent implements OnChanges {
     this.loadingStatement = true;
     this.crmService.getClientStatement(id).subscribe({
       next: r => { this.loadingStatement = false; this.statementUrl = r.data?.share_url || ''; if (this.statementUrl) window.open(this.statementUrl, '_blank', 'noopener'); },
-      error: () => { this.loadingStatement = false; alert('No se pudo abrir el estado de cuenta.'); }
+      error: () => { this.loadingStatement = false; this.toast.error('No se pudo abrir el estado de cuenta.'); }
     });
   }
   copyStatement(): void {
@@ -106,7 +106,7 @@ export class CrmInfoPanelComponent implements OnChanges {
         this.statementUrl = url;
         navigator.clipboard?.writeText(url).then(() => this.flash('Enlace del estado de cuenta copiado')).catch(() => {});
       },
-      error: () => alert('No se pudo generar el enlace.')
+      error: () => this.toast.error('No se pudo generar el enlace.')
     });
   }
 
@@ -135,7 +135,10 @@ export class CrmInfoPanelComponent implements OnChanges {
   historyLoaded = false;
   loadHistory(): void {
     if (this.historyLoaded) return;
-    this.crmService.getConversationHistory(this.conversationId).subscribe({ next: res => { this.history = res.data ?? []; this.historyLoaded = true; } });
+    this.crmService.getConversationHistory(this.conversationId).subscribe({
+      next: res => { this.history = res.data ?? []; this.historyLoaded = true; },
+      error: () => this.toast.error('No se pudo cargar el historial del cliente.'),
+    });
   }
   statusLabel(st: string): string { return st === 'closed' ? 'Cerrada' : st === 'in_progress' ? 'En curso' : 'Nueva'; }
 
@@ -329,14 +332,15 @@ export class CrmInfoPanelComponent implements OnChanges {
         this.editingName = false;
         this.savingName  = false;
       },
-      error: () => this.savingName = false
+      error: e => { this.savingName = false; this.toast.error(e?.error?.message || 'No se pudo cambiar el nombre.'); }
     });
   }
 
   /* ── NOTAS ──────────────────────────────────────────────────── */
   loadNotes(): void {
     this.crmService.getNotes(this.conversationId).subscribe({
-      next: res => this.notes = res.data ?? []
+      next: res => this.notes = res.data ?? [],
+      error: () => this.toast.error('No se pudieron cargar las notas.'),
     });
   }
 
@@ -350,13 +354,15 @@ export class CrmInfoPanelComponent implements OnChanges {
         this.newNoteText = '';
         this.savingNote  = false;
       },
-      error: () => this.savingNote = false
+      // El texto queda en la caja: se puede volver a intentar sin escribirlo otra vez.
+      error: () => { this.savingNote = false; this.toast.error('No se pudo guardar la nota.'); }
     });
   }
 
   deleteNote(noteId: number): void {
-    this.crmService.deleteNote(noteId).subscribe(() => {
-      this.notes = this.notes.filter(n => n.id !== noteId);
+    this.crmService.deleteNote(noteId).subscribe({
+      next: () => { this.notes = this.notes.filter(n => n.id !== noteId); },
+      error: () => this.toast.error('No se pudo borrar la nota.'),
     });
   }
 
@@ -374,13 +380,17 @@ export class CrmInfoPanelComponent implements OnChanges {
 
   toggleLabel(labelId: number): void {
     if (this.hasLabel(labelId)) {
-      this.crmService.removeConversationLabel(this.conversationId, labelId).subscribe(() => {
-        this.conversationLabels = this.conversationLabels.filter(l => l.id !== labelId);
+      this.crmService.removeConversationLabel(this.conversationId, labelId).subscribe({
+        next: () => { this.conversationLabels = this.conversationLabels.filter(l => l.id !== labelId); },
+        error: () => this.toast.error('No se pudo quitar la etiqueta.'),
       });
     } else {
-      this.crmService.addConversationLabel(this.conversationId, labelId).subscribe(() => {
-        const label = this.allLabels.find(l => l.id === labelId);
-        if (label) this.conversationLabels.push(label);
+      this.crmService.addConversationLabel(this.conversationId, labelId).subscribe({
+        next: () => {
+          const label = this.allLabels.find(l => l.id === labelId);
+          if (label) this.conversationLabels.push(label);
+        },
+        error: () => this.toast.error('No se pudo poner la etiqueta.'),
       });
     }
   }
@@ -388,9 +398,12 @@ export class CrmInfoPanelComponent implements OnChanges {
   /* ── PRIORIDAD ───────────────────────────────────────────────── */
   setPriority(p: 'low' | 'normal' | 'high'): void {
     if (this.currentPriority === p) return;
-    this.crmService.updatePriority(this.conversationId, p).subscribe(() => {
-      this.currentPriority = p;
-      this.priorityChanged.emit(p);
+    this.crmService.updatePriority(this.conversationId, p).subscribe({
+      next: () => {
+        this.currentPriority = p;
+        this.priorityChanged.emit(p);
+      },
+      error: () => this.toast.error('No se pudo cambiar la prioridad.'),
     });
   }
 
@@ -420,7 +433,9 @@ export class CrmInfoPanelComponent implements OnChanges {
           if (this.ticketServices.length)   this.ticketServiceId  = this.ticketServices[0].id;
           if (this.ticketPriorities.length) this.ticketPriorityId = this.ticketPriorities[0].id;
           if (this.ticketTechs.length)      this.ticketTechId     = this.ticketTechs[0].id;
-        }
+        },
+        // Sin esto los selectores quedaban vacíos y no se entendía por qué.
+        error: () => this.toast.error('No se pudieron cargar los tipos de servicio y los técnicos. Cierre y vuelva a abrir el formulario.'),
       });
     }
     this.ticketPhone   = this.customerPhone;
@@ -469,7 +484,7 @@ export class CrmInfoPanelComponent implements OnChanges {
         this.savingTicket   = false;
         this.toast.success(`Ticket #${res.ticket_id} creado`);
       },
-      error: () => this.savingTicket = false
+      error: e => { this.savingTicket = false; this.toast.error(e?.error?.message || 'No se pudo crear el ticket. Lo escrito sigue ahí: vuelva a intentar.'); }
     });
   }
 

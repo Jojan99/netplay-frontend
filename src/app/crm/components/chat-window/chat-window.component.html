@@ -23,13 +23,30 @@
       <button type="button" class="wa-ibtn" (click)="toggleSearch()" title="Cerrar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
     </div>
 
+    <!-- Resumen del chat (IA): tres líneas para quien lo toma del bot o de otro asesor. -->
+    <div class="wa-resumen" *ngIf="resumenIa || resumiendo" role="status">
+      <span class="wa-resumen-ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l1.6 4.4L18 9l-4.4 1.6L12 15l-1.6-4.4L6 9l4.4-1.6z"/></svg></span>
+      <div class="wa-resumen-t">
+        <span *ngIf="resumiendo" class="wa-resumen-cargando"><span class="np-spinner np-spinner--sm"></span> Resumiendo la conversación…</span>
+        <p *ngFor="let l of resumenIa">{{ l }}</p>
+      </div>
+      <button type="button" class="wa-ibtn" (click)="resumenIa = null" *ngIf="!resumiendo" title="Cerrar resumen"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
+    </div>
+    <button type="button" class="wa-resumir" *ngIf="!resumenIa && !resumiendo && messages.length >= 6 && !loading" (click)="resumirChat()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l1.6 4.4L18 9l-4.4 1.6L12 15l-1.6-4.4L6 9l4.4-1.6z"/></svg>
+      Resumir conversación
+    </button>
+
     <!-- Mensajes -->
     <div class="wa-messages" #messagesContainer [class.is-dragging]="dragging" (dragover)="onDragOver($event)" (dragleave)="onDragLeave($event)" (drop)="onDrop($event)">
       <div class="wa-drop-hint" *ngIf="dragging">Suelte el archivo para enviarlo</div>
       <div class="wa-loading" *ngIf="loading"><span class="np-spinner"></span> Cargando mensajes…</div>
+      <button type="button" class="wa-anteriores" *ngIf="hayAnteriores && !loading" (click)="cargarAnteriores()" [disabled]="cargandoAnteriores">
+        {{ cargandoAnteriores ? 'Cargando…' : 'Cargar mensajes anteriores' }}
+      </button>
       <ng-container *ngFor="let msg of messages; let i = index; trackBy: trackByMessage">
         <div class="wa-day" *ngIf="showDaySeparator(i)"><span>{{ dayLabel(msg.at) }}</span></div>
-        <app-message-bubble [message]="msg" [class.is-hit]="isHit(msg.id)" [class.is-hit-current]="isCurrentHit(msg.id)" (openPreview)="openPreview($event)" (forwardMsg)="onForwardMessage($event)" (deleteMsg)="onDeleteMessage($event)" (editMsg)="onEditMessage($event)" (saveSticker)="saveStickerFromMessage($event)" (retry)="retrySend($event)" (replyTo)="setReply($event)" (jumpTo)="jumpToMessage($event)" (startChat)="startChat.emit($event)" (react)="reactTo($event)" (moreEmoji)="openEmojiForReaction($event)" [canVote]="canVote" (vote)="votePoll($event)"></app-message-bubble>
+        <app-message-bubble [message]="msg" [class.is-hit]="isHit(msg.id)" [class.is-hit-current]="isCurrentHit(msg.id)" (openPreview)="openPreview($event)" (forwardMsg)="onForwardMessage($event)" (deleteMsg)="onDeleteMessage($event)" (editMsg)="onEditMessage($event)" (registrarPago)="registrarPago($event)" (saveSticker)="saveStickerFromMessage($event)" (retry)="retrySend($event)" (replyTo)="setReply($event)" (jumpTo)="jumpToMessage($event)" (startChat)="startChat.emit($event)" (react)="reactTo($event)" (moreEmoji)="openEmojiForReaction($event)" [canVote]="canVote" (vote)="votePoll($event)"></app-message-bubble>
       </ng-container>
     </div>
 
@@ -122,6 +139,12 @@
             </div>
           </div>
         </div>
+        <!-- Copiloto: redacta una respuesta con la ficha y la conversación; el asesor la revisa y la manda. -->
+        <button type="button" class="wa-ibtn wa-ia" (click)="sugerirRespuesta(); $event.stopPropagation()" [disabled]="sugiriendo || sending || !!filePreview"
+                [title]="sugiriendo ? 'Redactando…' : 'Sugerir respuesta (IA): la escribe en la caja para que usted la revise'">
+          <span class="np-spinner np-spinner--sm" *ngIf="sugiriendo"></span>
+          <svg *ngIf="!sugiriendo" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l1.6 4.4L18 9l-4.4 1.6L12 15l-1.6-4.4L6 9l4.4-1.6z"/><path d="M19 15l.7 1.8 1.8.7-1.8.7L19 20l-.7-1.8-1.8-.7 1.8-.7z"/></svg>
+        </button>
         <div class="wa-emoji-wrap">
           <button type="button" class="wa-ibtn" [class.is-active]="showEmojiPicker" (click)="toggleEmojiPicker($event)" title="Emojis"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M8 14s1.5 2 4 2 4-2 4-2M9 9h.01M15 9h.01"/></svg></button>
         </div>

@@ -40,6 +40,17 @@
   </div>
 
   <!-- WhatsApp Web sin recepción: lo que escriben los clientes no llega a esta bandeja -->
+  <!-- Línea caída: lo que se mande por ella no sale. -->
+  <div class="np-notice np-notice--danger" role="alert" *ngIf="lineasCaidas.length" style="display:flex; flex-wrap:wrap; align-items:center; gap:8px 14px; margin:8px 12px 0">
+    <span style="flex:1; min-width:240px"><b>{{ lineasCaidas.length === 1 ? 'La línea ' + (lineasCaidas[0].nombre || lineasCaidas[0].telefono) + ' está desconectada' : 'Hay ' + lineasCaidas.length + ' líneas desconectadas' }}.</b> Lo que envíe por ella no le llega al cliente hasta que se reconecte.</span>
+    <button type="button" class="np-btn np-btn--ghost np-btn--sm" *ngIf="esAdmin" (click)="verLineas()">Reconectar</button>
+  </div>
+
+  <!-- Sin avisos en vivo: la bandeja se refresca sola cada 20 s hasta que vuelvan. -->
+  <div class="np-notice np-notice--warn" role="status" *ngIf="!enVivo" style="margin:8px 12px 0">
+    <b>Sin conexión en vivo.</b> Los mensajes nuevos pueden tardar unos segundos en aparecer: la bandeja se refresca sola mientras se recupera.
+  </div>
+
   <div class="np-notice np-notice--danger" role="alert" *ngIf="recepcionApagada" style="display:flex; flex-wrap:wrap; align-items:center; gap:8px 14px; margin:8px 12px 0">
     <span style="flex:1; min-width:240px"><b>La recepción de mensajes de WhatsApp Web está desactivada.</b> Lo que sus clientes escriben a sus líneas no llega a esta bandeja.</span>
     <button type="button" class="np-btn np-btn--primary np-btn--sm" *ngIf="esAdmin" (click)="activarRecepcion()" [disabled]="activandoRecepcion">{{ activandoRecepcion ? 'Activando…' : 'Activar recepción' }}</button>
@@ -54,7 +65,7 @@
 
   <div class="wa-layout" *ngIf="mainView === 'inbox'">
     <aside class="wa-list-pane">
-      <app-conversation-list [conversations]="inbox" [activeConversationId]="activeConversationId" [activeStatus]="inboxStatus" [mostrarEstados]="vista === 'clientes'" [labels]="labels" [mostrarLinea]="variasLineas" [waitAlertMinutes]="settings?.wait_alert_minutes || 15" (openChat)="openChat($event)" (statusChange)="setStatus($event)" (refresh)="loadInbox()" (markUnread)="markUnread($event)"></app-conversation-list>
+      <app-conversation-list [conversations]="inbox" [activeConversationId]="activeConversationId" [activeStatus]="inboxStatus" [mostrarEstados]="vista === 'clientes'" [labels]="labels" [mostrarLinea]="variasLineas" [waitAlertMinutes]="settings?.wait_alert_minutes || 15" (openChat)="openChat($event)" (statusChange)="setStatus($event)" (refresh)="loadInbox()" (markUnread)="markUnread($event)" (buscar)="buscarEnServidor($event)"></app-conversation-list>
     </aside>
     <section class="wa-chat-pane">
       <app-chat-window class="wa-chat-host" [conversationId]="activeConversationId" (conversationClosed)="onConversationClosed()" (openTransfer)="openTransfer()" (back)="backToList()" (openConversation)="openChat($event)" (startChat)="startChatWith($event)" (labelsChanged)="onLabelsChanged()" (messageSent)="loadInbox()"></app-chat-window>

@@ -1,6 +1,6 @@
 import { Injectable, Inject, PLATFORM_ID } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
-import { Subject } from 'rxjs';
+import { BehaviorSubject, Subject } from 'rxjs';
 import { environment } from '../../environments/environment';
 
 @Injectable({ providedIn: 'root' })
@@ -9,6 +9,15 @@ export class EchoService {
   private echo: any = null;
 
   public inboxUpdated$ = new Subject<any>();
+
+  /** ¿Llegan los avisos en vivo? La bandeja lo muestra: sin esto un corte no lo notaba nadie. */
+  public conectado$ = new BehaviorSubject<boolean>(false);
+
+  /**
+   * Volvió la conexión después de un corte: lo que llegó mientras tanto no se avisó, así que
+   * la bandeja y el chat abierto se vuelven a pedir.
+   */
+  public reconectado$ = new Subject<void>();
 
   constructor(@Inject(PLATFORM_ID) platformId: Object) {
     if (isPlatformBrowser(platformId)) {
@@ -27,14 +36,36 @@ export class EchoService {
       key: environment.pusher.key,
       cluster: environment.pusher.cluster,
       forceTLS: true,
-      authEndpoint: `${environment.apiUrl}/broadcasting/auth`,
-      auth: {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('token')}`,
-          Accept: 'application/json'
-        }
-      }
+      // La clave de la sesión se lee en el momento de autorizar cada canal. Antes se tomaba una
+      // sola vez, al arrancar el servicio (antes del login, o con una clave que después se
+      // renovaba), y los canales privados fallaban sin decir nada hasta recargar la página.
+      authorizer: (channel: any) => ({
+        authorize: (socketId: string, callback: (error: any, data: any) => void) => {
+          fetch(`${environment.apiUrl}/broadcasting/auth`, {
+            method: 'POST',
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem('token') ?? ''}`,
+              Accept: 'application/json',
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ socket_id: socketId, channel_name: channel.name }),
+          })
+            .then(r => (r.ok ? r.json() : Promise.reject(new Error(`auth ${r.status}`))))
+            .then(data => callback(null, data))
+            .catch(error => callback(error, null));
+        },
+      }),
     });
+
+    const conexion = this.echo.connector?.pusher?.connection;
+    let huboCorte = false;
+    conexion?.bind('state_change', (e: { previous: string; current: string }) => {
+      const arriba = e.current === 'connected';
+      this.conectado$.next(arriba);
+      if (!arriba && e.previous === 'connected') huboCorte = true;
+      if (arriba && huboCorte) { huboCorte = false; this.reconectado$.next(); }
+    });
+    if (conexion?.state === 'connected') this.conectado$.next(true);
 
     this.escucharBandeja();
   }

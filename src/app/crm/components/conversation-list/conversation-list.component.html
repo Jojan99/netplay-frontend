@@ -3,7 +3,7 @@
     <div class="wa-list-title"><h2>Chats</h2><span class="wa-count">{{ filtered.length }}</span><span class="np-spacer"></span><button type="button" class="wa-ibtn" (click)="refresh.emit()" title="Actualizar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 12a8 8 0 1 1-2.3-5.7M20 4v5h-5"/></svg></button></div>
     <label class="wa-search">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg>
-      <input type="search" [(ngModel)]="searchQuery" (ngModelChange)="applySearch()" placeholder="Buscar por nombre, número o mensaje" aria-label="Buscar chat" />
+      <input type="search" [(ngModel)]="searchQuery" (ngModelChange)="alBuscar()" placeholder="Buscar por nombre, número o mensaje" aria-label="Buscar chat" />
     </label>
     <div class="wa-filters" role="group" aria-label="Estado" *ngIf="mostrarEstados">
       <button type="button" *ngFor="let tab of tabs" class="wa-filter" [attr.aria-pressed]="activeStatus === tab.id" (click)="changeStatus(tab.id)">{{ tab.label }}</button>

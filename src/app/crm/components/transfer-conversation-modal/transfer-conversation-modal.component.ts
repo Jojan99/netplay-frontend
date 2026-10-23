@@ -1,7 +1,8 @@
-import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
+import { Component, EventEmitter, Input, OnInit, Output, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { CrmService } from '../../../services/crm.service';
+import { ToastService } from '../../../services/toast.service';
 
 @Component({
   selector: 'app-transfer-conversation-modal',
@@ -20,12 +21,14 @@ export class TransferConversationModalComponent implements OnInit {
   reason = '';
   loading = false;
 
+  private toast = inject(ToastService);
+
   constructor(private crmService: CrmService) {}
 
   ngOnInit(): void {
     this.crmService.getAgents().subscribe({
       next: (r) => this.agents = r.data ?? [],
-      error: () => this.agents = []
+      error: () => { this.agents = []; this.toast.error('No se pudo cargar la lista de asesores.'); }
     });
   }
 
@@ -54,7 +57,8 @@ toggleExpand(agent: any, event: MouseEvent) {
       this.reason
     ).subscribe({
       next: () => this.closed.emit(true),
-      error: () => this.loading = false
+      // Antes fallaba en silencio: el agente creía que había transferido el chat.
+      error: e => { this.loading = false; this.toast.error(e?.error?.message || 'No se pudo transferir la conversación.'); }
     });
   }
 

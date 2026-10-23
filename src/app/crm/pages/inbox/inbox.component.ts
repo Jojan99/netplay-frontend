@@ -21,7 +21,8 @@ import { CrmService } from '../../../services/crm.service';
 import { EchoService } from '../../../services/echo.service';
 import { AuthService } from '../../../services/auth.service';
 import { WhatsappService } from '../../../whatsapp/services/whatsapp.service';
-import { Router } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
+import { Subject, Subscription, debounceTime, interval } from 'rxjs';
 
 type InboxStatus = 'all' | 'new' | 'in_progress' | 'closed';
 type MainView    = 'inbox' | 'dashboard';
@@ -92,6 +93,11 @@ export class InboxComponent implements OnInit, OnDestroy {
   lineaFiltro: number | null = null;
 
   trackByLineaId(_i: number, l: any): number { return l?.id ?? _i; }
+
+  /** Líneas de la empresa desconectadas: lo que se envíe por ellas no le llega al cliente. */
+  get lineasCaidas(): any[] {
+    return this.lineas.filter(l => l.activa !== false && l.estado && l.estado !== 'connected');
+  }
 
   loadLineas(): void {
     this.crmService.getLineas().subscribe({
@@ -232,7 +238,10 @@ export class InboxComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     if (isPlatformBrowser(this.platformId)) {
       this.isMobile = window.innerWidth < 768;
-      window.addEventListener('resize', () => { this.isMobile = window.innerWidth < 768; });
+      window.addEventListener('resize', this.alRedimensionar);
+      window.addEventListener('popstate', this.alVolverAtras);
+      // El estado de las líneas cambia (se cae una, vuelve): se mira cada dos minutos.
+      this.subs.add(interval(120_000).subscribe(() => this.loadLineas()));
 
       const saved = sessionStorage.getItem('crm_inbox_status') as InboxStatus;
       if (saved) this.inboxStatus = saved;
@@ -247,6 +256,17 @@ export class InboxComponent implements OnInit, OnDestroy {
     this.loadSettings();
     this.listenInboxRealtime();
     if (isPlatformBrowser(this.platformId)) this.loadRecepcion();
+
+    // Viene de la campana («X espera respuesta»): se abre ese chat, en su bandeja.
+    this.subs.add(this.ruta.queryParamMap.subscribe(q => {
+      const chat = Number(q.get('chat'));
+      if (!chat) return;
+      const proveedor = q.get('proveedor');
+      if ((proveedor === 'meta' || proveedor === 'netplay') && proveedor !== this.inboxProvider) this.setProvider(proveedor);
+      if (this.vista !== 'clientes') this.setVista('clientes');
+      this.openChat(chat);
+      this.router.navigate([], { relativeTo: this.ruta, queryParams: {}, replaceUrl: true });
+    }));
     // El permiso se pide tras el primer clic del agente (el navegador lo exige)
     if (isPlatformBrowser(this.platformId)) document.addEventListener('click', () => this.askNotificationPermission(), { once: true });
   }
@@ -254,6 +274,7 @@ export class InboxComponent implements OnInit, OnDestroy {
   /* ── RECEPCIÓN DE WHATSAPP WEB ──────────────────────────────── */
   private wa     = inject(WhatsappService);
   private router = inject(Router);
+  private ruta = inject(ActivatedRoute);
   readonly esAdmin = inject(AuthService).isAdmin();
 
   /**
@@ -298,74 +319,123 @@ export class InboxComponent implements OnInit, OnDestroy {
     });
   }
 
+  verLineas(): void {
+    this.router.navigate(['/dashboard/whatsapp']);
+  }
+
   verRecepcion(): void {
     this.router.navigate(['/dashboard/whatsapp/netplay/webhook']);
   }
 
   /* ── REALTIME ───────────────────────────────────────────────── */
+  //
+  // Antes: cada aviso pedía la bandeja completa, sin cancelar la anterior, y la suscripción
+  // nunca se soltaba. Cada vez que se volvía a la bandeja se sumaba otro oyente (sonido doble,
+  // no leídos inflados, N pedidos por aviso) y las respuestas podían llegar fuera de orden y
+  // dejar una lista vieja. Ahora: los avisos que llegan juntos se resuelven con UN pedido, el
+  // pedido nuevo cancela al anterior, todo se suelta al salir, y si se corta la conexión en
+  // vivo la bandeja se refresca sola cada 20 s hasta que vuelve (y al volver se resincroniza).
+
+  private subs = new Subscription();
+  private alRedimensionar = () => { this.isMobile = window.innerWidth < 768; };
+  private pendientes: any[] = [];
+  private recargar$ = new Subject<void>();
+  private pedidosEnVivo = new Map<string, Subscription>();
+  private cargaInbox?: Subscription;
+  /** ¿Llegan los avisos en vivo? Sin conexión se muestra un aviso y se refresca a mano. */
+  enVivo = true;
+  private relojSinConexion?: Subscription;
+
   listenInboxRealtime(): void {
     // La bandeja de la empresa del usuario (el servicio arranca antes del login).
     this.echoService.escucharBandeja();
-    this.echoService.inboxUpdated$.subscribe((payload: any) => {
-      this.zone.run(() => {
-        // El bot le pasó un chat a un asesor: aviso aparte, con más tiempo en pantalla.
-        if (payload.aviso && Number(payload.companyId) === this.auth.getCompanyId()) {
-          this.toast.show(`🔔 ${payload.aviso}`, 'warning', 9000);
-        }
+    this.subs.add(this.echoService.inboxUpdated$.subscribe((payload: any) => this.zone.run(() => this.alAviso(payload))));
+    this.subs.add(this.recargar$.pipe(debounceTime(250)).subscribe(() => this.zone.run(() => this.procesarPendientes())));
+    this.subs.add(this.echoService.reconectado$.subscribe(() => this.zone.run(() => { this.loadInbox(); this.loadLineas(); })));
+    this.subs.add(this.echoService.conectado$.pipe(debounceTime(4000)).subscribe(v => this.zone.run(() => {
+      this.enVivo = v;
+      this.relojSinConexion?.unsubscribe();
+      if (!v) this.relojSinConexion = interval(20_000).subscribe(() => this.zone.run(() => this.loadInbox()));
+    })));
+  }
 
-        const conversationId = payload.conversationId;
-        const fromCustomer = payload.sender !== 'agent';
-        const provider: string = payload.provider || this.inboxProvider;
+  private alAviso(payload: any): void {
+    // El bot le pasó un chat a un asesor: aviso aparte, con más tiempo en pantalla.
+    if (payload.aviso && Number(payload.companyId) === this.auth.getCompanyId()) {
+      this.toast.show(`🔔 ${payload.aviso}`, 'warning', 9000);
+    }
 
-        // No leídos: se cuentan por conversación, sin importar en qué bandeja esté el agente
-        if (fromCustomer && this.activeConversationId !== conversationId) {
-          this.unreadMap.set(conversationId, (this.unreadMap.get(conversationId) || 0) + 1);
-        }
+    // No leídos: se cuentan por conversación, sin importar en qué bandeja esté el agente.
+    if (payload.sender !== 'agent' && this.activeConversationId !== payload.conversationId) {
+      this.unreadMap.set(payload.conversationId, (this.unreadMap.get(payload.conversationId) || 0) + 1);
+    }
 
-        const filters: any = { provider };
-        if (this.vista === 'clientes' && provider === this.inboxProvider && this.inboxStatus !== 'all') {
-          filters.status = this.inboxStatus;
-        }
+    this.pendientes.push(payload);
+    this.recargar$.next();
+  }
 
-        // La recarga tiene que respetar la línea que el agente está mirando; si
-        // no, un mensaje de otra línea le repuebla la lista con todos los chats.
-        if (this.lineaFiltro && provider === 'netplay' && this.inboxProvider === 'netplay') {
-          filters.linea = this.lineaFiltro;
-        }
+  private filtrosPara(provider: string): any {
+    const filters: any = { provider };
+    if (this.busqueda && provider === this.inboxProvider) filters.search = this.busqueda;
+    if (this.vista === 'clientes' && provider === this.inboxProvider && this.inboxStatus !== 'all' && !this.busqueda) {
+      filters.status = this.inboxStatus;
+    }
+    // La recarga respeta la línea que el agente está mirando; si no, un mensaje de otra línea
+    // le repuebla la lista con todos los chats.
+    if (this.lineaFiltro && provider === 'netplay' && this.inboxProvider === 'netplay') {
+      filters.linea = this.lineaFiltro;
+    }
+    // Y la sección: sin esto, el eco del propio mensaje en un grupo lo sacaba de grupos.
+    if (this.vista === 'grupos') filters.grupos = 1;
+    return filters;
+  }
 
-        // La recarga tiene que respetar la sección en la que está el agente.
-        // Sin esto, al llegar el evento del propio mensaje enviado en un grupo
-        // la lista se repoblaba con los chats de clientes y sacaba al agente
-        // de la sección de grupos.
-        if (this.vista === 'grupos') filters.grupos = 1;
+  private procesarPendientes(): void {
+    const lote = this.pendientes.splice(0);
+    const porProveedor = new Map<string, any[]>();
+    for (const p of lote) {
+      const prov: string = p.provider || this.inboxProvider;
+      porProveedor.set(prov, [...(porProveedor.get(prov) ?? []), p]);
+    }
 
-        this.crmService.getInbox(filters).subscribe(res => {
+    porProveedor.forEach((avisos, provider) => {
+      this.pedidosEnVivo.get(provider)?.unsubscribe();
+      this.pedidosEnVivo.set(provider, this.crmService.getInbox(this.filtrosPara(provider)).subscribe({
+        next: res => {
           const freshInbox = res.data ?? [];
-          freshInbox.forEach((c: any) => { c.unread_count = this.unreadMap.get(c.id) || 0; });
-          const updatedConv = freshInbox.find((c: any) => c.id === conversationId);
+          this.conNoLeidos(freshInbox);
+          const delCliente = avisos.filter(a => a.sender !== 'agent');
 
           if (provider !== this.inboxProvider) {
-            // Llegó a la otra bandeja: contador en el chip + lista para previsualizar al pasar el mouse
-            if (fromCustomer && updatedConv) {
-              this.rememberArrival(provider, updatedConv);
+            // Llegó a la otra bandeja: contador en el chip + lista para previsualizar.
+            for (const a of delCliente) {
+              const conv = freshInbox.find((c: any) => c.id === a.conversationId);
+              if (!conv) continue;
+              this.rememberArrival(provider, conv);
               this.playNotification();
-              this.showToast(updatedConv, provider);
-              this.notifyBrowser(updatedConv);
+              this.showToast(conv, provider);
+              this.notifyBrowser(conv);
             }
             return;
           }
 
-          if (!updatedConv) { this.inbox = freshInbox; return; }
-          this.inbox = [updatedConv, ...freshInbox.filter((c: any) => c.id !== conversationId)];
+          // Los chats con novedades arriba, el más reciente primero.
+          const ids = [...new Set(avisos.map(a => a.conversationId).reverse())];
+          const arriba = ids.map(id => freshInbox.find((c: any) => c.id === id)).filter(Boolean);
+          this.inbox = [...arriba, ...freshInbox.filter((c: any) => !ids.includes(c.id))];
 
-          // Sonido y aviso sólo cuando hay un mensaje real del cliente en un chat que no está abierto
-          if (fromCustomer && this.activeConversationId !== conversationId) {
+          // Sonido y aviso sólo por mensajes reales del cliente en chats que no están abiertos.
+          for (const id of new Set(delCliente.map(a => a.conversationId))) {
+            const conv = freshInbox.find((c: any) => c.id === id);
+            if (!conv || this.activeConversationId === id) continue;
             this.playNotification();
-            this.showToast(updatedConv, provider);
-            this.notifyBrowser(updatedConv);
+            this.showToast(conv, provider);
+            this.notifyBrowser(conv);
           }
-        });
-      });
+        },
+        // Un aviso perdido no rompe nada: el próximo, o la reconexión, traen la lista al día.
+        error: () => {},
+      }));
     });
   }
 
@@ -453,14 +523,25 @@ export class InboxComponent implements OnInit, OnDestroy {
     });
   }
 
+  /** Lo que el agente busca (3 letras o más): se busca en el servidor, en todos los estados. */
+  busqueda = '';
+
+  buscarEnServidor(q: string): void {
+    if (q === this.busqueda) return;
+    this.busqueda = q;
+    this.loadInbox();
+  }
+
   /* ── INBOX ──────────────────────────────────────────────────── */
   loadInbox(): void {
     const filters: any = {};
+    if (this.busqueda) filters.search = this.busqueda;
 
     // En grupos no se aplica el estado: las pestañas están ocultas ahí, así que
     // un filtro heredado de la vista de clientes ("En curso", por ejemplo)
     // dejaba la lista de grupos vacía sin que se pudiera cambiar.
-    if (this.vista === 'clientes' && this.inboxStatus !== 'all') {
+    // Buscando, en todos los estados: lo que se busca suele ser un chat cerrado o viejo.
+    if (this.vista === 'clientes' && this.inboxStatus !== 'all' && !this.busqueda) {
       filters.status = this.inboxStatus;
     }
 
@@ -469,10 +550,16 @@ export class InboxComponent implements OnInit, OnDestroy {
     if (this.lineaFiltro && this.inboxProvider === 'netplay') filters.linea = this.lineaFiltro;
     if (this.vista === 'grupos') filters.grupos = 1;
 
-    this.crmService.getInbox(filters).subscribe(res => {
-      const freshInbox = res.data ?? [];
-      freshInbox.forEach((c: any) => { c.unread_count = this.unreadMap.get(c.id) || 0; });
-      this.inbox = freshInbox;
+    // El pedido nuevo cancela al anterior: cambiar rápido de pestaña o de línea no deja una
+    // lista vieja en pantalla.
+    this.cargaInbox?.unsubscribe();
+    this.cargaInbox = this.crmService.getInbox(filters).subscribe({
+      next: res => {
+        const freshInbox = res.data ?? [];
+        this.conNoLeidos(freshInbox);
+        this.inbox = freshInbox;
+      },
+      error: () => this.toast.error('No se pudo cargar la bandeja. Revise la conexión; se vuelve a intentar sola.'),
     });
   }
 
@@ -513,12 +600,40 @@ export class InboxComponent implements OnInit, OnDestroy {
     const conv = this.inbox.find(c => c.id === conversationId);
     if (conv) { conv.unread_count = 0; this.inbox = [...this.inbox]; }
 
-    if (this.isMobile) this.mobileView = 'chat';
+    if (this.isMobile) {
+      // En el celular el chat es una «página»: el botón atrás tiene que volver a la lista, no
+      // sacar de la bandeja. Se deja una entrada en el historial que «atrás» consume.
+      if (this.mobileView !== 'chat' && isPlatformBrowser(this.platformId)) history.pushState({ crmChat: conversationId }, '');
+      this.mobileView = 'chat';
+    }
   }
 
-  backToList(): void { this.mobileView = 'list'; }
+  backToList(): void {
+    // La flecha de la pantalla hace lo mismo que el botón atrás del teléfono.
+    if (this.isMobile && isPlatformBrowser(this.platformId) && history.state?.crmChat) { history.back(); return; }
+    this.mobileView = 'list';
+  }
+
+  /** El botón atrás del teléfono con un chat abierto: a la lista de chats. */
+  private alVolverAtras = () => this.zone.run(() => { if (this.mobileView === 'chat') this.mobileView = 'list'; });
+
+  /**
+   * Los no leídos vienen del servidor (compartidos entre asesores y a salvo de una recarga).
+   * El chat abierto se ve como leído aunque le acabe de llegar algo: se le avisa al servidor.
+   */
+  private conNoLeidos(lista: any[]): void {
+    for (const c of lista) {
+      c.unread_count = Number(c.unread_count) || 0;
+      if (c.id === this.activeConversationId && c.unread_count > 0) {
+        c.unread_count = 0;
+        this.crmService.marcarLeido(c.id).subscribe({ error: () => {} });
+      }
+    }
+  }
 
   markUnread(conversationId: number): void {
+    // Para todos: el servidor lo guarda.
+    this.crmService.marcarNoLeido(conversationId).subscribe({ error: () => this.toast.error('No se pudo marcar como no leído.') });
     this.unreadMap.set(conversationId, Math.max(1, this.unreadMap.get(conversationId) || 0));
     if (this.activeConversationId === conversationId) { this.activeConversationId = null; this.mobileView = 'list'; }
     this.inbox = this.inbox.map(c => c.id === conversationId ? { ...c, unread_count: this.unreadMap.get(conversationId) } : c);
@@ -549,7 +664,15 @@ export class InboxComponent implements OnInit, OnDestroy {
 
   /* ── CLEANUP ────────────────────────────────────────────────── */
   ngOnDestroy(): void {
-    const echo = this.echoService.instance;
-    if (echo) echo.leave('crm.inbox');
+    // El canal de la bandeja es del servicio (también lo usa el widget): no se deja. Lo que se
+    // suelta son los oyentes de esta pantalla, que antes se acumulaban en cada visita.
+    this.subs.unsubscribe();
+    this.relojSinConexion?.unsubscribe();
+    this.cargaInbox?.unsubscribe();
+    this.pedidosEnVivo.forEach(s => s.unsubscribe());
+    if (isPlatformBrowser(this.platformId)) {
+      window.removeEventListener('resize', this.alRedimensionar);
+      window.removeEventListener('popstate', this.alVolverAtras);
+    }
   }
 }
