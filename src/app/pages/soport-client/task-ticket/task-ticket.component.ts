@@ -1,3 +1,4 @@
+import { SeccionTabsComponent } from '../../../components/seccion-tabs/seccion-tabs.component';
 import { ToastService } from '../../../services/toast.service';
 import { Component, HostListener, OnInit, OnDestroy, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
@@ -17,9 +18,9 @@ import { BurbujaTicketComponent } from '../../../common/burbuja-ticket/burbuja-t
 @Component({
   selector: 'app-task-ticket',
   standalone: true,
-  imports: [CommonModule, FormsModule, NpSelectComponent, NuevoTicketComponent, BurbujaTicketComponent],
+  imports: [CommonModule, FormsModule, NpSelectComponent, NuevoTicketComponent, BurbujaTicketComponent, SeccionTabsComponent],
   templateUrl: './task-ticket.component.html',
-  styleUrls: ['./task-ticket.component.scss'],
+  styleUrls: ['./task-ticket.component.scss', './tickets-limpio.scss'],
   host: { class: 'np-console' },
 })
 export class TaskTicketComponent implements OnInit, OnDestroy {
@@ -627,6 +628,60 @@ export class TaskTicketComponent implements OnInit, OnDestroy {
   }
 
   // ── Helpers ───────────────────────────────────────────────────────────────
+
+  // ── Lo que muestra el diseño nuevo (21-10-2026) ─────────────────────────
+  /** El último diagnóstico que quedó como novedad del ticket. */
+  get ultimoDiagnostico(): TicketNote | null {
+    const diags = (this.notes ?? []).filter(n => String(n.note ?? '').startsWith('🩺'));
+    return diags.sort((a: any, b: any) => String(b.created_at ?? '').localeCompare(String(a.created_at ?? '')))[0] ?? null;
+  }
+
+  iniciales(nombres?: string | null, apellidos?: string | null): string {
+    const t = `${(nombres ?? '').trim()[0] ?? ''}${(apellidos ?? '').trim()[0] ?? ''}`.toUpperCase();
+    return t || '—';
+  }
+
+  /** «24 de septiembre»: el pipe de fecha sin el idioma registrado lo escribía en inglés. */
+  fechaLarga(fecha: string | null | undefined): string {
+    if (!fecha) return '';
+    const d = new Date(fecha);
+    return isNaN(d.getTime()) ? '' : d.toLocaleDateString('es-CO', { day: 'numeric', month: 'long' });
+  }
+
+  /** «JUNIOR ENRIQUE SOLANO BENAVIDES» → «Junior Solano»: el nombre completo se come la columna. */
+  nombreCorto(nombres?: string | null, apellidos?: string | null): string {
+    const primera = (v?: string | null) => (v ?? '').trim().split(/\s+/)[0] ?? '';
+    const bonito = (v: string) => v ? v.charAt(0).toUpperCase() + v.slice(1).toLowerCase() : '';
+    return [bonito(primera(nombres)), bonito(primera(apellidos))].filter(Boolean).join(' ');
+  }
+
+  origenDe(t: TicketInterface): string | null {
+    return ({ asistente: 'lo abrió el asistente', portal: 'desde el portal', cliente: 'desde el portal', whatsapp: 'por WhatsApp' } as Record<string, string>)[String(t.source ?? '')] ?? null;
+  }
+
+  private diasAbierto(t: TicketInterface): number {
+    const d = new Date(String(t.created_at ?? '').replace(' ', 'T'));
+    return isNaN(d.getTime()) ? 0 : (Date.now() - d.getTime()) / 86_400_000;
+  }
+
+  /** Abierto: hace cuánto. Naranja desde 1 día, rojo desde 3. */
+  edadTexto(t: TicketInterface): string {
+    const dias = this.diasAbierto(t);
+    if (dias < 1) { const h = Math.max(1, Math.round(dias * 24)); return `hace ${h} h`; }
+    const n = Math.floor(dias);
+    return n === 1 ? 'hace 1 día' : `hace ${n} días`;
+  }
+
+  edadNivel(t: TicketInterface): string {
+    if (t.status_id === 3) return 'cerrado';
+    const dias = this.diasAbierto(t);
+    return dias >= 3 ? 'mal' : (dias >= 1 ? 'warn' : 'ok');
+  }
+
+  tiempoMediano(horas?: number | null): string {
+    if (horas === null || horas === undefined) return '—';
+    return horas < 24 ? `${Math.round(horas)} h` : `${(horas / 24).toLocaleString('es-CO', { maximumFractionDigits: 1 })} días`;
+  }
 
   statusLabel(id: number | undefined): string {
     return id === 1 ? 'Pendiente' : id === 2 ? 'En Proceso' : id === 3 ? 'Cerrado' : '—';

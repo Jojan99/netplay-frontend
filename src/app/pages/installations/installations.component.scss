@@ -2,9 +2,9 @@
 .np-inst { --np-inspector-w: 440px; }
 .np-ribbon-sub { color: var(--text-3); font-size: 11px; margin-left: 4px; }
 .np-row--pending .np-stripe i     { background: var(--warn); }
-.np-row--confirmed .np-stripe i   { background: var(--accent); }
+.np-row--confirmed .np-stripe i   { background: transparent; }
 .np-row--in_progress .np-stripe i { background: var(--info); }
-.np-row--completed .np-stripe i   { background: var(--ok); }
+.np-row--completed .np-stripe i   { background: transparent; }
 .np-row--cancelled .np-stripe i   { background: var(--danger); }
 .np-pill--pending, .np-pill--pay-pending  { background: var(--warn-soft); color: var(--warn); }
 .np-pill--confirmed                       { background: var(--accent-soft); color: var(--accent); }
@@ -24,7 +24,7 @@
 /* La orden de práctica se distingue de una de verdad a primera vista */
 .np-practica {
   display: inline-block; margin-left: 8px; padding: 1px 7px; border-radius: 999px; vertical-align: middle;
-  background: var(--info-soft); color: var(--info); font: 800 9.5px var(--font-body); letter-spacing: .06em;
+  background: var(--info-soft); color: var(--info); font: 600 9.5px var(--font-body); letter-spacing: 0;
 }
 
 .np-comprobante { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
@@ -40,6 +40,6 @@
 .np-prov-p.es-ok::before { background: var(--ok); }
 .np-prov-p.es-mal::before { background: var(--danger); }
 .np-prov-h { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; }
-.np-prov-t { font-weight: 700; color: var(--text); font-size: 12px; }
+.np-prov-t { font-weight: 600; color: var(--text); font-size: 12px; }
 .np-prov-m { font-family: var(--font-mono); font-weight: 600; color: var(--text-3); font-size: 11px; white-space: nowrap; flex-shrink: 0; }
 .np-prov-d { color: var(--text-3); font-size: 11px; margin-top: 2px; overflow-wrap: anywhere; }

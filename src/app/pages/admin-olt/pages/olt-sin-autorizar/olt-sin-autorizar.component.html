@@ -59,22 +59,24 @@
   </div>
 </div>
 
-<div *ngIf="modal" class="np-overlay" (click)="modal = false">
-  <div class="np-modal" role="dialog" aria-modal="true" (click)="$event.stopPropagation()">
-    <div class="np-modal-head"><div><p class="np-kicker">OLT <b>/</b> {{ selectedOltName() }}</p><h3>Autorizar ONT</h3></div>
-      <button type="button" class="np-icobtn" (click)="modal = false" aria-label="Cerrar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div>
-    <div class="np-modal-body">
-      <!-- Una ONT sólo puede estar en un puerto: si ya está en otro, la OLT
-           rechaza el alta sin explicar. Se avisa antes de intentar. -->
-      <p class="np-notice np-notice--inline np-fine" *ngIf="buscandoOnt">Revisando si esta ONT ya está autorizada…</p>
+<!-- ══ Autorizar ONT (21-10-2026): el estilo limpio de los formularios. Cuatro bloques —equipo,
+     cliente, red y lo que se le carga al conectarse—; mientras la OLT trabaja, los pasos. ══ -->
+<div *ngIf="modal" class="np-overlay" (click)="!registering && (modal = false)">
+  <div class="np-modal ao" role="dialog" aria-modal="true" aria-label="Autorizar ONT" (click)="$event.stopPropagation()">
+    <div class="np-modal-head">
+      <div><p class="np-kicker">Red <b>·</b> {{ selectedOltName() }}</p>
+        <h3>{{ registering ? 'Autorizando la ONT' + (clienteElegido ? ' de ' + nombreCorto(clienteElegido.nombre) : '') : (pasos.length || pendienteAlta ? 'Resultado de la autorización' : 'Autorizar ONT') }}</h3></div>
+      <button type="button" class="np-icobtn" (click)="modal = false" [disabled]="registering" aria-label="Cerrar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
+    </div>
 
+    <!-- ── Formulario ── -->
+    <div class="np-modal-body ao-body" *ngIf="!registering && !pasos.length && !pendienteAlta">
       <div class="np-notice np-notice--warn" *ngIf="yaExiste">
         <strong>Esta ONT ya está autorizada en {{ yaExiste.fsp }}</strong>
         <span *ngIf="yaExiste.ont_id"> · ONT ID {{ yaExiste.ont_id }}</span>
         <span *ngIf="yaExiste.descripcion"> · {{ yaExiste.descripcion }}</span>
         <br />
-        Para autorizarla en {{ form.fsp }} hay que quitarla de donde está. El cliente pierde
-        el servicio un momento.
+        Para autorizarla en {{ form.fsp }} hay que quitarla de donde está. El cliente pierde el servicio un momento.
         <div class="np-btnrow">
           <button type="button" class="np-btn np-btn--warn np-btn--sm" (click)="moverOnt()" [disabled]="moviendo">
             {{ moviendo ? 'Moviendo…' : 'Quitar de ' + yaExiste.fsp + ' y autorizar aquí' }}
@@ -82,120 +84,172 @@
         </div>
       </div>
 
-      <!-- Qué se hizo y qué no. Un alta son varios pasos contra la OLT y
-           cualquiera puede fallar solo: verlos evita repetir todo. -->
-      <section class="olt-pasos" *ngIf="pasos.length">
-        <div class="olt-paso" *ngFor="let p of pasos" [attr.data-estado]="p.ok ? 'ok' : (p.omitido ? 'omitido' : 'falla')">
-          <i>{{ p.ok ? '✓' : (p.omitido ? '–' : '✗') }}</i>
-          <div>
-            <b>{{ p.paso }}</b>
-            <small *ngIf="p.detalle">{{ p.detalle }}</small>
+      <section class="ao-sec">
+        <header><h4>Equipo</h4><p>Lo que la OLT encontró sin autorizar.</p></header>
+        <div>
+          <div class="ao-equipo" *ngIf="!editarEquipo">
+            <span class="ao-ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="13" width="18" height="7" rx="2"/><path d="M7 16.5h.01M11 16.5h.01M8 13V8M16 13V8M5.5 8a6.5 6.5 0 0 1 13 0"/></svg></span>
+            <span class="ao-equipo-d">
+              <b>{{ marcaDelEquipo() ? marcaDelEquipo() + ' · ' : '' }}{{ porMac ? 'MAC' : 'serial' }} <span class="np-mono">{{ form.serial || 'sin leer' }}</span></b>
+              <small>Puerto <b class="np-mono">{{ form.fsp || '—' }}</b><ng-container *ngIf="senalDelEquipo() as rx"> · señal {{ rx }}</ng-container></small>
+              <small class="ao-ok" *ngIf="!buscandoOnt && !yaExiste && form.serial">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 12 5 5 9-10"/></svg>No está autorizada en otro puerto</small>
+              <small *ngIf="buscandoOnt">Revisando si ya está autorizada en otro puerto…</small>
+            </span>
+            <button type="button" class="np-btn np-btn--ghost np-btn--sm" (click)="editarEquipo = true">Editar</button>
+          </div>
+          <div class="np-form" *ngIf="editarEquipo">
+            <label class="np-field"><span>Puerto FSP</span><input class="np-input np-mono" [(ngModel)]="form.fsp" placeholder="0/0/3" /></label>
+            <label class="np-field"><span>{{ porMac ? 'MAC' : 'Serial' }}</span><input class="np-input np-mono" [(ngModel)]="form.serial" [placeholder]="porMac ? 'AA:BB:CC:DD:EE:FF' : 'HWTC12345678'" />
+              <small class="np-hint" *ngIf="porMac">En EPON la ONU se autoriza por MAC.</small></label>
           </div>
         </div>
-
-        <!-- En equipos sin service-port el reintento sólo verifica la VLAN del puerto -->
-        <button type="button" class="np-btn np-btn--warn np-btn--sm" *ngIf="faltaServicePort"
-                [disabled]="completando" (click)="completarServicePort()">
-          {{ completando ? (conServicePort ? 'Creando…' : 'Verificando…') : (conServicePort ? 'Crear sólo el service-port' : 'Volver a verificar la VLAN del puerto') }}
-        </button>
       </section>
 
-      <!-- Recién instalada: es el momento de dejarle la gestión puesta. -->
-      <section class="olt-sigue" *ngIf="pasos.length && urlAcs && clienteElegido">
-        <p class="olt-sigue-t">Antes de irte del sitio</p>
-        <p>Cargue al equipo esta dirección en su configuración de gestión (TR-069) y desde el panel podrá ver y cambiar su WiFi.</p>
-        <div class="olt-sigue-url">
-          <code class="np-mono">{{ urlAcs }}</code>
-          <button type="button" class="np-btn np-btn--ghost np-btn--sm" (click)="copiar(urlAcs, 'acs')">{{ copiado === 'acs' ? '✓ Copiada' : 'Copiar' }}</button>
-        </div>
-      </section>
-
-      <div class="np-form">
-        <label class="np-field"><span>Puerto FSP <em>*</em></span><input class="np-input np-mono" [(ngModel)]="form.fsp" placeholder="0/0/3" /></label>
-        <label class="np-field"><span>{{ porMac ? 'MAC' : 'Serial' }}</span><input class="np-input np-mono" [(ngModel)]="form.serial" [placeholder]="porMac ? 'AA:BB:CC:DD:EE:FF' : 'HWTC12345678'" /><small class="np-fine">Precargado desde la OLT.{{ porMac ? ' En EPON la ONU se autoriza por MAC.' : '' }}</small></label>
-        <!-- A quién se le pone la ONT. La lista aparece al escribir, igual que
-             en el alta de tickets: son cientos y mostrarlos todos no sirve. -->
-        <div class="np-field np-field-full">
-          <span>Cliente</span>
-
-          <div class="np-client-card" *ngIf="clienteElegido">
-            <div class="np-avatar">{{ clienteElegido.nombre?.charAt(0)?.toUpperCase() }}</div>
-            <div class="np-insp-id">
-              <h2>{{ clienteElegido.nombre }}</h2>
-              <div class="np-meta">CC <b>{{ clienteElegido.dni }}</b><span *ngIf="clienteElegido.plan"> · {{ clienteElegido.plan }}</span></div>
-              <div class="np-meta np-meta--addr" *ngIf="clienteElegido.direccion">{{ clienteElegido.direccion }}</div>
-            </div>
+      <section class="ao-sec">
+        <header><h4>Cliente</h4><p>A quién queda asignada. Su nombre va a la OLT.</p></header>
+        <div class="ao-col">
+          <div class="ao-cliente" *ngIf="clienteElegido">
+            <span class="ao-av">{{ iniciales(clienteElegido.nombre) }}</span>
+            <span class="ao-equipo-d">
+              <b>{{ clienteElegido.nombre }}</b>
+              <small><span class="np-mono">CC {{ clienteElegido.dni }}</span><ng-container *ngIf="clienteElegido.plan"> · {{ clienteElegido.plan }}</ng-container></small>
+              <small *ngIf="clienteElegido.direccion">{{ clienteElegido.direccion }}</small>
+            </span>
             <button type="button" class="np-btn np-btn--ghost np-btn--sm" (click)="quitarCliente()">Cambiar</button>
           </div>
 
           <label class="np-field np-field--search olt-busca-cliente" *ngIf="!clienteElegido">
-            <input type="search" class="np-input" [(ngModel)]="buscaCliente"
-                   (input)="mostrarLista = true" (focus)="mostrarLista = true"
-                   [placeholder]="cargandoClientes ? 'Cargando clientes…' : 'Nombre, cédula o dirección…'" />
-
+            <input type="search" class="np-input" [(ngModel)]="buscaCliente" (input)="mostrarLista = true" (focus)="mostrarLista = true"
+                   [placeholder]="cargandoClientes ? 'Cargando clientes…' : 'Buscar cliente: nombre, cédula o dirección'" aria-label="Buscar cliente" />
             <div class="np-checklist np-checklist--float" *ngIf="mostrarLista && buscaCliente">
-              <button type="button" class="np-check np-check--btn" *ngFor="let c of clientesFiltrados | slice:0:30"
-                      (click)="elegirCliente(c)">
-                <span class="np-strong">{{ c.nombre }}</span>
-                <span class="np-spacer"></span>
-                <span class="np-data">{{ c.dni }}</span>
+              <button type="button" class="np-check np-check--btn" *ngFor="let c of clientesFiltrados | slice:0:30" (click)="elegirCliente(c)">
+                <span class="np-strong">{{ c.nombre }}</span><span class="np-spacer"></span><span class="np-data">{{ c.dni }}</span>
                 <span class="olt-tomado" *ngIf="c.tiene_ont">ya tiene ONT</span>
               </button>
-
               <p class="np-muted np-check" *ngIf="!clientesFiltrados.length">No se encontraron clientes.</p>
-              <p class="np-muted np-check" *ngIf="clientesFiltrados.length > 30">
-                {{ clientesFiltrados.length }} coinciden — ajuste la búsqueda para verlos todos.
-              </p>
+              <p class="np-muted np-check" *ngIf="clientesFiltrados.length > 30">{{ clientesFiltrados.length }} coinciden — ajuste la búsqueda para verlos todos.</p>
             </div>
           </label>
+          <small class="np-hint is-error" *ngIf="!clienteElegido">Sin cliente la ONT queda suelta: no se ve en su ficha ni el cliente su WiFi en el portal.</small>
+
+          <label class="np-field"><span>Nombre en la OLT</span>
+            <span class="ao-contador"><input class="np-input np-mono" [(ngModel)]="form.description" maxlength="64" placeholder="Se llena con el nombre del cliente" /><small>{{ (form.description || '').length }}/64</small></span>
+            <small class="np-hint">Es lo que se ve en la OLT.</small></label>
         </div>
+      </section>
 
-        <p class="np-notice np-notice--warn np-notice--inline np-field-full" *ngIf="!clienteElegido && !pasos.length">
-          Sin cliente, la ONT queda suelta: no verá su equipo en la ficha ni el cliente su WiFi en el portal.
-        </p>
+      <section class="ao-sec">
+        <header><h4>Red</h4><p>{{ conServicePort ? 'Por dónde navega. El service port se crea solo.' : 'Por dónde navega. Se verifica que el puerto lleve la VLAN.' }}</p></header>
+        <div class="ao-col">
+          <label class="np-field"><span>VLAN</span>
+            <np-select [(ngModel)]="selectedSegment" (ngModelChange)="onSegmentChange()" [opciones]="lanSegments" [presentacion]="redes" [permitirVacio]="true" textoVacio="Sin VLAN" [cargando]="loadingSegments" textoCargando="Cargando VLANs…" ariaLabel="VLAN"></np-select>
+            <small class="np-hint" *ngIf="form.vlan && !conServicePort">{{ capacidades.explicacion_vlan }}</small>
+            <small class="np-hint is-error" *ngIf="!form.vlan && !loadingSegments">Sin VLAN la ONT queda registrada pero el cliente no navega.</small>
+          </label>
 
-        <label class="np-field np-field-full"><span>Descripción en la OLT <em>es lo que se ve en el equipo</em></span>
-          <input class="np-input" [(ngModel)]="form.description" placeholder="Se completa con el nombre del cliente" />
-        </label>
-        <!-- ZTE: el tipo de ONU es el modelo del equipo (ALL sirve para cualquiera). -->
-        <label class="np-field np-field-full" *ngIf="capacidades.tipos_onu?.length"><span>Tipo de ONU <em>el modelo del equipo; ALL sirve para cualquiera</em></span>
-          <np-select [(ngModel)]="form.onu_type" [opciones]="capacidades.tipos_onu!" [presentacion]="presTextos" [buscable]="true" textoBuscar="Buscar modelo: F680, F601…" ariaLabel="Tipo de ONU"></np-select>
-        </label>
-        <label class="np-field"><span>{{ capacidades.etiqueta_perfil_linea || 'Line profile' }}</span><np-select [(ngModel)]="form.line_profile_id" [opciones]="lineProfiles" [presentacion]="presPerfilLinea" [permitirVacio]="true" textoVacio="Sin perfil" [cargando]="loadingProfiles" [deshabilitado]="loadingProfiles" ariaLabel="Line profile"></np-select></label>
-        <!-- En EPON el perfil de servicio no se elige en el alta: lo asigna la
-             OLT. Igual se muestra, porque define cómo pasa la VLAN. -->
-        <label class="np-field"><span>{{ capacidades.etiqueta_perfil_servicio || 'Service profile' }}</span><np-select [(ngModel)]="form.srv_profile_id" [opciones]="srvProfiles" [presentacion]="presPerfilServicio" [permitirVacio]="true" textoVacio="Sin perfil" [cargando]="loadingProfiles" [deshabilitado]="loadingProfiles || !capacidades.perfil_servicio_en_alta" ariaLabel="Service profile"></np-select>
-          <small class="np-fine" *ngIf="!capacidades.perfil_servicio_en_alta">Lo asigna la OLT al autorizar; en este equipo no se elige en el alta.</small></label>
-        <label class="np-field np-field-full"><span>VLAN / segmento de red</span><np-select [(ngModel)]="selectedSegment" (ngModelChange)="onSegmentChange()" [opciones]="lanSegments" [presentacion]="redes" [permitirVacio]="true" textoVacio="Sin VLAN" [cargando]="loadingSegments" textoCargando="Cargando VLANs…" ariaLabel="VLAN / segmento de red"></np-select>
-          <small class="np-fine np-pos" *ngIf="form.vlan && conServicePort">VLAN {{ form.vlan }}: el service port se crea automáticamente.</small>
-          <small class="np-fine" *ngIf="form.vlan && !conServicePort">VLAN {{ form.vlan }}: al autorizar se verifica que el puerto PON la lleve. {{ capacidades.explicacion_vlan }}</small>
-          <small class="np-fine" *ngIf="!form.vlan && !loadingSegments">Sin VLAN la ONT se registra sin service port. Se puede asignar después.</small>
-        </label>
+          <div class="ao-resumen" *ngIf="!verPerfiles">
+            <span class="ao-equipo-d"><span>Perfiles de la OLT</span>
+              <small class="np-mono">{{ nombrePerfil(lineProfiles, form.line_profile_id) }} · {{ nombrePerfil(srvProfiles, form.srv_profile_id) }}<ng-container *ngIf="form.onu_type"> · {{ form.onu_type }}</ng-container>{{ perfilesPredeterminados() ? ' · predeterminados' : '' }}</small></span>
+            <button type="button" class="np-btn np-btn--ghost np-btn--sm" (click)="verPerfiles = true">Cambiar</button>
+          </div>
+          <div class="np-form" *ngIf="verPerfiles">
+            <label class="np-field np-field-full" *ngIf="capacidades.tipos_onu?.length"><span>Tipo de ONU <em>ALL sirve para cualquiera</em></span>
+              <np-select [(ngModel)]="form.onu_type" [opciones]="capacidades.tipos_onu!" [presentacion]="presTextos" [buscable]="true" textoBuscar="Buscar modelo: F680, F601…" ariaLabel="Tipo de ONU"></np-select></label>
+            <label class="np-field"><span>{{ capacidades.etiqueta_perfil_linea || 'Line profile' }}</span><np-select [(ngModel)]="form.line_profile_id" [opciones]="lineProfiles" [presentacion]="presPerfilLinea" [permitirVacio]="true" textoVacio="Sin perfil" [cargando]="loadingProfiles" [deshabilitado]="loadingProfiles" ariaLabel="Line profile"></np-select></label>
+            <label class="np-field"><span>{{ capacidades.etiqueta_perfil_servicio || 'Service profile' }}</span><np-select [(ngModel)]="form.srv_profile_id" [opciones]="srvProfiles" [presentacion]="presPerfilServicio" [permitirVacio]="true" textoVacio="Sin perfil" [cargando]="loadingProfiles" [deshabilitado]="loadingProfiles || !capacidades.perfil_servicio_en_alta" ariaLabel="Service profile"></np-select>
+              <small class="np-hint" *ngIf="!capacidades.perfil_servicio_en_alta">Lo asigna la OLT al autorizar.</small></label>
+          </div>
+          <p class="np-notice np-notice--warn" *ngIf="!loadingProfiles && lineProfiles.length === 0 && srvProfiles.length === 0">No hay perfiles sincronizados. En <strong>Perfiles</strong> haga clic en Sincronizar desde OLT.</p>
+        </div>
+      </section>
 
-        <!-- Aprovisionamiento: si la empresa lo tiene encendido en Acceso remoto -->
-        <ng-container *ngIf="aprov?.aprovisionar && !pasos.length">
-          <p class="np-fine np-field-full">
-            Al aparecer en el TR-069 se le carga<ng-container *ngIf="aprov.wan"> la conexión a internet del cliente{{ form.vlan ? ' en la VLAN ' + form.vlan : '' }}</ng-container><ng-container *ngIf="aprov.wifi && wifi.mandar">{{ aprov.wan ? ',' : '' }} el WiFi</ng-container><ng-container *ngIf="aprov.admin"> y la cuenta de administración</ng-container>.
-          </p>
+      <section class="ao-sec" *ngIf="aprov?.aprovisionar">
+        <header><h4>Al conectarse</h4><p>Lo que el sistema le carga al equipo cuando aparece en el TR-069.</p></header>
+        <div class="ao-col">
+          <ul class="ao-lista">
+            <li *ngIf="aprov.wan"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 12 5 5 9-10"/></svg>Internet del cliente{{ form.vlan ? ' en la VLAN ' + form.vlan : '' }}</li>
+            <li *ngIf="aprov.admin"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 12 5 5 9-10"/></svg>Cuenta de administración de la empresa</li>
+          </ul>
           <ng-container *ngIf="aprov.wifi">
-            <label class="olt-wifi-manda">
-              <button type="button" class="np-switch" role="switch" [attr.aria-checked]="wifi.mandar"
-                      aria-label="Cargarle la red WiFi al equipo" (click)="wifi.mandar = !wifi.mandar"></button>
-              <span>Cargarle la red WiFi al equipo <em>{{ wifi.mandar ? 'se le escribe la red de abajo' : 'queda la que el equipo ya tiene' }}</em></span>
+            <label class="ao-interruptor">
+              <span><b>Cargarle la red WiFi</b><small>{{ wifi.mandar ? 'Se le escribe la red de abajo.' : 'Queda la red que el equipo ya tiene.' }}</small></span>
+              <input type="checkbox" role="switch" [(ngModel)]="wifi.mandar" aria-label="Cargarle la red WiFi al equipo" />
             </label>
+            <div class="np-form" *ngIf="wifi.mandar">
+              <label class="np-field"><span>Nombre de la red</span>
+                <input class="np-input np-mono" [ngModel]="wifi.ssid" (ngModelChange)="filtrarSsidWifi($event)" maxlength="32" autocomplete="off" [placeholder]="ssidSugerido()" />
+                <small class="np-hint">Vacío: <span class="np-mono">{{ ssidSugerido() }}</span></small></label>
+              <label class="np-field"><span>Clave</span>
+                <span class="np-input-wrap"><input class="np-input np-mono" [ngModel]="wifi.clave" (ngModelChange)="filtrarClaveWifi($event)" maxlength="63" autocomplete="off" placeholder="Vacía: se genera" />
+                  <button type="button" class="np-eye" (click)="generarClaveWifi()">Generar</button></span>
+                <small class="np-hint">8 o más, sin eñes ni tildes.</small></label>
+            </div>
           </ng-container>
-          <ng-container *ngIf="aprov.wifi && wifi.mandar">
-            <label class="np-field"><span>Nombre del WiFi <em>vacío = {{ aprov.wifi_prefijo || aprov.prefijo_sugerido }}_APELLIDO</em></span>
-              <input class="np-input" [ngModel]="wifi.ssid" (ngModelChange)="filtrarSsidWifi($event)" maxlength="32" autocomplete="off" />
-            </label>
-            <label class="np-field"><span>Clave del WiFi <em>vacío = se genera</em></span>
-              <input class="np-input np-mono" [ngModel]="wifi.clave" (ngModelChange)="filtrarClaveWifi($event)" maxlength="63" autocomplete="off" placeholder="Mínimo 8 caracteres, sin eñes ni tildes" />
-            </label>
-          </ng-container>
-        </ng-container>
-      </div>
-      <p class="np-notice np-notice--warn" *ngIf="!loadingProfiles && lineProfiles.length === 0 && srvProfiles.length === 0">No hay perfiles sincronizados. En <strong>Perfiles</strong> haga clic en Sincronizar desde OLT.</p>
-      <div class="np-btnrow np-btnrow--end"><button type="button" class="np-btn np-btn--ghost" (click)="modal = false">Cancelar</button><button type="button" class="np-btn np-btn--primary" (click)="confirmRegister()" [disabled]="registering || !form.fsp || !!yaExiste" [title]="yaExiste ? 'Primero hay que quitarla del puerto donde está' : ''">{{ registering ? 'Autorizando…' : 'Confirmar autorización' }}</button></div>
+        </div>
+      </section>
+    </div>
+
+    <!-- ── Mientras la OLT trabaja ── -->
+    <div class="np-modal-body ao-body" *ngIf="registering">
+      <div class="ao-avance"><div><span>Trabajando en la OLT…</span><small>Puede tardar hasta dos minutos; si tarda más, se termina solo.</small></div><i><b></b></i></div>
+      <ol class="ao-pasos">
+        <li class="is-curso"><span class="ao-p-ico"></span><span class="ao-equipo-d"><span>Autorizar en el puerto {{ form.fsp }}</span><small>la OLT revisa el puerto y la registra</small></span></li>
+        <li><span class="ao-p-ico"></span><span class="ao-equipo-d"><span>{{ conServicePort ? 'Service port' : 'VLAN del puerto' }}{{ form.vlan ? ' · VLAN ' + form.vlan : '' }}</span></span></li>
+        <li *ngIf="clienteElegido"><span class="ao-p-ico"></span><span class="ao-equipo-d"><span>Asignar a {{ clienteElegido.nombre }}</span></span></li>
+        <li><span class="ao-p-ico"></span><span class="ao-equipo-d"><span>Gestión remota y aprovisionamiento</span><small>cuando el equipo aparezca en el TR-069</small></span></li>
+      </ol>
+    </div>
+
+    <!-- ── Resultado ── -->
+    <div class="np-modal-body ao-body" *ngIf="!registering && (pasos.length || pendienteAlta)">
+      <div class="np-notice np-notice--info" *ngIf="pendienteAlta">{{ pendienteAlta }}</div>
+      <ol class="ao-pasos" *ngIf="pasos.length">
+        <li *ngFor="let p of pasos" [ngClass]="claseDelPaso(p)">
+          <span class="ao-p-ico">
+            <ng-container *ngIf="claseDelPaso(p) !== 'is-curso'">
+            <svg *ngIf="claseDelPaso(p) === 'is-ok'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 12 5 5 9-10"/></svg>
+            <svg *ngIf="claseDelPaso(p) === 'is-falla'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" aria-hidden="true"><path d="M7 7l10 10M17 7 7 17"/></svg>
+            <svg *ngIf="claseDelPaso(p) === 'is-omitido'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" aria-hidden="true"><path d="M6 12h12"/></svg>
+            </ng-container>
+          </span>
+          <span class="ao-equipo-d">
+            <span>{{ p.paso }}<em class="ao-curso" *ngIf="claseDelPaso(p) === 'is-curso'"> · en curso</em></span>
+            <small *ngIf="enSegundoPlano(p)?.detalle as vivo">{{ vivo }}</small>
+            <small *ngIf="p.detalle && claseDelPaso(p) !== 'is-ok'" [class.ao-plan]="enSegundoPlano(p)">{{ p.detalle }}</small>
+            <small *ngIf="p.detalle && claseDelPaso(p) === 'is-ok' && !enSegundoPlano(p)">{{ p.detalle }}</small>
+          </span>
+        </li>
+      </ol>
+      <button type="button" class="np-btn np-btn--warn np-btn--sm" *ngIf="faltaServicePort" [disabled]="completando" (click)="completarServicePort()">
+        {{ completando ? (conServicePort ? 'Creando…' : 'Verificando…') : (conServicePort ? 'Crear sólo el service-port' : 'Volver a verificar la VLAN del puerto') }}
+      </button>
+      <section class="ao-aviso" *ngIf="pasos.length && clienteElegido">
+        <b>Antes de irse de la casa del cliente</b>
+        <span>La gestión remota y el aprovisionamiento siguen en la ventana de tareas (abajo a la derecha). Espere a que digan «listo»: así queda confirmado que navega y que el WiFi quedó cargado.</span>
+        <span *ngIf="urlAcs">Si el equipo no aparece, cárguele esta dirección de gestión (TR-069): <code class="np-mono">{{ urlAcs }}</code>
+          <button type="button" class="np-link" (click)="copiar(urlAcs, 'acs')">{{ copiado === 'acs' ? 'Copiada' : 'Copiar' }}</button></span>
+      </section>
+    </div>
+
+    <div class="np-modal-foot">
+      <ng-container *ngIf="!registering && !pasos.length && !pendienteAlta">
+        <div class="ao-pie">
+          <span><b>{{ clienteElegido ? nombreCorto(clienteElegido.nombre) : 'Sin cliente' }}</b> · puerto <span class="np-mono">{{ form.fsp || '—' }}</span>{{ form.vlan ? ' · VLAN ' + form.vlan : ' · sin VLAN' }}<ng-container *ngIf="aprov?.aprovisionar && aprov?.wifi && wifi.mandar"> · WiFi <span class="np-mono">{{ wifi.ssid || ssidSugerido() }}</span></ng-container></span>
+          <small>Tarda unos segundos en la OLT.</small>
+        </div>
+        <div class="np-btnrow">
+          <button type="button" class="np-btn np-btn--ghost" (click)="modal = false">Cancelar</button>
+          <button type="button" class="np-btn np-btn--primary" (click)="confirmRegister()" [disabled]="!form.fsp || !!yaExiste" [title]="yaExiste ? 'Primero hay que quitarla del puerto donde está' : ''">Autorizar ONT</button>
+        </div>
+      </ng-container>
+      <ng-container *ngIf="registering">
+        <small class="np-hint">No cierre esta ventana todavía.</small><span></span>
+      </ng-container>
+      <ng-container *ngIf="!registering && (pasos.length || pendienteAlta)">
+        <small class="np-hint">{{ hayFallas() ? 'Algo quedó pendiente: revíselo arriba.' : (hayEnCurso() ? 'Quedó hecho en la OLT; el equipo se termina de configurar en segundo plano.' : 'Todo quedó hecho.') }}</small>
+        <div class="np-btnrow"><button type="button" class="np-btn np-btn--primary" (click)="modal = false">Cerrar</button></div>
+      </ng-container>
     </div>
   </div>
 </div>

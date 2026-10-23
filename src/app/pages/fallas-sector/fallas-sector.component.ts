@@ -8,6 +8,8 @@ interface Falla {
   id: number; estado: string; sector: string; caidas: number; maximo_caidas: number; total: number;
   empezo_en: string; resuelta_en: string | null; afectados: number; avisados_inicio: number; avisados_fin: number; errores: number;
   mantenimiento: number; nota: string | null;
+  // Masivas (22-10-2026): de toda la OLT, por tickets, y los tickets que quedaron atados.
+  origen: 'puerto' | 'olt' | 'tickets'; tickets: number; tickets_abiertos: number;
   // Calculado al cargar (nada de getters en la plantilla).
   estadoTexto: string; tono: string; desde: string; duracion: string; abierta: boolean;
 }
@@ -82,7 +84,8 @@ export class FallasSectorComponent implements OnInit, OnDestroy {
     return {
       ...c,
       activo: b(c.activo), contar_cortes_de_luz: b(c.contar_cortes_de_luz), avisar_inicio: b(c.avisar_inicio), avisar_fin: b(c.avisar_fin),
-      avisar_grupo: b(c.avisar_grupo), incluir_suspendidos: b(c.incluir_suspendidos),
+      avisar_grupo: b(c.avisar_grupo), incluir_suspendidos: b(c.incluir_suspendidos), cerrar_tickets: b(c.cerrar_tickets ?? 1),
+      tickets_para_masiva: c.tickets_para_masiva ?? 4, minutos_ventana_tickets: c.minutos_ventana_tickets ?? 30,
       mensaje_inicio: c.mensaje_inicio || this.defecto.mensaje_inicio || '',
       mensaje_fin: c.mensaje_fin || this.defecto.mensaje_fin || '',
       wa_linea_id: c.wa_linea_id ?? null,
@@ -157,6 +160,7 @@ export class FallasSectorComponent implements OnInit, OnDestroy {
       wa_linea_id: c.wa_linea_id ? +c.wa_linea_id : null, segundos_entre_mensajes: +c.segundos_entre_mensajes,
       silencio_desde: c.silencio_desde || null, silencio_hasta: c.silencio_hasta || null,
       mensaje_inicio: c.mensaje_inicio, mensaje_fin: c.mensaje_fin,
+      tickets_para_masiva: +c.tickets_para_masiva, minutos_ventana_tickets: +c.minutos_ventana_tickets, cerrar_tickets: c.cerrar_tickets,
     };
     this.api.guardar(datos).subscribe({
       next: (r: any) => { this.guardando = false; this.avisar(r); this.cargar(true); },

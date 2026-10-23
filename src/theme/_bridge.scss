@@ -83,7 +83,7 @@
 
 /* Tablas */
 .app-platform thead { background: var(--surface-2) !important; }
-.app-platform thead th { color: var(--text-3) !important; font-size: 10.5px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; }
+.app-platform thead th { color: var(--text-3) !important; font-size: 10.5px; font-weight: 600; letter-spacing: 0; }
 .app-platform tbody tr:hover { background: var(--surface-2); }
 .app-platform :is([class*='hover:bg-gray-'], [class*='hover:bg-slate-'], [class*='hover:bg-stone-']):hover { background-color: var(--surface-2) !important; }
 

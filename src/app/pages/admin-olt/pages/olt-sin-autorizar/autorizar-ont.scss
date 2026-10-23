@@ -1,0 +1,68 @@
+/* ═══ Autorizar ONT (21-10-2026): el estilo limpio de los formularios ═══
+   Cuatro bloques con su para qué a la izquierda; mientras la OLT trabaja, los pasos. */
+.ao { max-width: 800px; display: flex; flex-direction: column; max-height: calc(100dvh - 32px); }
+.ao-body { overflow-y: auto; min-height: 0; flex: 1 1 auto; padding-top: 4px; gap: 0; }
+.ao-body > .np-notice { margin: 14px 0 4px; }
+.ao-sec { display: grid; grid-template-columns: 150px minmax(0, 1fr); gap: 22px; padding: 16px 0; border-bottom: 1px solid var(--line);
+  &:last-child { border-bottom: 0; }
+  > header { display: grid; gap: 4px; align-content: start;
+    h4 { margin: 0; font-size: 13.5px; font-weight: 600; color: var(--text); }
+    p { margin: 0; font-size: 12.5px; line-height: 1.45; color: var(--text-3); } } }
+.ao-col { display: grid; gap: 12px; min-width: 0; }
+
+.ao-equipo, .ao-cliente, .ao-resumen { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 13px; align-items: center; padding: 11px 13px; border: 1px solid var(--line); border-radius: 10px; background: var(--surface-2); }
+.ao-cliente { border: 2px solid var(--text); background: var(--surface); padding: 10px 12px; }
+.ao-resumen { grid-template-columns: minmax(0, 1fr) auto; padding: 9px 12px; }
+.ao-ico { width: 48px; height: 48px; border-radius: 10px; background: var(--surface); border: 1px solid var(--line); display: grid; place-items: center; color: var(--text-3);
+  svg { width: 24px; height: 24px; } }
+.ao-av { width: 38px; height: 38px; border-radius: 50%; background: var(--surface-2); display: grid; place-items: center; font-size: 12.5px; font-weight: 600; color: var(--text-2); }
+.ao-equipo-d { display: flex; flex-direction: column; gap: 2px; min-width: 0;
+  > b { font-size: 13.5px; font-weight: 600; color: var(--text); overflow-wrap: anywhere; }
+  > span { font-size: 13.5px; color: var(--text); }
+  small { font-size: 12px; color: var(--text-3); b { color: var(--text); font-weight: 500; } } }
+.ao-ok { display: inline-flex; align-items: center; gap: 6px; color: var(--ok) !important; svg { width: 13px; height: 13px; } }
+.ao-contador { position: relative; display: block; .np-input { padding-right: 58px; } small { position: absolute; right: 11px; top: 50%; transform: translateY(-50%); font-size: 12px; color: var(--text-3); } }
+
+.ao-lista { list-style: none; margin: 0; padding: 0; display: grid; gap: 7px; font-size: 13.5px; color: var(--text);
+  li { display: flex; align-items: center; gap: 9px; } svg { width: 15px; height: 15px; color: var(--accent); flex-shrink: 0; } }
+.ao-interruptor { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; padding: 10px 14px; border: 1px solid var(--line); border-radius: 10px; cursor: pointer;
+  > span { display: grid; gap: 2px; b { font-size: 13.5px; font-weight: 500; color: var(--text); } small { font-size: 12px; color: var(--text-3); } }
+  input { appearance: none; -webkit-appearance: none; flex-shrink: 0; width: 40px; height: 24px; margin-top: 2px; border-radius: 12px; background: var(--line-strong); position: relative; cursor: pointer; transition: background .15s;
+    &::after { content: ''; position: absolute; left: 3px; top: 3px; width: 18px; height: 18px; border-radius: 50%; background: #fff; box-shadow: 0 1px 2px rgba(0, 0, 0, .2); transition: transform .18s cubic-bezier(.23, 1, .32, 1); }
+    &:checked { background: var(--accent); &::after { transform: translateX(16px); } }
+    &:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; } } }
+.ao .np-input-wrap .np-eye { font-size: 12px; font-weight: 500; color: var(--text); background: var(--surface-2); padding: 5px 9px; border-radius: 6px; }
+
+/* Mientras la OLT trabaja y el resultado */
+.ao-avance { display: grid; gap: 8px; margin: 16px 0 14px;
+  > div { display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; span { font-size: 13.5px; font-weight: 500; } small { font-size: 12px; color: var(--text-3); } }
+  i { display: block; height: 6px; border-radius: 3px; background: var(--surface-2); overflow: hidden; position: relative;
+    b { position: absolute; inset: 0 auto 0 0; width: 35%; border-radius: 3px; background: var(--accent); animation: ao-barra 1.4s ease-in-out infinite; } } }
+@keyframes ao-barra { 0% { transform: translateX(-100%); } 100% { transform: translateX(290%); } }
+@media (prefers-reduced-motion: reduce) { .ao-avance i b { animation: none; width: 100%; opacity: .5; } }
+.ao-pasos { list-style: none; margin: 14px 0; padding: 0; border: 1px solid var(--line); border-radius: 12px; overflow: hidden;
+  li { display: grid; grid-template-columns: 24px minmax(0, 1fr); gap: 12px; align-items: center; padding: 11px 16px; border-bottom: 1px solid var(--line); color: var(--text-3); }
+  li:last-child { border-bottom: 0; }
+  li.is-curso, li.is-ok, li.is-falla, li.is-omitido { color: var(--text); }
+  li.is-curso { background: var(--surface-2); } }
+.ao-p-ico { width: 22px; height: 22px; border-radius: 50%; border: 1px solid var(--line-strong); box-sizing: border-box; display: grid; place-items: center;
+  svg { width: 12px; height: 12px; } }
+.is-curso .ao-p-ico { border: 2px solid var(--accent); border-top-color: transparent; animation: np-spin .8s linear infinite; }
+.is-ok .ao-p-ico { border: 0; background: color-mix(in srgb, var(--ok) 14%, transparent); color: var(--ok); }
+.is-falla .ao-p-ico { border: 0; background: color-mix(in srgb, var(--danger) 14%, transparent); color: var(--danger); }
+.is-omitido .ao-p-ico { border: 0; background: var(--surface-2); color: var(--text-3); }
+.ao-aviso { display: grid; gap: 5px; padding: 12px 14px; margin-top: 4px; border: 1px solid color-mix(in srgb, var(--warn) 35%, var(--line)); border-radius: 10px;
+  background: color-mix(in srgb, var(--warn) 8%, var(--surface)); font-size: 13px; line-height: 1.5; color: var(--text);
+  b { font-weight: 600; } code { font-size: 12px; overflow-wrap: anywhere; } }
+.ao-pie { display: grid; gap: 2px; min-width: 0; font-size: 13.5px; color: var(--text); b { font-weight: 600; } small { font-size: 12px; color: var(--text-3); } }
+
+@media (max-width: 680px) {
+  .ao-sec { grid-template-columns: minmax(0, 1fr); gap: 10px; }
+  .ao .np-form { grid-template-columns: minmax(0, 1fr); > * { grid-column: 1 / -1; } }
+  .ao { max-height: none; }
+}
+
+/* Paso que sigue en segundo plano (acceso remoto, aprovisionamiento): «en curso» y lo que
+   va haciendo; el plan que mandó el servidor queda debajo, más tenue. */
+.ao-curso { font-style: normal; color: var(--text-3); font-weight: 400; }
+.ao-plan { opacity: .75; }

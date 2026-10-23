@@ -1,7 +1,7 @@
 /* ─── Auditoría de comprobantes: sólo lo propio ─────────────────────── */
 .np-audit { --np-inspector-w: 460px; }
 .np-row--pending .np-stripe i    { background: var(--warn); }
-.np-row--approved .np-stripe i   { background: var(--ok); }
+.np-row--approved .np-stripe i   { background: transparent; }
 .np-row--suspicious .np-stripe i { background: #d97706; }
 .np-row--rejected .np-stripe i   { background: var(--danger); }
 .np-row--reverted .np-stripe i   { background: var(--line-strong); }
@@ -44,7 +44,7 @@
   gap: 12px;
   align-content: start;
 
-  .np-money { font-size: 16px; font-weight: 700; }
+  .np-money { font-size: 16px; font-weight: 600; }
 }
 
 /* Un dato que el lector no pudo confirmar.
@@ -55,7 +55,7 @@
   display: inline-block; margin-left: 6px; padding: 1px 7px; border-radius: 999px;
   background: var(--warn-soft); color: var(--warn);
   border: 1px solid color-mix(in srgb, var(--warn) 30%, transparent);
-  font-family: var(--font-body); font-size: 10px; font-weight: 700;
+  font-family: var(--font-body); font-size: 10px; font-weight: 600;
   letter-spacing: .02em; vertical-align: middle; white-space: nowrap;
 }
 
@@ -64,7 +64,7 @@
   display: inline-block; margin-left: 6px; padding: 1px 7px; border-radius: 999px;
   background: var(--ok-soft); color: var(--ok);
   border: 1px solid color-mix(in srgb, var(--ok) 28%, transparent);
-  font-family: var(--font-body); font-size: 10px; font-weight: 700; vertical-align: middle;
+  font-family: var(--font-body); font-size: 10px; font-weight: 600; vertical-align: middle;
 }
 
 /* ─── Aplicación automática ──────────────────────────────────────────────
@@ -93,7 +93,7 @@
 }
 
 /* Comprobante sin titular: se ve en la lista y se asigna desde el panel. */
-.ppa-sintitular { font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: .03em; padding: 2px 7px; border-radius: 999px; background: var(--warn-soft); color: var(--warn); }
+.ppa-sintitular { font-size: 11px; font-weight: 600; letter-spacing: 0; padding: 2px 7px; border-radius: 999px; background: var(--warn-soft); color: var(--warn); }
 .ppa-resultados { display: grid; gap: 4px; margin-top: 6px; }
 .ppa-resultado {
   appearance: none; border: 1px solid var(--line); background: var(--surface-2, transparent); color: var(--text);
@@ -111,12 +111,12 @@
 }
 .ppa-semaforo--txt {
   width: auto; height: auto; margin-left: 6px; padding: 2px 8px; border-radius: 999px;
-  font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: .03em; color: #fff;
+  font-size: 10px; font-weight: 600; letter-spacing: 0; color: #fff;
 }
 .ppa-senales {
   margin: 0 0 6px; padding: 0; list-style: none; display: grid; gap: 4px; font-size: 12px;
   li { padding-left: 16px; position: relative; color: var(--text-2); }
-  li::before { content: '✓'; position: absolute; left: 0; color: var(--ok); font-weight: 800; }
+  li::before { content: '✓'; position: absolute; left: 0; color: var(--ok); font-weight: 600; }
   li[data-nivel="aviso"]::before { content: '!'; color: var(--warn); }
   li[data-nivel="alerta"]::before { content: '✕'; color: var(--danger); }
   li[data-nivel="alerta"] { color: var(--text); font-weight: 600; }

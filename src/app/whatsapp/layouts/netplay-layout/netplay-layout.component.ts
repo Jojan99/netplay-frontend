@@ -22,10 +22,11 @@ import { RouterModule } from '@angular/router';
   `,
   styles: [`
     .np-wa-nav { border-top: 0; padding-top: 0; }
-    .np-seg a { display: inline-flex; align-items: center; height: 32px; padding: 0 11px; font-size: 12px; font-weight: 700; color: var(--text-2); border-right: 1px solid var(--line-strong); text-decoration: none; white-space: nowrap; }
-    .np-seg a:last-child { border-right: 0; }
-    .np-seg a:hover { background: var(--surface-3); }
-    .np-seg a.is-active { background: var(--text); color: var(--bg); }
+    /* Pestañas subrayadas, como el resto del panel (21-10-2026). */
+    .np-seg { display: flex; gap: 20px; height: auto; padding: 0; background: none; border: 0; border-bottom: 1px solid var(--line); border-radius: 0; overflow-x: auto; scrollbar-width: none; }
+    .np-seg a { display: inline-flex; align-items: center; padding: 0 0 10px; margin-bottom: -1px; font-size: 13px; font-weight: 400; color: var(--text-2); border-bottom: 2px solid transparent; text-decoration: none; white-space: nowrap; }
+    .np-seg a:hover { color: var(--text); }
+    .np-seg a.is-active { color: var(--text); font-weight: 500; border-bottom-color: var(--text); }
     .np-wa-outlet { flex: 1; min-height: 0; display: flex; flex-direction: column; }
     /* Angular deja el <router-outlet> en el DOM y cuelga el componente a su
        lado, como hermano. Con el selector de hijos el outlet —que está vacío—

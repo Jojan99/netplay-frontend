@@ -253,6 +253,7 @@ export class LayoutComponent implements OnInit {
             // Usar module si existe, si no usar href como clave de módulo
             const key = child.module || child.href || '';
             if (child.soloAdmin && !this.authService.isAdmin()) return false;
+            if (child.ocultarSiModulo && allowedModules.includes(child.ocultarSiModulo)) return false;
             return !key || isAllowed(key);
           });
           if (filteredChildren.length === 0) return null;

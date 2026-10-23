@@ -54,9 +54,13 @@
             <thead><tr><th>Sector</th><th>Estado</th><th>Equipos caídos</th><th>Desde</th><th>Duración</th><th>Clientes avisados</th><th></th></tr></thead>
             <tbody>
               <tr *ngFor="let f of fallas; trackBy: trackId">
-                <td data-label="Sector"><b class="fs-nombre">{{ f.sector }}</b><small class="fs-sub" *ngIf="f.nota">{{ f.nota }}</small></td>
+                <td data-label="Sector"><b class="fs-nombre">{{ f.sector }}</b><small class="fs-sub" *ngIf="f.nota">{{ f.nota }}</small>
+                  <small class="fs-sub" *ngIf="f.tickets">{{ f.tickets }} ticket{{ f.tickets === 1 ? '' : 's' }} asociado{{ f.tickets === 1 ? '' : 's' }}{{ f.tickets_abiertos ? ' · ' + f.tickets_abiertos + ' abierto' + (f.tickets_abiertos === 1 ? '' : 's') : ' · cerrados' }}</small></td>
                 <td data-label="Estado"><span class="fs-tag" [attr.data-t]="f.tono">{{ f.estadoTexto }}</span></td>
-                <td data-label="Equipos caídos">{{ f.abierta ? f.caidas : f.maximo_caidas }} de {{ f.total }}</td>
+                <td data-label="Equipos caídos">
+                  <ng-container *ngIf="f.origen === 'tickets'; else equipos">{{ f.maximo_caidas }} clientes reportaron</ng-container>
+                  <ng-template #equipos><ng-container *ngIf="f.origen === 'olt'">La OLT no respondía · </ng-container>{{ f.abierta ? f.caidas : f.maximo_caidas }} de {{ f.total }}</ng-template>
+                </td>
                 <td data-label="Desde">{{ f.desde }}</td>
                 <td data-label="Duración">{{ f.duracion }}</td>
                 <td data-label="Clientes avisados">
@@ -107,6 +111,12 @@
             <label class="np-field"><span>Minutos que debe durar <em>antes de avisar</em></span><input type="number" class="np-input" [(ngModel)]="cfg.minutos_confirmacion" name="minutos_confirmacion" min="0" max="120" /></label>
             <label class="np-field"><span>Minutos de vuelta <em>para darla por resuelta</em></span><input type="number" class="np-input" [(ngModel)]="cfg.minutos_resolucion" name="minutos_resolucion" min="0" max="120" /></label>
             <label class="np-field"><span>Revisar la red cada <em>minutos</em></span><input type="number" class="np-input" [(ngModel)]="cfg.minutos_revision" name="minutos_revision" min="1" max="60" /></label>
+            <label class="np-field"><span>Masiva por tickets <em>clientes distintos de la misma OLT</em></span><input type="number" class="np-input" [(ngModel)]="cfg.tickets_para_masiva" name="tickets_para_masiva" min="2" max="100" /></label>
+            <label class="np-field"><span>…dentro de <em>minutos</em></span><input type="number" class="np-input" [(ngModel)]="cfg.minutos_ventana_tickets" name="minutos_ventana_tickets" min="5" max="240" /></label>
+          </div>
+          <div class="fs-opcion">
+            <div><b>Cerrar los tickets al resolverse</b><small>Los tickets que abrieron los clientes (o Kloe) por una falla masiva quedan asociados a ella y se cierran solos cuando se resuelve; el grupo recibe la lista.</small></div>
+            <button type="button" class="np-switch" role="switch" [attr.aria-checked]="cfg.cerrar_tickets" (click)="alternar('cerrar_tickets')" aria-label="Cerrar los tickets al resolverse"></button>
           </div>
           <div class="fs-opcion">
             <div><b>Contar los cortes de energía</b><small>Si en el sector se va la luz, los equipos se apagan y también cuenta como falla. Apáguelo para avisar sólo cortes de fibra o de la OLT (Huawei y ZTE).</small></div>

@@ -1,7 +1,8 @@
+import { FinanzasTabsComponent } from '../../components/finanzas-tabs/finanzas-tabs.component';
 import { CommonModule } from '@angular/common';
 import { Component, ElementRef, HostListener, OnDestroy, OnInit, ViewChild, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, RouterLink } from '@angular/router';
 import { Subject } from 'rxjs';
 import { debounceTime, distinctUntilChanged, takeUntil } from 'rxjs/operators';
 import { FinanceService } from '../../services/finance.service';
@@ -14,7 +15,7 @@ import { PRESENTACION_METODOS_PAGO, PRESENTACION_POR_PAGINA, conValor } from '..
 @Component({
   selector: 'app-finance',
   standalone: true,
-  imports: [CommonModule, FormsModule, NpSelectComponent, BurbujaTicketComponent],
+  imports: [FinanzasTabsComponent, RouterLink, CommonModule, FormsModule, NpSelectComponent, BurbujaTicketComponent],
   templateUrl: './finance.component.html',
   styleUrl: './finance.component.scss',
   host: { class: 'np-console' },
@@ -46,7 +47,40 @@ export class FinanceComponent implements OnInit, OnDestroy {
   perPage = 15;
   perPageOptions = [15, 25, 50, 100];
   searchTerm = '';
-  summary: { m1: number; m2: number; m3: number; total_debt: number } | null = null;
+  summary: { m1: number; m2: number; m3: number; total_debt: number; recaudado_mes?: number; pagos_mes?: number; compromisos?: number } | null = null;
+
+  /** Filtro por meses de mora desde la barra del resumen: 1, 2 o 3 (tres o más). */
+  moraFiltro: number | null = null;
+  setMora(n: number | null): void {
+    this.moraFiltro = this.moraFiltro === n ? null : n;
+    this.page = 1;
+    this.loadClients();
+  }
+  readonly MORA_TXT: Record<number, string> = { 1: '1 mes', 2: '2 meses', 3: '3 o más' };
+
+  get mesActual(): string {
+    return new Date().toLocaleDateString('es-CO', { month: 'long' });
+  }
+
+  /** Fecha corta del último pago: «12 ago»; sin pagos, «nunca». */
+  fechaCorta(v: string | null | undefined): string {
+    if (!v) return 'Nunca ha pagado';
+    const d = new Date(String(v).replace(' ', 'T'));
+    return isNaN(d.getTime()) ? '—' : d.toLocaleDateString('es-CO', { day: 'numeric', month: 'short' }).replace('.', '');
+  }
+
+  recordando = new Set<number>();
+  recordar(c: any): void {
+    if (!c?.user_id || this.recordando.has(c.user_id)) return;
+    this.recordando.add(c.user_id);
+    this.financeService.recordarPago(c.user_id).subscribe({
+      next: (r: any) => {
+        this.recordando.delete(c.user_id);
+        if (r?.status === 0) { this.toast.success(r.message); c.recordado = true; } else { this.toast.error(r?.message || 'No se pudo enviar'); }
+      },
+      error: (e: any) => { this.recordando.delete(c.user_id); this.toast.error(e?.error?.message || 'No se pudo enviar'); },
+    });
+  }
   @ViewChild('searchInput') searchInput?: ElementRef<HTMLInputElement>;
 
   // Mora: severidad por meses pendientes (1 → ámbar, 2 → naranja, 3+ → rojo)
@@ -290,7 +324,7 @@ export class FinanceComponent implements OnInit, OnDestroy {
 
   loadClients(): void {
     this.loading = true;
-    this.financeService.getClientsPaginated(this.searchTerm, this.page, this.perPage, this.verAlDia)
+    this.financeService.getClientsPaginated(this.searchTerm, this.page, this.perPage, this.verAlDia, this.moraFiltro)
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (res) => {

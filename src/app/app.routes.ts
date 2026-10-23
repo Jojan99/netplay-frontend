@@ -59,6 +59,8 @@ export const routes: Routes = [
         data: { module: 'usuario' },
       },
       { path: 'finanzas',       component: FinanceComponent,           canActivate: [roleGuard], data: { module: 'finanzas' } },
+      { path: 'compromisos', loadComponent: () => import('./pages/compromisos/compromisos.component').then(m => m.CompromisosComponent), canActivate: [roleGuard], data: { module: 'finanzas' } },
+      { path: 'pagos', loadComponent: () => import('./pages/pagos/pagos.component').then(m => m.PagosComponent), canActivate: [roleGuard], data: { module: 'finanzas' } },
       { path: 'finanzas/metodos-pago', component: PaymentMethodsComponent, canActivate: [roleGuard], data: { module: 'finanzas' } },
       { path: 'egresos',        component: EgresosComponent,           canActivate: [roleGuard], data: { module: 'egresos' } },
       { path: 'report-paid',    component: ReportPaidComponent,        canActivate: [roleGuard], data: { module: 'report-paid' } },
@@ -133,8 +135,13 @@ export const routes: Routes = [
       { path: 'contratos', component: ContractsComponent, canActivate: [roleGuard], data: { module: 'contratos' } },
       { path: 'empleados', component: EmployeesComponent, canActivate: [roleGuard], data: { module: 'empleados' } },
       { path: 'planes-internet', component: InternetPlansComponent, canActivate: [roleGuard], data: { module: 'planes-internet' } },
+      // Para conectar el panel la primera vez: la empresa todavía no tiene el módulo de TV.
+      { path: 'television/conectar', loadComponent: () => import('./pages/television/television.component').then(m => m.TelevisionComponent), canActivate: [roleGuard], data: { module: 'planes-internet', soloConfig: true } },
+      { path: 'television', loadComponent: () => import('./pages/television/television.component').then(m => m.TelevisionComponent), canActivate: [roleGuard], data: { module: 'television' } },
+      { path: 'mi-dia', loadComponent: () => import('./pages/mi-dia/mi-dia.component').then(m => m.MiDiaComponent), canActivate: [roleGuard], data: { module: 'installations' } },
       { path: 'installations', component: InstallationsComponent, canActivate: [roleGuard], data: { module: 'installations' } },
       { path: 'installations/new', component: InstallationFormComponent, canActivate: [roleGuard, noTecnicoGuard], data: { module: 'installations' } },
+      { path: 'installations/:id/editar', component: InstallationFormComponent, canActivate: [roleGuard, noTecnicoGuard], data: { module: 'installations' } },
       { path: 'transfers', component: TransfersComponent, canActivate: [roleGuard], data: { module: 'transfers' } },
       { path: 'transfers/new', component: TransferFormComponent, canActivate: [roleGuard], data: { module: 'transfers' } },
       { path: 'technician-map', loadComponent: () => import('./pages/technician-map/technician-map.component').then(m => m.TechnicianMapComponent), canActivate: [roleGuard], data: { module: 'technician-map' } },
@@ -178,6 +185,8 @@ export const routes: Routes = [
   { path: 'register',      component: RegisterCompanyComponent, canActivate: [fueraDeLaConsolaGuard, soloEnLaRaizGuard] },
   { path: 'confirm-email', component: ConfirmEmailComponent },
   // Llegada al subdominio después de iniciar sesión en la raíz (canjea el vale).
+  // El celular como lector del computador (QR de «Usar el celular»): sin sesión, sólo con el token.
+  { path: 'escaner/:token', loadComponent: () => import('./pages/escaner-celular/escaner-celular.component').then(m => m.EscanerCelularComponent) },
   { path: 'entrar',        loadComponent: () => import('./pages/entrar/entrar.component').then(m => m.EntrarComponent) },
   // Netvula suspendió a la empresa: a dónde va su equipo en vez de quedarse frente a un panel vacío.
   { path: 'cuenta-suspendida', loadComponent: () => import('./pages/cuenta-suspendida/cuenta-suspendida.component').then(m => m.CuentaSuspendidaComponent) },

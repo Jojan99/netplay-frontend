@@ -1,17 +1,17 @@
 /* ─── Salud de la red ─────────────────────────────────────────────────── */
 .sal-cuando { margin: 0 0 10px; }
 
-.sal-dbm { font-family: var(--font-mono); font-weight: 700; padding: 2px 8px; border-radius: 999px;
+.sal-dbm { font-family: var(--font-mono); font-weight: 600; padding: 2px 8px; border-radius: 999px;
   background: var(--ok-soft); color: var(--ok);
   &[data-tono='aviso'] { background: var(--warn-soft); color: var(--warn); }
   &[data-tono='malo']  { background: var(--danger-soft); color: var(--danger); } }
 
-.sal-cambio { font-family: var(--font-mono); font-size: 11.5px; font-weight: 700; color: var(--ok);
+.sal-cambio { font-family: var(--font-mono); font-size: 11.5px; font-weight: 600; color: var(--ok);
   &[data-tono='aviso'] { color: var(--warn); }
   &[data-tono='malo']  { color: var(--danger); }
   &[data-tono='nada']  { color: var(--text-3); font-weight: 500; } }
 
-.sal-mal { color: var(--danger); font-weight: 700; }
+.sal-mal { color: var(--danger); font-weight: 600; }
 
 /* La fila entera del puerto se tiñe apenas, para verlo de un vistazo. */
 tr[data-tono='malo']  { background: color-mix(in srgb, var(--danger) 6%, transparent); }

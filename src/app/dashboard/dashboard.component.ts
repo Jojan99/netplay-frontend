@@ -94,20 +94,25 @@ export class DashboardComponent implements OnInit, OnDestroy {
   // ── El catálogo de paneles ─────────────────────────────────────────────
 
   readonly CATALOGO: Panel[] = [
-    { id: 'resolver',  titulo: 'Lo que hay que resolver', seccion: 'La gente', ancho: 5, modulo: 'usuario', para: 'Lo urgente de hoy, ordenado por lo que le duele al cliente.' },
-    { id: 'vivo',      titulo: 'Lo que está pasando',     seccion: 'La gente', ancho: 3, modulo: 'usuario', para: 'Los últimos movimientos de la empresa, minuto a minuto.' },
-    { id: 'plata',     titulo: 'Ingresos y egresos',      seccion: 'La plata', ancho: 4, plata: true, modulo: 'finanzas', para: 'El año mes a mes, con el resumen de caja.' },
-    { id: 'mora',      titulo: 'La mora por antigüedad',  seccion: 'La plata', ancho: 4, plata: true, modulo: 'finanzas', para: 'Cuánto se debe de 30, 60, 90 días y de más atrás.' },
-    { id: 'metodos',   titulo: 'Por dónde entra la plata', seccion: 'La plata', ancho: 3, plata: true, modulo: 'finanzas', para: 'Qué método de pago usa la gente este mes.' },
-    { id: 'deudores',  titulo: 'Los que más deben',       seccion: 'La plata', ancho: 5, plata: true, modulo: 'finanzas', para: 'Los cinco con más deuda vieja, con su mora.' },
-    { id: 'cobranza',  titulo: 'IA Cobranza',             seccion: 'La plata', ancho: 3, modulo: 'finanzas', para: 'Qué está haciendo el bot y qué espera su autorización.' },
-    { id: 'salud',     titulo: 'Salud de la red',         seccion: 'La red',   ancho: 4, modulo: 'olt-admin', para: 'Cada puerto PON con su señal, coloreado.' },
-    { id: 'borde',     titulo: 'Clientes al borde',       seccion: 'La red',   ancho: 3, modulo: 'olt-admin', para: 'Los que reciben menos luz de la que deberían.' },
-    { id: 'equipos',   titulo: 'Los equipos',             seccion: 'La red',   ancho: 3, modulo: 'olt-admin', para: 'Cuántas ONT hay en línea, apagadas y sin medir.' },
-    { id: 'tickets',   titulo: 'Técnicos y tickets',      seccion: 'La gente', ancho: 4, modulo: 'view-ticket', para: 'Quién está en calle y cómo van los tickets.' },
-    { id: 'clientes',  titulo: 'Altas y bajas',           seccion: 'La gente', ancho: 4, modulo: 'usuario', para: 'Cuántos clientes entraron y se fueron cada mes.' },
-    { id: 'novedades', titulo: 'Novedades de Netvula',    seccion: 'La gente', ancho: 3, para: 'Lo que se fue agregando a la plataforma.' },
+    { id: 'resolver',     titulo: 'Pendientes de hoy',        seccion: 'La gente', ancho: 4, para: 'Lo que está esperando a alguien, de todos los módulos.' },
+    { id: 'plata',        titulo: 'Ingresos y egresos',       seccion: 'La plata', ancho: 8, plata: true, modulo: 'finanzas', para: 'El año mes a mes.' },
+    { id: 'deudores',     titulo: 'Los que más deben',        seccion: 'La plata', ancho: 4, plata: true, modulo: 'finanzas', para: 'Los cinco con más deuda vieja, con su mora.' },
+    { id: 'metodos',      titulo: 'Medios de pago',           seccion: 'La plata', ancho: 4, plata: true, modulo: 'finanzas', para: 'Qué método de pago usa la gente este mes.' },
+    { id: 'compromisos',  titulo: 'Compromisos de pago',      seccion: 'La plata', ancho: 4, modulo: 'finanzas', para: 'Cuántos se cumplen, y los comprobantes por revisar.' },
+    { id: 'mora',         titulo: 'La mora por antigüedad',   seccion: 'La plata', ancho: 4, plata: true, modulo: 'finanzas', para: 'Cuánto se debe de 30, 60, 90 días y de más atrás.' },
+    { id: 'cobranza',     titulo: 'IA Cobranza',              seccion: 'La plata', ancho: 4, modulo: 'finanzas', para: 'Qué está haciendo el bot y qué espera su autorización.' },
+    { id: 'red',          titulo: 'Red y OLT',                seccion: 'La red',   ancho: 4, modulo: 'olt-admin', para: 'Los equipos y cada puerto PON con su señal.' },
+    { id: 'salud',        titulo: 'Salud de la red',          seccion: 'La red',   ancho: 4, modulo: 'olt-admin', para: 'Sólo los puertos PON, coloreados por su señal.' },
+    { id: 'borde',        titulo: 'Clientes al borde',        seccion: 'La red',   ancho: 4, modulo: 'olt-admin', para: 'Los que reciben menos luz de la que deberían.' },
+    { id: 'equipos',      titulo: 'Los equipos',              seccion: 'La red',   ancho: 4, modulo: 'olt-admin', para: 'Cuántas ONT hay en línea, apagadas y sin medir.' },
+    { id: 'tv-bodega',    titulo: 'Televisión y bodega',      seccion: 'La red',   ancho: 4, para: 'Canales al aire, líneas de TV e ítems agotados.' },
+    { id: 'tickets',      titulo: 'Tickets y técnicos',       seccion: 'La gente', ancho: 4, modulo: 'view-ticket', para: 'Cómo van los tickets y quién los tiene.' },
+    { id: 'hoy-clientes', titulo: 'Clientes',                 seccion: 'La gente', ancho: 4, modulo: 'usuario', para: 'Altas del mes, suspendidos e instalaciones de hoy.' },
+    { id: 'clientes',     titulo: 'Altas y bajas',            seccion: 'La gente', ancho: 4, modulo: 'usuario', para: 'Cuántos clientes entraron y se fueron cada mes.' },
+    { id: 'vivo',         titulo: 'Lo que está pasando',      seccion: 'La gente', ancho: 4, modulo: 'usuario', para: 'Los últimos movimientos de la empresa, minuto a minuto.' },
+    { id: 'novedades',    titulo: 'Novedades de Netvula',     seccion: 'La gente', ancho: 4, para: 'Lo que se fue agregando a la plataforma.' },
   ];
+
 
   /** Los paneles puestos, en orden. Se arma una sola vez, no en un getter. */
   paneles: Panel[] = [];
@@ -121,19 +126,25 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
   // ── Los datos ──────────────────────────────────────────────────────────
   indicadores: Indicador[] = [];
+  columnasKpi = 4;
 
   valorCaja = 0; valorIngreso = 0; valorPendiente = 0; valorEgresos = 0; countPaid = 0;
   active = 0; inactive = 0; totalUsers = 0;
   porMes: { mes: string; altas: number; bajas: number; alto: number; altoBajas: number }[] = [];
 
+  /** Las cifras sueltas de api/company/inicio; un bloque en null es que el perfil no lo ve. */
+  resumen: any = {};
+
   ticketPending = 0; ticketInProgress = 0; ticketClosedToday = 0;
   topTechnicians: { names: string; lastname: string; count: number }[] = [];
 
-  pmSummary: { name: string; total: number; count: number; texto: string }[] = [];
+  pmSummary: { name: string; total: number; count: number; texto: string; pct?: number }[] = [];
   pmPeriod = new Date().toISOString().slice(0, 7);
 
   puertos: Puerto[] = [];
   alBorde: any[] = [];
+  ontsAlBorde = 0;
+  puertosPorOlt: { olt: string; puertos: Puerto[] }[] = [];
   ontsTotal = 0; ontsApagadas = 0; ontsSinDueno = 0; puertosSinMedir = 0;
   avisosCriticos = 0; avisosTotal = 0; clientesAfectados = 0; equiposAMedias = 0;
 
@@ -163,6 +174,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
   /** Un panel se puede poner si el perfil lo alcanza. */
   private alcanza(p: Panel): boolean {
     if (p.plata && !this.veLaPlata) return false;
+    if (p.id === 'tv-bodega') return this.puede('television') || this.puede('inventory');
     return !p.modulo || this.puede(p.modulo);
   }
 
@@ -212,7 +224,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
   private ponerPaneles(ids: string[]): void {
     const deFabrica = this.isTecnico
       ? ['tickets', 'novedades']
-      : ['resolver', 'plata', 'salud', 'vivo', 'deudores', 'tickets', 'novedades'];
+      : ['resolver', 'plata', 'deudores', 'metodos', 'compromisos', 'red', 'tickets', 'hoy-clientes', 'tv-bodega', 'vivo', 'novedades'];
     const elegidos = (ids?.length ? ids : deFabrica)
       .map(id => this.CATALOGO.find(p => p.id === id))
       .filter((p): p is Panel => !!p && this.alcanza(p));
@@ -303,6 +315,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
   /** Pide una sola vez lo que cada panel necesita. */
   private pedirDatos(): void {
     this.pedir('clientes-conteo', () => this.cargarClientes());
+    this.pedir('inicio', () => this.cargarResumen());
     if (this.hay('vivo') || this.hay('resolver')) this.pedir('eventos', () => this.cargarEventos());
     if (this.hay('novedades')) this.pedir('novedades', () => this.cargarNovedades());
     if (this.hay('plata')) this.pedir('plata', () => { this.cargarPlata(); setTimeout(() => this.graficoDePlata(), 60); });
@@ -310,7 +323,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
     if (this.hay('metodos')) this.pedir('metodos', () => this.cargarMetodos());
     if (this.hay('deudores')) this.pedir('deudores', () => this.cargarDeudores());
     if (this.hay('cobranza')) this.pedir('cobranza', () => this.cargarCobranza());
-    if (this.hay('salud') || this.hay('borde') || this.hay('equipos')) this.pedir('salud', () => this.cargarSalud());
+    if (this.hay('salud') || this.hay('borde') || this.hay('equipos') || this.hay('red')) this.pedir('salud', () => this.cargarSalud());
     if (this.hay('tickets') || this.hay('resolver')) this.pedir('tickets', () => this.cargarTickets());
     if (this.hay('clientes')) this.pedir('clientes-meses', () => this.cargarClientesPorMes());
     if (this.veLaRed) this.pedir('avisos', () => this.cargarAvisos());
@@ -352,6 +365,13 @@ export class DashboardComponent implements OnInit, OnDestroy {
         this.totalUsers = this.active + this.inactive;
         this.armarIndicadores();
       },
+      error: () => {},
+    });
+  }
+
+  private cargarResumen(): void {
+    this.http.get<any>(`${environment.rootUrl}api/company/inicio`, { headers: this.cabeceras() }).subscribe({
+      next: r => { this.resumen = r?.data ?? {}; this.armarIndicadores(); this.armarAcciones(); },
       error: () => {},
     });
   }
@@ -414,7 +434,11 @@ export class DashboardComponent implements OnInit, OnDestroy {
       next: r => {
         const d = r?.data ?? {};
         const puertos: Puerto[] = d.puertos ?? [];
-        this.puertos = puertos.slice(0, 20);
+        this.puertos = puertos.slice(0, 24);
+        // Con dos OLT el mismo 0/0/1 sale dos veces: se agrupan por OLT para que se sepa cuál es cuál.
+        const olts = [...new Set(this.puertos.map(p => p.olt))];
+        this.puertosPorOlt = olts.map(olt => ({ olt, puertos: this.puertos.filter(p => p.olt === olt) }));
+        this.ontsAlBorde = puertos.reduce((n, p) => n + (p.al_borde || 0), 0);
         this.alBorde = (d.al_borde ?? []).slice(0, 5);
         this.ontsTotal = puertos.reduce((n, p) => n + (p.onts || 0), 0);
         // «offline» ahora son los clientes que deberían estar navegando y no
@@ -473,6 +497,8 @@ export class DashboardComponent implements OnInit, OnDestroy {
           const total = parseFloat(i.total_amount) || 0;
           return { name: i.method_name, total, count: parseInt(i.total_payments) || 0, texto: this.plata(total) };
         }).sort((a: any, b: any) => b.total - a.total).slice(0, 5);
+        const suma = this.pmSummary.reduce((n, m) => n + m.total, 0) || 1;
+        this.pmSummary = this.pmSummary.map(m => ({ ...m, pct: Math.round((m.total / suma) * 100) }));
       },
       error: () => {},
     });
@@ -502,33 +528,69 @@ export class DashboardComponent implements OnInit, OnDestroy {
   /** Las cosas de hoy, ordenadas por lo que le duele al cliente. */
   private armarAcciones(): void {
     const lista: { texto: string; detalle: string; tono: string; ruta: string; cuantos: number }[] = [];
+    const r = this.resumen ?? {};
 
     if (this.avisosCriticos) {
       lista.push({
-        cuantos: this.avisosCriticos, texto: 'avisos críticos en la red',
+        cuantos: this.avisosCriticos, texto: 'Avisos críticos en la red',
         detalle: this.clientesAfectados ? `${this.clientesAfectados} clientes sin buena señal` : 'hay que ir a mirarlos',
         tono: 'critico', ruta: '/dashboard/olt/alertas',
+      });
+    }
+
+    if (this.ticketPending) {
+      lista.push({
+        cuantos: this.ticketPending, texto: 'Tickets sin atender',
+        detalle: `${this.ticketInProgress} más en atención`, tono: 'neutro', ruta: '/dashboard/view-ticket',
       });
     }
 
     const esperan = this.cobranza?.esperan ?? 0;
     if (esperan) {
       lista.push({
-        cuantos: esperan, texto: 'casos de cobranza esperando',
-        detalle: 'la IA ya redactó el mensaje de cada uno', tono: 'aviso', ruta: '/dashboard/cobranza',
+        cuantos: esperan, texto: 'Casos de cobranza esperando',
+        detalle: 'la IA ya redactó el mensaje de cada uno', tono: 'neutro', ruta: '/dashboard/cobranza',
       });
     }
 
-    if (this.ticketPending) {
+    if (r.comprobantes) {
       lista.push({
-        cuantos: this.ticketPending, texto: 'tickets sin atender',
-        detalle: `${this.ticketInProgress} más están en atención`, tono: 'info', ruta: '/dashboard/view-ticket',
+        cuantos: r.comprobantes, texto: 'Comprobantes por revisar',
+        detalle: 'pagos que subieron los clientes', tono: 'neutro', ruta: '/dashboard/payment-proof-audit',
+      });
+    }
+
+    if (r.compromisos?.vigentes) {
+      lista.push({
+        cuantos: r.compromisos.vigentes, texto: 'Compromisos de pago vigentes',
+        detalle: 'clientes que prometieron pagar', tono: 'neutro', ruta: '/dashboard/compromisos',
+      });
+    }
+
+    if (r.instalaciones?.hoy) {
+      lista.push({
+        cuantos: r.instalaciones.hoy, texto: 'Instalaciones para hoy',
+        detalle: `${r.instalaciones.pendientes} pendientes en total`, tono: 'neutro', ruta: '/dashboard/installations',
+      });
+    }
+
+    if (r.bodega?.agotados) {
+      lista.push({
+        cuantos: r.bodega.agotados, texto: 'Ítems agotados',
+        detalle: 'no queda ninguno en bodega', tono: 'critico', ruta: '/dashboard/inventory',
+      });
+    }
+
+    if (r.tv?.caidos) {
+      lista.push({
+        cuantos: r.tv.caidos, texto: 'Canales de TV sin señal',
+        detalle: `de ${r.tv.al_aire + r.tv.caidos} canales`, tono: 'critico', ruta: '/dashboard/television',
       });
     }
 
     if (this.equiposAMedias) {
       lista.push({
-        cuantos: this.equiposAMedias, texto: 'equipos a medio configurar',
+        cuantos: this.equiposAMedias, texto: 'Equipos a medio configurar',
         detalle: 'se autorizaron pero el cliente no navega', tono: 'neutro', ruta: '/dashboard/olt/autorizadas',
       });
     }
@@ -555,6 +617,13 @@ export class DashboardComponent implements OnInit, OnDestroy {
         clave: 'clientes', etiqueta: 'Clientes', valor: this.totalUsers.toLocaleString('es-CO'),
         pie: `${this.active} en línea · ${this.inactive} cortados`, ruta: '/dashboard/usuario', tono: 'neutro',
       });
+      const c = this.resumen?.clientes;
+      if (c) {
+        lista.push(
+          { clave: 'altas', etiqueta: 'Altas del mes', valor: '+' + c.altas_mes, pie: 'clientes nuevos', ruta: '/dashboard/usuario', tono: 'ok' },
+          { clave: 'suspendidos', etiqueta: 'Suspendidos', valor: String(c.suspendidos), pie: 'por mora', ruta: '/dashboard/cartera', tono: 'neutro' },
+        );
+      }
     }
 
     if (this.veLaRed) {
@@ -568,11 +637,13 @@ export class DashboardComponent implements OnInit, OnDestroy {
     if (this.veTickets) {
       lista.push({
         clave: 'tickets', etiqueta: 'Tickets abiertos', valor: String(this.ticketPending + this.ticketInProgress),
-        pie: `${this.ticketClosedToday} cerrados hoy`, ruta: '/dashboard/view-ticket', tono: 'info',
+        pie: `${this.ticketInProgress} en atención · ${this.ticketClosedToday} cerrados hoy`, ruta: '/dashboard/view-ticket', tono: 'info',
       });
     }
 
     this.indicadores = lista;
+    // Ocho cifras no caben en una fila sin recortar la plata: de cinco para arriba van en dos.
+    this.columnasKpi = lista.length <= 4 ? lista.length : Math.ceil(lista.length / 2);
   }
 
   // ── Presentación ───────────────────────────────────────────────────────
@@ -632,11 +703,13 @@ export class DashboardComponent implements OnInit, OnDestroy {
       next: res => {
         const data = res.data ?? [];
         const meses = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
-        const ok = this.tok('--ok', '#1f8a4c');
-        const danger = this.tok('--danger', '#c0392b');
+        // Los mismos dos tonos de Estado de la OLT: verde azulado para lo que entra,
+        // naranja quemado para lo que sale.
+        const ok = '#0F766E';
+        const danger = '#C2410C';
         const line = this.tok('--line', '#d5e0e4');
         const text3 = this.tok('--text-3', '#7f92a2');
-        const font = { family: "'IBM Plex Mono', monospace", size: 10 };
+        const font = { family: "'Geist', system-ui, sans-serif", size: 11 };
 
         const el = document.getElementById('incomeChart') as HTMLCanvasElement | null;
         if (!el) return;
@@ -650,17 +723,18 @@ export class DashboardComponent implements OnInit, OnDestroy {
               {
                 label: 'Ingresos', data: data.map((d: any) => parseFloat(d.total_sum) || 0),
                 borderColor: ok, backgroundColor: this.alpha(ok, 0.12), fill: true, tension: 0.35,
-                pointBackgroundColor: ok, pointRadius: 2.5,
+                borderWidth: 2, pointBackgroundColor: ok, pointRadius: 0, pointHoverRadius: 4,
               },
               {
                 label: 'Egresos', data: data.map((d: any) => parseFloat(d.total_egresses) || 0),
-                borderColor: danger, backgroundColor: this.alpha(danger, 0.10), fill: true, tension: 0.35,
-                pointBackgroundColor: danger, pointRadius: 2.5,
+                borderColor: danger, backgroundColor: 'transparent', fill: false, tension: 0.35,
+                borderWidth: 2, pointBackgroundColor: danger, pointRadius: 0, pointHoverRadius: 4,
               },
             ],
           },
           options: {
             responsive: true, maintainAspectRatio: false,
+            interaction: { mode: 'index', intersect: false },
             plugins: {
               legend: { display: false }, datalabels: { display: false },
               tooltip: { callbacks: { label: (c: TooltipItem<'line'>) => ` $${(c.parsed.y as number).toLocaleString('es-CO')}` } },

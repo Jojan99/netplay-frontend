@@ -1302,9 +1302,27 @@ export class ContractsComponent implements OnInit, OnDestroy {
     setTimeout(() => { this.copiedId = null; }, 2000);
   }
 
+  // Por cuál WhatsApp sale el contrato: una línea de WhatsApp Web o la oficial de Meta.
+  canales: { web: { id: number; nombre: string; telefono: string | null; principal: number }[]; meta: { disponible: boolean; motivo: string | null } } | null = null;
+  canalWa: 'web' | 'meta' = 'web';
+  lineaWa: number | null = null;
+
+  private cargarCanales(): void {
+    this.contractService.canalesWhatsApp().subscribe({
+      next: (r: any) => {
+        this.canales = r?.data ?? null;
+        const web = this.canales?.web ?? [];
+        if (!this.lineaWa || !web.some(l => l.id === this.lineaWa)) this.lineaWa = web[0]?.id ?? null;
+        if (!web.length && this.canales?.meta?.disponible) this.canalWa = 'meta';
+      },
+      error: () => { this.canales = { web: [], meta: { disponible: false, motivo: 'No se pudo consultar' } }; },
+    });
+  }
+
   openSend(cc: ClientContract): void {
     this.showSendModal = cc;
     this.errorMsg = '';
+    this.cargarCanales();
     const digitos = (cc.user?.phone ?? '').replace(/\D/g, '');
     if (/^3\d{9}$/.test(digitos))        this.phoneInput = '+57' + digitos;
     else if (/^57\d{10}$/.test(digitos)) this.phoneInput = '+' + digitos;
@@ -1325,13 +1343,18 @@ export class ContractsComponent implements OnInit, OnDestroy {
     const cc = this.showSendModal;
     this.isSendingWa = true;
     this.errorMsg = '';
-    this.contractService.sendByWhatsApp(cc.id, phone).subscribe({
+    if (this.canalWa === 'web' && !this.lineaWa) {
+      this.errorMsg = 'Elija por cuál línea de WhatsApp Web se envía.';
+      this.isSendingWa = false;
+      return;
+    }
+    this.contractService.sendByWhatsApp(cc.id, phone, this.canalWa, this.canalWa === 'web' ? this.lineaWa : null).subscribe({
       next: r => {
         this.isSendingWa = false;
         if (r.status === 0) {
           this.aplicarSeguimiento(cc, r.data);
           this.showSendModal = null;
-          this.toast('Link enviado por WhatsApp.');
+          this.toast(r.message || 'Link enviado por WhatsApp.');
         } else {
           this.errorMsg = r.message || 'Error al enviar por WhatsApp.';
         }

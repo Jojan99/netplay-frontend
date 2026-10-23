@@ -471,9 +471,27 @@
       <p class="np-notice np-notice--code np-mono">{{ getSignUrl(showSendModal.token) }}</p>
       <p class="np-muted" *ngIf="showSendModal.sent_at">Ya se envió {{ showSendModal.sent_at | date:'dd/MM/yy HH:mm' }}<ng-container *ngIf="canal(showSendModal)"> por {{ canal(showSendModal) }}</ng-container><ng-container *ngIf="showSendModal.opened_at">; el cliente lo abrió {{ showSendModal.opened_at | date:'dd/MM/yy HH:mm' }}</ng-container>.</p>
       <div class="np-btnrow"><button type="button" class="np-btn np-btn--ghost np-btn--sm" (click)="copyLink(showSendModal)">{{ copiedId === showSendModal.id ? 'Link copiado' : 'Copiar link' }}</button></div>
+      <!-- Por cuál WhatsApp sale: una línea de WhatsApp Web (QR) o la línea oficial de Meta. -->
+      <fieldset class="ct-canal">
+        <legend>Enviar por</legend>
+        <p class="np-muted" *ngIf="!canales">Consultando las líneas…</p>
+        <ng-container *ngIf="canales">
+          <label class="ct-op" [class.is-off]="!canales.web.length">
+            <input type="radio" name="canalWa" value="web" [(ngModel)]="canalWa" [disabled]="!canales.web.length" />
+            <span><b>WhatsApp Web</b><small>{{ canales.web.length ? 'Sale como un mensaje normal desde la línea que elija.' : 'No hay líneas de WhatsApp Web conectadas.' }}</small></span>
+          </label>
+          <select class="np-input ct-linea" *ngIf="canalWa === 'web' && canales.web.length" [(ngModel)]="lineaWa" aria-label="Línea de WhatsApp Web">
+            <option *ngFor="let l of canales.web" [ngValue]="l.id">{{ l.nombre }}{{ l.telefono ? ' · +' + l.telefono : '' }}{{ l.principal ? ' (principal)' : '' }}</option>
+          </select>
+          <label class="ct-op" [class.is-off]="!canales.meta.disponible">
+            <input type="radio" name="canalWa" value="meta" [(ngModel)]="canalWa" [disabled]="!canales.meta.disponible" />
+            <span><b>WhatsApp oficial (Meta)</b><small>{{ canales.meta.disponible ? 'Sale con la plantilla aprobada y el botón «Firmar contrato»; llega aunque el cliente no haya escrito.' : canales.meta.motivo }}</small></span>
+          </label>
+        </ng-container>
+      </fieldset>
       <div class="np-form np-form--row">
-        <label class="np-field"><span>WhatsApp</span><input type="tel" class="np-input np-mono" [(ngModel)]="phoneInput" placeholder="573001234567" /></label>
-        <button type="button" class="np-btn np-btn--primary" (click)="sendWhatsApp()" [disabled]="isSendingWa || !phoneInput">{{ isSendingWa ? 'Enviando…' : 'Enviar' }}</button>
+        <label class="np-field"><span>WhatsApp del cliente</span><input type="tel" class="np-input np-mono" [(ngModel)]="phoneInput" placeholder="573001234567" /></label>
+        <button type="button" class="np-btn np-btn--primary" (click)="sendWhatsApp()" [disabled]="isSendingWa || !phoneInput || !canales">{{ isSendingWa ? 'Enviando…' : 'Enviar' }}</button>
       </div>
       <div class="np-form np-form--row">
         <label class="np-field"><span>Correo electrónico</span><input type="email" class="np-input" [(ngModel)]="emailInput" placeholder="cliente@correo.com" /></label>

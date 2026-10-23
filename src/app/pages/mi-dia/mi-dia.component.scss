@@ -1,0 +1,38 @@
+/* ═══ Mi día (21-10-2026): pensado para el celular, en la calle ═══ */
+:host {
+  --font-body: 'Geist', 'Manrope', ui-sans-serif, system-ui, sans-serif;
+  --bg: #f7f7f8; --surface: #ffffff; --surface-2: #f3f3f5; --surface-3: #ececef;
+  --text: #111216; --text-2: #4f525c; --text-3: #737782; --line: #e7e7ea; --line-strong: #d9dadf;
+  display: block; font-family: var(--font-body); color: var(--text);
+}
+:host-context(.dark), :host-context([data-theme='dark']) {
+  --bg: #0d0e10; --surface: #131417; --surface-2: #18191d; --surface-3: #1e2024;
+  --text: #ecedf0; --text-2: #a9acb5; --text-3: #868a95; --line: #222429; --line-strong: #2d3036;
+}
+.md { max-width: 640px; margin: 0 auto; padding-bottom: 32px; }
+.md-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 12px; margin-bottom: 14px;
+  h1 { margin: 0; font-size: 20px; font-weight: 600; letter-spacing: -0.01em; &::first-letter { } } }
+.md-kicker { margin: 0 0 4px; font-size: 12.5px; color: var(--text-3); }
+.md-btn { height: 36px; padding: 0 13px; border: 1px solid var(--line-strong); border-radius: 8px; background: var(--surface); color: var(--text); font: inherit; font-size: 13px; font-weight: 500; }
+.md-cifras { display: grid; grid-template-columns: repeat(auto-fit, minmax(0, 1fr)); gap: 8px; margin-bottom: 14px;
+  div { padding: 10px 12px; border-radius: 12px; background: var(--surface); border: 1px solid var(--line); display: flex; flex-direction: column; }
+  b { font-size: 20px; font-weight: 600; font-variant-numeric: tabular-nums; } span { font-size: 12.5px; color: var(--text-2); } }
+.md-vacio { padding: 32px 16px; text-align: center; color: var(--text-3); background: var(--surface); border: 1px solid var(--line); border-radius: 12px; }
+.md-lista { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+.md-item { display: flex; flex-direction: column; gap: 5px; padding: 13px 14px; background: var(--surface); border: 1px solid var(--line); border-radius: 12px;
+  &.is-primero { border: 2px solid var(--text); padding: 12px 13px; } }
+.md-item-h { display: flex; justify-content: space-between; align-items: center; gap: 8px; b { font-size: 14px; font-weight: 600; font-variant-numeric: tabular-nums; } }
+.md-chip { height: 21px; padding: 0 8px; border-radius: 6px; display: inline-flex; align-items: center; font-size: 12px; white-space: nowrap;
+  &.is-curso { background: color-mix(in srgb, var(--accent) 12%, transparent); color: var(--accent); }
+  &.is-info { background: var(--surface-2); color: var(--text-2); }
+  &.is-warn { background: color-mix(in srgb, var(--warn) 14%, transparent); color: var(--warn); }
+  &.is-mal { background: color-mix(in srgb, var(--danger) 12%, transparent); color: var(--danger); } }
+.md-cliente { font-size: 15.5px; font-weight: 600; }
+.md-dir { font-size: 13.5px; color: var(--text-2); }
+.md-det { font-size: 13px; color: var(--text-3); }
+.md-acc { display: grid; grid-template-columns: auto auto minmax(0, 1fr); gap: 8px; margin-top: 6px; }
+.md-ico { width: 46px; height: 46px; border: 1px solid var(--line); border-radius: 10px; display: grid; place-items: center; color: var(--text-2); background: var(--surface);
+  svg { width: 19px; height: 19px; } }
+.md-principal { height: 46px; border: 1px solid var(--line-strong); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 14.5px; font-weight: 500;
+  color: var(--text); text-decoration: none; background: var(--surface);
+  &.is-1 { background: var(--text); border-color: var(--text); color: var(--surface); } }

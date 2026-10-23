@@ -1,0 +1,100 @@
+/* ═══ Cobranza, estilo limpio (21-10-2026): el mismo de Pagos, Cartera y Bodega ═══ */
+:host {
+  --font-body: 'Geist', 'Manrope', ui-sans-serif, system-ui, sans-serif;
+  --font-display: 'Geist', 'Manrope', ui-sans-serif, system-ui, sans-serif;
+  --font-mono: 'Geist Mono', ui-monospace, monospace;
+  --bg: #f7f7f8; --surface: #ffffff; --surface-2: #f3f3f5; --surface-3: #ececef;
+  --text: #111216; --text-2: #4f525c; --text-3: #737782;
+  --line: #e7e7ea; --line-strong: #d9dadf;
+  font-family: var(--font-body); color: var(--text);
+}
+:host-context(.dark), :host-context([data-theme='dark']) {
+  --bg: #0d0e10; --surface: #131417; --surface-2: #18191d; --surface-3: #1e2024;
+  --text: #ecedf0; --text-2: #a9acb5; --text-3: #868a95; --line: #222429; --line-strong: #2d3036;
+}
+
+/* Ancho completo, como las demás pantallas de Cobros y pagos */
+.ic { max-width: none; margin: 0; padding: 0 0 32px; gap: 14px; }
+
+/* ── Encabezado ── */
+.ic-head { align-items: flex-end; }
+.ic-head-t h1 { font: 600 22px/1.2 var(--font-body); letter-spacing: -0.01em; }
+.ic-kicker { margin: 0 0 4px; font: 400 12.5px var(--font-body); letter-spacing: 0; text-transform: none; color: var(--text-3); }
+.ic-head-t .ic-fine { font-size: 13px; color: var(--text-2); }
+.ic-guardado { font-weight: 500; }
+
+/* ── Botones: tinta para lo principal, borde fino para lo demás ── */
+.ic-btn { height: 34px; padding: 0 13px; border-radius: 8px; border-color: var(--line-strong); font: 500 13px var(--font-body);
+  &:hover:not(:disabled) { background: var(--surface); border-color: var(--text-3); } }
+.ic-btn--pri { border-color: var(--text); background: var(--text); color: var(--surface);
+  &:hover:not(:disabled) { background: var(--text); border-color: var(--text); opacity: .9; } }
+.ic-btn--quiet { border-color: transparent; }
+
+/* ── Tarjetas planas ── */
+.ic-card { padding: 16px 18px; border-radius: 12px; box-shadow: none; }
+.ic-card-h h2 { font: 600 15px var(--font-body); }
+
+/* ── Barra de estado: encendido, modo y cifras en una línea ── */
+.ic-estado { padding: 12px 16px; gap: 12px 20px; }
+.ic-estado-l b { font-weight: 600; }
+.ic-switch { width: 36px; height: 20px;
+  &::after { top: 2px; left: 2px; width: 16px; height: 16px; box-shadow: none; }
+  &[aria-checked='true'] { background: var(--accent); &::after { transform: translateX(16px); } } }
+.ic-seg { padding: 3px; border: 0; border-radius: 8px; background: var(--surface-3);
+  button { height: 28px; padding: 0 12px; border-radius: 6px; font: 400 12.5px var(--font-body);
+    &.is-on { color: var(--text); font-weight: 600; box-shadow: 0 1px 2px rgba(0, 0, 0, .12); } } }
+.ic-stats { gap: 0; border: 1px solid var(--line); border-radius: 10px; overflow: hidden; }
+.ic-stat { min-width: 0; padding: 7px 14px; border: 0; border-radius: 0; background: var(--surface);
+  & + .ic-stat { border-left: 1px solid var(--line); }
+  b { font: 600 17px/1.2 var(--font-body); }
+  span { font-size: 11.5px; }
+  &.is-alerta { background: color-mix(in srgb, var(--danger) 6%, var(--surface)); span { color: var(--danger); } } }
+
+/* ── Pestañas subrayadas, como el resto ── */
+.cb-vistas { display: flex; gap: 22px; padding: 0; margin: 2px 0 0; border-radius: 0; background: none; border-bottom: 1px solid var(--line);
+  button { height: auto; padding: 0 0 10px; border-radius: 0; border-bottom: 2px solid transparent; background: none; font-size: 13.5px; color: var(--text-2); }
+  button[aria-selected='true'] { background: none; box-shadow: none; color: var(--text); font-weight: 500; border-bottom-color: var(--text); } }
+
+/* ── Tablero de casos: columnas sobre fondo gris, tarjetas blancas ── */
+.cb-tablero { gap: 10px; }
+.cb-col { padding: 10px; border-radius: 12px; background: var(--surface-2);
+  > header { padding: 0 2px; span { font-size: 13px; } b { min-width: 22px; height: 20px; padding: 0 6px; border-radius: 10px; background: var(--surface); display: inline-grid; place-items: center; font-size: 12px; } } }
+.cb-ayuda { margin: 0 2px 2px; font-size: 11.5px; }
+.cb-caso { padding: 10px 11px; gap: 6px; border-radius: 10px;
+  &:hover { border-color: var(--line-strong); }
+  &.is-nuevo { box-shadow: inset 2px 0 0 var(--accent); } }
+.cb-caso-h b { font-size: 13px; }
+.cb-acc .ic-btn { height: 28px; padding: 0 9px; font-size: 12px; }
+.cb-vacio { margin: 2px; padding: 10px; border: 1px dashed var(--line-strong); border-radius: 8px; font-size: 12px; text-align: center; }
+
+/* ── Reglas: frases con los números adentro, sin íconos de color ── */
+.ic-regla { border-top-style: solid; }
+.ic-regla-ico { width: 32px; height: 32px; border-radius: 8px; color: var(--text-2); background: var(--surface-2); }
+.ic-regla-c > small, .ic-oferta-t, .ic-grupo h3 { font: 500 12px var(--font-body); letter-spacing: 0; text-transform: none; color: var(--text-3); }
+.ic-regla-c p { font-size: 14px; }
+.ic-in { height: 28px; border-radius: 6px; background: var(--surface); font: 600 13.5px var(--font-mono);
+  &:hover { border-color: var(--text-3); }
+  &:focus { border-color: var(--accent); box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 15%, transparent); } }
+.ic-dias button { border-radius: 6px; font-weight: 500;
+  &:hover { border-color: var(--text-3); color: var(--text); }
+  &.is-on { border-color: var(--text); background: var(--text); color: var(--surface); } }
+.ic-oferta { border-radius: 10px; }
+.ic-chip { font-weight: 500; color: var(--text-2); background: var(--surface); border-color: var(--line-strong); }
+.ic-aviso { border-radius: 8px; }
+
+/* ── IA, ajustes avanzados y entradas ── */
+.ic-ia-t { font-weight: 600; }
+.ic-estado-ia { font-weight: 500; }
+.ic-input { height: 34px; border-radius: 8px; font: 400 13px var(--font-body);
+  &:focus { box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 15%, transparent); } }
+.ic-txt { height: auto; }
+.ic-avz-btn { padding: 14px 18px; b { font: 600 14px var(--font-body); } }
+.ic-avz-cuerpo { padding: 4px 18px 16px; }
+.ic-set-t b { font-weight: 500; }
+.ic-wa { border-radius: 10px; }
+.ic-wa-av { font-weight: 600; }
+
+@media (max-width: 720px) {
+  .ic-stats { margin-left: 0; width: 100%; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .cb-tablero { grid-template-columns: repeat(5, minmax(240px, 82vw)); scroll-snap-type: x mandatory; .cb-col { scroll-snap-align: start; } }
+}

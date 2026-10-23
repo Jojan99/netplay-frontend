@@ -1,0 +1,117 @@
+/* ═══ Red / OLT / Estado, rediseño F redondeado (21-10-2026) ═══
+   Cifras en pastillas, la potencia como curva sobre las zonas de señal, la dona de calidad y,
+   debajo, puertos y enlaces a atender. Paleta «un solo color, en tonos»: verde azulado más
+   oscuro es mejor señal; solo lo crítico en naranja. */
+:host {
+  --oe-1: #0F766E; --oe-2: #5FA8A0; --oe-3: #A9D4CF; --oe-mal: #C2410C; --oe-mal-suave: #FFF4EE; --oe-mal-borde: #F6D2BF;
+}
+:host-context(.dark), :host-context([data-theme='dark']) {
+  --oe-mal-suave: #2A1A12; --oe-mal-borde: #5A2E17;
+}
+
+.oe-cifras { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 14px; }
+.oe-pill { display: flex; flex-direction: column; justify-content: center; padding: 9px 20px; background: var(--surface); border: 1px solid var(--line); border-radius: 999px; min-width: 0;
+  b { font-size: 19px; font-weight: 600; line-height: 1.15; font-variant-numeric: tabular-nums; letter-spacing: -0.01em; }
+  small { font-size: 12px; color: var(--text-3); }
+  &.is-mal { background: var(--oe-mal-suave); border-color: var(--oe-mal-borde); b, small { color: var(--oe-mal); } } }
+.oe-pill--anillo { flex-direction: row; align-items: center; gap: 12px; padding: 8px 20px 8px 8px;
+  > span:last-child { display: flex; flex-direction: column; } }
+.oe-anillo { width: 42px; height: 42px; border-radius: 50%; display: grid; place-items: center; flex: none;
+  i { width: 32px; height: 32px; border-radius: 50%; background: var(--surface); } }
+
+.oe-h { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap;
+  h2 { margin: 0; font-size: 15px; font-weight: 600; } > span { font-size: 12.5px; color: var(--text-3); } }
+
+.oe-senal { display: grid; grid-template-columns: minmax(0, 1fr) 300px; margin-bottom: 14px; background: var(--surface); border: 1px solid var(--line); border-radius: 20px; overflow: hidden; }
+.oe-curva { padding: 16px 20px 10px; display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.oe-svg { width: 100%; height: auto; aspect-ratio: 1000 / 272; display: block; overflow: visible; font-family: var(--font-body); }
+.oe-zona { font-size: 12px; font-weight: 600; fill: #0F5F58; &.is-critica { fill: var(--oe-mal); } }
+.oe-rejilla { stroke: var(--line-strong); stroke-opacity: .7; stroke-dasharray: 2 4; }
+.oe-base { stroke: var(--line-strong); }
+.oe-eje { font-size: 11.5px; fill: var(--text-3); }
+.oe-valor { font-size: 12px; font-weight: 600; fill: var(--text); }
+.oe-falla { stroke: var(--oe-mal); stroke-width: 1.5; stroke-dasharray: 5 4; }
+.oe-falla-t { font-size: 11.5px; fill: var(--oe-mal); }
+.oe-mediana { stroke: var(--text); stroke-opacity: .6; stroke-width: 1.2; stroke-dasharray: 3 3; }
+.oe-mediana-t { font-size: 11.5px; font-weight: 500; fill: #FFFFFF; }
+
+.oe-calidad { padding: 16px 20px; border-left: 1px solid var(--line); display: flex; flex-direction: column; align-items: center; gap: 12px; }
+.oe-calidad-t { align-self: flex-start; font-size: 15px; font-weight: 600; }
+.oe-dona { position: relative; width: 160px; height: 160px; border-radius: 50%; flex: none;
+  i { position: absolute; inset: 19px; border-radius: 50%; background: var(--surface); }
+  span { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+  b { font-size: 25px; font-weight: 600; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
+  small { font-size: 12px; color: var(--text-3); } }
+.oe-leyenda { list-style: none; margin: 0; padding: 0; width: 100%; display: grid; gap: 2px;
+  button { width: 100%; display: grid; grid-template-columns: 10px minmax(0, 1fr) auto; align-items: center; gap: 8px; padding: 5px 8px; border: 0; border-radius: 8px;
+    background: none; font: inherit; font-size: 13px; color: var(--text); text-align: left; cursor: pointer;
+    &:hover { background: var(--surface-2); } &.is-sel { background: var(--surface-3); font-weight: 500; } }
+  i { width: 10px; height: 10px; border-radius: 50%; }
+  b { font-weight: 600; font-variant-numeric: tabular-nums; } }
+
+.oe-dos { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr); gap: 14px; align-items: start; }
+.oe-card { background: var(--surface); border: 1px solid var(--line); border-radius: 20px; overflow: hidden; min-width: 0;
+  > .oe-h { padding: 16px 20px 10px; } }
+.oe-puertos { display: flex; flex-direction: column; padding: 0 8px 8px; }
+.oe-puerto { display: grid; grid-template-columns: 70px minmax(0, 1fr) 96px 86px 70px; align-items: center; gap: 4px 12px; padding: 10px 12px; border: 0; border-radius: 12px;
+  background: none; font: inherit; font-size: 13px; color: var(--text); text-align: left; cursor: pointer;
+  &:hover { background: var(--surface-2); } }
+.oe-fsp { font-family: var(--font-mono); font-weight: 500; }
+.oe-ocup { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.oe-barra { flex: 1; height: 10px; border-radius: 5px; background: var(--surface-3); overflow: hidden;
+  i { display: block; height: 100%; border-radius: 5px; background: var(--oe-1); &.is-lleno { background: var(--oe-mal); } } }
+.oe-fine { font-size: 12.5px; color: var(--text-2); white-space: nowrap; font-variant-numeric: tabular-nums; }
+.oe-num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap;
+  small { font-size: 11.5px; color: var(--text-3); }
+  &.is-danger { color: var(--oe-mal); font-weight: 600; } &.is-warn { font-weight: 600; } }
+.oe-chip { justify-self: end; height: 22px; padding: 0 9px; border-radius: 11px; font-size: 12px; display: inline-flex; align-items: center; white-space: nowrap;
+  &.is-mal { background: var(--oe-mal-suave); color: var(--oe-mal); } &.is-algo { background: var(--surface-2); color: var(--text-2); }
+  &.is-ok { background: color-mix(in srgb, var(--oe-1) 12%, transparent); color: var(--oe-1); } }
+.oe-extra { grid-column: 2 / -1; font-size: 12px; color: var(--text-3); .is-danger { color: var(--oe-mal); } }
+
+.oe-seg { display: inline-flex; gap: 2px; padding: 3px; border-radius: 999px; background: var(--surface-2);
+  button { padding: 4px 12px; border: 0; border-radius: 999px; background: none; font: inherit; font-size: 12.5px; color: var(--text-3); cursor: pointer;
+    &.is-sel { background: var(--surface); color: var(--text); font-weight: 500; box-shadow: 0 1px 2px rgba(0, 0, 0, .1); } } }
+.oe-enlaces { list-style: none; margin: 0; padding: 0 8px 8px; display: flex; flex-direction: column; gap: 4px; max-height: 620px; overflow-y: auto;
+  li { display: grid; grid-template-columns: 30px minmax(0, 1fr) auto auto; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 12px; background: var(--surface-2); } }
+.oe-aro { width: 26px; height: 26px; border-radius: 50%; border: 4px solid var(--line-strong); box-sizing: border-box; }
+.oe-quien { display: flex; flex-direction: column; min-width: 0;
+  small { font-size: 12px; color: var(--text-3); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; } }
+.oe-nombre { padding: 0; border: 0; background: none; font: inherit; font-size: 13.5px; font-weight: 500; color: var(--text); text-align: left; cursor: pointer;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap; &:hover { text-decoration: underline; } }
+span.oe-nombre { cursor: default; &:hover { text-decoration: none; } }
+.oe-pot { font-size: 13.5px; font-weight: 600; font-variant-numeric: tabular-nums; white-space: nowrap;
+  &.is-danger { color: var(--oe-mal); } &.is-warn, &.is-ok, &.is-muted { color: var(--text); } }
+.oe-acc { display: inline-flex; align-items: center; gap: 4px; }
+.oe-vacio { margin: 0; padding: 14px 20px 18px; font-size: 13px; color: var(--text-3); }
+
+@media (max-width: 1180px) {
+  .oe-senal { grid-template-columns: minmax(0, 1fr); }
+  .oe-calidad { border-left: 0; border-top: 1px solid var(--line); flex-direction: row; flex-wrap: wrap; align-items: center; justify-content: center; }
+  .oe-calidad-t { flex-basis: 100%; }
+  .oe-leyenda { width: auto; min-width: 200px; flex: 1; }
+  .oe-dos { grid-template-columns: minmax(0, 1fr); }
+}
+@media (max-width: 640px) {
+  .oe-pill { flex: 1 1 calc(50% - 5px); padding: 8px 14px; }
+  .oe-pill--anillo { flex-basis: 100%; }
+  .oe-senal, .oe-card { border-radius: 16px; }
+  .oe-curva { padding: 14px 10px 6px; }
+  .oe-puerto { grid-template-columns: 60px minmax(0, 1fr) auto; }
+  .oe-puerto .oe-num:nth-of-type(1) { display: none; }
+  .oe-enlaces li { grid-template-columns: 26px minmax(0, 1fr) auto; }
+  .oe-acc { grid-column: 2 / -1; }
+}
+
+/* El área con scroll de la página es una rejilla de alto fijo: con overflow hidden, una sección
+   puede encogerse hasta 0 (así quedaba la franja de la gráfica, en 2 px). Que nunca baje de su
+   contenido. */
+.oe-cifras, .oe-senal, .oe-dos, .oe-card { flex-shrink: 0; min-height: min-content; }
+.oe-senal { overflow: visible; }
+.oe-senal > * { min-height: min-content; }
+
+/* En esta pantalla el área con scroll es una columna normal: como rejilla repartía el alto de
+   la ventana entre las secciones y la gráfica quedaba tapada por los puertos. */
+.np-scroll { display: flex; flex-direction: column; gap: 14px; }
+.np-scroll > * { flex-shrink: 0; }
+.oe-cifras, .oe-senal { margin-bottom: 0; }

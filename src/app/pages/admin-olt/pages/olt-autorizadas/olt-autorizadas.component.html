@@ -67,7 +67,7 @@
     <aside class="np-inspector" *ngIf="detailModal && detailOnt" aria-label="Detalle ONT">
       <div class="np-insp-head">
         <div class="np-avatar">{{ detailOnt.ont_id }}</div>
-        <div class="np-insp-id"><h2>{{ detailOnt.description || detailOnt.serial || ('ONT ' + detailOnt.ont_id) }}</h2><div class="np-meta">Puerto <b>{{ detailOnt.fsp }}</b> · ID <b>{{ detailOnt.ont_id }}</b><ng-container *ngIf="detailOnt.serial"> · <b>{{ detailOnt.serial }}</b></ng-container></div></div>
+        <div class="np-insp-id"><h2 [title]="detailOnt.description || ''">{{ nombreLegible(detailOnt.description) || detailOnt.serial || ('ONT ' + detailOnt.ont_id) }}</h2><div class="np-meta">Puerto <b>{{ detailOnt.fsp }}</b> · ID <b>{{ detailOnt.ont_id }}</b><ng-container *ngIf="detailOnt.serial"> · <b>{{ detailOnt.serial }}</b></ng-container></div></div>
         <div class="np-insp-tools"><button type="button" class="np-icobtn" (click)="detailModal = false" aria-label="Cerrar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div>
       </div>
       <div *ngIf="loadingDetail" class="np-loading"><span class="np-spinner"></span> Consultando OLT…</div>
@@ -77,24 +77,39 @@
           <!-- La medición del barrido manda: la consulta individual lee otra
                columna de la tabla óptica y llegaba a mostrar el voltaje como
                si fuera potencia. -->
-          <div class="np-stats" *ngIf="senalDe(detailOnt) || detailInfo; else noInfo">
-            <div class="np-stat"><span class="np-stat-l">Potencia recibida</span><span class="np-stat-v" [ngClass]="tonoDeSenal(detailOnt)">{{ potenciaDe(detailOnt) != null ? potenciaDe(detailOnt) + ' dBm' : '—' }}</span></div>
-            <div class="np-stat"><span class="np-stat-l">Clasificación</span><span class="np-stat-v" [ngClass]="tonoDeSenal(detailOnt)">{{ etiquetaDeSenal(detailOnt) }}</span></div>
-            <div class="np-stat"><span class="np-stat-l">Temperatura</span><span class="np-stat-v">{{ optica('temperatura') != null ? optica('temperatura') + ' °C' : '—' }}</span></div>
-            <div class="np-stat"><span class="np-stat-l">Voltaje</span><span class="np-stat-v">{{ optica('voltaje') != null ? optica('voltaje') + ' V' : '—' }}</span></div>
-            <div class="np-stat"><span class="np-stat-l">Corriente láser</span><span class="np-stat-v">{{ optica('corriente') != null ? optica('corriente') + ' mA' : '—' }}</span></div>
+          <div class="oe-senal" *ngIf="senalDe(detailOnt) || detailInfo; else noInfo">
+            <div class="oe-senal-h">
+              <span class="oe-senal-v" [ngClass]="tonoDeSenal(detailOnt)">{{ potenciaDe(detailOnt) != null ? potenciaDe(detailOnt) : '—' }}<small *ngIf="potenciaDe(detailOnt) != null"> dBm</small></span>
+              <span class="oe-senal-c" [ngClass]="tonoDeSenal(detailOnt)">{{ etiquetaDeSenal(detailOnt) }}</span>
+            </div>
+            <!-- La regla de la potencia: a la izquierda muy poca luz, a la derecha demasiada. -->
+            <div class="oe-regla" *ngIf="potenciaDe(detailOnt) != null" aria-hidden="true">
+              <span class="oe-regla-b"><i class="es-critica"></i><i class="es-baja"></i><i class="es-regular"></i><i class="es-buena"></i><i class="es-saturada"></i></span>
+              <b class="oe-regla-m" [style.left.%]="posicionDeSenal(detailOnt)"></b>
+              <span class="oe-regla-t"><span></span><span>−29</span><span>−27</span><span>−25</span><span>−8</span></span>
+            </div>
+            <div class="oe-tres">
+              <span><small>Temperatura</small><b>{{ optica('temperatura') != null ? optica('temperatura') + ' °C' : '—' }}</b></span>
+              <span><small>Voltaje</small><b>{{ optica('voltaje') != null ? optica('voltaje') + ' V' : '—' }}</b></span>
+              <span><small>Corriente láser</small><b>{{ optica('corriente') != null ? optica('corriente') + ' mA' : '—' }}</b></span>
+            </div>
           </div>
           <ng-template #noInfo><p class="np-muted">No se pudo obtener la señal óptica.</p></ng-template>
         </section>
         <section>
           <p class="np-sect">Service ports</p>
-          <div class="np-tablewrap" *ngIf="detailPorts.length > 0; else noPorts"><table class="np-table np-table--compact"><thead><tr><th>SP</th><th>VLAN</th><th>Estado</th></tr></thead>
-            <tbody><tr *ngFor="let sp of detailPorts"><td class="np-data np-strong">SP{{ sp.index ?? sp.sp_id ?? '—' }}</td><td class="np-data">{{ sp.vlan ?? '—' }}</td><td><span class="np-pill" *ngIf="sp.state" [ngClass]="sp.state === 'up' ? 'np-pill--active' : 'np-pill--neutral'">{{ sp.state }}</span></td></tr></tbody></table></div>
+          <ul class="oe-sps" *ngIf="detailPorts.length > 0; else noPorts">
+            <li *ngFor="let sp of detailPorts">
+              <b class="np-mono">SP{{ sp.index ?? sp.sp_id ?? '—' }}</b>
+              <span>VLAN <b class="np-mono">{{ sp.vlan ?? '—' }}</b></span>
+              <span class="np-pill" *ngIf="sp.state" [ngClass]="sp.state === 'up' ? 'np-pill--active' : 'np-pill--neutral'">{{ sp.state === 'up' ? 'Arriba' : sp.state }}</span>
+            </li>
+          </ul>
           <ng-template #noPorts><p class="np-muted">Sin service ports registrados.</p></ng-template>
         </section>
         <section *ngIf="puedeAdministrar">
           <p class="np-sect">Acciones</p>
-          <div class="np-quick"><button type="button" class="np-btn np-btn--ghost" (click)="openAssign(detailOnt)">Asignar cliente</button><button type="button" class="np-btn np-btn--ghost" (click)="darAccesoRemoto(detailOnt)" [disabled]="dandoAcceso" title="Le crea en la OLT las reglas para que el equipo hable con el TR-069">{{ dandoAcceso ? 'Dando acceso…' : 'Dar acceso remoto' }}</button><button type="button" class="np-btn np-btn--ghost" (click)="reiniciarEquipo(detailOnt)" [disabled]="reiniciando" title="Reinicia el equipo desde la OLT: el cliente queda sin internet un minuto">{{ reiniciando ? 'Reiniciando…' : 'Reiniciar equipo' }}</button><button type="button" class="np-btn np-btn--danger" (click)="openDelete(detailOnt)">Eliminar ONT</button></div>
+          <div class="np-quick oe-acciones"><button type="button" class="np-btn np-btn--ghost" (click)="openAssign(detailOnt)">Asignar cliente</button><button type="button" class="np-btn np-btn--ghost" (click)="darAccesoRemoto(detailOnt)" [disabled]="dandoAcceso" title="Le crea en la OLT las reglas para que el equipo hable con el TR-069">{{ dandoAcceso ? 'Dando acceso…' : 'Dar acceso remoto' }}</button><button type="button" class="np-btn np-btn--ghost" (click)="reiniciarEquipo(detailOnt)" [disabled]="reiniciando" title="Reinicia el equipo desde la OLT: el cliente queda sin internet un minuto">{{ reiniciando ? 'Reiniciando…' : 'Reiniciar equipo' }}</button><button type="button" class="np-btn np-btn--danger" (click)="openDelete(detailOnt)">Eliminar ONT</button></div>
         </section>
       </div>
     </aside>

@@ -1,7 +1,7 @@
 /* ─── Registro de clientes: sólo lo propio de esta pantalla ─────────────
    Lo compartido vive en src/theme/_console.scss.
 ──────────────────────────────────────────────────────────────────────── */
-.np-row--active .np-stripe i    { background: var(--ok); }
+.np-row--active .np-stripe i    { background: transparent; }
 .np-row--suspended .np-stripe i { background: var(--danger); }
 .np-row--noip .np-stripe i      { background: var(--warn); }
 
@@ -74,10 +74,12 @@
   /* Seis acciones en fila no entran en 390 px: se reparten en dos filas de
      botones grandes, que además se pueden tocar sin errarle. */
   .np-tabla-movil td.es-acciones .np-rowacts {
-    display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px;
+    display: flex; flex-wrap: nowrap; justify-content: flex-start; gap: 4px;
     padding-top: 8px; border-top: 1px solid var(--line); margin-top: 2px;
   }
-  .np-tabla-movil td.es-acciones .np-icobtn { width: 100%; height: 40px; }
+  .np-tabla-movil td.es-acciones .np-icobtn { width: 40px; height: 40px; flex: none; }
+  /* La ficha ya dice qué es cada cosa: «Cliente» y «Acciones» encima sobraban. */
+  .np-tabla-movil td.es-principal::before, .np-tabla-movil td.es-acciones::before { display: none !important; }
 
   /* El esqueleto de carga, también como tarjeta. */
   .np-tabla-movil .np-skel-bar { width: 100% !important; }
@@ -123,8 +125,8 @@
   display: grid; gap: 10px;
 }
 .np-baja-t {
-  margin: 0; font-size: 10.5px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--text-3);
-  span { text-transform: none; letter-spacing: 0; font-weight: 700; color: var(--text-2); }
+  margin: 0; font-size: 10.5px; font-weight: 600; letter-spacing: 0; color: var(--text-3);
+  span { text-transform: none; letter-spacing: 0; font-weight: 600; color: var(--text-2); }
 }
 .np-baja-lista {
   list-style: none; margin: 0; padding: 0; display: grid; gap: 6px;
@@ -152,7 +154,7 @@
   border: 1px solid var(--line); border-radius: var(--radius); background: var(--surface-2);
   .np-check { display: inline-flex; align-items: center; gap: 7px; font-size: 12.5px; }
 }
-.np-vel-t { font-size: 10.5px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--text-3); }
+.np-vel-t { font-size: 10.5px; font-weight: 600; letter-spacing: 0; color: var(--text-3); }
 
 /* Acción chica en la línea del título de un campo ("Ver todas" en VLAN):
    arriba no mueve el formulario cuando termina de cargar. */
@@ -168,16 +170,16 @@
 .cx-cab { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; }
 /* Rótulos chicos en mayúsculas: mismo tamaño, peso y tracking que .np-sect en
    todo el panel (10,5 px · 700 · .06em). */
-.cx-tipo { font-size: 10.5px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; padding: 3px 9px; border-radius: 999px; background: var(--accent-soft, var(--surface-3)); color: var(--accent); }
+.cx-tipo { font-size: 10.5px; font-weight: 600; letter-spacing: 0; padding: 3px 9px; border-radius: 999px; background: var(--accent-soft, var(--surface-3)); color: var(--accent); }
 .cx-valor { font-size: 15px; color: var(--text); }
-.cx-estado { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 700; color: var(--danger-ink, var(--danger));
+.cx-estado { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; color: var(--danger-ink, var(--danger));
   i { width: 8px; height: 8px; border-radius: 50%; background: currentColor; }
   &[data-ok="true"] { color: var(--ok-ink, var(--ok)); }
 }
 .cx-cambiar { margin-left: auto; }
 .cx-datos { margin: 0; display: flex; flex-wrap: wrap; gap: 8px 22px;
   > div { display: grid; gap: 1px; }
-  dt { font-size: 10.5px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--text-3); }
+  dt { font-size: 10.5px; font-weight: 600; letter-spacing: 0; color: var(--text-3); }
   dd { margin: 0; font-size: 13px; color: var(--text); }
 }
 .cx-ont { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px;
@@ -185,9 +187,9 @@
 .cx-ont-txt { display: grid; gap: 3px; min-width: 0; flex: 1 1 260px;
   small { font-size: 12px; color: var(--text-2); line-height: 1.5; overflow-wrap: anywhere; }
 }
-.cx-ont-t { font-size: 10.5px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--text-3); }
+.cx-ont-t { font-size: 10.5px; font-weight: 600; letter-spacing: 0; color: var(--text-3); }
 .cx-ont-acc { display: flex; gap: 6px; flex-wrap: wrap; }
-.cx-pill { font-style: normal; font-size: 10.5px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; padding: 1px 7px; margin-right: 4px;
+.cx-pill { font-style: normal; font-size: 10.5px; font-weight: 600; letter-spacing: 0; padding: 1px 7px; margin-right: 4px;
   border-radius: 999px; background: var(--warn-soft); color: var(--warn-ink, var(--warn));
   &[data-estado="listo"] { background: var(--ok-soft); color: var(--ok-ink, var(--ok)); }
   &[data-estado="con_errores"], &[data-estado="error"], &[data-estado="vencido"] { background: var(--danger-soft); color: var(--danger-ink, var(--danger)); }
@@ -196,7 +198,7 @@
 }
 .cx-editar { margin-top: 10px; }
 .cx-mac { margin-top: 10px;
-  > summary { cursor: pointer; font-size: 12.5px; font-weight: 700; color: var(--text-2); }
+  > summary { cursor: pointer; font-size: 12.5px; font-weight: 600; color: var(--text-2); }
   &[open] > summary { margin-bottom: 10px; }
 }
 
@@ -220,7 +222,7 @@
 @media (max-width: 767px) {
   .np-head .np-actions {
     display: grid;
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr) auto;
     gap: 8px;
     width: 100%;
 
@@ -301,7 +303,7 @@
 .np-detalles {
   border: 1px solid var(--line); border-radius: var(--radius); background: var(--surface-2);
   > summary {
-    cursor: pointer; padding: 9px 12px; font-size: 12.5px; font-weight: 700; color: var(--text-2); list-style: none;
+    cursor: pointer; padding: 9px 12px; font-size: 12.5px; font-weight: 600; color: var(--text-2); list-style: none;
     display: flex; align-items: center; gap: 8px; flex-wrap: wrap; border-radius: inherit; transition: color .12s;
     &::before { content: ''; width: 0; height: 0; border: 4px solid transparent; border-left: 6px solid var(--text-3); transition: transform .15s; }
     &::-webkit-details-marker { display: none; }
@@ -331,7 +333,7 @@
 }
 .ux-orden-h {
   display: flex; align-items: center; gap: 10px; padding: 10px 12px;
-  b { display: block; font: 700 13px var(--font-body); color: var(--text); }
+  b { display: block; font: 600 13px var(--font-body); color: var(--text); }
   small { display: block; font: 600 11px var(--font-body); color: var(--text-3); }
   > div { flex: 1; min-width: 0; }
   > button { flex: none; }
@@ -379,7 +381,7 @@
 }
 
 /* El tope del plan */
-.np-cupo--alto { color: var(--warn-ink, var(--warn)); font-weight: 700; }
+.np-cupo--alto { color: var(--warn-ink, var(--warn)); font-weight: 600; }
 .np-cupo-aviso { margin: 10px 0 0; max-width: 760px; }
 
 /* Suspensión a mano: motivo y «no reactivar automáticamente». */
@@ -390,7 +392,7 @@
 
 /* «Pagó y sigue suspendido»: la pestaña llama la atención y cada fila dice qué falta. */
 .np-chip--alerta[aria-pressed="true"] { background: var(--warn-soft); color: var(--warn-ink, var(--warn)); border-color: var(--warn); }
-.np-pagosusp { font-size: 11px; font-weight: 700; color: var(--warn-ink, var(--warn)); margin-top: 1px; }
+.np-pagosusp { font-size: 11px; font-weight: 600; color: var(--warn-ink, var(--warn)); margin-top: 1px; }
 
 /* Cambio de documento: el botón va discreto junto al número y el formulario en la misma fila. */
 .np-doc-btn { margin-left: 8px; font-size: 11px; }
@@ -433,7 +435,7 @@
   margin-top: 10px; padding: 10px 12px; border: 1px solid var(--line); border-radius: var(--radius);
   background: var(--surface-2); display: grid; gap: 6px;
 }
-.np-acceso-t { margin: 0; font-size: 12px; font-weight: 700; color: var(--text-2); }
+.np-acceso-t { margin: 0; font-size: 12px; font-weight: 600; color: var(--text-2); }
 .np-acceso-dl {
   margin: 0; display: grid; grid-template-columns: max-content 1fr; gap: 6px 12px; align-items: center;
   dt { font-size: 12px; color: var(--text-3); }
@@ -472,3 +474,15 @@
   .np-btn svg { width: 15px; height: 15px; }
 }
 @media (prefers-reduced-motion: reduce) { .np-opcion { transition: none; &:active:not(:disabled) { transform: none; } } }
+
+/* ═══ Celular más ordenado (22-10-2026) ═══
+   «Nuevo cliente» y «Más» en la misma fila; los filtros en una sola tira que se
+   desliza de lado en vez de cuatro renglones de pastillas. */
+@media (max-width: 767px) {
+  .np-head .np-actions .np-mas, .np-head .np-actions .np-mas-btn { width: auto; }
+  .np-clients .np-chips {
+    flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; margin-inline: -16px; padding: 0 16px 2px;
+    &::-webkit-scrollbar { display: none; }
+    .np-chip { flex: none; white-space: nowrap; }
+  }
+}

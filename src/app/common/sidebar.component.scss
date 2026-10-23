@@ -4,7 +4,7 @@
   &.sidebar-expanded { transform: translateX(0); box-shadow: var(--shadow-lg); } }
 .sidebar-surface { border-right: 1px solid var(--line); background: var(--surface); font-family: var(--font-body); padding: 12px 8px !important; }
 .sidebar-heading { display: flex; align-items: center; justify-content: space-between; margin: 0 8px 10px; padding: 0 4px 10px; border-bottom: 1px solid var(--line); }
-.sidebar-heading-label { color: var(--text-3); font-family: var(--font-mono); font-size: 10px; letter-spacing: .07em; text-transform: uppercase; }
+.sidebar-heading-label { color: var(--text-3); font-family: var(--font-mono); font-size: 10px; letter-spacing: 0; }
 .sidebar-heading-status { display: inline-flex; align-items: center; gap: 5px; color: var(--ok-ink, var(--ok)); font-family: var(--font-mono); font-size: 10px; }
 .sidebar-heading-status i { width: 6px; height: 6px; border-radius: 50%; background: var(--ok); box-shadow: 0 0 0 3px var(--ok-soft); }
 @media (min-width: 1024px) {

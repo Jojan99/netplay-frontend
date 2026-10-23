@@ -1,0 +1,80 @@
+<div class="np-page pg">
+  <header class="pg-head">
+    <div>
+      <p class="pg-kicker">Cobros y pagos</p>
+      <h1>Compromisos</h1>
+    </div>
+    <div class="pg-acc"><a class="pg-btn" routerLink="/dashboard/finanzas">Crear un compromiso desde la cartera</a></div>
+  </header>
+
+  <app-finanzas-tabs></app-finanzas-tabs>
+
+  <section class="cp-kpis" *ngIf="datos?.resumen as r" aria-label="Resumen de compromisos">
+    <div class="pg-caja"><small>Vigentes</small><b>{{ r.vigentes }}</b><span>{{ pesos(r.prometido) }} prometidos</span></div>
+    <div class="pg-caja"><small>Vencen esta semana</small><b>{{ r.esta_semana }}</b><span>{{ r.hoy ? r.hoy + ' hoy' : 'ninguno hoy' }}</span></div>
+    <div class="pg-caja"><small>Incumplidos</small><b>{{ r.incumplidos }}</b><span>se les cortó el servicio al vencer</span></div>
+    <div class="pg-caja" [class.is-alerta]="r.cumplimiento !== null && r.cumplimiento < 50">
+      <small>Cumplimiento</small><b>{{ r.cumplimiento !== null ? r.cumplimiento + ' %' : '—' }}</b>
+      <span>{{ r.cumplidos }} de {{ r.cumplidos + r.incumplidos }} cumplieron lo que prometieron</span>
+    </div>
+  </section>
+
+  <div class="pg-filtros">
+    <div class="pg-vistas cp-estados" role="tablist" aria-label="Estado del compromiso">
+      <button type="button" role="tab" *ngFor="let e of ESTADOS" [attr.aria-selected]="estado === e.id" (click)="elegir(e.id)">
+        {{ e.titulo }}<span class="pg-n" *ngIf="conteo(e.id) !== null">{{ conteo(e.id) }}</span>
+      </button>
+    </div>
+    <label class="pg-buscar">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg>
+      <input type="search" [(ngModel)]="busqueda" (ngModelChange)="buscar()" placeholder="Nombre, documento o teléfono" aria-label="Buscar cliente" />
+    </label>
+  </div>
+
+  <div *ngIf="cargando" class="np-loading"><span class="np-spinner"></span> Cargando compromisos…</div>
+
+  <div class="pg-caja pg-vacio" *ngIf="!cargando && datos && !datos.items.length">
+    {{ estado === 'vigentes' ? 'Nadie tiene un compromiso de pago vigente.' : 'No hay compromisos en este estado.' }}
+  </div>
+
+  <section class="cp-lista" *ngIf="!cargando && datos?.items?.length" aria-label="Compromisos de pago">
+    <article class="pg-caja cp-item" *ngFor="let c of datos.items" [ngClass]="'is-' + c.estado">
+      <div class="cp-quien">
+        <button type="button" class="pg-link pg-link--g" (click)="verFicha(c)">{{ c.cliente }}</button>
+        <small class="mono">{{ c.dni }}<ng-container *ngIf="c.telefono"> · {{ c.telefono }}</ng-container></small>
+        <span class="cp-nota" *ngIf="c.nota">«{{ c.nota }}»</span>
+        <small>Lo registró {{ c.creo || 'el sistema' }} el {{ c.creado_en | date:'d MMM' }}</small>
+      </div>
+
+      <div class="cp-promesa">
+        <small>Prometió pagar</small>
+        <b>{{ pesos(c.monto) }}</b>
+        <span>el {{ c.fecha | date:"EEEE d 'de' MMM" }}<ng-container *ngIf="c.estado === 'pending'"> · <em [class.is-mal]="c.dias < 0" [class.is-warn]="c.dias >= 0 && c.dias <= 1">{{ cuando(c.dias) }}</em></ng-container></span>
+      </div>
+
+      <div class="cp-facturas">
+        <small>Facturas del compromiso</small>
+        <b>{{ c.facturas_pagadas }} de {{ c.facturas }} pagadas</b>
+        <span>{{ c.falta > 0 ? 'faltan ' + pesos(c.falta) : 'no falta nada' }} · debe en total {{ pesos(c.deuda_total) }}</span>
+      </div>
+
+      <div class="cp-estado">
+        <ng-container [ngSwitch]="c.estado">
+          <span *ngSwitchCase="'pending'" class="pg-chip is-warn">Vigente{{ c.corta_si_incumple ? ' · se corta si no paga' : '' }}</span>
+          <span *ngSwitchCase="'broken'" class="pg-chip is-mal">Incumplido{{ c.cortado_en ? ' · cortado el ' + (c.cortado_en | date:'d MMM') : '' }}</span>
+          <span *ngSwitchCase="'fulfilled'" class="pg-chip is-ok">Cumplido{{ c.cumplido_en ? ' el ' + (c.cumplido_en | date:'d MMM') : '' }}</span>
+          <span *ngSwitchDefault class="pg-chip is-gris">Cancelado</span>
+        </ng-container>
+        <small *ngIf="c.suspendido" class="is-mal">Hoy está sin servicio</small>
+      </div>
+
+      <div class="cp-acc">
+        <button type="button" class="pg-btn pg-btn--sm" *ngIf="c.deuda_total > 0" (click)="recordar(c)" [disabled]="ocupado.has(c.id) || c.recordado">{{ c.recordado ? 'Recordado' : 'Recordar por WhatsApp' }}</button>
+        <ng-container *ngIf="c.estado === 'pending'">
+          <button type="button" class="pg-btn pg-btn--sm" (click)="cumplido(c)" [disabled]="ocupado.has(c.id)">Cumplió</button>
+          <button type="button" class="pg-btn pg-btn--sm pg-btn--peligro" (click)="cancelar(c)" [disabled]="ocupado.has(c.id)">Cancelar</button>
+        </ng-container>
+      </div>
+    </article>
+  </section>
+</div>

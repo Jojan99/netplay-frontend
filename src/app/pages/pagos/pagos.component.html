@@ -1,0 +1,318 @@
+<div class="np-page pg">
+  <header class="pg-head">
+    <div>
+      <p class="pg-kicker">Cobros y pagos</p>
+      <h1>Pagos y caja</h1>
+    </div>
+    <div class="pg-acc">
+      <a class="pg-btn" routerLink="/dashboard/payment-proof-audit" *ngIf="vista === 'revisar'">Auditoría completa</a>
+      <a class="pg-btn" routerLink="/dashboard/conciliacion-pagos" *ngIf="vista === 'registrados'">Cargar lista del banco</a>
+    </div>
+  </header>
+
+  <app-finanzas-tabs></app-finanzas-tabs>
+
+  <div class="pg-vistas" role="tablist" aria-label="Vistas de pagos">
+    <button type="button" role="tab" *ngFor="let v of VISTAS" [attr.aria-selected]="vista === v.id" (click)="abrir(v.id)">
+      {{ v.titulo }}
+      <span class="pg-n is-warn" *ngIf="v.id === 'revisar' && totalPorRevisar">{{ totalPorRevisar | number }}</span>
+      <span class="pg-n" *ngIf="v.id === 'en-linea' && linea?.sin_terminar?.length">{{ linea.sin_terminar.length }}</span>
+    </button>
+  </div>
+
+  <!-- ══ Registrados ═══════════════════════════════════════════════════════ -->
+  <ng-container *ngIf="vista === 'registrados'">
+    <div class="pg-filtros">
+      <label class="pg-buscar">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg>
+        <input type="search" [(ngModel)]="filtros.q" (ngModelChange)="buscar()" placeholder="Cliente, factura o referencia" aria-label="Buscar pago" />
+      </label>
+      <label class="pg-fecha"><span>Desde</span><input type="date" [(ngModel)]="filtros.desde" (change)="filtrar()" /></label>
+      <label class="pg-fecha"><span>Hasta</span><input type="date" [(ngModel)]="filtros.hasta" (change)="filtrar()" /></label>
+      <select class="pg-sel" [(ngModel)]="filtros.medio" (change)="filtrar()" aria-label="Medio de pago">
+        <option value="">Medio: todos</option>
+        <option value="sin">Sin medio registrado</option>
+        <option *ngFor="let m of reg?.medios" [value]="m.id">{{ m.name }}</option>
+      </select>
+      <select class="pg-sel" [(ngModel)]="filtros.quien" (change)="filtrar()" aria-label="Quién registró">
+        <option value="">Registró: todos</option>
+        <option value="auto">Automático o en línea</option>
+        <option *ngFor="let q of reg?.quienes" [value]="q.id">{{ q.nombre }}</option>
+      </select>
+      <select class="pg-sel" [(ngModel)]="filtros.tipo" (change)="filtrar()" aria-label="Tipo">
+        <option value="">Pagos, abonos y reversos</option>
+        <option value="pago_completo">Sólo pagos</option>
+        <option value="abono">Sólo abonos</option>
+        <option value="reverso">Sólo reversos</option>
+      </select>
+    </div>
+
+    <section class="pg-totales" *ngIf="reg" aria-label="Totales del periodo">
+      <div><small>Total registrado</small><b>{{ pesos(reg.resumen.neto) }}</b><span>{{ reg.resumen.pagos }} pagos<ng-container *ngIf="reg.resumen.abonos">, {{ reg.resumen.abonos }} de ellos abonos</ng-container></span></div>
+      <div *ngFor="let m of mediosTop"><small [title]="m.nombre">{{ m.nombre }}</small><b>{{ pesos(m.total) }}</b><span>{{ m.pagos }} {{ m.pagos === 1 ? 'pago' : 'pagos' }}</span></div>
+      <div class="is-mal" *ngIf="reg.resumen.reversos"><small>Reversados</small><b>{{ reg.resumen.reversos }}</b><span>{{ pesos(reg.resumen.reversado) }} devueltos</span></div>
+    </section>
+
+    <div class="pg-split">
+      <section class="pg-caja pg-tabla" aria-label="Pagos registrados">
+        <div *ngIf="cargandoReg" class="np-loading"><span class="np-spinner"></span> Cargando pagos…</div>
+        <div class="pg-scroll" *ngIf="!cargandoReg && reg">
+          <table>
+            <thead><tr><th>Cuándo</th><th>Cliente y factura</th><th>Medio</th><th>Registró</th><th class="r">Valor</th></tr></thead>
+            <tbody>
+              <tr *ngFor="let p of reg.items" [class.is-sel]="pagoSel?.id === p.id" (click)="pagoSel = p" tabindex="0" (keydown.enter)="pagoSel = p">
+                <td class="nw"><span class="dos"><span>{{ p.created_at | date:'d MMM' }}</span><small>{{ p.created_at | date:'h:mm a' }}</small></span></td>
+                <td><span class="dos"><b>{{ p.client_name || 'Sin nombre' }}</b><small>{{ p.date_facturation ? (p.date_facturation | date:'MMMM y') + ' · ' : '' }}{{ p.number_facture }}</small></span></td>
+                <td><span class="dos"><span>{{ p.medio || 'Sin medio registrado' }}</span><small class="mono" *ngIf="p.notes">{{ p.notes }}</small></span></td>
+                <td class="gris">{{ p.registro }}</td>
+                <td class="r"><span class="dos dos--r"><b [class.tachado]="p.type === 'reverso'">{{ pesos(p.amount) }}</b><span class="pg-chip" [ngClass]="'is-' + p.type">{{ TIPOS[p.type] || p.type }}</span></span></td>
+              </tr>
+              <tr *ngIf="!reg.items.length"><td colspan="5" class="pg-vacio">No hay pagos con estos filtros.</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <footer class="pg-pie" *ngIf="reg">
+          <span>{{ reg.total ? (reg.pagina - 1) * reg.por_pagina + 1 : 0 }}–{{ (reg.pagina * reg.por_pagina) > reg.total ? reg.total : reg.pagina * reg.por_pagina }} de {{ reg.total | number }} · los más recientes primero</span>
+          <span class="pg-pag">
+            <button type="button" (click)="pagina(-1)" [disabled]="reg.pagina <= 1" aria-label="Página anterior">‹</button>
+            <button type="button" (click)="pagina(1)" [disabled]="reg.pagina * reg.por_pagina >= reg.total" aria-label="Página siguiente">›</button>
+          </span>
+        </footer>
+      </section>
+
+      <aside class="pg-caja pg-detalle" *ngIf="pagoSel" aria-label="Detalle del pago">
+        <header>
+          <small>{{ TIPOS[pagoSel.type] || 'Pago' }} · {{ pagoSel.created_at | date:"d MMM, h:mm a" }}</small>
+          <b [class.tachado]="pagoSel.type === 'reverso'">{{ pesos(pagoSel.amount) }}</b>
+          <span class="pg-estado" [class.is-mal]="pagoSel.type === 'reverso'">
+            {{ pagoSel.type === 'reverso' ? 'Reverso: la factura volvió a quedar pendiente' : (pagoSel.paid ? 'Aplicado · la factura está pagada' : 'Aplicado como abono') }}
+          </span>
+        </header>
+        <dl>
+          <dt>Cliente</dt><dd><button type="button" class="pg-link" (click)="verFicha(pagoSel.cliente_id, pagoSel.client_name)">{{ pagoSel.client_name || 'Sin nombre' }}</button></dd>
+          <dt>Factura</dt><dd>{{ pagoSel.date_facturation ? (pagoSel.date_facturation | date:'MMMM y') : '' }} <span class="mono gris">{{ pagoSel.number_facture }}</span></dd>
+          <dt>Medio</dt><dd>{{ pagoSel.medio || 'Sin medio registrado' }}</dd>
+          <dt>Nota</dt><dd>{{ pagoSel.notes || '—' }}</dd>
+          <dt>Registró</dt><dd>{{ pagoSel.registro }}</dd>
+        </dl>
+        <div class="pg-comp" *ngIf="pagoSel.comprobante as c">
+          <small>Comprobante<ng-container *ngIf="c.banco"> · {{ c.banco }}</ng-container><ng-container *ngIf="c.referencia"> · ref. <span class="mono">{{ c.referencia }}</span></ng-container></small>
+          <a [href]="c.url" target="_blank" rel="noopener" *ngIf="esImagen(c.url); else compArchivo"><img [src]="c.url" alt="Comprobante del pago" loading="lazy" /></a>
+          <ng-template #compArchivo><a class="pg-btn" [href]="c.url" target="_blank" rel="noopener">Abrir el comprobante</a></ng-template>
+        </div>
+        <div class="pg-det-acc">
+          <button type="button" class="pg-btn" (click)="verFicha(pagoSel.cliente_id, pagoSel.client_name)" [disabled]="!pagoSel.cliente_id">Ver ficha del cliente</button>
+          <button type="button" class="pg-btn pg-btn--peligro" *ngIf="pagoSel.type !== 'reverso' && pagoSel.paid" (click)="revertir(pagoSel)">Revertir pago…</button>
+        </div>
+      </aside>
+    </div>
+  </ng-container>
+
+  <!-- ══ Por revisar ═══════════════════════════════════════════════════════ -->
+  <ng-container *ngIf="vista === 'revisar'">
+    <p class="pg-ayuda">
+      Comprobantes que mandaron los clientes por WhatsApp y nadie ha aprobado.
+      Teclado: <kbd>A</kbd> aprobar · <kbd>R</kbd> rechazar · <kbd>↑</kbd> <kbd>↓</kbd> cambiar.
+    </p>
+    <div *ngIf="cargandoCola" class="np-loading"><span class="np-spinner"></span> Cargando comprobantes…</div>
+    <div class="pg-vacio pg-caja" *ngIf="!cargandoCola && !cola.length">No hay comprobantes por revisar.</div>
+
+    <div class="pg-split pg-split--revisar" *ngIf="!cargandoCola && cola.length">
+      <section class="pg-caja pg-cola" aria-label="Comprobantes por revisar">
+        <div class="pg-cola-h"><span>{{ totalPorRevisar | number }} por revisar</span><span>los más recientes primero</span></div>
+        <ul>
+          <li *ngFor="let c of cola">
+            <button type="button" [class.is-sel]="sel?.id === c.id" (click)="elegir(c)">
+              <span class="pg-mini" aria-hidden="true"><img *ngIf="esImagen(c.file_path)" [src]="c.file_path" alt="" loading="lazy" /></span>
+              <span class="dos"><b>{{ nombreDe(c) }}</b><small>{{ c.bank_name || 'Banco sin leer' }} · {{ (c.payment_date || c.created_at) | date:'d MMM' }}</small>
+                <span class="pg-chip" [ngClass]="'is-' + estadoDe(c).tono">{{ estadoDe(c).texto }}</span></span>
+              <b class="num">{{ montoDe(c) !== null ? pesos(montoDe(c)) : '—' }}</b>
+            </button>
+          </li>
+        </ul>
+      </section>
+
+      <section class="pg-caja pg-rev" *ngIf="sel" aria-label="Comprobante seleccionado">
+        <figure class="pg-img">
+          <a *ngIf="esImagen(sel.file_path); else sinImg" [href]="sel.file_path" target="_blank" rel="noopener"><img [src]="sel.file_path" alt="Comprobante de pago" /></a>
+          <ng-template #sinImg><a class="pg-btn" [href]="sel.file_path" target="_blank" rel="noopener">Abrir el archivo</a></ng-template>
+          <figcaption>Llegó {{ sel.linea_nombre ? 'por la línea ' + sel.linea_nombre : 'por WhatsApp' }} · {{ sel.created_at | date:"d MMM, h:mm a" }}</figcaption>
+        </figure>
+
+        <div class="pg-rev-d">
+          <div class="dos">
+            <small>Lo envió</small>
+            <button type="button" class="pg-link pg-link--g" *ngIf="sel.user; else sinTitular" (click)="verFicha(sel.user_id, nombreDe(sel))">{{ nombreDe(sel) }}</button>
+            <ng-template #sinTitular><b class="pg-g">Sin cliente reconocido</b></ng-template>
+            <small class="mono" *ngIf="sel.user?.phone">{{ sel.user.phone }}</small>
+          </div>
+
+          <div class="pg-bloque">
+            <h3>Lo que se leyó</h3>
+            <dl>
+              <dt>Valor</dt><dd class="num"><b>{{ montoDe(sel) !== null ? pesos(montoDe(sel)) : 'No se leyó' }}</b></dd>
+              <dt>Banco</dt><dd>{{ sel.bank_name || '—' }}</dd>
+              <dt>Fecha</dt><dd>{{ sel.payment_date ? (sel.payment_date | date:'d MMMM y') : '—' }}</dd>
+              <dt>Referencia</dt><dd class="mono">{{ sel.reference_number || '—' }}</dd>
+            </dl>
+            <ul class="pg-senales" *ngIf="sel.semaforo?.senales?.length">
+              <li *ngFor="let s of sel.semaforo.senales" [class.is-mal]="s.nivel === 'alerta'">{{ s.texto }}</li>
+            </ul>
+          </div>
+
+          <div class="pg-bloque" *ngIf="sel.invoice">
+            <h3>Factura que paga</h3>
+            <div class="pg-fac">
+              <span>{{ sel.invoice.date_facturation | date:'MMMM y' }} <span class="mono gris">{{ sel.invoice.number_facture }}</span></span>
+              <b class="num">{{ pesos((sel.invoice.price_total || 0) - (sel.invoice.price_discount || 0) - (sel.invoice.price_abone || 0)) }}</b>
+            </div>
+          </div>
+
+          <!-- Sin titular, o es de otra persona: se busca el cliente y se asigna. -->
+          <div class="pg-bloque" *ngIf="asignando || !sel.user_id">
+            <h3>¿De quién es?</h3>
+            <input class="np-input" [(ngModel)]="buscarCliente" (ngModelChange)="buscarClientes()" placeholder="Nombre, documento o teléfono" aria-label="Buscar cliente" />
+            <ul class="pg-encontrados" *ngIf="clientesEncontrados.length">
+              <li *ngFor="let k of clientesEncontrados"><button type="button" (click)="asignar(k)"><b>{{ k.names }} {{ k.lastname }}</b><small class="mono">{{ k.dni }}</small></button></li>
+            </ul>
+          </div>
+
+          <div class="pg-bloque" *ngIf="rechazando">
+            <h3>Por qué se rechaza</h3>
+            <select class="np-input" [(ngModel)]="tipoRechazo" aria-label="Motivo del rechazo">
+              <option *ngFor="let t of TIPOS_RECHAZO" [value]="t.id">{{ t.label }}</option>
+            </select>
+          </div>
+
+          <div class="pg-rev-acc">
+            <ng-container *ngIf="!rechazando">
+              <button type="button" class="pg-btn" (click)="rechazando = true" [disabled]="trabajando">Rechazar</button>
+              <button type="button" class="pg-btn" (click)="asignando = !asignando" [disabled]="trabajando">Es de otro cliente</button>
+              <button type="button" class="pg-btn" (click)="releer()" [disabled]="trabajando">Leer de nuevo</button>
+              <span class="pg-esp"></span>
+              <label class="pg-monto" *ngIf="sel.invoice"><span>$</span><input inputmode="numeric" [(ngModel)]="montoAprobar" aria-label="Valor a aplicar" /></label>
+              <button type="button" class="pg-btn pg-btn--1" (click)="aprobar()" [disabled]="trabajando || !sel.invoice">{{ trabajando ? 'Aplicando…' : 'Aprobar y registrar' }}</button>
+            </ng-container>
+            <ng-container *ngIf="rechazando">
+              <button type="button" class="pg-btn" (click)="rechazando = false">Cancelar</button>
+              <span class="pg-esp"></span>
+              <button type="button" class="pg-btn pg-btn--peligro" (click)="rechazar()" [disabled]="trabajando">Rechazar comprobante</button>
+            </ng-container>
+          </div>
+        </div>
+      </section>
+    </div>
+  </ng-container>
+
+  <!-- ══ En línea ══════════════════════════════════════════════════════════ -->
+  <ng-container *ngIf="vista === 'en-linea'">
+    <div *ngIf="cargandoLinea" class="np-loading"><span class="np-spinner"></span> Consultando las pasarelas…</div>
+    <ng-container *ngIf="!cargandoLinea && linea">
+      <section class="pg-pasarelas" aria-label="Pasarelas">
+        <article class="pg-caja" *ngFor="let g of linea.pasarelas">
+          <div class="pg-pas-h"><b>{{ g.nombre }}</b><small>{{ totalPasarela(g) }} intentos · {{ pesos(g.recaudado) }}</small></div>
+          <div class="pg-barra" role="img" [attr.aria-label]="g.pagados + ' pagados, ' + g.pendientes + ' sin terminar, ' + g.fallidos + ' fallidos'">
+            <span class="is-ok" [style.flex-grow]="g.pagados" *ngIf="g.pagados"></span>
+            <span class="is-warn" [style.flex-grow]="g.pendientes" *ngIf="g.pendientes"></span>
+            <span class="is-mal" [style.flex-grow]="g.fallidos" *ngIf="g.fallidos"></span>
+          </div>
+          <div class="pg-ley">
+            <span><i class="is-ok"></i><b>{{ g.pagados }}</b> pagados</span>
+            <span><i class="is-warn"></i><b>{{ g.pendientes }}</b> sin terminar</span>
+            <span><i class="is-mal"></i><b>{{ g.fallidos }}</b> fallidos</span>
+          </div>
+        </article>
+        <p class="pg-ayuda" *ngIf="!linea.pasarelas.length">Todavía no hay pagos en línea de verdad (los de prueba no se cuentan).</p>
+      </section>
+
+      <div class="pg-split">
+        <section class="pg-caja pg-lista" aria-labelledby="pg-sin">
+          <header><h2 id="pg-sin">Pagos sin terminar</h2><small>{{ linea.sin_terminar.length }} clientes abrieron el pago y no lo completaron · {{ pesos(linea.total_sin_terminar) }}</small></header>
+          <ul>
+            <li *ngFor="let t of linea.sin_terminar" class="pg-fila4">
+              <span class="dos"><button type="button" class="pg-link pg-link--g" (click)="verFicha(t.cliente_id, t.cliente)" [disabled]="!t.cliente_id">{{ t.cliente }}</button><small class="mono">{{ t.referencia }}</small></span>
+              <span class="dos"><span>{{ t.pasarela }}</span><small>desde {{ t.desde | date:'d MMM, h:mm a' }}</small></span>
+              <b class="num r">{{ pesos(t.valor) }}</b>
+              <button type="button" class="pg-btn pg-btn--sm" (click)="escribirle(t)" [disabled]="!t.puede_escribirle || escribiendo.has(t.id) || t.escrito"
+                      [title]="t.puede_escribirle ? 'Le manda por WhatsApp el mismo enlace para terminar el pago' : 'No hay enlace o teléfono'">
+                {{ t.escrito ? 'Enviado' : (escribiendo.has(t.id) ? 'Enviando…' : 'Escribirle') }}
+              </button>
+            </li>
+            <li class="pg-vacio" *ngIf="!linea.sin_terminar.length">No hay pagos en línea pendientes.</li>
+          </ul>
+        </section>
+
+        <section class="pg-caja pg-lista pg-enlaces" aria-labelledby="pg-enl">
+          <header><h2 id="pg-enl">Enlaces de pago</h2><small>{{ linea.enlaces_creados }} creados · {{ linea.enlaces_usados }} ya se usaron</small></header>
+          <ul>
+            <li *ngFor="let e of linea.enlaces" class="pg-fila2">
+              <span class="dos"><button type="button" class="pg-link pg-link--g" (click)="verFicha(e.user_id, e.cliente)" [disabled]="!e.user_id">{{ e.cliente || 'Sin cliente' }}</button>
+                <small>{{ e.facturas }} {{ e.facturas === 1 ? 'factura' : 'facturas' }} · {{ e.created_at | date:'d MMM' }}<ng-container *ngIf="e.expires_at && e.estado === 'sin_usar'"> · vence {{ e.expires_at | date:'d MMM' }}</ng-container></small></span>
+              <span class="pg-chip" [ngClass]="e.estado === 'usado' ? 'is-ok' : (e.estado === 'vencido' ? 'is-mal' : 'is-gris')">{{ ESTADOS_ENLACE[e.estado] }}</span>
+            </li>
+          </ul>
+        </section>
+      </div>
+    </ng-container>
+  </ng-container>
+
+  <!-- ══ Cuadre de caja ════════════════════════════════════════════════════ -->
+  <ng-container *ngIf="vista === 'caja'">
+    <div class="pg-dia">
+      <button type="button" class="pg-btn pg-btn--ico" (click)="moverDia(-1)" aria-label="Día anterior">‹</button>
+      <b>{{ esHoy ? 'Hoy, ' : '' }}{{ fechaCaja + 'T12:00:00' | date:"EEEE d 'de' MMMM" }}</b>
+      <button type="button" class="pg-btn pg-btn--ico" (click)="moverDia(1)" [disabled]="esHoy" aria-label="Día siguiente">›</button>
+      <span class="pg-chip is-ok" *ngIf="caja?.cierre">Cerrada{{ caja.cierre.cerro ? ' por ' + caja.cierre.cerro : '' }}</span>
+    </div>
+    <div *ngIf="cargandoCaja" class="np-loading"><span class="np-spinner"></span> Cargando la caja…</div>
+
+    <ng-container *ngIf="!cargandoCaja && caja">
+      <section class="pg-personas" *ngIf="caja.por_persona.length" aria-label="Por quién registró">
+        <article class="pg-caja" *ngFor="let p of caja.por_persona">
+          <div class="pg-quien"><span class="pg-av">{{ (p.nombre || '?').slice(0, 2) | uppercase }}</span><span class="dos"><b>{{ p.nombre }}</b><small>{{ p.pagos }} {{ p.pagos === 1 ? 'pago' : 'pagos' }} · {{ p.medios }}</small></span></div>
+          <b class="pg-grande num">{{ pesos(p.total) }}</b>
+        </article>
+      </section>
+      <div class="pg-vacio pg-caja" *ngIf="!caja.por_medio.length">Ese día no se registró ningún pago.</div>
+
+      <div class="pg-split" *ngIf="caja.por_medio.length">
+        <section class="pg-caja pg-tabla pg-cuadre" aria-labelledby="pg-cuadre">
+          <header><h2 id="pg-cuadre">Cuadre por medio de pago</h2><small>Escriba lo que dice el extracto del banco o lo contado en efectivo. La diferencia sale sola.</small></header>
+          <div class="pg-scroll">
+            <table>
+              <thead><tr><th>Medio</th><th class="r">En el sistema</th><th class="r">En el banco o contado</th><th class="r">Diferencia</th></tr></thead>
+              <tbody>
+                <tr *ngFor="let m of caja.por_medio">
+                  <td><span class="dos"><span>{{ m.nombre }}</span><small>{{ m.pagos }} {{ m.pagos === 1 ? 'pago' : 'pagos' }}</small></span></td>
+                  <td class="r num"><b>{{ pesos(m.total) }}</b></td>
+                  <td class="r"><label class="pg-monto"><span>$</span><input inputmode="numeric" [(ngModel)]="contado[claveMedio(m)]" [attr.aria-label]="'Lo que hay en ' + m.nombre" placeholder="0" /></label></td>
+                  <td class="r num"><span *ngIf="diferencia(m) !== null" [class.is-ok]="diferencia(m) === 0" [class.is-mal]="diferencia(m) !== 0">{{ diferencia(m) === 0 ? '$ 0' : (diferencia(m)! > 0 ? '+ ' : '') + pesos(diferencia(m)) }}</span></td>
+                </tr>
+              </tbody>
+              <tfoot>
+                <tr><td>Total del día</td><td class="r num">{{ pesos(caja.total) }}</td><td class="r num">{{ totalContado !== null ? pesos(totalContado) : '—' }}</td>
+                  <td class="r num"><span *ngIf="diferenciaTotal !== null" [class.is-ok]="diferenciaTotal === 0" [class.is-mal]="diferenciaTotal !== 0">{{ diferenciaTotal === 0 ? 'Cuadra' : (diferenciaTotal! > 0 ? '+ ' : '') + pesos(diferenciaTotal) }}</span></td></tr>
+              </tfoot>
+            </table>
+          </div>
+          <footer class="pg-cierre">
+            <label class="np-field"><span>Nota del cierre <em>obligatoria si no cuadra</em></span>
+              <input class="np-input" [(ngModel)]="notaCaja" maxlength="500" placeholder="Qué pasó con la diferencia" /></label>
+            <button type="button" class="pg-btn pg-btn--1" (click)="cerrarCaja()" [disabled]="cerrando">{{ cerrando ? 'Cerrando…' : (caja.cierre ? 'Actualizar el cierre' : 'Cerrar caja del día') }}</button>
+          </footer>
+        </section>
+
+        <aside class="pg-caja pg-lista" aria-labelledby="pg-cierres">
+          <header><h2 id="pg-cierres">Cierres anteriores</h2></header>
+          <ul>
+            <li *ngFor="let k of caja.cierres" class="pg-fila2">
+              <span class="dos"><b>{{ k.fecha + 'T12:00:00' | date:"EEEE d MMM" }}</b><small>{{ k.cerro || 'Sin nombre' }} · {{ pesos(k.total_contado) }}<ng-container *ngIf="k.nota"> · {{ k.nota }}</ng-container></small></span>
+              <span class="pg-chip" [ngClass]="(+k.diferencia) === 0 ? 'is-ok' : 'is-warn'">{{ (+k.diferencia) === 0 ? 'Cuadró' : ((+k.diferencia) > 0 ? 'Sobran ' : 'Faltan ') + pesos(+k.diferencia < 0 ? -k.diferencia : k.diferencia) }}</span>
+            </li>
+            <li class="pg-vacio" *ngIf="!caja.cierres.length">Todavía no se ha cerrado ninguna caja.</li>
+          </ul>
+        </aside>
+      </div>
+    </ng-container>
+  </ng-container>
+</div>

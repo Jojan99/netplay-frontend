@@ -121,10 +121,15 @@ export class ContractService {
     );
   }
 
-  sendByWhatsApp(clientContractId: number, phone: string): Observable<any> {
+  /** Por dónde se puede mandar: líneas de WhatsApp Web conectadas y la oficial de Meta. */
+  canalesWhatsApp(): Observable<any> {
+    return this.http.get(`${this.base}/canales-whatsapp`, { headers: this.getHeaders() });
+  }
+
+  sendByWhatsApp(clientContractId: number, phone: string, canal: 'web' | 'meta' = 'web', linea: number | null = null, pdf = false): Observable<any> {
     return this.http.post(
       `${this.base}/send-whatsapp/${clientContractId}`,
-      JSON.stringify({ phone }),
+      JSON.stringify({ phone, canal, linea, pdf }),
       { headers: this.getHeaders() }
     );
   }

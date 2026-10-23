@@ -5,7 +5,7 @@
 
 .nv { min-height: 100vh; background: var(--bg); color: var(--text); font-family: var(--font-body); }
 .nv-wrap { width: 100%; max-width: 1160px; margin: 0 auto; padding-inline: 20px; }
-.nv-kicker { margin: 0 0 10px; font: 600 11px var(--font-mono); letter-spacing: .08em; text-transform: uppercase; color: var(--accent); }
+.nv-kicker { margin: 0 0 10px; font: 600 11px var(--font-mono); letter-spacing: 0; color: var(--accent); }
 
 /* Barra */
 .nv-top { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 20; background: color-mix(in srgb, var(--surface) 88%, transparent); backdrop-filter: blur(10px); border-bottom: 1px solid var(--line); }
@@ -56,10 +56,10 @@
 .nv-eventos { list-style: none; margin: 0; padding: 8px 0;
   li { display: grid; grid-template-columns: 44px minmax(0, 1fr); column-gap: 12px; row-gap: 2px; padding: 10px 16px; border-bottom: 1px dashed #1f343d; &:last-child { border-bottom: 0; } }
   time { grid-row: span 2; font: 500 12px var(--font-mono); color: #728a96; padding-top: 1px; }
-  b { font-size: 13.5px; font-weight: 700; }
+  b { font-size: 13.5px; font-weight: 600; }
   span { font: 12px var(--font-mono); color: #a9bcc5; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .is-ok { color: #4ccb7f; } .is-info { color: #7aa2f7; } .is-warn { color: #e0a84a; } }
-.nv-consola-pie { margin: 0; padding: 10px 16px; border-top: 1px solid #25383f; font: 11px var(--font-mono); color: #728a96; text-transform: uppercase; letter-spacing: .06em; }
+.nv-consola-pie { margin: 0; padding: 10px 16px; border-top: 1px solid #25383f; font: 11px var(--font-mono); color: #728a96; letter-spacing: 0; }
 
 /* Secciones */
 .nv-sec { padding-block: 72px; }
@@ -74,7 +74,7 @@
   span { font-size: 13.5px; line-height: 1.5; color: var(--text-2); } }
 
 .nv-indice { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 20px;
-  a { padding: 7px 14px; border: 1px solid var(--line-strong); border-radius: 999px; background: var(--surface); color: var(--text-2); font-size: 13px; font-weight: 700; text-decoration: none; transition: border-color .15s, color .15s;
+  a { padding: 7px 14px; border: 1px solid var(--line-strong); border-radius: 999px; background: var(--surface); color: var(--text-2); font-size: 13px; font-weight: 600; text-decoration: none; transition: border-color .15s, color .15s;
     &:hover { border-color: var(--accent); color: var(--accent); } } }
 
 .nv-areas { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 460px), 1fr)); gap: 16px; align-items: start; }
@@ -92,7 +92,7 @@
 /* El complemento ocupa el ancho entero y se distingue: no viene en el plan. */
 .nv-area--extra { grid-column: 1 / -1; border: 2px solid var(--accent); padding-top: 30px;
   ul { grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr)); gap: 14px 28px; } }
-.nv-area-tag { position: absolute; top: -12px; left: 22px; padding: 4px 10px; border-radius: 999px; background: var(--accent); color: var(--accent-ink); font: 600 10.5px var(--font-mono); text-transform: uppercase; letter-spacing: .06em; max-width: calc(100% - 44px); line-height: 1.35; }
+.nv-area-tag { position: absolute; top: -12px; left: 22px; padding: 4px 10px; border-radius: 999px; background: var(--accent); color: var(--accent-ink); font: 600 10.5px var(--font-mono); letter-spacing: 0; max-width: calc(100% - 44px); line-height: 1.35; }
 
 .nv-funciones-cta { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 14px; margin-top: 28px; padding: 20px 24px; background: var(--surface-2); border: 1px solid var(--line); border-radius: 12px;
   p { margin: 0; font-size: 15px; color: var(--text-2); b { color: var(--text); } } }
@@ -103,7 +103,7 @@
   th, td { padding: 14px 16px; text-align: right; border-bottom: 1px solid var(--line); vertical-align: top; white-space: nowrap; }
   th[scope="row"], thead th:first-child { text-align: left; white-space: normal; min-width: 200px; }
   thead th { background: var(--surface-2); font: 600 13px var(--font-body); color: var(--text); }
-  tbody th { font-weight: 700; color: var(--text); }
+  tbody th { font-weight: 600; color: var(--text); }
   td { font-family: var(--font-mono); font-variant-numeric: tabular-nums; color: var(--text-2); }
   /* La letra chica sí se parte: con cinco columnas, en una sola línea empujaba la última fuera de la tabla. */
   small { display: block; margin-top: 2px; font: 500 11.5px / 1.35 var(--font-body); color: var(--text-3); white-space: normal; }
@@ -135,7 +135,7 @@
   ul { list-style: none; margin: 18px 0 22px; padding: 0; display: grid; gap: 9px; flex: 1; align-content: start; }
   li { display: flex; gap: 8px; align-items: flex-start; font-size: 13.5px; color: var(--text-2); line-height: 1.45;
     svg { width: 15px; height: 15px; margin-top: 2px; color: var(--ok); flex-shrink: 0; } } }
-.nv-plan-tag { position: absolute; top: -11px; left: 22px; padding: 3px 9px; border-radius: 999px; background: var(--accent); color: var(--accent-ink); font: 600 10.5px var(--font-mono); text-transform: uppercase; letter-spacing: .05em; }
+.nv-plan-tag { position: absolute; top: -11px; left: 22px; padding: 3px 9px; border-radius: 999px; background: var(--accent); color: var(--accent-ink); font: 600 10.5px var(--font-mono); letter-spacing: 0; }
 .nv-plan-para { margin: 4px 0 0; color: var(--text-2); font-size: 13.5px; min-height: 2.8em; }
 .nv-plan-precio { margin: 18px 0 0; display: flex; align-items: baseline; gap: 6px;
   b { font: 600 32px var(--font-display); letter-spacing: -0.03em; }
@@ -155,13 +155,13 @@
 .nv-confianza { display: grid; grid-template-columns: minmax(0, 1fr); gap: 28px;
   h2 { margin: 0; font: 600 clamp(26px, 3.4vw, 38px) / 1.1 var(--font-display); letter-spacing: -0.025em; }
   dl { margin: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 20px 28px; }
-  dt { font-weight: 700; font-size: 14.5px; margin-bottom: 4px; }
+  dt { font-weight: 600; font-size: 14.5px; margin-bottom: 4px; }
   dd { margin: 0; color: var(--text-2); font-size: 13.5px; line-height: 1.55; } }
 @media (min-width: 960px) { .nv-confianza { grid-template-columns: minmax(0, 4fr) minmax(0, 7fr); } }
 
 .nv-faq { display: grid; gap: 8px; max-width: 820px;
   details { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-lg); padding: 0 18px; }
-  summary { cursor: pointer; list-style: none; padding: 16px 0; font-weight: 700; font-size: 15px; display: flex; justify-content: space-between; gap: 16px;
+  summary { cursor: pointer; list-style: none; padding: 16px 0; font-weight: 600; font-size: 15px; display: flex; justify-content: space-between; gap: 16px;
     &::-webkit-details-marker { display: none; }
     &::after { content: '+'; font: 500 20px/1 var(--font-mono); color: var(--accent); } }
   details[open] summary::after { content: '−'; }

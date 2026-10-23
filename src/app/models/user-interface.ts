@@ -38,6 +38,16 @@ export interface UserInterface {
     connection_type?: string | null
     /** Sin facturas por pagar (la pestaña «Pagó y sigue suspendido» dice por qué está ahí). */
     al_dia?: boolean
+    /** Lo que debe, en pesos, y en cuántas facturas (la lista lo trae ya calculado). */
+    deuda?: number
+    facturas_pendientes?: number
+    /** Los últimos 6 meses, el más viejo primero: a_tiempo | tarde | debe | por_pagar | sin. */
+    pagos?: { mes: string; estado: string }[]
+    monthly_price?: number | null
+    ultimo_pago?: string | null
+    ont_estado?: string | null
+    ont_puerto?: string | null
+    tickets_abiertos?: number
     pppoe_user?: string | null
     pppoe_password?: string | null
     pppoe_profile?: string | null

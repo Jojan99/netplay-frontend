@@ -12,6 +12,8 @@ export type RouteProps = {
   roles?: number[];
   card?: ComponentCardItem;
   children?: RouteProps[];
+  /** Se esconde cuando el perfil ya tiene ese módulo (p. ej. «Conectar panel de TV» si ya hay TV). */
+  ocultarSiModulo?: string;
   module?: string;
   /** Sólo lo ve el perfil ADMIN (además del módulo). */
   soloAdmin?: boolean;
@@ -72,7 +74,7 @@ export const components: RouteProps[] = [
     roles: [2, 4],
     children: [
       {
-        title: 'Facturas y pagos',
+        title: 'Cartera',
         icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v10M9.5 9.5h3.75a1.75 1.75 0 0 1 0 3.5H10.75a1.75 1.75 0 0 0 0 3.5H14.5"/></svg>`,
         href: 'finanzas',
         module: 'finanzas',
@@ -81,25 +83,25 @@ export const components: RouteProps[] = [
         card: TARJETA,
       },
       {
-        title: 'Comprobantes por revisar',
-        icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="6"/><path d="m20 20-4.5-4.5M9 11l1.5 1.5L13 9.5"/></svg>`,
-        href: 'payment-proof-audit',
+        title: 'Pagos y caja',
+        icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="6" width="18" height="13" rx="2"/><path d="M3 10h18M16 15h2"/></svg>`,
+        href: 'pagos',
         module: 'finanzas',
         group: false,
         roles: [2, 4],
         card: TARJETA,
       },
       {
-        title: 'Clientes en mora',
-        icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8"/><path d="M12 8v4l2.5 2.5"/></svg>`,
-        href: 'cartera',
+        title: 'Compromisos',
+        icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="5" width="16" height="15" rx="2"/><path d="M4 10h16M9 3v4M15 3v4M9 15l2 2 4-4"/></svg>`,
+        href: 'compromisos',
         module: 'finanzas',
         group: false,
         roles: [2, 4],
         card: TARJETA,
       },
       {
-        title: 'Recordatorios automáticos',
+        title: 'Cobranza',
         icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20l1.3-3.8A8 8 0 1 1 8 19.2L4 20z"/><path d="M12 8v8M10 10.2a2 2 0 0 1 2-1.2h.8a1.6 1.6 0 0 1 0 3.2h-1.6a1.6 1.6 0 0 0 0 3.2h.8a2 2 0 0 0 2-1.2"/></svg>`,
         href: 'cobranza',
         module: 'finanzas',
@@ -108,7 +110,7 @@ export const components: RouteProps[] = [
         card: TARJETA,
       },
       {
-        title: 'Conciliación de pagos',
+        title: 'Conciliación',
         icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3 8-8"/><path d="M20 12v6a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h9"/></svg>`,
         href: 'conciliacion-pagos',
         module: 'finanzas',
@@ -117,25 +119,7 @@ export const components: RouteProps[] = [
         card: TARJETA,
       },
       {
-        title: 'Reportes de pagos',
-        icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>`,
-        href: 'report-paid',
-        module: 'report-paid',
-        group: false,
-        roles: [2, 4],
-        card: TARJETA,
-      },
-      {
-        title: 'Métodos de pago',
-        icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 10h18M7 15h4"/></svg>`,
-        href: 'finanzas/metodos-pago',
-        module: 'finanzas',
-        group: false,
-        roles: [2, 4],
-        card: TARJETA,
-      },
-      {
-        title: 'Gastos de la empresa',
+        title: 'Gastos',
         icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 17l6-6 4 4 6-8"/><path d="M14 7h6v6"/></svg>`,
         href: 'egresos',
         module: 'egresos',
@@ -145,6 +129,7 @@ export const components: RouteProps[] = [
       },
       {
         title: 'Resumen del mes',
+        seccion: "Consultas",
         icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19h16M6 15V9M10 15V5M14 15v-4M18 15V7"/></svg>`,
         href: 'resumen',
         module: 'resumen',
@@ -153,10 +138,30 @@ export const components: RouteProps[] = [
         card: TARJETA,
       },
       {
-        title: 'Contabilidad externa',
+        title: 'Reporte de pagos',
+        seccion: "Consultas",
+        icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>`,
+        href: 'report-paid',
+        module: 'report-paid',
+        group: false,
+        roles: [2, 4],
+        card: TARJETA,
+      },
+      {
+        title: 'Tablero de mora',
+        seccion: "Consultas",
+        icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8"/><path d="M12 8v4l2.5 2.5"/></svg>`,
+        href: 'cartera',
+        module: 'finanzas',
+        group: false,
+        roles: [2, 4],
+        card: TARJETA,
+      },
+      {
+        title: 'Auditoría de comprobantes',
         seccion: AVANZADO,
-        icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h9l4 4v14H6z"/><path d="M14 3v5h5"/><path d="M9 13h6M9 17h4"/></svg>`,
-        href: 'alegra',
+        icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="6"/><path d="m20 20-4.5-4.5M9 11l1.5 1.5L13 9.5"/></svg>`,
+        href: 'payment-proof-audit',
         module: 'finanzas',
         group: false,
         roles: [2, 4],
@@ -169,6 +174,16 @@ export const components: RouteProps[] = [
         href: 'send-logs',
         group: false,
         module: 'finanzas',
+        roles: [2, 4],
+        card: TARJETA,
+      },
+      {
+        title: 'Contabilidad externa',
+        seccion: AVANZADO,
+        icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h9l4 4v14H6z"/><path d="M14 3v5h5"/><path d="M9 13h6M9 17h4"/></svg>`,
+        href: 'alegra',
+        module: 'finanzas',
+        group: false,
         roles: [2, 4],
         card: TARJETA,
       },
@@ -191,7 +206,7 @@ export const components: RouteProps[] = [
       },
       // "Crear Ticket" ya no va aparte: es el botón "Nuevo ticket" de esta pantalla.
       {
-        title: 'Tickets de soporte',
+        title: 'Tickets',
         icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8V6a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v2a2 2 0 0 0 0 4v2a2 2 0 0 0 0 4v2a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-2a2 2 0 0 0 0-4v-2a2 2 0 0 0 0-4z"/><path d="M9 12h6"/></svg>`,
         href: 'view-ticket',
         group: false,
@@ -211,11 +226,20 @@ export const components: RouteProps[] = [
     card: TARJETA,
   },
   {
-    title: 'Instalaciones',
+    title: 'Técnicos en campo',
     icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a4 4 0 0 0 5 5L14 17a4 4 0 0 1-5.7 0L4 12.7 9 8a4 4 0 0 1 5.7-1.7z"/></svg>`,
     group: true,
     roles: [2, 3, 4],
     children: [
+      {
+        title: 'Mi día',
+        icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="5" width="16" height="15" rx="2"/><path d="M4 10h16M9 3v4M15 3v4M8 14h3"/></svg>`,
+        href: 'mi-dia',
+        module: 'installations',
+        group: false,
+        roles: [2, 3],
+        card: TARJETA,
+      },
       {
         title: 'Órdenes de instalación',
         icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a4 4 0 0 0 5 5L14 17a4 4 0 0 1-5.7 0L4 12.7 9 8a4 4 0 0 1 5.7-1.7z"/></svg>`,
@@ -233,8 +257,17 @@ export const components: RouteProps[] = [
         roles: [2],
         card: TARJETA,
       },
+    ],
+    card: TARJETA,
+  },
+  {
+    title: 'Bodega',
+    icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="2"/><path d="M4 10h16M10 4v16"/></svg>`,
+    group: true,
+    roles: [2, 4],
+    children: [
       {
-        title: 'Bodega y técnicos',
+        title: 'Existencias y técnicos',
         icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="2"/><path d="M4 10h16M10 4v16"/></svg>`,
         href: 'inventory',
         group: false,
@@ -242,7 +275,7 @@ export const components: RouteProps[] = [
         card: TARJETA,
       },
       {
-        title: 'Categorías de la bodega',
+        title: 'Tipos de equipo',
         icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16M4 12h10M4 18h6"/></svg>`,
         href: 'inventory/categories',
         group: false,
@@ -253,17 +286,17 @@ export const components: RouteProps[] = [
     card: TARJETA,
   },
   {
-    title: 'Red y equipos',
+    title: 'Red',
     icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 8h14M5 12h14M5 16h14"/><circle cx="8" cy="8" r="1"/><circle cx="8" cy="12" r="1"/><circle cx="8" cy="16" r="1"/></svg>`,
     group: true,
     roles: [2],
     children: [
-      { title: 'Fallas por sector', href: 'fallas-sector', group: false, module: 'olt-admin', icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><path d="M12 9v4M12 17h.01"/></svg>`, card: TARJETA },
-      { title: 'Mapa de la red', href: 'mapa-red', group: false, module: 'olt-admin', icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 4 3 6v14l6-2 6 2 6-2V4l-6 2-6-2z"/><path d="M9 4v14M15 6v14"/></svg>`, card: TARJETA },
+      { title: 'Resumen de las OLT', href: 'olt/dashboard', group: false, module: 'olt-admin', icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="8" height="8" rx="1.5"/><rect x="13" y="3" width="8" height="5" rx="1.5"/><rect x="13" y="11" width="8" height="10" rx="1.5"/><rect x="3" y="14" width="8" height="7" rx="1.5"/></svg>`, card: TARJETA },
       { title: 'Equipos de los clientes', href: 'olt/autorizadas', group: false, module: 'olt-admin', icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="m8.5 12.5 2.5 2.5 4.5-5"/></svg>`, card: TARJETA },
       { title: 'Equipos por autorizar', href: 'olt/sin-autorizar', group: false, module: 'olt-admin', icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 8v4M12 16h.01"/></svg>`, card: TARJETA },
       { title: 'Equipos en línea', href: 'olt/online', group: false, module: 'olt-admin', icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 9a15 15 0 0 1 20 0M5.5 12.5a10 10 0 0 1 13 0M9 16a5 5 0 0 1 6 0M12 19h.01"/></svg>`, card: TARJETA },
-      { title: 'Resumen de las OLT', href: 'olt/dashboard', group: false, module: 'olt-admin', icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="8" height="8" rx="1.5"/><rect x="13" y="3" width="8" height="5" rx="1.5"/><rect x="13" y="11" width="8" height="10" rx="1.5"/><rect x="3" y="14" width="8" height="7" rx="1.5"/></svg>`, card: TARJETA },
+      { title: 'Fallas por sector', href: 'fallas-sector', group: false, module: 'olt-admin', icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><path d="M12 9v4M12 17h.01"/></svg>`, card: TARJETA },
+      { title: 'Mapa de la red', href: 'mapa-red', group: false, module: 'olt-admin', icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 4 3 6v14l6-2 6 2 6-2V4l-6 2-6-2z"/><path d="M9 4v14M15 6v14"/></svg>`, card: TARJETA },
       { title: 'Equipos OLT', seccion: AVANZADO, href: 'olt', group: false, module: 'olt-admin', icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M7 8h.01M7 12h.01M7 16h.01M11 8h6M11 12h6M11 16h6"/></svg>`, card: TARJETA },
       {
         title: 'Router principal',
@@ -282,6 +315,27 @@ export const components: RouteProps[] = [
     card: TARJETA,
   },
   {
+    title: 'Televisión',
+    icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="6" width="18" height="13" rx="2"/><path d="m8 2 4 4 4-4"/></svg>`,
+    group: true,
+    roles: [2],
+    children: [
+      { title: 'Canales y líneas', href: 'television', group: false, module: 'television', icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="6" width="18" height="13" rx="2"/><path d="m8 2 4 4 4-4"/></svg>`, card: TARJETA },
+      {
+        // Solo mientras la empresa no tenga TV: conectado el panel, aparece «Canales y líneas».
+        title: 'Conectar panel',
+        icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="6" width="18" height="13" rx="2"/><path d="m8 2 4 4 4-4"/></svg>`,
+        href: 'television/conectar',
+        module: 'planes-internet',
+        ocultarSiModulo: 'television',
+        group: false,
+        roles: [2],
+        card: TARJETA,
+      },
+    ],
+    card: TARJETA,
+  },
+  {
     title: 'Configuración',
     icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>`,
     group: true,
@@ -296,7 +350,15 @@ export const components: RouteProps[] = [
         card: TARJETA,
       },
       {
-        title: 'Equipo de trabajo',
+        title: 'Contratos',
+        icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5M8 17c1.5-2 3-2 4.5 0S15 19 17 15"/></svg>`,
+        href: 'contratos',
+        group: false,
+        roles: [2],
+        card: TARJETA,
+      },
+      {
+        title: 'Usuarios y permisos',
         icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.5"/><path d="M3 20a6 6 0 0 1 12 0M17 11h4M19 9v4"/></svg>`,
         href: 'staff',
         group: false,
@@ -313,6 +375,7 @@ export const components: RouteProps[] = [
       },
       {
         title: 'Facturación',
+        seccion: "Cobro",
         icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h12v18l-3-2-3 2-3-2-3 2z"/><path d="M9 8h6M9 12h6"/></svg>`,
         href: 'billing-config',
         group: false,
@@ -320,7 +383,18 @@ export const components: RouteProps[] = [
         card: TARJETA,
       },
       {
+        title: 'Medios de pago',
+        seccion: "Cobro",
+        icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 10h18M7 15h4"/></svg>`,
+        href: 'finanzas/metodos-pago',
+        module: 'finanzas',
+        group: false,
+        roles: [2, 4],
+        card: TARJETA,
+      },
+      {
         title: 'Pasarela de pago',
+        seccion: "Cobro",
         icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 10h18M15 15h2"/></svg>`,
         href: 'payment-gateway',
         group: false,
@@ -329,23 +403,8 @@ export const components: RouteProps[] = [
         card: TARJETA,
       },
       {
-        title: 'Contratos',
-        icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5M8 17c1.5-2 3-2 4.5 0S15 19 17 15"/></svg>`,
-        href: 'contratos',
-        group: false,
-        roles: [2],
-        card: TARJETA,
-      },
-      {
-        title: 'Correo',
-        icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg>`,
-        href: 'correo',
-        group: false,
-        roles: [2],
-        card: TARJETA,
-      },
-      {
         title: 'Líneas de WhatsApp',
+        seccion: "Mensajes",
         icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20l1.3-3.8A8 8 0 1 1 8 19.2L4 20z"/><path d="M9.5 12h5"/></svg>`,
         href: 'whatsapp',
         group: false,
@@ -353,9 +412,19 @@ export const components: RouteProps[] = [
         card: TARJETA,
       },
       {
-        title: 'Avisos automáticos',
+        title: 'Avisos por WhatsApp',
+        seccion: "Mensajes",
         icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 0 0-12 0c0 6-2 7-2 7h16s-2-1-2-7"/><path d="M10.5 20a2 2 0 0 0 3 0"/></svg>`,
         href: 'whatsapp/netplay/avisos',
+        group: false,
+        roles: [2],
+        card: TARJETA,
+      },
+      {
+        title: 'Correo',
+        seccion: "Mensajes",
+        icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg>`,
+        href: 'correo',
         group: false,
         roles: [2],
         card: TARJETA,

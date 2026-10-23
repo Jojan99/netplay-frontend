@@ -30,13 +30,13 @@
 
 /* Compromiso de pago */
 .np-commit { border: 1px solid var(--warn); background: var(--warn-soft); border-radius: var(--radius); padding: 10px 12px; display: grid; gap: 5px; font-size: 12px; }
-.np-commit-h { display: flex; justify-content: space-between; gap: 10px; font-weight: 800; color: var(--warn); span:last-child { font-family: var(--font-mono); font-weight: 500; } }
+.np-commit-h { display: flex; justify-content: space-between; gap: 10px; font-weight: 600; color: var(--warn); span:last-child { font-family: var(--font-mono); font-weight: 500; } }
 .np-commit-amt { font-family: var(--font-mono); font-size: 16px; font-weight: 600; color: var(--text); }
 .np-commit-notes { margin: 0; color: var(--text-2); }
 .np-commit .np-btnrow { margin-top: 4px; }
 .np-commit-hist { list-style: none; margin: 8px 0 0; padding: 0; display: grid; gap: 4px;
   li { display: flex; align-items: center; gap: 10px; font-size: 12px; padding: 4px 0; border-bottom: 1px dashed var(--line); &:last-child { border-bottom: 0; } } }
-.np-commit-total { display: flex; justify-content: space-between; align-items: center; margin-top: 8px; padding: 8px 12px; border-radius: var(--radius); background: var(--accent-soft); color: var(--accent); font-weight: 700; font-size: 12.5px; }
+.np-commit-total { display: flex; justify-content: space-between; align-items: center; margin-top: 8px; padding: 8px 12px; border-radius: var(--radius); background: var(--accent-soft); color: var(--accent); font-weight: 600; font-size: 12.5px; }
 
 @media (max-width: 1400px) { .np-finance.is-open .np-col-phone { display: none; } }
 @media (max-width: 760px) {
@@ -87,6 +87,14 @@
 
   .np-tl-t { line-height: 1.35; }
   .np-tl-d { line-height: 1.45; }
+
+  /* Cada pieza en su lugar, sin depender del acomodo automático de la rejilla:
+     así el monto nunca cae encima del «Pago completo · NT…». */
+  display: grid; grid-template-columns: minmax(0, 1fr) auto;
+  .np-tl-t { grid-column: 1; grid-row: 1; min-width: 0; }
+  .np-tl-m { grid-column: 2; grid-row: 1; text-align: right; }
+  .np-tl-d { grid-column: 1 / -1; grid-row: 2; }
+  .fin-mov-ref { grid-row: 3; }
 }
 
 .fin-mov-ref {
@@ -102,3 +110,76 @@
 
 /* Un reverso resta: se ve en rojo para no confundirlo con un cobro. */
 .np-tl--reverso::before { background: var(--danger); }
+
+/* ═══ Cartera, estilo limpio (21-10-2026): el de la ficha de Clientes ═══ */
+:host {
+  --font-body: 'Geist', 'Manrope', ui-sans-serif, system-ui, sans-serif;
+  --font-display: 'Geist', 'Manrope', ui-sans-serif, system-ui, sans-serif;
+  --bg: #f7f7f8; --surface: #ffffff; --surface-2: #f3f3f5; --surface-3: #ececef;
+  --text: #111216; --text-2: #4f525c; --text-3: #737782;
+  --line: #e7e7ea; --line-strong: #d9dadf;
+  font-family: var(--font-body);
+}
+:host-context(.dark), :host-context([data-theme='dark']) {
+  --bg: #0d0e10; --surface: #131417; --surface-2: #18191d; --surface-3: #1e2024;
+  --text: #ecedf0; --text-2: #a9acb5; --text-3: #868a95; --line: #222429; --line-strong: #2d3036;
+}
+.fz-head { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 12px; margin-bottom: 14px;
+  h1 { margin: 0; font-size: 22px; font-weight: 600; letter-spacing: -0.01em; color: var(--text); } }
+.fz-kicker { margin: 0 0 4px; font-size: 12.5px; color: var(--text-3); }
+.fz-acc { display: flex; flex-wrap: wrap; gap: 8px; }
+.fz-btn { display: inline-flex; align-items: center; gap: 7px; height: 34px; padding: 0 13px; border: 1px solid var(--line-strong); border-radius: 8px; background: var(--surface);
+  color: var(--text); font: inherit; font-size: 13px; font-weight: 500; text-decoration: none; cursor: pointer;
+  svg { width: 15px; height: 15px; } &:hover { border-color: var(--text-3); } }
+.fz-btn--1 { background: var(--text); border-color: var(--text); color: var(--surface); &:hover { opacity: .9; } }
+
+.fz-kpis { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; margin-bottom: 14px; }
+.fz-kpi { display: flex; flex-direction: column; gap: 5px; padding: 13px 16px; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; min-width: 0;
+  small { font-size: 12.5px; color: var(--text-3); &::first-letter { } }
+  > b { font-size: 22px; font-weight: 600; letter-spacing: -0.02em; color: var(--text); font-variant-numeric: tabular-nums; }
+  > span { font-size: 12.5px; color: var(--text-2); } }
+.fz-kpi--mora { grid-column: span 2; gap: 9px; }
+.fz-barra { display: flex; gap: 2px; height: 10px; border-radius: 5px; overflow: hidden; background: var(--surface-2);
+  span { flex: 0 1 0; } }
+.s1 { background: #e9b949; } .s2 { background: #d9772b; } .s3 { background: var(--danger); }
+.fz-ley { display: flex; flex-wrap: wrap; gap: 4px 8px;
+  button { display: inline-flex; align-items: center; gap: 6px; height: 28px; padding: 0 9px; border: 1px solid transparent; border-radius: 7px; background: transparent;
+    font: inherit; font-size: 13px; color: var(--text-2); cursor: pointer;
+    &:hover { background: var(--surface-2); } &[aria-pressed='true'] { border-color: var(--text); color: var(--text); background: var(--surface-2); } }
+  i { width: 8px; height: 8px; border-radius: 50%; } b { font-weight: 600; color: var(--text); font-variant-numeric: tabular-nums; } }
+.fz-filtro { display: inline-flex; align-items: center; gap: 6px; height: 30px; padding: 0 10px; border: 1px solid var(--text); border-radius: 15px; background: var(--surface-2);
+  font: inherit; font-size: 12.5px; color: var(--text); cursor: pointer; span { font-size: 15px; line-height: 1; } }
+.fz-prom { display: inline-flex; align-items: center; height: 19px; margin-left: 8px; padding: 0 7px; border-radius: 5px; font-size: 11.5px; vertical-align: middle;
+  background: color-mix(in srgb, var(--accent) 12%, transparent); color: var(--accent); white-space: nowrap; }
+.fz-ultimo { font-size: 13px; color: var(--text-2); white-space: nowrap; &.is-nunca { color: var(--danger); } }
+.fz-acciones { display: inline-flex; gap: 6px; align-items: center; justify-content: flex-end; }
+.fz-ico { width: 32px; height: 32px; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); color: var(--text-2); display: grid; place-items: center; cursor: pointer;
+  svg { width: 15px; height: 15px; } &:hover:not(:disabled) { border-color: var(--text-3); color: var(--text); } &:disabled { color: var(--ok); cursor: default; } }
+.fz-cobrar { height: 32px; padding: 0 12px; border: 1px solid var(--line-strong); border-radius: 8px; background: var(--surface); color: var(--text); font: inherit; font-size: 13px; font-weight: 500; cursor: pointer;
+  &:hover { border-color: var(--text-3); } }
+@media (max-width: 1000px) { .fz-kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 560px) { .fz-kpis { grid-template-columns: minmax(0, 1fr); } .fz-kpi--mora { grid-column: auto; } }
+
+/* ═══ La cartera del cliente en el celular, más ordenada (22-10-2026) ═══
+   Las tres cifras en una banda en vez de tres renglones grises; cada factura con
+   el número y el estado arriba, las cuatro cifras en una fila y las acciones en
+   un renglón al pie, sin la etiqueta «Acciones». */
+@media (max-width: 760px) {
+  .np-finance .np-inspector .np-stats--bar { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .np-finance .np-inspector .np-stats--bar .np-stat { border-right: 1px solid var(--line); border-bottom: 0; padding: 10px 12px;
+    &:last-child { border-right: 0; } }
+  .np-finance .np-inspector .np-stat-v { font-size: 15px; }
+}
+@media (max-width: 640px) {
+  .np-finance .np-ledger tbody tr:not(.np-empty) { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px 10px; padding: 12px 14px; }
+  .np-finance .np-ledger tbody td:nth-child(1) { grid-column: 1 / 3; order: -2; font-size: 14px; align-self: center; }
+  .np-finance .np-ledger tbody td:nth-child(3) { grid-column: 3 / 5; order: -1; justify-self: end; text-align: right !important;
+    .np-fine { text-align: right; } }
+  .np-finance .np-ledger tbody td:nth-child(1)::before,
+  .np-finance .np-ledger tbody td:nth-child(3)::before,
+  .np-finance .np-ledger tbody td:nth-child(7)::before { display: none !important; }
+  .np-finance .np-ledger tbody td:nth-child(7) { grid-column: 1 / -1; padding-top: 8px !important; border-top: 1px solid var(--line) !important; }
+  .np-finance .np-ledger .np-rowacts { display: flex; flex-wrap: wrap; justify-content: flex-start; gap: 2px; opacity: 1;
+    .np-icobtn { width: 34px; height: 34px; } }
+  .np-finance .np-subbar { flex-wrap: wrap; row-gap: 8px; }
+}

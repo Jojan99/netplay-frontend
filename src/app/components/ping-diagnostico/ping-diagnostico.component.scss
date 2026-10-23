@@ -51,15 +51,15 @@
 }
 .pg-perdida {
   display: grid; justify-items: end; line-height: 1;
-  font-size: 22px; font-weight: 700; color: var(--tono); font-variant-numeric: tabular-nums;
-  small { margin-top: 3px; font-size: 10px; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; color: var(--text-3); }
+  font-size: 22px; font-weight: 600; color: var(--tono); font-variant-numeric: tabular-nums;
+  small { margin-top: 3px; font-size: 10px; font-weight: 600; letter-spacing: 0; color: var(--text-3); }
 }
 
 .pg-cifras {
   display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin: 0;
   div { padding: 9px 10px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--surface-2); }
-  dt { font-size: 10px; font-weight: 600; letter-spacing: .05em; text-transform: uppercase; color: var(--text-3); }
-  dd { margin: 3px 0 0; font-size: 14px; font-weight: 700; color: var(--text); font-variant-numeric: tabular-nums; white-space: nowrap; }
+  dt { font-size: 10px; font-weight: 600; letter-spacing: 0; color: var(--text-3); }
+  dd { margin: 3px 0 0; font-size: 14px; font-weight: 600; color: var(--text); font-variant-numeric: tabular-nums; white-space: nowrap; }
 }
 
 .pg-grafica {
@@ -105,7 +105,7 @@
   padding: 12px 18px; border-top: 1px solid var(--line); background: var(--surface-2);
 }
 .pg-cantidades { display: flex; align-items: center; gap: 6px; }
-.pg-cantidades-l { margin-right: 4px; font-size: 11px; font-weight: 600; letter-spacing: .05em; text-transform: uppercase; color: var(--text-3); }
+.pg-cantidades-l { margin-right: 4px; font-size: 11px; font-weight: 600; letter-spacing: 0; color: var(--text-3); }
 .pg-chip {
   min-width: 36px; height: 30px; padding: 0 10px;
   border: 1px solid var(--line-strong); border-radius: 999px;

@@ -3,7 +3,7 @@
     <div class="np-modal-head">
       <div>
         <p class="np-kicker">Instalación <b>/</b> {{ orden.client_name }}</p>
-        <h3>{{ termino ? 'Instalación terminada' : 'Seleccione el equipo' }}</h3>
+        <h3>{{ termino ? 'Instalación terminada' : 'Instalar el equipo' }}</h3>
       </div>
       <button type="button" class="np-icobtn" (click)="cerrar()" aria-label="Cerrar">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M6 6l12 12M18 6 6 18"/></svg>
@@ -33,11 +33,37 @@
 
         <p class="np-notice np-notice--warn" *ngFor="let a of avisos">{{ a }}</p>
 
+        <!-- El plan lleva TV: los datos para dejar el TV Box o el Smart TV listo antes de irse. -->
+        <section class="pv-tv" *ngIf="tv">
+          <b>Televisión del cliente</b>
+          <dl>
+            <dt>Usuario</dt><dd class="np-mono">{{ tv.usuario }}</dd>
+            <dt>Clave</dt><dd class="np-mono">{{ tv.clave }}</dd>
+            <dt>Servidor</dt><dd class="np-mono">{{ tv.servidor }}</dd>
+            <dt>Lista</dt><dd class="np-mono">{{ tv.m3u }}</dd>
+          </dl>
+          <small>En IPTV Smarters o TiviMate: «Xtream Codes» con usuario, clave y servidor. En Smart TV o VLC: la lista. También le llegó al grupo de instalaciones.</small>
+        </section>
+
         <!-- La configuración no entró todavía: se ve en vivo cómo va llegando al equipo. -->
         <app-aprovisionamiento-en-vivo *ngIf="aprovisiona" [ordenId]="orden.id"></app-aprovisionamiento-en-vivo>
 
-        <div class="np-btnrow np-btnrow--end">
-          <button type="button" class="np-btn np-btn--primary" (click)="cerrar()">Cerrar</button>
+        <!-- Lo que antes pedía «Completar», aquí mismo: el cobro y la nota del trabajo. -->
+        <section class="pv-cierre">
+          <div class="pv-cobro" *ngIf="debeCobrar">
+            <span><b>Cobrar la instalación: {{ valorInstalacion }}</b><small>Tómele foto al comprobante o al recibo.</small></span>
+            <label class="np-btn np-btn--ghost">
+              {{ subiendoPago ? 'Subiendo…' : 'Foto del pago' }}
+              <input type="file" accept="image/*,.pdf" capture="environment" hidden [disabled]="subiendoPago" (change)="subirPago($event)" />
+            </label>
+          </div>
+          <p class="pv-ok" *ngIf="pagoSubido">Comprobante guardado.</p>
+          <label class="np-field" *ngIf="!orden.modo_practica"><span>Nota del trabajo <em>opcional</em></span>
+            <textarea class="np-input" rows="2" [(ngModel)]="notaCierre" placeholder="Materiales, metros de cable, algo que deba saber la oficina"></textarea></label>
+        </section>
+
+        <div class="np-btnrow np-btnrow--end pv-pie">
+          <button type="button" class="np-btn np-btn--primary" (click)="terminar()" [disabled]="cerrando">{{ cerrando ? 'Guardando…' : 'Terminar' }}</button>
         </div>
       </ng-container>
 
@@ -78,7 +104,13 @@
              está mirando el equipo: si el cliente ahora sale por otro nodo o
              por otra VLAN, se corrige acá y no queda autorizado donde no
              navega. Va cerrado porque casi siempre va lo planeado. -->
-        <div class="pv-donde" [class.es-abierto]="abiertoPorDonde">
+        <div class="pv-donde-fijo" *ngIf="esTecnico">
+          <span class="pv-donde-t"><b>Por dónde entra</b>
+            <small>{{ oltActual?.name || 'sin OLT' }}{{ vlan ? ' · VLAN ' + vlan : ' · sin VLAN' }}{{ nombrePerfil(lineProfiles, lineProfileId) ? ' · ' + nombrePerfil(lineProfiles, lineProfileId) : '' }}{{ nombrePerfil(srvProfiles, srvProfileId) ? ' · ' + nombrePerfil(srvProfiles, srvProfileId) : '' }}</small></span>
+          <small class="np-fine np-muted">Lo define la oficina. Si el cliente no sale por ahí, avísele antes de instalar.</small>
+        </div>
+
+        <div class="pv-donde" [class.es-abierto]="abiertoPorDonde" *ngIf="!esTecnico">
           <button type="button" class="pv-donde-h" (click)="abiertoPorDonde = !abiertoPorDonde"
                   [attr.aria-expanded]="abiertoPorDonde">
             <span class="pv-donde-t">
@@ -145,7 +177,7 @@
 
         <p class="np-fine np-muted pv-falta" *ngIf="porQueNoPuede && !cargando">{{ porQueNoPuede }}</p>
 
-        <div class="np-btnrow np-btnrow--end">
+        <div class="np-btnrow np-btnrow--end pv-pie">
           <button type="button" class="np-btn np-btn--ghost" (click)="buscarEquipos()" [disabled]="cargando || trabajando">Volver a buscar</button>
           <button type="button" class="np-btn np-btn--primary" (click)="instalar()" [disabled]="!puedeSeguir">
             <span *ngIf="trabajando" class="np-spinner np-spinner--sm"></span>

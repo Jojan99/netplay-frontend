@@ -1,3 +1,4 @@
+import { FinanzasTabsComponent } from '../../components/finanzas-tabs/finanzas-tabs.component';
 import { CommonModule } from '@angular/common';
 import { Component, HostListener, OnDestroy, OnInit, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
@@ -25,7 +26,7 @@ interface FiltroDeAviso {
 @Component({
   selector: 'app-egresos',
   standalone: true,
-  imports: [CommonModule, FormsModule, NpSelectComponent],
+  imports: [FinanzasTabsComponent, CommonModule, FormsModule, NpSelectComponent],
   templateUrl: './egresos.component.html',
   styleUrl: './egresos.component.scss',
   host: { class: 'np-console' },

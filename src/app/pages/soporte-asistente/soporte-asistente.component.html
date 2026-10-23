@@ -10,6 +10,7 @@
       <button type="button" class="np-switch" role="switch" [attr.aria-checked]="cfg.activa" (click)="encender()" [disabled]="guardando" aria-label="Activar el asistente de soporte"></button>
     </div>
   </header>
+  <app-seccion-tabs grupo="atencion"></app-seccion-tabs>
 
   <p class="np-loading" *ngIf="cargando"><span class="np-spinner"></span> Abriendo el asistente…</p>
   <p class="np-notice np-notice--danger" *ngIf="negado">{{ negado }}</p>

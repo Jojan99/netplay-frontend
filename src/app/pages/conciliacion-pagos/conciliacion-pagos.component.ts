@@ -1,3 +1,4 @@
+import { FinanzasTabsComponent } from '../../components/finanzas-tabs/finanzas-tabs.component';
 import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -78,7 +79,7 @@ export const ESTADOS: Record<string, { texto: string; tono: string }> = {
 @Component({
   selector: 'app-conciliacion-pagos',
   standalone: true,
-  imports: [CommonModule, FormsModule, NpSelectComponent],
+  imports: [FinanzasTabsComponent, CommonModule, FormsModule, NpSelectComponent],
   templateUrl: './conciliacion-pagos.component.html',
   styleUrl: './conciliacion-pagos.component.scss',
   host: { class: 'np-console' },

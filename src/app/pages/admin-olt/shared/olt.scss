@@ -4,7 +4,7 @@
 .np-meter--wide { width: 160px; }
 .np-sect--btn { width: 100%; cursor: pointer; margin: 0; }
 .np-registry { flex-shrink: 0; }
-.np-row--on .np-stripe i  { background: var(--ok); }
+.np-row--on .np-stripe i  { background: transparent; }
 .np-row--off .np-stripe i { background: var(--danger); }
 .np-stat-v.is-ok { color: var(--ok); } .np-stat-v.is-warn { color: var(--warn); } .np-stat-v.is-danger { color: var(--danger); }
 .np-olt-auth { --np-inspector-w: 420px; }
@@ -83,7 +83,7 @@
     border-radius: 50%;
     font-style: normal;
     font-size: 11px;
-    font-weight: 700;
+    font-weight: 600;
     background: var(--line);
     color: var(--text-2);
   }
@@ -223,7 +223,7 @@
 
 .olt-autoauth-n {
   font-size: 11px;
-  font-weight: 800;
+  font-weight: 600;
   letter-spacing: .3px;
   color: var(--text-2);
 }
@@ -233,7 +233,7 @@
   font-size: 11px;
   color: var(--text-3);
 
-  &.is-auto { color: var(--ok); font-weight: 700; }
+  &.is-auto { color: var(--ok); font-weight: 600; }
 }
 
 /* Lo que queda por hacer en el sitio, justo después de autorizar la ONT. */
@@ -243,7 +243,7 @@
   background: var(--ok-soft);
   p { margin: 0; font-size: 12.5px; color: var(--text-2); line-height: 1.5; }
 }
-.olt-sigue-t { font-size: 11px !important; font-weight: 800; letter-spacing: .5px; text-transform: uppercase; color: var(--ok) !important; }
+.olt-sigue-t { font-size: 11px !important; font-weight: 600; letter-spacing: .5px; color: var(--ok) !important; }
 .olt-sigue-url {
   display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
   code { font-size: 13.5px; font-weight: 600; color: var(--text); overflow-wrap: anywhere; }
@@ -252,3 +252,43 @@
 /* Soltar la ONT de su cliente (Autorizadas): en rojo porque deshace una
    asignación, y sólo aparece cuando hay alguien a quien quitársela. */
 .au-soltar { color: var(--danger); &:hover:not(:disabled) { background: var(--danger-soft); } }
+
+/* ═══ Ficha de la ONT, ordenada (22-10-2026) ═══
+   La potencia grande con su clasificación al lado y una regla que dice dónde
+   cae; temperatura, voltaje y corriente en una banda de tres; cada service port
+   en un renglón; las acciones de a dos y «Eliminar» sin el bloque rojo. */
+.oe-senal { display: grid; gap: 12px; padding: 14px; border: 1px solid var(--line); border-radius: var(--radius-lg); background: var(--surface); }
+.oe-senal-h { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; }
+.oe-senal-v { font-size: 26px; font-weight: 600; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; color: var(--text);
+  small { font-size: 13px; font-weight: 500; color: var(--text-3); }
+  &.is-ok { color: var(--ok); } &.is-warn { color: var(--warn); } &.is-danger { color: var(--danger); } }
+.oe-senal-c { height: 24px; padding: 0 10px; border-radius: 999px; display: inline-flex; align-items: center; font-size: 12.5px; font-weight: 500;
+  background: var(--surface-2); color: var(--text-2);
+  &.is-ok { background: var(--ok-soft); color: var(--ok); } &.is-warn { background: var(--warn-soft); color: var(--warn); } &.is-danger { background: var(--danger-soft); color: var(--danger); } }
+.oe-regla { position: relative; display: grid; gap: 4px; padding-top: 4px; }
+.oe-regla-b { display: flex; gap: 2px; height: 6px; border-radius: 3px; overflow: hidden;
+  i { display: block; }
+  /* De −32 a −6 dBm, con los cortes de la clasificación: crítica, baja, regular, buena, saturada. */
+  .es-critica { flex: 3; background: color-mix(in srgb, var(--danger) 60%, transparent); }
+  .es-baja { flex: 2; background: color-mix(in srgb, var(--danger) 35%, transparent); }
+  .es-regular { flex: 2; background: color-mix(in srgb, var(--warn) 55%, transparent); }
+  .es-buena { flex: 17; background: color-mix(in srgb, var(--ok) 55%, transparent); }
+  .es-saturada { flex: 2; background: color-mix(in srgb, var(--danger) 35%, transparent); } }
+.oe-regla-m { position: absolute; top: 0; width: 4px; height: 14px; margin-left: -2px; border-radius: 2px; background: var(--text); box-shadow: 0 0 0 2px var(--surface); }
+.oe-regla-t { display: grid; grid-template-columns: 3fr 2fr 2fr 17fr 2fr; font-size: 10.5px; color: var(--text-3); font-variant-numeric: tabular-nums;
+  /* Cada número va en el corte donde empieza su tramo. */
+  span { transform: translateX(-50%); white-space: nowrap; } span:first-child { transform: none; } }
+.oe-tres { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); border-top: 1px solid var(--line); padding-top: 10px;
+  > span { display: flex; flex-direction: column; gap: 2px; min-width: 0; padding-right: 8px; }
+  > span + span { padding-left: 10px; border-left: 1px solid var(--line); }
+  small { font-size: 11px; color: var(--text-3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  b { font-size: 15px; font-weight: 600; font-variant-numeric: tabular-nums; } }
+
+.oe-sps { list-style: none; margin: 0; padding: 0; border: 1px solid var(--line); border-radius: var(--radius-lg); overflow: hidden;
+  li { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; align-items: center; gap: 12px; padding: 9px 12px; font-size: 13px;
+    & + li { border-top: 1px solid var(--line); }
+    > span:not(.np-pill) { color: var(--text-3); b { color: var(--text); font-weight: 500; } } } }
+
+.oe-acciones { grid-template-columns: repeat(2, minmax(0, 1fr));
+  .np-btn--danger { background: transparent; border-color: var(--line-strong); color: var(--danger);
+    &:hover:not(:disabled) { background: var(--danger-soft); border-color: var(--danger); } } }

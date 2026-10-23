@@ -7,6 +7,8 @@ import { PRESENTACION_OLTS, PRESENTACION_TEXTOS, conValor } from '../../../commo
 import { ToastService } from '../../../services/toast.service';
 import { DialogService } from '../../../services/dialog.service';
 import { AprovisionamientoEnVivoComponent } from './aprovisionamiento-en-vivo.component';
+import { LocationTrackerService } from '../../../services/location-tracker.service';
+import { AuthService } from '../../../services/auth.service';
 
 /**
  * Lo que el técnico hace en la casa del cliente.
@@ -30,6 +32,52 @@ export class ProvisionarInstalacionComponent implements OnInit {
   private svc = inject(InstallationService);
   private toast = inject(ToastService);
   private dialog = inject(DialogService);
+  private gps = inject(LocationTrackerService);
+  /** Por dónde entra lo decide la oficina: el técnico lo ve como texto (el servidor tampoco se lo acepta). */
+  readonly esTecnico = inject(AuthService).isTecnico();
+
+  /**
+   * La ubicación del celular se pide al abrir, no al tocar «Instalar»: mientras el técnico elige
+   * el equipo el GPS ya va buscando, y la casa queda en el mapa de la red sin esperar nada.
+   */
+  private ubicacion: Promise<{ lat: number; lng: number; precision: number } | null> = Promise.resolve(null);
+
+  // ── Cierre en la misma ventana: cobro de la instalación y nota del trabajo ──
+  notaCierre = '';
+  subiendoPago = false;
+  pagoSubido = false;
+  cerrando = false;
+
+  get debeCobrar(): boolean {
+    return !this.orden?.modo_practica && Number(this.orden?.installation_cost ?? 0) > 0
+      && ['pending', 'rejected'].includes(this.orden?.payment_status) && !this.orden?.payment_image_url && !this.pagoSubido;
+  }
+
+  get valorInstalacion(): string {
+    return '$ ' + Math.round(Number(this.orden?.installation_cost ?? 0)).toLocaleString('es-CO');
+  }
+
+  subirPago(ev: Event): void {
+    const input = ev.target as HTMLInputElement;
+    const archivo = input.files?.[0];
+    input.value = '';
+    if (!archivo) return;
+    this.subiendoPago = true;
+    this.svc.uploadPaymentProof(this.orden.id, archivo).subscribe({
+      next: (r: any) => { this.subiendoPago = false; this.pagoSubido = true; this.toast.success(r?.message || 'Comprobante guardado'); },
+      error: (e: any) => { this.subiendoPago = false; this.toast.error(e?.error?.message || 'No se pudo subir el comprobante'); },
+    });
+  }
+
+  terminar(): void {
+    const nota = this.notaCierre.trim();
+    if (!nota || this.orden?.modo_practica) { this.cerrar(); return; }
+    this.cerrando = true;
+    this.svc.cierre(this.orden.id, nota).subscribe({
+      next: () => { this.cerrando = false; this.cerrar(); },
+      error: () => { this.cerrando = false; this.toast.error('No se pudo guardar la nota; la instalación sí quedó hecha.'); this.cerrar(); },
+    });
+  }
 
   /** La orden que el técnico está atendiendo. */
   @Input({ required: true }) orden!: any;
@@ -115,10 +163,13 @@ export class ProvisionarInstalacionComponent implements OnInit {
 
   /** El detalle de lo que pasó, para que el técnico vea dónde falló si falla. */
   pasos: any[] = [];
+  /** La línea de TV del cliente, si el plan la lleva: para dejarla configurada antes de irse. */
+  tv: { usuario: string; clave: string; servidor: string; m3u: string } | null = null;
   avisos: string[] = [];
   termino = false;
 
-  ngOnInit(): void { this.buscarEquipos(); }
+  ngOnInit(): void {
+    if (!this.orden?.modo_practica) this.ubicacion = this.gps.posicionActual().catch(() => null); this.buscarEquipos(); }
 
   buscarEquipos(): void {
     this.cargando = true;
@@ -192,6 +243,12 @@ export class ProvisionarInstalacionComponent implements OnInit {
   }
 
   /** Lo que se va a usar difiere de lo que traía la orden. */
+  nombrePerfil(lista: any[], id: any): string {
+    if (id === null || id === undefined || id === '') return '';
+    const p = (lista ?? []).find((x: any) => String(x?.profile_id) === String(id));
+    return p?.profile_name || `perfil ${id}`;
+  }
+
   get cambios(): string[] {
     const dif: string[] = [];
     const nombreOlt = (id: any) => this.olts.find(o => o.id === +id)?.name ?? ('OLT ' + id);
@@ -256,8 +313,10 @@ export class ProvisionarInstalacionComponent implements OnInit {
 
     this.trabajando = true;
     this.error = '';
+    const gps = await this.ubicacion;
 
     this.svc.provisionar(this.orden.id, {
+      ...(gps ? { lat: gps.lat, lng: gps.lng, precision: gps.precision } : {}),
       fsp: this.elegida.fsp,
       ont_id: Number(this.elegida.ont_id ?? 0),
       serial,
@@ -272,6 +331,7 @@ export class ProvisionarInstalacionComponent implements OnInit {
         this.trabajando = false;
         this.pasos = r?.data?.pasos ?? [];
         this.avisos = r?.data?.avisos ?? [];
+        this.tv = r?.data?.tv ?? null;
         this.termino = true;
         this.toast.success(r?.message || 'Listo.');
         // No se avisa al padre todavía: eso cierra el modal (ver cerrar()) y antes de

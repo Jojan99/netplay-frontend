@@ -1,12 +1,9 @@
 <div class="ic">
   <header class="ic-head">
     <div class="ic-head-t">
-      <span class="ic-marca" aria-hidden="true">
-        <svg viewBox="0 0 24 24"><path d="M5 18.6 11.1 7.4a1 1 0 0 1 1.8 0L19 18.6" fill="none" stroke="currentColor" stroke-width="4.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-      </span>
       <div>
-        <p class="ic-kicker">Finanzas / IA Cobranza</p>
-        <h1>IA Cobranza</h1>
+        <p class="ic-kicker">Cobros y pagos</p>
+        <h1>Cobranza</h1>
         <p class="ic-fine">Detecta quién debe y, con su permiso, le escribe por WhatsApp y negocia sólo dentro de sus reglas.</p>
       </div>
     </div>
@@ -15,6 +12,7 @@
       <button type="button" class="ic-btn ic-btn--pri" (click)="guardar()" [disabled]="guardando">{{ guardando ? 'Guardando…' : 'Guardar' }}</button>
     </div>
   </header>
+  <app-finanzas-tabs></app-finanzas-tabs>
 
   <p *ngIf="cargando" class="np-muted"><span class="np-spinner np-spinner--sm"></span> Cargando…</p>
 
@@ -43,7 +41,65 @@
       </div>
     </section>
 
-    <div class="ic-grid">
+    <!-- ── Casos por etapa (21-10-2026): se atienden aquí, sin abrir la burbuja ── -->
+    <div class="cb-vistas" role="tablist" aria-label="Cobranza">
+      <button type="button" role="tab" [attr.aria-selected]="vistaCob === 'casos'" (click)="vistaCob = 'casos'">Casos</button>
+      <button type="button" role="tab" [attr.aria-selected]="vistaCob === 'reglas'" (click)="vistaCob = 'reglas'">Reglas y ajustes</button>
+    </div>
+
+    <ng-container *ngIf="vistaCob === 'casos'">
+      <p *ngIf="cargandoCasos" class="np-muted"><span class="np-spinner np-spinner--sm"></span> Cargando casos…</p>
+      <div class="cb-tablero" *ngIf="!cargandoCasos">
+        <section class="cb-col" *ngFor="let col of columnas" [attr.aria-label]="col.titulo">
+          <header><span><i [style.background]="col.color"></i>{{ col.titulo }}</span><b>{{ col.casos.length }}</b></header>
+          <p class="cb-ayuda">{{ col.ayuda }}</p>
+          <article class="cb-caso" *ngFor="let c of col.casos.slice(0, 30)" [class.is-nuevo]="!c.visto">
+            <div class="cb-caso-h"><button type="button" class="cb-nombre" (click)="abrirCaso(c)">{{ nombreCaso(c) }}</button><b>{{ pesos(c.deuda) }}</b></div>
+            <p class="cb-nota" *ngIf="c.resumen || c.motivo">{{ c.resumen || c.motivo }}</p>
+            <small>{{ c.facturas }} {{ c.facturas === 1 ? 'factura' : 'facturas' }} · {{ c.dias_mora }} días de mora<ng-container *ngIf="c.ultimo_mensaje_en"> · último mensaje {{ c.ultimo_mensaje_en | date:'d MMM, h:mm a' }}</ng-container></small>
+            <div class="cb-acc">
+              <ng-container *ngIf="c.estado === 'detectado'">
+                <button type="button" class="ic-btn" (click)="accionCaso(c, 'descartar')" [disabled]="accionando.has(c.id)">Descartar</button>
+                <button type="button" class="ic-btn ic-btn--pri" (click)="accionCaso(c, 'autorizar')" [disabled]="accionando.has(c.id)">Autorizar</button>
+              </ng-container>
+              <ng-container *ngIf="c.estado === 'escalado'">
+                <button type="button" class="ic-btn" (click)="accionCaso(c, 'devolver')" [disabled]="accionando.has(c.id) || !c.conversation_id">Devolver al asistente</button>
+                <button type="button" class="ic-btn ic-btn--pri" (click)="accionCaso(c, 'tomar')" [disabled]="accionando.has(c.id)">Lo atiendo yo</button>
+              </ng-container>
+              <button type="button" class="ic-btn" *ngIf="c.conversation_id && c.estado !== 'detectado'" (click)="abrirCaso(c)">Ver conversación</button>
+            </div>
+          </article>
+          <p class="cb-vacio" *ngIf="!col.casos.length">Nadie aquí.</p>
+          <p class="cb-vacio" *ngIf="col.casos.length > 30">Y {{ col.casos.length - 30 }} más.</p>
+        </section>
+      </div>
+    </ng-container>
+
+    <!-- La conversación del asistente con el cliente -->
+    <div class="np-overlay" *ngIf="casoAbierto" (click)="casoAbierto = null">
+      <div class="np-modal np-modal--lg" role="dialog" aria-modal="true" [attr.aria-label]="'Conversación con ' + nombreCaso(casoAbierto)" (click)="$event.stopPropagation()">
+        <div class="np-modal-head">
+          <div><p class="np-kicker">Cobranza <b>·</b> {{ pesos(casoAbierto.deuda) }} · {{ casoAbierto.facturas }} facturas</p><h3>{{ nombreCaso(casoAbierto) }}</h3></div>
+          <button type="button" class="np-icobtn" (click)="casoAbierto = null" aria-label="Cerrar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
+        </div>
+        <div class="np-modal-body cb-conv">
+          <p *ngIf="cargandoConv" class="np-muted"><span class="np-spinner np-spinner--sm"></span> Cargando la conversación…</p>
+          <p *ngIf="!cargandoConv && !conversacion.length" class="np-muted">Todavía no hay mensajes con este cliente.</p>
+          <div class="cb-msg" *ngFor="let m of conversacion" [class.is-cliente]="m.sender_type === 'customer' || m.sender_type === 'client' || m.sender_type === 'contact'">
+            <p>{{ m.content || '[' + m.message_type + ']' }}</p><small>{{ m.created_at | date:'d MMM, h:mm a' }}</small>
+          </div>
+        </div>
+        <div class="np-modal-foot">
+          <span></span>
+          <div class="np-btnrow">
+            <button type="button" class="np-btn np-btn--ghost" *ngIf="casoAbierto.estado === 'escalado' && casoAbierto.conversation_id" (click)="accionCaso(casoAbierto, 'devolver')">Devolver al asistente</button>
+            <button type="button" class="np-btn np-btn--primary" *ngIf="casoAbierto.estado === 'escalado'" (click)="accionCaso(casoAbierto, 'tomar')">Lo atiendo yo</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="ic-grid" *ngIf="vistaCob === 'reglas'">
       <!-- ── Reglas ── -->
       <section class="ic-card">
         <header class="ic-card-h"><h2>Reglas</h2><span class="ic-fine">El asistente nunca se sale de esto.</span></header>
@@ -152,7 +208,7 @@
     </div>
 
     <!-- ── Opciones avanzadas: lista de ajustes por grupo ── -->
-    <section class="ic-card ic-avz" [class.is-open]="avanzado">
+    <section class="ic-card ic-avz" [class.is-open]="avanzado" *ngIf="vistaCob === 'reglas'">
       <button type="button" class="ic-avz-btn" (click)="avanzado = !avanzado" [attr.aria-expanded]="avanzado">
         <span><b>Opciones avanzadas</b><small>Cómo se presenta, recordatorios, topes y filtros</small></span>
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>

@@ -43,7 +43,7 @@
     <div class="oe-id">
       <p class="oe-marca"><i></i>{{ marca || 'Equipo ONT' }}</p>
       <h4>
-        <span class="np-mono">{{ modelo || '—' }}</span>
+        <span [class.oe-sin-modelo]="!modelo">{{ modelo || (consultandoEquipo ? 'Consultando…' : 'Modelo sin identificar') }}</span>
         <small *ngIf="version?.comercial">{{ version.comercial }}</small>
       </h4>
       <span class="oe-estado" [class.is-on]="enLinea === true" [class.is-off]="enLinea === false">
@@ -56,42 +56,54 @@
            MAC del PON; el equipo se presenta al TR-069 con el suyo de fábrica.
            En EPON son distintos y el técnico necesita los dos: la MAC para
            reconocerlo en la caja, el de fábrica para la garantía. -->
-      <p class="oe-ubic oe-seriales" *ngIf="ont?.serial || serialDelEquipo">
-        <span *ngIf="ont?.serial"><em>en la OLT</em> <b class="np-mono">{{ ont?.serial }}</b></span>
-        <span *ngIf="serialDelEquipo"><em>del equipo</em> <b class="np-mono">{{ serialDelEquipo }}</b></span>
-      </p>
+      <dl class="oe-seriales" *ngIf="ont?.serial || serialDelEquipo">
+        <ng-container *ngIf="ont?.serial"><dt>Serial en la OLT</dt><dd><span class="np-mono">{{ ont?.serial }}</span><button type="button" class="oe-linkbtn" (click)="copiar(ont?.serial || '', 'serial-olt')">{{ copiado === 'serial-olt' ? 'Copiado' : 'Copiar' }}</button></dd></ng-container>
+        <ng-container *ngIf="serialDelEquipo"><dt>Serial del equipo</dt><dd><span class="np-mono">{{ serialDelEquipo }}</span><button type="button" class="oe-linkbtn" (click)="copiar(serialDelEquipo, 'serial-eq')">{{ copiado === 'serial-eq' ? 'Copiado' : 'Copiar' }}</button></dd></ng-container>
+      </dl>
       <div class="oe-chips" *ngIf="version">
         <span *ngIf="version.hardware">HW <b>{{ version.hardware }}</b></span>
         <span *ngIf="version.software">SW <b>{{ version.software }}</b></span>
         <span *ngIf="vivo?.distancia_m !== null && vivo?.distancia_m !== undefined">A <b>{{ vivo.distancia_m }} m</b></span>
       </div>
       <p class="oe-cargando" *ngIf="consultandoEquipo && !version"><span class="np-spinner np-spinner--sm"></span> Consultando el equipo en la OLT…</p>
-      <button type="button" class="np-btn np-btn--primary np-btn--sm oe-abrir" (click)="fichaAbierta = true" title="Último arranque, caídas, voltaje, red y aparatos conectados">Ver ficha completa</button>
+      <button type="button" class="np-btn np-btn--ghost np-btn--sm oe-abrir" (click)="fichaAbierta = true" title="Último arranque, caídas, voltaje, red y aparatos conectados">Ver ficha completa</button>
     </div>
   </div>
 
-  <app-ont-ficha *ngIf="fichaAbierta" [userId]="userId" [ont]="ont" [cliente]="cliente" (cerrar)="fichaAbierta = false"></app-ont-ficha>
 
   <!-- ── Señal óptica ── -->
   <section class="oe-sec">
     <div *ngIf="midiendo && !vivo" class="oe-cargando"><span class="np-spinner np-spinner--sm"></span> Midiendo la señal…</div>
     <p *ngIf="vivo?.error" class="oe-aviso">{{ vivo.error }}</p>
     <ng-container *ngIf="vivo && !vivo.error">
+      <!-- Una sola tarjeta: la cifra con su significado, la escala de una red PON y todas las medidas. -->
       <div class="oe-senal" [attr.data-estado]="vivo.estado">
-        <div class="oe-senal-v">
-          <b class="np-mono">{{ vivo.potencia !== null ? (vivo.potencia | number:'1.2-2') : '—' }}</b><span>dBm recibidos</span>
-          <em>{{ etiquetaSenal(vivo.estado) }}</em>
+        <div class="oe-senal-top">
+          <div class="oe-senal-v">
+            <span class="oe-senal-lb">Señal que llega al equipo</span>
+            <b>{{ vivo.potencia !== null ? (vivo.potencia | number:'1.2-2') : '—' }}<small>dBm</small></b>
+          </div>
+          <div class="oe-senal-txt">
+            <em>{{ etiquetaSenal(vivo.estado) }}</em>
+            <p>{{ explicacionSenal(vivo.estado) }}</p>
+          </div>
         </div>
-        <div class="oe-senal-barra" *ngIf="vivo.potencia !== null" aria-hidden="true"><i [style.left.%]="posicionSenal(vivo.potencia)"></i></div>
-        <div class="oe-senal-escala" aria-hidden="true"><span>-35</span><span>-29</span><span>-25</span><span>-8</span><span>-5</span></div>
+        <div class="oe-escala" *ngIf="vivo.potencia !== null">
+          <div class="oe-senal-barra" aria-hidden="true"><i [style.left.%]="posicionSenal(vivo.potencia)"></i></div>
+          <div class="oe-zonas" aria-hidden="true">
+            <span style="--a: 0%; --b: 20%">Crítica</span><span style="--a: 20%; --b: 33.3%">Baja</span><span style="--a: 33.3%; --b: 90%">Buena</span><span style="--a: 90%; --b: 100%">Alta</span>
+          </div>
+          <div class="oe-senal-escala" aria-hidden="true"><span>−35</span><span>−29</span><span>−25</span><span>−8</span><span>−5</span></div>
+        </div>
+        <dl class="oe-medidas">
+          <div *ngIf="vivo.olt_rx !== null"><dt>Llega a la OLT</dt><dd>{{ vivo.olt_rx | number:'1.2-2' }} <small>dBm</small></dd></div>
+          <div *ngIf="vivo.tx !== null"><dt>Sale del equipo</dt><dd>{{ vivo.tx | number:'1.2-2' }} <small>dBm</small></dd></div>
+          <div *ngIf="vivo.distancia_m !== null && vivo.distancia_m !== undefined"><dt>Distancia</dt><dd>{{ vivo.distancia_m | number:'1.0-0' }} <small>m de fibra</small></dd></div>
+          <div *ngIf="vivo.temperatura !== null"><dt>Temperatura</dt><dd>{{ vivo.temperatura | number:'1.0-1' }} <small>°C</small></dd></div>
+          <div *ngIf="vivo.voltaje !== null"><dt>Voltaje</dt><dd>{{ vivo.voltaje | number:'1.2-2' }} <small>V</small></dd></div>
+          <div *ngIf="vivo.corriente !== null"><dt>Láser</dt><dd>{{ vivo.corriente | number:'1.1-2' }} <small>mA</small></dd></div>
+        </dl>
       </div>
-      <dl class="oe-medidas">
-        <div *ngIf="vivo.tx !== null"><dt>Tx ONT</dt><dd>{{ vivo.tx | number:'1.2-2' }} dBm</dd></div>
-        <div *ngIf="vivo.olt_rx !== null"><dt>Rx OLT</dt><dd>{{ vivo.olt_rx | number:'1.2-2' }} dBm</dd></div>
-        <div *ngIf="vivo.temperatura !== null"><dt>Temperatura</dt><dd>{{ vivo.temperatura | number:'1.0-1' }} °C</dd></div>
-        <div *ngIf="vivo.voltaje !== null"><dt>Voltaje</dt><dd>{{ vivo.voltaje | number:'1.2-2' }} V</dd></div>
-        <div *ngIf="vivo.corriente !== null"><dt>Láser</dt><dd>{{ vivo.corriente | number:'1.1-2' }} mA</dd></div>
-      </dl>
     </ng-container>
   </section>
 
@@ -269,3 +281,7 @@
     </button>
   </div>
 </div>
+
+<!-- La ficha completa va fuera de .oe: ese contenedor tiene container-type, que encierra a los
+     elementos «fixed» y la ventana quedaba recortada dentro de la ficha del cliente. -->
+  <app-ont-ficha *ngIf="fichaAbierta" [userId]="userId" [ont]="ont" [cliente]="cliente" (cerrar)="fichaAbierta = false"></app-ont-ficha>

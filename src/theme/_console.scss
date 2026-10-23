@@ -12,7 +12,7 @@
 .np-mono { font-family: var(--font-mono); font-variant-numeric: tabular-nums; letter-spacing: -0.01em; }
 .np-spacer { flex: 1; }
 .np-muted { color: var(--text-3); margin: 0; }
-.np-strong { font-weight: 700; color: var(--text); }
+.np-strong { font-weight: 600; color: var(--text); }
 .np-neg { color: var(--danger); font-weight: 600; }
 .np-pos { color: var(--ok-ink, var(--ok)); font-weight: 600; }
 .np-nowrap { white-space: nowrap; }
@@ -42,14 +42,14 @@
 /* ─── Toasts ─────────────────────────────────────────────────────────── */
 .np-toasts { position: fixed; top: 16px; right: 16px; z-index: 9999; display: grid; gap: 8px; max-width: 320px; pointer-events: none; }
 /* Fondo y texto salen de tokens distintos: así se leen en claro y en oscuro. */
-.np-toast { padding: 10px 14px; border-radius: var(--radius); font-weight: 700; font-size: 12.5px; color: var(--text); background: var(--surface); box-shadow: var(--shadow); border: 1px solid var(--line-strong); border-left: 4px solid var(--accent); pointer-events: auto; }
+.np-toast { padding: 10px 14px; border-radius: var(--radius); font-weight: 600; font-size: 12.5px; color: var(--text); background: var(--surface); box-shadow: var(--shadow); border: 1px solid var(--line-strong); border-left: 4px solid var(--accent); pointer-events: auto; }
 .np-toast--success { background: var(--ok-soft); border-color: var(--ok); }
 .np-toast--error   { background: var(--danger-soft); border-color: var(--danger); }
 .np-toast--info    { background: var(--info-soft); border-color: var(--info); }
 
 /* ─── Cabecera ───────────────────────────────────────────────────────── */
 .np-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 24px; padding: 2px 0 18px; }
-.np-kicker { font-family: var(--font-mono); font-size: 11px; color: var(--text-3); letter-spacing: .04em; text-transform: uppercase; margin: 0 0 6px; b { color: var(--accent); font-weight: 500; } }
+.np-kicker { font-family: var(--font-mono); font-size: 11px; color: var(--text-3); letter-spacing: 0; margin: 0 0 6px; b { color: var(--accent); font-weight: 500; } }
 .np-title { font-family: var(--font-display); font-weight: 600; font-size: 30px; line-height: 1.05; letter-spacing: -0.02em; margin: 0; color: var(--text); text-wrap: balance; }
 .np-ribbon { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 22px; margin-top: 12px; font-size: 12px; color: var(--text-2); min-height: 22px; }
 .np-ribbon--loading { color: var(--text-3); font-family: var(--font-mono); font-size: 11.5px; }
@@ -61,7 +61,7 @@
 /* Al pulsar, el botón se hunde apenas (97 %) y vuelve en 120 ms: la interfaz
    acusa recibo. Los «hover» van detrás de (hover: hover) para que en el
    teléfono el toque no deje el botón pintado. */
-.np-btn { display: inline-flex; align-items: center; justify-content: center; gap: 7px; height: 34px; padding: 0 14px; border-radius: var(--radius); font-weight: 700; font-size: 12.5px; border: 1px solid transparent; white-space: nowrap; transition: background .15s, border-color .15s, color .15s, transform var(--dur-press) var(--ease-out);
+.np-btn { display: inline-flex; align-items: center; justify-content: center; gap: 7px; height: 34px; padding: 0 14px; border-radius: var(--radius); font-weight: 600; font-size: 12.5px; border: 1px solid transparent; white-space: nowrap; transition: background .15s, border-color .15s, color .15s, transform var(--dur-press) var(--ease-out);
   &:active:not(:disabled) { transform: scale(.97); } }
 .np-btn--primary { background: var(--accent); color: var(--accent-ink); @media (hover: hover) { &:hover:not(:disabled) { filter: brightness(1.08); } } }
 .np-btn--ghost { border-color: var(--line-strong); background: var(--surface); color: var(--text-2); @media (hover: hover) { &:hover:not(:disabled) { border-color: var(--accent-line); color: var(--accent); } } }
@@ -72,7 +72,7 @@
 .np-btnrow { display: flex; gap: 8px; flex-wrap: wrap; }
 .np-btnrow--center { justify-content: center; }
 .np-btnrow--end { justify-content: flex-end; margin-top: 18px; }
-.np-link { color: var(--accent); font-weight: 700; font-size: 11.5px; text-transform: none; letter-spacing: 0; &:hover { text-decoration: underline; } }
+.np-link { color: var(--accent); font-weight: 600; font-size: 11.5px; text-transform: none; letter-spacing: 0; &:hover { text-decoration: underline; } }
 .np-link--muted { color: var(--text-3); }
 
 .np-icobtn { width: 28px; height: 28px; display: inline-grid; place-items: center; border-radius: 5px; color: var(--text-2); transition: background .12s, color .12s, transform var(--dur-press) var(--ease-out);
@@ -88,7 +88,7 @@
   input::placeholder { color: var(--text-3); }
   kbd { font-family: var(--font-mono); font-size: 10px; padding: 1px 5px; border: 1px solid var(--line-strong); border-radius: 4px; color: var(--text-3); } }
 .np-chips { display: flex; gap: 4px; flex-wrap: wrap; }
-.np-chip { display: inline-flex; align-items: center; height: 30px; padding: 0 12px; border-radius: 999px; font-weight: 700; font-size: 12px; color: var(--text-2); border: 1px solid var(--line); background: var(--surface); white-space: nowrap; transition: background .12s, color .12s, border-color .12s, transform var(--dur-press) var(--ease-out);
+.np-chip { display: inline-flex; align-items: center; height: 30px; padding: 0 12px; border-radius: 999px; font-weight: 600; font-size: 12px; color: var(--text-2); border: 1px solid var(--line); background: var(--surface); white-space: nowrap; transition: background .12s, color .12s, border-color .12s, transform var(--dur-press) var(--ease-out);
   @media (hover: hover) { &:hover { background: var(--surface-3); } }
   &:active { transform: scale(.97); }
   &[aria-pressed="true"] { background: var(--text); color: var(--bg); border-color: var(--text); } }
@@ -114,7 +114,7 @@
 .np-registry-wrap { flex: 1; min-height: 0; overflow: auto; overscroll-behavior: contain; }
 .np-table--registry thead th { position: sticky; top: 0; z-index: 1; }
 .np-table { width: 100%; border-collapse: collapse;
-  thead th { text-align: left; padding: 9px 12px; font-size: 10.5px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--text-3); border-bottom: 1px solid var(--line); background: var(--surface-2); white-space: nowrap; }
+  thead th { text-align: left; padding: 9px 12px; font-size: 10.5px; font-weight: 600; letter-spacing: 0; color: var(--text-3); border-bottom: 1px solid var(--line); background: var(--surface-2); white-space: nowrap; }
   tbody td { padding: 10px 12px; border-bottom: 1px solid var(--line); vertical-align: middle; }
   tbody tr:last-child td { border-bottom: 0; } }
 .np-table--registry { min-width: 560px; }
@@ -126,7 +126,7 @@
   /* El anillo de foco va por dentro de la fila: por fuera lo recortaba el scroll de la tabla. */
   &:focus-visible { outline-offset: -2px; } }
 .np-stripe { padding: 0 !important; width: 4px; i { display: block; width: 4px; height: 44px; background: var(--line); } }
-.np-name { font-weight: 800; font-size: 13px; color: var(--text); }
+.np-name { font-weight: 600; font-size: 13px; color: var(--text); }
 
 /* El nombre del cliente lleva a su ficha: se subraya al pasar por encima para
    que se note que es un enlace, pero no se pinta de azul —en una tabla llena
@@ -142,7 +142,7 @@
 .np-plan { font-size: 11px; color: var(--text-3); font-weight: 600; margin-top: 1px; em { font-style: normal; font-family: var(--font-mono); color: var(--text-2); } }
 .np-data { font-family: var(--font-mono); font-size: 12px; color: var(--text-2); font-variant-numeric: tabular-nums; }
 .np-data--dim { color: var(--text-3); }
-.np-pill { display: inline-flex; align-items: center; gap: 6px; height: 22px; padding: 0 9px 0 7px; border-radius: 999px; font-size: 11px; font-weight: 800; letter-spacing: .02em; white-space: nowrap;
+.np-pill { display: inline-flex; align-items: center; gap: 6px; height: 22px; padding: 0 9px 0 7px; border-radius: 999px; font-size: 11px; font-weight: 600; letter-spacing: .02em; white-space: nowrap;
   &::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: currentColor; } }
 /* Texto con los tonos «ink»: los de estado a secas no llegaban a 4.5:1 sobre su fondo suave. */
 .np-pill--active    { background: var(--ok-soft); color: var(--ok-ink, var(--ok)); }
@@ -177,13 +177,13 @@
 .np-insp-volver { display: none; }
 .np-insp-head, .np-switchrow { flex-shrink: 0; }
 .np-insp-head { display: flex; align-items: flex-start; gap: 12px; padding: 16px 16px 12px; border-bottom: 1px solid var(--line); }
-.np-avatar { width: 40px; height: 40px; border-radius: var(--radius-lg); display: grid; place-items: center; background: var(--accent-soft); color: var(--accent); font-family: var(--font-display); font-weight: 700; font-size: 18px; flex-shrink: 0; }
+.np-avatar { width: 40px; height: 40px; border-radius: var(--radius-lg); display: grid; place-items: center; background: var(--accent-soft); color: var(--accent); font-family: var(--font-display); font-weight: 600; font-size: 18px; flex-shrink: 0; }
 .np-insp-id { min-width: 0; flex: 1;
   h2 { font-family: var(--font-display); font-size: 17px; font-weight: 600; margin: 0; line-height: 1.15; letter-spacing: -0.01em; color: var(--text); overflow-wrap: anywhere; } }
 .np-meta { font-family: var(--font-mono); font-size: 11.5px; color: var(--text-3); margin: 3px 0 0; font-variant-numeric: tabular-nums; b { color: var(--text-2); font-weight: 500; } }
 .np-insp-tools { display: flex; gap: 2px; flex-shrink: 0; }
 
-.np-switchrow { display: flex; align-items: center; justify-content: space-between; padding: 10px 16px; background: var(--surface-2); border-bottom: 1px solid var(--line); font-size: 12px; font-weight: 700; color: var(--text-2); }
+.np-switchrow { display: flex; align-items: center; justify-content: space-between; padding: 10px 16px; background: var(--surface-2); border-bottom: 1px solid var(--line); font-size: 12px; font-weight: 600; color: var(--text-2); }
 .np-switchrow-right { display: inline-flex; align-items: center; gap: 10px; }
 .np-state { font-family: var(--font-mono); font-size: 11px; color: var(--ok-ink, var(--ok)); &.is-off { color: var(--danger-ink, var(--danger)); } }
 /* El botón del interruptor se mueve con transform, no con «left»: no recalcula el layout en cada cuadro. */
@@ -192,7 +192,7 @@
   &[aria-checked="true"] { background: var(--ok); &::after { transform: translateX(16px); } } }
 
 .np-tabs { display: flex; gap: 6px; padding: 0 10px; border-bottom: 1px solid var(--line); overflow-x: auto; flex-shrink: 0; scrollbar-width: none; &::-webkit-scrollbar { display: none; } }
-.np-tab { display: inline-flex; align-items: center; gap: 6px; padding: 11px 10px; font-weight: 700; font-size: 12.5px; color: var(--text-3); border-bottom: 2px solid transparent; margin-bottom: -1px; white-space: nowrap; transition: color .12s, border-color .12s;
+.np-tab { display: inline-flex; align-items: center; gap: 6px; padding: 11px 10px; font-weight: 600; font-size: 12.5px; color: var(--text-3); border-bottom: 2px solid transparent; margin-bottom: -1px; white-space: nowrap; transition: color .12s, border-color .12s;
   .np-c { margin-left: 0; background: var(--surface-3); color: var(--text-2); }
   &[aria-selected="true"] .np-c { background: var(--accent-soft); color: var(--accent); }
   @media (hover: hover) { &:hover { color: var(--text); } }
@@ -200,7 +200,7 @@
   &[aria-selected="true"] { color: var(--accent); border-color: var(--accent); } }
 
 .np-insp-body { flex: 1; min-height: 0; padding: 14px 16px 18px; display: grid; gap: 18px; align-content: start; overflow-y: auto; overscroll-behavior: contain; }
-.np-sect { font-size: 10.5px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--text-3); margin: 0 0 8px; display: flex; justify-content: space-between; align-items: baseline; gap: 10px; }
+.np-sect { font-size: 10.5px; font-weight: 600; letter-spacing: 0; color: var(--text-3); margin: 0 0 8px; display: flex; justify-content: space-between; align-items: baseline; gap: 10px; }
 .np-sect--inline { margin: 0; }
 .np-sect-actions { display: inline-flex; gap: 10px; }
 
@@ -217,7 +217,7 @@
   &:last-child { border-right: 0; }
   @media (hover: hover) { &:hover { background: var(--surface-2); } }
   &:focus-visible { outline-offset: -2px; } }
-.np-stat-l { font-size: 10.5px; color: var(--text-3); font-weight: 700; text-transform: uppercase; letter-spacing: .05em; }
+.np-stat-l { font-size: 10.5px; color: var(--text-3); font-weight: 600; letter-spacing: 0; }
 .np-stat-v { font-family: var(--font-mono); font-size: 17px; font-weight: 600; color: var(--text); font-variant-numeric: tabular-nums; &.is-warn { color: var(--warn-ink, var(--warn)); } }
 .np-quick { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; .np-btn { height: 32px; font-size: 12px; } }
 .np-quick-full { grid-column: 1 / -1; }
@@ -227,15 +227,26 @@
 .np-ont-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
 
 /* ─── Formularios ────────────────────────────────────────────────────── */
-.np-form { display: grid; grid-template-columns: 1fr 1fr; gap: 10px 12px; }
-.np-form--row { grid-template-columns: 1fr auto; align-items: end; }
-.np-field { display: grid; gap: 4px; min-width: 0;
-  > span { font-size: 11px; font-weight: 700; color: var(--text-3); text-transform: uppercase; letter-spacing: .04em; em { font-style: normal; text-transform: none; letter-spacing: 0; color: var(--warn); } } }
+/* Estilo limpio (21-10-2026, el de la ficha de Clientes): etiqueta normal en vez de
+   mayúsculas chiquitas, la ayuda en gris y campos de 40 px. Versión anterior en el
+   respaldo «respaldo-formularios» y en git. */
+.np-form { display: grid; grid-template-columns: 1fr 1fr; gap: 12px 14px; align-items: start; }
+.np-form--row { grid-template-columns: 1fr auto; align-items: end; .np-btn { height: 36px; } }
+.np-field { display: grid; gap: 5px; min-width: 0; align-content: start;
+  > span { font-size: 12.5px; font-weight: 500; color: var(--text); line-height: 1.35;
+    em { font-style: normal; font-weight: 400; color: var(--text-3); &::before { content: '· '; } } } }
 .np-field-full { grid-column: 1 / -1; }
-.np-input { width: 100%; height: 34px; padding: 0 10px; font-size: 13px; color: var(--text); background: var(--surface); border: 1px solid var(--line-strong); border-radius: var(--radius); font-family: inherit;
-  &:disabled { opacity: .5; }
-  &::placeholder { color: var(--text-3); } }
-select.np-input { padding-right: 28px; }
+/* La ayuda de un campo va debajo, en gris, sólo donde hace falta. */
+.np-hint { font-size: 12px; line-height: 1.45; color: var(--text-3); }
+.np-hint.is-ok { color: var(--ok); } .np-hint.is-error { color: var(--danger); }
+.np-input { width: 100%; height: 36px; padding: 0 11px; font-size: 13.5px; color: var(--text); background: var(--surface); border: 1px solid var(--line-strong); border-radius: 8px; font-family: inherit;
+  transition: border-color .12s, box-shadow .12s;
+  &:disabled { background: var(--surface-2); color: var(--text-3); border-color: var(--line); cursor: not-allowed; }
+  &::placeholder { color: var(--text-3); }
+  &.is-error { border-color: var(--danger); } }
+textarea.np-input { height: auto; min-height: 84px; padding: 10px 12px; line-height: 1.5; }
+select.np-input { padding-right: 30px; }
+.np-modal, .np-form { font-family: 'Geist', var(--font-body); }
 /* Los <input> con type llevan también la regla de formularios de Tailwind
    ([type='text'], [type='password']…) con fondo blanco. Pesa lo mismo que
    .np-input y va después, así que ganaba: dentro del panel lo tapa el puente
@@ -257,12 +268,13 @@ select optgroup {
 
 .np-subbar { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; }
 .np-subbar-search { width: 140px; height: 32px; }
-.np-seg { display: inline-flex; border: 1px solid var(--line-strong); border-radius: var(--radius); overflow: hidden;
-  button { height: 32px; padding: 0 11px; font-size: 12px; font-weight: 700; color: var(--text-2); border-right: 1px solid var(--line-strong); transition: background .12s, color .12s;
-    &:last-child { border-right: 0; }
-    @media (hover: hover) { &:hover { background: var(--surface-3); } }
+.np-seg { display: inline-flex; gap: 2px; padding: 3px; border-radius: 8px; background: var(--surface-3);
+  button { height: 30px; padding: 0 12px; font-size: 12.5px; font-weight: 500; color: var(--text-2); border-radius: 6px; transition: background .12s, color .12s, box-shadow .12s;
+    @media (hover: hover) { &:hover { color: var(--text); } }
     &:focus-visible { outline-offset: -2px; }
-    &[aria-pressed="true"] { background: var(--text); color: var(--bg); } } }
+    &[aria-pressed="true"] { background: var(--surface); color: var(--text); font-weight: 600; box-shadow: 0 1px 2px rgba(0, 0, 0, .12); } } }
+/* Las opciones parejas ocupan todo el ancho (estrato, tipo de conexión…). */
+.np-seg--full { display: grid; grid-auto-columns: minmax(0, 1fr); grid-auto-flow: column; width: 100%; button { height: 30px; } }
 
 .np-tablewrap { overflow-x: auto; border: 1px solid var(--line); border-radius: var(--radius); }
 .np-tablewrap--scroll { max-height: 260px; overflow-y: auto; }
@@ -278,15 +290,24 @@ select optgroup {
 
 /* ─── Modales ────────────────────────────────────────────────────────── */
 .np-overlay { position: fixed; inset: 0; z-index: 60; background: var(--overlay); display: flex; align-items: center; justify-content: center; padding: 16px; overflow-y: auto; }
-.np-modal { width: 100%; max-width: 520px; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-lg); box-shadow: var(--shadow-lg); overflow: hidden; }
+.np-modal { width: 100%; max-width: 520px; background: var(--surface); border: 1px solid var(--line); border-radius: 14px; box-shadow: var(--shadow-lg); overflow: hidden; }
 .np-modal--lg { max-width: 720px; }
 .np-modal--confirm { max-width: 400px; padding: 26px 24px 22px; text-align: center;
   h3 { font-family: var(--font-display); font-weight: 600; font-size: 19px; margin: 12px 0 6px; color: var(--text); }
   p { margin: 0 0 18px; color: var(--text-2); font-size: 13px; } }
-.np-modal-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; padding: 16px 18px 12px; border-bottom: 1px solid var(--line);
-  h3 { font-family: var(--font-display); font-weight: 600; font-size: 18px; margin: 0; color: var(--text); letter-spacing: -0.01em; }
+.np-modal-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; padding: 20px 22px 16px; border-bottom: 1px solid var(--line);
+  h3 { font-family: inherit; font-weight: 600; font-size: 19px; margin: 0; color: var(--text); letter-spacing: -0.01em; }
   .np-kicker { margin-bottom: 3px; } }
-.np-modal-body { padding: 16px 18px 18px; display: grid; gap: 14px; }
+.np-modal-body { padding: 20px 22px 22px; display: grid; gap: 16px; }
+/* Dentro de un formulario: la ruta arriba en letra normal y botones de 40 px; el principal en
+   tinta, como en la ficha de Clientes (el color de la empresa queda para el foco y las marcas). */
+.np-modal-head .np-kicker { font-family: inherit; font-size: 12.5px; letter-spacing: 0; text-transform: none; margin-bottom: 4px; b { color: var(--text-3); font-weight: 400; } }
+.np-modal :is(.np-btnrow--end, .np-modal-foot) .np-btn { height: 36px; padding: 0 14px; font-size: 13.5px; font-weight: 500; border-radius: 8px; }
+.np-modal :is(.np-btnrow--end, .np-modal-foot) .np-btn--primary:not(.np-btn--danger) { background: var(--text); border-color: var(--text); color: var(--surface);
+  @media (hover: hover) { &:hover:not(:disabled) { background: color-mix(in srgb, var(--text) 86%, var(--surface)); } } }
+/* Pie del formulario: fijo abajo, con lo que falta a la izquierda y los botones a la derecha. */
+.np-modal-foot { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; padding: 14px 22px; border-top: 1px solid var(--line); background: var(--surface-2);
+  .np-btn { height: 36px; padding: 0 14px; } }
 .np-confirm-icon { width: 48px; height: 48px; border-radius: 50%; display: inline-grid; place-items: center; svg { width: 22px; height: 22px; }
   &.is-warn   { background: var(--warn-soft); color: var(--warn); }
   &.is-ok     { background: var(--ok-soft); color: var(--ok); }
@@ -310,7 +331,7 @@ select optgroup {
     display: flex; align-items: center; gap: 8px; width: 100%;
     padding: 12px 16px; padding-top: max(12px, env(safe-area-inset-top));
     border: 0; border-bottom: 1px solid var(--line); background: var(--surface-2);
-    color: var(--text-2); font-weight: 700; font-size: 13px; text-align: left; cursor: pointer;
+    color: var(--text-2); font-weight: 600; font-size: 13px; text-align: left; cursor: pointer;
     svg { width: 18px; height: 18px; flex-shrink: 0; }
     &:hover { background: var(--surface-3); color: var(--text); }
   }
@@ -397,7 +418,7 @@ select optgroup {
   .np-tab { padding: 9px 10px; }
   .np-insp-body { padding: 12px 14px 14px; gap: 14px; }
   .np-stat { padding: 8px; min-width: 0; }
-  .np-stat-l { font-size: 9.5px; letter-spacing: .03em; }
+  .np-stat-l { font-size: 9.5px; letter-spacing: 0; }
   .np-stat-v { font-size: 14px; overflow: hidden; text-overflow: ellipsis; }
 }
 
@@ -435,7 +456,7 @@ select optgroup {
     grid-template-columns: 1fr; row-gap: 0; align-items: stretch;
     dt {
       margin: 0; padding: 9px 0 0;
-      font-size: 10.5px; font-weight: 800; letter-spacing: .05em; text-transform: uppercase;
+      font-size: 10.5px; font-weight: 600; letter-spacing: 0;
       color: var(--text-3);
     }
     dd {
@@ -472,7 +493,7 @@ select optgroup {
   &:last-child { border-bottom: 0; }
   &:hover { background: var(--surface-2); }
   input { width: 15px; height: 15px; accent-color: var(--accent); margin: 0; flex-shrink: 0; } }
-.np-check--all { background: var(--surface-2); font-weight: 700; color: var(--text-2); }
+.np-check--all { background: var(--surface-2); font-weight: 600; color: var(--text-2); }
 .np-check--box { border: 1px solid var(--line); border-radius: var(--radius); padding: 10px 12px; align-items: flex-start; color: var(--text-2); line-height: 1.45;
   input { margin-top: 2px; }
   &.is-danger { border-color: var(--danger); background: var(--danger-soft); strong { color: var(--danger); } } }
@@ -484,8 +505,12 @@ select optgroup {
 .np-tl--abono::before, .np-tl--partial::before { background: var(--info); }
 .np-tl--descuento::before { background: var(--warn); }
 .np-tl--error::before { background: var(--danger); }
-.np-tl-t { font-weight: 700; color: var(--text); }
-.np-tl-m { grid-row: 1 / 3; align-self: start; font-family: var(--font-mono); font-weight: 600; color: var(--text); white-space: nowrap; }
+/* Cada pieza con su columna fija. La fecha tenía sólo la fila (1 / 3): la rejilla acomoda
+   primero lo que tiene fila fija, la ponía en la primera columna y pisaba el título
+   («22/10/26, 3:35 p. m.» encima de «Orden creada»). */
+.np-tl-t { grid-column: 1; grid-row: 1; min-width: 0; font-weight: 600; color: var(--text); }
+.np-tl-d { grid-column: 1; grid-row: 2; }
+.np-tl-m { grid-column: 2; grid-row: 1 / 3; text-align: right; align-self: start; font-family: var(--font-mono); font-weight: 600; color: var(--text); white-space: nowrap; }
 .np-tl-d { color: var(--text-3); font-size: 11px; overflow-wrap: anywhere; }
 
 /* ─── Piezas agregadas con Dashboard / Resumen (genéricas) ──────────── */
@@ -508,7 +533,7 @@ select optgroup {
 .np-kpi { display: grid; gap: 3px; padding: 14px 16px; border-right: 1px solid var(--line); min-width: 0; text-align: left; &:last-child { border-right: 0; } }
 button.np-kpi:hover { background: var(--surface-2); }
 .np-kpi--accent { background: var(--accent-soft); .np-kpi-l { color: var(--accent); } }
-.np-kpi-l { font-size: 10.5px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--text-3); }
+.np-kpi-l { font-size: 10.5px; font-weight: 600; letter-spacing: 0; color: var(--text-3); }
 .np-kpi-v { font-family: var(--font-mono); font-size: 22px; font-weight: 600; color: var(--text); letter-spacing: -0.02em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-variant-numeric: tabular-nums; }
 .np-kpi-v--ok { color: var(--ok); } .np-kpi-v--warn { color: var(--warn); } .np-kpi-v--danger { color: var(--danger); } .np-kpi-v--info { color: var(--info); } .np-kpi-v--accent { color: var(--accent); }
 .np-kpi-s { font-size: 11.5px; color: var(--text-3); display: flex; align-items: center; gap: 4px; flex-wrap: wrap; .np-dot { margin-right: 2px; } }
@@ -516,7 +541,7 @@ button.np-kpi:hover { background: var(--surface-2); }
 .np-rank { list-style: none; margin: 0; padding: 0; display: grid; gap: 2px; counter-reset: rank;
   li { display: flex; align-items: center; gap: 10px; padding: 6px 0; border-bottom: 1px dashed var(--line); font-size: 12.5px; counter-increment: rank; &:last-child { border-bottom: 0; }
     &::before { content: counter(rank, decimal-leading-zero); font-family: var(--font-mono); font-size: 11px; color: var(--text-3); } } }
-.np-rank-n { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 700; color: var(--text); }
+.np-rank-n { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 600; color: var(--text); }
 .np-rank-c { font-family: var(--font-mono); font-weight: 600; color: var(--accent); background: var(--accent-soft); border-radius: 999px; min-width: 24px; height: 20px; display: inline-grid; place-items: center; padding: 0 7px; font-size: 11.5px; }
 
 @media (max-width: 1100px) { .np-kpis, .np-kpis--5 { grid-template-columns: repeat(3, minmax(0, 1fr)); } .np-kpi { border-bottom: 1px solid var(--line); } .np-grid-3 { grid-template-columns: 1fr; } }
@@ -533,7 +558,7 @@ button.np-kpi:hover { background: var(--surface-2); }
 .np-notice--code { background: var(--surface-2); border-color: var(--line); color: var(--text-2); font-size: 12px; overflow-wrap: anywhere; }
 .np-check--btn { width: 100%; text-align: left; }
 .np-input-wrap { position: relative; display: block; .np-input { padding-right: 64px; } }
-.np-eye { position: absolute; right: 6px; top: 50%; transform: translateY(-50%); font-size: 11px; font-weight: 700; color: var(--accent); padding: 4px 6px; border-radius: 4px; &:hover { background: var(--accent-soft); } }
+.np-eye { position: absolute; right: 6px; top: 50%; transform: translateY(-50%); font-size: 11px; font-weight: 600; color: var(--accent); padding: 4px 6px; border-radius: 4px; &:hover { background: var(--accent-soft); } }
 
 /* ─── Shell (navbar, footer): tipografía y resets sin el layout de página ─ */
 .np-shell { font-family: var(--font-body); color: var(--text); font-size: 13px; }
@@ -642,8 +667,8 @@ input.np-input:-webkit-autofill:active {
    chica y en mayúsculas, y el apunte de abajo explica sin robar atención. */
 .np-kvs { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 14px 20px; }
 .np-kv { display: grid; gap: 2px; min-width: 0; align-content: start; }
-.np-kv-l { font-size: 10px; font-weight: 700; letter-spacing: .07em; text-transform: uppercase; color: var(--text-3); }
-.np-kv-v { font-size: 14.5px; font-weight: 700; color: var(--text); line-height: 1.3; overflow-wrap: anywhere;
+.np-kv-l { font-size: 10px; font-weight: 600; letter-spacing: 0; color: var(--text-3); }
+.np-kv-v { font-size: 14.5px; font-weight: 600; color: var(--text); line-height: 1.3; overflow-wrap: anywhere;
   &.is-dim { color: var(--text-3); font-weight: 600; } }
 .np-kv-v--mono { font-family: var(--font-mono); font-weight: 600; font-size: 13.5px; font-variant-numeric: tabular-nums; }
 .np-kv-s { font-size: 11px; color: var(--text-3); line-height: 1.35; }
@@ -684,7 +709,7 @@ input.np-input:-webkit-autofill:active {
    cambian de color al pasar el mouse. */
 .np-flags { display: flex; flex-wrap: wrap; gap: 6px; }
 .np-flag { display: inline-flex; align-items: center; gap: 7px; height: 28px; padding: 0 11px; border-radius: 999px;
-  border: 1px solid var(--line); background: var(--surface-2); color: var(--text-2); font-size: 12px; font-weight: 700; white-space: nowrap;
+  border: 1px solid var(--line); background: var(--surface-2); color: var(--text-2); font-size: 12px; font-weight: 600; white-space: nowrap;
   &::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--line-strong); flex-shrink: 0; }
   em { font-style: normal; font-family: var(--font-mono); font-weight: 500; font-size: 11px; color: var(--text-3); } }
 .np-flag--on  { border-color: var(--accent-line); background: var(--accent-soft); color: var(--accent); &::before { background: currentColor; } em { color: inherit; opacity: .8; } }
@@ -725,7 +750,7 @@ input.np-input:-webkit-autofill:active {
 
 /* Subtítulo dentro de una tarjeta o de un modal. */
 .np-consola h4.np-fine, .np-consola .np-sub {
-  margin: 0; font-size: 10px; font-weight: 700; letter-spacing: .07em; text-transform: uppercase; color: var(--text-3);
+  margin: 0; font-size: 10px; font-weight: 600; letter-spacing: 0; color: var(--text-3);
   display: flex; align-items: center; justify-content: space-between; gap: 10px; }
 
 /* ── Zona delicada ──────────────────────────────────────────────────────
@@ -733,7 +758,7 @@ input.np-input:-webkit-autofill:active {
    sola, al final, enmarcada en rojo y con el botón imposible de no ver. */
 .np-peligro { border: 1px solid var(--danger); border-radius: var(--radius-lg); background: var(--surface); overflow: hidden; }
 .np-peligro-h { display: flex; align-items: center; gap: 8px; padding: 9px 14px; background: var(--danger-soft); color: var(--danger);
-  font-size: 10.5px; font-weight: 800; letter-spacing: .07em; text-transform: uppercase;
+  font-size: 10.5px; font-weight: 600; letter-spacing: 0;
   svg { width: 15px; height: 15px; } }
 .np-peligro-b { display: flex; align-items: center; gap: 18px; flex-wrap: wrap; padding: 14px;
   p { flex: 1 1 280px; margin: 0; font-size: 12.5px; line-height: 1.5; color: var(--text-2); }
@@ -743,11 +768,11 @@ input.np-input:-webkit-autofill:active {
 /* ── Dinero ─────────────────────────────────────────────────────────────
    Siempre a la derecha y en la misma tipografía, para poder comparar dos
    cifras mirando la columna y no leyendo dígito por dígito. */
-.np-money--xl { font-size: 24px; font-weight: 700; letter-spacing: -0.02em; }
+.np-money--xl { font-size: 24px; font-weight: 600; letter-spacing: -0.02em; }
 .np-consola .np-table td.np-money, .np-consola .np-table th.np-th-right { text-align: right; }
 
 /* ── Enlace con ícono ───────────────────────────────────────────────────*/
-.np-linkico { display: inline-flex; align-items: center; gap: 5px; color: var(--accent); font-weight: 700; text-decoration: none;
+.np-linkico { display: inline-flex; align-items: center; gap: 5px; color: var(--accent); font-weight: 600; text-decoration: none;
   svg { width: 13px !important; height: 13px !important; }
   &:hover { text-decoration: underline; } }
 
@@ -809,8 +834,7 @@ input.np-input:-webkit-autofill:active {
     tbody td[data-label]::before {
       content: attr(data-label);
       display: block; margin-bottom: 2px;
-      font-family: var(--font-body); font-size: 10px; font-weight: 700; letter-spacing: .05em;
-      text-transform: uppercase; color: var(--text-3);
+      font-family: var(--font-body); font-size: 10px; font-weight: 600; letter-spacing: 0; color: var(--text-3);
     }
 
     /* La franja de color queda como borde de la tarjeta. */
@@ -914,3 +938,62 @@ body:has(.np-overlay) .wg-launch { display: none; }
 
 /* Las confirmaciones pueden traer dos párrafos: qué se va a hacer y la pregunta. */
 .np-confirm-msg { white-space: pre-line; }
+
+/* ═══ Armonización con el diseño limpio (21-10-2026) ═══════════════════════════
+   Lo mismo que ya tienen Clientes, Cobros y pagos, Bodega, Tickets y Televisión, ahora en la
+   base: así todas las pantallas que usan las piezas np-* se ven iguales. Títulos de 22 px en
+   peso 600, rótulos en letra normal (sin mayúsculas ni monoespaciada), botón principal en
+   tinta, pestañas subrayadas en tinta, tarjetas planas con borde y etiquetas neutras. El acento
+   de color queda para el foco, los enlaces y lo que está seleccionado. */
+.np-console { font-size: 13.5px; }
+.np-title { font-family: var(--font-body); font-size: 22px; font-weight: 600; line-height: 1.2; letter-spacing: -0.01em; }
+.np-head { padding: 2px 0 14px; }
+.np-kicker { font-family: var(--font-body); font-size: 12.5px; letter-spacing: 0; text-transform: none; color: var(--text-3); margin: 0 0 4px; b { color: var(--text-3); font-weight: 400; } }
+.np-sect, .np-kpi-l, .np-pagesize, .np-table thead th { letter-spacing: 0; text-transform: none; }
+.np-sect { font-size: 12.5px; font-weight: 500; color: var(--text-3); }
+.np-kpi-l { font-size: 12.5px; font-weight: 400; }
+.np-kpi-v { font-family: var(--font-body); font-size: 20px; }
+.np-table thead th { font-size: 12px; font-weight: 500; background: transparent; }
+.np-table tbody tr { transition: background .12s; }
+
+.np-btn { height: 34px; padding: 0 13px; border-radius: 8px; font-weight: 500; font-size: 13px; }
+.np-btn--primary { background: var(--text); color: var(--surface); border-color: var(--text);
+  @media (hover: hover) { &:hover:not(:disabled) { filter: none; opacity: .9; } } }
+.np-btn--ghost { color: var(--text); border-color: var(--line-strong);
+  @media (hover: hover) { &:hover:not(:disabled) { border-color: var(--text-3); color: var(--text); background: var(--surface); } } }
+.np-link { font-weight: 500; font-size: inherit; }
+
+.np-tabs { gap: 22px; padding: 0; }
+.np-tab { padding: 0 0 11px; font-weight: 400; font-size: 13.5px; color: var(--text-2);
+  &[aria-selected="true"] { color: var(--text); border-color: var(--text); font-weight: 500; }
+  &[aria-selected="true"] .np-c { background: var(--surface-3); color: var(--text); } }
+.np-chip { height: 30px; font-weight: 400; font-size: 12.5px; border-color: var(--line-strong); }
+
+.np-card, .np-registry, .np-inspector, .np-kpis { box-shadow: none; border-radius: 12px; }
+.np-card-h h2, .np-card h2 { font-family: var(--font-body); font-weight: 600; }
+.np-tablewrap, .np-panel, .np-stats, .np-checklist, .np-check--box { border-radius: 10px; }
+.np-tag { background: var(--surface-2); color: var(--text-2); font-family: var(--font-body); font-size: 11.5px; font-weight: 400; border-radius: 5px; }
+.np-avatar { background: var(--surface-3); color: var(--text-2); font-family: var(--font-body); font-weight: 600; font-size: 15px; border-radius: 50%; }
+.np-kpi--accent { background: var(--surface); .np-kpi-l { color: var(--text-3); } }
+.np-stats--one { background: var(--surface-2); border-color: var(--line); .np-stat-v { color: var(--text); } }
+.np-notice--warn { border-color: color-mix(in srgb, var(--warn) 35%, transparent); }
+.np-toast { font-weight: 500; border-left-width: 1px; box-shadow: var(--shadow-lg); }
+.np-modal { border-radius: 14px; }
+/* Lo de arriba no pisa los tamaños chicos ni el ajuste táctil del teléfono. */
+.np-btn--sm { height: 30px; padding: 0 11px; font-size: 12.5px; }
+@media (max-width: 767px) {
+  .np-btn { height: 42px; }
+  .np-btn--sm { height: 40px; }
+  .np-tab { padding-bottom: 12px; }
+}
+/* Las barras np-seg que hacen de pestañas (role="tablist") se ven como pestañas: subrayadas.
+   Las que eligen una opción en un formulario siguen como control segmentado. */
+.np-seg[role="tablist"] { display: flex; gap: 22px; padding: 0; height: auto; background: none; border: 0; border-bottom: 1px solid var(--line); border-radius: 0; overflow-x: auto; scrollbar-width: none;
+  button { height: auto; padding: 0 0 11px; margin-bottom: -1px; border: 0; border-bottom: 2px solid transparent; border-radius: 0; background: none; box-shadow: none; font-size: 13.5px; font-weight: 400; color: var(--text-2); white-space: nowrap;
+    &[aria-pressed="true"], &[aria-selected="true"], &.is-on { background: none; box-shadow: none; color: var(--text); font-weight: 500; border-bottom-color: var(--text); } } }
+/* Cifras de las tablas en la letra del panel con números alineados (como Pagos); la
+   monoespaciada queda para seriales, IP y códigos (.np-mono). */
+.np-data, .np-money { font-family: var(--font-body); font-variant-numeric: tabular-nums; }
+.np-data { font-size: 13px; }
+/* La franja de estado de cada fila: fina, y solo cuando dice algo (alerta o problema). */
+.np-stripe { width: 2px; i { width: 2px; } }

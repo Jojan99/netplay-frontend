@@ -36,7 +36,7 @@
   display: grid; place-items: center; flex: none;
   width: 20px; height: 20px; border-radius: 50%;
   background: var(--surface-3); color: var(--text-2);
-  font: 800 11px var(--font-body);
+  font: 600 11px var(--font-body);
   .inf-paso.es-aqui & { background: rgba(255, 255, 255, .25); color: #fff; }
   .inf-paso.es-listo & { background: var(--ok-soft, var(--surface-3)); color: var(--ok, currentColor); }
   svg { width: 12px; height: 12px; }
@@ -45,7 +45,7 @@
 /* Separador dentro de un paso, cuando junta dos cosas distintas. */
 .np-subhead {
   margin: 6px 0 0; padding-top: 10px; border-top: 1px solid var(--border);
-  font: 700 11px var(--font-body); letter-spacing: .06em; text-transform: uppercase;
+  font: 600 11px var(--font-body); letter-spacing: 0;
   color: var(--text-3);
 }
 
@@ -72,3 +72,6 @@
 @media (min-width: 1100px) {
   .inf-resumen { grid-template-columns: 1fr 1fr; }
 }
+
+/* Aviso de TV bajo el plan: pegado al selector, en su propio renglón. */
+.in-tv { display: block; margin-top: 6px; font-size: 12.5px; line-height: 1.45; }

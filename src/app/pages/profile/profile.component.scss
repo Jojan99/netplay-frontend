@@ -4,4 +4,4 @@
 .np-profile-grid { align-items: start; }
 .np-form--single { grid-template-columns: 1fr; }
 .np-input-wrap { position: relative; display: block; .np-input { padding-right: 64px; } }
-.np-eye { position: absolute; right: 6px; top: 50%; transform: translateY(-50%); font-size: 11px; font-weight: 700; color: var(--accent); padding: 4px 6px; border-radius: 4px; &:hover { background: var(--accent-soft); } }
+.np-eye { position: absolute; right: 6px; top: 50%; transform: translateY(-50%); font-size: 11px; font-weight: 600; color: var(--accent); padding: 4px 6px; border-radius: 4px; &:hover { background: var(--accent-soft); } }

@@ -54,7 +54,7 @@
   &[data-tono='info'] .sala-kpi-v { color: var(--info); }
 }
 
-.sala-kpi-l { font-size: 10px; letter-spacing: .08em; text-transform: uppercase; color: var(--text-3); }
+.sala-kpi-l { font-size: 10px; letter-spacing: 0; color: var(--text-3); }
 .sala-kpi-v { font-family: var(--font-mono); font-variant-numeric: tabular-nums; font-size: 23px; font-weight: 600; line-height: 1.15; }
 .sala-kpi-s { font-size: 11px; color: var(--text-3); }
 
@@ -78,13 +78,13 @@
   display: flex; align-items: baseline; justify-content: space-between; gap: 12px;
   padding-bottom: 10px; margin-bottom: 2px; border-bottom: 1px solid var(--line);
 
-  h2 { margin: 0; font-family: var(--font-display); font-size: 14.5px; font-weight: 700; white-space: nowrap; }
+  h2 { margin: 0; font-family: var(--font-display); font-size: 14.5px; font-weight: 600; white-space: nowrap; }
 }
 
 .sala-ir { font-size: 12px; font-weight: 600; color: var(--text-2); text-decoration: none; white-space: nowrap; }
 a.sala-ir:hover { color: var(--accent); }
 .sala-fine { margin: 6px 0 0; font-size: 11px; color: var(--text-3); }
-.sala-sect { margin: 12px 0 6px; font-size: 10px; letter-spacing: .08em; text-transform: uppercase; color: var(--text-3); }
+.sala-sect { margin: 12px 0 6px; font-size: 10px; letter-spacing: 0; color: var(--text-3); }
 .sala-vacio { margin: 12px 0 0; font-size: 12px; color: var(--text-3); }
 .sala-loading { display: flex; align-items: center; gap: 8px; margin-top: 12px; font-size: 12px; color: var(--text-3); }
 .sala-mono { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
@@ -208,7 +208,7 @@ a.sala-ir:hover { color: var(--accent); }
 
 .sala-tabla-h {
   display: flex; gap: 12px; padding: 0 0 6px; border-bottom: 1px solid var(--line);
-  font-size: 10px; letter-spacing: .08em; text-transform: uppercase; color: var(--text-3);
+  font-size: 10px; letter-spacing: 0; color: var(--text-3);
 
   span:first-child { flex-grow: 1; }
 }
@@ -253,7 +253,7 @@ a.sala-ir:hover { color: var(--accent); }
 .sala-avatar {
   width: 27px; height: 27px; border-radius: 999px; flex-shrink: 0;
   display: flex; align-items: center; justify-content: center;
-  background: var(--accent-soft); color: var(--accent); font-size: 11px; font-weight: 700;
+  background: var(--accent-soft); color: var(--accent); font-size: 11px; font-weight: 600;
 }
 
 .sala-tecnico-n { flex-grow: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -293,7 +293,7 @@ a.sala-ir:hover { color: var(--accent); }
 
 .sala-etiqueta {
   flex-shrink: 0; padding: 2px 8px; border-radius: 999px;
-  background: var(--accent-soft); font-size: 10px; font-weight: 700; color: var(--accent);
+  background: var(--accent-soft); font-size: 10px; font-weight: 600; color: var(--accent);
 }
 
 .sala-novedad-t { min-width: 0; font-size: 12.5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -406,4 +406,148 @@ a.sala-ir:hover { color: var(--accent); }
   .sala-ancho { width: 84px; }
   .sala-num { width: 60px; }
   .sala-meses { height: 96px; }
+}
+
+/* ═══ Inicio con el diseño limpio (21-10-2026) ═══
+   Cifras en la letra del panel, en tinta; sin franja de color arriba. Solo lo que pide
+   atención (crítico, peligro) se tiñe. */
+.sala-kpi::before { display: none; }
+.sala-kpi-l { font-size: 12px; }
+.sala-kpi-v { font-family: var(--font-body); font-size: 22px; letter-spacing: -0.02em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.sala-kpi-s { font-size: 12px; }
+.sala-kpi[data-tono='accent'] .sala-kpi-v, .sala-kpi[data-tono='ok'] .sala-kpi-v, .sala-kpi[data-tono='info'] .sala-kpi-v { color: var(--text); }
+.sala-kpi[data-tono='warn'] .sala-kpi-v { color: var(--text); }
+.sala-kpi[data-tono='danger'], .sala-kpi[data-tono='critico'] { background: color-mix(in srgb, var(--danger) 5%, var(--surface)); border-color: color-mix(in srgb, var(--danger) 25%, var(--line)); }
+.sala-mono, .sala-num { font-family: var(--font-body); }
+@media (max-width: 640px) { .sala-kpi-v { font-size: 19px; } }
+
+/* ═══ Inicio «E» (22-10-2026) ═══
+   La rejilla de siempre con las piezas del sistema: una franja de cifras con
+   divisiones, listas con renglones, bandas de tres cifras como np-stats y las
+   barras en el verde azulado de Estado de la OLT. Lo que está mal, en el rojo
+   del sistema; lo demás en tinta. */
+.sala { --sala-tono: #0F766E; --sala-tono-2: #A9D4CF; }
+:host-context([data-theme='dark']) .sala, :host-context(.dark) .sala { --sala-tono: #5FA8A0; --sala-tono-2: #2C5A55; }
+
+.sala-sub { margin: 4px 0 0; font-size: 13px; color: var(--text-3); }
+.sala-hoy::first-letter { text-transform: uppercase; }
+
+/* La franja: una sola caja con divisiones; si no caben en una fila, bajan solas. */
+.sala-kpis {
+  grid-template-columns: repeat(var(--sala-cols, 4), minmax(0, 1fr)); gap: 1px;
+  background: var(--line); border: 1px solid var(--line); border-radius: var(--radius-lg); overflow: hidden;
+}
+.sala-kpi {
+  border: 0; border-radius: 0; padding: 14px 16px; gap: 3px;
+  &:hover, &:focus-visible { border-color: transparent; box-shadow: none; transform: none; background: var(--surface-2); }
+}
+.sala-kpi-l { font-size: 12.5px; }
+.sala-kpi-v { font-size: 20px; }
+.sala-kpi-s { font-size: 11.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.sala-kpi[data-tono='ok'] .sala-kpi-v { color: var(--sala-tono); }
+.sala-kpi[data-tono='danger'], .sala-kpi[data-tono='critico'] { border-color: transparent; }
+.sala-kpi[data-tono='danger'] .sala-kpi-v, .sala-kpi[data-tono='critico'] .sala-kpi-v { color: var(--danger); }
+
+.sala-grilla { gap: 16px; align-items: stretch; }
+.sala-panel { padding: 14px 16px 16px; gap: 10px; }
+.sala-panel-h { align-items: center; padding-bottom: 0; margin-bottom: 0; border-bottom: 0;
+  h2 { font-size: 15px; } }
+.sala-ir { font-size: 12.5px; font-weight: 500; color: var(--sala-tono); }
+a.sala-ir:hover { color: var(--text); }
+.sala-fine { margin: 0; font-size: 12px; }
+.sala-vacio { margin: 4px 0 0; font-size: 12.5px; }
+.sala-ok { color: var(--sala-tono); }
+
+/* Pendientes de hoy: renglones con su cuenta en una pastilla. */
+.sala-pendientes { display: flex; flex-direction: column; }
+.sala-pendiente {
+  display: grid; grid-template-columns: minmax(0, 1fr) auto 12px; align-items: center; gap: 10px;
+  width: 100%; padding: 10px 2px; border: 0; border-bottom: 1px solid var(--line);
+  background: none; font: inherit; color: inherit; text-align: left; cursor: pointer;
+  &:last-child { border-bottom: 0; }
+  &:hover, &:focus-visible { background: var(--surface-2); }
+}
+.sala-pendiente-t { display: flex; flex-direction: column; gap: 1px; min-width: 0;
+  b { font-size: 13.5px; font-weight: 500; }
+  small { font-size: 12px; color: var(--text-3); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; } }
+.sala-cuenta {
+  min-width: 34px; height: 24px; padding: 0 8px; border-radius: 999px; display: inline-grid; place-items: center;
+  background: var(--surface-3); font-size: 12.5px; font-weight: 600; font-variant-numeric: tabular-nums;
+}
+.sala-pendiente[data-tono='critico'] .sala-cuenta { background: var(--danger-soft); color: var(--danger); }
+.sala-flecha { color: var(--text-3); }
+
+/* Ingresos y egresos: la leyenda dice los totales; la gráfica ocupa lo que quede. */
+.sala-leyenda { display: flex; flex-wrap: wrap; gap: 6px 18px; font-size: 12px; color: var(--text-3);
+  span { display: inline-flex; align-items: center; gap: 6px; }
+  i { width: 10px; height: 10px; border-radius: 3px; }
+  .es-ing { background: #0F766E; } .es-egr { background: #C2410C; }
+  b { color: var(--text); font-weight: 600; font-variant-numeric: tabular-nums; } }
+.sala-chart { margin-top: 0; min-height: 220px; }
+
+/* Medios de pago */
+.sala-metodos { display: flex; flex-direction: column; gap: 12px; }
+.sala-metodo { display: grid; grid-template-columns: minmax(0, 150px) minmax(0, 1fr) 40px; align-items: center; gap: 10px; font-size: 13px; }
+.sala-metodo-n { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.sala-metodo-b { height: 8px; border-radius: 4px; background: var(--surface-3); overflow: hidden;
+  i { display: block; height: 100%; min-width: 2px; border-radius: 4px; background: var(--sala-tono); transition: width .45s cubic-bezier(.2, .7, .3, 1); } }
+.sala-metodo-p { text-align: right; font-weight: 600; font-variant-numeric: tabular-nums; }
+
+/* Los que más deben: lista numerada, como np-rank. */
+.sala-rank { list-style: none; margin: 0; padding: 0;
+  li { border-bottom: 1px dashed var(--line); &:last-child { border-bottom: 0; } }
+  button { display: grid; grid-template-columns: 22px minmax(0, 1fr) auto; align-items: center; gap: 8px; width: 100%;
+    padding: 8px 0; border: 0; background: none; font: inherit; color: inherit; text-align: left; cursor: pointer;
+    &:hover, &:focus-visible { background: var(--surface-2); } } }
+.sala-rank-i { font-family: var(--font-mono); font-size: 11px; color: var(--text-3); }
+.sala-rank-t { display: flex; flex-direction: column; min-width: 0;
+  b { font-size: 13px; font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  small { font-size: 11.5px; color: var(--text-3); } }
+.sala-rank-v { font-size: 13px; font-weight: 600; font-variant-numeric: tabular-nums; }
+
+/* Tres cifras en una banda, como np-stats. */
+.sala-cifras { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden;
+  > span { display: flex; flex-direction: column; gap: 2px; padding: 10px 12px; border-right: 1px solid var(--line); min-width: 0; &:last-child { border-right: 0; } }
+  small { font-size: 11.5px; color: var(--text-3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  b { font-size: 17px; font-weight: 600; font-variant-numeric: tabular-nums; } }
+
+/* Compromisos: la parte que se cumple frente a la que no. */
+.sala-proporcion-h { display: flex; justify-content: space-between; gap: 10px; font-size: 12px; color: var(--text-3);
+  b { color: var(--text); font-weight: 600; } }
+.sala-proporcion { display: flex; gap: 2px; height: 8px; border-radius: 4px; overflow: hidden;
+  i { display: block; min-width: 2px; } .es-ok { background: var(--sala-tono); } .es-mal { background: #C2410C; } }
+.sala-enlace { display: flex; justify-content: space-between; align-items: center; padding: 10px 12px; border-radius: var(--radius);
+  background: var(--surface-2); color: inherit; text-decoration: none; font-size: 13px;
+  b { font-weight: 600; font-variant-numeric: tabular-nums; }
+  &:hover { background: var(--surface-3); } }
+
+/* Red y OLT */
+.sala-puertos { grid-template-columns: repeat(auto-fill, minmax(70px, 1fr)); gap: 6px; margin-top: 0; }
+a.sala-puerto { text-decoration: none; padding: 7px 4px; transition: border-color .12s;
+  &:hover { border-color: var(--text-3); } }
+.sala-puerto { background: var(--surface-2); border-color: var(--line); color: var(--text);
+  &[data-tono='ok'] { background: var(--surface-2); color: var(--text); border-color: var(--line); }
+  &[data-tono='aviso'] { background: var(--surface-2); color: var(--text); border-color: var(--line-strong); }
+  &[data-tono='aviso'] .sala-puerto-d { color: var(--warn); } }
+.sala-puerto-f { font-weight: 500; }
+.sala-puerto-d { font-size: 11px; }
+
+.sala-olt { margin: 2px 0 -4px; font-size: 11.5px; font-weight: 500; color: var(--text-2); }
+
+/* Televisión y bodega */
+.sala-renglones { display: flex; flex-direction: column;
+  a { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 9px 0; border-bottom: 1px dashed var(--line);
+    color: inherit; text-decoration: none; font-size: 13px;
+    &:last-child { border-bottom: 0; }
+    &:hover { color: var(--sala-tono); } }
+  b { font-weight: 600; font-variant-numeric: tabular-nums; } }
+
+.sala-pie { margin-top: auto; font-size: 12px;
+  b { font-family: var(--font-body); } }
+.sala-tecnicos-l { margin: 0; }
+
+@media (max-width: 1100px) { .sala-kpis { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+@media (max-width: 720px) {
+  .sala-kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .sala-cifras b { font-size: 15px; }
 }

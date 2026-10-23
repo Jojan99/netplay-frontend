@@ -1,6 +1,9 @@
+import { TvDelClienteComponent } from '../../components/tv-del-cliente/tv-del-cliente.component';
 import { CommonModule } from '@angular/common';
 import { HttpClientModule } from '@angular/common/http';
-import { Component, HostListener, ChangeDetectorRef, OnInit, ViewChild, ElementRef, inject } from '@angular/core';
+import { Component, HostListener, ChangeDetectorRef, OnInit, AfterViewChecked, ViewChild, ElementRef, inject } from '@angular/core';
+import { AcsService } from '../../services/acs.service';
+import { ContractService } from '../../services/contract.service';
 import { DialogService } from '../../services/dialog.service';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
@@ -37,7 +40,7 @@ interface Toast {
 
 export type ClientStatusFilter = 'all' | 'active' | 'suspended' | 'noip' | 'nowa' | 'fe' | 'pago' | 'pagosusp';
 export type ClientRowStatus = 'active' | 'suspended' | 'noip';
-export type ClientTab = 'resumen' | 'servicios' | 'facturacion' | 'tickets' | 'historial';
+export type ClientTab = 'resumen' | 'servicios' | 'facturacion' | 'tickets' | 'contrato' | 'historial';
 
 import { DatosFiscalesComponent } from '../../components/datos-fiscales/datos-fiscales.component';
 import { UbicacionClienteComponent } from '../../components/ubicacion-cliente/ubicacion-cliente.component';
@@ -48,11 +51,11 @@ import { PingDiagnosticoComponent } from '../../components/ping-diagnostico/ping
   selector: 'app-user',
   templateUrl: './user.component.html',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink, NpSelectComponent, HttpClientModule, LayoutComponent, FooterComponent, OntEquipoComponent, BurbujaTicketComponent, BurbujaPagoComponent, DatosFiscalesComponent, PingDiagnosticoComponent, UbicacionClienteComponent],
-  styleUrls: ['./user.component.scss'],
+  imports: [CommonModule, FormsModule, RouterLink, NpSelectComponent, HttpClientModule, LayoutComponent, FooterComponent, OntEquipoComponent, BurbujaTicketComponent, BurbujaPagoComponent, DatosFiscalesComponent, PingDiagnosticoComponent, UbicacionClienteComponent, TvDelClienteComponent],
+  styleUrls: ['./user.component.scss', './user.ficha.scss', './user.alta.scss'],
   host: { class: 'np-console' }
 })
-export class UserComponent implements OnInit {
+export class UserComponent implements OnInit, AfterViewChecked {
   private feSvc = inject(FacturaElectronicaService);
 
   /** Cómo se ven las redes en el selector de VLAN: número de VLAN, segmento y clientes. */
@@ -416,6 +419,122 @@ export class UserComponent implements OnInit {
   setTab(tab: ClientTab) {
     if (tab === 'servicios') { this.openServiciosTab(); return; }
     this.modalTab = tab;
+    if (tab === 'contrato' && Number(this.contratoDe) !== Number(this.selectedUserId)) this.cargarContrato();
+  }
+
+  // ── Pestaña Contrato ──────────────────────────────────────────────────────
+  contrato: { contratos: any[]; comodato: any[]; valor_comodato: number; contactos: any[]; telefono?: string | null } | null = null;
+  cargandoContrato = false;
+  private contratoDe: any = null;
+  formContacto: { nombre: string; relacion: string; telefono: string; rol: string; nota: string } | null = null;
+  guardandoContacto = false;
+  readonly rolesContacto: Record<string, string> = { paga: 'Paga la factura', respaldo: 'Respaldo', autorizado: 'Autorizado' };
+  readonly estadosContrato: Record<string, string> = { signed: 'Firmado', pending: 'Pendiente de firma', sent: 'Enviado, sin firmar', expired: 'Vencido' };
+
+  cargarContrato(): void {
+    const id = this.selectedUserId;
+    this.contratoDe = id;
+    this.cargandoContrato = true;
+    this.contrato = null;
+    this.userSvc.fichaContrato(id).subscribe({
+      next: r => { if (this.selectedUserId !== id) return; this.cargandoContrato = false; this.contrato = r?.data ?? null; },
+      error: () => { this.cargandoContrato = false; this.toast('No se pudo cargar el contrato', 'error'); },
+    });
+  }
+
+  // Enviar el contrato desde la ficha: el enlace para firmar (con el PDF adjunto si se quiere)
+  // o, si ya firmó, el PDF firmado. Por WhatsApp Web (la línea que se elija) o por Meta.
+  envioCt: any = null;
+  canalesCt: { web: { id: number; nombre: string; telefono: string | null; principal: number }[]; meta: { disponible: boolean; motivo: string | null } } | null = null;
+  canalCt: 'web' | 'meta' = 'web';
+  lineaCt: number | null = null;
+  telefonoCt = '';
+  pdfCt = true;
+  enviandoCt = false;
+  abriendoPdf: number | null = null;
+
+  abrirEnvioContrato(c: any): void {
+    this.envioCt = c;
+    this.pdfCt = true;
+    const d = String(this.contrato?.['telefono'] ?? '').replace(/\D/g, '');
+    this.telefonoCt = /^57\d{10}$/.test(d) ? d.slice(2) : d;
+    this.canalesCt = null;
+    this.contractSvc.canalesWhatsApp().subscribe({
+      next: (r: any) => {
+        this.canalesCt = r?.data ?? { web: [], meta: { disponible: false, motivo: null } };
+        const web = this.canalesCt!.web;
+        if (!this.lineaCt || !web.some(l => l.id === this.lineaCt)) this.lineaCt = web[0]?.id ?? null;
+        this.canalCt = web.length || c.estado === 'signed' ? 'web' : (this.canalesCt!.meta.disponible ? 'meta' : 'web');
+      },
+      error: (e: any) => { this.envioCt = null; this.toast(e?.status === 403 ? 'Su usuario no tiene el módulo de contratos' : 'No se pudieron consultar las líneas de WhatsApp', 'error'); },
+    });
+  }
+
+  enviarContrato(): void {
+    const c = this.envioCt;
+    const tel = this.telefonoCt.replace(/\D/g, '');
+    if (!c) return;
+    if (!/^(57\d{10}|3\d{9})$/.test(tel)) { this.toast('Número inválido: 10 dígitos (3XX…) o 12 con el 57', 'error'); return; }
+    if (this.canalCt === 'web' && !this.lineaCt) { this.toast('Elija por cuál línea de WhatsApp Web se envía', 'error'); return; }
+    // Firmado: el PDF es lo que se manda; sin firmar: el enlace, y el PDF si se marcó.
+    const pdf = this.canalCt === 'web' && (c.estado === 'signed' || this.pdfCt);
+    this.enviandoCt = true;
+    this.contractSvc.sendByWhatsApp(c.id, tel, this.canalCt, this.canalCt === 'web' ? this.lineaCt : null, pdf).subscribe({
+      next: (r: any) => {
+        this.enviandoCt = false;
+        if (r?.status !== 0) { this.toast(r?.message || 'No se pudo enviar', 'error'); return; }
+        this.envioCt = null;
+        this.toast(r?.message || 'Contrato enviado', 'success');
+        this.cargarContrato();
+        this.loadAuditLog(this.selectedUserId);
+      },
+      error: (e: any) => { this.enviandoCt = false; this.toast(e?.status === 403 ? 'Su usuario no tiene el módulo de contratos' : (e?.error?.message || 'No se pudo enviar'), 'error'); },
+    });
+  }
+
+  verPdfContrato(c: any): void {
+    // La pestaña se abre ya (si se abre después de la descarga, el navegador la bloquea).
+    const ventana = window.open('', '_blank');
+    this.abriendoPdf = c.id;
+    this.contractSvc.downloadPdf(c.id).subscribe({
+      next: blob => {
+        this.abriendoPdf = null;
+        const url = URL.createObjectURL(new Blob([blob], { type: 'application/pdf' }));
+        if (ventana) ventana.location.href = url; else window.open(url, '_blank');
+        setTimeout(() => URL.revokeObjectURL(url), 60000);
+      },
+      error: (e: any) => { this.abriendoPdf = null; ventana?.close(); this.toast(e?.status === 403 ? 'Su usuario no tiene el módulo de contratos' : 'No se pudo abrir el PDF', 'error'); },
+    });
+  }
+
+  nuevoContacto(): void {
+    this.formContacto = { nombre: '', relacion: '', telefono: '', rol: 'respaldo', nota: '' };
+  }
+
+  guardarContacto(): void {
+    const f = this.formContacto;
+    if (!f || !f.nombre.trim()) { this.toast('Escriba el nombre del contacto', 'error'); return; }
+    this.guardandoContacto = true;
+    this.userSvc.guardarContacto(this.selectedUserId, { ...f, nombre: f.nombre.trim() }).subscribe({
+      next: r => {
+        this.guardandoContacto = false;
+        if (r?.error) { this.toast(r?.message || 'No se pudo guardar', 'error'); return; }
+        if (this.contrato) this.contrato.contactos = r.data ?? [];
+        this.formContacto = null;
+        this.toast('Contacto agregado', 'success');
+        this.loadAuditLog(this.selectedUserId);
+      },
+      error: (e: any) => { this.guardandoContacto = false; this.toast(e?.error?.message || 'No se pudo guardar', 'error'); },
+    });
+  }
+
+  async quitarContacto(c: any): Promise<void> {
+    const ok = await this.dialog.confirm(`¿Quitar a ${c.nombre} de los contactos de este cliente?`, { title: 'Quitar contacto', okLabel: 'Quitar', danger: true });
+    if (!ok) return;
+    this.userSvc.borrarContacto(this.selectedUserId, c.id).subscribe({
+      next: r => { if (this.contrato) this.contrato.contactos = r?.data ?? []; this.toast('Contacto quitado', 'success'); },
+      error: () => this.toast('No se pudo quitar el contacto', 'error'),
+    });
   }
 
   private abrirAlCargar = 0;
@@ -593,7 +712,54 @@ export class UserComponent implements OnInit {
       router_id: e.router_id ?? null,
       connection_type: e.connection_type ?? 'static',
       al_dia: !!Number(e.al_dia ?? 0),
+      deuda: Number(e.deuda ?? 0),
+      facturas_pendientes: Number(e.facturas_pendientes ?? 0),
+      pagos: Array.isArray(e.pagos) ? e.pagos : [],
+      monthly_price: e.monthly_price !== null && e.monthly_price !== undefined ? Number(e.monthly_price) : null,
+      ultimo_pago: e.ultimo_pago ?? null,
+      ont_estado: e.ont_estado ?? null,
+      ont_puerto: e.ont_puerto ?? null,
+      tickets_abiertos: Number(e.tickets_abiertos ?? 0),
     };
+  }
+
+  // ── La fila: tres líneas ──────────────────────────────────────────────────
+  /** «MARÍA FERNANDA DE LA HOZ» → «María Fernanda de la Hoz»: se lee mejor que todo en mayúsculas. */
+  nombrePropio(...partes: (string | null | undefined)[]): string {
+    const menores = new Set(['de', 'del', 'la', 'las', 'los', 'y', 'e']);
+    return partes.filter(Boolean).join(' ').toLowerCase().split(/\s+/)
+      .map((p, i) => (i > 0 && menores.has(p)) ? p : p.charAt(0).toUpperCase() + p.slice(1))
+      .join(' ').trim();
+  }
+
+  readonly etiquetaPago: Record<string, string> = { a_tiempo: 'pagó a tiempo', tarde: 'pagó tarde', debe: 'no pagó', por_pagar: 'por pagar', sin: 'sin factura' };
+
+  /** «hace 3 días», «hace 2 meses»: cuánto hace del último pago. */
+  haceCuanto(fecha: string | null | undefined): string {
+    if (!fecha) return '';
+    const dias = Math.floor((Date.now() - new Date(fecha.replace(' ', 'T')).getTime()) / 86400000);
+    if (dias <= 0) return 'hoy';
+    if (dias === 1) return 'ayer';
+    if (dias < 31) return `hace ${dias} días`;
+    const meses = Math.round(dias / 30);
+    return `hace ${meses} ${meses === 1 ? 'mes' : 'meses'}`;
+  }
+
+  /** Cliente de menos de 30 días: se marca «Nuevo» en la fila. */
+  esNuevo(u: UserInterface): boolean {
+    return !!u.date_create && Date.now() - new Date(String(u.date_create).replace(' ', 'T')).getTime() < 30 * 86400000;
+  }
+
+  /** La franja solo se muestra si hubo alguna factura en esos 6 meses: toda gris confundía. */
+  tienePagos(u: UserInterface): boolean {
+    return (u.pagos ?? []).some(m => m.estado !== 'sin');
+  }
+
+  /** «Pagó 4 de 5 a tiempo» para el lector de pantalla, a partir de la franja. */
+  resumenPagos(pagos: { mes: string; estado: string }[] | undefined): string {
+    const p = (pagos ?? []).filter(x => x.estado !== 'sin');
+    if (!p.length) return 'Sin facturas en los últimos 6 meses';
+    return `Últimos 6 meses: ${p.filter(x => x.estado === 'a_tiempo').length} a tiempo, ${p.filter(x => x.estado === 'tarde').length} tarde, ${p.filter(x => x.estado === 'debe').length} sin pagar`;
   }
 
   /** La búsqueda va a la base (nombre, documento, teléfono, correo, IP o usuario). */
@@ -757,7 +923,7 @@ export class UserComponent implements OnInit {
   pendingSuspendRouterId: number | null = null;
 
   // ── Cliente modal (Soporte) ───────────────────────────────────────────────
-  modalTab: 'resumen' | 'servicios' | 'facturacion' | 'tickets' | 'historial' = 'resumen';
+  modalTab: ClientTab = 'resumen';
   loadingModal = false;
 
   selectedUserData: any = null;
@@ -786,6 +952,165 @@ export class UserComponent implements OnInit {
     // el equipo y el aprovisionamiento se piden al abrir, no sólo en Servicios.
     this.loadAssignedOnt(userId);
     this.cargarProvCliente();
+    this.cargarEquipoResumen(Number(userId));
+    this.sumActiva = null;
+    this.sumFija = false;
+    this.bloquesFijos.clear();
+  }
+
+  // ── Ficha: el resumen en tres tarjetas y los bloques que se despliegan ────
+  private acsSvc = inject(AcsService);
+  /** La señal en vivo de la ONT (SNMP) y lo que el equipo dice por TR-069 (WiFi). */
+  equipoVivo: any = null;
+  equipoAcs: any = null;
+  cargandoEquipoVivo = false;
+
+  cargarEquipoResumen(userId: number) {
+    this.equipoVivo = null;
+    this.equipoAcs = null;
+    this.cargandoEquipoVivo = true;
+    this.oltService.ontEnVivo(userId, false).subscribe({
+      next: r => { if (Number(this.selectedUserId) !== userId) return; this.cargandoEquipoVivo = false; this.equipoVivo = r?.data?.vivo ?? null; },
+      error: () => { this.cargandoEquipoVivo = false; },
+    });
+    this.acsSvc.deCliente(userId).subscribe({
+      next: r => { if (Number(this.selectedUserId) !== userId) return; this.equipoAcs = r?.error === 0 ? r.data : null; },
+      error: () => { this.equipoAcs = null; },
+    });
+  }
+
+  readonly etiquetaSenal: Record<string, string> = { buena: 'Señal buena', regular: 'Señal regular', baja: 'Señal baja', critica: 'Señal crítica', saturada: 'Señal saturada', sin_senal: 'Sin señal' };
+
+  /** La señal pide atención: el equipo se pone en ámbar y trae su acción. */
+  get senalAtencion(): boolean {
+    return ['baja', 'critica', 'saturada', 'sin_senal'].includes(this.equipoVivo?.estado);
+  }
+
+  /** Redes WiFi encendidas que informó el equipo por TR-069. */
+  get redesWifi(): any[] {
+    return (this.equipoAcs?.wifi ?? []).filter((r: any) => r.activo !== false && r.ssid);
+  }
+
+  get aparatosConectados(): number {
+    return this.redesWifi.reduce((n: number, r: any) => n + (Number(r.conectados) || 0), 0);
+  }
+
+  // Tarjetas de arriba: al pasar se abre el marco con el detalle de esa tarjeta; moverse entre
+  // tarjetas cambia el contenido sin cerrar; salir lo cierra; clic lo deja fijo.
+  sumActiva: 'plata' | 'servicio' | 'equipo' | null = null;
+  sumFija = false;
+  private sumTimer: any = null;
+  readonly punteroFino = typeof window !== 'undefined' && !!window.matchMedia?.('(hover: hover) and (pointer: fine)').matches;
+
+  sumEntrar(c: 'plata' | 'servicio' | 'equipo') {
+    if (!this.punteroFino) return;
+    clearTimeout(this.sumTimer);
+    if (this.sumFija && this.sumActiva !== c) return;
+    this.sumTimer = setTimeout(() => { this.sumActiva = c; }, this.sumActiva ? 0 : 140);
+  }
+
+  sumSalir() {
+    clearTimeout(this.sumTimer);
+    if (!this.sumFija) this.sumActiva = null;
+  }
+
+  sumClic(c: 'plata' | 'servicio' | 'equipo', ev: Event) {
+    if ((ev.target as HTMLElement).closest('button, a')) return;
+    if (this.sumFija && this.sumActiva === c) { this.sumFija = false; this.sumActiva = null; return; }
+    this.sumFija = true;
+    this.sumActiva = c;
+  }
+
+  /** Bloques de abajo: se abren al pasar (CSS); con clic o toque quedan fijos. */
+  bloquesFijos = new Set<string>();
+  alternarBloque(id: string, ev: Event) {
+    if ((ev.target as HTMLElement).closest('button, a, input')) return;
+    this.bloquesFijos.has(id) ? this.bloquesFijos.delete(id) : this.bloquesFijos.add(id);
+  }
+
+  /** Días después de la factura en que un pago cuenta «a tiempo»: la misma regla que la lista. */
+  private readonly DIAS_A_TIEMPO = 10;
+
+  /** Las facturas de los últimos 6 meses con cuándo se pagaron, la más nueva primero. */
+  get filasPago(): { id: number; mes: string; dias: number | null; estado: string; detalle: string; valor: number }[] {
+    return (this.factureInfo ?? [])
+      .filter((f: any) => !f.anulada_en && f.date_facturation)
+      .sort((a: any, b: any) => String(b.date_facturation).localeCompare(String(a.date_facturation)))
+      .slice(0, 6)
+      .map((f: any) => {
+        const emitida = new Date(String(f.date_facturation).slice(0, 10) + 'T00:00:00');
+        const pagadaEn = f.paid_at ? new Date(f.paid_at) : null;
+        const dias = pagadaEn ? Math.max(0, Math.round((pagadaEn.getTime() - emitida.getTime()) / 86400000)) : null;
+        const vencida = Date.now() > emitida.getTime() + (this.DIAS_A_TIEMPO + 1) * 86400000;
+        const estado = f.paid === 1
+          ? (dias !== null && dias > this.DIAS_A_TIEMPO ? 'tarde' : 'a_tiempo')
+          : (vencida ? 'debe' : 'por_pagar');
+        const metodo = f.metodo_pago ? ` · ${String(f.metodo_pago).toLowerCase()}` : '';
+        const detalle = estado === 'a_tiempo' ? `a los ${dias ?? 0} días${metodo}`
+          : estado === 'tarde' ? `a los ${dias} días · ${dias! - this.DIAS_A_TIEMPO} tarde${metodo}`
+          : estado === 'debe' ? `sin pagar · debe $ ${Math.round(f.restante).toLocaleString('es-CO')}`
+          : 'en plazo para pagar';
+        return {
+          id: f.id,
+          mes: emitida.toLocaleDateString('es-CO', { month: 'short', year: '2-digit' }).replace('.', ''),
+          dias, estado, detalle,
+          valor: f.paid === 1 ? (Number(f.price_total) || 0) - (Number(f.price_discount) || 0) : f.restante,
+        };
+      });
+  }
+
+  /** «4 de 5 a tiempo»: el resumen del bloque de pagos. */
+  get resumenDePagos(): string {
+    const pagadas = this.filasPago.filter(f => f.estado === 'a_tiempo' || f.estado === 'tarde');
+    if (!this.filasPago.length) return 'Sin facturas todavía';
+    if (!pagadas.length) return 'Ninguna pagada en estos meses';
+    return `${pagadas.filter(f => f.estado === 'a_tiempo').length} de ${pagadas.length} pagadas a tiempo`;
+  }
+
+  /** Dónde cae un pago en la regla de 0 a 20 días (el corte de «a tiempo» queda en el 50 %). */
+  posicionPago(dias: number | null): number {
+    return Math.min(100, ((dias ?? 0) / (this.DIAS_A_TIEMPO * 2)) * 100);
+  }
+
+  get ticketAbierto(): any {
+    return (this.userTickets ?? []).find((t: any) => t.status && t.status !== 'CERRADO') ?? null;
+  }
+
+  /** Lo último que pasó: cambios del historial y pagos, mezclados por fecha. */
+  get ultimos(): { texto: string; quien: string; fecha: string; tipo: string }[] {
+    const cambios = (this.auditLogs ?? []).slice(0, 8).map((l: any) => ({
+      texto: l.description || this.auditFieldLabel(l.field_changed),
+      quien: l.hecho_por || (Number(l.changed_by) === 0 ? 'Sistema' : ''),
+      fecha: String(l.created_at ?? ''),
+      tipo: 'cambio',
+    }));
+    const pagos = (this.factureInfo ?? []).filter((f: any) => f.paid === 1 && f.paid_at).slice(0, 4).map((f: any) => ({
+      texto: `Pagó $ ${Math.round((Number(f.price_total) || 0) - (Number(f.price_discount) || 0)).toLocaleString('es-CO')}${f.metodo_pago ? ' por ' + String(f.metodo_pago).toLowerCase() : ''} · factura ${f.number_facture}`,
+      quien: '',
+      fecha: String(f.paid_at),
+      tipo: 'pago',
+    }));
+    return [...cambios, ...pagos].filter(x => x.fecha).sort((a, b) => b.fecha.localeCompare(a.fecha)).slice(0, 6);
+  }
+
+  // Pestañas: una sola línea que se desliza a la elegida. Se escribe directo en el estilo
+  // (sin pasar por la detección de cambios) y solo cuando cambia la pestaña o su tamaño.
+  @ViewChild('tabBar') tabBar?: ElementRef<HTMLElement>;
+  private ultimoIndicador = '';
+  ngAfterViewChecked() {
+    const bar = this.tabBar?.nativeElement;
+    if (!bar) { this.ultimoIndicador = ''; return; }
+    const t = bar.querySelector<HTMLElement>('[aria-selected="true"]');
+    const ind = bar.querySelector<HTMLElement>('.np-tab-ind');
+    if (!t || !ind) return;
+    const clave = `${t.offsetLeft}:${t.offsetWidth}`;
+    if (clave === this.ultimoIndicador) return;
+    const primera = this.ultimoIndicador === '';
+    this.ultimoIndicador = clave;
+    if (primera) ind.style.transition = 'none';
+    ind.style.width = `${Math.max(0, t.offsetWidth - 20)}px`;
+    ind.style.transform = `translateX(${t.offsetLeft + 10}px)`;
+    if (primera) { void ind.offsetWidth; ind.style.transition = ''; }
   }
 
   closeClienteModal() {
@@ -823,7 +1148,29 @@ export class UserComponent implements OnInit {
   }
 
   // ── Resumen tab ───────────────────────────────────────────────────────────
-  enableEdit()  { this.isEditing = true; }
+  enableEdit()  { this.isEditing = true; this.irA('resumen', 'np-datos'); }
+
+  /**
+   * Lleva a la pestaña donde se ve lo que se acaba de pedir y desplaza la ficha hasta ahí, con un
+   * resaltado breve. Sin esto, «Usuario y clave» tocado desde Historial abría un panel que estaba
+   * en Resumen y no se veía nada.
+   */
+  irA(tab: ClientTab, ancla?: string): void {
+    if (this.modalTab !== tab) this.setTab(tab);
+    if (!ancla || typeof document === 'undefined') return;
+    let intentos = 0;
+    const buscar = () => {
+      const el = document.getElementById(ancla);
+      if (!el) { if (++intentos < 20) setTimeout(buscar, 50); return; }
+      const reducir = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+      el.scrollIntoView({ behavior: reducir ? 'auto' : 'smooth', block: 'center' });
+      el.classList.remove('np-destello');
+      void el.offsetWidth;
+      el.classList.add('np-destello');
+      setTimeout(() => el.classList.remove('np-destello'), 1400);
+    };
+    setTimeout(buscar, 0);
+  }
   cancelEdit()  { this.isEditing = false; this.loadModalUser(this.selectedUserId); }
 
   // ── Suspensión temporal que pide el cliente ───────────────────────────────
@@ -851,6 +1198,7 @@ export class UserComponent implements OnInit {
         if (r?.error || !r?.data) { this.toast(r?.message || 'No se pudo consultar el acceso del equipo', 'error', 6000); return; }
         this.accesoEquipo = r.data;
         this.verClaveEquipo = false;
+        this.irA('resumen', 'np-acceso');
         this.loadAuditLog(this.selectedUserId);
       },
       error: (e: any) => { this.cargandoAcceso = false; this.toast(e?.error?.message || 'No se pudo consultar el acceso del equipo', 'error'); },
@@ -886,6 +1234,7 @@ export class UserComponent implements OnInit {
   abrirFormSusp(): void {
     this.formSusp = { desde: this.hoyIso(), hasta: this.hoyIso(30), motivo: '' };
     this.simularSusp();
+    this.irA('resumen', 'np-susp');
   }
 
   simularSusp(): void {
@@ -1405,9 +1754,14 @@ export class UserComponent implements OnInit {
   assignedOnt: any   = null;
   loadingOnt         = false;
 
+  /** Quién instaló el equipo: se guardaba en la orden y el inventario, pero no se veía. */
+  instalacion: { orden_id: number | null; tecnico: string | null; fecha: string | null; equipo: string | null; serial: string | null } | null = null;
+
   loadAssignedOnt(userId: number): void {
     this.loadingOnt  = true;
     this.assignedOnt = null;
+    this.instalacion = null;
+    this.instalacionSvc.delCliente(userId).subscribe({ next: (r: any) => this.instalacion = r?.data ?? null, error: () => {} });
     this.oltService.getOntByUserId(userId).subscribe({
       next: (res) => { this.loadingOnt = false; this.assignedOnt = res.data ?? null; },
       error: () => { this.loadingOnt = false; },
@@ -1995,6 +2349,93 @@ export class UserComponent implements OnInit {
     });
   }
 
+  // ── Alta: lo que muestra el formulario nuevo (21-10-2026) ───────────────────
+  /** Ciudad, DANE e indicativo vienen de la empresa: se muestran en una línea y se abren al pedirlo. */
+  verUbicacion = false;
+  /** El barrio lo puso la dirección (y se sigue actualizando con ella) hasta que alguien lo escriba. */
+  barrioAuto = false;
+
+  /**
+   * Barrios que se reconocen dentro de la dirección: los mismos (y en el mismo orden) que
+   * DatosDelCliente::BARRIOS del backend, que además lo completa al guardar si llega vacío.
+   */
+  private readonly BARRIOS: Array<[RegExp, string]> = [
+    [/altos\s+de(l)?\s+horizonte/, 'Altos de Horizonte'],
+    [/horizonte/, 'Nuevo Horizonte'],
+    [/villas?\s+(las\s+)?moras.{0,12}(\b2\b|\bii\b|\bll\b|e2|etapa\s*2|2\s*etapa)/, 'Villa Las Moras 2'],
+    [/villas?\s+(las\s+)?moras/, 'Villa Las Moras'],
+    [/r[ií]o\s*verde/, 'Río Verde'],
+    [/manantial/, 'Manantial'],
+  ];
+
+  alCambiarDireccion(): void {
+    const texto = String(this.newUser.address ?? '').toLowerCase();
+    const hallado = this.BARRIOS.find(([patron]) => patron.test(texto))?.[1] ?? null;
+    if (hallado && (this.barrioAuto || !String(this.newUser.barrio ?? '').trim())) {
+      this.newUser.barrio = hallado;
+      this.barrioAuto = true;
+    } else if (!hallado && this.barrioAuto) {
+      this.newUser.barrio = '';
+      this.barrioAuto = false;
+    }
+    this.guardarBorrador();
+  }
+
+  /** «Grupo 2 – Día 5 a las 08:00»: arriba el grupo, abajo cuándo se factura (como presCortes). */
+  corteTitulo(d: any): string { return String(d?.names ?? '').split(/\s[–-]\s/)[0]; }
+  corteDetalle(d: any): string { return String(d?.names ?? '').split(/\s[–-]\s/).slice(1).join(' – '); }
+
+  get nombreDelAlta(): string {
+    return [this.newUser?.names, this.newUser?.lastname].map(v => String(v ?? '').trim()).filter(Boolean).join(' ');
+  }
+
+  nombreDelTipo(id: string): string {
+    return this.tiposDeDocumento.find(t => t.id === id)?.nombre ?? id;
+  }
+
+  /** Pesos con punto de miles, como se escriben aquí: $ 55.000. */
+  pesos(v: unknown): string {
+    return '$ ' + Math.round(Number(v) || 0).toLocaleString('es-CO');
+  }
+
+  esTexto = (v: unknown): boolean => String(v ?? '').trim() !== '';
+
+  /** Los planes del alta en tarjetas: los activos, del más barato al más caro. */
+  get planesDelAlta(): any[] {
+    return (this.PlanInternet as any[])
+      .filter(p => p.active === undefined || p.active === null || Number(p.active) === 1 || p.active === true)
+      .sort((a, b) => Number(a.monthly_price || 0) - Number(b.monthly_price || 0));
+  }
+
+  get planElegido(): any {
+    const id = this.comoTexto(this.newUser?.plan_id);
+    return id && id !== '0' ? (this.PlanInternet as any[]).find(p => String(p.id) === id) ?? null : null;
+  }
+
+  get faltaPaso1(): string[] {
+    const u = this.newUser ?? {};
+    const falta: string[] = [];
+    if (!this.esTexto(u.names)) falta.push('nombres');
+    if (!this.esTexto(u.lastname)) falta.push('apellidos');
+    if (!this.esTexto(u.dni)) falta.push('documento');
+    if (String(u.phone ?? '').replace(/\D/g, '').length < 10) falta.push('WhatsApp');
+    if (!this.esTexto(u.address)) falta.push('dirección');
+    if (!u.periode_facturation || String(u.periode_facturation) === '0') falta.push('periodo');
+    return falta;
+  }
+
+  get faltaAlta(): string[] {
+    const falta = [...this.faltaPaso1];
+    if (!this.planElegido) falta.push('plan');
+    if (this.esPppoe) {
+      if (!this.esTexto(this.newUser.pppoe_user)) falta.push('usuario PPPoE');
+      if (!this.esTexto(this.newUser.pppoe_password)) falta.push('clave PPPoE');
+    } else if (!this.newUser.ip) {
+      falta.push('IP');
+    }
+    return falta;
+  }
+
   readonly CAMPOS_PERSONALES = [
     { label: 'Nombres',   key: 'names',    type: 'text',  ph: 'Juan Carlos',                 ayuda: 'sin apellidos', mono: false, ancho: false },
     { label: 'Apellidos', key: 'lastname', type: 'text',  ph: 'Pérez Gómez',                 ayuda: '',              mono: false, ancho: false },
@@ -2161,6 +2602,9 @@ export class UserComponent implements OnInit {
       // usuario y contraseña y la IP se la da el pool.
       connection_type: 'static',
       pppoe_user: '', pppoe_password: '', pppoe_profile: '',
+      // «Activar contrato»: se le asigna al registrarlo, con hoy como día de instalación.
+      activar_contrato: (this.plantillasContrato?.length ?? 0) > 0,
+      contrato_id: this.plantillasContrato?.[0]?.id ?? null,
     };
   }
 
@@ -2496,6 +2940,8 @@ export class UserComponent implements OnInit {
 
   openCreateUserModal() {
     const b = this.leerBorrador();
+    this.verUbicacion = false;
+    this.barrioAuto = false;
 
     this.newUser          = b?.newUser ?? this.usuarioEnBlanco();
     this.selectedRouterId = b?.routerId ?? null;
@@ -2517,6 +2963,23 @@ export class UserComponent implements OnInit {
     this.cargarInterfaces();
 
     this.showCreateUser = true;
+    this.cargarPlantillasContrato();
+  }
+
+  // Plantillas de contrato activas, para «Activar contrato» en el registro.
+  private contractSvc = inject(ContractService);
+  plantillasContrato: { id: number; title: string }[] = [];
+  private cargarPlantillasContrato(): void {
+    this.contractSvc.getAll().subscribe({
+      next: (r: any) => {
+        this.plantillasContrato = (r?.data ?? []).filter((c: any) => c.active === true || Number(c.active) === 1).map((c: any) => ({ id: Number(c.id), title: c.title }));
+        if (this.newUser && this.newUser.contrato_id == null && this.plantillasContrato.length) {
+          this.newUser.activar_contrato = true;
+          this.newUser.contrato_id = this.plantillasContrato[0].id;
+        }
+      },
+      error: () => { this.plantillasContrato = []; },
+    });
   }
 
   createUser() {

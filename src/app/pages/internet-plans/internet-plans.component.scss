@@ -1,5 +1,5 @@
 /* ─── Planes: sólo lo propio ────────────────────────────────────────── */
-.np-row--fibra .np-stripe i    { background: var(--accent); }
+.np-row--fibra .np-stripe i    { background: transparent; }
 .np-row--wireless .np-stripe i { background: var(--info); }
 .np-row--cable .np-stripe i    { background: var(--warn); }
 .np-row--dsl .np-stripe i      { background: #a16207; }

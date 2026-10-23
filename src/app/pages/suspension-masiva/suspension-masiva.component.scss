@@ -10,11 +10,11 @@
 .sm-cuerpo { display: grid; gap: 14px; align-content: start; padding-top: 14px; }
 
 .sm-filtros { display: flex; flex-wrap: wrap; gap: 14px 26px; }
-.sm-et { display: block; margin-bottom: 5px; font-size: 11px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; color: var(--text-3); }
+.sm-et { display: block; margin-bottom: 5px; font-size: 11px; font-weight: 600; letter-spacing: 0; color: var(--text-3); }
 
 .sm-kpis { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; margin: 14px 0; }
-.sm-kpi { display: grid; gap: 2px; padding: 10px 14px; border: 1px solid var(--line); border-left: 3px solid var(--tono, var(--accent)); border-radius: var(--radius); background: var(--surface);
-  span { font-size: 10.5px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; color: var(--text-3); }
+.sm-kpi { display: grid; gap: 2px; padding: 10px 14px; border: 1px solid var(--line); border-left: 1px solid var(--line); border-radius: var(--radius); background: var(--surface);
+  span { font-size: 10.5px; font-weight: 600; letter-spacing: 0; color: var(--text-3); }
   b { font-size: 20px; line-height: 1.15; color: var(--text); font-variant-numeric: tabular-nums; } }
 
 .sm-barra { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-bottom: 10px; }
@@ -49,7 +49,7 @@ tr.sm-detalle ul { margin: 0; padding: 0; list-style: none; display: grid; gap: 
 .sm-form { margin-bottom: 12px; }
 .sm-area { height: auto; min-height: 76px; padding: 8px 10px; resize: vertical; line-height: 1.45; }
 .sm-previa { margin: 0 0 10px; padding: 12px 14px; border-radius: 4px 14px 14px 14px; background: #e7f8e1; max-width: 520px;
-  span { display: block; margin-bottom: 4px; font-size: 10.5px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; color: #3d6b3a; }
+  span { display: block; margin-bottom: 4px; font-size: 10.5px; font-weight: 600; letter-spacing: 0; color: #3d6b3a; }
   p { margin: 0; font-size: 13.5px; line-height: 1.5; color: #14251a; white-space: pre-wrap; overflow-wrap: anywhere; } }
 .sm-motivo { max-width: 520px; margin-bottom: 12px; }
 .sm-problema { margin: 0 0 12px; }

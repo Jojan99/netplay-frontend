@@ -24,8 +24,8 @@
 .al-kpis { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
 .al-kpi {
   display: grid; gap: 3px; padding: 14px 16px; text-align: left; font: inherit; color: inherit;
-  border: 1px solid var(--line); border-left: 3px solid var(--tono, var(--accent)); border-radius: var(--radius-lg); background: var(--surface);
-  span { font-size: 11px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; color: var(--text-3); }
+  border: 1px solid var(--line); border-left: 1px solid var(--line); border-radius: var(--radius-lg); background: var(--surface);
+  span { font-size: 11px; font-weight: 600; letter-spacing: 0; color: var(--text-3); }
   b { font-size: 24px; line-height: 1.15; color: var(--text); font-variant-numeric: tabular-nums; }
   small { font-size: 12px; color: var(--text-2); }
 }
@@ -40,9 +40,9 @@ button.al-kpi { cursor: pointer; transition: border-color .15s, box-shadow .15s;
   &:hover { transform: translateY(-1px); box-shadow: 0 3px 12px color-mix(in srgb, var(--tono) 20%, transparent); }
   strong { font-size: 26px; line-height: 1; color: var(--tono); font-variant-numeric: tabular-nums; }
 }
-.al-cruce-t { font-size: 13.5px; font-weight: 700; color: var(--text); }
+.al-cruce-t { font-size: 13.5px; font-weight: 600; color: var(--text); }
 .al-cruce-e { font-size: 12px; line-height: 1.4; color: var(--text-2); }
-.al-cruce em { margin-top: 2px; font-style: normal; font-size: 12px; font-weight: 700; color: var(--tono); }
+.al-cruce em { margin-top: 2px; font-style: normal; font-size: 12px; font-weight: 600; color: var(--tono); }
 [data-t='neutro'].al-cruce strong { color: var(--text-2); }
 
 .al-dos { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; align-items: start; }
@@ -59,7 +59,7 @@ button.al-kpi { cursor: pointer; transition: border-color .15s, box-shadow .15s;
 
 .al-dl { display: grid; gap: 0; margin: 0;
   div { display: grid; gap: 3px; padding: 10px 0; & + div { border-top: 1px solid var(--line); } }
-  dt { font-size: 11px; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; color: var(--text-3); }
+  dt { font-size: 11px; font-weight: 600; letter-spacing: 0; color: var(--text-3); }
   dd { margin: 0; font-size: 13.5px; color: var(--text); display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
   small { color: var(--text-3); font-size: 12px; }
 }
@@ -77,7 +77,7 @@ button.al-kpi { cursor: pointer; transition: border-color .15s, box-shadow .15s;
 .al-sel { width: auto; max-width: 300px; height: 34px; }
 .al-buscar { flex: 1; min-width: 220px; max-width: 360px; height: 34px; }
 .al-suma { margin-left: auto; font-size: 12.5px; font-weight: 600; color: var(--text-2); white-space: nowrap; }
-.al-chip-n { margin-left: 6px; font-weight: 700; opacity: .75; }
+.al-chip-n { margin-left: 6px; font-weight: 600; opacity: .75; }
 .al-nota { margin: 0; }
 .al-tenue { opacity: .5; }
 
@@ -110,7 +110,7 @@ button.al-kpi { cursor: pointer; transition: border-color .15s, box-shadow .15s;
 .al-auto { display: inline-flex; align-items: center; gap: 6px; margin-left: auto; font-size: 12px; font-weight: 600; color: var(--text-2); cursor: pointer; }
 
 .al-banco { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 12px; padding: 12px 14px; border: 1px solid var(--line); border-radius: var(--radius-lg); background: var(--surface-2);
-  label { display: grid; gap: 4px; span { font-size: 11px; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; color: var(--text-3); } }
+  label { display: grid; gap: 4px; span { font-size: 11px; font-weight: 600; letter-spacing: 0; color: var(--text-3); } }
   select { height: 34px; min-width: 210px; }
 }
 .al-enviando { display: inline-flex; align-items: center; gap: 7px; height: 34px; font-size: 12.5px; font-weight: 600; color: var(--accent); }

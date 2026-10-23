@@ -1,0 +1,360 @@
+/* ═══ Rediseño limpio de Clientes (20-10-2026) ═══════════════════════════
+   Solo esta pantalla: neutros calibrados y letra Geist sobre los mismos tokens
+   del tema, así el modo oscuro y el acento de cada empresa siguen mandando.
+   Versión anterior: etiqueta git «ficha-anterior».
+────────────────────────────────────────────────────────────────────────── */
+:host {
+  --font-body: 'Geist', 'Manrope', ui-sans-serif, system-ui, sans-serif;
+  --font-display: 'Geist', 'Manrope', ui-sans-serif, system-ui, sans-serif;
+  --font-mono: 'Geist Mono', 'IBM Plex Mono', ui-monospace, monospace;
+  --bg: #f7f7f8; --surface: #ffffff; --surface-2: #f3f3f5; --surface-3: #ececef;
+  --text: #111216; --text-2: #4f525c; --text-3: #737782;
+  --line: #e7e7ea; --line-strong: #d9dadf;
+  --np-hover: #f0f0f2;
+  --np-warn-bg: #fff7e8; --np-warn-line: #f3dcae; --np-warn-ink: #9a5b00;
+  --np-ease: cubic-bezier(.23, 1, .32, 1);
+  font-family: var(--font-body);
+}
+:host-context(.dark), :host-context([data-theme='dark']) {
+  --bg: #0d0e10; --surface: #131417; --surface-2: #18191d; --surface-3: #1e2024;
+  --text: #ecedf0; --text-2: #a9acb5; --text-3: #868a95;
+  --line: #222429; --line-strong: #2d3036;
+  --np-hover: #1c1d22;
+  --np-warn-bg: #241c0d; --np-warn-line: #4a3816; --np-warn-ink: #f0b44c;
+}
+.np-num { font-variant-numeric: tabular-nums; }
+.np-muted { color: var(--text-3); }
+
+/* Estado: punto + palabra, nunca solo color */
+.np-dot-st { display: inline-flex; align-items: center; gap: 6px; font-size: 12.5px; font-weight: 500; color: var(--text-2); white-space: nowrap; }
+.np-dot-st::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--ok); flex-shrink: 0; }
+.np-dot-st.is-warn::before, .np-dot-st.is-noip::before, .np-dot-st.is-por_pagar::before { background: var(--warn); }
+.np-dot-st.is-off::before, .np-dot-st.is-suspended::before { background: var(--danger); }
+
+/* ── Fila de la lista: tres líneas ── */
+.np-table--registry td.es-principal { min-width: 0; }
+.np-r1, .np-r2, .np-r3 { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.np-r1 { justify-content: space-between; }
+.np-r1 .np-name { font-weight: 500; font-size: 13.5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
+.np-debe { font-size: 13px; color: var(--text-3); white-space: nowrap; flex-shrink: 0; }
+.np-debe.is-si { color: var(--danger); font-weight: 600; }
+.np-r2 { margin-top: 2px; font-size: 12.5px; color: var(--text-3); }
+.np-r2 .np-dot-st { flex-shrink: 0; }
+.np-r2-t, .np-r3-t { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
+.np-r3 { margin-top: 2px; justify-content: space-between; font-size: 12px; color: var(--text-3); }
+.np-r3 .np-mono { font-size: 11.5px; }
+.np-meses { display: inline-flex; gap: 2px; align-items: center; flex-shrink: 0; }
+.np-meses i { width: 7px; height: 10px; border-radius: 2px; background: var(--ok); opacity: .8; }
+.np-meses i.is-tarde, .np-meses i.is-por_pagar { background: var(--warn); opacity: 1; }
+.np-meses i.is-debe { background: transparent; box-shadow: inset 0 0 0 1.5px var(--danger); opacity: 1; }
+.np-meses i.is-sin { background: var(--line-strong); opacity: 1; }
+.np-clients.is-open .np-col-ip { display: none; }
+
+/* ── Encabezado de la ficha ── */
+.np-insp-id h2 { font-weight: 600; letter-spacing: -.015em; text-wrap: balance; }
+.np-meta--l1 { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; }
+.np-sep { width: 3px; height: 3px; border-radius: 50%; background: var(--line-strong); }
+.np-insp-tools { display: flex; align-items: center; gap: 6px; position: relative; }
+.np-insp-tools .np-btn svg { width: 14px; height: 14px; }
+.np-btn { transition: transform 140ms var(--np-ease), background-color 140ms ease; }
+.np-btn:active { transform: scale(.97); }
+.np-mas-sep { display: block; height: 1px; background: var(--line); margin: 4px 6px; }
+.np-mas-item--danger { color: var(--danger) !important; }
+@media (max-width: 760px) { .np-hide-sm { display: none !important; } }
+
+/* ── Pestañas: ícono, dato con significado y una línea que se desliza ── */
+.np-tabs--ficha { position: sticky; top: 0; z-index: 3; background: var(--surface); gap: 2px; padding: 6px 10px 6px; }
+.np-tabs--ficha .np-tab { position: relative; border-bottom: 0; margin: 0; padding: 0 10px; height: 32px; border-radius: 8px; font-weight: 500; font-size: 13px; gap: 7px; transition: color 140ms ease, background-color 140ms ease; }
+.np-tabs--ficha .np-tab svg { width: 15px; height: 15px; flex-shrink: 0; }
+.np-tabs--ficha .np-tab[aria-selected="true"] { color: var(--text); border-bottom: 0; }
+.np-tabs--ficha .np-tab:active { transform: scale(.98); }
+@media (hover: hover) and (pointer: fine) { .np-tabs--ficha .np-tab:hover { color: var(--text); background: var(--np-hover); } }
+.np-tabs--ficha .np-c { font-family: var(--font-body); font-size: 11px; font-weight: 600; height: 18px; padding: 0 7px; background: var(--surface-2); color: var(--text-2); border: 1px solid var(--line); }
+.np-tabs--ficha .np-c--warn, .np-tabs--ficha .np-tab[aria-selected="true"] .np-c--warn { background: var(--np-warn-bg); color: var(--np-warn-ink); border-color: var(--np-warn-line); }
+.np-tabs--ficha .np-c--ok, .np-tabs--ficha .np-tab[aria-selected="true"] .np-c--ok { background: color-mix(in srgb, var(--ok) 12%, transparent); color: var(--ok); border-color: transparent; font-weight: 500; }
+.np-tab-ind { position: absolute; left: 0; bottom: -1px; height: 2px; width: 0; border-radius: 2px; background: var(--text); pointer-events: none; transition: transform 240ms var(--np-ease), width 240ms var(--np-ease); }
+
+/* ── Resumen ── */
+.np-ficha-res { padding: 14px 16px 18px; display: grid; gap: 14px; border-bottom: 1px solid var(--line); }
+
+.np-sum { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); border: 1px solid var(--line); border-radius: 12px; background: var(--surface); overflow: hidden; }
+.np-cell { position: relative; padding: 14px 16px 12px; display: grid; gap: 3px; align-content: start; border-left: 1px solid var(--line); min-width: 0; cursor: pointer; outline: none; transition: background-color 160ms ease; }
+.np-cell:first-child { border-left: 0; }
+.np-cell::after { content: ""; position: absolute; left: 16px; right: 16px; bottom: 0; height: 2px; border-radius: 2px; background: var(--text); transform: scaleX(0); transition: transform 220ms var(--np-ease); }
+.np-cell.is-att { background: var(--np-warn-bg); box-shadow: inset 0 0 0 1px var(--np-warn-line); }
+.np-cell.is-att::after { background: var(--warn); }
+.np-cell.is-act::after { transform: scaleX(1); }
+.np-cell:focus-visible { box-shadow: inset 0 0 0 2px var(--accent); }
+@media (hover: hover) and (pointer: fine) { .np-cell:not(.is-att):hover, .np-cell.is-act:not(.is-att) { background: color-mix(in srgb, var(--surface-2) 70%, var(--surface)); } }
+.np-cell-lb { display: flex; align-items: center; justify-content: space-between; gap: 8px; font-size: 12.5px; color: var(--text-3); font-weight: 500; }
+.np-cell-v { font-size: 18px; font-weight: 600; letter-spacing: -.01em; line-height: 1.3; }
+.np-cell.is-att .np-cell-v { color: var(--np-warn-ink); }
+.np-cell-d { font-size: 12.5px; color: var(--text-2); line-height: 1.45; }
+.np-cell-lk { justify-self: start; margin-top: 6px; font-size: 12.5px; font-weight: 500; color: var(--text); text-decoration: underline; text-underline-offset: 3px; text-decoration-color: var(--line-strong); background: none; border: 0; padding: 0; cursor: pointer; }
+.np-cell-lk:disabled { color: var(--text-3); cursor: not-allowed; }
+.np-cell.is-att .np-cell-lk { color: var(--np-warn-ink); }
+.np-cell .np-meses { margin-top: 6px; }
+.np-cell .np-meses i { width: 14px; height: 7px; }
+
+.np-sum-more { grid-column: 1 / -1; display: grid; grid-template-rows: 0fr; transition: grid-template-rows 240ms var(--np-ease); }
+.np-sum.is-open .np-sum-more { grid-template-rows: 1fr; }
+.np-sum-in { min-height: 0; overflow: hidden; }
+.np-sum.is-open .np-sum-in { border-top: 1px solid var(--line); }
+.np-det { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 14px 24px; padding: 14px 16px; animation: np-det-in 200ms var(--np-ease); }
+.np-det h4 { margin: 0 0 8px; font-size: 12px; font-weight: 500; color: var(--text-3); }
+.np-det-acc { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: 6px; padding-top: 12px; border-top: 1px solid var(--line); }
+@keyframes np-det-in { from { opacity: 0; transform: translateY(-4px); filter: blur(2px); } to { opacity: 1; transform: none; filter: none; } }
+.np-det-list { list-style: none; margin: 0; padding: 0; display: grid; }
+.np-det-list li { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; gap: 10px; align-items: center; padding: 6px 0; border-top: 1px solid var(--line); font-size: 13px; }
+.np-det-list li:first-child { border-top: 0; padding-top: 0; }
+.np-det-list li b { font-weight: 500; text-align: right; }
+.np-kv { margin: 0; display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: 6px 14px; font-size: 13px; }
+.np-kv dt { color: var(--text-3); }
+.np-kv dd { margin: 0; min-width: 0; overflow-wrap: anywhere; }
+
+/* Bloques que se despliegan: el hueco guarda el alto del resumen y el bloque crece por encima. */
+.np-tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 10px; }
+.np-tile-slot { position: relative; height: 92px; }
+.np-tile { position: absolute; inset: 0 0 auto 0; z-index: 1; display: grid; grid-template-rows: auto auto 0fr; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); padding: 12px 14px 10px; outline: none; cursor: pointer;
+  transition: grid-template-rows 200ms var(--np-ease), box-shadow 200ms var(--np-ease), border-color 160ms ease; transition-delay: 0ms; }
+.np-tile.is-att { border-color: var(--np-warn-line); }
+.np-tile-h { display: flex; align-items: center; gap: 8px; }
+.np-tile-h h3 { margin: 0; font-size: 12px; font-weight: 500; color: var(--text-3); }
+.np-tile-pin { margin-left: auto; font-size: 11px; font-weight: 600; color: var(--text-2); background: var(--surface-2); border-radius: 999px; padding: 0 8px; line-height: 18px; opacity: 0; transition: opacity 150ms ease; }
+.np-tile-res { display: grid; gap: 3px; margin-top: 6px; min-width: 0; }
+.np-tile-1 { font-size: 14px; font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; display: flex; align-items: center; gap: 6px; min-width: 0; }
+.np-tile-2 { font-size: 12.5px; color: var(--text-3); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.np-tile-more { min-height: 0; overflow: hidden; }
+.np-tile-in { padding-top: 12px; margin-top: 10px; border-top: 1px solid var(--line); display: grid; gap: 10px; opacity: 0; transform: translateY(-4px); filter: blur(2px); transition: opacity 140ms ease, transform 200ms var(--np-ease), filter 160ms ease; }
+.np-tile-p { margin: 0; font-size: 13px; color: var(--text-2); }
+@mixin np-tile-abierto { grid-template-rows: auto auto 1fr; z-index: 4; box-shadow: 0 1px 2px rgb(17 18 22 / .06), 0 12px 32px -8px rgb(17 18 22 / .2); border-color: var(--line-strong);
+  .np-tile-in { opacity: 1; transform: none; filter: none; transition-delay: 60ms; } }
+.np-tile.is-fijo, .np-tile:focus-within { @include np-tile-abierto; }
+.np-tile.is-fijo .np-tile-pin { opacity: 1; }
+@media (hover: hover) and (pointer: fine) { .np-tile:hover { @include np-tile-abierto; transition-delay: 120ms; } }
+.np-feed { list-style: none; margin: 0; padding: 0; display: grid; }
+.np-feed li { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 10px; padding: 6px 0; border-top: 1px solid var(--line); font-size: 13px; }
+.np-feed li:first-child { border-top: 0; padding-top: 0; }
+.np-feed small { display: block; color: var(--text-3); font-size: 12px; }
+.np-feed-t { color: var(--text-3); font-size: 12px; white-space: nowrap; }
+.np-pg { display: grid; gap: 2px; }
+.np-pg-h, .np-pg-r { display: grid; grid-template-columns: 52px minmax(70px, 1fr) minmax(0, auto) 76px; gap: 10px; align-items: center; }
+.np-pg-h { font-size: 11px; color: var(--text-3); padding-bottom: 4px; }
+.np-pg-esc { position: relative; display: flex; justify-content: space-between; }
+.np-pg-c { position: absolute; left: 50%; transform: translateX(-50%); color: var(--text-2); white-space: nowrap; }
+.np-pg-r { height: 30px; border-top: 1px solid var(--line); font-size: 12.5px; }
+.np-pg-m { color: var(--text-2); font-weight: 500; text-transform: capitalize; }
+.np-pg-t { position: relative; height: 6px; border-radius: 3px; background: linear-gradient(90deg, color-mix(in srgb, var(--ok) 14%, transparent) 0 50%, var(--surface-2) 50%); }
+.np-pg-t::after { content: ""; position: absolute; left: 50%; top: -5px; bottom: -5px; width: 1px; background: var(--line-strong); }
+.np-pg-t i { position: absolute; top: 50%; width: 10px; height: 10px; margin: -5px 0 0 -5px; border-radius: 50%; background: var(--ok); box-shadow: 0 0 0 2px var(--surface); z-index: 1; }
+.np-pg-r.is-tarde .np-pg-t i { background: var(--warn); }
+.np-pg-r.is-debe .np-pg-d { color: var(--danger); font-weight: 500; }
+.np-pg-d { color: var(--text-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.np-pg-v { text-align: right; }
+
+@media (max-width: 760px) {
+  .np-sum { grid-template-columns: minmax(0, 1fr); }
+  .np-cell { border-left: 0; border-top: 1px solid var(--line); }
+  .np-cell:first-child { border-top: 0; }
+  .np-det { grid-template-columns: minmax(0, 1fr); }
+  .np-tiles { grid-template-columns: minmax(0, 1fr); }
+  .np-tile-slot { height: auto; }
+  .np-tile { position: relative; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .np-sum-more, .np-cell::after, .np-tile, .np-tile-in, .np-tab-ind { transition: none; }
+  .np-det { animation: none; }
+  .np-tile-in { transform: none; filter: none; }
+}
+
+/* ── Ajustes tras verla en el sistema (21-10) ── */
+/* La ficha toma todo el espacio; la lista queda como columna de ~400 px, como en la muestra. */
+.np-clients.is-open .np-workspace { grid-template-columns: minmax(340px, 400px) minmax(0, 1fr); }
+.np-clients.is-wide .np-workspace { grid-template-columns: minmax(300px, 340px) minmax(0, 1fr); }
+.np-clients.is-open .np-table--registry { min-width: 0; }
+.np-clients.is-open .np-table--registry th:last-child,
+.np-clients.is-open .np-table--registry td.es-acciones,
+.np-clients.is-open .np-col-pago { display: none; }
+/* Ficha cerrada: deuda y franja en su columna; abierta (o en el celular): dentro de la fila. */
+.np-clients:not(.is-open) .np-r1 .np-debe,
+.np-clients:not(.is-open) .np-r3 .np-meses { display: none; }
+.np-col-pago { width: 1%; white-space: nowrap; text-align: right; }
+td.np-col-pago { vertical-align: middle; }
+td.np-col-pago .np-debe { display: block; margin-bottom: 6px; }
+td.np-col-pago .np-meses { justify-content: flex-end; }
+@media (max-width: 760px) {
+  .np-col-pago { display: none; }
+  .np-clients:not(.is-open) .np-r1 .np-debe, .np-clients:not(.is-open) .np-r3 .np-meses { display: inline-flex; }
+}
+
+/* Selección y acción principal sobrias, como en la muestra: gris suave y tinta oscura. */
+.np-row[aria-selected="true"] { background: var(--surface-2) !important; box-shadow: inset 0 0 0 1px var(--line); }
+.np-btn--primary { background: var(--text); color: var(--surface); }
+
+/* Encabezado en rejilla: el nombre nunca pierde su ancho; las acciones bajan si no caben. */
+.np-insp-head { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 12px; align-items: start; }
+.np-insp-id { min-width: 0; }
+.np-insp-id h2 { word-break: normal; overflow-wrap: anywhere; }
+@media (max-width: 1100px) {
+  .np-insp-head { grid-template-columns: auto minmax(0, 1fr); }
+  .np-insp-tools { grid-column: 1 / -1; justify-content: flex-end; }
+}
+.np-avatar { background: var(--surface-2); color: var(--text-2); border: 1px solid var(--line); border-radius: 50%; }
+
+/* Columnas que aprovechan el ancho con la ficha cerrada; se van quitando al angostarse. */
+.np-col-x { white-space: nowrap; vertical-align: middle; }
+.np-c1 { display: block; font-size: 13px; color: var(--text); }
+.np-c2 { display: block; font-size: 12px; color: var(--text-3); margin-top: 2px; }
+.np-col-eq .np-dot-st { display: inline-flex; }
+.np-tk { font-size: 12.5px; color: var(--text-3); }
+.np-tk.is-si { color: var(--np-warn-ink); font-weight: 600; background: var(--np-warn-bg); border: 1px solid var(--np-warn-line); border-radius: 999px; padding: 1px 8px; }
+.np-nuevo { margin-left: 8px; font-size: 10.5px; font-weight: 600; letter-spacing: .02em; color: var(--accent); background: color-mix(in srgb, var(--accent) 12%, transparent); border-radius: 999px; padding: 1px 7px; vertical-align: 1px; }
+.np-warn-t { color: var(--np-warn-ink); }
+.np-clients.is-open .np-col-x { display: none; }
+@media (max-width: 1500px) { .np-col-tk { display: none; } }
+@media (max-width: 1300px) { .np-col-up { display: none; } }
+@media (max-width: 1100px) { .np-col-eq { display: none; } }
+@media (max-width: 900px) { .np-col-plan { display: none; } }
+
+/* Al llegar a algo desde otra pestaña: un resaltado breve para ubicarlo. */
+.np-destello { animation: np-destello 1.3s var(--np-ease); border-radius: 10px; }
+@keyframes np-destello { 0% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--accent) 0%, transparent); } 15% { box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent) 35%, transparent); } 100% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--accent) 0%, transparent); } }
+@media (prefers-reduced-motion: reduce) { .np-destello { animation: none; outline: 2px solid var(--accent); outline-offset: 2px; } }
+
+
+/* ── Teléfono (21-10): menú dentro de la pantalla, pestañas que caben, encabezado compacto ── */
+.np-insp-tools .np-mas { position: relative; }
+.np-insp-tools .np-mas-menu { right: 0; left: auto; max-width: calc(100vw - 32px); }
+@media (max-width: 760px) {
+  .np-insp-head { gap: 8px 10px; }
+  .np-insp-id h2 { font-size: 17px; }
+  .np-meta--l1 { font-size: 12.5px; gap: 2px 8px; }
+  .np-meta--l1 .np-sep { display: none; }
+  .np-meta--l1 > span + span:not(.np-sep)::before { content: "· "; color: var(--text-3); }
+  .np-meta--addr { font-size: 12px; }
+  .np-insp-tools { justify-content: stretch; }
+  .np-insp-tools .np-btn--primary { flex: 1; justify-content: center; height: 40px; }
+  .np-insp-tools .np-icobtn { width: 40px; height: 40px; }
+  .np-insp-tools .np-mas-menu { position: fixed; left: 12px; right: 12px; top: auto; bottom: calc(12px + env(safe-area-inset-bottom, 0px)); max-width: none; z-index: 80; border-radius: 14px; padding: 6px; }
+  .np-insp-tools .np-mas-menu .np-mas-item { min-height: 44px; font-size: 15px; }
+  .np-tabs--ficha { padding: 6px 8px; gap: 0; }
+  .np-tabs--ficha .np-tab { padding: 0 9px; height: 36px; font-size: 13px; }
+  .np-tabs--ficha .np-tab svg { display: none; }
+  .np-tabs--ficha .np-c { display: none; }
+  .np-ficha-res { padding: 12px; }
+  .np-cell { padding: 12px 14px 10px; }
+  .np-cell-v { font-size: 17px; }
+  .np-det-acc .np-btn { flex: 1 1 auto; justify-content: center; height: 40px; }
+  .np-tile { padding: 12px 14px; }
+  .np-pg-h, .np-pg-r { grid-template-columns: 44px minmax(50px, 1fr) 70px; }
+  .np-pg-d { display: none; }
+  .np-pg-h > span:nth-child(3) { display: none; }
+}
+
+/* ── Encabezado compacto (21-10): la página cede alto a la lista y a la ficha ──
+   Antes: ruta, título grande, cinta de números (los mismos de los chips) y dos filas más.
+   Ahora: título con un dato corto al lado, buscador y chips en una fila; con la ficha
+   abierta, todo en una sola línea y los chips detrás de «Filtros». */
+@media (min-width: 1001px) {
+  .np-clients {
+    .np-head .np-kicker, .np-ribbon { display: none; }
+    .np-head { align-items: center; padding-bottom: 10px; margin-bottom: 0; }
+    .np-title { font-size: 20px; font-weight: 600; letter-spacing: -.015em; white-space: nowrap; display: inline; margin-right: 12px; }
+    .np-title-meta { display: inline; font-family: var(--font-body); font-size: 12.5px; color: var(--text-3); white-space: nowrap; b { color: var(--text); font-weight: 600; } }
+    .np-toolbar { flex-wrap: nowrap; gap: 10px; align-items: center; }
+    .np-search { flex: 0 0 300px; }
+    .np-chips { flex: 1 1 auto; min-width: 0; flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; &::-webkit-scrollbar { display: none; } }
+    .np-pagesize { flex-shrink: 0; }
+
+    &.is-open {
+      .np-top { display: flex; align-items: center; flex-wrap: wrap; gap: 8px 12px; padding-bottom: 10px; flex-shrink: 0; }
+      .np-head, .np-toolbar { display: contents; }
+      .np-head > div:first-child { order: 0; }
+      .np-search { order: 1; flex: 0 1 260px; }
+      .np-filtros-btn { order: 2; display: inline-flex; height: 32px; font-size: 12.5px; padding: 0 12px; &[aria-pressed="true"] { border-color: var(--text); color: var(--text); } }
+      .np-actions { order: 3; margin-left: auto; }
+      .np-spacer, .np-chips, .np-pagesize { display: none; }
+    }
+    &.is-open.is-filtros {
+      .np-chips { display: flex; order: 4; flex: 1 1 100%; }
+      .np-pagesize { display: inline-flex; order: 5; }
+    }
+  }
+}
+
+/* Ajuste (21-10): la cinta de números vuelve, compacta junto al título; los chips bajan de línea
+   en vez de cortarse (deslizables no se notaba que había más). */
+@media (min-width: 1001px) {
+  .np-clients {
+    .np-head > div:first-child { display: flex; align-items: baseline; flex-wrap: wrap; gap: 4px 18px; min-width: 0; }
+    .np-title-meta { display: none; }
+    .np-ribbon { display: flex; flex-wrap: wrap; gap: 4px 16px; margin: 0; font-size: 12.5px; color: var(--text-3);
+      .np-n { font-size: 13px; font-weight: 600; color: var(--text); margin-right: 4px; } }
+    .np-ribbon--loading { display: block; }
+    .np-chips { flex-wrap: wrap; overflow: visible; }
+    &.is-open .np-ribbon { display: none; }
+    &.is-open .np-title-meta { display: inline; }
+  }
+}
+
+/* ── Pestaña Contrato (21-10) ── */
+.np-ct { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+.np-ct-sec { border: 1px solid var(--line); border-radius: 12px; background: var(--surface); padding: 14px 16px; display: grid; gap: 12px; align-content: start; min-width: 0; }
+.np-ct-wide { grid-column: 1 / -1; }
+.np-ct-h { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; flex-wrap: wrap;
+  h3 { margin: 0; font-size: 13.5px; font-weight: 600; .np-muted { font-weight: 400; font-size: 12.5px; margin-left: 6px; } } }
+.np-ct-c { display: grid; gap: 12px; }
+.np-ct-c + .np-ct-c { padding-top: 14px; border-top: 1px solid var(--line); }
+.np-ct-cab { display: flex; align-items: center; justify-content: space-between; gap: 10px; b { font-weight: 600; } }
+.np-ct-cifras { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); border: 1px solid var(--line); border-radius: 10px;
+  > div { padding: 10px 14px; display: grid; gap: 1px; border-left: 1px solid var(--line); min-width: 0; }
+  > div:first-child { border-left: 0; }
+  small { font-size: 12px; color: var(--text-3); } b { font-size: 15px; font-weight: 600; } span { font-size: 12px; color: var(--text-2); } }
+.np-ct-docs { list-style: none; margin: 0; padding: 0; display: grid;
+  li { display: grid; grid-template-columns: 18px minmax(0, 1fr) auto; gap: 10px; align-items: center; padding: 8px 0; border-top: 1px solid var(--line); font-size: 13px; }
+  li:first-child { border-top: 0; padding-top: 0; }
+  li > svg { width: 16px; height: 16px; color: var(--text-3); }
+  small { display: block; font-size: 12px; color: var(--text-3); }
+  b { font-weight: 500; } }
+.np-ct-contactos li { grid-template-columns: 28px minmax(0, 1fr) auto; }
+.np-av-s { width: 28px; height: 28px; border-radius: 50%; background: var(--surface-2); border: 1px solid var(--line); display: grid; place-items: center; font-size: 11px; font-weight: 600; color: var(--text-2); }
+.np-ct-tag { display: inline-flex; align-items: center; gap: 4px; height: 22px; padding: 0 8px; border-radius: 6px; background: var(--surface-2); border: 1px solid var(--line); font-size: 12px; color: var(--text-2); white-space: nowrap; }
+.np-ct-tag.is-paga { background: color-mix(in srgb, var(--ok) 10%, transparent); color: var(--ok); border-color: transparent; }
+.np-ct-x { border: 0; background: none; color: var(--text-3); cursor: pointer; font-size: 15px; line-height: 1; padding: 0 0 0 2px; }
+.np-ct-nota { margin: 0; font-size: 12.5px; color: var(--text-2); }
+.np-ct-form { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px 12px; padding-top: 12px; border-top: 1px solid var(--line); }
+.np-ct-full { grid-column: 1 / -1; }
+.np-ct-acc { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 8px; }
+.np-ct-envio { display: grid; gap: 12px; padding: 12px 14px; border: 1px solid var(--line); border-radius: 10px; background: var(--surface-2);
+  .np-ct-form { padding-top: 0; border-top: 0; } }
+.np-ct-canales { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+.np-ct-op { display: flex; gap: 10px; align-items: flex-start; padding: 10px 12px; border: 1px solid var(--line); border-radius: 9px; background: var(--surface); cursor: pointer; font-size: 13px;
+  input { margin-top: 2px; accent-color: var(--text); flex-shrink: 0; }
+  b { display: block; font-weight: 600; } small { display: block; font-size: 12px; color: var(--text-3); }
+  &.is-on { border-color: var(--text); }
+  &.is-off { opacity: .55; cursor: not-allowed; } }
+@media (max-width: 600px) { .np-ct-canales { grid-template-columns: minmax(0, 1fr); } .np-ct-acc > .np-btn { flex: 1 1 auto; } }
+@media (max-width: 900px) { .np-ct { grid-template-columns: minmax(0, 1fr); } }
+@media (max-width: 600px) { .np-ct-cifras { grid-template-columns: minmax(0, 1fr); > div { border-left: 0; border-top: 1px solid var(--line); } > div:first-child { border-top: 0; } } .np-ct-form { grid-template-columns: minmax(0, 1fr); } }
+
+/* Pantallas medianas (portátiles, o con zoom): el buscador arriba y los chips en su propia fila a
+   todo el ancho; al lado del buscador se apilaban en cuatro filas (21-10). */
+@media (min-width: 1001px) and (max-width: 1600px) {
+  .np-clients:not(.is-open) {
+    .np-toolbar { flex-wrap: wrap; row-gap: 10px; }
+    .np-search { flex: 1 1 280px; max-width: 420px; }
+    .np-pagesize { order: 2; margin-left: auto; }
+    .np-chips { order: 3; flex: 1 1 100%; gap: 6px; }
+    .np-chip { height: 30px; padding: 0 11px; font-size: 12.5px; }
+  }
+}
+@media (min-width: 1001px) and (max-width: 1280px) {
+  .np-clients .np-ribbon { font-size: 12px; gap: 2px 12px; }
+  .np-clients .np-head { flex-wrap: wrap; }
+}
+
+/* «Activar contrato» en el registro de un cliente */
+.np-contrato-alta { display: grid; gap: 10px; padding: 12px 14px; margin: 4px 0 12px; border: 1px solid var(--line); border-radius: 10px; background: var(--surface-2); }
+.np-check { display: flex; align-items: flex-start; gap: 10px; font-size: 13px; color: var(--text-2); cursor: pointer;
+  input { margin-top: 2px; width: 16px; height: 16px; accent-color: var(--text); flex-shrink: 0; }
+  b { color: var(--text); font-weight: 600; } }

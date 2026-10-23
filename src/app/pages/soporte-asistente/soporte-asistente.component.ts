@@ -1,3 +1,4 @@
+import { SeccionTabsComponent } from '../../components/seccion-tabs/seccion-tabs.component';
 import { Component, OnDestroy, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -37,7 +38,7 @@ const ACCIONES: Record<string, string> = {
 @Component({
   selector: 'app-soporte-asistente',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink],
+  imports: [CommonModule, FormsModule, RouterLink, SeccionTabsComponent],
   templateUrl: './soporte-asistente.component.html',
   styleUrl: './soporte-asistente.component.scss',
 })

@@ -171,13 +171,26 @@ export class FinanceService {
    * deben nada: sin eso, un cliente que termina de pagar desaparece de la
    * pantalla y no hay forma de abrir su historial desde aquí.
    */
-  getClientsPaginated(search: string, page: number, perPage: number, incluirAlDia = false): Observable<any> {
+  getClientsPaginated(search: string, page: number, perPage: number, incluirAlDia = false, mora: number | null = null): Observable<any> {
     let params = new HttpParams()
       .set('page', page)
       .set('per_page', perPage);
     if (search) params = params.set('search', search);
     if (incluirAlDia) params = params.set('al_dia', '1');
+    if (mora) params = params.set('mora', mora);
     return this.http.get<any>(this.env.rootUrl + 'api/facturation/clients', { headers: this.getHeaders(), params });
+  }
+
+  /** Los compromisos de pago de toda la empresa, por estado. */
+  compromisos(estado: string, q = ''): Observable<any> {
+    let params = new HttpParams().set('estado', estado);
+    if (q) params = params.set('q', q);
+    return this.http.get<any>(`${this.env.rootUrl}api/cartera/compromisos`, { headers: this.getHeaders(), params });
+  }
+
+  /** Recordarle al cliente por WhatsApp lo que debe, con enlace de pago si hay pasarela. */
+  recordarPago(userId: number): Observable<any> {
+    return this.http.post<any>(`${this.env.rootUrl}api/cartera/${userId}/recordar`, '{}', { headers: this.getHeaders() });
   }
 
   getClientInvoices(cabId: number): Observable<any> {

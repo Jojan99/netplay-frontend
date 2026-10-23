@@ -76,6 +76,11 @@ export class InstallationService {
 
   constructor(private http: HttpClient) {}
 
+  /** Quién le instaló el equipo al cliente y cuándo (para la ficha). */
+  delCliente(userId: number): Observable<any> {
+    return this.http.get(`${this.baseUrl}/del-cliente/${userId}`);
+  }
+
   getAll(filter?: InstallationFilter): Observable<any> {
     let params = new HttpParams();
     if (filter) {
@@ -133,6 +138,11 @@ export class InstallationService {
   }
 
   /** El comprobante de la transferencia con la que pagaron la instalación. Lo sube el mismo técnico. */
+  /** La nota del trabajo de una orden que ya quedó instalada (instalar la cierra sola). */
+  cierre(id: number, notas: string): Observable<any> {
+    return this.http.post(`${this.baseUrl}/${id}/cierre`, { technical_notes: notas });
+  }
+
   uploadPaymentProof(id: number, archivo: File): Observable<any> {
     const fd = new FormData();
     fd.append('comprobante', archivo);
@@ -174,6 +184,7 @@ export class InstallationService {
     // que traía la orden.
     olt_id?: number | null; vlan?: number | null;
     line_profile_id?: number | null; srv_profile_id?: number | null; onu_type?: string | null;
+      lat?: number; lng?: number; precision?: number;
   }): Observable<any> {
     return this.http.post(`${this.baseUrl}/${id}/provisionar`, equipo);
   }

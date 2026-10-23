@@ -35,7 +35,7 @@ main {
 }
 
 /* Encabezado de grupo del menú: botón nativo, se ve igual que los ítems. */
-.sidebar-group-btn { position: relative; display: flex; align-items: center; width: 100%; min-height: 38px; padding: 0 10px; margin: 0 0 2px; border: 1px solid transparent; border-radius: var(--radius); background: none; color: var(--text-2); font-family: var(--font-body); font-size: 12.5px; font-weight: 700; text-align: left; cursor: pointer; transition: background .15s, color .15s; -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
+.sidebar-group-btn { position: relative; display: flex; align-items: center; width: 100%; min-height: 38px; padding: 0 10px; margin: 0 0 2px; border: 1px solid transparent; border-radius: var(--radius); background: none; color: var(--text-2); font-family: var(--font-body); font-size: 12.5px; font-weight: 600; text-align: left; cursor: pointer; transition: background .15s, color .15s; -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
 @media (hover: hover) { .sidebar-group-btn:hover { background: var(--surface-2); color: var(--accent); } }
 .sidebar-group-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: -1px; }
 .sidebar-group-btn.is-open { color: var(--text); }
@@ -51,7 +51,7 @@ main {
 .sidebar-content-inner { min-height: 0; overflow: hidden; }
 .sidebar-content.expanded { grid-template-rows: 1fr; margin-bottom: 6px; }
 /* Rótulo «Avanzado» dentro de un grupo: chico y gris, con una línea arriba. */
-.sidebar-subsect { margin: 8px 0 2px; padding: 6px 10px 0; border-top: 1px dashed var(--line); font-size: 10px; font-weight: 800; letter-spacing: .07em; text-transform: uppercase; color: var(--text-3); }
+.sidebar-subsect { margin: 8px 0 2px; padding: 6px 10px 0; border-top: 1px dashed var(--line); font-size: 10px; font-weight: 600; letter-spacing: 0; color: var(--text-3); }
 :host ::ng-deep .sidebar-content .sidebar-nav-item { min-height: 32px; font-size: 12px; font-weight: 600; }
 :host ::ng-deep .sidebar-content .sidebar-nav-item-active::before { left: -10px; }
 
@@ -64,13 +64,13 @@ main {
 .app-shell-brand { gap: 10px; min-width: 0; text-decoration: none; }
 .app-shell-logo, .app-shell-monogram { width: 32px; height: 32px; border-radius: 7px; object-fit: cover; flex-shrink: 0; }
 .app-shell-logo { border: 1px solid var(--line); }
-.app-shell-monogram { display: grid; place-items: center; background: var(--text); color: var(--bg); font-family: var(--font-display); font-size: 15px; font-weight: 700; }
+.app-shell-monogram { display: grid; place-items: center; background: var(--text); color: var(--bg); font-family: var(--font-display); font-size: 15px; font-weight: 600; }
 .app-shell-brand-copy { display: grid; gap: 1px; min-width: 0; }
 .app-shell-company { overflow: hidden; color: var(--text); font-family: var(--font-display); font-size: 15px; font-weight: 600; letter-spacing: -0.01em; line-height: 1.1; text-overflow: ellipsis; white-space: nowrap; }
-.app-shell-product { color: var(--text-3); font-family: var(--font-mono); font-size: 10px; letter-spacing: .05em; text-transform: uppercase; white-space: nowrap; }
+.app-shell-product { color: var(--text-3); font-family: var(--font-body); font-size: 11.5px; letter-spacing: 0; white-space: nowrap; }
 
 .app-shell-ia { margin-left: auto; flex-shrink: 0; }
-.app-shell-context { display: flex; align-items: center; justify-self: center; gap: 12px; height: 32px; padding: 0 12px; border: 1px solid var(--line); border-radius: 999px; background: var(--surface-2); color: var(--text-3); font-family: var(--font-mono); font-size: 11px; white-space: nowrap; }
+.app-shell-context { display: flex; align-items: center; justify-self: center; gap: 12px; height: 32px; padding: 0 12px; border: 1px solid var(--line); border-radius: 999px; background: var(--surface-2); color: var(--text-3); font-family: var(--font-body); font-size: 12px; white-space: nowrap; font-variant-numeric: tabular-nums; }
 .app-shell-crumb { display: inline-flex; align-items: center; gap: 6px; b { font-weight: 500; color: var(--text-3); } i { font-style: normal; color: var(--accent); } span { color: var(--text); font-weight: 500; } }
 .app-shell-context-divider { width: 1px; height: 12px; background: var(--line-strong); }
 .app-shell-live { display: inline-flex; align-items: center; gap: 6px; color: var(--ok-ink, var(--ok)); i { width: 6px; height: 6px; border-radius: 50%; background: var(--ok); box-shadow: 0 0 0 3px var(--ok-soft); } }
@@ -84,11 +84,11 @@ main {
 .app-shell-profile:active { transform: scale(.98); }
 .app-shell-profile[aria-expanded="true"] { border-color: var(--accent-line); background: var(--accent-soft); }
 .app-shell-profile[aria-expanded="true"] .app-shell-chevron { transform: rotate(180deg); }
-.app-shell-user-monogram { display: grid; width: 26px; height: 26px; place-items: center; border-radius: 5px; background: var(--accent-soft); color: var(--accent); font-family: var(--font-display); font-size: 12px; font-weight: 700; flex-shrink: 0; }
+.app-shell-user-monogram { display: grid; width: 26px; height: 26px; place-items: center; border-radius: 5px; background: var(--accent-soft); color: var(--accent); font-family: var(--font-display); font-size: 12px; font-weight: 600; flex-shrink: 0; }
 .app-shell-user-monogram--lg { width: 36px; height: 36px; font-size: 16px; }
 .app-shell-profile-copy { display: grid; gap: 1px; text-align: left; }
-.app-shell-user { color: var(--text); font-size: 12px; font-weight: 800; line-height: 1.2; white-space: nowrap; }
-.app-shell-user-role { color: var(--text-3); font-family: var(--font-mono); font-size: 9.5px; letter-spacing: .05em; line-height: 1.2; text-transform: uppercase; }
+.app-shell-user { color: var(--text); font-size: 12px; font-weight: 600; line-height: 1.2; white-space: nowrap; }
+.app-shell-user-role { color: var(--text-3); font-family: var(--font-body); font-size: 11px; letter-spacing: 0; line-height: 1.2; }
 .app-shell-chevron { width: 14px; height: 14px; color: var(--text-3); transition: transform var(--dur-menu) var(--ease-out); }
 
 /* El menú nace de la esquina del botón que lo abre (arriba a la derecha) en 160 ms. */
@@ -96,10 +96,10 @@ main {
 @keyframes app-shell-menu-in { from { opacity: 0; transform: scale(.96) translateY(-2px); } }
 .app-shell-dropdown-head { display: flex; align-items: center; gap: 10px; padding: 12px 14px; border-bottom: 1px solid var(--line); background: var(--surface-2); }
 .app-shell-dropdown-copy { min-width: 0; }
-.app-shell-dropdown-user { margin: 0; color: var(--text); font-size: 13px; font-weight: 800; }
-.app-shell-role { margin: 2px 0 0; color: var(--text-3); font-family: var(--font-mono); font-size: 10.5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.app-shell-dropdown-user { margin: 0; color: var(--text); font-size: 13px; font-weight: 600; }
+.app-shell-role { margin: 2px 0 0; color: var(--text-3); font-family: var(--font-body); font-size: 11.5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .app-shell-menu { list-style: none; margin: 0; padding: 6px; display: grid; gap: 2px; }
-.app-shell-menu-item { display: flex; align-items: center; gap: 10px; width: 100%; min-height: 36px; padding: 8px 10px; border-radius: 5px; color: var(--text-2); font-size: 12.5px; font-weight: 700; text-decoration: none; background: none; border: 0; cursor: pointer; text-align: left; svg { width: 15px; height: 15px; } }
+.app-shell-menu-item { display: flex; align-items: center; gap: 10px; width: 100%; min-height: 36px; padding: 8px 10px; border-radius: 5px; color: var(--text-2); font-size: 12.5px; font-weight: 600; text-decoration: none; background: none; border: 0; cursor: pointer; text-align: left; svg { width: 15px; height: 15px; } }
 .app-shell-menu-item:focus-visible { background: var(--accent-soft); color: var(--accent); outline-offset: -2px; }
 @media (hover: hover) { .app-shell-menu-item:hover { background: var(--accent-soft); color: var(--accent); } }
 .app-shell-menu-item--danger { color: var(--danger-ink, var(--danger)); }
@@ -163,8 +163,8 @@ main {
 /* Franja fija sobre el contenido: una sola línea que se desliza si hay muchos atajos. */
 .app-atajos { flex-shrink: 0; display: flex; align-items: center; gap: 6px; padding-block: 10px 8px; padding-inline: 24px; border-bottom: 1px solid var(--line); background: var(--bg); overflow-x: auto; scrollbar-width: none; &::-webkit-scrollbar { display: none; } }
 .app-atajos-chip, .app-atajos-label { flex-shrink: 0; }
-.app-atajos-label { margin-right: 4px; color: var(--text-3); font: 500 10px var(--font-mono); letter-spacing: .1em; text-transform: uppercase; }
-.app-atajos-chip { display: inline-flex; align-items: center; gap: 6px; height: 28px; padding: 0 10px 0 8px; border: 1px solid var(--line); border-radius: 999px; background: var(--surface); color: var(--text-2); font: 700 12px var(--font-body); text-decoration: none; white-space: nowrap; transition: border-color .15s, color .15s, transform var(--dur-press) var(--ease-out);
+.app-atajos-label { margin-right: 4px; color: var(--text-3); font: 500 12px var(--font-body); letter-spacing: 0; }
+.app-atajos-chip { display: inline-flex; align-items: center; gap: 6px; height: 28px; padding: 0 10px 0 8px; border: 1px solid var(--line); border-radius: 999px; background: var(--surface); color: var(--text-2); font: 600 12px var(--font-body); text-decoration: none; white-space: nowrap; transition: border-color .15s, color .15s, transform var(--dur-press) var(--ease-out);
   @media (hover: hover) { &:hover { border-color: var(--accent-line); color: var(--accent); } }
   &:active { transform: scale(.97); }
   &.is-active { border-color: var(--accent-line); background: var(--accent-soft); color: var(--accent); }
@@ -271,7 +271,7 @@ main {
   border-radius: 999px;
   background: var(--accent-soft);
   color: var(--accent);
-  font: 700 11.5px var(--font-body, inherit);
+  font: 600 11.5px var(--font-body, inherit);
   cursor: pointer;
   white-space: nowrap;
   transition: background .15s, color .15s;
@@ -321,7 +321,7 @@ main {
 .app-ubicacion-acc { display: grid; gap: 8px; margin-top: 4px; }
 .app-ubicacion-btn {
   min-height: 48px; border: 0; border-radius: var(--radius, 8px); cursor: pointer;
-  background: var(--accent, #0f766e); color: #fff; font: inherit; font-size: 15px; font-weight: 700;
+  background: var(--accent, #0f766e); color: #fff; font: inherit; font-size: 15px; font-weight: 600;
   transition: transform 120ms cubic-bezier(.23, 1, .32, 1);
   &:active { transform: scale(.97); }
   &:focus-visible { outline: 2px solid var(--accent, #0f766e); outline-offset: 2px; }
@@ -341,3 +341,21 @@ main {
   background: var(--warn-soft, #fdf3e3); color: var(--warn-ink, #8a5a12) !important;
 }
 .app-ubicacion-btn:disabled { opacity: .7; cursor: progress; }
+
+/* ═══ Menú plegado, ordenado (22-10-2026) ═══
+   Plegado, las subopciones quedaban corridas a la derecha con la línea punteada
+   y los iconos no caían en la misma columna que los de los grupos. Ahora todos
+   los iconos van en una sola columna, y las subopciones del grupo abierto se
+   juntan en un bloque gris debajo de su grupo. */
+@media (min-width: 1024px) {
+  :host ::ng-deep .sidebar-collapsed {
+    .sidebar-group-btn { width: 48px; padding: 0 14px; }
+    .sidebar-chevron { display: none; }
+    .sidebar-content { margin-left: 0; padding-left: 0; border-left: 0; width: 48px; border-radius: 10px; }
+    .sidebar-content.expanded { background: var(--surface-2); padding: 4px 0; margin: 2px 0 8px; }
+    .sidebar-subsect { display: none; }
+    .sidebar-nav-item { width: 48px; margin-left: 0 !important; margin-right: 0 !important; padding-left: 14px !important; padding-right: 0 !important; }
+    .sidebar-content .sidebar-nav-item-active::before { display: none; }
+    .sidebar-content .sidebar-nav-item-active { background: var(--surface); }
+  }
+}

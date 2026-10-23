@@ -19,7 +19,7 @@
 .ges-servidor { padding: 0; margin-top: 14px; }
 .ges-toggle { width: 100%; display: flex; align-items: center; gap: 12px; padding: 14px 16px;
   border: 0; background: transparent; color: var(--text); cursor: pointer; text-align: left;
-  b { display: block; font: 700 13.5px var(--font-display); }
+  b { display: block; font: 600 13.5px var(--font-display); }
   small { font-size: 12px; color: var(--text-3); }
   svg { width: 17px; height: 17px; flex-shrink: 0; color: var(--text-3); transition: transform .2s ease; }
   &:hover svg { color: var(--accent); } }

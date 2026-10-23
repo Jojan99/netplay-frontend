@@ -1,28 +1,36 @@
 <div class="np-page np-finance" [class.is-open]="drawerOpen" [class.is-wide]="drawerOpen && inspectorWide">
 
-  <!-- Cabecera -->
-  <header class="np-head">
+  <!-- Cabecera (21-10-2026): el estilo limpio de Clientes; las cifras en tarjetas debajo de las pestañas -->
+  <header class="fz-head">
     <div>
-      <p class="np-kicker">Operación <b>/</b> Recaudo</p>
-      <h1 class="np-title">Cartera y recaudo</h1>
-      <div class="np-ribbon" *ngIf="!loading || summary">
-        <span><span class="np-n">{{ totalClients | number }}</span>clientes con saldo</span>
-        <ng-container *ngIf="summary">
-          <span><span class="np-n">{{ formatCurrency(summary.total_debt) }}</span>en cartera</span>
-          <span><i class="np-dot np-dot--sev1"></i><span class="np-n">{{ summary.m1 | number }}</span>con 1 mes</span>
-          <span><i class="np-dot np-dot--sev2"></i><span class="np-n">{{ summary.m2 | number }}</span>con 2 meses</span>
-          <span><i class="np-dot np-dot--sev3"></i><span class="np-n">{{ summary.m3 | number }}</span>con 3 o más</span>
-        </ng-container>
-      </div>
-      <div class="np-ribbon np-ribbon--loading" *ngIf="loading && !summary">Cargando cartera…</div>
+      <p class="fz-kicker">Cobros y pagos</p>
+      <h1>Cartera</h1>
     </div>
-    <div class="np-actions">
-      <button type="button" class="np-btn np-btn--ghost" (click)="exportAllCSV()">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12m0 0 4-4m-4 4-4-4M4 17v3h16v-3"/></svg>
-        Exportar CSV
+    <div class="fz-acc">
+      <button type="button" class="fz-btn" (click)="exportAllCSV()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 3v12m0 0 4-4m-4 4-4-4M4 17v3h16v-3"/></svg>
+        Exportar
       </button>
+      <a class="fz-btn fz-btn--1" routerLink="/dashboard/pagos">Registrar o revisar pagos</a>
     </div>
   </header>
+  <app-finanzas-tabs></app-finanzas-tabs>
+
+  <section class="fz-kpis" aria-label="Resumen de cartera">
+    <div class="fz-kpi"><small>En cartera</small><b>{{ summary ? formatCurrency(summary.total_debt) : '—' }}</b><span>{{ (summary ? summary.m1 + summary.m2 + summary.m3 : totalClients) | number }} clientes con saldo</span></div>
+    <div class="fz-kpi"><small>Recaudado en {{ mesActual }}</small><b>{{ summary?.recaudado_mes !== undefined ? formatCurrency(summary!.recaudado_mes!) : '—' }}</b><span>{{ summary?.pagos_mes ?? 0 }} facturas pagadas</span></div>
+    <div class="fz-kpi fz-kpi--mora" *ngIf="summary">
+      <small>Mora por cliente <ng-container *ngIf="summary.compromisos"> · {{ summary.compromisos }} con compromiso de pago</ng-container></small>
+      <div class="fz-barra" role="img" [attr.aria-label]="summary.m1 + ' con 1 mes, ' + summary.m2 + ' con 2 meses, ' + summary.m3 + ' con 3 o más'">
+        <span class="s1" [style.flex-grow]="summary.m1"></span><span class="s2" [style.flex-grow]="summary.m2"></span><span class="s3" [style.flex-grow]="summary.m3"></span>
+      </div>
+      <div class="fz-ley">
+        <button type="button" [attr.aria-pressed]="moraFiltro === 1" (click)="setMora(1)"><i class="s1"></i><b>{{ summary.m1 | number }}</b>con 1 mes</button>
+        <button type="button" [attr.aria-pressed]="moraFiltro === 2" (click)="setMora(2)"><i class="s2"></i><b>{{ summary.m2 | number }}</b>con 2 meses</button>
+        <button type="button" [attr.aria-pressed]="moraFiltro === 3" (click)="setMora(3)"><i class="s3"></i><b>{{ summary.m3 | number }}</b>con 3 o más</button>
+      </div>
+    </div>
+  </section>
 
   <!-- Barra -->
   <div class="np-toolbar">
@@ -32,6 +40,9 @@
              [(ngModel)]="searchTerm" (ngModelChange)="onSearchChange()" />
       <kbd>/</kbd>
     </label>
+    <button type="button" class="fz-filtro" *ngIf="moraFiltro" (click)="setMora(null)" [attr.aria-label]="'Quitar el filtro ' + MORA_TXT[moraFiltro]">
+      Sólo con {{ MORA_TXT[moraFiltro] }} <span aria-hidden="true">×</span>
+    </button>
     <span class="np-spacer"></span>
     <!-- La cartera es para cobrar, así que por defecto sólo están los que
          deben. Esto trae también a los que ya pagaron, para poder abrir su
@@ -59,7 +70,8 @@
               <th>Cliente</th>
               <th class="np-col-phone">Teléfono</th>
               <th>Mora</th>
-              <th class="np-th-right">Saldo</th>
+              <th class="np-col-phone">Último pago</th>
+              <th class="np-th-right">Debe</th>
               <th class="np-th-right">Acciones</th>
             </tr>
           </thead>
@@ -70,6 +82,7 @@
                 <td><span class="np-skel-bar" style="width:60%"></span><span class="np-skel-bar np-skel-bar--sm" style="width:35%"></span></td>
                 <td class="np-col-phone"><span class="np-skel-bar" style="width:60%"></span></td>
                 <td><span class="np-skel-bar" style="width:90px"></span></td>
+                <td class="np-col-phone"><span class="np-skel-bar" style="width:50px"></span></td>
                 <td><span class="np-skel-bar" style="width:70px;margin-left:auto"></span></td>
                 <td></td>
               </tr>
@@ -84,6 +97,7 @@
                 <td>
                   <button type="button" class="np-name np-name--link" (click)="$event.stopPropagation(); verFicha(c)"
                           [title]="'Ver la ficha de ' + c.names">{{ c.names }} {{ c.lastname }}</button><app-burbuja-ticket [userId]="c.user_id" />
+                  <span class="fz-prom" *ngIf="c.compromiso" [title]="'Compromiso de pago para el ' + (c.compromiso | date:'d MMM')">Promete pagar el {{ c.compromiso | date:'d MMM' }}</span>
                   <div class="np-plan"><em>{{ c.dni }}</em><span class="np-plan-mobile" *ngIf="c.phone"> · <em>{{ c.phone }}</em></span></div>
                 </td>
                 <td class="np-data np-col-phone">{{ c.phone || '—' }}</td>
@@ -93,18 +107,22 @@
                     <b>{{ moraLabel(c.months_pending) }}</b>
                   </span>
                 </td>
+                <td class="np-data np-col-phone fz-ultimo" [class.is-nunca]="!c.ultimo_pago">{{ fechaCorta(c.ultimo_pago) }}</td>
                 <td class="np-money">{{ formatCurrency(c.total_pending) }}</td>
                 <td class="np-td-right">
-                  <div class="np-rowacts" (click)="$event.stopPropagation()">
-                    <button type="button" class="np-icobtn" (click)="openDrawer(c)" title="Abrir cartera">
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 6 6 6-6 6"/></svg>
+                  <div class="np-rowacts fz-acciones" (click)="$event.stopPropagation()">
+                    <button type="button" class="fz-ico" *ngIf="+c.total_pending > 0" (click)="recordar(c)" [disabled]="recordando.has(c.user_id) || c.recordado"
+                            [title]="c.recordado ? 'Ya se le recordó' : 'Recordarle por WhatsApp lo que debe'" [attr.aria-label]="'Recordarle por WhatsApp a ' + c.names">
+                      <svg *ngIf="!c.recordado" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a8.5 8.5 0 0 1-12.6 7.4L3 21l1.6-5.2A8.5 8.5 0 1 1 21 12z"/></svg>
+                      <svg *ngIf="c.recordado" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 12 5 5 9-10"/></svg>
                     </button>
+                    <button type="button" class="fz-cobrar" (click)="openDrawer(c)">{{ +c.total_pending > 0 ? 'Cobrar' : 'Ver' }}</button>
                   </div>
                 </td>
               </tr>
               <tr *ngIf="clients.length === 0" class="np-empty">
-                <td colspan="6">
-                  <strong>No hay clientes con saldo pendiente.</strong>
+                <td colspan="7">
+                  <strong>{{ moraFiltro ? 'Nadie con ' + MORA_TXT[moraFiltro] + ' de mora.' : 'No hay clientes con saldo pendiente.' }}</strong>
                   <span *ngIf="searchTerm">Pruebe con otro nombre, documento o teléfono.</span>
                 </td>
               </tr>

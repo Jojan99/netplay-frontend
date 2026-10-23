@@ -120,6 +120,17 @@ export class UserService {
 
   /** Enlace de un solo uso a la página web de la ONT del cliente (puente de equipos.netvula.com). */
   /** Usuario y clave de administración del equipo del cliente (queda en el historial). */
+  /** Pestaña «Contrato» de la ficha: contratos, documentos, comodato y contactos. */
+  fichaContrato(userId: any): Observable<any> {
+    return this.http.get<any>(this.env.rootUrl + `api/user/${userId}/contrato`, { headers: this.getHeaders() });
+  }
+  guardarContacto(userId: any, datos: { nombre: string; relacion?: string; telefono?: string; rol: string; nota?: string }): Observable<any> {
+    return this.http.post<any>(this.env.rootUrl + `api/user/${userId}/contactos`, datos, { headers: this.getHeaders() });
+  }
+  borrarContacto(userId: any, contactoId: number): Observable<any> {
+    return this.http.delete<any>(this.env.rootUrl + `api/user/${userId}/contactos/${contactoId}`, { headers: this.getHeaders() });
+  }
+
   accesoDelEquipo(userId: any): Observable<any> {
     return this.http.get<any>(this.env.rootUrl + `api/user/${userId}/equipo/acceso`, { headers: this.getHeaders() });
   }

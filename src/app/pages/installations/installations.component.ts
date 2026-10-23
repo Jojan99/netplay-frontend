@@ -1,3 +1,5 @@
+import { ActivatedRoute } from '@angular/router';
+import { SeccionTabsComponent } from '../../components/seccion-tabs/seccion-tabs.component';
 import { DialogService } from '../../services/dialog.service';
 import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
@@ -14,9 +16,9 @@ import { LocationTrackerService } from '../../services/location-tracker.service'
 @Component({
   selector: 'app-installations',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterModule, NpSelectComponent, ProvisionarInstalacionComponent, AprovisionamientoEnVivoComponent],
+  imports: [CommonModule, FormsModule, RouterModule, NpSelectComponent, ProvisionarInstalacionComponent, AprovisionamientoEnVivoComponent, SeccionTabsComponent],
   templateUrl: './installations.component.html',
-  styleUrl: './installations.component.scss',
+  styleUrls: ['./installations.component.scss', './instalaciones-limpio.scss'],
   host: { class: 'np-console' },
 })
 export class InstallationsComponent implements OnInit {
@@ -136,6 +138,12 @@ export class InstallationsComponent implements OnInit {
 
   constructor(private svc: InstallationService, private auth: AuthService) {}
 
+  /** «?orden=12»: se abre esa orden al cargar (desde «Mi día»). */
+  private ruta = inject(ActivatedRoute);
+  private abrirOrden = Number(this.ruta.snapshot.queryParamMap.get('orden')) || 0;
+  /** «&instalar=1»: además abre «Instalar el equipo» (el botón de «Mi día»). */
+  private abrirInstalar = this.ruta.snapshot.queryParamMap.get('instalar') === '1';
+
   /**
    * Un técnico ve sólo sus propias órdenes (el servidor ya se las filtra, ver
    * InstallationOrderController::index) y avanza su estado, pero no da de alta una instalación
@@ -150,6 +158,62 @@ export class InstallationsComponent implements OnInit {
     const yo = this.auth.getEmployeeId();
     if (!yo || !ids.includes(yo)) return null;
     return this.getNumValue(i.commission_amount) / (ids.length || 1);
+  }
+
+  // ── Lo que muestra el diseño nuevo (21-10-2026) ─────────────────────────
+  private fechaLocal(d: Date): string {
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  }
+
+  /** Lunes a sábado de esta semana, con cuántas órdenes tiene cada día. */
+  get semana(): Array<{ fecha: string; nombre: string; numero: number; total: number; texto: string }> {
+    const hoy = new Date();
+    const lunes = new Date(hoy);
+    lunes.setDate(hoy.getDate() - ((hoy.getDay() + 6) % 7));
+    const hoyTxt = this.fechaLocal(hoy);
+    const NOMBRES = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
+    return NOMBRES.map((nombre, i) => {
+      const d = new Date(lunes);
+      d.setDate(lunes.getDate() + i);
+      const fecha = this.fechaLocal(d);
+      const del = (this.allInstallations ?? []).filter((x: any) => String(x.scheduled_date ?? '').slice(0, 10) === fecha && x.status !== 'cancelled');
+      const hechas = del.filter((x: any) => x.status === 'completed').length;
+      const porHacer = del.length - hechas;
+      const texto = !del.length ? 'libre' : [porHacer ? `${porHacer} por hacer` : '', hechas ? `${hechas} ${hechas === 1 ? 'hecha' : 'hechas'}` : ''].filter(Boolean).join(' · ');
+      return { fecha, nombre: fecha === hoyTxt ? 'Hoy' : nombre, numero: d.getDate(), total: del.length, texto };
+    });
+  }
+
+  /** Tocar un día filtra por esa fecha; tocarlo otra vez quita el filtro. */
+  elegirDia(fecha: string): void {
+    const igual = this.dateFrom === fecha && this.dateTo === fecha;
+    this.dateFrom = igual ? '' : fecha;
+    this.dateTo = igual ? '' : fecha;
+    this.filter();
+  }
+
+  conteoEstado(estado: string): number {
+    return (this.allInstallations ?? []).filter((x: any) => x.status === estado).length;
+  }
+
+  /** Los pasos de una orden, de los datos al equipo instalado, con dónde va. */
+  avanceDe(o: any): Array<{ titulo: string; detalle?: string; estado: 'ok' | 'curso' | 'falta' | 'mal' }> {
+    if (!o) return [];
+    if (o.status === 'cancelled') return [{ titulo: 'Orden cancelada', detalle: o.observations || undefined, estado: 'mal' }];
+    const pagado = ['paid', 'verified'].includes(o.payment_status);
+    const tecnicos = (o.technician_ids ?? []).length;
+    const instalada = !!o.provision_detalle?.pasos?.length;
+    const fallo = instalada && o.provision_detalle.pasos.some((p: any) => !p.ok);
+    const hecha = o.status === 'completed';
+    return [
+      { titulo: 'Datos y plan', detalle: (o.plan as any)?.plan_name || o.plan?.name || undefined, estado: 'ok' },
+      { titulo: 'Pago de la instalación', detalle: pagado ? (o.payment_status === 'verified' ? 'verificado' : 'por verificar') : (o.payment_status === 'rejected' ? 'comprobante no válido' : 'por cobrar'),
+        estado: pagado ? 'ok' : (o.payment_status === 'rejected' ? 'mal' : 'falta') },
+      { titulo: 'Técnicos', detalle: tecnicos ? `${tecnicos} asignado${tecnicos > 1 ? 's' : ''}` : 'sin asignar', estado: tecnicos ? 'ok' : 'falta' },
+      { titulo: 'Equipo instalado y aprovisionado', detalle: instalada ? (fallo ? 'algún paso falló: ver el detalle abajo' : 'ONT autorizada y configurada') : (o.status === 'in_progress' ? 'en la casa del cliente' : undefined),
+        estado: instalada ? (fallo ? 'mal' : 'ok') : (o.status === 'in_progress' ? 'curso' : 'falta') },
+      { titulo: 'Orden completada', estado: hecha ? 'ok' : 'falta' },
+    ];
   }
 
   ngOnInit(): void {
@@ -203,6 +267,16 @@ export class InstallationsComponent implements OnInit {
         }
         this.totalPages = r.last_page || r.lastPage || 1;
         this.currentPage = r.current_page || r.currentPage || 1;
+        if (this.abrirOrden) {
+          const o = this.installations.find((x: any) => Number(x.id) === this.abrirOrden)
+            ?? (this.allInstallations ?? []).find((x: any) => Number(x.id) === this.abrirOrden);
+          if (o) {
+            this.abrirOrden = 0;
+            this.openDetail(o);
+            if (this.abrirInstalar && ['confirmed', 'in_progress'].includes(o.status)) this.abrirProvisionar(o);
+            this.abrirInstalar = false;
+          }
+        }
         
         if (!this.statusFilter && !this.paymentStatusFilter && !this.dateFrom && !this.dateTo) {
           this.allInstallations = this.installations;
@@ -238,6 +312,23 @@ export class InstallationsComponent implements OnInit {
     this.selected = i;
     this.showDetail = true;
     this.loadLogs(i.id!);
+    this.cargarTv(i.id!);
+  }
+
+  /** La TV de la orden: si el plan la incluye y, ya instalada, la línea con su URL M3U. */
+  tvOrden: { incluida: boolean; linea: { usuario: string; clave: string; estado: string; servidor: string; m3u: string } | null; cuando: string | null } | null = null;
+  copiadoTv = false;
+
+  private cargarTv(id: number): void {
+    this.tvOrden = null;
+    this.svc.getById(id).subscribe({
+      next: (r: any) => { if (this.selected?.id === id) this.tvOrden = (r?.data ?? r)?.tv ?? null; },
+      error: () => { /* sin TV en el detalle: lo demás sigue */ },
+    });
+  }
+
+  copiarM3u(url: string): void {
+    navigator.clipboard?.writeText(url).then(() => { this.copiadoTv = true; setTimeout(() => this.copiadoTv = false, 2000); }).catch(() => {});
   }
 
   loadLogs(id: number): void {
@@ -303,7 +394,13 @@ export class InstallationsComponent implements OnInit {
     this.svc.delete(inst.id).subscribe({ next: () => { this.toast('Orden de práctica borrada.'); this.load(); }, error: () => this.toast('No se pudo borrar.') });
   }
 
-  abrirProvisionar(inst: any): void { this.provisionando = inst; }
+  /** Abrir «Instalar el equipo» ya es empezar: la orden pasa a «en proceso» sola. */
+  abrirProvisionar(inst: any): void {
+    this.provisionando = inst;
+    if (inst?.status === 'confirmed') {
+      this.svc.start(inst.id).subscribe({ next: () => { inst.status = 'in_progress'; this.loadAllForSummary(); }, error: () => {} });
+    }
+  }
 
   terminoLaInstalacion(): void {
     this.provisionando = null;

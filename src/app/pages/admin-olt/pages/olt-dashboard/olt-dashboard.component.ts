@@ -58,7 +58,7 @@ interface PuertoConSenal {
   standalone: true,
   imports: [CommonModule, FormsModule, NpSelectComponent, OltNavComponent, OltEquipoComponent, MedicionSenalComponent, NuevoTicketComponent, BurbujaTicketComponent],
   templateUrl: './olt-dashboard.component.html',
-  styleUrls: ['../../shared/olt.scss', './olt-dashboard.component.scss', '../../shared/olt-movil.scss'],
+  styleUrls: ['../../shared/olt.scss', './olt-dashboard.component.scss', '../../shared/olt-movil.scss', './olt-estado.scss'],
   host: { class: 'np-console' },
 })
 export class OltDashboardComponent implements OnInit {
@@ -288,6 +288,105 @@ export class OltDashboardComponent implements OnInit {
 
   altoBarra(total: number): number {
     return Math.round(total / this.picoHistograma * 100);
+  }
+
+  // ── Gráfica de potencia (21-10-2026): curva suave sobre las zonas de señal ──
+
+  /** Colores de la paleta «un solo color, en tonos»: más oscuro es mejor señal; solo lo crítico en naranja. */
+  readonly COLOR: Record<string, string> = {
+    buena: '#0F766E', regular: '#5FA8A0', baja: '#A9D4CF', critica: '#C2410C', saturada: '#7C2D12', sin_dato: '#D9DADF',
+  };
+
+  private graficaDe: any = null;
+  private graficaCache: any = null;
+
+  /**
+   * Todo lo que dibuja la gráfica, calculado una vez por medición: la curva (Catmull-Rom) por el
+   * conteo de cada tramo, las zonas de señal según los umbrales del sistema (−25, −27, −29 dBm),
+   * la línea de falla y la mediana.
+   */
+  get grafica(): any {
+    const r = this.resumen;
+    if (!r?.histograma?.length) return null;
+    if (this.graficaDe === r) return this.graficaCache;
+
+    const X0 = 70, X1 = 980, Y0 = 64, Y1 = 234;
+    const tramos = r.histograma as Array<{ desde: number; hasta: number; total: number }>;
+    const centros = tramos.map(t => (t.desde + t.hasta) / 2);
+    const max = Math.max(...tramos.map(t => t.total), 1) * 1.08;
+    const paso = tramos.length > 1 ? (X1 - X0) / (tramos.length - 1) : 0;
+    const xDe = (dbm: number) => {
+      const a = centros[0], b = centros[centros.length - 1];
+      if (a === b) return X0;
+      return Math.min(X1, Math.max(X0, X0 + (dbm - a) / (b - a) * (X1 - X0)));
+    };
+    const yDe = (n: number) => Y1 - n / max * (Y1 - Y0);
+    const pts = tramos.map((t, i) => [X0 + i * paso, yDe(t.total)]);
+    const f = (n: number) => Math.round(n * 10) / 10;
+
+    let curva = `M ${f(pts[0][0])} ${f(pts[0][1])}`;
+    for (let i = 0; i < pts.length - 1; i++) {
+      const p0 = pts[i - 1] ?? pts[i], p1 = pts[i], p2 = pts[i + 1], p3 = pts[i + 2] ?? p2;
+      const c1 = [p1[0] + (p2[0] - p0[0]) / 6, Math.min(Y1, p1[1] + (p2[1] - p0[1]) / 6)];
+      const c2 = [p2[0] - (p3[0] - p1[0]) / 6, Math.min(Y1, p2[1] - (p3[1] - p1[1]) / 6)];
+      curva += ` C ${f(c1[0])} ${f(c1[1])}, ${f(c2[0])} ${f(c2[1])}, ${f(p2[0])} ${f(p2[1])}`;
+    }
+    const ultimo = pts[pts.length - 1];
+    const area = `${curva} L ${f(ultimo[0])} ${Y1} L ${f(pts[0][0])} ${Y1} Z`;
+
+    // Ascendente en dBm: crítica (< −29), baja, regular, buena (> −25).
+    const cortes = [X0, xDe(-29), xDe(-27), xDe(-25), X1];
+    const zonas = (['critica', 'baja', 'regular', 'buena'] as EstadoSenal[]).map((id, i) => ({
+      id, etiqueta: this.etiquetaDe(id), n: this.cuantas(id), color: this.COLOR[id],
+      x: f(cortes[i]), ancho: f(Math.max(0, cortes[i + 1] - cortes[i])), centro: f((cortes[i] + cortes[i + 1]) / 2),
+      fondo: ['#FFF4EE', '#F2FAF9', '#EAF5F3', '#E3F1EF'][i], borde: i === 0 ? '#F6D2BF' : '#CFE6E2',
+      pastilla: (this.etiquetaDe(id) + ' · ' + this.cuantas(id)).length * 7 + 20,
+    })).filter(z => z.ancho > 0);
+
+    const mediana = typeof r.mediana === 'number' ? r.mediana : null;
+    this.graficaDe = r;
+    this.graficaCache = {
+      curva, area, zonas, Y0, Y1,
+      escala: [0.25, 0.5, 0.75].map(k => ({ y: f(yDe(max / 1.08 * k)), v: Math.round(max / 1.08 * k) })),
+      puntos: tramos.map((t, i) => ({ x: f(pts[i][0]), y: f(pts[i][1]), n: t.total, dbm: Math.round(centros[i]), critico: centros[i] < -29,
+        ayuda: `${t.total} ONT entre ${t.desde} y ${t.hasta} dBm` })),
+      falla: f(xDe(-27)),
+      mediana: mediana !== null ? { x: f(xDe(mediana)), texto: 'mediana ' + String(mediana).replace('.', ',') } : null,
+      etiqueta: `Potencia óptica: ${this.cuantas('critica')} ONT en zona crítica de ${r.medidas} medidas`,
+    };
+    return this.graficaCache;
+  }
+
+  /** La dona de calidad: un degradado circular con un respiro blanco entre tramos. */
+  get dona(): { fondo: string; partes: Array<{ id: EstadoSenal; etiqueta: string; n: number; color: string }> } {
+    const ids: EstadoSenal[] = ['buena', 'regular', 'baja', 'critica', 'saturada', 'sin_dato'];
+    const total = ids.reduce((s, id) => s + this.cuantas(id), 0) || 1;
+    let acum = 0;
+    const tramos: string[] = [];
+    for (const id of ids) {
+      const n = this.cuantas(id);
+      if (!n) continue;
+      const desde = acum / total * 100, hasta = (acum + n) / total * 100;
+      tramos.push(`${this.COLOR[id]} ${desde.toFixed(2)}% ${Math.max(desde, hasta - 0.6).toFixed(2)}%`, `#FFFFFF ${Math.max(desde, hasta - 0.6).toFixed(2)}% ${hasta.toFixed(2)}%`);
+      acum += n;
+    }
+    return {
+      fondo: tramos.length ? `conic-gradient(${tramos.join(', ')})` : '#ECECEF',
+      partes: ids.map(id => ({ id, etiqueta: this.etiquetaDe(id), n: this.cuantas(id), color: this.COLOR[id] })).filter(p => p.n || ['buena', 'critica'].includes(p.id)),
+    };
+  }
+
+  /** El anillo de disponibilidad de la pastilla de arriba. */
+  get anilloDisponibilidad(): string {
+    const pct = Math.max(0, Math.min(100, this.onlinePct || 0));
+    return `conic-gradient(#0F766E 0 ${pct}%, #ECECEF ${pct}% 100%)`;
+  }
+
+  /** Ocupación de un puerto en % de su capacidad (si se conoce). */
+  ocupacionDe(fsp: string, total: number): number {
+    const d = this.datosDelPuerto(fsp);
+    if (d?.ocupacion != null) return d.ocupacion;
+    return this.capacidadPuerto ? Math.round(total / this.capacidadPuerto * 100) : 0;
   }
 
   /** Cuántas ONT hay en esa clase de señal. */

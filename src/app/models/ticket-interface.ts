@@ -1,5 +1,7 @@
 export interface TicketInterface {
   id?: number;
+  /** Por dónde llegó: admin, asistente, portal… */
+  source?: string | null;
   client?: number;
   user_id?: number;
   address?: string;
@@ -48,6 +50,13 @@ export interface TicketNote {
 }
 
 export interface TicketStats {
+  /** Abiertos con más de 3 días, el más viejo, los del asistente (30 días) y la mediana para cerrar. */
+  viejos?: number;
+  mas_viejo?: string | null;
+  del_asistente_30?: number;
+  creados_30?: number;
+  cerrados_mes?: number;
+  mediana_horas?: number | null;
   total: number;
   in_progress: number;
   closed_today: number;

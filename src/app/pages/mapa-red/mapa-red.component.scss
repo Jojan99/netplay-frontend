@@ -38,7 +38,7 @@
     &:hover, &:focus-visible { background: var(--surface-2); outline: none; }
     i { width: 10px; height: 10px; border-radius: 50%; justify-self: center; box-shadow: 0 0 0 1px color-mix(in srgb, var(--text) 12%, transparent); &.is-cuadro { border-radius: 3px; width: 12px; height: 12px; } }
     span { min-width: 0; display: grid; }
-    b { font-size: 13px; font-weight: 700; color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    b { font-size: 13px; font-weight: 600; color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     small { font-size: 11.5px; color: var(--text-3); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; } }
   .np-mr-nada { padding: 12px 10px; font-size: 12.5px; color: var(--text-3); } }
 
@@ -47,8 +47,8 @@
 .np-map-fabs { position: absolute; right: 12px; top: 64px; z-index: 900; display: grid; gap: 8px;
   button { position: relative; width: 44px; height: 44px; border-radius: 50%; display: grid; place-items: center; background: var(--surface); border: 1px solid var(--line); box-shadow: var(--shadow-lg); color: var(--text-2); transition: background .12s, color .12s, transform .12s;
     svg { width: 20px; height: 20px; }
-    span { position: absolute; right: calc(100% + 8px); top: 50%; transform: translateY(-50%); padding: 4px 8px; border-radius: 6px; background: var(--text); color: var(--surface); font-size: 11.5px; font-weight: 700; white-space: nowrap; opacity: 0; pointer-events: none; transition: opacity .12s; }
-    small { position: absolute; top: -4px; right: -4px; min-width: 18px; height: 18px; padding: 0 5px; border-radius: 999px; background: var(--accent); color: #fff; font: 700 10px var(--font-mono); display: grid; place-items: center; border: 2px solid var(--surface); }
+    span { position: absolute; right: calc(100% + 8px); top: 50%; transform: translateY(-50%); padding: 4px 8px; border-radius: 6px; background: var(--text); color: var(--surface); font-size: 11.5px; font-weight: 600; white-space: nowrap; opacity: 0; pointer-events: none; transition: opacity .12s; }
+    small { position: absolute; top: -4px; right: -4px; min-width: 18px; height: 18px; padding: 0 5px; border-radius: 999px; background: var(--accent); color: #fff; font: 600 10px var(--font-mono); display: grid; place-items: center; border: 2px solid var(--surface); }
     &:hover { background: var(--surface-2); color: var(--text); span { opacity: 1; } }
     &:active { transform: scale(.94); }
     &[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: #fff; } } }
@@ -80,7 +80,7 @@
   p { margin: 0; font-size: 12.5px; color: var(--text-3); } }
 .np-mr-pasos { list-style: none; margin: 8px 0 0; padding: 0; display: grid; gap: 6px;
   li { display: grid; grid-template-columns: 24px minmax(0, 1fr) auto; align-items: center; gap: 10px; padding: 8px 10px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--surface-2); }
-  b { width: 24px; height: 24px; border-radius: 50%; display: grid; place-items: center; background: var(--accent-soft); color: var(--accent); font: 700 12px var(--font-mono); }
+  b { width: 24px; height: 24px; border-radius: 50%; display: grid; place-items: center; background: var(--accent-soft); color: var(--accent); font: 600 12px var(--font-mono); }
   span { font-size: 12.5px; color: var(--text-2); } }
 
 .np-btn--danger { color: var(--danger, #dc2626); }
@@ -89,8 +89,8 @@
 /* El asa y el resumen son de la hoja del teléfono: en escritorio no existen. */
 .np-mr-asa, .np-mr-peek { display: none; }
 
-.np-mr-insp-ico { width: 36px; height: 36px; flex-shrink: 0; display: grid; place-items: center; border-radius: 8px; background: var(--surface); border: 3px solid var(--line-strong); font: 700 12px var(--font-mono); font-style: normal; color: var(--text);
-  &.is-olt { background: #1e293b; border-color: #1e293b; color: #fff; font-size: 10px; letter-spacing: .04em; } }
+.np-mr-insp-ico { width: 36px; height: 36px; flex-shrink: 0; display: grid; place-items: center; border-radius: 8px; background: var(--surface); border: 3px solid var(--line-strong); font: 600 12px var(--font-mono); font-style: normal; color: var(--text);
+  &.is-olt { background: #1e293b; border-color: #1e293b; color: #fff; font-size: 10px; letter-spacing: 0; } }
 .np-mr-buscar { flex-shrink: 0; padding: 10px 12px 0; .np-search { flex: none; width: 100%; min-width: 0; height: 32px; } }
 .np-mr-cuerpo { padding-top: 10px; gap: 0; }
 .np-mr-form { display: grid; gap: 10px; label { display: grid; gap: 4px; font-size: 12px; color: var(--text-2); } }
@@ -103,7 +103,7 @@
     &.is-cuadro { border-radius: 3px; width: 12px; height: 12px; }
     &.is-olt { background: var(--text); } }
   > span { min-width: 0; display: grid;
-    b { font-size: 13px; font-weight: 700; color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    b { font-size: 13px; font-weight: 600; color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     small { font-size: 11.5px; color: var(--text-3); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; } }
   .np-link { font-size: 12px; white-space: nowrap; } }
 .np-mr-conteo { display: flex; flex-wrap: wrap; gap: 4px; margin: 0 0 10px;
@@ -124,16 +124,16 @@
   > i { width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; background: var(--c); color: #fff; box-shadow: 0 2px 6px color-mix(in srgb, var(--c) 40%, transparent);
     ::ng-deep svg { width: 18px; height: 18px; } }
   > span { min-width: 0; display: grid;
-    b { font-size: 13px; font-weight: 700; color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    b { font-size: 13px; font-weight: 600; color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     small { font-size: 11.5px; color: var(--text-2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; } } }
 
 /* Cómo llegar y quién está más cerca, en la caja seleccionada. */
 .np-mr-llegar { display: grid; gap: 10px; padding: 10px 12px; border-radius: 14px; background: var(--surface-2); border: 1px solid var(--line); }
 .np-mr-tecfila { display: flex; align-items: center; gap: 10px; min-width: 0;
   > span { min-width: 0; display: grid;
-    small { font-size: 11px; color: var(--text-3); text-transform: uppercase; letter-spacing: .04em; font-weight: 700; }
+    small { font-size: 11px; color: var(--text-3); letter-spacing: 0; font-weight: 600; }
     b { font-size: 13px; color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; } } }
-.np-mr-avatar { width: 32px; height: 32px; flex-shrink: 0; border-radius: 50%; display: grid; place-items: center; background: #0ea5e9; color: #fff; font: 700 12px var(--font-display); font-style: normal; border: 2px solid #fff; box-shadow: 0 0 0 2px #10b981;
+.np-mr-avatar { width: 32px; height: 32px; flex-shrink: 0; border-radius: 50%; display: grid; place-items: center; background: #0ea5e9; color: #fff; font: 600 12px var(--font-display); font-style: normal; border: 2px solid #fff; box-shadow: 0 0 0 2px #10b981;
   &.is-vacio { background: var(--surface-3); color: var(--text-3); box-shadow: 0 0 0 2px var(--line-strong); } }
 .np-mr-waze { display: inline-flex; align-items: center; justify-content: center; gap: 8px; width: 100%; background: #1d6fd8; border-color: #1d6fd8; color: #fff; text-decoration: none;
   svg { width: 15px; height: 15px; }
@@ -150,18 +150,18 @@
 
 /* Burbujas de clientes agrupados: del color del peor estado que hay adentro. */
 :host ::ng-deep .mr-cluster { border-radius: 50%; background: var(--surface); border: 4px solid var(--c, #10b981); display: grid; place-items: center; box-shadow: 0 0 0 3px color-mix(in srgb, var(--c, #10b981) 25%, transparent), 0 2px 8px rgb(0 0 0 / .35); transition: transform .12s;
-  b { font: 700 12px var(--font-mono); color: var(--text); }
+  b { font: 600 12px var(--font-mono); color: var(--text); }
   &.is-grave { box-shadow: 0 0 0 5px color-mix(in srgb, var(--c) 30%, transparent), 0 2px 8px rgb(0 0 0 / .35); }
   &:hover { transform: scale(1.08); } }
 
 /* Caja NAP: cuadrito con el conteo. La seleccionada lleva un halo que respira. */
 :host ::ng-deep .mr-nap { position: relative; width: 30px; height: 30px; border-radius: 9px; background: #fff; border: 4px solid #94a3b8; display: grid; place-items: center; box-shadow: 0 0 0 1px rgb(0 0 0 / .2), 0 2px 8px rgb(0 0 0 / .35);
-  b { font: 700 11px var(--font-mono); color: #1e293b; }
+  b { font: 600 11px var(--font-mono); color: #1e293b; }
   &.is-grave { animation: mr-pulso 1.8s ease-out infinite; }
   &.is-sel { outline: 3px solid #0ea5e9; outline-offset: 2px;
     &::before { content: ""; position: absolute; inset: -16px; border-radius: 50%; background: rgb(14 165 233 / .25); animation: mr-halo 2s ease-in-out infinite; pointer-events: none; } } }
 @keyframes mr-halo { 0%, 100% { transform: scale(.85); opacity: .9; } 50% { transform: scale(1.25); opacity: .35; } }
-:host ::ng-deep .mr-olt { position: relative; width: 40px; height: 40px; border-radius: 11px; background: #1e293b; color: #fff; display: grid; place-items: center; font: 800 11px var(--font-display); letter-spacing: .04em; border: 3px solid #fff; box-shadow: 0 0 0 1px rgb(0 0 0 / .3), 0 2px 10px rgb(0 0 0 / .4);
+:host ::ng-deep .mr-olt { position: relative; width: 40px; height: 40px; border-radius: 11px; background: #1e293b; color: #fff; display: grid; place-items: center; font: 600 11px var(--font-display); letter-spacing: 0; border: 3px solid #fff; box-shadow: 0 0 0 1px rgb(0 0 0 / .3), 0 2px 10px rgb(0 0 0 / .4);
   &.is-sel { outline: 3px solid #0ea5e9; outline-offset: 2px;
     &::before { content: ""; position: absolute; inset: -18px; border-radius: 50%; background: rgb(14 165 233 / .25); animation: mr-halo 2s ease-in-out infinite; pointer-events: none; } } }
 :host ::ng-deep .mr-temp { display: block; width: 20px; height: 20px; border-radius: 50%; background: #0ea5e9; border: 3px solid #fff; box-shadow: 0 0 0 4px rgb(14 165 233 / .35), 0 2px 8px rgb(0 0 0 / .4); }
@@ -169,7 +169,7 @@
 /* Pines de alerta: el «reporte» de Waze flotando sobre la caja. El marcador mide 0×0 y
    el globo se centra con transform, así el ancho depende del texto. */
 :host ::ng-deep .mr-alerta-pin { overflow: visible !important; }
-:host ::ng-deep .mr-alerta { position: absolute; left: 0; bottom: 24px; transform: translateX(-50%); display: flex; align-items: center; gap: 6px; height: 30px; padding: 0 10px 0 3px; border-radius: 999px; background: #fff; border: 2px solid var(--c); box-shadow: 0 3px 10px rgb(0 0 0 / .35); color: #1e293b; font: 700 12px var(--font-body); white-space: nowrap; cursor: pointer; transition: transform .12s;
+:host ::ng-deep .mr-alerta { position: absolute; left: 0; bottom: 24px; transform: translateX(-50%); display: flex; align-items: center; gap: 6px; height: 30px; padding: 0 10px 0 3px; border-radius: 999px; background: #fff; border: 2px solid var(--c); box-shadow: 0 3px 10px rgb(0 0 0 / .35); color: #1e293b; font: 600 12px var(--font-body); white-space: nowrap; cursor: pointer; transition: transform .12s;
   i { width: 22px; height: 22px; border-radius: 50%; display: grid; place-items: center; background: var(--c); color: #fff; flex-shrink: 0; svg { width: 13px; height: 13px; } }
   &::after { content: ""; position: absolute; left: 50%; bottom: -8px; width: 10px; height: 10px; background: var(--c); transform: translateX(-50%) rotate(45deg); border-radius: 2px; }
   &.is-falla i { animation: mr-latido 1.4s ease-in-out infinite; }
@@ -177,7 +177,7 @@
 @keyframes mr-latido { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.15); } }
 
 /* Técnicos: avatar redondo con iniciales. Anillo verde si mandó posición hace poco; gris si no. */
-:host ::ng-deep .mr-tec { position: relative; width: 34px; height: 34px; border-radius: 50%; background: #94a3b8; color: #fff; display: grid; place-items: center; font: 700 12px var(--font-display); border: 2px solid #fff; box-shadow: 0 0 0 3px #94a3b8, 0 2px 8px rgb(0 0 0 / .4);
+:host ::ng-deep .mr-tec { position: relative; width: 34px; height: 34px; border-radius: 50%; background: #94a3b8; color: #fff; display: grid; place-items: center; font: 600 12px var(--font-display); border: 2px solid #fff; box-shadow: 0 0 0 3px #94a3b8, 0 2px 8px rgb(0 0 0 / .4);
   &.is-fresco { background: #0ea5e9; box-shadow: 0 0 0 3px #10b981, 0 2px 8px rgb(0 0 0 / .4);
     i { position: absolute; inset: -8px; border-radius: 50%; border: 2px solid #10b981; animation: mr-tec-pulso 1.8s ease-out infinite; pointer-events: none; } } }
 @keyframes mr-tec-pulso { 0% { transform: scale(.75); opacity: .9; } 100% { transform: scale(1.5); opacity: 0; } }
@@ -188,9 +188,9 @@
 :host ::ng-deep .leaflet-popup-close-button { color: var(--text-3); }
 :host ::ng-deep .leaflet-tooltip { border-radius: 8px; background: var(--surface); color: var(--text); border-color: var(--line); box-shadow: var(--shadow); font-weight: 600; }
 :host ::ng-deep .mr-pop { display: grid; gap: 2px; min-width: 180px; b { font-size: 13.5px; color: var(--text); } small { color: var(--text-3); font-size: 11.5px; } }
-:host ::ng-deep .mr-pop-st { font-size: 11.5px; font-weight: 700; }
+:host ::ng-deep .mr-pop-st { font-size: 11.5px; font-weight: 600; }
 :host ::ng-deep .mr-pop-acc { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px;
-  a { display: inline-flex; align-items: center; height: 28px; padding: 0 10px; border-radius: 999px; background: var(--surface-2); color: var(--text) !important; font-size: 12px; font-weight: 700; text-decoration: none !important; border: 1px solid var(--line); }
+  a { display: inline-flex; align-items: center; height: 28px; padding: 0 10px; border-radius: 999px; background: var(--surface-2); color: var(--text) !important; font-size: 12px; font-weight: 600; text-decoration: none !important; border: 1px solid var(--line); }
   a.mr-waze { background: #1d6fd8; border-color: #1d6fd8; color: #fff !important; }
   a.mr-waze::before { content: "➤"; margin-right: 6px; font-size: 11px; } }
 
@@ -235,7 +235,7 @@
     i { width: 40px; height: 5px; border-radius: 999px; background: var(--line-strong); } }
   .np-mr-peek { display: grid; grid-template-columns: 36px minmax(0, 1fr) 20px; align-items: center; gap: 10px; flex-shrink: 0; padding: 4px 16px 12px; text-align: left; width: 100%;
     > span { min-width: 0; display: grid;
-      b { font-size: 14px; font-weight: 700; color: var(--text); }
+      b { font-size: 14px; font-weight: 600; color: var(--text); }
       small { font-size: 12px; color: var(--text-3); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; } } }
   .np-mr-peek-ico { width: 36px; height: 36px; border-radius: 50%; display: grid; place-items: center; background: var(--danger-soft); color: var(--danger); svg { width: 18px; height: 18px; }
     &.is-ok { background: color-mix(in srgb, #10b981 15%, transparent); color: #059669; } }

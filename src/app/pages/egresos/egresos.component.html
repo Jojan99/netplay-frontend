@@ -1,8 +1,8 @@
 <div class="np-page np-egresos">
   <header class="np-head">
     <div>
-      <p class="np-kicker">Operación <b>/</b> Finanzas <b>/</b> Egresos</p>
-      <h1 class="np-title">Egresos</h1>
+      <p class="np-kicker">Cobros y pagos</p>
+      <h1 class="np-title">Gastos</h1>
       <div class="np-ribbon" *ngIf="tablero as t">
         <span><span class="np-n">{{ pesos(t.total) }}</span>en el período</span>
         <span><span class="np-n">{{ t.movimientos | number }}</span>movimientos</span>
@@ -22,6 +22,7 @@
       </button>
     </div>
   </header>
+  <app-finanzas-tabs></app-finanzas-tabs>
 
   <!-- ══ Filtros ══════════════════════════════════════════════════════════ -->
   <div class="np-toolbar">

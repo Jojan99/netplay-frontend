@@ -9,13 +9,13 @@
 .cp-tab {
   display: inline-flex; align-items: center; gap: 8px; min-height: 40px; padding: 0 14px;
   border: 1px solid transparent; border-bottom: 0; border-radius: 10px 10px 0 0; margin-bottom: -1px;
-  background: none; color: var(--text-2); font: 700 13px var(--font-body); cursor: pointer;
+  background: none; color: var(--text-2); font: 600 13px var(--font-body); cursor: pointer;
   &:hover { background: var(--surface-2); }
   small { color: var(--text-3); font-weight: 400; }
   &[aria-selected=true] { background: var(--surface); border-color: var(--line); color: var(--accent); }
 }
 .cp-tab--mas { color: var(--accent); }
-.cp-ok { color: var(--ok); font-style: normal; font-weight: 800; }
+.cp-ok { color: var(--ok); font-style: normal; font-weight: 600; }
 .cp-x {
   display: grid; place-items: center; width: 18px; height: 18px; border-radius: 50%;
   color: var(--text-3); font-size: 15px; line-height: 1;
@@ -24,7 +24,7 @@
 
 .cp-n {
   display: grid; place-items: center; flex: none; width: 21px; height: 21px; border-radius: 50%;
-  background: var(--accent-soft); color: var(--accent); font: 800 11px var(--font-body);
+  background: var(--accent-soft); color: var(--accent); font: 600 11px var(--font-body);
 }
 .np-card-h { display: flex; align-items: center; gap: 8px; }
 .cp-csv { margin-left: auto; }
@@ -36,7 +36,7 @@
 .cp-kpis { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; margin-bottom: 14px; }
 .cp-kpi {
   background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-lg); padding: 10px 14px; box-shadow: var(--shadow);
-  span { display: block; font: 700 10.5px var(--font-body); letter-spacing: .06em; text-transform: uppercase; color: var(--text-3); }
+  span { display: block; font: 600 10.5px var(--font-body); letter-spacing: 0; color: var(--text-3); }
   b { display: block; font: 600 22px var(--font-mono); margin-top: 2px; }
   small { color: var(--text-3); }
 }
@@ -52,7 +52,7 @@
 .cp-lote { display: block; font: 400 10.5px var(--font-mono); color: var(--text-3); }
 
 .cp-pill {
-  display: inline-block; padding: 1px 9px; border-radius: 999px; font: 700 11px var(--font-body);
+  display: inline-block; padding: 1px 9px; border-radius: 999px; font: 600 11px var(--font-body);
   &[data-est=Exacta]    { background: var(--ok-soft);   color: var(--ok); }
   &[data-est=Probable]  { background: var(--info-soft); color: var(--info); }
   &[data-est=Corregida] { background: var(--ok-soft);   color: var(--ok); box-shadow: inset 0 0 0 1px var(--ok); }
@@ -80,7 +80,7 @@ tr.cp-cambio td { background: var(--surface-2); padding: 12px 14px; }
   background: var(--surface-3); color: var(--text-2);
   &[data-tipo=pago_completo] { background: var(--ok-soft); color: var(--ok); }
 }
-.cp-forzar { display: flex; gap: 6px; align-items: center; margin-top: 4px; font-size: 12px; font-weight: 700; color: var(--warn); cursor: pointer; input { width: 16px; height: 16px; } }
+.cp-forzar { display: flex; gap: 6px; align-items: center; margin-top: 4px; font-size: 12px; font-weight: 600; color: var(--warn); cursor: pointer; input { width: 16px; height: 16px; } }
 
 .np-notice--warn:has(.np-btn) { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
 

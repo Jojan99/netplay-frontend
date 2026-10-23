@@ -9,7 +9,7 @@
 
 /* ─── IP al reinstalar ─────────────────────────────────────────────── */
 .np-ipbox { margin: 14px 0; padding: 14px; border: 1px solid var(--line); border-radius: 12px; display: grid; gap: 10px; }
-.np-ipbox-title { margin: 0; font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; opacity: .7; }
+.np-ipbox-title { margin: 0; font-size: 11px; font-weight: 600; letter-spacing: 0; opacity: .7; }
 .np-ipestado { margin: 0; font-size: 13px; }
 .np-ipestado .np-fine { display: block; margin-top: 2px; }
 .np-ipestado--ok b { color: var(--ok); }

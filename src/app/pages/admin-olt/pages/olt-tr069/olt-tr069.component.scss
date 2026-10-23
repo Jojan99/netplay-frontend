@@ -30,12 +30,12 @@
 .tr-url {
   display: grid; gap: 5px; padding: 12px 14px; border-radius: var(--radius);
   background: var(--surface-2); border: 1px dashed var(--line-strong);
-  > span { font-size: 10.5px; font-weight: 800; letter-spacing: .5px; text-transform: uppercase; color: var(--text-3); }
+  > span { font-size: 10.5px; font-weight: 600; letter-spacing: .5px; color: var(--text-3); }
   > div { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
   code { font-size: 14px; font-weight: 600; color: var(--text); overflow-wrap: anywhere; }
 }
 .tr-copy {
-  padding: 3px 10px; border-radius: 999px; cursor: pointer; font: inherit; font-size: 11.5px; font-weight: 700;
+  padding: 3px 10px; border-radius: 999px; cursor: pointer; font: inherit; font-size: 11.5px; font-weight: 600;
   border: 1px solid var(--line-strong); background: var(--surface); color: var(--text-2);
   &:hover { border-color: var(--accent); color: var(--accent); }
 }
@@ -67,7 +67,7 @@
   span {
     width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center;
     background: var(--surface-2); border: 1px solid var(--line-strong);
-    font-weight: 800; font-size: 13px; color: var(--text-2);
+    font-weight: 600; font-size: 13px; color: var(--text-2);
   }
   .is-listo & span { background: var(--ok-soft); border-color: transparent; color: var(--ok); }
 }
@@ -108,7 +108,7 @@
 .tr-tarjeta-check {
   position: absolute; top: 10px; right: 12px; width: 20px; height: 20px; border-radius: 50%;
   display: grid; place-items: center; background: var(--accent); color: var(--accent-ink);
-  font-size: 12px; font-weight: 800; opacity: 0; transform: scale(.6); transition: opacity .15s, transform .15s;
+  font-size: 12px; font-weight: 600; opacity: 0; transform: scale(.6); transition: opacity .15s, transform .15s;
 }
 .tr-propio { display: grid; gap: 0; }
 
@@ -139,11 +139,11 @@
 .tr-grupo { display: grid; gap: 6px; }
 .tr-grupo-h {
   display: flex; align-items: baseline; justify-content: space-between; gap: 10px; flex-wrap: wrap;
-  h3 { margin: 0; font-size: 10.5px; font-weight: 800; letter-spacing: .6px; text-transform: uppercase; color: var(--text-3); }
+  h3 { margin: 0; font-size: 10.5px; font-weight: 600; letter-spacing: .6px; color: var(--text-3); }
   span { display: inline-flex; gap: 6px; }
 }
 .tr-mini {
-  padding: 2px 8px; border-radius: 999px; cursor: pointer; font: inherit; font-size: 11px; font-weight: 700;
+  padding: 2px 8px; border-radius: 999px; cursor: pointer; font: inherit; font-size: 11px; font-weight: 600;
   border: 1px solid var(--line); background: var(--surface); color: var(--text-2);
   &:hover { border-color: var(--accent); color: var(--accent); }
 }
@@ -167,7 +167,7 @@
 .tr-script { display: grid; gap: 8px; }
 .tr-script-h {
   display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap;
-  > span:first-child { font-size: 11px; font-weight: 800; letter-spacing: .5px; text-transform: uppercase; color: var(--text-3); }
+  > span:first-child { font-size: 11px; font-weight: 600; letter-spacing: .5px; color: var(--text-3); }
   > span:last-child { display: inline-flex; align-items: center; gap: 8px; }
 }
 

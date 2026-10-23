@@ -66,7 +66,7 @@
 // No se puede configurar solo: final y sin ruedita, con el motivo y qué hacer.
 .tf-etiqueta {
   justify-self: start;
-  font: 800 10px/1.6 var(--font-body, system-ui, sans-serif); letter-spacing: .3px; text-transform: uppercase;
+  font: 600 10px/1.6 var(--font-body, system-ui, sans-serif); letter-spacing: .3px;
   padding: 0 7px; border-radius: 999px;
   background: var(--warn-soft, #fdf3e1); color: var(--warn, #a15c00);
 }
@@ -90,7 +90,7 @@
   width: 18px; height: 18px;
   display: grid; place-items: center;
   border-radius: 50%;
-  font: 700 11px/1 var(--font-body, system-ui, sans-serif);
+  font: 600 11px/1 var(--font-body, system-ui, sans-serif);
   color: #fff;
   &.is-listo { background: var(--ok, #1f8a4c); }
   &.is-error { background: var(--danger, #c0392b); }

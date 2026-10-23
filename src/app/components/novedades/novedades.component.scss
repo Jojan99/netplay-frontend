@@ -14,7 +14,7 @@
   box-shadow: var(--shadow-lg); overflow: hidden; }
 
 .nv-cab { display: flex; align-items: center; gap: 8px; padding: 12px 10px 12px 14px; border-bottom: 1px solid var(--line);
-  b { display: block; font: 700 14px var(--font-display); }
+  b { display: block; font: 600 14px var(--font-display); }
   small { font-size: 11.5px; color: var(--text-3); }
   div { flex: 1; min-width: 0; } }
 .nv-x { width: 28px; height: 28px; border: 0; border-radius: var(--radius); background: transparent; color: var(--text-3); cursor: pointer;
@@ -28,7 +28,7 @@
 .nv-item-t { display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
   b { flex: 1; min-width: 0; font-size: 13px; } }
 .nv-fecha { font: 500 11px var(--font-mono); color: var(--text-3); }
-.nv-tipo { font: 700 9.5px var(--font-mono); letter-spacing: .06em; text-transform: uppercase; padding: 2px 7px; border-radius: 999px;
+.nv-tipo { font: 600 9.5px var(--font-mono); letter-spacing: 0; padding: 2px 7px; border-radius: 999px;
   background: var(--accent-soft); color: var(--accent);
   &[data-tipo='mejora']  { background: var(--warn-soft); color: var(--warn); }
   &[data-tipo='arreglo'] { background: var(--ok-soft); color: var(--ok); } }

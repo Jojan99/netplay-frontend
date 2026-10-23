@@ -26,7 +26,7 @@ export class InventoryService {
     return this.http.get(`${this.env.rootUrl}api/inventory/categories`, { headers: this.getHeaders() });
   }
 
-  createCategory(data: { name: string; description?: string }): Observable<any> {
+  createCategory(data: { name: string; description?: string; usa_serial?: boolean }): Observable<any> {
     return this.http.post(
       `${this.env.rootUrl}api/inventory/categories`,
       JSON.stringify(data),
@@ -34,7 +34,7 @@ export class InventoryService {
     );
   }
 
-  updateCategory(id: number, data: { name?: string; description?: string }): Observable<any> {
+  updateCategory(id: number, data: { name?: string; description?: string; usa_serial?: boolean }): Observable<any> {
     return this.http.put(
       `${this.env.rootUrl}api/inventory/categories/${id}`,
       JSON.stringify(data),
@@ -184,6 +184,11 @@ export class InventoryService {
 
   preguntarAlAsistente(pregunta: string, historial: Array<{ rol: string; texto: string }>): Observable<any> {
     return this.http.post(this.ruta('asistente'), JSON.stringify({ pregunta, historial }), { headers: this.getHeaders() });
+  }
+
+  /** Entrada con varios ítems a la vez: cada línea con sus seriales, o con la cantidad si no llevan. */
+  entradaLote(cuerpo: { lineas: Array<{ inventory_id: number; cantidad?: number; seriales?: string[]; precio?: number }>; nota?: string }): Observable<any> {
+    return this.http.post(this.ruta('entradas/lote'), JSON.stringify(cuerpo), { headers: this.getHeaders() });
   }
 
   miMaterial(): Observable<any> { return this.http.get(this.ruta('mi-material'), { headers: this.getHeaders() }); }

@@ -196,6 +196,16 @@ export class OltOnlineComponent implements OnInit {
 
   estadoDeSenal(ont: any): string { return this.senalDe(ont)?.estado ?? this.enVivo(ont)?.estado ?? 'sin_dato'; }
 
+  /** Dónde cae la potencia en la regla de −32 a −6 dBm (0–100 %); los cortes son los de SenalDeLaOlt::clasificar. */
+  posicionDeSenal(ont: any): number {
+    const p = this.potenciaDe(ont);
+    if (p == null) return 0;
+    return Math.max(0, Math.min(100, ((Number(p) + 32) / 26) * 100));
+  }
+
+  /** «ROBYELIT_ANDREINA_RODRIGUEZ» → «ROBYELIT ANDREINA RODRIGUEZ»: la OLT no acepta espacios, la ficha sí. */
+  nombreLegible(v: string | null | undefined): string { return (v ?? '').replace(/_+/g, ' ').trim(); }
+
   tonoDeSenal(ont: any): string {
     return {
       buena: 'is-ok', regular: 'is-warn', baja: 'is-warn',

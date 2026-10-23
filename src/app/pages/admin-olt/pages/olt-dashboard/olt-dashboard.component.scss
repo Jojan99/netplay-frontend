@@ -29,7 +29,7 @@
 
 .olt-hist-n {
   font-size: 10px;
-  font-weight: 700;
+  font-weight: 600;
   color: var(--text-3);
   font-variant-numeric: tabular-nums;
 }
@@ -80,8 +80,8 @@
   &.is-muted  .olt-clase-n { color: var(--text-3); }
 }
 
-.olt-clase-n { font-size: 17px; font-weight: 800; line-height: 1.1; font-variant-numeric: tabular-nums; }
-.olt-clase-l { font-size: 11px; font-weight: 700; color: var(--text-2); }
+.olt-clase-n { font-size: 17px; font-weight: 600; line-height: 1.1; font-variant-numeric: tabular-nums; }
+.olt-clase-l { font-size: 11px; font-weight: 600; color: var(--text-2); }
 .olt-clase-p { font-size: 10px; color: var(--text-3); font-variant-numeric: tabular-nums; }
 
 /* Tonos reutilizados en celdas y pastillas. */

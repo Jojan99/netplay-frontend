@@ -17,19 +17,21 @@ import { AuthService } from '../../../services/auth.service';
   `,
   styles: [`
     :host { display: block; min-width: 0; max-width: 100%; }
-    .np-olt-nav { max-width: 100%; overflow-x: auto; scrollbar-width: none; scroll-snap-type: x proximity; }
+    /* Pestañas subrayadas, como el resto del panel (21-10-2026). */
+    .np-olt-nav { display: flex; gap: 20px; max-width: 100%; height: auto; padding: 0; overflow-x: auto; scrollbar-width: none; scroll-snap-type: x proximity;
+      background: none; border: 0; border-bottom: 1px solid var(--line); border-radius: 0; }
     .np-olt-nav::-webkit-scrollbar { display: none; }
-    .np-olt-nav a { display: inline-flex; align-items: center; height: 32px; padding: 0 11px; font-size: 12px; font-weight: 700; color: var(--text-2); border-right: 1px solid var(--line-strong); text-decoration: none; white-space: nowrap; scroll-snap-align: start; }
-    .np-olt-nav a:last-child { border-right: 0; }
-    .np-olt-nav a:hover { background: var(--surface-3); }
-    .np-olt-nav a.is-active { background: var(--text); color: var(--bg); }
+    .np-olt-nav a { display: inline-flex; align-items: center; padding: 0 0 10px; margin-bottom: -1px; font-size: 13px; font-weight: 400; color: var(--text-2);
+      border-bottom: 2px solid transparent; text-decoration: none; white-space: nowrap; scroll-snap-align: start; }
+    .np-olt-nav a:hover { color: var(--text); }
+    .np-olt-nav a.is-active { color: var(--text); font-weight: 500; border-bottom-color: var(--text); }
 
     /* En el teléfono son catorce secciones en una fila: se desplaza con el
        dedo, cada una del alto de un dedo, y un degradado avisa que hay más. */
     @media (max-width: 760px) {
       :host { flex: 1 1 100%; }
       .np-olt-nav { display: flex; width: 100%; -webkit-mask-image: linear-gradient(90deg, #000 85%, transparent); mask-image: linear-gradient(90deg, #000 85%, transparent); }
-      .np-olt-nav a { height: 42px; padding: 0 14px; font-size: 13px; }
+      .np-olt-nav a { min-height: 42px; padding: 0 2px 10px; font-size: 13.5px; }
       .np-olt-nav a:last-child { margin-right: 8px; }
       /* Al final no queda nada por ver: sin degradado, la última no se tapa. */
       .np-olt-nav.al-final { -webkit-mask-image: none; mask-image: none; }

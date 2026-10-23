@@ -42,6 +42,7 @@ const MODULE_LABELS: Record<string, { label: string; group: string }> = {
   'created-ticket':   { label: 'Crear Ticket',           group: 'Soporte' },
   'view-ticket':      { label: 'Ver Tickets',            group: 'Soporte' },
   'installations':    { label: 'Instalaciones',          group: 'Soporte' },
+  'television':       { label: 'Televisión',             group: 'Soporte' },
   'crm':              { label: 'CRM WhatsApp',           group: 'Soporte' },
   'inventory':        { label: 'Inventario',             group: 'Inventario' },
   'olt-detail':       { label: 'ONUs Autorizadas',       group: 'Red' },

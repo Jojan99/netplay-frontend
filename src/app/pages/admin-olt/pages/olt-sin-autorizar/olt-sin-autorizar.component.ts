@@ -21,7 +21,7 @@ import { coincide } from '../../../../common/busqueda';
   standalone: true,
   imports: [CommonModule, FormsModule, NpSelectComponent, OltNavComponent],
   templateUrl: './olt-sin-autorizar.component.html',
-  styleUrls: ['../../shared/olt.scss', '../../shared/olt-movil.scss'],
+  styleUrls: ['../../shared/olt.scss', '../../shared/olt-movil.scss', './autorizar-ont.scss'],
   host: { class: 'np-console' },
 })
 export class OltSinAutorizarComponent implements OnInit {
@@ -373,7 +373,96 @@ export class OltSinAutorizarComponent implements OnInit {
     this.verificarSiYaExiste();
     this.cargarClientes();
     this.wifi = { ssid: '', clave: '', mandar: true };
+    this.editarEquipo = false;
+    this.verPerfiles = false;
+    this.pendienteAlta = '';
     this.cargarAprov();
+  }
+
+  // ── Lo que muestra el formulario nuevo (21-10-2026) ─────────────────────
+  /** Puerto y serial vienen de la OLT: se muestran en una tarjeta y se editan sólo si hace falta. */
+  editarEquipo = false;
+  /** Los perfiles casi nunca se tocan: van en una línea y se abren al pedirlo. */
+  verPerfiles = false;
+  /** Cuando la OLT tardó más que la espera: el alta sigue y se termina sola. */
+  pendienteAlta = '';
+
+  nombreCorto(nombre: string): string {
+    const p = String(nombre ?? '').trim().split(/\s+/);
+    return p.length > 2 ? `${p[0]} ${p[p.length >= 4 ? 2 : 1]}` : p.join(' ');
+  }
+
+  iniciales(nombre: string): string {
+    const p = String(nombre ?? '').trim().split(/\s+/).filter(Boolean);
+    return ((p[0]?.[0] ?? '') + (p[p.length >= 4 ? 2 : 1]?.[0] ?? '')).toUpperCase() || '?';
+  }
+
+  /** La marca por el prefijo del serial (los cuatro primeros, o su versión en hexadecimal). */
+  marcaDelEquipo(): string {
+    const s = String(this.form.serial ?? '').toUpperCase();
+    const pref = /^[0-9A-F]{16}$/.test(s) ? s.slice(0, 8).match(/../g)!.map(h => String.fromCharCode(parseInt(h, 16))).join('') : s.slice(0, 4);
+    return ({ HWTC: 'Huawei', ZTEG: 'ZTE', SKYW: 'Skyworth', SMBS: 'Sagemcom', ALCL: 'Nokia', FHTT: 'FiberHome', TPLG: 'TP-Link', VSOL: 'V-Sol', MSTC: 'Mastech', SDMC: 'SDMC' } as Record<string, string>)[pref] ?? '';
+  }
+
+  senalDelEquipo(): string | null {
+    const rx = this.selectedOnt?.rx_power ?? this.selectedOnt?.rx;
+    if (rx === null || rx === undefined || rx === '' || rx === '—') return null;
+    const n = Number(String(rx).replace(',', '.').replace(/[^\d.-]/g, ''));
+    return isNaN(n) ? String(rx) : `${n.toLocaleString('es-CO', { maximumFractionDigits: 1 })} dBm`;
+  }
+
+  nombrePerfil(lista: any[], id: any): string {
+    if (id === null || id === undefined || id === '') return 'sin perfil';
+    const p = (lista ?? []).find(x => String(x?.profile_id) === String(id));
+    return p?.profile_name || `perfil ${id}`;
+  }
+
+  perfilesPredeterminados(): boolean {
+    const olt = this.olts.find(o => o.id === this.selectedOltId);
+    return !!olt && String(olt.ont_lineprofile_id ?? '') === String(this.form.line_profile_id ?? '')
+      && (!this.capacidades.perfil_servicio_en_alta || String(olt.ont_srvprofile_id ?? '') === String(this.form.srv_profile_id ?? ''));
+  }
+
+  /** El nombre de WiFi que pone el aprovisionamiento si se deja vacío: PREFIJO_APELLIDO. */
+  ssidSugerido(): string {
+    const prefijo = this.aprov?.wifi_prefijo || this.aprov?.prefijo_sugerido || 'WIFI';
+    const c = this.clienteElegido;
+    const quien = c ? (String(c.apellidos || '').trim().split(/\s+/)[0] || String(c.nombres || c.nombre || '').trim().split(/\s+/)[0]) : 'APELLIDO';
+    return limpiarTextoWifi(`${prefijo}_${quien.toUpperCase()}`, true).slice(0, 32);
+  }
+
+  generarClaveWifi(): void {
+    const letras = 'abcdefghjkmnpqrstuvwxyz23456789';
+    const azar = new Uint32Array(10);
+    crypto.getRandomValues(azar);
+    this.wifi.clave = Array.from(azar, n => letras[n % letras.length]).join('');
+  }
+
+  hayFallas(): boolean { return this.pasos.some(p => this.claseDelPaso(p) === 'is-falla'); }
+
+  hayEnCurso(): boolean { return this.pasos.some(p => this.claseDelPaso(p) === 'is-curso'); }
+
+  /**
+   * El acceso remoto y el aprovisionamiento no terminan en la OLT: siguen en segundo plano. El
+   * servidor los devuelve «ok» porque quedaron lanzados, y la ventana los pintaba con el visto
+   * verde mientras la de tareas decía «esperando…». Ahora se leen de la tarea, en vivo.
+   */
+  enSegundoPlano(p: any): { estado: string; detalle: string } | null {
+    const id = p?.tarea ? String(p.tarea) : (p?.aprovisionamiento ? 'aprov-' + p.aprovisionamiento : null);
+    if (!id) return null;
+    const t = this.tareas.tareas().find(x => x.id === id);
+    return t ? { estado: t.estado, detalle: t.estado === 'en_curso' ? (t.detalle || '') : '' } : { estado: 'en_curso', detalle: '' };
+  }
+
+  claseDelPaso(p: any): 'is-ok' | 'is-curso' | 'is-omitido' | 'is-falla' {
+    const b = this.enSegundoPlano(p);
+    if (p?.ok && b) {
+      if (b.estado === 'en_curso') return 'is-curso';
+      if (b.estado === 'listo') return 'is-ok';
+      if (b.estado === 'error') return 'is-falla';
+      return 'is-omitido';
+    }
+    return p?.ok ? 'is-ok' : (p?.omitido ? 'is-omitido' : 'is-falla');
   }
 
   /** La dirección del TR-069, para dejársela cargada al equipo recién instalado. */
@@ -470,6 +559,8 @@ export class OltSinAutorizarComponent implements OnInit {
   private trasProvisionar(res: any): void {
     this.registering = false;
     this.pasos = res?.data?.pasos ?? [];
+    // La OLT tardó más que la espera: el alta sigue y el sistema la termina solo.
+    this.pendienteAlta = res?.data?.pendiente ? (res?.message || 'La OLT está tardando: el alta sigue y se termina sola.') : '';
     this.ontRegistrada = res?.data ?? null;
 
     // El acceso remoto del equipo nuevo sigue en segundo plano: a la ventana.
@@ -485,7 +576,7 @@ export class OltSinAutorizarComponent implements OnInit {
     }
 
     if (res?.error !== 0) {
-      this.toast.error(res?.message || 'La OLT no autorizó la ONT.');
+      if (!this.pendienteAlta) this.toast.error(res?.message || 'La OLT no autorizó la ONT.');
       return;
     }
 
@@ -493,9 +584,8 @@ export class OltSinAutorizarComponent implements OnInit {
     this.loadUnauth();
     this.cargarUrlAcs();
 
-    // Si algún paso quedó pendiente, el modal se queda abierto para poder
-    // reintentarlo: cerrarlo daría por terminado algo que no lo está.
-    if (!this.pasos.some(p => !p.ok && !p.omitido)) this.modal = false;
+    // La ventana queda abierta con el resultado: qué se hizo, qué falta y el aviso de no irse
+    // de la casa del cliente hasta que el aprovisionamiento diga «listo».
   }
 
   copiado = '';

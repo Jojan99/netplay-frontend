@@ -1,15 +1,15 @@
 /* ─── Contratos: sólo lo propio ─────────────────────────────────────── */
-.np-row--active .np-stripe i { background: var(--ok); }
+.np-row--active .np-stripe i { background: transparent; }
 .np-row--noip .np-stripe i   { background: var(--warn); }
 .np-row--off .np-stripe i    { background: var(--line-strong); }
 .np-docs { display: grid; grid-template-columns: 1fr 1fr; gap: 12px;
   figure { margin: 0; display: grid; gap: 6px; justify-items: start; border: 1px solid var(--line); border-radius: var(--radius); padding: 10px; background: var(--surface-2); }
   img { max-height: 180px; width: 100%; object-fit: contain; border-radius: 4px; background: var(--surface); }
-  figcaption { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; color: var(--text-3); } }
+  figcaption { font-size: 11px; font-weight: 600; letter-spacing: 0; color: var(--text-3); } }
 @media (max-width: 640px) { .np-docs { grid-template-columns: 1fr; } }
 
 /* ─── Editor de plantilla ───────────────────────────────────────────── */
-.np-ctr-modo { line-height: 1.5; em { font-style: normal; font-weight: 700; } }
+.np-ctr-modo { line-height: 1.5; em { font-style: normal; font-weight: 600; } }
 .np-ctr-ayuda { font-size: 12px; line-height: 1.45; margin-bottom: 8px; }
 .np-ctr-archivos { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
 .np-ctr-logo { height: 34px; width: auto; max-width: 140px; object-fit: contain; border: 1px solid var(--line); border-radius: var(--radius); padding: 3px 6px; background: var(--surface-2); }
@@ -21,7 +21,7 @@
 .np-ctr-vars { display: flex; flex-wrap: wrap; gap: 5px; }
 .np-ctr-var { display: inline-grid; gap: 1px; justify-items: start; padding: 5px 9px; border: 1px solid var(--line); border-radius: var(--radius);
   background: var(--surface); text-align: left; transition: border-color .12s, background .12s;
-  b { font-size: 12px; font-weight: 700; color: var(--text); }
+  b { font-size: 12px; font-weight: 600; color: var(--text); }
   em { font-style: normal; font-family: var(--font-mono); font-size: 10.5px; color: var(--text-3); }
   &:hover { border-color: var(--accent); background: var(--accent-soft); b { color: var(--accent); } } }
 
@@ -32,8 +32,7 @@
 .np-ctr-guia { display: flex; flex-direction: column; border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; min-height: 420px;
   iframe { flex: 1; width: 100%; border: 0; background: var(--surface-2); } }
 .np-ctr-guia-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 7px 10px;
-  background: var(--surface-2); border-bottom: 1px solid var(--line); font-size: 11px; font-weight: 700;
-  text-transform: uppercase; letter-spacing: .05em; color: var(--text-3); }
+  background: var(--surface-2); border-bottom: 1px solid var(--line); font-size: 11px; font-weight: 600; letter-spacing: 0; color: var(--text-3); }
 .np-ctr-texto { height: 420px; padding: 10px 12px; font-family: var(--font-mono); font-size: 12.5px; line-height: 1.6; resize: vertical; }
 
 /* Hoja de la vista previa: se parece a lo que ve el cliente */
@@ -47,7 +46,7 @@
   :is(th, td) { border: 1px solid #c9ccd6; padding: 5px 7px; text-align: left; }
   :is(ul, ol) { margin: 8px 0 8px 20px; }
   hr { border: 0; border-top: 1px solid #d5d8e2; margin: 12px 0; }
-  .dato { background: #fff6cc; border-radius: 3px; padding: 0 3px; font-weight: 700; }
+  .dato { background: #fff6cc; border-radius: 3px; padding: 0 3px; font-weight: 600; }
   .dato--vacio { background: transparent; border-bottom: 1.5px solid #9aa0b4; } }
 
 /* Editor de posiciones sobre el PDF */
@@ -71,7 +70,7 @@
 
 .np-ctr-terminos { min-height: 74px; padding: 9px 11px; line-height: 1.5; resize: vertical; }
 .np-ctr-nav { display: inline-flex; align-items: center; gap: 4px;
-  .np-icobtn { border: 1px solid var(--line-strong); font-weight: 700; }
+  .np-icobtn { border: 1px solid var(--line-strong); font-weight: 600; }
   .np-data { min-width: 44px; text-align: center; } }
 .np-ctr-color { width: 34px; height: 26px; padding: 1px; border: 1px solid var(--line-strong);
   border-radius: var(--radius); background: var(--surface); cursor: pointer; }
@@ -107,3 +106,13 @@
 /* Cómo lo ve el cliente, con PDF propio: el PDF relleno a todo el alto. */
 .np-ctr-previapdf { height: max(520px, calc(100vh - 330px)); border: 1px solid var(--line); border-radius: var(--radius); background: var(--surface-2); overflow: hidden; display: flex; align-items: center; justify-content: center;
   iframe { width: 100%; height: 100%; border: 0; background: #fff; } }
+
+
+/* Por cuál WhatsApp sale el contrato */
+.ct-canal { border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px 12px; margin: 0; display: grid; gap: 8px;
+  legend { padding: 0 4px; font-size: 12px; color: var(--text-3); } }
+.ct-op { display: flex; gap: 10px; align-items: flex-start; cursor: pointer; font-size: 13px;
+  input { margin-top: 3px; accent-color: var(--accent); }
+  span { display: grid; gap: 1px; } b { font-weight: 600; } small { color: var(--text-3); font-size: 12px; }
+  &.is-off { opacity: .55; cursor: not-allowed; } }
+.ct-linea { margin-left: 26px; max-width: calc(100% - 26px); }

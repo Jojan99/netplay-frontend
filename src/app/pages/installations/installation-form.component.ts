@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Router, RouterModule } from '@angular/router';
+import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { InstallationService } from '../../services/installation.service';
 import { OltService } from '../../services/olt.service';
 import { UserService } from '../../services/user.service';
@@ -124,15 +124,69 @@ export class InstallationFormComponent implements OnInit {
 
   paso = 1;
 
+  /** Editando una orden que ya existe (installations/:id/editar); null es una nueva. */
+  editId: number | null = null;
+  cargandoOrden = false;
+  estadoOrden = '';
+
   constructor(
     private svc: InstallationService,
     private userSvc: UserService,
     private oltSvc: OltService,
-    private router: Router
+    private router: Router,
+    private route: ActivatedRoute,
   ) {}
 
   ngOnInit(): void {
+    this.editId = Number(this.route.snapshot.paramMap.get('id')) || null;
     this.cargarCatalogos();
+    if (this.editId) this.cargarOrden(this.editId);
+  }
+
+  /**
+   * La orden tal como quedó guardada, en el mismo formulario. Las listas que dependen del
+   * router y de la OLT se cargan sin borrar lo que la orden ya trae (VLAN, IP, perfiles).
+   */
+  private cargarOrden(id: number): void {
+    this.cargandoOrden = true;
+    this.svc.getById(id).subscribe({
+      next: (r: any) => {
+        const o = r?.data ?? r ?? {};
+        const txt = (v: any) => (v === null || v === undefined ? '' : String(v));
+        const nombre = txt(o.client_name).trim();
+        const tecnicos = Array.isArray(o.technician_ids) ? o.technician_ids : (() => { try { return JSON.parse(o.technician_ids || '[]'); } catch { return []; } })();
+
+        this.estadoOrden = txt(o.status);
+        this.form = {
+          ...this.emptyForm(),
+          user_data_id: txt(o.user_data_id),
+          client_nombres: txt(o.client_firstname) || nombre.split(' ').slice(0, Math.ceil(nombre.split(' ').length / 2)).join(' '),
+          client_apellidos: txt(o.client_lastname) || nombre.split(' ').slice(Math.ceil(nombre.split(' ').length / 2)).join(' '),
+          client_dni: txt(o.client_dni), client_phone: txt(o.client_phone), client_email: txt(o.client_email),
+          address: txt(o.address), neighborhood: txt(o.neighborhood),
+          internet_plan_id: txt(o.internet_plan_id), grupo_facturacion: txt(o.grupo_facturacion) || '1',
+          connection_type: o.connection_type || 'pppoe', router_id: o.router_id ?? null,
+          pppoe_user: txt(o.pppoe_user), pppoe_password: txt(o.pppoe_password), pppoe_profile: txt(o.pppoe_profile),
+          ip_asignada: txt(o.ip_asignada), vlan: o.vlan ?? null,
+          olt_id: o.olt_id ?? null, line_profile_id: o.line_profile_id ?? null, srv_profile_id: o.srv_profile_id ?? null, onu_type: o.onu_type ?? null,
+          wifi_ssid: txt(o.wifi_ssid), wifi_password: txt(o.wifi_password),
+          scheduled_date: txt(o.scheduled_date).slice(0, 10), scheduled_time: txt(o.scheduled_time).slice(0, 5) || '09:00',
+          installation_cost: txt(o.installation_cost) || '0', technician_ids: tecnicos.map((t: any) => Number(t)),
+          commission_amount: txt(o.commission_amount) || '0', observations: txt(o.observations),
+        };
+
+        if (this.form.router_id) {
+          this.cargarRedes();
+          if (this.esPppoe) this.cargarPerfilesPpp();
+        }
+        if (this.form.olt_id) this.alCambiarOlt(true);
+        this.cargandoOrden = false;
+      },
+      error: e => {
+        this.cargandoOrden = false;
+        this.errorMsg = e?.status === 404 ? 'Esa orden no existe o es de otra empresa.' : 'No se pudo cargar la orden.';
+      },
+    });
   }
 
   emptyForm() {
@@ -187,7 +241,7 @@ export class InstallationFormComponent implements OnInit {
         this.cargandoRouters = false;
         this.routers = r?.data ?? [];
         // Con un router solo no hay nada que elegir.
-        if (this.routers.length === 1) {
+        if (this.routers.length === 1 && !this.editId) {
           this.form.router_id = this.routers[0].id;
           this.alCambiarRouter();
         }
@@ -198,7 +252,7 @@ export class InstallationFormComponent implements OnInit {
     this.oltSvc.listOlts().subscribe({
       next: (r: any) => {
         this.olts = r?.data ?? [];
-        if (this.olts.length === 1) {
+        if (this.olts.length === 1 && !this.editId) {
           this.form.olt_id = this.olts[0].id;
           this.alCambiarOlt();
         }
@@ -350,19 +404,22 @@ export class InstallationFormComponent implements OnInit {
 
   // ── La OLT y sus perfiles ─────────────────────────────────────────────────
 
-  alCambiarOlt(): void {
+  /** @param conservar al abrir una orden guardada: se cargan las listas sin pisar lo elegido. */
+  alCambiarOlt(conservar = false): void {
     this.lineProfiles = [];
     this.srvProfiles = [];
-    this.form.line_profile_id = null;
-    this.form.srv_profile_id = null;
-    this.form.onu_type = null;
+    if (!conservar) {
+      this.form.line_profile_id = null;
+      this.form.srv_profile_id = null;
+      this.form.onu_type = null;
+    }
 
     if (!this.form.olt_id) return;
 
     this.oltSvc.getCapacidades(this.form.olt_id).subscribe({
       next: (r: any) => {
         this.capacidades = { ...this.capacidades, ...(r?.data ?? {}) };
-        if (this.capacidades.tipos_onu?.length) {
+        if (this.capacidades.tipos_onu?.length && !(conservar && this.form.onu_type)) {
           this.form.onu_type = this.capacidades.tipo_onu_defecto || 'ALL';
         }
       },
@@ -378,6 +435,7 @@ export class InstallationFormComponent implements OnInit {
 
         // El que la OLT trae por defecto, si sigue existiendo; si no, el primero.
         const olt = this.oltElegida;
+        if (conservar && this.form.line_profile_id != null && this.form.srv_profile_id != null) return;
         this.form.line_profile_id = this.existe(this.lineProfiles, olt?.ont_lineprofile_id) ?? (this.lineProfiles[0]?.profile_id ?? null);
         this.form.srv_profile_id = this.existe(this.srvProfiles, olt?.ont_srvprofile_id) ?? (this.srvProfiles[0]?.profile_id ?? null);
       },
@@ -420,18 +478,24 @@ export class InstallationFormComponent implements OnInit {
    * orden se manda junta: una clave con ñ hace fallar también el nombre de la
    * red. Mejor que se sepa aquí y no con el técnico en la casa del cliente.
    */
+  /** «Peña» → «Pena», «Ñ» → «N», «José» → «Jose»: se corrige mientras se escribe en vez de dar error. */
+  sinTildes(v: string | null | undefined): string {
+    return (v ?? '').normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+  }
+
   get problemaDeLaClaveWifi(): string {
     const c = this.form.wifi_password ?? '';
     if (!c) return '';
     if (c.length < 8) return 'Al menos 8 caracteres.';
-    if (!/^[A-Za-z0-9\-_.@#$%&*+=!?():,]+$/.test(c)) return 'Sin ñ, sin tildes y sin espacios: el equipo la rechaza.';
+    if (!/^[A-Za-z0-9\-_.@#$%&*+=!?():,]+$/.test(c)) return 'Sin espacios ni signos raros: el equipo la rechaza.';
     return '';
   }
 
   get problemaDelNombreWifi(): string {
     const n = this.form.wifi_ssid ?? '';
     if (!n) return '';
-    if (!/^[A-Za-z0-9\-_. ]+$/.test(n)) return 'Sin ñ ni tildes: el equipo lo rechaza.';
+    // Los mismos signos que acepta el servidor (AprovisionamientoDeOnt::SIGNOS_WIFI), más el espacio.
+    if (!/^[A-Za-z0-9 \-_.@#$%&*+=!?():,]+$/.test(n)) return 'Sólo letras, números, espacios y - _ . @ # $ % & * + = ! ? ( ) : ,';
     return '';
   }
 
@@ -541,6 +605,13 @@ export class InstallationFormComponent implements OnInit {
     return [this.form.client_nombres, this.form.client_apellidos].map(x => (x ?? '').trim()).filter(Boolean).join(' ');
   }
 
+  /** El plan elegido lleva TV y la empresa tiene el panel conectado (el módulo sólo aparece si lo tiene). */
+  get planConTv(): boolean {
+    const p = this.plans.find(x => String(x.id) === String(this.form.internet_plan_id));
+    if (!p || !(p.tv_incluida === true || p.tv_incluida === 1 || p.tv_incluida === '1')) return false;
+    try { return (JSON.parse(localStorage.getItem('allowed_modules') || '[]') as any[]).some(m => (m?.module ?? m) === 'television'); } catch { return false; }
+  }
+
   get nombreDelPlan(): string {
     const p = this.plans.find(x => String(x.id) === String(this.form.internet_plan_id));
     return p ? (p.plan_name ?? p.names ?? '—') : '—';
@@ -615,21 +686,26 @@ export class InstallationFormComponent implements OnInit {
       observations: this.form.observations || undefined,
     };
 
-    this.svc.create(data).subscribe({
+    const pedido = this.editId ? this.svc.update(this.editId, data) : this.svc.create(data);
+    const queHizo = this.editId ? 'guardar los cambios' : 'crear';
+
+    pedido.subscribe({
       next: r => {
         this.isSaving = false;
         if (r.status === 0 || r.status === undefined) {
-          this.toast(r.message || 'Instalación creada');
+          this.toast(r.message || (this.editId ? 'Cambios guardados' : 'Instalación creada'));
           this.router.navigate(['/dashboard/installations']);
         } else {
-          this.errorMsg = r.message || 'Error al crear';
+          this.errorMsg = r.message || `No se pudo ${queHizo}.`;
         }
       },
       error: e => {
         this.isSaving = false;
         // El backend dice qué campo rechazó: sirve más que «Error al crear».
         const v = e?.error?.errors;
-        this.errorMsg = v ? Object.values(v).flat().join(' ') : (e?.error?.message || 'Error al crear');
+        this.errorMsg = e?.status === 403
+          ? 'Su perfil no puede cambiar órdenes de instalación (sólo administrador o contador).'
+          : (v ? Object.values(v).flat().join(' ') : (e?.error?.message || `No se pudo ${queHizo}.`));
       },
     });
   }

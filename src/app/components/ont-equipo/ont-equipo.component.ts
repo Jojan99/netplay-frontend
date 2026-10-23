@@ -260,7 +260,31 @@ export class OntEquipoComponent implements OnChanges {
   get version(): any { return this.equipo?.version ?? null; }
 
   get marca(): string {
-    return this.version?.fabricante ?? '';
+    return this.version?.fabricante || this.acs?.fabricante || this.marcaPorSerial;
+  }
+
+  /**
+   * La marca deducida del serial cuando la OLT no la informa: los cuatro primeros caracteres
+   * son el código del fabricante (HWTC = Huawei, ZTEG = ZTE…), en texto o en hexadecimal.
+   */
+  get marcaPorSerial(): string {
+    const crudo = String(this.ont?.serial || this.acs?.serial || '').toUpperCase().replace(/[^0-9A-Z]/g, '');
+    const codigo = /^[0-9A-F]{16}$/.test(crudo)
+      ? (crudo.slice(0, 8).match(/../g) || []).map((h: string) => String.fromCharCode(parseInt(h, 16))).join('')
+      : crudo.slice(0, 4);
+    return ({ HWTC: 'Huawei', ZTEG: 'ZTE', SMBS: 'Sagemcom', SKYW: 'Skyworth', ALCL: 'Nokia', FHTT: 'FiberHome', TPLG: 'TP-Link', VSOL: 'V-SOL', CDTC: 'C-Data' } as Record<string, string>)[codigo] ?? '';
+  }
+
+  /** Qué significa la señal, en palabras de quien atiende. */
+  explicacionSenal(estado: string): string {
+    return ({
+      buena: 'Llega bien: la fibra no le causa cortes.',
+      regular: 'Llega justa: funciona, pero conviene revisarla si tiene cortes.',
+      baja: 'Llega débil: puede tener cortes. Suele ser el cable o un conector.',
+      critica: 'Casi no llega: va a tener cortes. Hay que mandar un técnico.',
+      saturada: 'Llega demasiado fuerte: puede fallar. Falta un atenuador.',
+      sin_senal: 'No llega señal: cable cortado o desconectado.',
+    } as Record<string, string>)[estado] ?? '';
   }
 
   /**
@@ -287,7 +311,7 @@ export class OntEquipoComponent implements OnChanges {
   }
 
   get modelo(): string {
-    return this.version?.modelo ?? this.vivo?.modelo ?? '';
+    return this.version?.modelo || this.vivo?.modelo || this.acs?.modelo || '';
   }
 
   get colorMarca(): string {

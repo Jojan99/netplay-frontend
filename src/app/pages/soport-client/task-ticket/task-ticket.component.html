@@ -1,30 +1,32 @@
 <div class="np-page np-tickets" [class.is-open]="showDetail && selectedTicket" [class.is-wide]="showDetail && selectedTicket && inspectorWide">
 
-  <header class="np-head">
-    <div>
-      <p class="np-kicker">Soporte <b>/</b> {{ isAdmin ? 'Tickets' : 'Mis tickets' }}</p>
-      <h1 class="np-title">{{ isAdmin ? 'Tickets de soporte' : 'Mis tickets' }}</h1>
-      <div class="np-ribbon">
-        <span><i class="np-dot" style="background:var(--warn)"></i><span class="np-n">{{ pendingCount }}</span>pendientes</span>
-        <span><i class="np-dot" style="background:var(--info)"></i><span class="np-n">{{ inProgressCount }}</span>en proceso</span>
-        <span><i class="np-dot" style="background:var(--ok)"></i><span class="np-n">{{ closedCount }}</span>cerrados</span>
-        <span *ngIf="isAdmin && stats"><span class="np-n">{{ stats.closed_today }}</span>cerrados hoy · <span class="np-mono">{{ stats.reopen_pct }}%</span> reabiertos</span>
-        <span class="np-live"><i></i>en vivo, cada 20 s</span>
-      </div>
-    </div>
-    <div class="np-actions">
-      <button type="button" class="np-btn np-btn--ghost" *ngIf="isAdmin" (click)="showStats = !showStats">{{ showStats ? 'Ocultar ranking' : 'Ranking' }}</button>
-      <button type="button" class="np-btn np-btn--ghost" (click)="loadTickets()" title="Actualizar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 12a8 8 0 1 1-2.3-5.7M20 4v5h-5"/></svg>Actualizar</button>
-      <button type="button" class="np-btn np-btn--primary" *ngIf="puedeCrear" (click)="mostrarNuevo = true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M12 5v14M5 12h14"/></svg>Nuevo ticket</button>
+  <!-- Estilo limpio (21-10-2026): cabecera y cifras como en Cobros y pagos -->
+  <header class="tk-head">
+    <div><p class="tk-kicker">Atención</p><h1>{{ isAdmin ? 'Tickets' : 'Mis tickets' }}</h1></div>
+    <div class="tk-acc">
+      <span class="np-live"><i></i>en vivo</span>
+      <button type="button" class="tk-btn" *ngIf="isAdmin" (click)="showStats = !showStats">{{ showStats ? 'Ocultar ranking' : 'Ranking' }}</button>
+      <button type="button" class="tk-btn" (click)="loadTickets()" title="Actualizar">Actualizar</button>
+      <button type="button" class="tk-btn tk-btn--1" *ngIf="puedeCrear" (click)="mostrarNuevo = true">Nuevo ticket</button>
     </div>
   </header>
+  <app-seccion-tabs grupo="atencion"></app-seccion-tabs>
+
+  <section class="tk-kpis" aria-label="Resumen de tickets">
+    <div class="tk-kpi"><small>Abiertos</small><b>{{ pendingCount + inProgressCount }}</b><span>{{ inProgressCount ? inProgressCount + ' en proceso' : 'ninguno marcado «en proceso»' }}</span></div>
+    <div class="tk-kpi" [class.is-alerta]="(stats?.viejos ?? 0) > 0" *ngIf="isAdmin && stats">
+      <small>Llevan más de 3 días</small><b>{{ stats.viejos ?? 0 }}</b><span>{{ stats.mas_viejo ? 'el más viejo es del ' + fechaLarga(stats.mas_viejo) : 'ninguno' }}</span></div>
+    <div class="tk-kpi" *ngIf="isAdmin && stats"><small>Creados por el asistente</small><b>{{ stats.del_asistente_30 ?? 0 }}</b><span>de {{ stats.creados_30 ?? 0 }} en los últimos 30 días</span></div>
+    <div class="tk-kpi" *ngIf="isAdmin && stats"><small>Tiempo para cerrar</small><b>{{ tiempoMediano(stats.mediana_horas) }}</b><span>la mitad de los {{ stats.cerrados_mes ?? 0 }} cerrados este mes</span></div>
+    <div class="tk-kpi" *ngIf="!isAdmin"><small>Cerrados</small><b>{{ closedCount }}</b><span>en total</span></div>
+  </section>
 
   <div class="np-toolbar">
-    <div class="np-chips" role="group" aria-label="Estado">
-      <button type="button" class="np-chip" [attr.aria-pressed]="filterStatus === null" (click)="filterStatus = null; applyFilter()">Todos<span class="np-c">{{ conteos.todos }}</span></button>
-      <button type="button" class="np-chip" [attr.aria-pressed]="filterStatus === 1" (click)="filterStatus = 1; applyFilter()">Pendientes<span class="np-c">{{ pendingCount }}</span></button>
-      <button type="button" class="np-chip" [attr.aria-pressed]="filterStatus === 2" (click)="filterStatus = 2; applyFilter()">En proceso<span class="np-c">{{ inProgressCount }}</span></button>
-      <button type="button" class="np-chip" [attr.aria-pressed]="filterStatus === 3" (click)="filterStatus = 3; applyFilter()">Cerrados<span class="np-c">{{ closedCount }}</span></button>
+    <div class="np-seg" role="group" aria-label="Estado">
+      <button type="button" [attr.aria-pressed]="filterStatus === 1" (click)="filterStatus = 1; applyFilter()">Pendientes <span class="tk-c">{{ pendingCount }}</span></button>
+      <button type="button" [attr.aria-pressed]="filterStatus === 2" (click)="filterStatus = 2; applyFilter()">En proceso <span class="tk-c">{{ inProgressCount }}</span></button>
+      <button type="button" [attr.aria-pressed]="filterStatus === 3" (click)="filterStatus = 3; applyFilter()">Cerrados <span class="tk-c">{{ closedCount }}</span></button>
+      <button type="button" [attr.aria-pressed]="filterStatus === null" (click)="filterStatus = null; applyFilter()">Todos <span class="tk-c">{{ conteos.todos }}</span></button>
     </div>
     <ng-container *ngIf="isAdmin">
       <label class="np-pagesize">Técnico
@@ -50,21 +52,23 @@
   <div class="np-workspace">
     <section class="np-registry" aria-label="Tickets">
       <div class="np-registry-wrap">
-        <table class="np-table np-table--registry">
-          <thead><tr><th class="np-th-stripe"></th><th>N°</th><th>Cliente</th><th>Servicio</th><th *ngIf="isAdmin" class="np-col-tech">Técnico</th><th>Estado</th><th>Duración</th><th>Prioridad</th><th class="np-th-right"></th></tr></thead>
+        <table class="np-table np-table--registry np-tabla-movil">
+          <thead><tr><th class="np-th-stripe"></th><th>Ticket</th><th *ngIf="isAdmin" class="np-col-tech">Técnico</th><th>Estado</th><th class="np-th-right">Tiempo</th></tr></thead>
           <tbody>
-            <tr *ngIf="loading" class="np-empty"><td colspan="9"><span class="np-spinner"></span></td></tr>
-            <tr *ngIf="!loading && tickets.length === 0" class="np-empty"><td colspan="9"><strong>No hay tickets con estos filtros.</strong></td></tr>
+            <tr *ngIf="loading" class="np-empty"><td colspan="5"><span class="np-spinner"></span></td></tr>
+            <tr *ngIf="!loading && tickets.length === 0" class="np-empty"><td colspan="5"><strong>No hay tickets con estos filtros.</strong></td></tr>
             <tr *ngFor="let ticket of tickets" class="np-row" [ngClass]="'np-row--s' + ticket.status_id" [attr.aria-selected]="isSelected(ticket)" (click)="selectTicket(ticket)" tabindex="0" (keydown.enter)="selectTicket(ticket)">
               <td class="np-stripe"><i></i></td>
-              <td class="np-data np-strong" data-t="Ticket">{{ ticket.id }}</td>
-              <td data-t="Cliente"><button type="button" class="np-name np-name--link" (click)="$event.stopPropagation(); verFicha(ticket)" [title]="'Ver la ficha de ' + ticket.name">{{ ticket.name }} {{ ticket.last_name }}</button><app-burbuja-ticket [userId]="ticket.user_id" /><div class="np-plan"><em>{{ ticket.cedula }}</em></div></td>
-              <td data-t="Servicio">{{ ticket.name_service }}</td>
-              <td *ngIf="isAdmin" class="np-col-tech" data-t="Técnico">{{ ticket.tech_names ? (ticket.tech_names + ' ' + (ticket.tech_lastname || '')) : 'Sin asignar' }}</td>
-              <td data-t="Estado"><span class="np-pill" [ngClass]="'np-pill--s' + ticket.status_id">{{ statusLabel(ticket.status_id) }}</span><span class="np-fine" *ngIf="ticket.reopened_count && ticket.reopened_count > 0">reabierto ×{{ ticket.reopened_count }}</span></td>
-              <td class="np-data" data-t="Duración" [class.np-pos-info]="ticket.status_id === 2">{{ ticket.status_id === 2 ? formatSecs(ticket.elapsedSeconds || 0) : formatDuration(ticket) }}</td>
-              <td data-t="Prioridad"><span class="np-pill" [ngClass]="priorityPill(ticket.name_priority)">{{ ticket.name_priority }}</span></td>
-              <td class="np-td-right"><div class="np-rowacts"><button type="button" class="np-icobtn" title="Abrir ticket"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 6 6 6-6 6"/></svg></button></div></td>
+              <td data-t="Ticket" class="tk-principal es-principal">
+                <span class="tk-l1"><span class="tk-n">#{{ ticket.id }}</span><button type="button" class="np-name np-name--link" (click)="$event.stopPropagation(); verFicha(ticket)" [title]="'Ver la ficha de ' + ticket.name">{{ ticket.name }} {{ ticket.last_name }}</button><app-burbuja-ticket [userId]="ticket.user_id" />
+                  <span class="tk-tipo">{{ ticket.name_service }}</span></span>
+                <span class="tk-l2" *ngIf="ticket.observation">{{ ticket.observation }}</span>
+                <span class="tk-l3">{{ ticket.address || ticket.cedula }}<ng-container *ngIf="origenDe(ticket) as o"> · {{ o }}</ng-container></span>
+              </td>
+              <td *ngIf="isAdmin" class="np-col-tech" data-t="Técnico" data-label="Técnico"><span class="tk-tec"><span class="tk-av">{{ iniciales(ticket.tech_names, ticket.tech_lastname) }}</span><span [title]="ticket.tech_names ? ticket.tech_names + ' ' + (ticket.tech_lastname || '') : ''">{{ ticket.tech_names ? nombreCorto(ticket.tech_names, ticket.tech_lastname) : 'Sin técnico' }}</span></span></td>
+              <td data-t="Estado" data-label="Estado"><span class="tk-estado"><span class="np-pill" [ngClass]="'np-pill--s' + ticket.status_id">{{ statusLabel(ticket.status_id) }}</span><span class="tk-prio" [ngClass]="priorityPill(ticket.name_priority)">{{ ticket.name_priority }}</span></span>
+                <span class="np-fine" *ngIf="ticket.reopened_count && ticket.reopened_count > 0">reabierto ×{{ ticket.reopened_count }}</span></td>
+              <td class="np-td-right" data-t="Tiempo" data-label="Tiempo"><span class="tk-edad" [ngClass]="'is-' + edadNivel(ticket)">{{ ticket.status_id === 2 ? formatSecs(ticket.elapsedSeconds || 0) : (ticket.status_id === 3 ? formatDuration(ticket) : edadTexto(ticket)) }}</span></td>
             </tr>
           </tbody>
         </table>
@@ -116,6 +120,19 @@
           </div>
         </section>
 
+        <section class="tk-diag">
+          <div class="np-notes-head">
+            <p class="np-sect">Diagnóstico del servicio</p>
+            <button type="button" class="np-btn np-btn--ghost np-btn--sm" (click)="diagnosticar()" [disabled]="diagnosticando" title="Revisa cuenta, ONT, MikroTik y TR-069 del cliente">
+              <span *ngIf="diagnosticando" class="np-spinner np-spinner--sm"></span>{{ diagnosticando ? 'Revisando…' : (ultimoDiagnostico ? 'Revisar de nuevo' : 'Revisar el servicio') }}
+            </button>
+          </div>
+          <div class="tk-diag-r" *ngIf="ultimoDiagnostico as dg">
+            <p>{{ dg.note }}</p><small>{{ dg.created_at }}</small>
+          </div>
+          <p class="np-muted" *ngIf="!ultimoDiagnostico && !diagnosticando">Revisa la cuenta, la ONT, el MikroTik y el TR-069 del cliente y dice dónde está la falla.</p>
+        </section>
+
         <section>
           <p class="np-sect">Ticket</p>
           <dl class="np-dl">
@@ -138,9 +155,6 @@
         <section>
           <div class="np-notes-head">
             <p class="np-sect">Novedades</p>
-            <button type="button" class="np-btn np-btn--ghost np-btn--sm" (click)="diagnosticar()" [disabled]="diagnosticando" title="Revisa cuenta, ONT, MikroTik y TR-069 del cliente">
-              <span *ngIf="diagnosticando" class="np-spinner np-spinner--sm"></span>{{ diagnosticando ? 'Diagnosticando…' : '🩺 Diagnosticar' }}
-            </button>
           </div>
           <div *ngIf="notesLoading" class="np-loading np-loading--inline"><span class="np-spinner"></span> Cargando…</div>
           <p class="np-muted" *ngIf="!notesLoading && notes.length === 0">Aún no hay novedades registradas.</p>

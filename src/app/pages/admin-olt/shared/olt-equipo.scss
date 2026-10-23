@@ -33,7 +33,7 @@
 
 .olt-marca-badge {
   display: inline-flex; align-items: center; height: 20px; padding: 0 8px;
-  font-size: 10.5px; font-weight: 800; letter-spacing: .5px; text-transform: uppercase;
+  font-size: 10.5px; font-weight: 600; letter-spacing: .5px;
   color: var(--bg); background: var(--text);
 
   /* Cada fabricante con su color, para reconocerlo de un vistazo. */
@@ -48,13 +48,13 @@
   gap: 8px 16px; margin: 12px 0 0;
 
   div { min-width: 0; }
-  dt { font-size: 10.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .4px; color: var(--text-3); }
+  dt { font-size: 10.5px; font-weight: 600; letter-spacing: .4px; color: var(--text-3); }
   dd { margin: 1px 0 0; font-size: 12.5px; color: var(--text); overflow-wrap: anywhere; }
 }
 
 .olt-subir {
   display: inline-flex; align-items: center; margin-top: 12px;
-  font-size: 11.5px; font-weight: 700; color: var(--text-2);
+  font-size: 11.5px; font-weight: 600; color: var(--text-2);
   cursor: pointer;
 
   input { position: absolute; width: 1px; height: 1px; opacity: 0; }
@@ -78,7 +78,7 @@
 
 .olt-slot-nombre {
   flex: 0 0 66px;
-  font-size: 10.5px; font-weight: 800; text-transform: uppercase; letter-spacing: .4px;
+  font-size: 10.5px; font-weight: 600; letter-spacing: .4px;
   color: var(--text-3);
 }
 
@@ -93,7 +93,7 @@
 .olt-puerto {
   display: inline-flex; align-items: center; justify-content: center;
   width: 26px; height: 26px;
-  font-size: 11px; font-weight: 800; font-variant-numeric: tabular-nums;
+  font-size: 11px; font-weight: 600; font-variant-numeric: tabular-nums;
   color: #8a94a6;
   background: #2a3039;
   border: 1px solid #11151a;
@@ -151,7 +151,7 @@
 
 .olt-diag-icono {
   flex: 0 0 16px;
-  font-weight: 800; color: var(--ok);
+  font-weight: 600; color: var(--ok);
   line-height: 1.5;
 }
 
@@ -167,7 +167,7 @@
   height: 14px;
   padding: 0 3px;
   font-size: 9px;
-  font-weight: 800;
+  font-weight: 600;
   line-height: 14px;
   text-align: center;
   color: #fff;

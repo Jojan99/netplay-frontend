@@ -1,9 +1,9 @@
 /* ─── Traslados: sólo lo propio ─────────────────────────────────────── */
 .np-transfers { --np-inspector-w: 440px; }
 .np-row--pending .np-stripe i     { background: var(--warn); }
-.np-row--confirmed .np-stripe i   { background: var(--accent); }
+.np-row--confirmed .np-stripe i   { background: transparent; }
 .np-row--in_progress .np-stripe i { background: var(--info); }
-.np-row--completed .np-stripe i   { background: var(--ok); }
+.np-row--completed .np-stripe i   { background: transparent; }
 .np-row--cancelled .np-stripe i   { background: var(--danger); }
 .np-pill--pending     { background: var(--warn-soft); color: var(--warn); }
 .np-pill--confirmed   { background: var(--accent-soft); color: var(--accent); }

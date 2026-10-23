@@ -1,6 +1,6 @@
 /* ── Footer: línea de estado ───────────────────────────────────────────── */
 :host { display: block; }
-.app-footer { border-top: 1px solid var(--line); background: var(--surface); color: var(--text-3); font-family: var(--font-mono); font-size: 11px; }
+.app-footer { border-top: 1px solid var(--line); background: var(--surface); color: var(--text-3); font-family: var(--font-body); font-size: 11px; }
 .app-footer-inner { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 16px; height: 36px; padding: 0 16px; }
 .app-footer-brand, .app-footer-status, .app-footer-meta { display: flex; align-items: center; gap: 10px; white-space: nowrap; }
 .app-footer-brand b { font-weight: 500; color: var(--text-2); }

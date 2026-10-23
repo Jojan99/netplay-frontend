@@ -1,0 +1,33 @@
+<div class="np-page md">
+  <header class="md-head">
+    <div><p class="md-kicker">{{ esTecnico && nombre ? 'Hola, ' + nombre : 'Técnicos en campo' }}</p>
+      <h1>{{ esTecnico ? 'Tu día' : 'El día de hoy' }} · {{ hoy | date:"EEEE d" }}</h1></div>
+    <button type="button" class="md-btn" (click)="cargar()" [disabled]="cargando">{{ cargando ? 'Cargando…' : 'Actualizar' }}</button>
+  </header>
+  <app-seccion-tabs grupo="instalaciones" *ngIf="!esTecnico"></app-seccion-tabs>
+
+  <section class="md-cifras" aria-label="Resumen del día">
+    <div><b>{{ instalacionesHoy }}</b><span>{{ instalacionesHoy === 1 ? 'instalación' : 'instalaciones' }}</span></div>
+    <div><b>{{ ticketsHoy }}</b><span>{{ ticketsHoy === 1 ? 'ticket' : 'tickets' }}</span></div>
+    <div *ngIf="esTecnico"><b>{{ equipos }}</b><span>equipos contigo</span></div>
+  </section>
+
+  <div *ngIf="cargando" class="np-loading"><span class="np-spinner"></span> Cargando tu agenda…</div>
+  <p class="md-vacio" *ngIf="!cargando && !visitas.length">No hay nada pendiente para hoy.</p>
+
+  <ol class="md-lista" *ngIf="!cargando && visitas.length">
+    <li *ngFor="let v of visitas; let i = index" class="md-item" [class.is-primero]="i === 0">
+      <div class="md-item-h"><span class="md-chip" [ngClass]="'is-' + v.tono">{{ v.etiqueta }}</span><b *ngIf="v.hora">{{ v.hora }}</b></div>
+      <b class="md-cliente">{{ v.cliente }}</b>
+      <span class="md-dir" *ngIf="v.direccion">{{ v.direccion }}</span>
+      <span class="md-det" *ngIf="v.detalle">{{ v.detalle }}</span>
+      <div class="md-acc">
+        <a class="md-ico" [href]="mapa(v)" target="_blank" rel="noopener" *ngIf="v.direccion" aria-label="Cómo llegar">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 21s-7-6.2-7-12a7 7 0 0 1 14 0c0 5.8-7 12-7 12z"/><circle cx="12" cy="9" r="2.5"/></svg></a>
+        <a class="md-ico" [href]="whatsapp(v)" target="_blank" rel="noopener" *ngIf="v.telefono" [attr.aria-label]="'Escribirle por WhatsApp a ' + v.cliente">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a8.5 8.5 0 0 1-12.6 7.4L3 21l1.6-5.2A8.5 8.5 0 1 1 21 12z"/></svg></a>
+        <a class="md-principal" [routerLink]="v.ruta" [queryParams]="v.query" [class.is-1]="i === 0">{{ v.accion }}</a>
+      </div>
+    </li>
+  </ol>
+</div>

@@ -1,3 +1,4 @@
+import { FinanzasTabsComponent } from '../../components/finanzas-tabs/finanzas-tabs.component';
 import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -11,9 +12,9 @@ import { CobranzaConfig, CobranzaResumen, CobranzaService } from '../../services
 @Component({
   selector: 'app-cobranza',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [FinanzasTabsComponent, CommonModule, FormsModule],
   templateUrl: './cobranza.component.html',
-  styleUrl: './cobranza.component.scss',
+  styleUrls: ['./cobranza.component.scss', './cobranza-limpio.scss'],
   host: { class: 'np-console' },
 })
 export class CobranzaComponent implements OnInit {
@@ -60,7 +61,62 @@ export class CobranzaComponent implements OnInit {
   ];
   diasElegidos = new Set<number>();
 
+  // ── Tablero de casos (21-10-2026): por etapa, para atender sin abrir la burbuja ──
+  vistaCob: 'casos' | 'reglas' = 'casos';
+  cargandoCasos = false;
+  columnas: Array<{ clave: string; titulo: string; ayuda: string; color: string; casos: any[] }> = [];
+  casoAbierto: any = null;
+  conversacion: any[] = [];
+  cargandoConv = false;
+  accionando = new Set<number>();
+
+  private readonly ETAPAS = [
+    { clave: 'escalado', titulo: 'Necesitan una persona', ayuda: 'El asistente no pudo resolver: hay que contestar.', color: '#b42318', estados: ['escalado'] },
+    { clave: 'detectado', titulo: 'Para autorizar', ayuda: 'Con mora y sin escribirles todavía.', color: '#e9b949', estados: ['detectado'] },
+    { clave: 'curso', titulo: 'En conversación', ayuda: 'El asistente está hablando con ellos.', color: '#d9772b', estados: ['autorizado', 'contactado', 'negociando', 'acuerdo'] },
+    { clave: 'sin_respuesta', titulo: 'Sin respuesta', ayuda: 'Se les escribió y no contestan.', color: '#a0a3ac', estados: ['sin_respuesta'] },
+    { clave: 'pagado', titulo: 'Pagaron', ayuda: 'Pagaron después de la conversación (últimos 30 días).', color: '#1f8a4c', estados: ['pagado'] },
+  ];
+
+  cargarCasos(): void {
+    this.cargandoCasos = true;
+    const todos: any[] = [];
+    let faltan = 3;
+    (['atencion', 'curso', 'resultados'] as const).forEach(g => this.svc.casos(g).subscribe({
+      next: (r: any) => { todos.push(...(r?.data ?? [])); if (--faltan === 0) this.armarColumnas(todos); },
+      error: () => { if (--faltan === 0) this.armarColumnas(todos); },
+    }));
+  }
+
+  private armarColumnas(todos: any[]): void {
+    this.cargandoCasos = false;
+    this.columnas = this.ETAPAS.map(e => ({ ...e, casos: todos.filter(c => e.estados.includes(c.estado)) }));
+  }
+
+  pesos(v: unknown): string { return '$ ' + Math.round(Number(v) || 0).toLocaleString('es-CO'); }
+
+  nombreCaso(c: any): string { return `${c?.names ?? ''} ${c?.lastname ?? ''}`.trim() || 'Sin nombre'; }
+
+  accionCaso(c: any, que: 'autorizar' | 'descartar' | 'tomar' | 'devolver'): void {
+    this.accionando.add(c.id);
+    this.svc.accion(c.id, que).subscribe({
+      next: (r: any) => { this.accionando.delete(c.id); this.avisar(r?.message || 'Listo', r?.status === 0 ? 'ok' : 'error'); if (r?.status === 0) { this.cargarCasos(); if (this.casoAbierto?.id === c.id) this.casoAbierto = null; } },
+      error: (e: any) => { this.accionando.delete(c.id); this.avisar(e?.error?.message || 'No se pudo', 'error'); },
+    });
+  }
+
+  abrirCaso(c: any): void {
+    this.casoAbierto = c;
+    this.conversacion = [];
+    this.cargandoConv = true;
+    this.svc.caso(c.id).subscribe({
+      next: (r: any) => { this.cargandoConv = false; this.conversacion = r?.data?.mensajes ?? []; },
+      error: () => { this.cargandoConv = false; },
+    });
+  }
+
   ngOnInit(): void {
+    this.cargarCasos();
     this.cargar();
     this.svc.resumen().subscribe({ next: r => this.resumen = r?.data ?? null, error: () => {} });
   }

@@ -1,8 +1,10 @@
 <div class="np-page np-inst-form">
   <header class="np-head">
     <div>
-      <p class="np-kicker"><a routerLink="/dashboard/installations" class="np-crumb">Instalaciones</a> <b>/</b> Nueva orden</p>
-      <h1 class="np-title">Nueva instalación</h1>
+      <p class="np-kicker"><a routerLink="/dashboard/installations" class="np-crumb">Instalaciones</a> <b>/</b> {{ editId ? 'Orden #' + editId : 'Nueva orden' }}</p>
+      <h1 class="np-title">{{ editId ? 'Editar instalación' : 'Nueva instalación' }}</h1>
+      <p class="np-notice np-notice--warn" *ngIf="editId && estadoOrden === 'completed'">Esta instalación ya se hizo: aquí cambia la orden, no la ficha del cliente ni lo que quedó cargado en el equipo.</p>
+      <p class="np-loading" *ngIf="cargandoOrden"><span class="np-spinner"></span> Cargando la orden…</p>
       <div class="np-ribbon"><span>Todo lo que se cargue aquí viaja con la orden: el técnico lo aplica desde la casa del cliente.</span></div>
     </div>
     <div class="np-actions">
@@ -68,6 +70,10 @@
             <np-select [(ngModel)]="form.internet_plan_id" [opciones]="plans" [presentacion]="presPlanes"
                        [valorVacio]="''" placeholder="Seleccione plan…" textoBuscar="Buscar plan, velocidad o precio…"
                        ariaLabel="Plan de internet"></np-select>
+            <!-- La línea de TV no sale con la orden: el cliente todavía no existe. Se avisa cuándo. -->
+            <small class="np-notice np-notice--info in-tv" *ngIf="planConTv">
+              <b>Este plan incluye televisión.</b> La línea (la lista M3U) se crea cuando el técnico toque «Instalar el equipo»: ahí el cliente queda dado de alta, y la URL le aparece al técnico, al grupo de instalaciones y en la ficha del cliente.
+            </small>
           </label>
           <label class="np-field np-field-full"><span>Día de corte <em class="np-req">*</em></span>
             <np-select [(ngModel)]="form.grupo_facturacion" [opciones]="cortes" [presentacion]="presCortes"
@@ -184,16 +190,16 @@
           <p class="np-subhead np-field-full">El WiFi que va a quedar puesto</p>
 
           <label class="np-field np-field-full"><span>Nombre de la red</span>
-            <input class="np-input" [(ngModel)]="form.wifi_ssid" name="ssid" maxlength="32" placeholder="CASA_PEREZ" />
+            <input class="np-input" [ngModel]="form.wifi_ssid" (ngModelChange)="form.wifi_ssid = sinTildes($event)" name="ssid" maxlength="32" placeholder="CASA_PEREZ" />
             <small class="np-fine np-pos-danger" *ngIf="problemaDelNombreWifi">{{ problemaDelNombreWifi }}</small>
           </label>
           <label class="np-field np-field-full"><span>Clave del WiFi</span>
             <span class="np-input-wrap">
-              <input class="np-input np-mono" [(ngModel)]="form.wifi_password" name="wifipass" maxlength="63" />
+              <input class="np-input np-mono" [ngModel]="form.wifi_password" (ngModelChange)="form.wifi_password = sinTildes($event)" name="wifipass" maxlength="63" />
               <button type="button" class="np-eye" (click)="generarClaveWifi()" title="Generar una clave">GENERAR</button>
             </span>
             <small class="np-fine np-pos-danger" *ngIf="problemaDeLaClaveWifi">{{ problemaDeLaClaveWifi }}</small>
-            <small class="np-fine np-muted" *ngIf="!problemaDeLaClaveWifi">Sin ñ, tildes ni espacios: el equipo las rechaza.</small>
+            <small class="np-fine np-muted" *ngIf="!problemaDeLaClaveWifi">Sin espacios. Las tildes se quitan solas y la ñ queda n: el equipo no las acepta.</small>
           </label>
         </div>
 
@@ -253,7 +259,7 @@
 
           <button type="button" class="np-btn np-btn--primary" *ngIf="esElUltimo" (click)="save()" [disabled]="isSaving">
             <span *ngIf="isSaving" class="np-spinner np-spinner--sm"></span>
-            {{ isSaving ? 'Guardando…' : 'Crear instalación' }}
+            {{ isSaving ? 'Guardando…' : (editId ? 'Guardar cambios' : 'Crear instalación') }}
           </button>
         </div>
       </section>

@@ -18,7 +18,7 @@
 .ori-n {
   flex: none; min-width: 46px; padding: 6px 10px; border-radius: var(--radius);
   font-family: var(--font-mono); font-variant-numeric: tabular-nums;
-  font-size: 21px; font-weight: 700; text-align: center; line-height: 1.1;
+  font-size: 21px; font-weight: 600; text-align: center; line-height: 1.1;
 }
 
 .ori-t {
@@ -31,7 +31,7 @@
   flex: none; display: flex; flex-direction: column; align-items: flex-end; gap: 1px;
   font-family: var(--font-mono); font-variant-numeric: tabular-nums; font-size: 14px; font-weight: 600;
   em { font-style: normal; font-family: var(--font-body); font-size: 10px;
-       letter-spacing: .06em; text-transform: uppercase; color: var(--text-3); }
+       letter-spacing: 0; color: var(--text-3); }
 }
 
 .ori-flecha { flex: none; color: var(--text-3); font-size: 13px; }
